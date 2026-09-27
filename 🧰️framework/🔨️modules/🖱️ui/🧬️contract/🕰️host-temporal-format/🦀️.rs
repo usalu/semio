@@ -35,7 +35,9 @@ pub enum HostTemporalSourceV1 {
         #[serde(rename = "timestampMs")]
         timestamp_ms: i64,
     },
-    Iso { iso: String },
+    Iso {
+        iso: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -76,12 +78,64 @@ pub struct HostTemporalFormatReplyV1 {
     pub labels: Vec<HostTemporalLabelV1>,
 }
 
+fn temporal_iso_digits(value: &str, start: usize, length: usize) -> Option<u32> {
+    value.get(start..start + length)?.parse().ok()
+}
+
+/// 🧭 Validates the deterministic ISO subset shared by browser and native host formatters.
+pub fn is_host_temporal_iso_v1(value: &str) -> bool {
+    let date_only = value.len() == 10;
+    if value.len() < 10 || value.as_bytes().get(4) != Some(&b'-') || value.as_bytes().get(7) != Some(&b'-') {
+        return false;
+    }
+    if !date_only {
+        if value.len() < 17 || value.as_bytes().get(10) != Some(&b'T') || value.as_bytes().get(13) != Some(&b':') {
+            return false;
+        }
+        let has_seconds = value.as_bytes().get(16) == Some(&b':');
+        let mut cursor = if has_seconds { 19 } else { 16 };
+        if has_seconds && value.as_bytes().get(cursor) == Some(&b'.') {
+            cursor += 1;
+            let start = cursor;
+            while value.as_bytes().get(cursor).is_some_and(u8::is_ascii_digit) {
+                cursor += 1;
+            }
+            if cursor == start {
+                return false;
+            }
+        }
+        match value.get(cursor..) {
+            Some("Z") => {}
+            Some(offset) if offset.len() == 6 && matches!(offset.as_bytes()[0], b'+' | b'-') && offset.as_bytes()[3] == b':' => {
+                let Some(hours) = offset.get(1..3).and_then(|value| value.parse::<u32>().ok()) else { return false };
+                let Some(minutes) = offset.get(4..6).and_then(|value| value.parse::<u32>().ok()) else { return false };
+                if hours > 23 || minutes > 59 {
+                    return false;
+                }
+            }
+            _ => return false,
+        }
+    }
+    let Some(year) = temporal_iso_digits(value, 0, 4) else { return false };
+    let Some(month) = temporal_iso_digits(value, 5, 2) else { return false };
+    let Some(day) = temporal_iso_digits(value, 8, 2) else { return false };
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let month_days = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if !(1..=12).contains(&month) || !(1..=month_days[(month - 1) as usize]).contains(&day) {
+        return false;
+    }
+    if date_only {
+        return true;
+    }
+    let Some(hour) = temporal_iso_digits(value, 11, 2) else { return false };
+    let Some(minute) = temporal_iso_digits(value, 14, 2) else { return false };
+    let second = if value.as_bytes().get(16) == Some(&b':') { temporal_iso_digits(value, 17, 2) } else { Some(0) };
+    hour <= 23 && minute <= 59 && second.is_some_and(|second| second <= 59)
+}
+
 impl HostTemporalFormatRequestV1 {
     pub fn validate(&self) -> bool {
-        if !(HOST_TEMPORAL_FORMAT_MIN_TIMESTAMP_MS..=HOST_TEMPORAL_FORMAT_MAX_TIMESTAMP_MS).contains(&self.now_ms)
-            || self.values.is_empty()
-            || self.values.len() > HOST_TEMPORAL_FORMAT_MAX_VALUES
-        {
+        if !(HOST_TEMPORAL_FORMAT_MIN_TIMESTAMP_MS..=HOST_TEMPORAL_FORMAT_MAX_TIMESTAMP_MS).contains(&self.now_ms) || self.values.is_empty() || self.values.len() > HOST_TEMPORAL_FORMAT_MAX_VALUES {
             return false;
         }
         let mut ids = BTreeSet::new();

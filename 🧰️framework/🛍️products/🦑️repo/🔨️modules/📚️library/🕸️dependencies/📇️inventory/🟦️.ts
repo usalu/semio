@@ -634,10 +634,13 @@ export function dependencyIsCompositionManifest(relPath: string): boolean {
   return relPath.startsWith("compose/") || relPath.startsWith("temp/compose/");
 }
 
-/** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`. */
+/** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`.
+ * A manifest inside the taxonomy's test domain never ships, so its runtime/build sections are recorded as `test-runner` inputs. */
 export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaselineEntry[] {
   const byKey = new Map<string, DependencyBaselineEntry>();
-  const record = (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string): void => {
+  const testDomain = dependencyTestDomain(dependencyTaxonomy(repoRoot));
+  const record = (ecosystem: DependencyEcosystem, name: string, version: string, declaredKind: DependencyKind, user: string): void => {
+    const kind = dependencyTestOwned(user, testDomain) && (declaredKind === "production-runtime" || declaredKind === "production-build") ? "test-runner" : declaredKind;
     const key = `${ecosystem}:${name}`;
     const existing = byKey.get(key);
     if (existing) {
@@ -672,9 +675,8 @@ export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyB
   dependencyCollectDotnet(repoRoot, record);
 
   const oracles = dependencyOracleRegistryPackages(repoRoot);
-  const contributionTaxonomy = dependencyTaxonomy(repoRoot);
   for (const entry of byKey.values()) {
-    dependencyClassifyOracleEntry(entry, oracles.get(entry.name), String(contributionTaxonomy.testOraclesDirName));
+    dependencyClassifyOracleEntry(entry, oracles.get(entry.name), testDomain);
     entry.declarations?.sort((left, right) => left.user.localeCompare(right.user) || left.kind.localeCompare(right.kind) || left.version.localeCompare(right.version));
     entry.kinds.sort();
     entry.users.sort();
@@ -683,19 +685,27 @@ export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyB
   return [...byKey.values()].sort((a, b) => (a.ecosystem === b.ecosystem ? a.name.localeCompare(b.name) : a.ecosystem.localeCompare(b.ecosystem)));
 }
 
-/** 📇️ Identifies canonical test cases, testing fixtures and the repository's semantic test domain. */
-const DEPENDENCY_TEST_DOMAIN_PATH_RE = /(?:^|\/)(?:🧪️test|🧪️tests|🧫️fixtures)\//u;
+/** 📇️ The repository's test domain exactly as the taxonomy names it: every test-owned directory kind (cases, fixtures,
+ * examples, oracles, probes, fixture generators) plus the semantic test module. A manifest below any of them is test-owned. */
+export type DependencyTestDomain = { readonly directoryNames: readonly string[]; readonly domainPath: string };
+
+/** 🧪️ Reads {@link DependencyTestDomain} from the taxonomy, so a new test directory kind never needs a second list here. */
+export function dependencyTestDomain(taxonomy: Record<string, unknown>): DependencyTestDomain {
+  const directoryNames = [taxonomy.testsDirName, taxonomy.testFixturesDirName, taxonomy.testExamplesDirName, taxonomy.testOraclesDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
+  if (directoryNames.some((name) => typeof name !== "string" || name.length === 0) || typeof taxonomy.testDomainPath !== "string") throw new Error("[dependencies] taxonomy lacks a test-domain directory name or testDomainPath");
+  return { directoryNames: directoryNames as string[], domainPath: taxonomy.testDomainPath };
+}
+
+function dependencyTestOwned(path: string, testDomain: DependencyTestDomain): boolean {
+  return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
+}
 
 /** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain OR is itself a non-production declaration (`dev-dependencies`/`devDependencies`, i.e. `test-runner`/`repository-tooling` kind) — per the ticket's own definition of done, a third-party dependency kept ONLY behind `[dev-dependencies]` is compliant from ANY directory, not just a test-domain one. A genuine conflict requires an actual production-runtime/production-build declaration outside the test domain; those remain honest and become conflicts. */
-export function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined, oracleDirectoryName: string): void {
+export function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined, testDomain: DependencyTestDomain): void {
   if (!oracleIds) return;
   entry.oracleIds = [...oracleIds].sort();
   const declarations = entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
-  const isContribution = (path: string): boolean => {
-    const parts = path.split("/");
-    return parts.slice(0, -1).includes(oracleDirectoryName);
-  };
-  const productDeclarations = declarations.filter((declaration) => !DEPENDENCY_TEST_DOMAIN_PATH_RE.test(declaration.user) && !isContribution(declaration.user) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
+  const productDeclarations = declarations.filter((declaration) => !dependencyTestOwned(declaration.user, testDomain) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
   if (productDeclarations.length === 0) entry.kinds = ["test-oracle"];
   else entry.oracleConflictUsers = [...new Set(productDeclarations.map((declaration) => declaration.user))].sort();
 }

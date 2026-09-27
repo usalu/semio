@@ -27,3 +27,5 @@ record reorder-rows tag=6
 field payload bytes
 record edit-cell tag=7
 field payload bytes
+record set-snapshot tag=8
+field payload bytes

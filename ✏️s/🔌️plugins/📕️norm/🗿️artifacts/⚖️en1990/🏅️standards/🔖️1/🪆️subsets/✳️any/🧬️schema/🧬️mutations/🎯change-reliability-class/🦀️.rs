@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeReliabilit
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change reliability-class", "Ändern: reliability-class")
+        protocol::LocalizedLabel::native("Change reliability class", "Zuverlässigkeitsklasse ändern")
     }
 }
 //#endregion 🔖️Payload

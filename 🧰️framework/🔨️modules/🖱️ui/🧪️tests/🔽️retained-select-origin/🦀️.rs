@@ -65,8 +65,9 @@ fn select_tree(item_count: usize) -> UiNode {
 fn upward_tree_select(item_count: usize) -> UiNode {
     let mut item = UiTreeItemNode::base("fixture.item", Label::data("Fixture item"));
     item.control = Some(UiControlNode::Select(select_node(item_count)));
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { id: "fixture.section".into(), label: Some(Label::data("Fixture section")), default_open: Some(true), presence: UiPresence::default(), items: vec![item], window: None }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, id: "fixture.section".into(), label: Some(Label::data("Fixture section")), default_open: Some(true), presence: UiPresence::default(), items: vec![item], window: None }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -86,8 +87,8 @@ fn place_fixture_layout(ui: &mut Ui, trigger: Rect, viewport: Rect) {
     let root = window.tree.root.expect("fixture root");
     let select = window.tree.children(root).next().expect("fixture Select");
     let generation = window.tree.accepted_layout_generation().checked_add(1).expect("fixture layout generation");
-    assert!(window.tree.write_inactive_layout(root, generation, AcceptedLayout { x: 0.0, y: 0.0, width: viewport.w, height: viewport.h }));
-    assert!(window.tree.write_inactive_layout(select, generation, AcceptedLayout { x: trigger.x, y: trigger.y, width: trigger.w, height: trigger.h }));
+    assert!(window.tree.write_inactive_layout(root, generation, AcceptedLayout { x: 0.0, y: 0.0, width: viewport.w, height: viewport.h, inline_suffix_width: 0.0 }));
+    assert!(window.tree.write_inactive_layout(select, generation, AcceptedLayout { x: trigger.x, y: trigger.y, width: trigger.w, height: trigger.h, inline_suffix_width: 0.0 }));
     window.tree.commit_inactive_layout(generation);
 }
 

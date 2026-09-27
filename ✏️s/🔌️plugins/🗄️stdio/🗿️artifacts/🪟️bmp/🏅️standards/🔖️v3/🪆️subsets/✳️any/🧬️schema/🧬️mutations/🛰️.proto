@@ -5,4 +5,5 @@ import "📥️insert-palette-entry/🛰️.proto";
 import "📤️remove-palette-entry/🛰️.proto";
 import "🎨️replace-palette-entry/🛰️.proto";
 import "🔲️replace-pixel-data/🛰️.proto";
-message BmpMutation { oneof mutation { ChangeHeaderFieldsMutation change_header_fields = 2; InsertPaletteEntryMutation insert_palette_entry = 3; RemovePaletteEntryMutation remove_palette_entry = 4; ReplacePaletteEntryMutation replace_palette_entry = 5; ReplacePixelDataMutation replace_pixel_data = 6; } }
+import "📸️set-snapshot/🛰️.proto";
+message BmpMutation { oneof mutation { ChangeHeaderFieldsMutation change_header_fields = 2; InsertPaletteEntryMutation insert_palette_entry = 3; RemovePaletteEntryMutation remove_palette_entry = 4; ReplacePaletteEntryMutation replace_palette_entry = 5; ReplacePixelDataMutation replace_pixel_data = 6; SetSnapshot set_snapshot = 7; } }

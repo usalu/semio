@@ -1,0 +1,8 @@
+# T13 (session 13) guest crates whose code changed — for W3's consolidated rebuild (describe → materialize → activate-s)
+semio-s-artifact-wfc-2d — new test bridge `wfc2d_mutation_report_json` (pub fn over `store::test_support::mutation_report_json`); no descriptor/ABI change.
+semio-s-artifact-wfc-grid2d — new test bridge `grid2d_mutation_report_json`; the in-crate replay module moved out of the case dir (crate root `#[cfg(test)]` mount removed; the fixture-tree roster law now lives in the mutations unit tests). No descriptor/ABI change.
+semio-s-artifact-wfc-bitmap — new test bridges `bitmap_mutation_report_json` + `bitmap_snapshot_json_round_trip`; the `mount_contract` test module moved into `🧪️tests/🔬️unit` (crate root mount removed). No descriptor/ABI change.
+semio-s-artifact-wfc-3d — new test bridges `wfc3d_mutation_report_json` + `wfc3d_snapshot_json_round_trip`. No descriptor/ABI change.
+semio-s-artifact-wfc-grid3d — new test bridge `grid3d_mutation_report_json`; the roster laws moved from the case dir into the mutations unit tests (crate root mount removed). No descriptor/ABI change.
+semio-s-artifact-reasoning-wires — editor builds `interactionSelect` args as `DslValue` via the in-repo JSON writer; `serde_json` moved to `[dev-dependencies]` (AGENTS.md: no external runtime deps). Same wire args; no descriptor change.
+semio-framework-surface — `tiled_map::map_lod_band` (pub fn) + `MAX_VISIBLE_TILE_REQUESTS` made pub (test surface); linked by gis/infinite guests. No behaviour change.

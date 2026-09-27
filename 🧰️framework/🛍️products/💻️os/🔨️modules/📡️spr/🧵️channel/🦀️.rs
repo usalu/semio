@@ -21,7 +21,7 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 17;
+pub const CHANNEL_VERSION: u32 = 18;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -1651,7 +1651,7 @@ const fn route_field_plan(tag: u8) -> Option<(usize, bool, usize)> {
         10 => Some((3, false, 0)),
         11 => Some((2, false, 0)),
         12 => Some((1, false, 0)),
-        17 => Some((3, true, 2)),
+        17 => Some((3, true, 3)),
         18..=21 => Some((1, false, 0)),
         _ => None,
     }
@@ -1716,7 +1716,8 @@ impl PagedRouteFieldsDecode {
                 let mutation_id = Self::text(&mut fields)?;
                 let payload = fields.next().expect("retained transaction payload");
                 let label = Self::text(&mut fields)?;
-                Ok(AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops: ops, label, origin: fields.next().expect("retained transaction origin") })
+                let origin = fields.next().expect("retained transaction origin");
+                Ok(AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops: ops, label, origin, prepared_child_ops: fields.next().expect("retained transaction child op groups") })
             }),
             18 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionCommit { seq, txn_id }),
             19 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionRollback { seq, txn_id }),
@@ -1859,6 +1860,7 @@ impl DecodedAppCommandOwner {
             (2, AppCommand::TransactionPrepare { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
             (3, AppCommand::TransactionPrepare { mutation_id, .. }) => Some(std::mem::take(mutation_id).into_bytes()),
             (4, AppCommand::TransactionPrepare { label, .. }) => Some(std::mem::take(label).into_bytes()),
+            (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => Some(std::mem::take(prepared_child_ops)),
             (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
             (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => Some(std::mem::take(group_id).into_bytes()),
             _ => None,
@@ -1884,6 +1886,7 @@ impl DecodedAppCommandOwner {
                     (2, AppCommand::TransactionPrepare { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
                     (3, AppCommand::TransactionPrepare { mutation_id, .. }) => *mutation_id = String::from_utf8(field).expect("decoded mutation id remains valid UTF-8"),
                     (4, AppCommand::TransactionPrepare { label, .. }) => *label = String::from_utf8(field).expect("decoded transaction label remains valid UTF-8"),
+                    (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => *prepared_child_ops = field,
                     (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
                     (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => *group_id = String::from_utf8(field).expect("decoded transaction group id remains valid UTF-8"),
                     _ => unreachable!("decoded command close field has an exact restoration target"),
@@ -2165,8 +2168,8 @@ impl PagedAppCommandDecodeCursor {
                     AppCommand::MediaIn { port, descriptor, data, .. } => vec![port.into_bytes(), descriptor, data],
                     AppCommand::MediaOut { port, request, .. } => vec![port.into_bytes(), request],
                     AppCommand::MediaFingerprint { port, .. } => vec![port.into_bytes()],
-                    AppCommand::TransactionPrepare { txn_id, mutation_id, payload, prepared_ops, label, origin, .. } => {
-                        let mut fields = vec![txn_id.into_bytes(), mutation_id.into_bytes(), payload, label.into_bytes(), origin];
+                    AppCommand::TransactionPrepare { txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops, .. } => {
+                        let mut fields = vec![txn_id.into_bytes(), mutation_id.into_bytes(), payload, label.into_bytes(), origin, prepared_child_ops];
                         fields.extend(prepared_ops);
                         fields
                     }
@@ -2385,6 +2388,10 @@ pub enum AppCommand {
         prepared_ops: Vec<Vec<u8>>,
         label: String,
         origin: Vec<u8>,
+        /// 🧩️ The pre-planned form's owned-child op groups (CHANNEL_VERSION 18 trailing addition): the composing
+        /// guest's own `ChildEmit` list as one wire pack, exactly as its `AppFrame::Emit.child_ops` preview produced
+        /// it; empty when the gesture touches no owned child. The channel carries it opaque.
+        prepared_child_ops: Vec<u8>,
     },
     /// ✅️ Phase-2 commit for one transaction member. CHANNEL_VERSION 9 wire addition.
     TransactionCommit {
@@ -2576,6 +2583,10 @@ pub enum AppFrame {
         draft_ops: Vec<u8>,
         output: Vec<u8>,
         diagnostics: Vec<u8>,
+        /// 🧩️ The owned-child op groups of a previewed agent gesture (CHANNEL_VERSION 18 trailing addition): the
+        /// composing guest's `ChildEmit` list as one wire pack, handed back unmodified on
+        /// `AppCommand::TransactionPrepare.prepared_child_ops`; empty when the gesture touches no owned child.
+        child_ops: Vec<u8>,
     },
     /// 📝️ Draft-lane pack snapshot (volatile; never enters a Change/Checkpoint).
     Draft {
@@ -2882,6 +2893,17 @@ impl CommandPageWriter {
         for dependency in &value.dependencies {
             self.string(&dependency.0)?;
         }
+        match &value.observed {
+            Some(observed) => {
+                self.varint(1)?;
+                self.string(&observed.0)?;
+            }
+            None => self.varint(0)?,
+        }
+        self.varint(value.target.len() as u64)?;
+        for segment in &value.target {
+            self.string(segment)?;
+        }
         self.string(&value.diff.schema.0)?;
         self.bytes(&value.diff.payload)?;
         self.string(&value.inverse.schema.0)?;
@@ -3026,7 +3048,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(16)?;
             out.varint(*seq)?;
         }
-        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
+        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops } => {
             if prepared_ops.len() > TRANSACTION_PREPARED_OPS_MAXIMUM {
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
             }
@@ -3041,6 +3063,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             }
             out.string(label)?;
             out.bytes(origin)?;
+            out.bytes(prepared_child_ops)?;
         }
         AppCommand::TransactionCommit { seq, txn_id } => {
             out.byte(18)?;
@@ -3340,6 +3363,7 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             prepared_ops: read_vec_bytes(bytes, &mut pos).await?,
             label: crate::os_spr::read_str(bytes, &mut pos)?,
             origin: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            prepared_child_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         18 => AppCommand::TransactionCommit { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
         19 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
@@ -3504,7 +3528,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, fault);
             crate::os_spr::write_bytes(&mut out, report);
         }
-        AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
+        AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics, child_ops } => {
             out.push(10);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, document_ops);
@@ -3512,6 +3536,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, draft_ops);
             crate::os_spr::write_bytes(&mut out, output);
             crate::os_spr::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_bytes(&mut out, child_ops);
         }
         AppFrame::Draft { in_reply_to, pack, spr, ops } => {
             out.push(11);
@@ -3644,6 +3669,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             draft_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
             output: crate::os_spr::read_bytes(bytes, &mut pos)?,
             diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            child_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         11 => AppFrame::Draft { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
         12 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },

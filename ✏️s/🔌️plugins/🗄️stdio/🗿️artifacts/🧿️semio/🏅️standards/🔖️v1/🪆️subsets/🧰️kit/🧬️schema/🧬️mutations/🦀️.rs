@@ -32,9 +32,12 @@ use super::unbind_representation;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit")]
 pub enum SemioKitMutation {
+    SetSnapshot(SetSnapshot),
     CreateObject(create_object::CreateObject),
     DeleteObject(delete_object::DeleteObject),
     CreateModel(create_model::CreateModel),
@@ -57,7 +60,7 @@ pub enum SemioKitMutation {
 /// `🧰️mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &[
+pub const KINDS: &[&str] = &["set-snapshot", 
     "create-object",
     "delete-object",
     "create-model",

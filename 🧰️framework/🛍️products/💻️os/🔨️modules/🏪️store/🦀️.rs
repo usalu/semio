@@ -21794,6 +21794,10 @@ pub struct GroupMeta {
     pub actor: Option<String>,
     pub description: Option<String>,
     pub coalesce_key: Option<String>,
+    /// 🪪️ The group identity every member's tail edit is stamped with when the caller already owns one
+    /// (an agent transaction's `txn_id`, so the gateway's `TransactionUndo{group_id}` names this group);
+    /// `None` mints the content-addressed invocation id from the parent edit and the child op fingerprints.
+    pub group_id: Option<String>,
 }
 
 /// @emoji 🧾️ Best-effort group undo/redo report: `undone` is every member that WAS rolled
@@ -22454,7 +22458,10 @@ impl TransactionCoordinator {
         for (_, dispatch) in children.iter() {
             child_fingerprints.push((dispatch.child.artifact_id.clone(), concat_ops_fingerprint(&dispatch.ops).await));
         }
-        let invocation_id = mint_invocation_id(&parent_ref.artifact_id, &parent_edit_fingerprint, &child_fingerprints).await;
+        let invocation_id = match meta.group_id.clone() {
+            Some(group_id) => group_id,
+            None => mint_invocation_id(&parent_ref.artifact_id, &parent_edit_fingerprint, &child_fingerprints).await,
+        };
 
         // 🎯️ O1: no more `ChildStoreFactory` global registry lookup — `M::create` (the
         // `space_members!`-generated `MemberFactory` impl) matches `kind` against M's OWN closed

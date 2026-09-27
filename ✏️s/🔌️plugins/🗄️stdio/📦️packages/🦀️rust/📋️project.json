@@ -2,7 +2,10 @@
   "name": "@semio-tech/stdio-plugin",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "artifact-directory-wiring-generate": {
@@ -113,6 +116,15 @@
         "command": "bun ./📜️script.ts home-io-surface native"
       },
       "outputs": []
+    },
+    "editor-component-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts editor-component-check",
+        "forwardAllArgs": true
+      },
+      "cache": false
     }
   }
 }

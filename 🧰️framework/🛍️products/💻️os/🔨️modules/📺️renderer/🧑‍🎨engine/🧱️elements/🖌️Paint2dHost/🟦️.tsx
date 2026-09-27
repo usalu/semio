@@ -12,6 +12,7 @@ import {
   registerIntroductionSurfaceResolver,
   windowElementId,
   useLabel,
+  useTranslation,
   useShellScopeOptional,
   useCanvasAppearanceSync,
   useCanvasPickInteraction,
@@ -164,7 +165,9 @@ function noopPaint2dSession(): RasterWasmSession {
     gpuReady: () => false,
     attachCanvas: async () => undefined,
     setSize: () => {},
-    renderFrame: () => {},
+    renderFrame: () => false,
+    renderProgressJson: () => JSON.stringify({pending:false,completed:0,total:0,error:null}),
+    cancelRender: () => {},
     setCamera: () => {},
     wheelScreen: () => {},
     pointerDownScreen: () => {},
@@ -319,7 +322,7 @@ function Paint2dCanvasSurface({
     session.setBrushSize(scene.brushSize);
     session.setBrushOpacity(scene.brushOpacity);
     session.syncInteraction(scene.selectionJson, scene.hoveredId ?? null);
-    session.setViewMode(scene.viewMode);
+    session.setViewMode(scene.viewMode,parsePaint2dSelection(scene.selectionJson)[0]??null);
     if (isNavigator) {
       const rect = containerRef.current?.getBoundingClientRect();
       const width = rect?.width || 1;
@@ -345,6 +348,8 @@ function Paint2dCanvasSurface({
     }
     session.renderFrame();
   }, [isNavigator, scene.documentSyncJson, scene.assetsJson, scene.cameraJson, scene.selectionJson, scene.hoveredId, scene.activeUtility, scene.brushSize, scene.brushOpacity, scene.viewMode, scene.compositeViewportJson]);
+  const syncAllRef = useRef(syncAll);
+  syncAllRef.current = syncAll;
 
   useEffect(() => {
     syncAll();
@@ -364,10 +369,13 @@ function Paint2dCanvasSurface({
   const onSessionReady = useCallback(
     (session: RasterWasmSession) => {
       sessionRef.current = session;
+      documentSyncRef.current = null;
+      assetsRef.current = null;
+      cameraRef.current = { x: 0, y: 0, zoom: 1 };
       syncSessionCanvasTheme(session);
-      syncAll();
+      syncAllRef.current();
     },
-    [syncAll],
+    [],
   );
 
   const sessionFactory = useCallback((): RasterWasmSession => wasmSession ?? noopPaint2dSession(), [wasmSession]);
@@ -739,6 +747,11 @@ function Paint2dCanvasSurface({
  * and paints at once on `renderFrame`, so an idle raster canvas paints nothing (ticket 26/09/23 F1: it repainted every
  * animation frame — 60 frames/s and 120 rAF/s for the composite + navigator windows of one idle raster editor). */
 function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessionFactory: () => RasterWasmSession; readonly onSessionReady: (session: RasterWasmSession) => void }) {
+  const {i18n}=useTranslation();
+  const language=i18n.resolvedLanguage?.split("-")[0];
+  const text=language==="en"?{rendering:"Rendering image",cancel:"Cancel rendering",failed:"Image rendering failed"}:language==="de"?{rendering:"Bild wird gerendert",cancel:"Rendern abbrechen",failed:"Bild konnte nicht gerendert werden"}:null;
+  const [progress,setProgress]=useState<{pending:boolean;completed:number;total:number;error:string|null}>({pending:false,completed:0,total:0,error:null});
+  const cancelRef=useRef<()=>void>(()=>{});
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const observerRef = useRef<ResizeObserver | null>(null);
@@ -748,7 +761,14 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
     const container = containerRef.current;
     if (!canvas || !container) return;
     const session = sessionFactory();
-    const scheduler = createDemandFrameScheduler(() => session.renderFrame());
+    const scheduler = createDemandFrameScheduler(() => {
+      try {
+        const pending=session.renderFrame();
+        setProgress(JSON.parse(session.renderProgressJson()));
+        if(pending)scheduler.invalidate();
+      }catch(error){setProgress({pending:false,completed:0,total:0,error:String(error)});}
+    });
+    cancelRef.current=()=>{session.cancelRender();scheduler.paintNow();};
     onSessionReady(frameDemandingSessionV1(session, scheduler));
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
@@ -795,6 +815,11 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
   return (
     <div ref={containerRef} className="absolute inset-0">
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
+      {text&&progress.pending&&<div className="absolute bottom-2 left-2 z-50 flex items-center gap-2 rounded bg-background p-2 text-sm" role="status">
+        <span>{text.rendering}</span><progress aria-label={text.rendering} max={Math.max(1,progress.total)} value={progress.completed}/>
+        <button type="button" onClick={()=>cancelRef.current()}>{text.cancel}</button>
+      </div>}
+      {text&&progress.error&&<div className="absolute bottom-2 left-2 z-50 rounded bg-background p-2 text-sm" role="alert">{text.failed}: {progress.error}</div>}
     </div>
   );
 }

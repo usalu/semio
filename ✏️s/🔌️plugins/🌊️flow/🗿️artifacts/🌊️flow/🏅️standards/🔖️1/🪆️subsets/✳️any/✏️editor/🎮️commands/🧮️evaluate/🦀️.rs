@@ -49,7 +49,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
 pub struct Evaluate {}
 
 pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(evaluate_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN))
+    Ok(evaluate_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN))
 }
 
 //#region 🧪️Tests

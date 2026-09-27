@@ -377,6 +377,12 @@ pub struct NumberStepperProps {
     pub value: f64,
     pub step: f64,
     pub uniform: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
 }
 
 /// 💍️ Props for `Component::Ring`. `on_change` moved to the record's `bindings`.
@@ -554,6 +560,10 @@ pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
+    /// 🎛️ The section's direct horizontal Toolbar child whose Button children render in the header.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub header_toolbar: Option<crate::UiNodeId>,
     /// 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]

@@ -1,6 +1,6 @@
 //! 🧪️ Real PostgreSQL genesis acknowledgement, lock-time authority, and recovery ownership laws.
 
-use super::tests::{PostgresContainer, test_directory};
+use super::tests::{PostgresFixture, test_directory};
 use super::*;
 use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
 use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
@@ -10,7 +10,7 @@ use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreat
 
 struct GenesisFixture {
     directory: std::sync::Arc<PostgresDirectory>,
-    container: PostgresContainer,
+    fixture: PostgresFixture,
     intent: ArtifactCreationIntentV1,
     prepared: ArtifactCreationPreparedV1,
     checkpoint: ArtifactCheckpoint,
@@ -61,7 +61,7 @@ impl GenesisFixture {
     }
 
     async fn create() -> Self {
-        let (directory, container) = test_directory().await;
+        let (directory, fixture) = test_directory().await;
         directory.seed().await.unwrap();
         let issued = directory
             .issue_auth_session(&AuthSessionIssue {
@@ -108,7 +108,7 @@ impl GenesisFixture {
         checkpoint.spr.storage_key = artifact_cas_manifest_locator_v1(prepare_artifact_cas_manifest_v1(&intent.scope.space_id, &prepared.spr).unwrap().manifest_id);
         let plan = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() }).unwrap();
         let reservation = directory.reserve_artifact_cas(&plan, intent.deadline_ms, now_ms() as u64).await.unwrap();
-        Self { directory: std::sync::Arc::new(directory), container, intent, prepared, checkpoint, reservation }
+        Self { directory: std::sync::Arc::new(directory), fixture, intent, prepared, checkpoint, reservation }
     }
 }
 
@@ -117,6 +117,7 @@ fn system() -> DirectoryActor {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn genesis_commit_ack_and_locked_expiry_are_atomic_postgres() {
     let committed = GenesisFixture::create().await;
     committed.directory.genesis_test_control.fail_commit_ack.store(true, std::sync::atomic::Ordering::SeqCst);
@@ -145,7 +146,7 @@ async fn genesis_commit_ack_and_locked_expiry_are_atomic_postgres() {
     assert_eq!(expired.operation().await.phase, SpaceArtifactCreationPhaseV1::Preparing);
     sqlx_core::query::query("UPDATE hub_auth_session SET expires_at = 0 WHERE id = $1").bind(&expired.intent.actor.session_id).execute(&expired.directory.pool).await.unwrap();
 
-    let secondary = expired.container.connect().await;
+    let secondary = expired.fixture.connect().await;
     let barrier = std::sync::Arc::new(tokio::sync::Barrier::new(3));
     let first = {
         let directory = expired.directory.clone();

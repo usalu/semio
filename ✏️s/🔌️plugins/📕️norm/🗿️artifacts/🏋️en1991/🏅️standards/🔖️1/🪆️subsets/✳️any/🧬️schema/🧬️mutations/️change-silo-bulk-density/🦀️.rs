@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloBulkDe
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-silo-bulk-density", "change-silo-bulk-density")
+        protocol::LocalizedLabel::native("Change bulk solid unit weight", "Wichte des Schüttguts ändern")
     }
 }
 //#endregion 🔖️Payload

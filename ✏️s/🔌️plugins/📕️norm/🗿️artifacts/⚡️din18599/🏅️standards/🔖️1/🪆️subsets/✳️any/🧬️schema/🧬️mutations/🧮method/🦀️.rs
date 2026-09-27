@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeMethod
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change method", "method ändern")
+        protocol::LocalizedLabel::native("Change calculation method", "Berechnungsverfahren ändern")
     }
 }

@@ -11,6 +11,7 @@ use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_BASIC_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
+use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -18,10 +19,11 @@ pub enum SvgBasicEditCommand {
     SetPixelRegion { source: String },
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
+    EditSnapshot { event: editing::SnapshotEditEvent },
 }
 
 impl protocol::OpBinary for SvgBasicEditCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = STDIO_SVG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(pack::to_json_string(self).into_bytes())
@@ -35,6 +37,15 @@ impl protocol::OpBinary for SvgBasicEditCommand {
 
 
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+const STDIO_SVG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.svg.tool-command.v1";
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
@@ -42,9 +53,11 @@ fn svgBasicEditor_example_snapshot(example_id: &str) -> SvgSnapshot {
     if example_id == crate::examples::demo::ID { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { SvgSnapshot::default() }
 }
 fn svgBasicEditor_command_id(command: &SvgBasicEditCommand) -> &'static str {
+    if let SvgBasicEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command { SvgBasicEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
 }
 fn svgBasicEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SvgBasicEditCommand, Fault> {
+    if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| SvgBasicEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(SvgBasicEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
@@ -104,10 +117,10 @@ impl ArtifactEditor for SvgBasicEditor {
     const DIALECT: Dialect = SVG_BASIC_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SvgBasicEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🦀️.rs",
-        controller: "s.stdio.svg@1.1/*#editor",
+        controller: "s.stdio.svg@1.1/basic#editor",
         artifact_schema: "stdio.svg",
         factory: "SvgBasicEditorExampleFactory",
         factory_type: SvgBasicEditorExampleFactory,
@@ -115,14 +128,19 @@ impl ArtifactEditor for SvgBasicEditor {
         tools: ["setActiveExample"]
     }
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        registry.register(SvgBasicEditorExampleFactory::new(registry.controller_id()))
+        registry.register(SvgBasicEditorExampleFactory::new(registry.controller_id()))?;
+        editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if !STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
         if svgBasicEditor_command_id(&request.command) != request.tool_id { return Err(Fault::from("stdio-example-tool-mismatch")); }
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision };
         let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, svgBasicEditor_command_id, STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, svgBasicEditor_retained_reduce, svgBasicEditor_retained_extent)))?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
     fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation))
@@ -144,6 +162,7 @@ impl ArtifactEditor for SvgBasicEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
+            SvgBasicEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             SvgBasicEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svgBasicEditor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)],
                 description: Some(format!("Load example {example_id}")),
@@ -156,24 +175,39 @@ impl ArtifactEditor for SvgBasicEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.svg@1.1/basic#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Editor
 
+
+impl editing::SnapshotEditingEditor for SvgBasicEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
+        match command { SvgBasicEditCommand::EditSnapshot { event } => Some(event), _ => None }
+    }
+    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot }))
+    }
+}
+
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_svg_basic_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(SVG_BASIC_DIALECT).document(["semio", "svg"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(SVG_BASIC_DIALECT).document(["semio", "svg"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        ;
+    editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

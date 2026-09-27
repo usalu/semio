@@ -1,0 +1,193 @@
+{
+  "cases": [
+    {
+      "name": "first-view-waits-for-example",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "settle",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        },
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        }
+      ]
+    },
+    {
+      "name": "replacement-ignores-old-completion",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "render",
+          "instance": "draw:18",
+          "enabled": true,
+          "ready": false,
+          "starts": 2
+        },
+        {
+          "event": "settle",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 2
+        },
+        {
+          "event": "settle",
+          "instance": "draw:18",
+          "enabled": true,
+          "ready": true,
+          "starts": 2
+        }
+      ]
+    },
+    {
+      "name": "host-mode-needs-no-example",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": false,
+          "ready": true,
+          "starts": 0
+        }
+      ]
+    },
+    {
+      "name": "terminal-refusal-releases-initial-view",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "reject",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        }
+      ]
+    },
+    {
+      "name": "new-session-loads-once",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "settle",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        },
+        {
+          "event": "render",
+          "instance": "draw:18",
+          "enabled": true,
+          "ready": false,
+          "starts": 2
+        },
+        {
+          "event": "settle",
+          "instance": "draw:18",
+          "enabled": true,
+          "ready": true,
+          "starts": 2
+        }
+      ]
+    },
+    {
+      "name": "same-number-another-plugin-needs-initialization",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "settle",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        },
+        {
+          "event": "render",
+          "instance": "raster:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 2
+        },
+        {
+          "event": "settle",
+          "instance": "raster:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 2
+        }
+      ]
+    },
+    {
+      "name": "completed-example-waits-for-canvas-publication",
+      "steps": [
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "complete",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "render",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": false,
+          "starts": 1
+        },
+        {
+          "event": "publish",
+          "instance": "draw:17",
+          "enabled": true,
+          "ready": true,
+          "starts": 1
+        }
+      ]
+    }
+  ]
+}

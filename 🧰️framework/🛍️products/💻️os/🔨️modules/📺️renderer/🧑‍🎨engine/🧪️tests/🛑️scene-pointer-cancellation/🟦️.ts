@@ -28,11 +28,20 @@ describe("scene pointer cancellation contract", () => {
     expect(validate({ ...fixture, cases: fixture.cases.map((entry) => (entry.family === "ink" ? { ...entry, reactStatus: "invented" } : entry)) })).toBe(false);
   });
 
-  it("pins discard versus TiledMap navigation commit without inventing React support", () => {
+  it("pins discard, retained Ink events, and TiledMap navigation without inventing React support", () => {
     expect(fixture.cases.map(({ family }) => family)).toEqual(["nodeGraph", "board2d", "ink", "tiledMap", "paint2d", "textEditor"]);
     const tiledMap = fixture.cases.find(({ family }) => family === "tiledMap")!;
     expect(tiledMap).toMatchObject({ reactStatus: "reference", terminal: "commit-navigation", invokeNormalPointerUp: true, publishOnCancel: ["camera"] });
-    for (const entry of fixture.cases.filter(({ family }) => family !== "tiledMap")) {
+    const ink = fixture.cases.find(({ family }) => family === "ink")!;
+    expect(ink).toMatchObject({
+      reactStatus: "reference",
+      terminal: "retain-accepted-events",
+      invokeNormalPointerUp: false,
+      preservePublished: ["selection", "camera", "gesture-begin", "gesture-live"],
+      publishOnCancel: [],
+      blockAfterCancel: ["gesture-live", "gesture-commit"],
+    });
+    for (const entry of fixture.cases.filter(({ family }) => family !== "tiledMap" && family !== "ink")) {
       expect(entry.terminal, entry.family).toBe("discard");
       expect(entry.invokeNormalPointerUp, entry.family).toBe(false);
       expect(entry.publishOnCancel, entry.family).toEqual([]);

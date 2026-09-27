@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeBuildi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change building-category", "building-category ändern")
+        protocol::LocalizedLabel::native("Change building category", "Gebäudekategorie ändern")
     }
 }

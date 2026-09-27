@@ -478,7 +478,7 @@ pub struct ComponentCodecRow {
     pub pack_schema_hash: String,
 }
 
-/// 🪪️ The exact guest fault `plugin_artifact_codec_app` (`🔌️plugin/🦀️.rs`) answers when no app of the bundle
+/// 🪪️ The exact guest fault `plugin_artifact_codec` (`🔌️plugin/🦀️.rs`) answers when no app of the bundle
 /// owns a document schema: a kind a package DECLARES (an input it reads, a companion it lists) without owning its
 /// codec. The emitter reports such a kind as unowned instead of failing, because the codec belongs to another package.
 pub const UNOWNED_ARTIFACT_CODEC_SCHEMA: &str = "artifact codec schema is owned by no app of this bundle";
@@ -497,7 +497,7 @@ pub struct ComponentCodecRows {
 ///
 /// `pairs` are `<artifact-kind>=<document-schema>` as the package's own compiled descriptor spells
 /// them (`ArtifactKindSpec { id, schema }`). The component is asked by SCHEMA — the primary key
-/// `plugin_artifact_codec_app` resolves on, and the exact key the hub's own
+/// `plugin_artifact_codec` resolves on, and the exact key the hub's own
 /// `VerifiedTrustedCatalog` pin (`codec_pack_schema_hash(&compiled, &expected.artifact_schema, …)`)
 /// uses — so this probe walks the identical guest path the server will, and a package that answers
 /// here is a package the server can pin. The kind travels in the row as the catalog's own kind id.

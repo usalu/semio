@@ -36,7 +36,7 @@ fn representative_raster_document() -> RasterSnapshot {
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
-                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None }),
+                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None, image_key:Some("asset-1".into()), transform:RasterTransform {x:-4.0,y:2.0,..RasterTransform::default()} }),
                 width: Some(256),
                 height: Some(256),
                 image_key: Some("asset-1".into()),

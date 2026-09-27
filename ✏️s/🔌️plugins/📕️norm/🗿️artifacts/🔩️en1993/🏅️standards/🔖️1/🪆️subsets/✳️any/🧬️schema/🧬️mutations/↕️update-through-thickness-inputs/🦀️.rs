@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateThroughThi
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert section {}", self.section.id),
-            &format!("Querschnitt setzen {}", self.section.id),
+            &format!("Update section {}", self.section.id),
+            &format!("Querschnitt {} aktualisieren", self.section.id),
         )
     }
     fn target(&self) -> Vec<String> {

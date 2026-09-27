@@ -2573,25 +2573,27 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 🐘️ The directory backends' LIVE lanes: the `postgres` and `neo4j` laws against real servers, plus
- * the backend-neutral share-scope corpus on all three. Every fixture in
- * `📇️directory/🐘️postgres/🧪️tests/` and `📇️directory/🌐️neo4j/🧪️tests/` starts its OWN disposable
- * `docker run --detach --rm` container on an ephemeral port, so the only prerequisite is a running
- * Docker daemon — there is no URL to configure and `🔣️db2-compose.yaml` is NOT needed for this verb.
- * Without a daemon the lanes panic in their fixture rather than skipping, which is why this is a
- * verb of its own and not part of `test`. A leading `postgres`/`neo4j`/`corpus` segment narrows it. */
+/** 🐘️ The directory backends' LIVE lanes: the `postgres` and `neo4j` laws of `directory::postgres` / `directory::neo4j`
+ * (incl. the backend-neutral share-scope and space-administration corpora and the DB3 document-storage law) against the ONE
+ * shared development server claimed by `os-hub-ts backend run <postgres|neo4j> -- …` — each postgres law in a database
+ * of its own on the claim, the neo4j laws one at a time over the claim's emptied graph (`db_storage::claimed_backend`).
+ * They are `#[ignore]`d outside a claim and never start a server of their own (preamble rule 22).
+ * `directory-live-lanes [postgres|neo4j]`: without a lane, every lane whose claim environment is present. */
+const DIRECTORY_LIVE_LANES: Readonly<Record<string, Readonly<{ filter: string; claimed: string; threads: number }>>> = {
+  postgres: { filter: "directory::postgres", claimed: "OS_HUB_DATABASE_URL", threads: 2 },
+  neo4j: { filter: "directory::neo4j", claimed: "OS_HUB_NEO4J_URI", threads: 1 },
+};
+
 class DirectoryLiveLanesScript extends BundleScript {
   run(segments: string[]): void {
-    const lane = segments[0] ?? "all";
-    if (segments.length > 1 || !["all", "postgres", "neo4j", "corpus"].includes(lane)) throw new Error("directory-live-lanes accepts all, postgres, neo4j or corpus");
-    // 🧵️ `directory::postgres` also carries the DB3 document-storage law: a `db::Database` over the
-    // same live PostgreSQL, opened through the WorkerPool I/O lane, which aborts the process if the
-    // external-driver runtime seam is bypassed.
-    const probe = runProbe("docker", ["info", "--format", "{{.ServerVersion}}"], { cwd: this.repoRoot });
-    if (probe.status !== 0) throw new Error("directory-live-lanes needs a running Docker daemon (start Docker Desktop, then retry); every lane fixture starts its own postgres:17-alpine / neo4j:5-community container");
-    const filters = lane === "all" ? ["directory::postgres", "directory::neo4j", "corpus_v1_holds_on"] : lane === "corpus" ? ["corpus_v1_holds_on", "read_surface_v1_holds_on"] : ["directory::" + lane];
-    for (const filter of filters) {
-      runCargo(["test", "--manifest-path", "Cargo.toml", "--no-default-features", "--features", "sqlite,postgres,neo4j", "--lib", filter, "--", "--test-threads=2"], this.root);
+    const lanes = segments.length ? segments : Object.keys(DIRECTORY_LIVE_LANES).filter((name) => process.env[DIRECTORY_LIVE_LANES[name]!.claimed]);
+    const unknown = lanes.filter((name) => !(name in DIRECTORY_LIVE_LANES));
+    if (unknown.length || lanes.length === 0) throw new Error(`directory-live-lanes accepts ${Object.keys(DIRECTORY_LIVE_LANES).join(" | ")} and runs only under a claim: \`os-hub-ts backend run <postgres|neo4j> -- …\`${unknown.length ? `, got ${unknown.join(",")}` : ""}`);
+    const unclaimed = lanes.filter((name) => !process.env[DIRECTORY_LIVE_LANES[name]!.claimed]);
+    if (unclaimed.length) throw new Error(`directory-live-lanes ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
+    for (const lane of lanes) {
+      const { filter, threads } = DIRECTORY_LIVE_LANES[lane]!;
+      runCargo(["test", "--manifest-path", "Cargo.toml", "--no-default-features", "--features", "sqlite,postgres,neo4j", "--lib", filter, "--", "--include-ignored", `--test-threads=${threads}`], this.root);
     }
   }
 }
@@ -6347,6 +6349,8 @@ async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
   text(command.actor);
   integer(command.dependencies.length);
   command.dependencies.forEach(text);
+  integer(0);
+  integer(0);
   text(command.diff.schema);
   bytes(Buffer.from(command.diff.payloadHex, "hex"));
   text(command.inverse.schema);
@@ -7696,16 +7700,22 @@ async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise
   if (fixture.schema !== "semio.hub.gis-native-provider-selection/v1" || fixture.cases.length !== 8 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("GIS provider selection envelope differs");
   const receipts = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), "utf8"));
   if (fixture.packageVersion !== receipts.packageVersion || fixture.codecCount !== receipts.receipts.length) throw new Error("GIS selection differs from the package-owned closure");
-  let accepted = 0;
+  let exact = 0;
+  let unlinkedAccepted = 0;
   for (const row of fixture.cases) {
     if (!admitsSelection(row)) throw new Error(`GIS provider selection case violates its owning scope contract: ${row.name}`);
     assertHubFixtureExpectation(`gis-native-provider-selection/${row.name}`, { stage: row.stage, result: row.accepted ? "accepted" : "rejected", code: row.code }, admitsSelection({ ...row, accepted: true }));
-    const result = row.pluginId === receipts.pluginId && row.packageId === receipts.packageId && row.version === receipts.packageVersion && !row.cancelled && row.nowMs < row.deadlineMs;
+    const inBounds = !row.cancelled && row.nowMs < row.deadlineMs;
+    const exactPackage = row.pluginId === receipts.pluginId && row.packageId === receipts.packageId && row.version === receipts.packageVersion;
+    const unlinked = row.pluginId !== receipts.pluginId && row.packageId !== receipts.packageId;
+    const result = inBounds && (exactPackage || unlinked);
     if (result !== row.accepted) throw new Error(`GIS native selection mismatch: ${row.name}`);
-    if (result) accepted++;
+    if (row.bindings !== (result && exactPackage ? receipts.receipts.length : 0)) throw new Error(`GIS native selection binding count mismatch: ${row.name}`);
+    if (result && exactPackage) exact++;
+    if (result && unlinked) unlinkedAccepted++;
   }
-  if (accepted !== 1) throw new Error("GIS provider corpus must admit exactly one selection");
-  console.log(`gis-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} scope-exports=1; no native or catalog activation claim`);
+  if (exact !== 1 || unlinkedAccepted !== 1) throw new Error("GIS provider corpus must admit exactly one linked selection and one unlinked package");
+  console.log(`gis-native-provider-selection-oracle: cases=${fixture.cases.length} exact=${exact} unlinked=${unlinkedAccepted} scope-exports=1; no native or catalog activation claim`);
 }
 
 /** 🪪️ Keeps descriptor SHA-256 authority distinct from component PackageRef BLAKE3. */
@@ -11033,6 +11043,7 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
     text(command.actor);
     parts.push(variable(command.dependencies.length));
     command.dependencies.forEach(text);
+    parts.push(variable(0), variable(0));
     text(command.diff.schema);
     field(Buffer.from(command.diff.payloadHex, "hex"));
     text(command.inverse.schema);
@@ -11078,6 +11089,7 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
       if (command.dependencies.includes(value)) throw new Error("duplicate");
       command.dependencies.push(value);
     }
+    if (integer() !== 0 || integer() !== 0) throw new Error("server-stamped command carries an observation or a target");
     command.diff = { schema: text(), payloadHex: field(limits.payloadBytes).toString("hex") };
     command.inverse = { schema: text(), payloadHex: field(limits.payloadBytes).toString("hex") };
     command.timestamp = { actor: integer(), physicalMs: integer(), logical: integer() };
@@ -11221,7 +11233,7 @@ async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void>
 }
 
 async function proveNativeDeficitFixture(repoRoot: string): Promise<void> {
-  const { toolJobCooperativeMaintenanceSelfTests } = await import(join(repoRoot, "📜️script.ts"));
+  const { toolJobCooperativeMaintenanceSelfTests } = await import(join(repoRoot, "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts"));
   const checks = toolJobCooperativeMaintenanceSelfTests();
   if (checks !== 8) throw new Error("deficit oracle must execute all six lanes and two hostile bounds");
   console.log(`native-deficit-oracle: lanes=6 maximum-rounds=8 checks=${checks}; shared independent oracle, cooperative host turns remain distinct`);

@@ -66,7 +66,7 @@
     "nonRunnableTurns": {
       "type": "array", "minItems": 2, "maxItems": 2,
       "prefixItems": [
-        { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "future-deadline" }, "requestFrame": { "const": true }, "continueFrame": { "const": false } } },
+        { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame", "nextDeadlineDelayMs"], "properties": { "owner": { "const": "future-deadline" }, "requestFrame": { "const": false }, "continueFrame": { "const": false }, "nextDeadlineDelayMs": { "type": "number", "minimum": 0 } } },
         { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "hub-status-external" }, "requestFrame": { "const": false }, "continueFrame": { "const": false } } }
       ],
       "items": false

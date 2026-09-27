@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloHydrau
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-silo-hydraulic-radius", "change-silo-hydraulic-radius")
+        protocol::LocalizedLabel::native("Change silo hydraulic radius", "Hydraulischen Radius des Silos ändern")
     }
 }
 //#endregion 🔖️Payload

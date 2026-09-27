@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedCon
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-construction-qk", "change-assumed-construction-qk")
+        protocol::LocalizedLabel::native("Change assumed construction load", "Angenommene Last im Bauzustand ändern")
     }
 }
 //#endregion 🔖️Payload

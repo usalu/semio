@@ -448,7 +448,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
             0,
             vec![AppCommand::TransactionPrepare {
                 txn_id: txn.clone(),
-                ops: PreparedOps { document: ops.document.clone(), config: Vec::new(), draft: Vec::new() },
+                ops: PreparedOps { document: ops.document.clone(), config: Vec::new(), draft: Vec::new(), children: ops.children.clone() },
                 label: "wr4 two-phase probe".to_string(),
                 origin: crate::actions::MutationOrigin::Agent { principal: "agent:two-phase-test".to_string(), invocation_id: "wr4-inv-1".to_string() },
             }],

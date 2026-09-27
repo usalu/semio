@@ -1,0 +1,193 @@
+{
+  "cases": [
+    {
+      "name": "Linked Image Mask",
+      "mask": {
+        "enabled": true,
+        "linked": true,
+        "invert": false,
+        "width": 3,
+        "height": 1,
+        "imageKey": "mask-alpha",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "name": "Unlinked Inverted Mask",
+      "mask": {
+        "enabled": true,
+        "linked": false,
+        "invert": true,
+        "width": 64,
+        "height": 32,
+        "imageKey": "mask-ä",
+        "transform": {
+          "x": -12,
+          "y": 7,
+          "scaleX": -1,
+          "scaleY": 2,
+          "rotation": 90
+        }
+      }
+    },
+    {
+      "name": "Constant Reveal Mask",
+      "mask": {
+        "enabled": false,
+        "linked": true,
+        "invert": false,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    }
+  ],
+  "invalidExtents": [
+    0,
+    -1,
+    16385,
+    1.5
+  ],
+  "maskImage": {
+    "width": 3,
+    "height": 1,
+    "pixels": [
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      128,
+      0,
+      0,
+      0,
+      255
+    ]
+  },
+  "compositing": [
+    {
+      "name": "Linked Mask",
+      "enabled": true,
+      "linked": true,
+      "invert": false,
+      "layerX": 1,
+      "maskX": 0,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        255,
+        128,
+        0
+      ]
+    },
+    {
+      "name": "Unlinked Mask",
+      "enabled": true,
+      "linked": false,
+      "invert": false,
+      "layerX": 1,
+      "maskX": 0,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        128,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Inverted Mask",
+      "enabled": true,
+      "linked": true,
+      "invert": true,
+      "layerX": 0,
+      "maskX": 0,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        0,
+        127,
+        255
+      ]
+    },
+    {
+      "name": "Disabled Mask",
+      "enabled": false,
+      "linked": true,
+      "invert": false,
+      "layerX": 0,
+      "maskX": 0,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "Group Mask After Compositing",
+      "enabled": true,
+      "linked": true,
+      "invert": false,
+      "layerX": 0,
+      "maskX": 0,
+      "group": true,
+      "opacity": 0.5,
+      "alpha": [
+        128,
+        64,
+        0
+      ]
+    },
+    {
+      "name": "Translated Mask",
+      "enabled": true,
+      "linked": true,
+      "invert": false,
+      "layerX": 0,
+      "maskX": 1,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        0,
+        255,
+        128
+      ]
+    },
+    {
+      "name": "Inverted Translated Mask",
+      "enabled": true,
+      "linked": true,
+      "invert": true,
+      "layerX": 0,
+      "maskX": 1,
+      "group": false,
+      "opacity": 1,
+      "alpha": [
+        255,
+        0,
+        127
+      ]
+    }
+  ],
+  "assetRetention": {
+    "imageKey": "shared-image",
+    "operation": {
+      "kind": "invert"
+    },
+    "expectedRemovedAssets": []
+  }
+}

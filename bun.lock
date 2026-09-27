@@ -106,10 +106,8 @@
     "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript": {
       "name": "@semio-tech/mathematical-js",
       "version": "0.1.0",
-      "dependencies": {
-        "ajv": "^8.20.0",
-      },
       "devDependencies": {
+        "ajv": "^8.20.0",
         "typescript": "^5.9.3",
       },
     },
@@ -301,10 +299,8 @@
     "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript": {
       "name": "@semio-tech/lowpoly-js",
       "version": "0.1.0",
-      "dependencies": {
-        "ajv": "^8.20.0",
-      },
       "devDependencies": {
+        "ajv": "^8.20.0",
         "typescript": "^5.9.3",
       },
     },
@@ -984,7 +980,6 @@
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@xyflow/react": "^12.10.0",
-        "dagre": "^0.8.5",
         "i18next": "^25.7.4",
         "pdfjs-dist": "^5.4.296",
         "react": "^19.2.3",
@@ -1122,11 +1117,9 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-mcp",
       "version": "0.1.0",
-      "dependencies": {
+      "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.30.0",
         "ajv": "^8.20.0",
-      },
-      "devDependencies": {
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },

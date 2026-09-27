@@ -1,3 +1,4 @@
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioBrepMutation facet mirror — see the `🦀️.rs` sibling for the real source of
 # truth. SMO's approved 13-verb brep vocabulary; `create-loop`/`delete-loop` deliberately absent.
 
@@ -15,6 +16,7 @@ enum BrepMutationKind {
   REPLACE_CURVE
   REPLACE_SURFACE
   MOVE_VERTEX
+  SET_SNAPSHOT
 }
 
 # Flattening keeps fields usable across all 13 variants, so GraphQL nullability alone cannot
@@ -40,4 +42,5 @@ type SemioBrepMutation {
   faces: [BrepShellFace!]
   shells: [BrepSolidShell!]
   tol: Float
+  snapshot: SemioBrepSnapshot
 }

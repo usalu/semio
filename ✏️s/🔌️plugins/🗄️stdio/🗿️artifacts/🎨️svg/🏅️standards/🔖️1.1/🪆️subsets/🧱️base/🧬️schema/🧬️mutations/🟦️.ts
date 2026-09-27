@@ -4,6 +4,7 @@
  * NOT the kebab-case `semanticKind` slugs this previously used for the tag value (confirmed by each
  * leaf's own `🔣️.json` manifest, which separates `aggregateVariant: "SetDeclaration"`
  * from `semanticKind: "set-declaration"` / `textOpcode`). */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SetDeclarationPayload } from './📣️set-declaration/🟦️.ts';
 import type { SetDoctypePayload } from './📜️set-doctype/🟦️.ts';
 import type { InsertElementPayload } from './📥️insert-element/🟦️.ts';
@@ -22,4 +23,5 @@ export type SvgMutation =
   | { readonly mutation: 'setAttribute'; readonly payload: { readonly phase: 'apply'; readonly value: SetAttributePayload } }
   | { readonly mutation: 'setText'; readonly payload: { readonly phase: 'apply'; readonly value: SetTextPayload } }
   | { readonly mutation: 'setViewBox'; readonly payload: { readonly phase: 'apply'; readonly value: SetViewBoxPayload } }
-  | { readonly mutation: 'setTransform'; readonly payload: { readonly phase: 'apply'; readonly value: SetTransformPayload } };
+  | { readonly mutation: 'setTransform'; readonly payload: { readonly phase: 'apply'; readonly value: SetTransformPayload } }
+  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot };

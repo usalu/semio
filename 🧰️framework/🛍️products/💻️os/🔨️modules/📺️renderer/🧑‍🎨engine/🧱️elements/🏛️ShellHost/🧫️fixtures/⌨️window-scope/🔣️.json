@@ -421,6 +421,32 @@
       "expectedWindowId": "left"
     }
   ],
+  "tabPresentation": [
+    {
+      "id": "orthographic-instance-overrides-kind-icon",
+      "kindIconId": "puzzle",
+      "templateId": "world-projection:{\"mode\":{\"kind\":\"orthographic\"},\"orientation\":{\"type\":\"cardinal\",\"view\":\"top\"}}",
+      "expectedIconId": "projection-orthographic"
+    },
+    {
+      "id": "three-point-instance-overrides-kind-icon",
+      "kindIconId": "puzzle",
+      "templateId": "world-projection:{\"mode\":{\"kind\":\"threePoint\",\"fov\":50},\"orientation\":{\"type\":\"free\"}}",
+      "expectedIconId": "projection-three-point"
+    },
+    {
+      "id": "ordinary-window-keeps-kind-icon",
+      "kindIconId": "app-window",
+      "templateId": null,
+      "expectedIconId": "app-window"
+    },
+    {
+      "id": "malformed-template-keeps-kind-icon",
+      "kindIconId": "puzzle",
+      "templateId": "world-projection:not-json",
+      "expectedIconId": "puzzle"
+    }
+  ],
   "unownedHint": [
     {
       "locale": "en",

@@ -8,6 +8,7 @@ import {
   HOST_TEMPORAL_TIME_OPTIONS,
   formatHostTemporalValuesV1,
   hostTemporalFormatReplyMatchesV1,
+  isHostTemporalIsoV1,
   type HostTemporalFormatReplyV1,
   type HostTemporalValueV1,
 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
@@ -31,7 +32,19 @@ function relativeOracle(date: Date, nowMs: number, locale: string): string {
   return new Intl.RelativeTimeFormat(locale, { numeric: "always" }).format(amount, unit);
 }
 
+function canonicalIsoOracle(value: string): boolean {
+  const structural = new RegExp(schema.$defs.CanonicalIso.pattern).exec(value);
+  if (!structural) return false;
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number) as [number, number, number];
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const monthDays = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > monthDays[month - 1]!) return false;
+  const time = /T(\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(value);
+  return !time || Number(time[1]) <= 23 && Number(time[2]) <= 59 && Number(time[3] ?? 0) <= 59 && Number(time[4] ?? 0) <= 23 && Number(time[5] ?? 0) <= 59;
+}
+
 function intlOracle(value: HostTemporalValueV1, nowMs: number, locale: string, timeZone: string): string {
+  if (value.source.kind === "iso" && !canonicalIsoOracle(value.source.iso)) return value.source.iso;
   const date = new Date(value.source.kind === "epochMs" ? value.source.timestampMs : value.source.iso);
   if (Number.isNaN(date.valueOf())) return value.source.kind === "iso" ? value.source.iso : "Invalid Date";
   if (value.format === "relative") return relativeOracle(date, nowMs, locale);
@@ -42,6 +55,14 @@ function intlOracle(value: HostTemporalValueV1, nowMs: number, locale: string, t
 describe("WGPU shared temporal host door", () => {
   it("matches browser Intl for EventFeed time and VFS date, datetime, relative, and invalid ISO values", () => {
     expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
+    for (const value of fixture.isoGrammar.valid) {
+      expect(canonicalIsoOracle(value)).toBe(true);
+      expect(isHostTemporalIsoV1(value)).toBe(true);
+    }
+    for (const value of fixture.isoGrammar.invalid) {
+      expect(canonicalIsoOracle(value)).toBe(false);
+      expect(isHostTemporalIsoV1(value)).toBe(false);
+    }
     for (const row of fixture.cases) {
       const request = { nowMs: row.nowMs, values: row.values as readonly HostTemporalValueV1[] };
       const reply = formatHostTemporalValuesV1(request, { profileRevision: 0, profileSignature: "" }, row.locales, row.timeZone);

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedBri
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-bridge-udl", "change-assumed-bridge-udl")
+        protocol::LocalizedLabel::native("Change assumed uniformly distributed traffic load", "Angenommene gleichmäßig verteilte Verkehrslast ändern")
     }
 }
 //#endregion 🔖️Payload

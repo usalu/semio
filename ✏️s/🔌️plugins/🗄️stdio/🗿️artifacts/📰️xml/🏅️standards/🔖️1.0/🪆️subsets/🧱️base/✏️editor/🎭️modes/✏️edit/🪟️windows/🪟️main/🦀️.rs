@@ -4,10 +4,10 @@
 //! `Text` nodes are real `set-node` edit targets (`XmlMutation::SetText`'s own documented scope);
 //! `Element`/`CData`/`Comment`/`ProcessingInstruction` nodes render read-only in this window.
 
-use crate::schema::snapshot::XmlNode;
+use crate::schema::snapshot::{xml_document_to_text, XmlNode};
 use crate::XmlSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -51,6 +51,20 @@ pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framew
         None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
     };
     TreeWindowKit::render_windowed(&TreeView { roots: vec![root] }, windows)
+}
+
+/// 📝️ Adds the natural XML source draft to the structured tree for editor hosts.
+pub fn render_editor(document: &XmlSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let tree = render(document, windows)?;
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor(
+        "stdio-xml-source",
+        xml_document_to_text(&document.doc),
+        "xml",
+        "set-node",
+        XML_ROOT_NODE_ID,
+        locale,
+        tree,
+    )
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

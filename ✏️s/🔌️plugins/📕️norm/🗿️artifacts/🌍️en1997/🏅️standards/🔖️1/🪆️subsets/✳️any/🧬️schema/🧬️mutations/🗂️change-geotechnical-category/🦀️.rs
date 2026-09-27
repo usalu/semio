@@ -24,6 +24,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeGeotechnic
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-geotechnical-category", "change-geotechnical-category")
+        protocol::LocalizedLabel::native("Change geotechnical category", "Geotechnische Kategorie ändern")
     }
 }

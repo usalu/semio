@@ -27,7 +27,15 @@ async fn grid_row_offsets_by_one_when_has_header() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = CsvEditorCommand::SetCell { row: 2, column: 5, value: "a value".into() };
+    let command = CsvEditorCommand::SetCell { row: 2, column: 5, value: "a \\s value %20\nGrüße 🌍".into() };
+    let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
+    let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
+    assert_eq!(parsed, command);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn op_text_roundtrip_preserves_example_ids_without_escape_reinterpretation() {
+    let command = CsvEditorCommand::SetActiveExample { example_id: "literal\\s%20\n日本語".into() };
     let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);

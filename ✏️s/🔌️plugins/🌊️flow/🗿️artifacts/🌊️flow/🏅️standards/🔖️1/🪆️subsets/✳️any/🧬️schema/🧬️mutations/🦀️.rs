@@ -118,18 +118,6 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
 /// enum. The framework's own diffing helper (`semio_framework_artifact_flow_flow::flow_host_snapshot_operations`) never emits
 /// `ReplaceFlowHostSnapshot` (only the add/remove/move/change leaves), so this arm is unreachable on the
 /// live host-bridge path and only matters for a hand-authored/decoded `flow.op` line.
-/// ✏️ Runs a stateful host mutation and diffs the result back into granular `FlowMutation`s — pure
-/// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
-/// Returns an empty vec when the two fixtures are identical, or when the framework diff itself fails.
-pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
-    let (before, after) = (before.to_host_snapshot(), after.to_host_snapshot());
-    let operations = semio_framework_artifact_flow_flow::flow_host_snapshot_operations(&before, &after).unwrap_or_default();
-    // 🧹️ Both projections own a layout `OrderedMap` root that refuses a bare drop.
-    before.retire_cold();
-    after.retire_cold();
-    operations.into_iter().filter_map(from_framework_mutation).collect()
-}
-
 pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::FlowMutation) -> Option<FlowMutation> {
     Some(match mutation {
         semio_framework_artifact_flow_flow::FlowMutation::AddWidget(payload) => FlowMutation::CreateWidget(super::create_widget::CreateWidget { index: payload.index as usize, widget: payload.widget }),

@@ -14,6 +14,7 @@ use crate::wgpu::widgets::{
     WidgetInteractionMaps, WidgetNode,
 };
 use crate::wgpu::Label;
+use crate::wgpu::TOOLTIP_DWELL_SECONDS;
 use std::collections::HashMap as StdHashMap;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision};
 
@@ -39,11 +40,7 @@ fn test_layout_pool() -> semio_framework_async::WorkerPool {
 }
 
 fn scene_lifetime_document(window_id: &str, generation: u64, scene: bool) -> UiDocumentTree {
-    let component = if scene {
-        serde_json::json!({ "type": "surface", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [] } })
-    } else {
-        serde_json::json!({ "type": "container" })
-    };
+    let component = if scene { serde_json::json!({ "type": "surface", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [] } }) } else { serde_json::json!({ "type": "container" }) };
     let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 1,
         "key": "scene-lifetime/root",
@@ -55,15 +52,8 @@ fn scene_lifetime_document(window_id: &str, generation: u64, scene: bool) -> UiD
         "children": []
     }))
     .expect("scene lifetime record");
-    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
-        generation,
-        surface: SurfaceId::try_from(window_id).expect("scene lifetime surface"),
-        revision: UiRevision(generation),
-        root: UiNodeId(1),
-        layout_epoch: generation,
-        node_count: 1,
-    })
-    .expect("scene lifetime document");
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation, surface: SurfaceId::try_from(window_id).expect("scene lifetime surface"), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: generation, node_count: 1 })
+        .expect("scene lifetime document");
     document.try_upsert_record(record).expect("scene lifetime record admits");
     document
 }
@@ -92,16 +82,8 @@ fn captured_slider_document(window_id: &str, generation: u64, value: f64, childr
     .expect("captured slider document");
     document.try_upsert_record(root).expect("captured slider root admits");
     for id in children {
-        let component = if *id == 4 {
-            serde_json::json!({ "type": "slider", "value": value, "min": 0, "max": 10, "step": 1 })
-        } else {
-            serde_json::json!({ "type": "container" })
-        };
-        let bindings = if *id == 4 {
-            serde_json::json!([{ "trigger": "change", "action": { "scope": "fixture", "name": "setValue", "version": 1 } }])
-        } else {
-            serde_json::json!([])
-        };
+        let component = if *id == 4 { serde_json::json!({ "type": "slider", "value": value, "min": 0, "max": 10, "step": 1 }) } else { serde_json::json!({ "type": "container" }) };
+        let bindings = if *id == 4 { serde_json::json!([{ "trigger": "change", "action": { "scope": "fixture", "name": "setValue", "version": 1 } }]) } else { serde_json::json!([]) };
         let mut record: UiNodeRecord = serde_json::from_value(serde_json::json!({
             "id": id,
             "key": format!("captured-slider/{id}"),
@@ -118,6 +100,82 @@ fn captured_slider_document(window_id: &str, generation: u64, value: f64, childr
         document.try_upsert_record(record).expect("captured slider child admits");
     }
     document
+}
+
+fn held_stepper_document(window_id: &str, generation: u64, hold: &serde_json::Value) -> UiDocumentTree {
+    let mut root: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1,
+        "key": "held-stepper/root",
+        "component": { "type": "container" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": [2]
+    }))
+    .expect("held stepper root");
+    root.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Horizontal, grow: true, ..Default::default() });
+    let mut stepper: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 2,
+        "key": "held-stepper/control",
+        "component": { "type": "numberStepper", "value": hold["start"], "step": 1, "uniform": true, "min": 0, "max": 5 },
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Held value" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "fixture", "name": "setHeldValue", "version": 1 } }],
+        "children": []
+    }))
+    .expect("held stepper control");
+    stepper.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { grow: true, ..Default::default() });
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation, surface: SurfaceId::try_from(window_id).expect("held stepper surface"), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: generation, node_count: 2 })
+        .expect("held stepper document");
+    document.try_upsert_record(root).expect("held stepper root admits");
+    document.try_upsert_record(stepper).expect("held stepper control admits");
+    document
+}
+
+fn tooltip_document(window_id: &str, generation: u64, label: &str, shortcut: &str) -> UiDocumentTree {
+    let records = serde_json::json!([
+        {
+            "id": 1,
+            "key": "tooltip/root",
+            "component": { "type": "container" },
+            "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+            "style": {},
+            "activity": "idle",
+            "accessibility": {},
+            "children": [2]
+        },
+        {
+            "id": 2,
+            "key": "tooltip/close",
+            "component": { "type": "button", "icon": "x", "label": label },
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": { "label": label, "shortcut": shortcut },
+            "bindings": [{ "trigger": "activate", "action": { "scope": "fixture", "name": "close", "version": 1 } }],
+            "children": []
+        }
+    ]);
+    let records = records.as_array().expect("tooltip records");
+    let mut document =
+        UiDocumentTree::new(UiDocumentLeaseHeader { generation, surface: SurfaceId::try_from(window_id).expect("tooltip surface"), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: generation, node_count: records.len() })
+            .expect("tooltip document");
+    for record in records {
+        document.try_upsert_record(serde_json::from_value(record.clone()).expect("tooltip record")).expect("tooltip record admits");
+    }
+    document
+}
+
+fn place_tooltip_anchor(tree: &mut UiTree, anchor: [f32; 4], viewport: [f32; 2]) {
+    let root = tree.document_node(UiNodeId(1)).expect("tooltip root");
+    let control = tree.document_node(UiNodeId(2)).expect("tooltip control");
+    let generation = tree.accepted_layout_generation().saturating_add(1);
+    assert!(tree.write_inactive_layout(root, generation, crate::wgpu::tree::AcceptedLayout { x: 0.0, y: 0.0, width: viewport[0], height: viewport[1], inline_suffix_width: 0.0 }));
+    assert!(tree.write_inactive_layout(control, generation, crate::wgpu::tree::AcceptedLayout { x: anchor[0], y: anchor[1], width: anchor[2], height: anchor[3], inline_suffix_width: 0.0 },));
+    tree.commit_inactive_layout(generation);
 }
 
 fn reconcile_scene_lifetime_candidate(ui: &mut Ui, window_id: &str, generation: u64, scene: bool) {
@@ -256,6 +314,307 @@ fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() 
     ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerMove { x: 120.0, y: 20.0, modifiers: Default::default() });
     ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerUp { x: 120.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_none());
+}
+
+#[test]
+fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_repeat_changes_state() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("number stepper fixture");
+    let hold = &fixture["hold"];
+    let window_id = "clock-held-stepper";
+    let generation = 1;
+    let mut ui = Ui::new();
+    assert!(ui.publish_document(window_id, held_stepper_document(window_id, generation, hold)));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 160.0, 24.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 70);
+    let surface = ui.surface_token(window_id).expect("clock surface token");
+    assert_eq!(ui.clock_surface_at(0), Some((window_id, surface)));
+    let clock_origin = hold["clockOriginSeconds"].as_f64().unwrap();
+    assert!(!ui.advance_window_clock(window_id, clock_origin).unwrap().interaction_changed);
+
+    let presented = ui.windows.get(window_id).and_then(|window| window.presented_tree.document_node(UiNodeId(2))).expect("presented stepper");
+    let (x, y, width, height) = ui.windows.get(window_id).and_then(|window| window.presented_tree.mounted_layout(presented)).expect("presented stepper bounds");
+    ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerDown { x: x + width - height * 0.5, y: y + height * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
+    let tooltip_deadline = clock_origin + f64::from(TOOLTIP_DWELL_SECONDS);
+    let first_deadline = clock_origin + (hold["delayMs"].as_f64().unwrap() + hold["intervalMs"].as_f64().unwrap()) / 1000.0;
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(tooltip_deadline))));
+    let accepted = vec![(window_id.to_string(), surface)];
+    assert_eq!(ui.surfaces_next_clock_deadline(&accepted), Some(tooltip_deadline));
+
+    let revealed = ui.advance_window_clock(window_id, tooltip_deadline).expect("tooltip clock step");
+    assert!(revealed.interaction_changed);
+    assert_eq!(revealed.tooltip, TooltipStep::Reveal(presented));
+    assert_eq!(revealed.next_deadline, Some(first_deadline));
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    assert!(ui.seal_presented_input_candidate(71, &[window_id.to_string()]));
+    let noop = ui.advance_window_clock(window_id, tooltip_deadline + (first_deadline - tooltip_deadline) * 0.5).expect("clock step");
+    assert_eq!((noop.surface, noop.interaction_changed, noop.tooltip, noop.next_deadline), (surface, false, TooltipStep::Idle, Some(first_deadline)));
+    assert!(ui.candidate_is_sealed_for(window_id, 71), "pure elapsed time does not starve an already sealed candidate");
+
+    let repeated = ui.advance_window_clock(window_id, first_deadline).expect("repeat step");
+    assert!(repeated.interaction_changed);
+    assert_eq!(repeated.tooltip, TooltipStep::Idle);
+    assert!(!ui.candidate_is_sealed_for(window_id, 71), "the due repeat changes presented state and invalidates the stale candidate exactly once");
+    let live_text = ui.windows.get(window_id).and_then(|window| window.presented_tree.node(presented)).and_then(|node| node.state.edit.as_ref()).map(|edit| edit.text.as_str());
+    let expected = hold["atFirstInterval"].as_i64().unwrap().to_string();
+    assert_eq!(live_text, Some(expected.as_str()));
+
+    assert!(ui.discard_presented_input_candidate(71));
+    assert!(ui.seal_presented_input_candidate(72, &[]));
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(first_deadline + hold["intervalMs"].as_f64().unwrap() / 1000.0))), "sealing an unaccepted hidden roster cannot mutate the still-visible accepted interaction");
+    assert_eq!(ui.surfaces_next_clock_deadline(&accepted), Some(first_deadline + hold["intervalMs"].as_f64().unwrap() / 1000.0));
+    assert!(ui.discard_presented_input_candidate(72));
+    assert!(ui.window_next_clock_deadline(window_id).is_some_and(|(_, deadline)| deadline.is_some()), "discarding the hidden candidate preserves the accepted hold");
+    assert!(ui.surfaces_next_clock_deadline(&accepted).is_some(), "discard preserves the accepted roster deadline");
+    let window = ui.windows.get_mut(window_id).expect("clock window");
+    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: "Increase".into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+    assert!(ui.seal_presented_input_candidate(73, &[]));
+    assert!(ui.acknowledge_presented_input(73), "accepting an empty visibility roster retires hidden clock owners");
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, None)));
+    assert_eq!(ui.surfaces_next_clock_deadline(&accepted), None);
+    assert!(ui.windows.get(window_id).expect("hidden clock window").presented_tooltip.is_none(), "hidden acceptance clears the presented tooltip with its clock state");
+    assert!(!ui.advance_window_clock(window_id, clock_origin + 1_000_000.0).unwrap().interaction_changed, "a hidden held press cannot catch up when the surface becomes clocked again");
+}
+
+#[test]
+fn a_late_hidden_visibility_ack_cannot_suspend_a_reused_surface_id() {
+    let window_id = "reused-clock-surface";
+    let mut ui = Ui::new();
+    ui.apply_tree(window_id, &stack_ui(Vec::new()));
+    let retired = ui.surface_token(window_id).expect("first surface token");
+    assert!(ui.seal_presented_input_candidate(80, &[]));
+    close_surface_to_terminal(&mut ui, retired);
+
+    let stepper =
+        UiNode::NumberStepper(UiNumberStepperNode { id: "reused.stepper".into(), value: 2.0, step: 1.0, uniform: true, min: Some(0.0), max: Some(5.0), on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None });
+    ui.apply_tree(window_id, &stack_ui(vec![stepper]));
+    let successor = ui.surface_token(window_id).expect("successor surface token");
+    assert_ne!(successor, retired);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 160.0, 24.0, &mut atlas);
+    let origin = 31_536_000.123_456;
+    assert!(!ui.advance_window_clock(window_id, origin).unwrap().interaction_changed);
+    let stepper = ui.windows.get(window_id).and_then(|window| window.tree.root).and_then(|root| ui.windows.get(window_id)?.tree.node(root)?.first_child).expect("successor stepper");
+    let bounds = ui.windows.get(window_id).and_then(|window| window.tree.absolute_rect(stepper)).expect("successor bounds");
+    ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerDown { x: bounds.x + bounds.w - 1.0, y: bounds.y + bounds.h * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
+    let deadline = ui.window_next_clock_deadline(window_id).expect("successor clock deadline");
+    assert!(deadline.1.is_some());
+    assert_eq!(ui.surfaces_next_clock_deadline(&[(window_id.to_string(), retired)]), None, "an accepted roster carrying the retired token cannot adopt its id-reusing successor's deadline");
+    assert_eq!(ui.surfaces_next_clock_deadline(&[(window_id.to_string(), successor)]), deadline.1);
+
+    assert!(ui.acknowledge_presented_input(80));
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some(deadline), "the old token-qualified receipt cannot suspend the successor that reused its id and slot");
+}
+
+#[test]
+fn accepted_input_caret_starts_solid_blinks_resets_and_cancels_from_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    let half_period = fixture["halfPeriodMs"].as_f64().expect("half period") / 1_000.0;
+    assert_eq!(half_period, crate::wgpu::events::CARET_BLINK_SECONDS);
+    for (case_index, case) in fixture["cases"].as_array().expect("caret cases").iter().enumerate() {
+        let window_id = format!("caret-cadence-{case_index}");
+        let mut ui = Ui::new();
+        publish_blur_commit_input_document(&mut ui, &window_id);
+        let mut atlas = FontAtlas::builtin();
+        drive_layout(&mut ui, &window_id, 180.0, 28.0, &mut atlas);
+        acknowledge_scene_lifetime_candidate(&mut ui, &window_id, 200 + case_index as u64);
+        let generation = ui.surface_generation(&window_id).expect("accepted generation");
+        let surface = ui.surface_token(&window_id).expect("accepted surface");
+        let input = ui.windows.get(&window_id).and_then(|window| window.presented_tree.document_node(UiNodeId(2))).expect("accepted input");
+        let mut now = 31_536_000.125;
+        assert!(!ui.advance_window_clock(&window_id, now).expect("clock origin").interaction_changed);
+
+        for step in case["steps"].as_array().expect("caret steps") {
+            now += step["advanceMs"].as_f64().expect("advance") / 1_000.0;
+            match step["event"].as_str().expect("event") {
+                "focus" => {
+                    ui.dispatch_accessibility_event(&window_id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Focus).expect("focus accepted");
+                }
+                "tick" => {
+                    ui.advance_window_clock(&window_id, now).expect("clock tick");
+                }
+                "edit" => {
+                    ui.advance_window_clock(&window_id, now).expect("edit clock stamp");
+                    ui.dispatch_event(&window_id, UiEvent::TextInput { text: "x".into() });
+                }
+                "blur" => {
+                    ui.dispatch_accessibility_event(&window_id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Blur).expect("blur accepted");
+                }
+                "hide" => {
+                    let witness = 300 + case_index as u64;
+                    assert!(ui.seal_presented_input_candidate(witness, &[]));
+                    assert!(ui.acknowledge_presented_input(witness));
+                }
+                event => panic!("unknown caret event {event}"),
+            }
+            let visible = ui.windows.get(&window_id).and_then(|window| window.presented_tree.node(input)).is_some_and(|node| node.state.caret_visible);
+            assert_eq!(visible, step["visible"].as_bool().expect("visible"), "{} {step:?}", case["id"]);
+            let armed = ui.surfaces_next_clock_deadline(&[(window_id.clone(), surface)]).is_some();
+            assert_eq!(armed, step["armed"].as_bool().expect("armed"), "{} {step:?}", case["id"]);
+        }
+    }
+}
+
+#[test]
+fn scene_caret_requires_exact_accepted_surface_and_document_identity() {
+    let window_id = "accepted-scene-caret";
+    let mut ui = Ui::new();
+    let component = serde_json::json!({ "type": "surface", "kind": "text-editor", "docSchema": "text-editor@1", "doc": { "bytes": [13,1,6,6,98,117,102,102,101,114,6,0] } });
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1, "key": "caret/editor", "component": component,
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "style": {}, "activity": "idle", "accessibility": {}, "children": []
+    }))
+    .expect("text editor scene record");
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from(window_id).expect("surface"), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 1, node_count: 1 }).expect("scene document");
+    document.try_upsert_record(record).expect("scene record admits");
+    assert!(ui.publish_document(window_id, document));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 180.0, 80.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 400);
+    let surface = ui.surface_token(window_id).expect("accepted surface");
+    let origin = 31_536_000.25;
+    let armed = ui.arm_presented_scene_caret(window_id, surface, UiNodeId(1), origin).expect("exact scene arms");
+    assert_eq!((armed.source, armed.visible), (UiCaretSource::Scene, true));
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(origin + crate::wgpu::events::CARET_BLINK_SECONDS))));
+    let blink = ui.advance_window_clock(window_id, origin + crate::wgpu::events::CARET_BLINK_SECONDS).expect("scene blink").caret.expect("scene directive");
+    assert_eq!((blink.surface, blink.document_id, blink.source, blink.visible), (surface, UiNodeId(1), UiCaretSource::Scene, false));
+    let cleared = ui.clear_presented_scene_caret(window_id, surface, UiNodeId(1)).expect("exact scene clears");
+    assert!(!cleared.visible);
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, None)));
+
+    close_surface_to_terminal(&mut ui, surface);
+    ui.apply_tree(window_id, &stack_ui(Vec::new()));
+    let successor = ui.surface_token(window_id).expect("successor surface");
+    assert_ne!(successor, surface);
+    assert!(ui.arm_presented_scene_caret(window_id, surface, UiNodeId(1), origin + 1.0).is_none(), "a retired exact token cannot arm its id-reusing successor");
+}
+
+#[test]
+fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_immediately() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let window_id = "retained-tooltip";
+    let generation = 1;
+    let label = fixture["text"]["label"].as_str().expect("tooltip label");
+    let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
+    let mut ui = Ui::new();
+    assert!(ui.publish_document(window_id, tooltip_document(window_id, generation, label, shortcut)));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 240.0, 180.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 90);
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    drive_layout(&mut ui, window_id, 240.0, 180.0, &mut atlas);
+
+    for placement in fixture["placements"].as_array().expect("tooltip placements") {
+        let numbers = |key: &str| -> Vec<f32> { placement[key].as_array().expect("placement numbers").iter().map(|value| value.as_f64().expect("number") as f32).collect() };
+        let anchor = numbers("anchor");
+        let content = numbers("content");
+        let viewport = numbers("viewport");
+        let window = ui.windows.get_mut(window_id).expect("tooltip window");
+        place_tooltip_anchor(&mut window.tree, [anchor[0], anchor[1], anchor[2], anchor[3]], [viewport[0], viewport[1]]);
+        let control = window.tree.document_node(UiNodeId(2)).expect("tooltip control");
+        let resolved = resolve_overlay_placement_side(&window.tree, OverlayAnchor::Node(control), (content[0], content[1]), (viewport[0], viewport[1]), OverlayKind::Tooltip.default_placement(), window.router.flow().inline);
+        assert!((resolved.x - placement["expected"]["left"].as_f64().expect("left") as f32).abs() < 0.01);
+        assert!((resolved.y - placement["expected"]["top"].as_f64().expect("top") as f32).abs() < 0.01);
+        let expected_side = placement["expected"]["side"].as_str().expect("side");
+        assert!(matches!((expected_side, resolved.side), ("top", crate::wgpu::events::OverlaySide::Top) | ("bottom", crate::wgpu::events::OverlaySide::Bottom)));
+    }
+
+    let placement = &fixture["placements"][0];
+    let anchor = placement["anchor"].as_array().expect("anchor");
+    let anchor = [anchor[0].as_f64().unwrap() as f32, anchor[1].as_f64().unwrap() as f32, anchor[2].as_f64().unwrap() as f32, anchor[3].as_f64().unwrap() as f32];
+    let window = ui.windows.get_mut(window_id).expect("tooltip window");
+    place_tooltip_anchor(&mut window.tree, anchor, [240.0, 180.0]);
+    place_tooltip_anchor(&mut window.presented_tree, anchor, [240.0, 180.0]);
+    let clock_origin = fixture["timing"]["clockOriginSeconds"].as_f64().expect("clock origin");
+    let dwell = fixture["timing"]["dwellMs"].as_f64().expect("dwell") / 1000.0;
+    assert_eq!(ui.advance_window_clock(window_id, clock_origin).expect("clock starts").tooltip, TooltipStep::Idle);
+    ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerMove { x: anchor[0] + anchor[2] * 0.5, y: anchor[1] + anchor[3] * 0.5, modifiers: Default::default() });
+    assert_eq!(ui.advance_window_clock(window_id, clock_origin + dwell - 0.001).expect("pre-dwell").tooltip, TooltipStep::Idle);
+    assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none());
+    assert!(matches!(ui.advance_window_clock(window_id, clock_origin + dwell).expect("dwell").tooltip, TooltipStep::Reveal(_)));
+    let expected_label = fixture["text"]["formatted"].as_str().expect("formatted label");
+    assert_eq!(ui.windows.get(window_id).and_then(|window| window.presented_tooltip.as_ref()).map(|tooltip| tooltip.label.as_str()), Some(expected_label));
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    let surface = ui.surface_token(window_id).expect("tooltip surface");
+    let theme = ui.theme;
+    let tooltip = retained_tooltip_paint(ui.windows.get_mut(window_id).expect("tooltip window"), surface, &mut atlas, &theme).expect("accepted tooltip paint");
+    let size = tooltip_surface_size(expected_label, &theme, &mut atlas);
+    assert!((tooltip.x + size.0 * 0.5 - (anchor[0] + anchor[2] * 0.5)).abs() < 0.01, "tooltip remains centered over its accepted anchor");
+    assert!((tooltip.y + size.1 + 8.0 - anchor[1]).abs() < 0.01, "tooltip uses React's top gap");
+    let mut tooltip_draw = DrawList::default();
+    paint_retained_tooltip(&mut tooltip_draw, &mut atlas, tooltip, (0.0, 0.0), &theme);
+    assert!(tooltip_draw.layers.iter().any(|layer| !layer.overlay_ui_instances.is_empty()), "the tooltip surface and text use the overlay route");
+    let mut frame_draw = DrawList::default();
+    let mut ready = false;
+    for _ in 0..262_144 {
+        match ui.frame_into_step::<RecordingSceneHost>(window_id, Rect::new(0.0, 0.0, 240.0, 180.0), &mut atlas, None, None, &mut frame_draw) {
+            UiFrameStep::Pending => {}
+            UiFrameStep::Ready => {
+                ready = true;
+                break;
+            }
+            step => panic!("tooltip frame answered {step:?}: {}", ui.paint_stall_census(window_id)),
+        }
+    }
+    assert!(ready, "tooltip frame completes");
+    assert!(frame_draw.layers.iter().any(|layer| !layer.overlay_ui_instances.is_empty()), "the production ladder composites the tooltip after retained content");
+
+    ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerMove { x: 0.0, y: 179.0, modifiers: Default::default() });
+    assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none(), "pointer leave dismisses without another clock tick");
+    let window = ui.windows.get_mut(window_id).expect("tooltip window");
+    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: expected_label.into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+    assert!(ui.begin_surface_close(surface));
+    assert!(ui.windows.get(window_id).expect("closing tooltip window").presented_tooltip.is_none(), "surface close retires the accepted tooltip record");
+}
+
+#[test]
+fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replacement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let window_id = "accepted-tooltip-text";
+    let label = fixture["text"]["label"].as_str().expect("tooltip label");
+    let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
+    let mut ui = Ui::new();
+    assert!(ui.publish_document(window_id, tooltip_document(window_id, 1, label, shortcut)));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 160.0, 120.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 91);
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    drive_layout(&mut ui, window_id, 160.0, 120.0, &mut atlas);
+    let window = ui.windows.get_mut(window_id).expect("tooltip window");
+    place_tooltip_anchor(&mut window.tree, [4.0, 4.0, 32.0, 20.0], [160.0, 120.0]);
+    place_tooltip_anchor(&mut window.presented_tree, [4.0, 4.0, 32.0, 20.0], [160.0, 120.0]);
+    let origin = fixture["timing"]["clockOriginSeconds"].as_f64().expect("clock origin");
+    let dwell = fixture["timing"]["dwellMs"].as_f64().expect("dwell") / 1000.0;
+    ui.advance_window_clock(window_id, origin);
+    ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerMove { x: 20.0, y: 14.0, modifiers: Default::default() });
+    assert!(matches!(ui.advance_window_clock(window_id, origin + dwell).expect("tooltip reveal").tooltip, TooltipStep::Reveal(_)));
+    let accepted = fixture["text"]["formatted"].as_str().expect("formatted tooltip");
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    assert!(ui.publish_document(window_id, tooltip_document(window_id, 2, "Fenster schließen", "Strg+W")));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 2);
+    place_tooltip_anchor(&mut ui.windows.get_mut(window_id).expect("tooltip window").tree, [4.0, 4.0, 32.0, 20.0], [160.0, 120.0]);
+    let surface = ui.surface_token(window_id).expect("tooltip surface");
+    let theme = ui.theme;
+    let candidate = retained_tooltip_paint(ui.windows.get_mut(window_id).expect("tooltip window"), surface, &mut atlas, &theme).expect("accepted text paints against candidate geometry");
+    assert_eq!(candidate.label, accepted, "an unaccepted candidate cannot leak replacement text");
+    assert!(ui.seal_presented_input_candidate(92, &[window_id.to_string()]));
+    assert!(ui.discard_presented_input_candidate(92));
+    assert_eq!(ui.windows.get(window_id).and_then(|window| window.presented_tooltip.as_ref()).map(|tooltip| tooltip.label.as_str()), Some(accepted), "candidate discard preserves the accepted tooltip");
+
+    assert!(ui.publish_document(window_id, tooltip_document(window_id, 3, "Fenster schließen", "Strg+W")));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 3);
+    place_tooltip_anchor(&mut ui.windows.get_mut(window_id).expect("tooltip window").tree, [4.0, 4.0, 32.0, 20.0], [160.0, 120.0]);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 93);
+    assert!(retained_tooltip_paint(ui.windows.get_mut(window_id).expect("tooltip window"), surface, &mut atlas, &theme).is_none());
+    assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none(), "accepting the replacement retires the old document label");
 }
 
 fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> crate::wgpu::tree::Node {
@@ -467,8 +826,8 @@ fn rect_matches(actual: [f32; 4], expected: Rect) -> bool {
 }
 
 /// ⚙️ The actual Puzzle3D Settings payload enters through `UiDocumentTree`, completes the
-/// production frame ladder, publishes all four controls and retains every stepper's two border boxes
-/// and three glyph runs. This is the app-level witness for the phase-0 ten-item chrome grant.
+/// production frame ladder, publishes all four controls and retains the clipped outer border,
+/// two dividers, catalog icons and value text.
 #[test]
 fn puzzle3d_settings_document_completes_retained_paint() {
     let law = puzzle3d_settings_law();
@@ -477,12 +836,13 @@ fn puzzle3d_settings_document_completes_retained_paint() {
     reconcile_puzzle3d_settings(&mut ui, window_id, &law);
 
     let mut atlas = FontAtlas::builtin();
+    let icons = crate::wgpu::draw::IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
     let body = Rect::new(0.0, 0.0, 360.0, 480.0);
     drive_layout(&mut ui, window_id, body.w, body.h, &mut atlas);
     let mut draw = DrawList::default();
     let mut ready = false;
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, &mut atlas, None, None, &mut draw) {
+        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, &mut atlas, Some(&icons), None, &mut draw) {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => {
                 ready = true;
@@ -510,21 +870,42 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         assert!(bounds.w > 0.0 && bounds.h > 0.0, "{key} has accepted layout");
         assert!(hits.iter().any(|hit| hit.control_id == key && hit.kind == HitKind::NumberStepper), "{key} publishes its retained hit");
 
-        let solids: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_SOLID && rect_inside(instance.rect, bounds)).collect();
-        assert_eq!(solids.len(), crate::wgpu::paint::RETAINED_NUMBER_STEPPER_CHROME_OUTPUT_ITEMS, "{key} retains exactly two five-quad control borders");
+        let clip = crate::wgpu::draw::ScissorRect::from_rect(bounds, body.h);
+        let clipped: Vec<_> = draw.layers.iter().filter(|layer| layer.scissor == Some(clip)).flat_map(|layer| layer.ui_instances.iter()).collect();
+        let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_SOLID).collect();
+        assert_eq!(solids.len(), 7, "{key} retains one five-quad border and two clipped dividers when neither side is hovered");
         assert!(solids.iter().any(|instance| rect_matches(instance.rect, bounds)), "{key} retains the outer background");
-        let value_segment = crate::wgpu::layout::number_stepper_segments(bounds)[1];
-        assert!(solids.iter().any(|instance| rect_matches(instance.rect, value_segment)), "{key} retains the nested value background");
+        let [minus, value_segment, plus] = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
+        assert!(!solids.iter().any(|instance| rect_matches(instance.rect, value_segment)), "{key} center is transparent and borderless");
+        let hair = ui.theme.stroke_hairline;
+        for divider in [Rect::new(minus.x + minus.w - hair, minus.y, hair, minus.h), Rect::new(plus.x, plus.y, hair, plus.h)] {
+            assert!(solids.iter().any(|instance| rect_matches(instance.rect, divider)), "{key} side divider follows its button edge");
+        }
+        let texture_instances: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_TEXTURED).collect();
+        assert_eq!(texture_instances.len(), 2, "{key} retains two catalog icons");
+        for (id, segment) in [("minus", minus), ("plus", plus)] {
+            let size = crate::wgpu::chrome::ICON_TINY;
+            let inset = if id == "minus" { -hair } else { hair };
+            let expected = Rect::new(segment.x + (segment.w - size + inset) * 0.5, segment.y + (segment.h - size) * 0.5, size, size);
+            assert!(texture_instances.iter().any(|instance| instance.uv_rect == icons.icon_uv(id).unwrap() && rect_matches(instance.rect, expected)), "{key} positions the {id} catalog icon");
+        }
 
         let glyphs: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_GLYPH && rect_inside(instance.rect, bounds)).collect();
-        let thirds = crate::wgpu::layout::number_stepper_segments(bounds);
-        let in_segment = |segment: Rect| glyphs.iter().filter(|instance| {
-            let centre = instance.rect[0] + instance.rect[2] * 0.5;
-            centre >= segment.x && centre <= segment.x + segment.w
-        }).count();
-        assert!(in_segment(thirds[0]) >= 1, "{key} retains the minus glyph run");
+        let expected_text = control["formatted"].as_str().unwrap();
+        assert_eq!(ui_contract::format_ui_number(stepper.value), expected_text);
+        let thirds = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
+        let in_segment = |segment: Rect| {
+            glyphs
+                .iter()
+                .filter(|instance| {
+                    let centre = instance.rect[0] + instance.rect[2] * 0.5;
+                    centre >= segment.x && centre <= segment.x + segment.w
+                })
+                .count()
+        };
+        assert_eq!(in_segment(thirds[0]), 0, "{key} minus comes from the icon atlas");
         assert!(in_segment(thirds[1]) >= control["formatted"].as_str().expect("formatted value").chars().count(), "{key} retains the formatted value glyph run");
-        assert!(in_segment(thirds[2]) >= 1, "{key} retains the plus glyph run");
+        assert_eq!(in_segment(thirds[2]), 0, "{key} plus comes from the icon atlas");
         eprintln!("[DEBUG] Puzzle3D Settings retained {key}: bounds={bounds:?} solids={} glyphs={}", solids.len(), glyphs.len());
     }
 }
@@ -542,11 +923,22 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
         let tree = ui.tree(window_id).expect("mounted tree");
         let id = explicit_node(tree, control["key"].as_str().expect("control key"));
         let bounds = tree.absolute_rect(id).expect("stepper bounds");
-        let segment = match gesture["segment"].as_str().unwrap() { "minus" => 0, "value" => 1, "plus" => 2, _ => unreachable!() };
-        let rect = crate::wgpu::layout::number_stepper_segments(bounds)[segment];
+        let segment = match gesture["segment"].as_str().unwrap() {
+            "minus" => 0,
+            "value" => 1,
+            "plus" => 2,
+            _ => unreachable!(),
+        };
+        let rect = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline)[segment];
         let (x, y) = (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5);
         let pressed = ui.dispatch_event(window_id, UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
-        let actions = pressed.iter().filter_map(|command| match command { UiCommand::App { intent, .. } => Some(intent.descriptor()), _ => None }).collect::<Vec<_>>();
+        let actions = pressed
+            .iter()
+            .filter_map(|command| match command {
+                UiCommand::App { intent, .. } => Some(intent.descriptor()),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
         assert_eq!(actions.len(), gesture["pressActions"].as_u64().unwrap() as usize, "{} commits on press", gesture["id"]);
         if let Some(action) = actions.first() {
             assert_eq!(action.action, control["action"].as_str().unwrap());
@@ -679,7 +1071,7 @@ fn surface_close_silently_discards_a_focused_blur_commit() {
     assert!(ui.try_admit_surface(id).is_err());
     assert!(ui.dispatch_accessibility_event(id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Blur).is_none());
     assert!(ui.dispatch_event(id, UiEvent::PointerCancel).is_empty());
-    assert!(ui.advance_clock(1000.0).is_empty());
+    assert!(ui.advance_window_clock(id, 1000.0).is_none());
     close_surface_to_terminal(&mut ui, token);
     assert_eq!(ui.drain_commands().len(), law["silentBlurCommit"]["actions"].as_u64().unwrap() as usize);
     assert_eq!(ui.window_ids().count(), law["closedSurfaces"].as_u64().unwrap() as usize);
@@ -695,7 +1087,13 @@ fn accessibility_blur_input_stages_values_and_commits_exactly_once_on_blur() {
     let value = ui.dispatch_accessibility_event(window_id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Value("Focus Flow".into())).expect("value");
     assert!(value.iter().all(|command| !matches!(command, UiCommand::App { .. })), "a blur-committing value remains a draft");
     let blur = ui.dispatch_accessibility_event(window_id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Blur).expect("blur");
-    let actions = blur.iter().filter_map(|command| match command { UiCommand::App { intent, .. } => Some(intent.descriptor()), _ => None }).collect::<Vec<_>>();
+    let actions = blur
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => Some(intent.descriptor()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].action, "setDriverSaveLabel");
     assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("value")), Some(&DslValue::String("Focus Flow".into())));
@@ -730,9 +1128,18 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
 
     let option_key = law["activation"]["optionKey"].as_str().unwrap();
     let commands = ui.dispatch_accessibility_event(window_id, generation, node_id, option_key, AccessibilityUiEvent::Activate).expect("current virtual option address activates");
-    let actions: Vec<_> = commands.iter().filter_map(|command| match command { UiCommand::App { intent, .. } => Some(intent.descriptor()), _ => None }).collect();
+    let actions: Vec<_> = commands
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => Some(intent.descriptor()),
+            _ => None,
+        })
+        .collect();
     assert_eq!(actions.len(), law["activation"]["expectedActions"].as_u64().unwrap() as usize);
-    assert_eq!(actions[0].args.as_ref().and_then(|args| args.as_object()).and_then(|entries| entries.iter().find(|(key, _)| key == "value")).map(|(_, value)| value), Some(&DslValue::String(law["activation"]["expectedValue"].as_str().unwrap().to_string())));
+    assert_eq!(
+        actions[0].args.as_ref().and_then(|args| args.as_object()).and_then(|entries| entries.iter().find(|(key, _)| key == "value")).map(|(_, value)| value),
+        Some(&DslValue::String(law["activation"]["expectedValue"].as_str().unwrap().to_string()))
+    );
     assert!(commands.iter().any(|command| matches!(command, UiCommand::OverlayClosed { .. })), "option activation closes its one popup authority");
     assert!(ui.dispatch_accessibility_event(window_id, generation, node_id, option_key, AccessibilityUiEvent::Activate).is_none(), "the closed popup rejects its retired virtual option address");
     let closed_again: Vec<_> = crate::wgpu::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).into_iter().filter(|node| node.node_id == node_id).map(|node| node.role).collect();
@@ -1703,7 +2110,10 @@ fn golden_toggle() {
     // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
     // against) never had, so a selected fixture would fail this equivalence check for the wrong
     // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
-    assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })));
+    assert_equivalent(
+        "Toggle",
+        &leaf(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })),
+    );
 }
 
 /// ✨️ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
@@ -1713,7 +2123,8 @@ fn golden_toggle() {
 #[test]
 fn selected_presence_draws_an_outset_ring_on_any_element() {
     let unselected = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None });
-    let selected = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::selected(true), menu: None });
+    let selected =
+        UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::selected(true), menu: None });
     let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
     let (selected_instances, _, _) = retained_stats(&leaf(selected));
     assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
@@ -1729,33 +2140,21 @@ fn golden_slider() {
     assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })));
 }
 
-/// KNOWN GAP: `widgets::render_number_stepper` renders its center value segment via a full
-/// `render_input` call (which itself calls `push_control_border` — a background fill plus 4
-/// border-edge quads, 5 instances), giving the center value its own nested input-style border box.
-/// `paint::paint_number_stepper` instead just `draw_text_on`s the formatted value directly with no
-/// surrounding border. Confirmed by running this fixture: retained emits 14 instances (one
-/// `push_control_border` for the whole control + 2 divider lines + 3 text runs), immediate emits
-/// 19 (the same 14 plus the center value's own nested 5-instance border box) — a real, reproducible
-/// paint-logic difference, not a fixture/harness artifact. This is real follow-up work for `paint`
-/// (either add the nested border to `paint_number_stepper`, or confirm the immediate path's nested
-/// border is unintentional and should be dropped there instead — a product decision outside this
-/// façade's scope), not something to paper over here.
+/// 🔀️ Mixed values share the same placeholder and chrome in both WGPU painting paths.
 #[test]
-fn golden_number_stepper_known_gap() {
-    let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })));
-    assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
+fn golden_mixed_number_stepper() {
+    assert_equivalent(
+        "MixedNumberStepper",
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+    );
 }
 
-/// 🔒️ Added by `w1c-paint-parity` (see `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`):
-/// `paint::paint_number_stepper` now ports `widgets::render_number_stepper`'s nested
-/// center-value border box (the exact gap `golden_number_stepper_known_gap`'s doc comment
-/// above documents), closing the 14-vs-19-instance divergence for the `uniform: true` case.
-/// Left `golden_number_stepper_known_gap` itself untouched (still valid, still a `uniform: false`
-/// fixture) and added this as a new, additive `assert_equivalent` case for `uniform: true`
-/// instead, per this workstream's "don't modify existing tests" rule.
 #[test]
 fn golden_number_stepper() {
-    assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })));
+    assert_equivalent(
+        "NumberStepper",
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+    );
 }
 
 #[test]
@@ -1788,12 +2187,14 @@ fn golden_tree() {
         drag_data: None,
         items: None,
         control: None,
-        inline_toolbar: None, detail: None,
+        inline_toolbar: None,
+        detail: None,
         dimmed: None,
         menu: None,
     };
-    let node = UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+    let node = UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -2510,9 +2911,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
     let surface = law["surface"].as_str().unwrap();
     let nodes = law["nodes"].as_array().unwrap();
-    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
-        generation: 1, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len(),
-    }).unwrap();
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len() }).unwrap();
     for node in nodes {
         document.try_upsert_record(serde_json::from_value(node.clone()).expect("compact row record")).unwrap();
     }
@@ -2532,9 +2931,14 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
     }
     let mut oracle = taffy::TaffyTree::<()>::new();
     oracle.disable_rounding();
-    let children = law["visibleRowHeights"].as_array().unwrap().iter().map(|height| {
-        oracle.new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(300.0), height: taffy::style::Dimension::length(height.as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() }).unwrap()
-    }).collect::<Vec<_>>();
+    let children = law["visibleRowHeights"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|height| {
+            oracle.new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(300.0), height: taffy::style::Dimension::length(height.as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() }).unwrap()
+        })
+        .collect::<Vec<_>>();
     let root = oracle.new_with_children(taffy::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() }, &children).unwrap();
     oracle.compute_layout(root, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).unwrap();
     assert!((oracle.layout(root).unwrap().size.height - expected).abs() < 0.02, "independent flex oracle agrees with the measured React row sum");
@@ -2548,12 +2952,12 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
     let sequence = law["publicationSequence"].as_array().unwrap();
     let document = |generation: u64, presentation: &str| {
         let nodes = law["nodes"].as_array().unwrap();
-        let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
-            generation, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len(),
-        }).unwrap();
+        let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len() }).unwrap();
         for node in nodes {
             let mut node = node.clone();
-            if node["id"] == 1 { node["component"]["presentation"] = presentation.into(); }
+            if node["id"] == 1 {
+                node["component"]["presentation"] = presentation.into();
+            }
             document.try_upsert_record(serde_json::from_value(node).unwrap()).unwrap();
         }
         document

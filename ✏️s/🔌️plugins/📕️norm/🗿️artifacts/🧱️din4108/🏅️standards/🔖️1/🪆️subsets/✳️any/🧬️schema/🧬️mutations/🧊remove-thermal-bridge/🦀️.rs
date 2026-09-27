@@ -23,6 +23,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveThermalB
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-thermal-bridge", "remove-thermal-bridge")
+        protocol::LocalizedLabel::native("Remove thermal bridge", "Wärmebrücke entfernen")
     }
 }

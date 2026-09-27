@@ -1459,12 +1459,13 @@ pub struct TreeSectionBuilder {
     label: crate::Label,
     default_open: Option<bool>,
     window: Option<crate::TreeWindow>,
+    header_toolbar: Option<crate::UiNodeId>,
 }
 
 /// 🌲️ A tree section reading `label`, ready for [`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
-    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None, window: None }
+    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None, window: None, header_toolbar: None }
 }
 
 impl TreeSectionBuilder {
@@ -1482,6 +1483,12 @@ impl TreeSectionBuilder {
         self.window = Some(window);
         self
     }
+
+    /// 🎛️ Relates a direct horizontal Toolbar child to the section header.
+    pub fn header_toolbar(mut self, header_toolbar: crate::UiNodeId) -> Self {
+        self.header_toolbar = Some(header_toolbar);
+        self
+    }
 }
 
 impl HasBase for TreeSectionBuilder {
@@ -1496,7 +1503,7 @@ impl HasStackLayout for TreeSectionBuilder {}
 impl From<TreeSectionBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeSectionBuilder) -> Self {
-        assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open, window: builder.window }))
+        assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open, window: builder.window, header_toolbar: builder.header_toolbar }))
     }
 }
 

@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeColumnActi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-column-action-force-n", "change-column-action-force-n")
+        protocol::LocalizedLabel::native("Change characteristic axial action on the column", "Charakteristische Normalkraft der Stütze ändern")
     }
 }
 //#endregion 🔖️Payload

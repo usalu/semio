@@ -29,6 +29,33 @@ fn document_with_solid_layer(red: u8, green: u8, blue: u8, alpha: u8, width: u32
 }
 
 #[semio_framework_async_macros::async_test]
+async fn composite_applies_persisted_mask_assets_and_linked_transforms() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    let pixels:Vec<u8>=fixture["maskImage"]["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
+    let image=SemioImageSnapshot {schema:STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),width:3,height:1,colorspace:SemioColorspace::Rgba,bit_depth:8,frames:vec![SemioImageFrame {delay_ms:0,rgba8:pixels}],icc:None,metadata:Vec::new()};
+    let bytes=png_bytes_from_semio_image(&image).unwrap();
+    for case in fixture["compositing"].as_array().unwrap() {
+        let mut document=document_with_solid_layer(255,0,0,255,3,1);
+        let asset=crate::mint_raster_asset_child("mask-alpha",&RasterImageAsset {mime:"image/png".into(),data:bytes.clone()});
+        document.assets.insert("mask-alpha".into(),asset).unwrap();
+        let mask=crate::RasterLayerMask {enabled:case["enabled"].as_bool().unwrap(),linked:case["linked"].as_bool().unwrap(),invert:case["invert"].as_bool().unwrap(),width:Some(3),height:Some(1),image_key:Some("mask-alpha".into()),transform:RasterTransform {x:case["maskX"].as_f64().unwrap(),..RasterTransform::default()}};
+        if case["group"].as_bool().unwrap() {
+            let mut children=std::mem::take(&mut document.layers);let mut second=children[0].clone();if let RasterLayerNode::Pixel {id,..}=&mut second{id.push_str("-second");}children.push(second);
+            let mut group=crate::standards::v1::subsets::any::schema::create_layer_of_kind("group");
+            if let RasterLayerNode::Group {children:target,mask:target_mask,transform,opacity,..}=&mut group {*target=children;*target_mask=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
+            document.layers.push(group);
+        }else if let RasterLayerNode::Pixel {mask:target,transform,opacity,..}=&mut document.layers[0] {*target=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
+        let mut job=raster_composite_job(&document).unwrap();let preparation=job.advance(1).unwrap();job.cancel();
+        let result=raster_composite_image(&document);retire(document);
+        assert_eq!(preparation.completed,1);
+        assert_eq!(preparation.total,if case["group"].as_bool().unwrap(){15}else{6}+if case["enabled"].as_bool().unwrap(){3}else{0},"mask preparation belongs to the bounded export job");
+        let alpha:Vec<u8>=result.unwrap().frames[0].rgba8.chunks_exact(4).map(|p|p[3]).collect();
+        let expected:Vec<u8>=case["alpha"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
+        assert_eq!(alpha,expected,"{}",case["name"]);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn composite_flattens_a_pixel_layer_back_to_its_own_canvas() {
     let document = document_with_solid_layer(10, 20, 30, 255, 4, 2);
     let composite = raster_composite_image(&document).expect("composite");
@@ -50,19 +77,50 @@ async fn composite_preserves_centered_pixels_at_negative_coordinates() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn composite_refuses_a_visible_adjustment_layer_with_a_reason() {
-    let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
-    document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment"));
-    let error = raster_composite_image(&document).expect_err("adjustment layers must refuse");
-    assert!(error.contains("adjustment layer"), "{error}");
+async fn composite_applies_a_visible_brightness_adjustment() {
+    let mut document = document_with_solid_layer(64, 64, 64, 255, 2, 2);
+    let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
+    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),dsl::DslValue::float(0.2)).unwrap();}
+    document.layers.push(adjustment);
+    let result=raster_composite_image(&document);
     retire(document);
+    assert_eq!(result.expect("adjusted composite").frames[0].rgba8,[115,115,115,255].repeat(4));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn composite_applies_group_opacity_once_after_overlapping_children() {
+    let mut document=document_with_solid_layer(255,0,0,255,2,2);
+    let mut children=std::mem::take(&mut document.layers);
+    let mut second=children[0].clone();if let RasterLayerNode::Pixel {id,..}=&mut second{id.push_str("-second");}children.push(second);
+    let mut group=crate::standards::v1::subsets::any::schema::create_layer_of_kind("group");
+    if let RasterLayerNode::Group {children:target,opacity,..}=&mut group {*target=children;*opacity=0.5;}
+    document.layers.push(group);
+    let result=raster_composite_image(&document);
+    retire(document);
+    assert_eq!(result.unwrap().frames[0].rgba8,[255,0,0,128].repeat(4));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn composite_svg_matches_adjusted_pixel_export() {
+    let mut document=document_with_solid_layer(64,64,64,255,2,2);
+    let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
+    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),dsl::DslValue::float(0.2)).unwrap();}
+    document.layers.push(adjustment);
+    let svg=raster_document_json_to_svg(&document);
+    retire(document);
+    let (svg,width,height)=svg.unwrap();
+    let encoded=semio_framework_os::rasterize_svg_to_png_base64(&svg,width,height).unwrap();
+    let png=base64_codec::base64_standard_decode(encoded.as_bytes()).unwrap();
+    let image=semio_framework_pixels::decode_png(&png).unwrap();
+    assert_eq!((image.width,image.height),(2,2));
+    assert_eq!(image.pixels,[115,115,115,255].repeat(4));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
     let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
     if let Some(RasterLayerNode::Pixel { blend_mode, .. }) = document.layers.first_mut() {
-        *blend_mode = "colorDodge".into();
+        *blend_mode = "undefinedBlend".into();
     }
     let error = raster_composite_image(&document).expect_err("unknown blend modes must refuse");
     assert!(error.contains("unsupported blend mode"), "{error}");
@@ -73,6 +131,16 @@ async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
 async fn composite_refuses_a_document_with_nothing_to_flatten() {
     let error = raster_composite_image(&crate::standards::v1::subsets::any::schema::empty_raster_snapshot()).expect_err("an empty document has no composite");
     assert!(error.contains("nothing to flatten"), "{error}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn composite_exports_a_blank_pixel_layer_as_transparent() {
+    let document=crate::standards::v1::subsets::any::schema::empty_raster_document();
+    let result=raster_composite_image(&document);
+    retire(document);
+    let image=result.unwrap();
+    assert_eq!((image.width,image.height),(512,512));
+    assert!(image.frames[0].rgba8.iter().all(|v|*v==0));
 }
 
 /// 🧪️ The real end-to-end pixel hop this packet exists for: composite → stdio's own

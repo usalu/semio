@@ -3,7 +3,7 @@
 use crate::editor::flow::commands::evaluate::evaluate_result;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
-use crate::editor::flow::commands::reorganize::reorganize_operations;
+use crate::editor::flow::commands::reorganize::reorganize_edit;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::{op::FlowMutation, FlowSnapshot};
@@ -41,12 +41,12 @@ pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnap
         return Err(refuse("flow.extension-disabled", format!("runExtensionAction \"{}\" belongs to the disabled extension \"{id}\"", payload.action_id)));
     }
     match *effect {
-        "reorganize" => Ok(Emit::mutations(reorganize_operations(snapshot, config, session))),
+        "reorganize" => reorganize_edit(snapshot, config, session),
         "evaluate" => Ok(evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
         other => Err(refuse("flow.extension-effect-unknown", format!("runExtensionAction \"{}\" names the unknown effect \"{other}\"", payload.action_id))),
     }
 }
 
 pub fn handle(payload: &RunExtensionAction, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    extension_action_result(payload, doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)
+    extension_action_result(payload, &crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)
 }

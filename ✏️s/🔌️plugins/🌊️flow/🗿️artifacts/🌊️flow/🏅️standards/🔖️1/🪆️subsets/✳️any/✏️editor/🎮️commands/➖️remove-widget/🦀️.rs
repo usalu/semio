@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::host_operations;
+use crate::editor::flow::host_scene_edit;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,7 +18,10 @@ pub struct RemoveWidget {
 /// `SetSelection` config mutation needed, the framework auto-prunes the deleted id out of `graph`'s
 /// selection via `interaction_topology` on the next dispatch.
 pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let target_id = &payload.widget_id;
-    let operations = host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| host.remove_widget(target_id).is_ok());
-    Ok(Emit::mutations(operations))
+    let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
+    let emit = host_scene_edit(&composed, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| Ok(host.remove_widget(&payload.widget_id).is_ok()))?;
+    if emit.child_emits.is_empty() {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)));
+    }
+    Ok(emit)
 }

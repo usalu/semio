@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFireInputs
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert fire exposure {}", self.fire_exposure.id),
-            &format!("Brandbeanspruchung setzen {}", self.fire_exposure.id),
+            &format!("Update fire exposure {}", self.fire_exposure.id),
+            &format!("Brandbeanspruchung {} aktualisieren", self.fire_exposure.id),
         )
     }
     fn target(&self) -> Vec<String> {

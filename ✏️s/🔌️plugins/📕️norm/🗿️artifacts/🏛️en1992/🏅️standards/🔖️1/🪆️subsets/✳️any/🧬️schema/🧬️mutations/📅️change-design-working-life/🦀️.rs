@@ -18,6 +18,6 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeDesignWork
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change design-working-life to {}", self.new_years), &format!("design-working-life auf {} ändern", self.new_years))
+        protocol::LocalizedLabel::native(&format!("Change design working life to {} years", self.new_years), &format!("Geplante Nutzungsdauer auf {} Jahre ändern", self.new_years))
     }
 }

@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePileInputs
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert pile {}", self.pile.id),
-            &format!("Pfahl setzen {}", self.pile.id),
+            &format!("Update pile {}", self.pile.id),
+            &format!("Pfahl {} aktualisieren", self.pile.id),
         )
     }
     fn target(&self) -> Vec<String> {

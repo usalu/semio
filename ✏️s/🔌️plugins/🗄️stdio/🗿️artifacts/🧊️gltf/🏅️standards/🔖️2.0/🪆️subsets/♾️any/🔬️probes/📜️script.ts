@@ -273,9 +273,13 @@ const PROBES: Record<string, Probe> = {
   },
   "gltf-import": async (inputs) => {
     requireInputs(inputs, 1, "gltf-import");
-    const gltf = await readGltf(inputs[0]!);
-    const json = gltf.parser.json;
-    return { status: "ok", measurements: { parsed: true, sceneCount: (json.scenes ?? []).length, nodeCount: (json.nodes ?? []).length, meshCount: (json.meshes ?? []).length, materialCount: (json.materials ?? []).length, assetVersion: json.asset?.version ?? null } };
+    const results = await Promise.allSettled(inputs.map((input) => readGltf(input)));
+    const perInput = results.map((result, index) => {
+      if (result.status === "rejected") return { path: inputs[index], ok: false, error: String((result.reason as Error).message ?? result.reason) };
+      const json = result.value.parser.json;
+      return { path: inputs[index], ok: true, sceneCount: (json.scenes ?? []).length, nodeCount: (json.nodes ?? []).length, meshCount: (json.meshes ?? []).length, materialCount: (json.materials ?? []).length, assetVersion: json.asset?.version ?? null };
+    });
+    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
   },
   "gltf-project": async (inputs) => {
     requireInputs(inputs, 1, "gltf-project");

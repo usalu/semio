@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-layer", "insert-layer")
+        protocol::LocalizedLabel::native("Insert layer", "Schicht einfügen")
     }
 }

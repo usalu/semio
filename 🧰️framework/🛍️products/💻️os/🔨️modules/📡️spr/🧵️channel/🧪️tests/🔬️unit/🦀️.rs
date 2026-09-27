@@ -165,8 +165,10 @@ async fn app_command_pure_command_round_trips() {
 //#region 🔖️Transaction
 #[semio_framework_async_macros::async_test]
 async fn app_command_transaction_prepare_round_trips_owner_and_preplanned_forms() {
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 8, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -219,8 +221,9 @@ async fn paged_ingress_admits_every_media_route() {
 
 #[semio_framework_async_macros::async_test]
 async fn paged_ingress_admits_every_transaction_route() {
-    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
-    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
     assert_paged_route_admits(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }).await;
     assert_paged_route_admits(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }).await;
     assert_paged_route_admits(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }).await;
@@ -428,7 +431,8 @@ async fn app_frame_error_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn app_frame_emit_round_trips() {
-    assert_frame_round_trips(&AppFrame::Emit { in_reply_to: 14, document_ops: vec![1], config_ops: vec![2], draft_ops: vec![3], output: vec![4], diagnostics: vec![5] }).await;
+    assert_frame_round_trips(&AppFrame::Emit { in_reply_to: 14, document_ops: vec![1], config_ops: vec![2], draft_ops: vec![3], output: vec![4], diagnostics: vec![5], child_ops: Vec::new() }).await;
+    assert_frame_round_trips(&AppFrame::Emit { in_reply_to: 15, document_ops: Vec::new(), config_ops: Vec::new(), draft_ops: Vec::new(), output: vec![4], diagnostics: Vec::new(), child_ops: vec![6, 7, 8] }).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -814,8 +818,9 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
         ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
         ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
-        ("TransactionPrepareOwner", AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }),
-        ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }),
+        ("TransactionPrepareOwner", AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }),
+        ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }),
+        ("TransactionPreparePrePlannedChildren", AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }),
         ("TransactionCommit", AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }),
         ("TransactionRollback", AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }),
         ("TransactionUndo", AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }),
@@ -854,7 +859,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
         ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
         ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99], report: vec![7] }),
-        ("Emit", AppFrame::Emit { in_reply_to: 1, document_ops: vec![1], config_ops: vec![], draft_ops: vec![], output: vec![2], diagnostics: vec![] }),
+        ("Emit", AppFrame::Emit { in_reply_to: 1, document_ops: vec![1], config_ops: vec![], draft_ops: vec![], output: vec![2], diagnostics: vec![], child_ops: vec![] }),
         ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
         ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
         ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7], tool_run: vec![8] }),
@@ -896,8 +901,9 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
         "LoadChildren" => "0e01010173016301640101",
         "ReadChildren" => "0f01",
         "ReadHistory" => "1001",
-        "TransactionPrepareOwner" => "11010174016d0109000000",
-        "TransactionPreparePrePlanned" => "110201740000020101020202016c0109",
+        "TransactionPrepareOwner" => "11010174016d010900000000",
+        "TransactionPreparePrePlanned" => "110201740000020101020202016c010900",
+        "TransactionPreparePrePlannedChildren" => "110701740000010101016c0109020506",
         "TransactionCommit" => "12030174",
         "TransactionRollback" => "13040174",
         "TransactionUndo" => "14050167",
@@ -929,7 +935,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "Media" => "0701017001010102",
         "MediaFingerprint" => "080101700101",
         "Error" => "090001630107",
-        "Emit" => "0a0101010000010200",
+        "Emit" => "0a010101000001020000",
         "Draft" => "0b01010101020164",
         "Children" => "0c01010173016301640101",
         "Ephemeral" => "0d020102030401070108",
@@ -1017,7 +1023,7 @@ async fn channel_transaction_fixtures_match_shared_cross_language_json_vectors()
     let frame_json = include_str!("../../../../../🧫️fixtures/📡️channel/📨️app-frame-transaction.json");
     let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🧾️app-command-transaction.json must parse");
     let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("📨️app-frame-transaction.json must parse");
-    assert_eq!(command_vectors.len(), 6, "🧾️app-command-transaction.json vector count changed");
+    assert_eq!(command_vectors.len(), 7, "🧾️app-command-transaction.json vector count changed");
     assert_eq!(frame_vectors.len(), 4, "📨️app-frame-transaction.json vector count changed");
 
     for (label, value) in channel_command_fixture_corpus().await {

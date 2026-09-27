@@ -1598,7 +1598,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         let resolveClose!: () => void;
         const lease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "close-fixture", apps: [] }), createApp: async () => fixture.instance,
+            manifest: { pluginId: "close-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest, createApp: async () => fixture.instance,
             destroyApp: () => new Promise<void>((resolve, reject) => { resolveClose = resolve; rejectClose = reject; }),
             enqueue: () => {}, takeSegmentedDownloadChunk: async () => undefined,
             outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { const id = subscriptions++; return { next: () => new Promise(() => {}), return: async () => { returned.push(id); return { done: true, value: undefined }; } }; } },
@@ -1624,7 +1624,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const closes: Array<() => void> = [];
         const lease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "close-fixture", apps: [] }), createApp: async () => fixture.instance,
+            manifest: { pluginId: "close-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest, createApp: async () => fixture.instance,
             destroyApp: () => new Promise<void>(resolve => { closes.push(resolve); }),
             enqueue: () => {}, takeSegmentedDownloadChunk: async () => undefined,
             outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { const id = subscriptions++; return { next: () => new Promise(() => {}), return: async () => { returned.push(id); return { done: true, value: undefined }; } }; } },
@@ -1652,7 +1652,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         let resolveClose!: () => void;
         const lease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "retire-fixture", apps: [] }),
+            manifest: { pluginId: "retire-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
             createApp: async () => 7,
             destroyApp: () => new Promise<void>((resolve) => { resolveClose = resolve; }),
             enqueue: (instanceId: number) => { enqueued.push(instanceId); },
@@ -1689,7 +1689,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("keeps a never-created instance a loud failure rather than a retirement", async () => {
         const lease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "retire-fixture", apps: [] }),
+            manifest: { pluginId: "retire-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
             createApp: async () => 7,
             destroyApp: async () => {},
             enqueue: () => {},
@@ -1712,7 +1712,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         const fakeLease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
+            manifest: { pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
             createApp: async () => 20,
             destroyApp: async () => {},
             takeSegmentedDownloadChunk: async () => undefined,
@@ -1765,7 +1765,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         await handle.loadWindowConfigPack(instanceId, { window_id: "graph-b", window_kind_id: "graph", envelope_pack: [8] });
   
         expect(seenCommands).toEqual([
-          { transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [] } },
+          { transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
           { transactionCommit: { seq: 2, txn_id: "txn-1" } },
           { transactionRollback: { seq: 3, txn_id: "txn-2" } },
           { transactionUndo: { seq: 4, group_id: "grp-1" } },
@@ -1780,7 +1780,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         const fakeLease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
+            manifest: { pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
             createApp: async () => 20,
             destroyApp: async () => {},
             takeSegmentedDownloadChunk: async () => undefined,
@@ -1815,7 +1815,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         let replyWithDocument = true;
         const fakeLease = {
           handle: {
-            manifest: async () => encodePackValue({ pluginId: "c-plugin", label: "C", version: "1.0.0", apps: [], workflows: [], examples: [] }),
+            manifest: { pluginId: "c-plugin", label: "C", version: "1.0.0", apps: [], workflows: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
             createApp: async () => 30,
             destroyApp: async () => {},
             takeSegmentedDownloadChunk: async () => undefined,
@@ -3282,7 +3282,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       push = (outcome) => broadcast.push(outcome);
       const handle = {
-        manifest: async () => encodePackValue({ id: "fixture", apps: [] }),
+        manifest: { id: "fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
         createApp: async () => instanceId,
         destroyApp: async () => {},
         takeSegmentedDownloadChunk: async () => undefined,
@@ -3359,7 +3359,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     const { adaptPluginHandle, encodePackValue, isPluginInstanceRetiredV1 } = dependencies;
     const lease = {
       handle: {
-        manifest: async () => encodePackValue({ pluginId: "reject-fixture", apps: [] }),
+        manifest: { pluginId: "reject-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
         createApp: async () => 55,
         destroyApp: async () => {},
         enqueue: () => {},
@@ -3397,7 +3397,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     const { adaptPluginHandle, encodePackValue, isPluginInstanceRetiredV1, pluginInstanceWasRetiredV1 } = dependencies;
     const makeLease = (nextInstance: number) => ({
       handle: {
-        manifest: async () => encodePackValue({ pluginId: "swap-fixture", apps: [] }),
+        manifest: { pluginId: "swap-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
         createApp: async () => nextInstance,
         destroyApp: async () => {},
         enqueue: () => {},

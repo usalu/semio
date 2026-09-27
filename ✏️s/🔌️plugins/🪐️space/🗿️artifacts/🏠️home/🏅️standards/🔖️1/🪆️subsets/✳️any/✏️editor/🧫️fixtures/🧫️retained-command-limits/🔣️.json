@@ -91,9 +91,11 @@
     },
     {
       "id": "renameSpace",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "catalog mutation and filesystem rename still execute in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     },
     {
       "id": "shareSpace",

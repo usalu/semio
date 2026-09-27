@@ -1,8 +1,8 @@
 use super::{
     claim_raster_stage_tuple, content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale, ClipRegion, DrawList, FixedMeshGpuRegistry, FixedRasterTextureRegistry,
     MeshGpuEntry, MeshGpuKey, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor, RasterTextureReservationRetirement, RasterTextureStageClaim,
-    RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, RasterUploadPixels, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY, RASTER_TEXTURE_KEY_BYTES,
-    RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
+    RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, RasterUploadPixels, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY,
+    RASTER_TEXTURE_KEY_BYTES, RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
 };
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::kernel_3d_scene::ScenePass3d;
@@ -16,11 +16,9 @@ fn raster_identity(seed: u64) -> crate::wgpu::prepared::RasterContentIdentity {
 fn scene_raster_profiles_keep_the_verified_srgb_storage_contract() {
     use crate::wgpu::raster_ownership::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterMeshSeal, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode};
 
-    for (revision, profile, mesh) in [
-        (1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None),
-        (2, SceneRasterProfile::ReferenceCanvasSrgb, None),
-        (3, SceneRasterProfile::MeshPaintMapNoColorSpace, Some(SceneRasterMeshSeal { mesh_revision: 1, uv_revision: 1, uv_count: 1 })),
-    ] {
+    for (revision, profile, mesh) in
+        [(1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None), (2, SceneRasterProfile::ReferenceCanvasSrgb, None), (3, SceneRasterProfile::MeshPaintMapNoColorSpace, Some(SceneRasterMeshSeal { mesh_revision: 1, uv_revision: 1, uv_count: 1 }))]
+    {
         let pool = SceneRasterPool::new();
         let descriptor = SceneRasterDescriptor { width: 1, height: 1, source_digest: [revision, revision], source_revision: revision, profile, mesh };
         let SceneRasterBegin::Writer(writer) = pool.begin(descriptor, revision, SceneRasterWriteMode::Streamed) else { panic!("profile writer") };
@@ -71,7 +69,15 @@ fn fixed_raster_registry_rejects_capacity_plus_one_with_exact_handback() {
     for index in 0..RASTER_TEXTURE_TABLE_CAPACITY {
         let key = raster_key_for_start(index, 0);
         registry
-            .insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 1, preview_generation: 1, operation: index as u64 }, content_identity: raster_identity(index as u64), bytes: 1, cpu_release: None, gpu_resident: None, value: Box::new(index) })
+            .insert(RasterTextureEntry {
+                key,
+                witness: RasterTextureWitness { scene_revision: 1, preview_generation: 1, operation: index as u64 },
+                content_identity: raster_identity(index as u64),
+                bytes: 1,
+                cpu_release: None,
+                gpu_resident: None,
+                value: Box::new(index),
+            })
             .ok()
             .expect("fixed raster slot");
     }
@@ -129,7 +135,15 @@ fn fixed_raster_registry_probe_saturation_and_replacement_preserve_owners() {
     assert_eq!((&*rejected.value) as *const usize, rejected_pointer);
     let replacement_key = raster_key_for_start(start, 0);
     let previous = registry
-        .insert(RasterTextureEntry { key: replacement_key, witness: RasterTextureWitness { scene_revision: 9, preview_generation: 3, operation: 77 }, content_identity: raster_identity(777), bytes: 1, cpu_release: None, gpu_resident: None, value: Box::new(777usize) })
+        .insert(RasterTextureEntry {
+            key: replacement_key,
+            witness: RasterTextureWitness { scene_revision: 9, preview_generation: 3, operation: 77 },
+            content_identity: raster_identity(777),
+            bytes: 1,
+            cpu_release: None,
+            gpu_resident: None,
+            value: Box::new(777usize),
+        })
         .ok()
         .flatten()
         .expect("exact replaced owner");

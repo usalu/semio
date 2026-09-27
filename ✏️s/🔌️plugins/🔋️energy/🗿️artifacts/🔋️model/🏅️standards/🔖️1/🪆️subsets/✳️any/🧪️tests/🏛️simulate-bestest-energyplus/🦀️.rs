@@ -268,36 +268,36 @@ pub fn adapter() -> Adapter {
     for case in ALL {
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("case-parameters-{case}"), subject::case_parameters(case));
+            built = built.subject(&format!("case-parameters-{}", case.to_ascii_lowercase()), subject::case_parameters(case));
         }
         let _ = case;
     }
     for case in CONDITIONED {
-        built = built.oracle(&format!("annual-energy-{case}"), oracle_for(case));
+        built = built.oracle(&format!("annual-energy-{}", case.to_ascii_lowercase()), oracle_for(case));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("annual-energy-{case}"), subject::annual_energy(case));
+            built = built.subject(&format!("annual-energy-{}", case.to_ascii_lowercase()), subject::annual_energy(case));
         }
     }
     for case in PEAK {
-        built = built.oracle(&format!("peak-load-{case}"), oracle_for(case));
+        built = built.oracle(&format!("peak-load-{}", case.to_ascii_lowercase()), oracle_for(case));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("peak-load-{case}"), subject::peak_load(case));
+            built = built.subject(&format!("peak-load-{}", case.to_ascii_lowercase()), subject::peak_load(case));
         }
     }
     for case in FREE_FLOAT {
-        built = built.oracle(&format!("free-float-{case}"), oracle_for(case));
+        built = built.oracle(&format!("free-float-{}", case.to_ascii_lowercase()), oracle_for(case));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("free-float-{case}"), subject::free_float(case));
+            built = built.subject(&format!("free-float-{}", case.to_ascii_lowercase()), subject::free_float(case));
         }
     }
     for case in HOURLY {
-        built = built.oracle(&format!("hourly-temperature-{case}"), oracle_for(case));
+        built = built.oracle(&format!("hourly-temperature-{}", case.to_ascii_lowercase()), oracle_for(case));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("hourly-temperature-{case}"), subject::hourly_temperature(case));
+            built = built.subject(&format!("hourly-temperature-{}", case.to_ascii_lowercase()), subject::hourly_temperature(case));
         }
     }
     #[cfg(feature = "sut")]

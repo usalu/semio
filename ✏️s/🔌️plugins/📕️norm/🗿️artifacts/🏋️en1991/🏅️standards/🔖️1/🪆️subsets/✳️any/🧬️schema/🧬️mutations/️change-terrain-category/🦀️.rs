@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeTerrainCat
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-terrain-category", "change-terrain-category")
+        protocol::LocalizedLabel::native("Change terrain category", "Geländekategorie ändern")
     }
 }
 //#endregion 🔖️Payload

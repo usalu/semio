@@ -95,6 +95,7 @@ fn every_published_record_projects_the_way_the_shared_fixture_declares() {
         assert_eq!(node.hidden, row["hidden"].as_bool().expect("fixture hidden"), "{} hidden", node.key);
         assert_eq!(node.disabled, row["disabled"].as_bool().expect("fixture disabled"), "{} disabled", node.key);
         assert_eq!(node.focusable, row["focusable"].as_bool().expect("fixture focusable"), "{} focusable", node.key);
+        assert_eq!(node.tabbable, row["tabbable"].as_bool().expect("fixture tabbable"), "{} tabbable", node.key);
         assert_eq!(node.actionable, row["actionable"].as_bool().expect("fixture actionable"), "{} actionable", node.key);
         assert!(!node.focused, "the pure projection stamps no live focus — only a renderer's own walk does");
         assert_value_matches(&node, row);
@@ -160,4 +161,16 @@ fn shortcut_roundtrips() {
     let json = serde_json::to_string(&spec).expect("serialize");
     let back: AccessibilitySpec = serde_json::from_str(&json).expect("deserialize");
     assert_eq!(spec, back);
+}
+
+#[test]
+fn stepper_accessible_values_match_the_shared_display_and_mixed_contract() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    for row in law["numbers"].as_array().unwrap() {
+        let mut component: crate::Component = serde_json::from_value(serde_json::json!({"type":"numberStepper","value":row["value"],"step":1.0,"uniform":true})).unwrap();
+        assert_eq!(accessibility_value(&component).text.as_deref(), row["text"].as_str());
+        if let crate::Component::NumberStepper(props) = &mut component { props.uniform = false; }
+        let mixed = accessibility_value(&component);
+        assert!(mixed.now.is_none() && mixed.text.is_none());
+    }
 }

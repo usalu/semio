@@ -3166,7 +3166,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   };
 
   const handle: KernelPluginWasmHandle = {
-    manifest: async () => encodePackValue(manifest),
+    manifest,
     createApp: (appId) => {
       if (disposing) return Promise.reject(new Error("plugin-handle.closed"));
       const instanceId = nextGlobalInstanceId;
@@ -3846,7 +3846,7 @@ async function readHistoryWithBoundedRetryV1(
  * whose `ShootingConfig` fields have no `#[serde(default)]` and would reject `{}`). */
 export async function adaptPluginHandle(pluginId: string, lease: { readonly handle: KernelPluginWasmHandle; readonly release: () => Promise<void> }): Promise<PluginWasmHandle> {
   const handle = lease.handle;
-  const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
+  const manifest = handle.manifest as unknown as PluginManifest;
   const channels = new Map<number, AppChannelClient>();
   const channelRequests = new AppChannelRequestSequence();
   let disposal: Promise<void> | null = null;

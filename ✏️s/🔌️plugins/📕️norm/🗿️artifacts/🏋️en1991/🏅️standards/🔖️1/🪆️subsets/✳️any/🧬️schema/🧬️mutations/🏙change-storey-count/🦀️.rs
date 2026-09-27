@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeStoreyCoun
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-storey-count", "change-storey-count")
+        protocol::LocalizedLabel::native("Change number of storeys", "Geschossanzahl ändern")
     }
 }
 //#endregion 🔖️Payload

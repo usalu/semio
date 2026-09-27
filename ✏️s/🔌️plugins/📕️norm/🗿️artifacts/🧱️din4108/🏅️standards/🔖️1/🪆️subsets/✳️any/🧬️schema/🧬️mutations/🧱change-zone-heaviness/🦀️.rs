@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneHeav
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-heaviness", "change-zone-heaviness")
+        protocol::LocalizedLabel::native("Change construction weight class of the zone", "Bauart (leicht, mittel, schwer) der Zone ändern")
     }
 }

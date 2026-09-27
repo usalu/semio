@@ -28,11 +28,7 @@ pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `RasterSnapshot -> BuiltNode` read: composites the real layer stack to a canonical PNG through
-/// the same artifact-level `🚪️io` bridge the editor's `raster_composite_media` uses
-/// (`raster_document_json_to_svg` → `rasterize_svg_to_png_base64` → `canonicalize_png_bytes`), then
-/// hands the pixels to `ImageWindowKit::render` — never a bespoke renderer, never a call through the
-/// sibling editor module.
+/// 👁️ Displays the canonical layer composite through the shared image window.
 pub fn render(document: &RasterSnapshot) -> UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render(&composited_image_view(document))
 }
@@ -43,16 +39,11 @@ pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
     composite_document_to_png(document).unwrap_or_else(|| ImageView { width: 1, height: 1, mime: "image/png".into(), base64: RASTER_VIEW_FALLBACK_PNG_BASE64.into() })
 }
 
-/// 🌉️ The read-only composite primitive — real pixels, never a placeholder title card, matching the
-/// editor's own `raster_composite_media` fidelity exactly (same three-step bridge), just returning the
-/// framework's `ImageView` view-model instead of a `Media` payload.
+/// 🌉️ Uses the same compositor and PNG encoder as pixel export and image ports.
 fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
-    let (svg, width, height) = crate::io::raster_document_json_to_svg(document).ok()?;
-    let rendered_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).ok()?;
-    let raw_bytes = base64_codec::base64_standard_decode(rendered_base64.as_bytes()).ok()?;
-    let canonical = crate::io::canonicalize_png_bytes(&raw_bytes).ok()?;
-    let base64_string = base64_codec::base64_standard_encode(canonical);
-    Some(ImageView { width, height, mime: "image/png".into(), base64: base64_string })
+    let image=crate::io::raster_composite_image(document).ok()?;
+    let bytes=crate::io::png_bytes_from_semio_image(&image).ok()?;
+    Some(ImageView { width:image.width, height:image.height, mime:"image/png".into(), base64:base64_codec::base64_standard_encode(bytes) })
 }
 //#endregion 🔖️Render
 

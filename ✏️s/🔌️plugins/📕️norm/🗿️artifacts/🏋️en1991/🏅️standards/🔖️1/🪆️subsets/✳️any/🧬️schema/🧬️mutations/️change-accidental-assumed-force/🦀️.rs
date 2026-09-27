@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAccidental
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-accidental-assumed-force", "change-accidental-assumed-force")
+        protocol::LocalizedLabel::native("Change assumed accidental force", "Angenommene außergewöhnliche Kraft ändern")
     }
 }
 //#endregion 🔖️Payload

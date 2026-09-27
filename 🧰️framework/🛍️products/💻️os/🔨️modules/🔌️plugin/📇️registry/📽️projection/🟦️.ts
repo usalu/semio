@@ -3,7 +3,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "../🚀️launch/🟦️.ts";
+import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "../🚀️launch/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
 import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, PluginRegistryEntry, TAXONOMY, generatePluginRegistry, resolveRegistryPluginIdForFilter, isHostPluginFilter, resolveRegistryPluginIdsForFilter } from "../🔎️discovery/🟦️.ts";
@@ -302,21 +302,13 @@ ${rows}
 /** @emoji 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
  * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
  * `🤖️generated/`. */
-export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[]; componentLaunchers: { project: string; pluginId: string }[] } {
+export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
   const packages = discoverCatalogPackages(repoRoot, TAXONOMY, view);
   const entries = generatePluginRegistry(repoRoot, { packages, view });
   const playgrounds = generatePlaygroundRegistry(repoRoot, { packages, view });
   const frameworkPackages = generateFrameworkPackageRegistry(repoRoot, packages);
   const hostVariant = defaultHostVariant(entries, playgrounds);
-  const componentLaunchers = entries.map((entry) => {
-    const path = `${entry.cratePath}/📋️project.json`, kind = view.kind(path);
-    if (kind && kind !== "file") throw new Error(`Invalid component Nx project: ${path}`);
-    const project = kind ? JSON.parse(view.readText(path)).name : entry.packageName;
-    if (typeof project !== "string" || !project.length) throw new Error(`Missing component Nx identity: ${path}`);
-    return { project, pluginId: entry.pluginId };
-  });
   return {
-    componentLaunchers,
     entries,
     playgrounds,
     frameworkPackages,
@@ -364,7 +356,7 @@ export function catalogOutputInventory(outDir: string): { directories: string[];
 export class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, entries, playgrounds, frameworkPackages, componentLaunchers } = renderCatalogFiles(repoRoot);
+    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     mkdirSync(outDir, { recursive: true });
     const expected = catalogOutputShape(files), actual = catalogOutputInventory(outDir);
@@ -378,7 +370,7 @@ export class GenerateScript extends BundleScript {
     // regenerated here rather than from a separate entry point — `check` enforces its freshness. Written
     // last so a seed/devLaunchers problem can never leave the catalog itself unwritten.
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds, componentLaunchers));
+    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot)));
     console.log(`${LAUNCH_OUTPUT_REL_PATH} regenerated -> ${launchPath}`);
   }
 }
@@ -421,7 +413,7 @@ export class PreviewGeneratedScript extends BundleScript {
       payload = Buffer.concat(chunks).toString("utf8");
     }
     const view = protocol ? registryCatalogProjectedInputView(repoRoot, TAXONOMY, parseRegistryCatalogProjection(payload, TAXONOMY), base) : base;
-    const { files, playgrounds, componentLaunchers } = renderCatalogFiles(repoRoot, view);
+    const { files, playgrounds } = renderCatalogFiles(repoRoot, view);
     const outDir = join(this.root, "🤖️generated");
     const rootPath = relative(repoRoot, outDir).replaceAll("\\", "/").normalize("NFC");
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
@@ -430,7 +422,7 @@ export class PreviewGeneratedScript extends BundleScript {
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
       ...expected.directories.map((path) => ({ bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: `${rootPath}/${path.normalize("NFC")}` })),
       ...Object.entries(files).map(([name, content]) => ({ bytesBase64: Buffer.from(content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${name.normalize("NFC")}` })),
-      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, componentLaunchers, (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
+      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot, view), (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
     ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const expectedPaths = new Set([...expected.directories, ...expected.files]);
     const staleRemovals = [...actual.directories, ...actual.files].filter((path) => !expectedPaths.has(path)).map((path) => `${rootPath}/${path.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
@@ -444,14 +436,14 @@ export class PreviewGeneratedScript extends BundleScript {
 export class CheckGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, playgrounds, componentLaunchers } = renderCatalogFiles(repoRoot);
+    const { files, playgrounds } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     const expected = catalogOutputShape(files), actual = catalogOutputInventory(outDir);
     const stale = Object.entries(files).filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content).map(([name]) => name);
     const expectedPaths = new Set([...expected.directories, ...expected.files]);
     stale.push(...[...actual.directories, ...actual.files].filter((path) => !expectedPaths.has(path)));
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds, componentLaunchers)) stale.push(LAUNCH_OUTPUT_REL_PATH);
+    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot))) stale.push(LAUNCH_OUTPUT_REL_PATH);
     if (stale.length) throw new Error(`Generated registry output is stale: ${stale.join(", ")}`);
     console.log("plugin registry generated catalog and launch bytes are fresh.");
   }
@@ -463,7 +455,7 @@ export class CheckScript extends BundleScript {
     const repoRoot = getWorkspaceRoot();
     const authorityProblems = validateGeneratorContractsAgainstWorkspace(repoRoot, TAXONOMY);
     if (authorityProblems.length) throw new Error(authorityProblems.join("\n"));
-    const { files, entries, playgrounds, frameworkPackages, componentLaunchers } = renderCatalogFiles(repoRoot);
+    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     const expected = catalogOutputShape(files), actual = catalogOutputInventory(outDir);
     const stale = Object.entries(files)
@@ -476,7 +468,7 @@ export class CheckScript extends BundleScript {
     const launchViolations: string[] = [];
     try {
       const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-      const expectedLaunch = generateLaunchJson(repoRoot, playgrounds, componentLaunchers);
+      const expectedLaunch = generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot));
       if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== expectedLaunch) stale.push(LAUNCH_OUTPUT_REL_PATH);
     } catch (error) {
       launchViolations.push(`${LAUNCH_OUTPUT_REL_PATH} cannot be rendered: ${(error as Error).message}`);

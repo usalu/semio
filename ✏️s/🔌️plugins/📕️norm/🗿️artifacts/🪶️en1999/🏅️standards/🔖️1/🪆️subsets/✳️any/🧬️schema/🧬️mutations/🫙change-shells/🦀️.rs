@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeShells {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-shells", "change-shells")
+        protocol::LocalizedLabel::native("Change shell structures", "Schalentragwerke ändern")
     }
 }

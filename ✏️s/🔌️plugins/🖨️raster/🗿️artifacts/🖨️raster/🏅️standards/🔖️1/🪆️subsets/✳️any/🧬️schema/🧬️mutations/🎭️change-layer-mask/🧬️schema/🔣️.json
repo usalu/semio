@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-mask/schema.json",
+  "title":"Change Layer Mask",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["layerId","expected","mask"],
+  "properties":{
+    "layerId":{"type":"string","minLength":1},
+    "expected":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}]},
+    "mask":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}]}
+  }
+}

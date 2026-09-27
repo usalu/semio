@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeGegQpF
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change geg-qp-factor", "geg-qp-factor ändern")
+        protocol::LocalizedLabel::native("Change GEG primary energy requirement factor", "GEG-Anforderungsfaktor für den Primärenergiebedarf ändern")
     }
 }

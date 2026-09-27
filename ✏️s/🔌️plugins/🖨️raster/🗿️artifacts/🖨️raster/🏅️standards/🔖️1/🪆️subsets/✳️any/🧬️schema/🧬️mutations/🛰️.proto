@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.raster.raster.mutation;
+import "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 message CreateLayer {
   optional string parent_id = 1;
@@ -64,7 +65,22 @@ message RemoveLayerAsset {
   string asset_id = 1;
 }
 
-// Tags 1..12 assigned in dispatch-enum variant order (= grammar alternation order); append-only.
+message RasterPixelContent {
+  optional string image_key = 1;
+  optional uint32 width = 2;
+  optional uint32 height = 3;
+}
+message ChangeLayerPixels {
+  string layer_id = 1;
+  optional string expected_image_key = 2;
+  RasterPixelContent content = 3;
+  optional semio.s.raster.raster.artifact.RasterTransform transform = 4;
+}
+message ChangeLayerMask {
+  string layer_id = 1;
+  optional semio.s.raster.raster.artifact.RasterLayerMask expected = 2;
+  optional semio.s.raster.raster.artifact.RasterLayerMask mask = 3;
+}
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -79,5 +95,7 @@ message RasterMutation {
     ChangeLayerAdjustmentKind change_layer_adjustment_kind = 10;
     AddLayerAsset add_layer_asset = 11;
     RemoveLayerAsset remove_layer_asset = 12;
+    ChangeLayerPixels change_layer_pixels = 13;
+    ChangeLayerMask change_layer_mask = 14;
   }
 }

@@ -147,7 +147,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       case "tree":
         return { ...base, component: { type: "tree", interactionDomain: null } };
       case "treeSection":
-        return { ...base, component: { type: "treeSection", label: spec.key, defaultOpen: true, window: null } };
+        return { ...base, component: { type: "treeSection", label: spec.key, defaultOpen: true, headerToolbar: null, window: null } };
       case "treeItem":
         return { ...base, component: { type: "treeItem", label: spec.key, description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } };
       case "surface":

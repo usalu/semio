@@ -1,4 +1,5 @@
 # 🧬️ Transparent PngMutation descriptor assembly.
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # change-header/ChangeHeader: 📐️change-header/🔗️.graphql
 # replace-palette/ReplacePalette: 🎨️replace-palette/🔗️.graphql
 # change-transparency/ChangeTransparency: 👁️change-transparency/🔗️.graphql
@@ -12,7 +13,8 @@
 # remove-text-chunk/RemoveTextChunk: 🗑️remove-text-chunk/🔗️.graphql
 # replace-text-chunk/ReplaceTextChunk: ✏️replace-text-chunk/🔗️.graphql
 # replace-pixels/ReplacePixels: 🔲️replace-pixels/🔗️.graphql
+# patch-pixels/PatchPixels: 🩹️patch-pixels/🔗️.graphql
 # insert-unknown-chunk/InsertUnknownChunk: 📦️insert-unknown-chunk/🔗️.graphql
 # remove-unknown-chunk/RemoveUnknownChunk: 📤️remove-unknown-chunk/🔗️.graphql
-enum PngMutationKind { CHANGE_HEADER REPLACE_PALETTE CHANGE_TRANSPARENCY CHANGE_GAMMA CHANGE_CHROMATICITIES CHANGE_SRGB_INTENT CHANGE_PHYSICAL_DIMS CHANGE_TIMESTAMP CHANGE_BACKGROUND INSERT_TEXT_CHUNK REMOVE_TEXT_CHUNK REPLACE_TEXT_CHUNK REPLACE_PIXELS INSERT_UNKNOWN_CHUNK REMOVE_UNKNOWN_CHUNK }
-input PngMutation { change_header: ChangeHeaderMutation replace_palette: ReplacePaletteMutation change_transparency: ChangeTransparencyMutation change_gamma: ChangeGammaMutation change_chromaticities: ChangeChromaticitiesMutation change_srgb_intent: ChangeSrgbIntentMutation change_physical_dims: ChangePhysicalDimsMutation change_timestamp: ChangeTimestampMutation change_background: ChangeBackgroundMutation insert_text_chunk: InsertTextChunkMutation remove_text_chunk: RemoveTextChunkMutation replace_text_chunk: ReplaceTextChunkMutation replace_pixels: ReplacePixelsMutation insert_unknown_chunk: InsertUnknownChunkMutation remove_unknown_chunk: RemoveUnknownChunkMutation }
+enum PngMutationKind { SET_SNAPSHOT CHANGE_HEADER REPLACE_PALETTE CHANGE_TRANSPARENCY CHANGE_GAMMA CHANGE_CHROMATICITIES CHANGE_SRGB_INTENT CHANGE_PHYSICAL_DIMS CHANGE_TIMESTAMP CHANGE_BACKGROUND INSERT_TEXT_CHUNK REMOVE_TEXT_CHUNK REPLACE_TEXT_CHUNK REPLACE_PIXELS PATCH_PIXELS INSERT_UNKNOWN_CHUNK REMOVE_UNKNOWN_CHUNK }
+input PngMutation { set_snapshot: SetSnapshot change_header: ChangeHeaderMutation replace_palette: ReplacePaletteMutation change_transparency: ChangeTransparencyMutation change_gamma: ChangeGammaMutation change_chromaticities: ChangeChromaticitiesMutation change_srgb_intent: ChangeSrgbIntentMutation change_physical_dims: ChangePhysicalDimsMutation change_timestamp: ChangeTimestampMutation change_background: ChangeBackgroundMutation insert_text_chunk: InsertTextChunkMutation remove_text_chunk: RemoveTextChunkMutation replace_text_chunk: ReplaceTextChunkMutation replace_pixels: ReplacePixelsMutation patch_pixels: PatchPixelsMutation insert_unknown_chunk: InsertUnknownChunkMutation remove_unknown_chunk: RemoveUnknownChunkMutation }

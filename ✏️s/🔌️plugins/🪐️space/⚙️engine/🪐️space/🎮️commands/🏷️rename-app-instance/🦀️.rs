@@ -12,7 +12,7 @@ pub struct RenameAppInstance {
     pub label: Option<String>,
 }
 
-async fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     match crate::engine::space::primary_selected_node_id(selected, config).await {
         Some(node_id) => {
             let next_label = payload.label.clone().or_else(|| doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));

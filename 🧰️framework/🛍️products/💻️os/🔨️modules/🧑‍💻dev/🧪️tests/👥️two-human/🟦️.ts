@@ -20,7 +20,7 @@ import type { Browser, BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { FAULT, NOISE, clickUncovered, fillStagedArgument, readMatrixPins, readShell, submitStagedVerb, unfoldActionsRail } from "../🧮️program-matrix/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 //#region 🔖️Sessions
 /** 🔑️ One human: a hub credential. */
@@ -265,7 +265,7 @@ async function creatableKinds(session: Session): Promise<CreatableKind[]> {
   return options.map((option) => ({ ...option, kindId: String((JSON.parse(option.value) as { kindId?: unknown }).kindId ?? "") }));
 }
 
-async function createArtifact(session: Session, name: string, kind: CreatableKind): Promise<string> {
+async function createArtifact(session: Session, name: string, kind: CreatableKind, budgetMs: number): Promise<string> {
   const before = await rowIds(session.page, "artifact");
   await activate(session.page, "s-space-create-artifact");
   await dialog(session.page).waitFor({ state: "visible", timeout: 20_000 });
@@ -274,7 +274,7 @@ async function createArtifact(session: Session, name: string, kind: CreatableKin
   await session.page.keyboard.press("Enter");
   await session.page.locator(`[role="option"][data-value="${kind.value.replace(/"/gu, '\\"')}"]`).first().click();
   await submitDialog(session.page);
-  return waitNewRow(session.page, "artifact", before, 240_000);
+  return waitNewRow(session.page, "artifact", before, budgetMs);
 }
 
 /** 📄️ The document as the human sees it: every window body's text plus element / SVG / canvas counts and an FNV digest
@@ -356,10 +356,11 @@ export type TwoHumanOptions = Readonly<{
   tag: string;
   outDir: string;
   adminCapabilityFile: string | null;
+  mountBudgetMs: number;
   signal: AbortSignal;
 }>;
 
-type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
+type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; timings?: { createToMountedMs?: number; openRowToMountedMs?: number }; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
 
 /** 📊️ The run's report, rewritten after every kind. */
 export type TwoHumanReport = { tag: string; hub: string; serves: readonly string[]; locale: string; startedAt: string; finishedAt?: string; spaceId: string | null; kinds: string[]; rows: KindRow[]; misses: unknown[]; fatal?: string; cancelled?: boolean };
@@ -426,14 +427,20 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
       };
       try {
         await openSpace(A, spaceId, report.misses);
-        const artifactId = await createArtifact(A, `Two Human ${kind.kindId} ${Date.now() % 100000}`, kind);
+        const createdAt = Date.now();
+        const artifactId = await createArtifact(A, `Two Human ${kind.kindId} ${Date.now() % 100000}`, kind, options.mountBudgetMs);
         row.artifactId = artifactId;
-        const shellA = await awaitMounted(A, 300_000);
+        const shellA = await awaitMounted(A, options.mountBudgetMs);
+        row.timings = { createToMountedMs: Date.now() - createdAt };
         const plugin = /^s\.([a-z0-9-]+)\./u.exec(String((JSON.parse(kind.value) as { dialect?: { artifactKind?: string } }).dialect?.artifactKind ?? ""))?.[1] ?? PLUGIN_BY_KIND[kind.kindId] ?? "";
         row.plugin = plugin;
         check("A creates + opens", true, { artifactId, windows: shellA.windowIds });
-        await openRow(B, spaceId, artifactId, report.misses);
-        const shellB = await awaitMounted(B, 300_000);
+        await openSpace(B, spaceId, report.misses);
+        await waitRow(B.page, "artifact", artifactId, 90_000);
+        const openedAt = Date.now();
+        await clickRowAction(B.page, "artifact", artifactId, /^(open|öffnen)\b/iu);
+        const shellB = await awaitMounted(B, options.mountBudgetMs);
+        row.timings = { ...row.timings, openRowToMountedMs: Date.now() - openedAt };
         check("B opens via Space index", true, { windows: shellB.windowIds });
         const presence = await until(async () => {
           const [a, b] = [await readStatus(A.page), await readStatus(B.page)];
@@ -478,8 +485,8 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
         for (const session of [A, B]) await boot(session);
         await openRow(A, spaceId, artifactId, report.misses);
         await openRow(B, spaceId, artifactId, report.misses);
-        await awaitMounted(A, 300_000);
-        await awaitMounted(B, 300_000);
+        await awaitMounted(A, options.mountBudgetMs);
+        await awaitMounted(B, options.mountBudgetMs);
         const converged = await until(async () => {
           const [a, b] = [await docText(A), await docText(B)];
           return a === settled[0] && b === settled[1] ? { a: short(a) } : null;
@@ -534,7 +541,9 @@ function readHumans(segments: readonly string[]): readonly [Human, Human] {
 }
 
 /** 🚪️ `verify two-human --hub <url> --serve <url> [--serve-b <url>] [--locale en|de] [--kinds <kindId,…>] [--space <id>]
- * [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>]` — runs the journey, writes `report.json`,
+ * [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>] [--max-create-to-mounted-ms <n>]
+ * [--max-open-to-mounted-ms <n>] [--mount-budget-ms <n>]` — runs the journey (a creation or an open waits up to
+ * `--mount-budget-ms`, default 15 min, for the document to mount; the latency bounds judge it), writes `report.json`,
  * `console.txt` and failure screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless every
  * kind passes. */
 export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
@@ -548,7 +557,7 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
   const startedAt = new Date();
-  try {
+  await withAcceptanceRecord(repoRoot, "two-human", async () => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
     const report = await runTwoHuman({
       hub: hub.replace(/\/$/u, ""),
@@ -560,31 +569,40 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
       tag,
       outDir,
       adminCapabilityFile: flagValue(segments, "--admin-capability") ?? null,
+      mountBudgetMs: Number(flagValue(segments, "--mount-budget-ms") ?? 900_000),
       signal: controller.signal,
     });
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
     const failing = report.rows.filter((row) => !row.pass).map((row) => `${row.kindId}: ${Object.entries(row.checks).filter(([, entry]) => !entry.pass).map(([name]) => name).join(", ") || "faults"}`);
-    const status = report.fatal || report.cancelled || total === 0 ? "fail" : passed === total ? "pass" : "fail";
+    const unreachable = total === 0 && /ERR_CONNECTION_REFUSED|ECONNREFUSED|Unable to connect/u.test(report.fatal ?? "");
+    const bound = (flag: string): number | null => (flagValue(segments, flag) === undefined ? null : Number(flagValue(segments, flag)));
+    const createBoundMs = bound("--max-create-to-mounted-ms");
+    const openBoundMs = bound("--max-open-to-mounted-ms");
+    const createTimes = report.rows.map((row) => row.timings?.createToMountedMs).filter((value): value is number => value !== undefined).sort((left, right) => left - right);
+    const openTimes = report.rows.map((row) => row.timings?.openRowToMountedMs).filter((value): value is number => value !== undefined).sort((left, right) => left - right);
+    const p50 = (values: readonly number[]): number => (values.length ? values[Math.floor((values.length - 1) / 2)]! : -1);
+    const slow = report.rows.filter((row) => (createBoundMs !== null && (row.timings?.createToMountedMs ?? 0) > createBoundMs) || (openBoundMs !== null && (row.timings?.openRowToMountedMs ?? 0) > openBoundMs)).map((row) => row.kindId);
+    const status = unreachable ? "blocked" : report.fatal || report.cancelled || total === 0 ? "fail" : passed === total && slow.length === 0 ? "pass" : "fail";
+    const latency = { en: `create→mounted p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (bound ${createBoundMs})`}, open→mounted p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (bound ${openBoundMs})`}${slow.length ? `; over bound: ${slow.join(", ")}` : ""}`, de: `Anlegen→eingebunden p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (Grenze ${createBoundMs})`}, Öffnen→eingebunden p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (Grenze ${openBoundMs})`}${slow.length ? `; über der Grenze: ${slow.join(", ")}` : ""}` };
     publishAcceptanceCheckResult(
       repoRoot,
       acceptanceCheckResult({
         check: "two-human",
         status,
         startedAt,
-        measured: { locale, kinds: total, passed, failed: total - passed, routeMisses: report.misses.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled) },
+        measured: { locale, kinds: total, passed, failed: total - passed, routeMisses: report.misses.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled), createToMountedP50Ms: p50(createTimes), createToMountedMaxMs: createTimes.at(-1) ?? -1, openRowToMountedP50Ms: p50(openTimes), openRowToMountedMaxMs: openTimes.at(-1) ?? -1, createBoundMs: createBoundMs ?? -1, openBoundMs: openBoundMs ?? -1, overBound: slow.length },
         summary: {
-          en: `${passed}/${total} kinds pass the two-human journey in ${locale}${failing.length ? `; failing: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.slice(0, 160)}` : ""}`,
-          de: `${passed}/${total} Arten bestehen den Zwei-Personen-Weg in ${locale}${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.slice(0, 160)}` : ""}`,
+          en: `${passed}/${total} kinds pass the two-human journey in ${locale}; ${latency.en}${failing.length ? `; failing: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
+          de: `${passed}/${total} Arten bestehen den Zwei-Personen-Weg in ${locale}; ${latency.de}${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
         },
         evidence: [join(outDir, tag, "report.json")],
       }),
     );
     console.log(`[two-human] === ${tag}: PASS ${passed}/${total} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
-  } finally {
-    process.removeListener("SIGINT", cancel);
-    process.removeListener("SIGTERM", cancel);
-  }
+  });
+  process.removeListener("SIGINT", cancel);
+  process.removeListener("SIGTERM", cancel);
 }
 //#endregion 🔖️TwoHuman

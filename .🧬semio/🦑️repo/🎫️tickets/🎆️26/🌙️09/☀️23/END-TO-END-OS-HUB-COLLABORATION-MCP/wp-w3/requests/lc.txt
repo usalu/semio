@@ -1,0 +1,11 @@
+# LC (landing slice), 2026-09-27 05:5x — guest crates whose code changed (native --lib --tests green, combined-check-2)
+semio-framework — P8 agent-lane: action-bus `ToolPayload::into_inner`
+semio-framework-plugin — P8 agent-lane (preview runs the retained job, uncarried lanes refused), P8 law (probe boot args), F1 `typing_run()` (test-only)
+semio-framework-os-kernel — U5 `UserPreferenceRecorded` event + `RecordUserPreference` command (directory Rust twin, DIRECTORY wire change); H9-C `SpaceArtifactCreationProgressV1` on the creation status
+semio-s-artifact-flow-flow + semio-s-plugin-flow — P8 flow: one scene (content child), 9 verbs on the Child lane
+semio-s-artifact-cad-cad + semio-s-plugin-cad — P8 cad: 5 BatchOnly verbs migrated
+semio-s-plugin-space — P8 space-studio: 24 BatchOnly verbs migrated
+semio-s-artifact-space-home — P8 space-home: renameSpace migrated
+semio-s-artifact-trinity-jack (+ semio-s-plugin-trinity) — F1 jack query typing coalesces
+semio-s-artifact-vcs-vcs (+ semio-s-plugin-vcs) — F1 vcs text typing coalesces (retained work + pure handler)
+semio-s-artifact-architect-program (+ semio-s-plugin-architect) — peer compile break fixed (trace SurfaceKind)

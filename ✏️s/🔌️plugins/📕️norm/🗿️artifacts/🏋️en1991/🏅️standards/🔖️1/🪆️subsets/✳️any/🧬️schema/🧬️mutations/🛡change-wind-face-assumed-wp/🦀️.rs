@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWindFaceAs
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-wind-face-assumed-wp", "change-wind-face-assumed-wp")
+        protocol::LocalizedLabel::native("Change assumed wind pressure on the face", "Angenommenen Winddruck auf die Fläche ändern")
     }
 }
 //#endregion 🔖️Payload

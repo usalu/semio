@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "a-queued-job-drop-recovers-the-current-and-remaining-owner",
+      "dropAt": "queued",
+      "currentReceiptSettlements": 1,
+      "remainingActions": 2,
+      "closeSteps": 3,
+      "readyReservations": 0,
+      "inFlightReservations": 0
+    },
+    {
+      "id": "a-running-job-drop-does-not-settle-the-current-receipt-twice",
+      "dropAt": "running",
+      "currentReceiptSettlements": 1,
+      "remainingActions": 2,
+      "closeSteps": 3,
+      "readyReservations": 0,
+      "inFlightReservations": 0
+    }
+  ]
+}

@@ -26,6 +26,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "no-mutation" => Ok(input.to_vec()),
         "set-fmt" => reference::mutate_set_fmt(input, &params),
         "set-data" => reference::mutate_set_data(input, &params),
+        "patch-data" => reference::mutate_patch_data(input, &params),
         "set-other-chunks" => reference::mutate_set_other_chunks(input, &params),
         "set-snapshot" => reference::mutate_set_snapshot(input, &params),
         "" => Err("mutation spec carries no `kind`".to_string()),
@@ -158,6 +159,24 @@ mod reference {
         write(&wav)
     }
 
+    /// 🩹️ `PatchData` — independently replaces or moves one bounded PCM16 sample range.
+    pub fn mutate_patch_data(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let mut wav = read(input)?;
+        let index = number(params, "index", f64::MAX) as usize;
+        if let Some(Json::Number(move_to)) = params.get("moveTo") {
+            let move_to = *move_to as usize;
+            if index >= wav.samples.len() || move_to >= wav.samples.len() { return Err("patch-data move is outside the sample range".into()); }
+            let sample = wav.samples.remove(index);
+            wav.samples.insert(move_to, sample);
+        } else {
+            let remove_count = number(params, "removeCount", f64::MAX) as usize;
+            let end = index.checked_add(remove_count).ok_or_else(|| "patch-data range overflows".to_string())?;
+            if index > wav.samples.len() || end > wav.samples.len() { return Err("patch-data range is outside the sample lane".into()); }
+            wav.samples.splice(index..end, samples(params, "samples"));
+        }
+        write(&wav)
+    }
+
     /// 📎️ `SetOtherChunks` — replaces the verbatim chunk list wholesale; `fmt`/`data` are untouched.
     pub fn mutate_set_other_chunks(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut wav = read(input)?;
@@ -194,6 +213,7 @@ mod reference {
             "no-mutation" => {}
             "set-fmt" => restored.format = original.format,
             "set-data" => restored.samples = original.samples,
+            "patch-data" => restored.samples = original.samples,
             "set-other-chunks" => restored.other_chunks = original.other_chunks,
             other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
         }

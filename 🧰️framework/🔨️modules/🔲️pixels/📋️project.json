@@ -7,7 +7,12 @@
         "cwd": "🧰️framework/🔨️modules/🔲️pixels",
         "command": "bun ./📜️script.ts test typescript",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/**/*"
+      ]
     },
     "test-rust": {
       "executor": "nx:run-commands",

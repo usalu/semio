@@ -7,6 +7,15 @@
     {
       "type": "object",
       "additionalProperties": false,
+      "required": ["mutation", "payload"],
+      "properties": {
+        "mutation": { "const": "set-snapshot" },
+        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/set-snapshot/schema.json" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
       "required": [
         "mutation",
         "payload"
@@ -226,6 +235,15 @@
         "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-pixels/schema.json"
         }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "payload"],
+      "properties": {
+        "mutation": { "const": "patch-pixels" },
+        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/patch-pixels/schema.json" }
       }
     },
     {

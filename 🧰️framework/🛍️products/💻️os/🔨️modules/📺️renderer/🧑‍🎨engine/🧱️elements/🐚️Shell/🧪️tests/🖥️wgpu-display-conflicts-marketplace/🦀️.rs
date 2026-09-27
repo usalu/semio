@@ -122,7 +122,7 @@ fn settle_tree_surface(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu
                 assert!(engine.seal_presented_input_candidate(witness, &[surface.to_string()]));
                 assert!(engine.acknowledge_presented_input(witness));
                 return;
-            },
+            }
             step => panic!("Display branch paint answered {step:?}"),
         }
     }
@@ -158,7 +158,8 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
         root: records.first().expect("Display document root").id,
         layout_epoch: 0,
         node_count: records.len(),
-    }).expect("Display retained document header");
+    })
+    .expect("Display retained document header");
     for record in records {
         document.try_upsert_record(record).expect("Display retained record admits");
     }
@@ -349,16 +350,23 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
         id: source["id"].as_str().unwrap().into(),
         quarantined: source["quarantined"].as_bool().unwrap(),
         code: source["code"].as_str().unwrap().into(),
-        message: source["message"].as_str().unwrap().into(), preview_after: r#"{
+        message: source["message"].as_str().unwrap().into(),
+        preview_after: r#"{
   "incoming": true
-}"#.into(),
+}"#
+        .into(),
     }];
     shell.selected_conflict_id = None;
     let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).unwrap();
     let row_id = fixture["rowId"].as_str().unwrap();
     assert_eq!(records.iter().filter(|record| matches!(record.component, ui_contract::Component::TreeItem(_))).count(), fixture["expected"]["rowCount"].as_u64().unwrap() as usize);
     let row = records.iter().find(|record| record.key.as_str().ends_with(row_id)).unwrap();
-    let toolbar = row.children.iter().filter_map(|id| records.iter().find(|record| record.id == *id)).find(|record| matches!(&record.component, ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Toolbar)).expect("the conflict row owns its inline toolbar before selection");
+    let toolbar = row
+        .children
+        .iter()
+        .filter_map(|id| records.iter().find(|record| record.id == *id))
+        .find(|record| matches!(&record.component, ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Toolbar))
+        .expect("the conflict row owns its inline toolbar before selection");
     let ui_contract::Component::TreeItem(props) = &row.component else { panic!("the conflict is one TreeItem row") };
     assert_eq!(props.inline_toolbar, Some(toolbar.id), "the row explicitly identifies its semantic inline toolbar");
     assert!(matches!(&toolbar.layout, ui_contract::LayoutSpec::Stack(layout) if layout.axis == ui_contract::Axis::Horizontal));
@@ -419,11 +427,7 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
-    let hit = (0..240)
-        .step_by(4)
-        .flat_map(|y| (0..300).step_by(4).map(move |x| (x as f32, y as f32)))
-        .find_map(|(x, y)| engine.scene_at(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, x, y))
-        .expect("accepted frame exposes the selected DiffView slot");
+    let hit = (0..240).step_by(4).flat_map(|y| (0..300).step_by(4).map(move |x| (x as f32, y as f32))).find_map(|(x, y)| engine.scene_at(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, x, y)).expect("accepted frame exposes the selected DiffView slot");
     assert_eq!(hit.kind, ui_wgpu::wgpu::SurfaceKind::DiffView);
     assert!(hit.rect.w > 0.0 && hit.rect.h > 0.0, "the accepted detail slot has real geometry: {:?}", hit.rect);
 }
@@ -438,9 +442,11 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
         id: source["id"].as_str().unwrap().into(),
         quarantined: source["quarantined"].as_bool().unwrap(),
         code: source["code"].as_str().unwrap().into(),
-        message: source["message"].as_str().unwrap().into(), preview_after: r#"{
+        message: source["message"].as_str().unwrap().into(),
+        preview_after: r#"{
   "incoming": true
-}"#.into(),
+}"#
+        .into(),
     }];
     let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).expect("conflict controls project");
     let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {

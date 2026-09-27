@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveSlab {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-slab", "remove-slab")
+        protocol::LocalizedLabel::native("Remove composite slab", "Verbunddecke entfernen")
     }
 }
 //#endregion 🔖️Payload

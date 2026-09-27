@@ -41,3 +41,5 @@ record remove-design tag=13
 field payload bytes
 record edit-design tag=14
 field payload bytes
+record set-snapshot tag=15
+field payload bytes

@@ -1,0 +1,19 @@
+{
+  "slugs": [
+    { "folder": "4️⃣ac1018", "slug": "ac1018" },
+    { "folder": "🔟ac1024", "slug": "ac1024" },
+    { "folder": "7️⃣1.7", "slug": "1.7" },
+    { "folder": "🧾️json", "slug": "json" },
+    { "folder": "🧑‍💻dev", "slug": "dev" },
+    { "folder": "plain", "slug": "plain" }
+  ],
+  "prefixes": [
+    { "variant": "stdio-dwg-ac1018", "prefix": "🗄️stdio🖊️dwg4️⃣ac1018" },
+    { "variant": "stdio-dwg-ac1024", "prefix": "🗄️stdio🖊️dwg🔟ac1024" },
+    { "variant": "stdio-pdf14-a", "prefix": "🗄️stdio📖️pdf4️⃣1.4🗄️a" },
+    { "variant": "stdio-pdf17-a", "prefix": "🗄️stdio📖️pdf7️⃣1.7🗄️a" },
+    { "variant": "stdio-gif87a", "prefix": "🗄️stdio🎞️gif7️⃣87a" },
+    { "variant": "stdio-gif89a", "prefix": "🗄️stdio🎞️gif9️⃣89a" },
+    { "variant": "stdio-json-i", "prefix": "🗄️stdio🧾️json🛜️i-json" }
+  ]
+}

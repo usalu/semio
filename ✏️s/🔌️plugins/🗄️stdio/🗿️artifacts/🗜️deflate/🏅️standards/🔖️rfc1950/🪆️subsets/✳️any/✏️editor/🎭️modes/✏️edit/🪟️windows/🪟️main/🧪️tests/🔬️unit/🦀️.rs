@@ -6,7 +6,7 @@ async fn definition_declares_an_editable_text_window() {
     let def = definition();
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
-    assert!(def.actions.iter().any(|action| action.id == "replace-text"), "editable text window must carry the replace-text catalog action");
+    assert!(def.actions.iter().any(|action| action.id == "textEdit"), "editable text window must carry the replace-text catalog action");
 }
 
 #[semio_framework_async_macros::async_test]

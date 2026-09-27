@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeAutoma
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change automation-class", "automation-class ändern")
+        protocol::LocalizedLabel::native("Change building automation class", "Gebäudeautomationsklasse ändern")
     }
 }

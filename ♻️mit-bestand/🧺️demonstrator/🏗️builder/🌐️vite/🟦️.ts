@@ -3,10 +3,10 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { demonstratorGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { demonstratorRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
@@ -78,6 +78,7 @@ export default defineConfig(({ command }) => {
     },
   },
   plugins: [
+    semioServeCloseVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "Entwerfen mit Bestand · Demonstrator",
       entry: "./🟦️.tsx",
@@ -90,7 +91,7 @@ export default defineConfig(({ command }) => {
     semioBlobVitePlugin(),
     development && demonstratorUnionReceiptVitePlugin({ workspace: repoRoot }),
     development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) }),
-    command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
+    command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer }),
     ...semioAssetsVitePlugin(repoRoot),
     ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, "release"))] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),

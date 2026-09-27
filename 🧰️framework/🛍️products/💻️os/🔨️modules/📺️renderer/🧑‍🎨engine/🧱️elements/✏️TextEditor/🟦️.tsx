@@ -18,8 +18,8 @@ import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
 import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { createCoalescingActionDispatcher, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useAppKeybindingsByActionId } from "../🏛️ShellHost/🟦️.tsx";
-import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
-import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
+import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TextEditorHost
@@ -39,6 +39,22 @@ type RenameInfo = { readonly name: string; readonly occurrences: readonly SpanRa
 type RenameDraft = { readonly occurrences: readonly SpanRange[]; readonly text: string };
 
 type PickTarget = { readonly domain: string; readonly id: string; readonly generality?: number; readonly label: string };
+
+export type TextEditorExplicitDraftSettings = Readonly<{
+  readOnly: false;
+  editAction: string;
+  editArgument: string;
+  editArguments: Readonly<Record<string, unknown>>;
+  commit: "explicit";
+  applyLabel: string;
+  discardLabel: string;
+  conflictLabel: string;
+  applyingLabel: string;
+  cancelLabel: string;
+  failedLabel: string;
+}>;
+
+export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: string; draft: string; dirty: boolean; conflicted: boolean }>;
 //#endregion Types
 
 const TOKEN_CLASS_COLORS: Record<string, string> = {
@@ -127,6 +143,78 @@ export function reconcileTextEditorEchoV1(state: TextEditorEchoStateV1, buffer: 
  * clipboard and input events and are applied at the session's caret. */
 function ignoreInputSinkChange(): void {}
 
+export const TEXT_EDITOR_CARET_BLINK_MS = 500;
+
+export type TextEditorCaretCadenceV1 = Readonly<{
+  reset: () => void;
+  suspend: () => void;
+  dispose: () => void;
+  visible: () => boolean;
+  armed: () => boolean;
+}>;
+
+/** @emoji ⌨️ Gives the canvas editor the focus-owned caret cadence native HTML inputs receive from
+ * the browser. The hidden textarea remains the focus/IME authority; the canvas session receives
+ * only visible-state transitions and paints the caret itself. */
+export function installTextEditorCaretCadenceV1(target: HTMLTextAreaElement, present: (visible: boolean) => void): TextEditorCaretCadenceV1 {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let current = false;
+  let focused = target.ownerDocument.activeElement === target;
+  const publish = (visible: boolean) => {
+    if (current === visible) return;
+    current = visible;
+    present(visible);
+  };
+  const clear = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  const arm = () => {
+    clear();
+    if (!focused) return;
+    timer = setTimeout(() => {
+      timer = undefined;
+      if (!focused) return;
+      publish(!current);
+      arm();
+    }, TEXT_EDITOR_CARET_BLINK_MS);
+  };
+  const reset = () => {
+    if (!focused) return;
+    publish(true);
+    arm();
+  };
+  const focus = () => {
+    focused = true;
+    reset();
+  };
+  const suspend = () => {
+    focused = false;
+    clear();
+    publish(false);
+  };
+  const resetEvents = ["beforeinput", "input", "keydown", "pointerdown", "compositionstart", "compositionupdate", "compositionend"] as const;
+  target.addEventListener("focus", focus);
+  target.addEventListener("blur", suspend);
+  for (const event of resetEvents) target.addEventListener(event, reset);
+  target.ownerDocument.defaultView?.addEventListener("pagehide", suspend);
+  if (focused) reset();
+  else present(false);
+  return {
+    reset,
+    suspend,
+    visible: () => current,
+    armed: () => timer !== undefined,
+    dispose: () => {
+      suspend();
+      target.removeEventListener("focus", focus);
+      target.removeEventListener("blur", suspend);
+      for (const event of resetEvents) target.removeEventListener(event, reset);
+      target.ownerDocument.defaultView?.removeEventListener("pagehide", suspend);
+    },
+  };
+}
+
 /** @emoji 🚫️ A refused edit never reaches the guest: it leaves the pending set, and once nothing is pending any more the host
  * re-applies the guest's own buffer (`resync`) — the typed text the guest did not take disappears together with the
  * shell's refusal notice instead of lingering as an edit that looks saved (ticket 26/09/23 F1: every keystroke after the
@@ -189,6 +277,69 @@ function parseJsonOr<T>(json: string | undefined, fallback: T): T {
   }
 }
 
+/** 📝 Decodes the strict explicit-commit subset of a text-editor scene's settings. */
+export function parseTextEditorExplicitDraftSettings(json: string | undefined): TextEditorExplicitDraftSettings | null {
+  if (!json) return null;
+  try {
+    const value = JSON.parse(json) as Record<string, unknown>;
+    if (
+      value === null ||
+      Array.isArray(value) ||
+      value.readOnly !== false ||
+      value.commit !== "explicit" ||
+      typeof value.editAction !== "string" ||
+      value.editAction.length === 0 ||
+      typeof value.editArgument !== "string" ||
+      value.editArgument.length === 0 ||
+      typeof value.applyLabel !== "string" ||
+      value.applyLabel.length === 0 ||
+      typeof value.discardLabel !== "string" ||
+      value.discardLabel.length === 0 ||
+      typeof value.conflictLabel !== "string" ||
+      value.conflictLabel.length === 0 ||
+      typeof value.applyingLabel !== "string" ||
+      value.applyingLabel.length === 0 ||
+      typeof value.cancelLabel !== "string" ||
+      value.cancelLabel.length === 0 ||
+      typeof value.failedLabel !== "string" ||
+      value.failedLabel.length === 0 ||
+      (value.editArguments !== undefined && (value.editArguments === null || typeof value.editArguments !== "object" || Array.isArray(value.editArguments)))
+    ) return null;
+    return {
+      readOnly: false,
+      editAction: value.editAction,
+      editArgument: value.editArgument,
+      editArguments: (value.editArguments ?? {}) as Readonly<Record<string, unknown>>,
+      commit: "explicit",
+      applyLabel: value.applyLabel,
+      discardLabel: value.discardLabel,
+      conflictLabel: value.conflictLabel,
+      applyingLabel: value.applyingLabel,
+      cancelLabel: value.cancelLabel,
+      failedLabel: value.failedLabel,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** 📦 Merges a local draft into its artifact-owned action without mutating static arguments. */
+export function textEditorExplicitDraftAction(settings: TextEditorExplicitDraftSettings, draft: string): ActionDescriptor {
+  return { controllerId: "", action: settings.editAction, args: { ...settings.editArguments, [settings.editArgument]: draft } };
+}
+
+/** 🔄 Preserves dirty local text across rerenders and accepts only its exact persisted echo. */
+export function reconcileTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, sceneBuffer: string): TextEditorExplicitDraftState {
+  if (state.surfaceId !== surfaceId || !state.dirty || state.draft === sceneBuffer) return { surfaceId, base: sceneBuffer, draft: sceneBuffer, dirty: false, conflicted: false };
+  return { ...state, conflicted: sceneBuffer !== state.base };
+}
+
+/** ✍️ Recomputes dirty/conflict state against the latest persisted buffer for each local edit. */
+export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, sceneBuffer: string, draft: string): TextEditorExplicitDraftState {
+  if (state.surfaceId !== surfaceId || draft === sceneBuffer) return { surfaceId, base: sceneBuffer, draft, dirty: draft !== sceneBuffer, conflicted: false };
+  return { surfaceId, base: state.base, draft, dirty: true, conflicted: sceneBuffer !== state.base };
+}
+
 //#endregion EditingHelpers
 
 //#region WasmEditorSurface
@@ -197,12 +348,18 @@ function WasmEditorSurface({
   controllerId,
   surfaceId,
   onAction,
+  explicitDraft,
+  explicitDraftDirty,
+  onDraftChange,
   requestContextMenu,
 }: {
   readonly scene: TextEditorScene;
   readonly controllerId: string;
   readonly surfaceId: string;
   readonly onAction: (action: ActionDescriptor) => void;
+  readonly explicitDraft?: TextEditorExplicitDraftSettings | null;
+  readonly explicitDraftDirty?: boolean;
+  readonly onDraftChange?: (text: string) => void;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 }) {
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
@@ -210,6 +367,13 @@ function WasmEditorSurface({
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
   const echoStateRef = useRef<TextEditorEchoStateV1>({ pending: [], acknowledged: null });
   const reconciledRef = useRef<{ readonly scene: TextEditorScene; readonly pack: Uint8Array } | null>(null);
+  const explicitHistoryRef = useRef<{ past: string[]; current: string; future: string[] }>({ past: [], current: scene.buffer, future: [] });
+
+  useEffect(() => {
+    if (!explicitDraft || explicitDraftDirty === false || explicitHistoryRef.current.current !== scene.buffer) {
+      explicitHistoryRef.current = { past: [], current: scene.buffer, future: [] };
+    }
+  }, [explicitDraft, explicitDraftDirty, scene.buffer]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -232,6 +396,13 @@ function WasmEditorSurface({
     () =>
       createCoalescingActionDispatcher<TextEditorOutboxV1>(
         async (next) => {
+          if (explicitDraft) {
+            const history = explicitHistoryRef.current;
+            if (history.current !== next.text) explicitHistoryRef.current = { past: [...history.past, history.current].slice(-256), current: next.text, future: [] };
+            echoStateRef.current = { pending: [], acknowledged: next.text };
+            onDraftChange?.(next.text);
+            return;
+          }
           const echo = echoStateRef.current;
           const guestHasText = echo.pending.length > 0 ? echo.pending.at(-1) === next.text : echo.acknowledged === next.text;
           if (!guestHasText && !readOnlyRef.current) {
@@ -254,7 +425,7 @@ function WasmEditorSurface({
         },
         (a, b) => a.text === b.text && a.start === b.start && a.end === b.end,
       ),
-    [controllerId, onAction, surfaceId],
+    [controllerId, explicitDraft, onAction, onDraftChange, surfaceId],
   );
   const sendEdit = useCallback(
     (text: string) => {
@@ -263,6 +434,24 @@ function WasmEditorSurface({
     },
     [deliver],
   );
+
+  const moveExplicitHistory = useCallback((direction: "undo" | "redo") => {
+    if (!explicitDraft) return false;
+    const history = explicitHistoryRef.current;
+    const source = direction === "undo" ? history.past : history.future;
+    const next = source.at(-1);
+    if (next === undefined) return true;
+    explicitHistoryRef.current = direction === "undo"
+      ? { past: history.past.slice(0, -1), current: next, future: [...history.future, history.current] }
+      : { past: [...history.past, history.current], current: next, future: history.future.slice(0, -1) };
+    const session = sessionRef.current;
+    session?.setText(next);
+    session?.setSelectionRange(next.length, next.length);
+    session?.renderFrame();
+    echoStateRef.current = { pending: [], acknowledged: next };
+    onDraftChange?.(next);
+    return true;
+  }, [explicitDraft, onDraftChange]);
 
   const syncSession = useCallback(
     (resync = false) => {
@@ -307,13 +496,66 @@ function WasmEditorSurface({
     wasmEditorSurfaceShellScope?.rootRef.current ?? undefined,
   );
 
+  const presenceWindowId = surfaceId || "text";
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const [presenceFrame, setPresenceFrame] = useState(0);
+  /** ✏️ Publishes this text window's caret in the editor's WORLD coordinates (plus its camera and size) for the next
+   * presence beat, so every peer paints it at the same text position through its own camera. */
+  const publishCaretPresence = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    try {
+      const world = JSON.parse(session.caretWorldJson()) as { readonly x?: number; readonly y?: number } | null;
+      const camera = JSON.parse(session.cameraJson()) as { readonly x?: number; readonly y?: number; readonly zoom?: number };
+      const rect = surfaceRef.current?.getBoundingClientRect();
+      publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+        windowId: presenceWindowId,
+        space: "text",
+        kind: { kind: "canvas", x: camera.x ?? 0, y: camera.y ?? 0, zoom: camera.zoom ?? 1 },
+        size: [rect?.width ?? 0, rect?.height ?? 0],
+        ...(world?.x == null || world?.y == null ? {} : { pointer: [world.x, world.y, 0] as const }),
+      });
+      publishLocalActiveToolV1("local", "edit");
+    } catch {
+      return;
+    }
+  }, [presenceWindowId]);
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const projectPeerCaret = useCallback((world: readonly [number, number]): { readonly x: number; readonly y: number } | null => {
+    const session = sessionRef.current;
+    if (!session) return null;
+    try {
+      const screen = JSON.parse(session.worldToScreenJson(world[0], world[1])) as { readonly x?: number; readonly y?: number } | null;
+      return screen?.x == null || screen?.y == null ? null : { x: screen.x, y: screen.y };
+    } catch {
+      return null;
+    }
+  }, []);
+
   const emitSelection = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
     deliver({ text: session.text(), start: session.anchor(), end: session.caret() });
-  }, [deliver]);
+    publishCaretPresence();
+  }, [deliver, publishCaretPresence]);
 
   const sinkRef = useRef<HTMLTextAreaElement>(null);
+  const caretCadenceRef = useRef<TextEditorCaretCadenceV1 | null>(null);
+  useEffect(() => {
+    const sink = sinkRef.current;
+    if (!sink) return;
+    const cadence = installTextEditorCaretCadenceV1(sink, (visible) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      session.setCaretVisible(visible);
+      session.renderFrame();
+    });
+    caretCadenceRef.current = cadence;
+    return () => {
+      cadence.dispose();
+      if (caretCadenceRef.current === cadence) caretCadenceRef.current = null;
+    };
+  }, []);
   useEffect(() => {
     const sink = sinkRef.current;
     if (!sink) return;
@@ -491,13 +733,15 @@ function WasmEditorSurface({
   // so it must not close over anything that changes per scene update (see sessionEpoch above for re-sync).
   const onSessionReady = useCallback((session: GraphWasmSession) => {
     sessionRef.current = session as FrameworkEditorSession;
+    sessionRef.current.setCaretVisible(caretCadenceRef.current?.visible() ?? false);
     syncSessionCanvasTheme(sessionRef.current);
     setSessionEpoch((epoch) => epoch + 1);
   }, []);
 
   return (
-    <div className="relative min-h-0 flex-1">
+    <div ref={surfaceRef} className="relative min-h-0 flex-1">
       <GraphWasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
+      <TextPeerCaretsOverlayV1 windowId={presenceWindowId} project={projectPeerCaret} frame={presenceFrame + sessionEpoch} lineHeightPx={16} locale={typeof document !== "undefined" ? document.documentElement.lang : undefined} />
       <div
         className="absolute inset-0"
         onPointerDown={(event) => {
@@ -557,6 +801,8 @@ function WasmEditorSurface({
           session.wheelScrollScreen(event.deltaY);
           session.renderFrame();
           dispatch("setCamera", { camera: JSON.parse(session.cameraJson()) });
+          publishCaretPresence();
+          setPresenceFrame((frame) => frame + 1);
         }}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -757,6 +1003,7 @@ function WasmEditorSurface({
           const history = documentHistoryChord(event);
           if (history) {
             event.preventDefault();
+            if (moveExplicitHistory(history)) return;
             dispatch(history, {});
             return;
           }
@@ -917,25 +1164,16 @@ function WasmEditorSurface({
 export function TextEditorHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.textEditor;
   const isClient = useClient();
-  const presenceWindowId = node.surfaceId || "text";
-  const localPresenceActor = useLocalPresenceActorIdV1("local");
-  const presencePublishAtRef = useRef(0);
-  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const explicitDraft = useMemo(() => parseTextEditorExplicitDraftSettings(scene?.settingsJson), [scene?.settingsJson]);
+  const [draftState, setDraftState] = useState<TextEditorExplicitDraftState>(() => ({ surfaceId: node.surfaceId, base: scene?.buffer ?? "", draft: scene?.buffer ?? "", dirty: false, conflicted: false }));
+  const [draftApply, setDraftApply] = useState<{ pending: boolean; error: string | null }>({ pending: false, error: null });
   useEffect(() => {
-    if (!scene) return;
-    const now = Date.now();
-    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
-    presencePublishAtRef.current = now;
-    const caret = scene.buffer.length;
-    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
-      windowId: presenceWindowId,
-      space: "canvas",
-      kind: { kind: "canvas", x: 0, y: 0, zoom: 1 },
-      size: [1, 1],
-      pointer: [caret, 0, 0],
-    });
-    publishLocalActiveToolV1("local", "edit");
-  }, [presenceWindowId, scene?.buffer]);
+    if (!scene || !explicitDraft) return;
+    setDraftState((current) => reconcileTextEditorExplicitDraft(current, node.surfaceId, scene.buffer));
+  }, [explicitDraft, node.surfaceId, scene]);
+  useEffect(() => {
+    if (!draftState.dirty) setDraftApply({ pending: false, error: null });
+  }, [draftState.dirty]);
   const tokens = useMemo((): readonly GrammarToken[] => {
     if (!scene?.tokensJson) return [];
     try {
@@ -958,30 +1196,50 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
 
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
+  const draft = explicitDraft && draftState.surfaceId === node.surfaceId ? draftState.draft : scene.buffer;
+  const displayedScene = explicitDraft ? { ...scene, buffer: draft } : scene;
+  const changeDraft = (text: string) => {
+    setDraftApply((current) => current.error === null ? current : { pending: false, error: null });
+    setDraftState((current) => changeTextEditorExplicitDraft(current, node.surfaceId, scene.buffer, text));
+  };
+  const discardDraft = () => {
+    setDraftApply({ pending: false, error: null });
+    setDraftState({ surfaceId: node.surfaceId, base: scene.buffer, draft: scene.buffer, dirty: false, conflicted: false });
+  };
+  const applyDraft = async () => {
+    if (!explicitDraft || !draftState.dirty || draftState.conflicted || draftApply.pending) return;
+    const action = textEditorExplicitDraftAction(explicitDraft, draft);
+    setDraftApply({ pending: true, error: null });
+    const reason = refusalReason(await onAction({ ...action, controllerId: node.controllerId }));
+    setDraftApply(reason === null ? { pending: false, error: null } : { pending: false, error: reason });
+  };
+
   return (
-    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId}>
+    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && draftState.dirty ? "true" : "false"}>
       {isClient ? (
-        <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} requestContextMenu={requestContextMenu} />
+        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} explicitDraft={explicitDraft} explicitDraftDirty={draftState.dirty} onDraftChange={changeDraft} requestContextMenu={requestContextMenu} />
       ) : (
         <div className="relative min-h-0 flex-1">
-          <HighlightedBuffer buffer={scene.buffer} tokens={tokens} />
+          <HighlightedBuffer buffer={draft} tokens={tokens} />
           <Textarea
             className="relative min-h-0 flex-1 resize-none bg-transparent font-mono text-xs text-transparent caret-foreground"
             id={`${node.surfaceId}.editor`}
             lazy
             rows={24}
-            value={scene.buffer}
+            value={draft}
             placeholder={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
-            onLazyChange={(value) =>
-              onAction({
-                controllerId: node.controllerId,
-                action: textEditorActions.edit,
-                args: { surfaceId: node.surfaceId, text: value },
-              })
-            }
+            onLazyChange={(value) => explicitDraft ? changeDraft(value) : onAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } })}
           />
         </div>
       )}
+      {explicitDraft ? (
+        <div className="flex items-center justify-end gap-2 border-t border-border px-3 py-2">
+          {draftState.conflicted || draftApply.error ? <span role="alert" className="mr-auto truncate text-xs text-destructive">{draftState.conflicted ? explicitDraft.conflictLabel : `${explicitDraft.failedLabel}: ${draftApply.error}`}</span> : null}
+          {draftApply.pending ? <span role="status" className="mr-auto text-xs text-muted-foreground">{explicitDraft.applyingLabel}</span> : null}
+          <button type="button" className="rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={!draftState.dirty || draftApply.pending} onClick={discardDraft}>{explicitDraft.discardLabel}</button>
+          <button type="button" className="rounded bg-accent px-3 py-1 text-xs text-accent-foreground disabled:opacity-50" disabled={!draftState.dirty || draftState.conflicted || draftApply.pending} onClick={() => void applyDraft()}>{explicitDraft.applyLabel}</button>
+        </div>
+      ) : null}
       {diagnostics.length > 0 ? (
         <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
           {diagnostics.slice(0, 4).map((diag, index) => (
@@ -992,16 +1250,6 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
           ))}
         </div>
       ) : null}
-      <CanvasPresenceOverlayV1
-        runtimeKey="local"
-        windowId={presenceWindowId}
-        space="canvas"
-        myActor={localPresenceActor ?? ""}
-        locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
-        localCanvas={{ x: 0, y: 0, zoom: 1 }}
-        localSizePx={[1, 1]}
-        scenePath={`text/${presenceWindowId}`}
-      />
     </div>
   );
 }

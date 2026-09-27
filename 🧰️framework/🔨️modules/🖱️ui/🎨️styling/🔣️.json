@@ -363,11 +363,13 @@
       "textSmPx": 12.8,
       "textBasePx": 14.4,
       "textLgPx": 16.0,
+      "text2xlPx": 21.6,
       "text2xsLineHeightPx": 14.4,
       "textXsLineHeightPx": 16.0,
       "textSmLineHeightPx": 19.2,
       "textBaseLineHeightPx": 22.4,
-      "textLgLineHeightPx": 25.6
+      "textLgLineHeightPx": 25.6,
+      "text2xlLineHeightPx": 30.4
     },
     "dom": {
       "rootRemPx": 16.0,

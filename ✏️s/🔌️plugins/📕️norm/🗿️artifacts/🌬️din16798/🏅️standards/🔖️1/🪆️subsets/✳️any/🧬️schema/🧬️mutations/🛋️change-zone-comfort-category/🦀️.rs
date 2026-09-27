@@ -11,6 +11,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeZoneCo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-comfort-category", kind: "change-zone-comfort-category", record: "ChangeZoneComfortCategory" };
     fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("change-zone-comfort-category", "change-zone-comfort-category") }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change comfort category of the zone", "Kategorie des Raumklimas der Zone ändern")
+    }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

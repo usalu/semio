@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedDel
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-delta-t", "change-assumed-delta-t")
+        protocol::LocalizedLabel::native("Change assumed temperature difference", "Angenommenen Temperaturunterschied ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -789,9 +789,12 @@ impl GuestArtifactComponent {
     async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
         self.compiled
             .acquire(context, || async {
+                context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 0, total_units: 1 })?;
                 let bytes = self.component.read(context).await?;
                 let (runtime, package) = (Arc::clone(&self.runtime), self.package.clone());
-                interpret_off_worker(context, move |_handle, _progress| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
+                let compiled = interpret_off_worker(context, move |_handle, _progress| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
+                context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 1, total_units: 1 })?;
+                Ok(compiled)
             })
             .await
     }
@@ -803,60 +806,60 @@ impl GuestArtifactComponent {
         if self.rows.is_empty() {
             return Ok(());
         }
-        let outcome = self
-            .verified
-            .get_or_try_init(|| async {
-                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Verifying);
-                match self.verify_rows(context).await {
-                    Ok(()) => {
-                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Ready);
-                        Ok(Ok(()))
-                    }
-                    Err(error @ (AuthorityError::Cancelled | AuthorityError::Stalled | AuthorityError::DeadlineExceeded)) => {
-                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Staged);
-                        Err(error)
-                    }
-                    Err(AuthorityError::Catalog(refusal)) => {
-                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
-                        Ok(Err(refusal))
-                    }
-                    Err(error) => {
-                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
-                        Ok(Err(error.to_string()))
-                    }
-                }
-            })
-            .await?;
+        let outcome = self.verified.get_or_try_init(|| self.verify_once(context)).await?;
         outcome.clone().map_err(AuthorityError::Catalog)
     }
 
-    /// 🔐️ Interprets every pending row on one compile, several at once ([`guest_verification_concurrency`]),
-    /// compares each answer with its trust record and remembers it for this engine.
+    /// 🔐️ One verification attempt: its phase in the catalog progress, and its terminal outcome — `Ok(Err(..))`
+    /// is a refusal the package keeps, `Err` a cancellation or stall the next caller retries.
+    async fn verify_once(&self, context: &OperationContext<'_>) -> Result<Result<(), String>, AuthorityError> {
+        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Verifying);
+        match self.verify_rows(context).await {
+            Ok(()) => {
+                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Ready);
+                Ok(Ok(()))
+            }
+            Err(error @ (AuthorityError::Cancelled | AuthorityError::Stalled | AuthorityError::DeadlineExceeded)) => {
+                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Staged);
+                Err(error)
+            }
+            Err(AuthorityError::Catalog(refusal)) => {
+                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
+                Ok(Err(refusal))
+            }
+            Err(error) => {
+                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
+                Ok(Err(error.to_string()))
+            }
+        }
+    }
+
+    /// 🔐️ Interprets every pending row on one compile, several at once ([`guest_verification_concurrency`]).
     async fn verify_rows(&self, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         use futures::StreamExt;
         let schemas = self.rows.iter().map(|(schema, _)| schema.as_str()).collect::<Vec<_>>().join(", ");
         let compiled = self.compiled(context).await.map_err(|error| catalog_error(format!("{schemas}: {error}")))?;
-        let rows = self.rows.iter().map(|(schema, expected)| {
-            let compiled = Arc::clone(&compiled);
-            async move {
-                context.checkpoint()?;
-                let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.clone());
-                let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
-                    .await?
-                    .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
-                context.checkpoint()?;
-                if observed != *expected {
-                    return Err(catalog(&format!("{schema}: guest artifact codec schema hash differs from its trust record")));
-                }
-                self.verifications.remember(&self.component_sha256, schema, &observed).await;
-                self.progress.package(self.position, |package| package.rows_verified = package.rows_verified.saturating_add(1));
-                Ok::<_, AuthorityError>(())
-            }
-        });
-        let mut running = futures::stream::iter(rows).buffer_unordered(guest_verification_concurrency());
+        let pending: Vec<_> = self.rows.iter().map(|(schema, expected)| self.verify_row(Arc::clone(&compiled), schema, *expected, context)).collect();
+        let mut running = futures::stream::iter(pending).buffer_unordered(guest_verification_concurrency());
         while let Some(row) = running.next().await {
             row?;
         }
+        Ok(())
+    }
+
+    /// 🔐️ One row: the component's own `pack-schema-hash`, compared with the trust record and remembered for this engine.
+    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_host::CompiledHandle>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        context.checkpoint()?;
+        let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.to_string());
+        let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+            .await?
+            .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
+        context.checkpoint()?;
+        if observed != expected {
+            return Err(catalog(&format!("{schema}: guest artifact codec schema hash differs from its trust record")));
+        }
+        self.verifications.remember(&self.component_sha256, schema, &observed).await;
+        self.progress.package(self.position, |package| package.rows_verified = package.rows_verified.saturating_add(1));
         Ok(())
     }
 }

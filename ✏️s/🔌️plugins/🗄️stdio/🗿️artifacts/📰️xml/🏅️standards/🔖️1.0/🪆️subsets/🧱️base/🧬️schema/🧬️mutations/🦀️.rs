@@ -10,6 +10,9 @@ pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
 pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use crate::schema::mutation_support::XmlNodePath;
 
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "s.stdio.xml")]
@@ -20,6 +23,7 @@ pub enum XmlMutation {
     RemoveElement(RemoveElementMutation),
     SetAttribute(SetAttributeMutation),
     SetText(SetTextMutation),
+    SetSnapshot(set_snapshot::SetSnapshot),
 }
 
 pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {

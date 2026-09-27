@@ -4562,6 +4562,53 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group() {
+        let mut app = contract_composed_app().await;
+        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        let children = vec![ChildEmit::of::<TestSnapshot, _>("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 5 })])];
+        let wire = ChildEmit::encode_groups(&children);
+        assert!(!wire.is_empty(), "a gesture that touches a child carries its group");
+        assert_eq!(ChildEmit::decode_groups(&wire).expect("the wire pack decodes"), children, "the group survives the wire byte for byte");
+        assert!(ChildEmit::encode_groups(&[]).is_empty(), "a childless gesture leaves the wire unchanged");
+        assert_eq!(ChildEmit::decode_groups(&[7, 7, 7]).expect_err("rubbish is refused").code.0, "transaction.child-groups-malformed");
+
+        let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
+        let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, "agent composite", Some(protocol::MutationOrigin::Owner)).await;
+        assert!(outcome.rejection.is_none(), "prepare admits a held child: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
+        let edit_id = app.transaction_commit("txn-agent-1", &meta()).await.expect("commit the composite transaction");
+        assert!(!edit_id.is_empty());
+        macro_rules! child_count {
+            ($app:expr) => {{
+                let TestMembers::Child(child_store) = &mut $app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered").member;
+                child_store.snapshot().expect("child snapshot").count
+            }};
+        }
+        assert_eq!(child_count!(app), 5, "the child applied the agent's op");
+        assert_eq!(app.test_snapshot().await.label, "agent", "the parent applied the agent's op");
+        assert_eq!(app.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
+
+        app.transaction_undo("txn-agent-1").await.expect("undo the whole group");
+        assert_eq!(child_count!(app), 0, "undo reverts the child");
+        assert_ne!(app.test_snapshot().await.label, "agent", "undo reverts the parent");
+        app.transaction_redo("txn-agent-1").await.expect("redo the whole group");
+        assert_eq!(child_count!(app), 5, "redo reapplies the child");
+        assert_eq!(app.test_snapshot().await.label, "agent", "redo reapplies the parent");
+        assert!(app.transaction_undo("txn-someone-else").await.is_err(), "a group no member carries is refused by name");
+
+        let only_child = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
+        let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, "", Some(protocol::MutationOrigin::Owner)).await;
+        assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
+        app.transaction_commit("txn-agent-2", &meta()).await.expect("commit the children-only transaction");
+        assert_eq!(child_count!(app), 8);
+        app.transaction_undo("txn-agent-2").await.expect("undo the children-only group");
+        assert_eq!(child_count!(app), 5);
+
+        let stray = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
+        let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, "", Some(protocol::MutationOrigin::Owner)).await;
+        assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
         let mut app = contract_composed_app_raw().await;
         app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
@@ -7057,7 +7104,7 @@ mod plugin_builder_contract_tests {
             }),
         )
         .expect("bounded fixture");
-        let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, window: None })).expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
+        let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, header_toolbar: None, window: None })).expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
         let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
             .expect("bounded fixture")
             .try_with_children([section])
@@ -7114,7 +7161,7 @@ mod plugin_builder_contract_tests {
             .expect("bounded fixture")
         };
         let tree = || {
-            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, window: None }))
+            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, header_toolbar: None, window: None }))
                 .expect("bounded fixture")
                 .try_with_children([row("item-1", "Item 1"), row("item-2", "Item 2")])
                 .unwrap_or_else(|_| panic!("bounded fixture"));

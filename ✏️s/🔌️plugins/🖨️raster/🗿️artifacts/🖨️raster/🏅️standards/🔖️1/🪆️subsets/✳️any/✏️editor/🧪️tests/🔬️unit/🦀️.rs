@@ -675,6 +675,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
         RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() }),
         RasterCommand::EditPixels(edit_pixels::EditPixels { layer_id: "l1".into(), expected_image_key: None, operation: "{\"kind\":\"invert\"}".into(), selection: None }),
+        RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:"[[0,1,255]]".into()}),
     ]
 }
 
@@ -687,9 +688,9 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 18);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 18);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 18);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 19);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 19);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 19);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
@@ -699,7 +700,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
     // 🛣️ Lane discipline, read off the handlers: ten document verbs publish into the artifact lane,
     // five session verbs into the config lane, and no route publishes into both.
-    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "editPixels"].into_iter().collect();
+    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "editPixels", "maskFromSelection"].into_iter().collect();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
         let expected = if artifact_lane.contains(tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::Config };
@@ -757,7 +758,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 18, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 19, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -791,6 +792,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
                 RasterCommand::SetCameraZoom(_) => "camera-zoom",
                 RasterCommand::SetActiveExample(_) => "set-active-example",
                 RasterCommand::EditPixels(_) => "edit-pixels",
+                RasterCommand::MaskFromSelection(_) => "mask-from-selection",
             };
             (keyword, command)
         })
@@ -1151,4 +1153,33 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
     assert_eq!(crate::standards::v1::subsets::any::schema::layer_opacity(layer), 0.25);
     assert!(!crate::standards::v1::subsets::any::schema::layer_visible(layer));
     crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(snapshot);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn selection_mask_retained_publication_survives_undo_and_redo() {
+    use crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🎭️mask-from-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let mut app=context::app().await;
+    context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
+    let snapshot=app.snapshot().unwrap();
+    let id=crate::standards::v1::subsets::any::schema::layer_node_id(&snapshot.layers[0]).to_owned();
+    retire_raster_snapshot(snapshot);
+    for field in ["width","height"] {
+        context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.clone(),field:field.into(),value:fixture[field].to_string()})).await;
+    }
+    context::dispatch(&mut app,RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:id,expected_image_key:None,selection:fixture["selection"].to_string()})).await;
+    let snapshot=app.snapshot().unwrap();
+    let crate::RasterLayerNode::Pixel {mask:Some(mask),image_key:None,..}=&snapshot.layers[0] else {panic!("mask creation must preserve source pixels")};
+    let key=mask.image_key.clone().unwrap();
+    let asset=crate::raster_asset(&snapshot.assets,&key).unwrap();
+    assert_eq!(serde_json::to_value(semio_framework_pixels::decode_png(&asset.data).unwrap().pixels).unwrap(),fixture["expectedRgba"]);
+    retire_raster_snapshot(snapshot);
+    context::history(&mut app,"undo").await;
+    let snapshot=app.snapshot().unwrap();
+    assert!(matches!(&snapshot.layers[0],crate::RasterLayerNode::Pixel {mask:None,image_key:None,..}));
+    assert!(!snapshot.assets.contains_key(&key));retire_raster_snapshot(snapshot);
+    context::history(&mut app,"redo").await;
+    let snapshot=app.snapshot().unwrap();
+    assert!(matches!(&snapshot.layers[0],crate::RasterLayerNode::Pixel {mask:Some(mask),image_key:None,..} if mask.image_key.as_ref()==Some(&key)));
+    assert!(crate::raster_asset(&snapshot.assets,&key).is_some());retire_raster_snapshot(snapshot);
 }

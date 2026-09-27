@@ -128,7 +128,7 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&txt_example_snapshot(crate::examples::demo::ID)).await;
-    dispatch_settled(&mut app, "replace-text", &[("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
+    dispatch_settled(&mut app, "textEdit", &[("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
     let after = app.snapshot().expect("txt snapshot");
     assert_eq!(after.lines, vec!["alpha".to_string(), "beta".to_string()]);
     assert!(after.trailing_newline);

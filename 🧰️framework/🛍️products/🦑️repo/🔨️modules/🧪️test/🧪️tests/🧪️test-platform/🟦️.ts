@@ -20,7 +20,7 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -153,6 +153,16 @@ Feature: A thing
     expect(feature.errors.some((error) => error.includes("@id-"))).toBe(true);
     expect(feature.errors.some((error) => error.includes("@level-"))).toBe(true);
     expect(feature.errors.some((error) => error.includes("@mode-"))).toBe(true);
+  });
+
+  test("an outline row without a kebab-case id cell is an error rather than an index-named scenario", () => {
+    const outline = (header: string, row: string): string => `@capability-x @no-oracle-y @comparison-ordered-json-v1\nFeature: F\n  @id-read @level-quick @mode-differential\n  Scenario Outline: Read <${header}>\n    Given <${header}>\n    Examples:\n      | ${header} |\n      | ${row} |\n`;
+    for (const [header, row] of [["format", "stl"], ["id", "600FF"], ["id", ""]] as const) {
+      const feature = parseFeature(outline(header, row));
+      expect(feature.scenarios).toHaveLength(0);
+      expect(feature.errors.some((error) => error.includes("needs a kebab-case `id` cell"))).toBe(true);
+    }
+    expect(parseFeature(outline("id", "stl")).scenarios.map((scenario) => scenario.id)).toEqual(["read-stl"]);
   });
 
   test("duplicate scenario ids are rejected", () => {
@@ -859,6 +869,39 @@ describe("🚫️ oracle purity", () => {
   });
 });
 
+describe("⚖️ comparison pipelines", () => {
+  test("a pipeline runs its probes over the pair's artifacts by role, and fails on an unproduced role or an invalid report", () => {
+    const dir = join(testCacheDir(repoRoot, "work"), "⚖️pipeline-self-test");
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    const probeScript = join(dir, "probe.ts");
+    writeFileSync(probeScript, 'const [probe, ...rest] = process.argv.slice(2);\nconst inputs = rest.filter((_, index) => rest[index - 1] === "--input");\nif (probe === "broken") { console.log("not json"); process.exit(1); }\nconst texts = inputs.map((path) => require("node:fs").readFileSync(path, "utf8"));\nconsole.log(JSON.stringify({ schema: "semio.repository-test.probe-report/v2", probe, status: "ok", measurements: { equal: texts.every((text) => text === texts[0]), count: texts.length } }, null, 2));\n');
+    const expected = join(dir, "expected.txt");
+    const same = join(dir, "same.txt");
+    const other = join(dir, "other.txt");
+    writeFileSync(expected, "a");
+    writeFileSync(same, "a");
+    writeFileSync(other, "b");
+    const probe = (id: string) => ({ id, kind: "external-process" as const, ecosystem: "javascript", package: "self-test", capabilities: ["self.test"], outputSchema: "semio.repository-test.probe-report/v2", deterministic: true, license: "MIT", testOnly: true as const, command: ["bun", probeScript, id], qualification: { status: "qualified" as const, evidence: "self-test" } });
+    const probes = new Map([["text-compare", probe("text-compare")], ["broken", probe("broken")]]);
+    type Stage = { probe: string; inputs: string[]; assertions: Record<string, unknown> };
+    const pipeline = { id: "self-test-v1", stages: [{ probe: "text-compare", inputs: ["expected-text", "actual-text"], assertions: { equal: true, count: 2 } }] as Stage[] };
+    const run = (artifacts: Record<string, string>, stages: Stage[] = pipeline.stages) => executePipeline(repoRoot, { ...pipeline, stages }, probes, new Map(Object.entries(artifacts)), { budgetMs: 60_000 });
+    const equal = run({ "expected-text": expected, "actual-text": same });
+    expect(equal.problems).toEqual([]);
+    expect(equal.verdict.equal).toBe(true);
+    expect(run({ "expected-text": expected, "actual-text": other }).verdict.equal).toBe(false);
+    const unproduced = run({ "expected-text": expected });
+    expect(unproduced.verdict.equal).toBe(false);
+    expect(unproduced.problems.join("\n")).toContain("no artifact for role(s) actual-text");
+    const invalid = run({ "expected-text": expected, "actual-text": same }, [{ probe: "broken", inputs: ["expected-text"], assertions: {} }]);
+    expect(invalid.verdict.equal).toBe(false);
+    expect(invalid.problems.join("\n")).toContain("without a valid report");
+    expect(pipelineRoleArtifacts([{ role: "oracle", artifacts: [{ role: "x", path: "a", mediaType: "text/plain", sha256: "0" }] }, { role: "subject", artifacts: [{ role: "x", path: "b", mediaType: "text/plain", sha256: "0" }] }]).problems).toEqual(["artifact role x is produced by more than one result"]);
+    rmSync(dir, { recursive: true, force: true });
+  }, 120_000);
+});
+
 describe("🧩️ cross-language oracle hosts", () => {
   test("a subject host enables the features the owner and its ancestors declare for its language, and nothing else", () => {
     const contribution = (owner: string, subjectFeatures: readonly { implementation: "rust" | "python"; features: readonly string[]; rationale: string }[]) => ({ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures, mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] });
@@ -1159,8 +1202,9 @@ describe("🧭️ contribution directory ownership", () => {
     const inventory = await import("../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts");
     const api = { discover: inventory.dependencyDiscoverContributionManifests, classify: inventory.dependencyClassifyOracleEntry } as unknown as {
       discover(root: string, directory: string, filename: string): string[];
-      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], directory: string): void;
+      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], testDomain: { readonly directoryNames: readonly string[]; readonly domainPath: string }): void;
     };
+    const oracleOnlyDomain = { directoryNames: [oracleDirectoryCases.directoryName], domainPath: String(testTaxonomy(repoRoot).testDomainPath) };
     const root = mkdtempSync(join(tmpdir(), "root-contribution-directory-"));
     try {
       for (const row of oracleDirectoryCases.cases) {
@@ -1168,7 +1212,7 @@ describe("🧭️ contribution directory ownership", () => {
         mkdirSync(join(root, directory), { recursive: true });
         writeFileSync(join(root, directory, "🔣️.json"), "{}\n");
         const entry = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: [row.path], declarations: [{ user: row.path, version: "1.0.0", kind: "production-runtime" }] };
-        api.classify(entry, ["reference"], oracleDirectoryCases.directoryName);
+        api.classify(entry, ["reference"], oracleOnlyDomain);
         expect(entry.kinds, row.path).toEqual([row.owned ? "test-oracle" : "production-runtime"]);
       }
       const expected = oracleDirectoryCases.cases.filter(({ owned }) => owned).map(({ path }) => `${path.slice(0, path.lastIndexOf("/"))}/🔣️.json`).sort();
@@ -1176,7 +1220,7 @@ describe("🧭️ contribution directory ownership", () => {
       rmSync(join(root, "🎠️kernel/🔮️oracles/🔣️.json"));
       expect(api.discover(root, oracleDirectoryCases.directoryName, "🔣️.json").sort()).toEqual(expected.filter((path) => path !== "🎠️kernel/🔮️oracles/🔣️.json"));
       const absent = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracles/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracles/package.json", version: "1.0.0", kind: "production-runtime" }] };
-      api.classify(absent, ["reference"], oracleDirectoryCases.directoryName);
+      api.classify(absent, ["reference"], oracleOnlyDomain);
       expect(absent.kinds).toEqual(["test-oracle"]);
     } finally {
       rmSync(root, { recursive: true, force: true });

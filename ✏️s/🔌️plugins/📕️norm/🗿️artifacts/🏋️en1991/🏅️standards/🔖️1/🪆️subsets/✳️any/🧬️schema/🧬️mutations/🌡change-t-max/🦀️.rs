@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeTMax {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-t-max", "change-t-max")
+        protocol::LocalizedLabel::native("Change maximum shade air temperature", "Maximale Außenlufttemperatur ändern")
     }
 }
 //#endregion 🔖️Payload

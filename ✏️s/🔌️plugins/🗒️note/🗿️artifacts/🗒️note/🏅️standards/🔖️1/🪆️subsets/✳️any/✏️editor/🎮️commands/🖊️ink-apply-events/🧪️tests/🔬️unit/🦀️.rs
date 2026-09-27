@@ -73,6 +73,34 @@ async fn gesture_begin_live_commit_produces_single_undo_step() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn cancellation_retains_accepted_begin_live_without_a_terminal_app_operation() {
+    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
+    let law = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "note-ink-canvas").expect("Note surface behavior");
+    assert_eq!(law["terminalPolicy"], "retain-accepted-events");
+    assert_eq!(law["publishedOnCancel"], json!([]));
+
+    let mut app = note_app().await;
+    let mut ids = crate::schema::NoteIdOwner::new("ink-cancel-test", 0);
+    let block = create_block_by_kind(&mut ids, "text", 32.0, 40.0);
+    let id = block_id(&block).to_string();
+    let begin = json!([{ "operation": "addBlock", "block": ink_wire_block(&block), "parentId": null, "index": null }]).to_string();
+    dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: begin, phase: "begin".into(), select_ids: Some(vec![id.clone()]) })).await;
+    let mut moved = block.clone();
+    if let NoteBlockNode::Text { x, y, .. } = &mut moved {
+        *x = 48.0;
+        *y = 52.0;
+    }
+    let live = json!([{ "operation": "updateBlock", "blockId": id, "block": ink_wire_block(&moved) }]).to_string();
+    dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: live, phase: "live".into(), select_ids: None })).await;
+
+    let snapshot = app.snapshot().expect("accepted begin/live snapshot");
+    assert_eq!(snapshot.blocks.len(), 1);
+    let NoteBlockNode::Text { x, y, .. } = &snapshot.blocks[0] else { panic!("accepted Ink block remains text") };
+    assert_eq!((*x, *y), (48.0, 52.0));
+    assert_eq!(law["artifactAfterCancel"], "retain-accepted-begin-live");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn gesture_with_no_changes_creates_no_edit() {
     let mut app = note_app().await;
     dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None })).await;

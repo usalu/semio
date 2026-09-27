@@ -14,6 +14,7 @@ import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWor
 import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { PanelTabBar, type PanelTabNode } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx";
 import { Toggle } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx";
+import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import accessibilityVisibilityFixture from "../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
 import accessibilityVisibilitySchema from "../../🧬️schema/♿️wgpu-accessibility-visibility/🔣️.json";
 import accessibilityInteractionSchema from "../../🧬️schema/♿️wgpu-accessibility-interaction/🔣️.json";
@@ -38,6 +39,7 @@ type ProjectionNode = {
 type Address = { readonly windowId: string; readonly windowGeneration: number; readonly nodeId: number; readonly nodeKey: string };
 type WireEvent = Address & { readonly kind: "accessibility-focus" | "accessibility-blur" | "accessibility-activate" | "accessibility-value"; readonly value?: string };
 type Fixture = {
+  readonly passiveChrome: readonly { readonly kind: string; readonly id: string; readonly element: "div" | "button"; readonly label: string | null; readonly action: boolean; readonly announced: boolean }[];
   readonly schema: string;
   readonly limits: { readonly windowIdBytes: number; readonly nodeKeyBytes: number; readonly valueCodeUnits: number; readonly losslessItems: number };
   readonly projection: { readonly windowId: string; readonly windowGeneration: number; readonly nodes: readonly ProjectionNode[] };
@@ -50,7 +52,7 @@ type Fixture = {
     readonly requiredControlId: string;
     readonly pointerRects: readonly { readonly id: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
   };
-  readonly presentedChrome: { readonly firstEpoch: number; readonly successorEpoch: number; readonly controls: readonly { readonly id: string; readonly label: string }[]; readonly generationRule: { readonly controlId: string; readonly firstRect: readonly number[]; readonly sameChromeRect: readonly number[]; readonly changedChromeRect: readonly number[] } };
+  readonly presentedChrome: { readonly firstEpoch: number; readonly successorEpoch: number; readonly controls: readonly { readonly id: string; readonly label: string }[]; readonly generationRule: { readonly controlId: string; readonly focusOnlyKeepsGeneration: boolean; readonly firstRect: readonly number[]; readonly sameChromeRect: readonly number[]; readonly changedChromeRect: readonly number[] } };
   readonly settingsTabStrip: { readonly role: string; readonly stateAttribute: string; readonly availableWidth: number; readonly activeId: string; readonly tabs: readonly { readonly id: string; readonly label: string }[]; readonly tailIds: readonly string[] };
   readonly chromePressedSemantics: {
     readonly stateAttribute: string;
@@ -71,8 +73,17 @@ type Fixture = {
 type OracleTreeNode = { readonly node: ProjectionNode; readonly children: OracleTreeNode[] };
 
 const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as Fixture;
+type DockTabKeyboardFixture = {
+  readonly projection: AccessibilityProjectionWindow & { readonly nodes: readonly (AccessibilityProjectionWindow["nodes"][number] & { readonly tabbable: boolean; readonly controls?: string; readonly selected?: boolean })[] };
+  readonly stacks: readonly { readonly id: string; readonly panel: string; readonly active: string; readonly tabs: readonly string[] }[];
+  readonly cases: readonly { readonly id: string; readonly stack: string; readonly from: string; readonly key: "ArrowLeft" | "ArrowRight" | "Home" | "End" | "Enter" | " "; readonly focus: string; readonly activate: string | null }[];
+  readonly stale: { readonly node: string; readonly generation: number };
+};
+const dockTabKeyboardFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json"), "utf8")) as DockTabKeyboardFixture;
+const dockTabKeyboardSchema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧬️schema/⌨️dock-tab-keyboard/🔣️.json"), "utf8"));
 const { computeAccessibleDescription, computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const mounted: Root[] = [];
+(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 class AccessibilityWorker implements BrowserFrameWorkerPort {
   onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
@@ -98,6 +109,16 @@ function PressedChromeOracle(): React.JSX.Element {
     <Toggle id={semantics.fullscreen.id} text={semantics.fullscreen.label} pressed={semantics.fullscreen.pressed} icon={<FixtureIcon />} />
     <Toggle id={semantics.utility.toggle.id} text={semantics.utility.toggle.label} pressed={semantics.utility.toggle.pressed} icon={<FixtureIcon />} />
   </>;
+}
+
+function DockTabKeyboardOracle(): React.JSX.Element {
+  const [active, setActive] = useState(dockTabKeyboardFixture.stacks[0]!.active);
+  const windows = dockTabKeyboardFixture.stacks.flatMap((stack) => stack.tabs.map((id) => ({ id, title: uiDataLabel(id.toUpperCase()), iconId: "app-window" as const, children: <div>{id}</div> })));
+  const layout: WindowLayoutNode = {
+    kind: "row",
+    children: dockTabKeyboardFixture.stacks.map((stack) => ({ kind: "stack" as const, activeId: stack.active, children: stack.tabs.map((id) => ({ kind: "window" as const, id })) })),
+  };
+  return <Mode windows={windows} activeWindowId={active} onActiveWindowChange={(id) => setActive(id ?? active)} layout={layout} />;
 }
 
 function projectionTree(nodes: readonly ProjectionNode[]): OracleTreeNode[] {
@@ -214,6 +235,73 @@ describe("wgpu accessibility interaction contract", () => {
     expect(validate(accessibilityVisibilityFixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
+  it("matches the production React Mode roving Dock tab keyboard contract", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(dockTabKeyboardSchema);
+    expect(validate(dockTabKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
+    vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
+    vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    try {
+      for (const row of dockTabKeyboardFixture.cases) {
+        act(() => root.render(<DockTabKeyboardOracle key={row.id} />));
+        const tabs = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+        const activeIds = new Set(dockTabKeyboardFixture.stacks.map((stack) => stack.active));
+        expect(tabs.filter((tab) => tab.tabIndex === 0).map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
+        const from = tabs.find((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId === row.from)!;
+        act(() => from.focus());
+        act(() => from.dispatchEvent(new KeyboardEvent("keydown", { key: row.key, bubbles: true, cancelable: true })));
+        const focused = document.activeElement as HTMLButtonElement;
+        expect(focused.closest<HTMLElement>("[data-window-id]")?.dataset.windowId).toBe(row.focus);
+        if (row.activate === null) {
+          expect(tabs.filter((tab) => tab.getAttribute("aria-selected") === "true").map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
+        } else {
+          expect(container.querySelector(`[data-window-id="${row.activate}"] [role="tab"]`)?.getAttribute("aria-selected")).toBe("true");
+        }
+      }
+    } finally {
+      act(() => root.unmount());
+      vi.unstubAllGlobals();
+    }
+  }, 15_000);
+
+  it("mirrors Dock tabs with one tab stop per stack and exact addressed keyboard routing", async () => {
+    vi.useFakeTimers();
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(dockTabKeyboardSchema);
+    expect(validate(dockTabKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
+    const root = document.createElement("div");
+    document.body.append(root);
+    const sent: WireEvent[] = [];
+    const bubbled = vi.fn();
+    root.addEventListener("keydown", bubbled);
+    const mirror = createAccessibilityMirror(root, {
+      introspect: async () => JSON.stringify({ windows: [dockTabKeyboardFixture.projection] }),
+      enqueueLossless: (event) => { sent.push(event as WireEvent); return true; },
+    }, "en");
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    const tabs = Array.from(root.querySelectorAll<HTMLElement>('[role="tab"]'));
+    expect(tabs.filter((tab) => tab.tabIndex === 0).map((tab) => tab.dataset.nodeKey)).toEqual(
+      dockTabKeyboardFixture.stacks.map((stack) => `dock.tab.${stack.id === "left" ? "0" : "1"}.${stack.active}`),
+    );
+    expect(tabs.filter((tab) => tab.tabIndex === -1)).toHaveLength(3);
+    for (const row of dockTabKeyboardFixture.cases) {
+      const stack = dockTabKeyboardFixture.stacks.find((candidate) => candidate.id === row.stack)!;
+      const from = tabs.find((tab) => tab.dataset.nodeKey?.endsWith(`.${row.from}`))!;
+      from.focus();
+      sent.length = 0;
+      const event = new KeyboardEvent("keydown", { key: row.key, bubbles: true, cancelable: true });
+      expect(from.dispatchEvent(event)).toBe(false);
+      const focused = document.activeElement as HTMLElement;
+      expect(focused.dataset.nodeKey?.endsWith(`.${row.focus}`)).toBe(true);
+      expect(focused.getAttribute("aria-controls")).toBe(tabs.find((tab) => tab.dataset.nodeKey?.endsWith(`.${stack.active}`))?.getAttribute("aria-controls"));
+      expect(sent.filter((candidate) => candidate.kind === "accessibility-activate").map((candidate) => candidate.nodeKey)).toEqual(row.activate === null ? [] : [from.dataset.nodeKey]);
+    }
+    expect(bubbled).not.toHaveBeenCalled();
+    mirror.dispose();
+  });
+
   it("mirrors the shared TextEditor projection as the same named multiline textarea React exposes", async () => {
     vi.useFakeTimers();
     const root = document.createElement("div");
@@ -222,7 +310,7 @@ describe("wgpu accessibility interaction contract", () => {
     const projection: AccessibilityProjectionWindow = {
       windowId: "text-editor-window",
       windowGeneration: 1,
-      nodes: [{ nodeId: 1, key: "scene.editor", role: row.role, depth: 0, label: row.label, live: "off", focusable: true, actionable: true, editable: row.editable, multiline: row.multiline, valueText: row.value }],
+      nodes: [{ nodeId: 1, key: "scene.editor", role: row.role, depth: 0, label: row.label, live: "off", focusable: true, tabbable: true, actionable: true, editable: row.editable, multiline: row.multiline, valueText: row.value }],
     };
     const mirror = createAccessibilityMirror(root, { enqueueLossless: vi.fn(), introspect: vi.fn(async () => JSON.stringify({ windows: [projection] })) }, "en");
     mirror.refresh();
@@ -304,7 +392,7 @@ describe("wgpu accessibility interaction contract", () => {
     const projection = (): AccessibilityProjectionWindow => ({
       windowId: "shell.chrome",
       windowGeneration: generation,
-      nodes: chrome.controls.map((control, index) => ({ nodeId: index + 1, key: control.id, role: "switch", depth: 0, label: control.label, live: "off", focusable: true, actionable: true, checked: control.id === "ui.panelToggle.display" && displayChecked })),
+      nodes: chrome.controls.map((control, index) => ({ nodeId: index + 1, key: control.id, role: "switch", depth: 0, label: control.label, live: "off", focusable: true, tabbable: true, actionable: true, checked: control.id === "ui.panelToggle.display" && displayChecked })),
     });
     const mirror = createAccessibilityMirror(root, {
       introspect: async () => JSON.stringify({ windows: [projection()] }),
@@ -382,7 +470,7 @@ describe("wgpu accessibility interaction contract", () => {
     document.body.append(root);
     const sent: WireEvent[] = [];
     const nodes = [
-      { nodeId: 11, key: "appearance", role: "combobox", depth: 0, label: "Appearance", live: "off", focusable: true, actionable: true, expanded: true, valueText: "system" },
+      { nodeId: 11, key: "appearance", role: "combobox", depth: 0, label: "Appearance", live: "off", focusable: true, tabbable: true, actionable: true, expanded: true, valueText: "system" },
       { nodeId: 11, key: "appearance::listbox", role: "listbox", depth: 0, label: "Appearance", live: "off" },
       { nodeId: 11, key: "appearance::option::system", role: "option", depth: 1, label: "System", live: "off", actionable: true, selected: true },
       { nodeId: 11, key: "appearance::option::dark", role: "option", depth: 1, label: "Dark", live: "off", actionable: true, selected: false },
@@ -406,14 +494,41 @@ describe("wgpu accessibility interaction contract", () => {
     mirror.dispose();
   });
 
+  it("keeps the real focus then activation address across a focus-only mirror refresh", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    const sent: WireEvent[] = [];
+    const control = fixture.presentedChrome.controls[1]!;
+    const node = { nodeId: 1, key: control.id, role: "button", depth: 0, label: control.label, live: "off", focusable: true, tabbable: true, actionable: true, focused: false };
+    const address = { windowId: "shell.chrome", windowGeneration: fixture.presentedChrome.firstEpoch, nodeId: node.nodeId, nodeKey: node.key };
+    const mirror = createAccessibilityMirror(root, {
+      introspect: async () => JSON.stringify({ windows: [{ ...address, nodes: [node] }] }),
+      enqueueLossless: event => { sent.push(event as WireEvent); return true; },
+    }, "en");
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    root.querySelector<HTMLButtonElement>("button")!.focus();
+    node.focused = true;
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    const button = root.querySelector<HTMLButtonElement>("button")!;
+    expect(computeAccessibleName(button)).toBe(control.label);
+    expect(document.activeElement).toBe(button);
+    button.click();
+    expect(fixture.presentedChrome.generationRule.focusOnlyKeepsGeneration).toBe(true);
+    expect(sent).toEqual([{ kind: "accessibility-focus", ...address }, { kind: "accessibility-activate", ...address }]);
+    mirror.dispose();
+  });
+
   it("transports a real editable blur after the final staged accessibility value", async () => {
     vi.useFakeTimers();
     const root = document.createElement("div");
     document.body.append(root);
     const sent: WireEvent[] = [];
     const nodes = [
-      { nodeId: 21, key: "driver.saveLabel", role: "textbox", depth: 0, label: "Save label", live: "off", focusable: true, valueText: "" },
-      { nodeId: 22, key: "driver.save", role: "button", depth: 0, label: "Save", live: "off", focusable: true, actionable: true },
+      { nodeId: 21, key: "driver.saveLabel", role: "textbox", depth: 0, label: "Save label", live: "off", focusable: true, tabbable: true, valueText: "" },
+      { nodeId: 22, key: "driver.save", role: "button", depth: 0, label: "Save", live: "off", focusable: true, tabbable: true, actionable: true },
     ];
     const mirror = createAccessibilityMirror(root, {
       introspect: async () => JSON.stringify({ windows: [{ windowId: "settings", windowGeneration: 9, nodes }] }),
@@ -497,4 +612,16 @@ describe("wgpu accessibility interaction contract", () => {
     for (const row of fixture.events) expect(staleReason(row.wire), row.id).toBeNull();
     expect(fixture.exactOnce.staleActivateActions).toBe(0);
   });
+});
+
+it("keeps passive layout regions out of the native button vocabulary", () => {
+  for (const row of fixture.passiveChrome) {
+    const element = document.createElement(row.element);
+    element.dataset.controlId = row.id;
+    if (row.label) element.setAttribute("aria-label", row.label);
+    document.body.append(element);
+    expect(getRole(element) === "button").toBe(row.announced);
+    if (row.label) expect(computeAccessibleName(element)).toBe(row.label);
+    element.remove();
+  }
 });

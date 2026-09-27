@@ -10,6 +10,7 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<PngMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::text::CODEC,
     crate::schema::mutations::change_header::text::CODEC,
     crate::schema::mutations::replace_palette::text::CODEC,
     crate::schema::mutations::change_transparency::text::CODEC,
@@ -23,6 +24,7 @@ pub const REGISTRY: &[Entry] = &[
     crate::schema::mutations::remove_text_chunk::text::CODEC,
     crate::schema::mutations::replace_text_chunk::text::CODEC,
     crate::schema::mutations::replace_pixels::text::CODEC,
+    crate::schema::mutations::patch_pixels::text::CODEC,
     crate::schema::mutations::insert_unknown_chunk::text::CODEC,
     crate::schema::mutations::remove_unknown_chunk::text::CODEC,
 ];

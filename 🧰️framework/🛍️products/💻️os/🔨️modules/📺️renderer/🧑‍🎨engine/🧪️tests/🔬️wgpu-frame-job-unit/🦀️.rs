@@ -1,5 +1,61 @@
 use super::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn partial_control_deadline_publication_cannot_erase_another_owner_when_a_candidate_is_discarded() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    for row in fixture["sources"].as_array().unwrap() {
+        runtime.publish_shell_clock_deadline(row["shellDueUs"].as_f64().map(|value| value / 1_000_000.0));
+        runtime.publish_retained_control_deadline(row["uiDueUs"].as_f64().map(|value| value / 1_000_000.0));
+        assert_eq!(runtime.control_deadline_us(), row["expectedDueUs"].as_u64(), "{}", row["id"]);
+        assert!(runtime.try_lock().unwrap().shell.presented_input_candidate_matches(witness));
+    }
+    let mut scheduler = ui_render::FrameScheduler::new();
+    let key = crate::deadlines::RETAINED_CONTROL_CLOCK;
+    runtime.publish_shell_clock_deadline(Some(1.4));
+    runtime.publish_retained_control_deadline(Some(1.0));
+    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(0), 0.0));
+    assert!(scheduler.should_render(1.0).is_some());
+    runtime.publish_retained_control_deadline(Some(1.6));
+    let mut candidate = Some(witness);
+    assert!(crate::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(candidate.is_none());
+    assert_eq!(runtime.control_deadline_us(), Some(1_400_000));
+    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_000_000), 1.0));
+    assert!(scheduler.should_render(1.0).is_none());
+    assert_eq!(scheduler.next_deadline().map(|value| value.due), Some(1.4));
+    assert!(scheduler.should_render(1.4).is_some());
+    runtime.publish_shell_clock_deadline(Some(1.8));
+    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_400_000), 1.4));
+    assert!(scheduler.should_render(1.4).is_none());
+    assert!((scheduler.next_deadline().unwrap().due - 1.6).abs() < f64::EPSILON * 2.0);
+    runtime.publish_shell_clock_deadline(None);
+    assert_eq!(runtime.control_deadline_us(), Some(1_600_000));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_wake() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let wakes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let observed = wakes.clone();
+    runtime.set_waker(Arc::new(move || {
+        observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }));
+    let before = runtime.0.presentation_authority.current();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    for row in fixture["bridges"].as_array().unwrap() {
+        let seconds = row["dueUs"].as_f64().map(|microseconds| microseconds / 1_000_000.0);
+        runtime.publish_retained_control_deadline(seconds);
+        assert_eq!(runtime.0.retained_control_deadline_us.load(std::sync::atomic::Ordering::Acquire), row["dueUs"].as_u64().unwrap_or(u64::MAX), "{}", row["id"]);
+        assert_eq!(runtime.0.presentation_authority.current(), before);
+        assert!(runtime.try_lock().unwrap().shell.presented_input_candidate_matches(witness));
+    }
+    assert_eq!(wakes.load(std::sync::atomic::Ordering::SeqCst), 0, "deadline publication rides the existing frame completion; generic Wake would supersede this build");
+    assert!(runtime.retained_control_deadline(0.0).is_none());
+}
+
 fn frozen_clock() -> Option<u64> {
     Some(0)
 }
@@ -127,8 +183,6 @@ fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::sh
         modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
-        caret_blink_at_ms: 0.0,
-        caret_blink_visible: true,
         text_streams: std::array::from_fn(|_| None),
         text_fault: None,
         frame_fault: None,
@@ -255,17 +309,8 @@ fn cancelled_after_chrome_frame_returns_its_exact_presented_input_candidate() {
     let operation = OperationId(94);
     let generation = Generation(94);
     let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation);
-    transaction.after_chrome = Some(crate::AppFrameAfterChrome {
-        resource_input: None,
-        input_candidate: Some(witness),
-        upload_rejected: None,
-        draw_rejected: None,
-        engine_packets: None,
-        fullscreen: None,
-        cursor_wake: None,
-        job_progress: None,
-        retirement: None,
-    });
+    transaction.after_chrome =
+        Some(crate::AppFrameAfterChrome { resource_input: None, input_candidate: Some(witness), upload_rejected: None, draw_rejected: None, engine_packets: None, fullscreen: None, cursor_wake: None, job_progress: None, retirement: None });
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
     active.phase = ActiveFramePhase::Build(transaction);
     let runtime = close_active_frame(active);

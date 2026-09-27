@@ -1,50 +1,32 @@
 use super::*;
-use std::net::TcpListener;
-use std::process::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
 
 //#region 🔖️PostgresFixture
-static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);
+static NEXT_DATABASE: AtomicU64 = AtomicU64::new(1);
 
-pub(super) struct PostgresContainer {
-    name: String,
-    pub(super) url: String,
+/// 🐘️ One lane's own database on the ONE claimed shared PostgreSQL (`os-hub-ts backend run postgres -- …`), dropped with
+/// the guard — the lanes never start a server of their own (preamble rule 22).
+pub(super) struct PostgresFixture {
+    database: db::db_storage::claimed_backend::FreshPostgresDatabase,
 }
 
-impl Drop for PostgresContainer {
-    fn drop(&mut self) {
-        let _ = Command::new("docker").args(["rm", "--force", &self.name]).output();
+impl PostgresFixture {
+    pub(super) fn url(&self) -> &str {
+        &self.database.url
     }
-}
 
-impl PostgresContainer {
     pub(super) async fn connect(&self) -> PostgresDirectory {
-        PostgresDirectory::connect(&self.url).await.expect("connect second postgres directory")
+        PostgresDirectory::connect(self.url()).await.expect("connect second postgres directory")
     }
 }
 
-/// 🐘️ Starts a disposable real Postgres behind a private fixture boundary, without a Rust
-/// container-orchestration dependency.
-pub(super) async fn test_directory() -> (PostgresDirectory, PostgresContainer) {
-    let port = TcpListener::bind(("127.0.0.1", 0)).expect("reserve postgres fixture port").local_addr().expect("postgres fixture address").port();
-    let sequence = NEXT_CONTAINER.fetch_add(1, Ordering::Relaxed);
-    let name = format!("semio-hub-postgres-{}-{sequence}", std::process::id());
-    let mapping = format!("127.0.0.1:{port}:5432");
-    let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "POSTGRES_PASSWORD=postgres", "--publish", &mapping, "postgres:17-alpine"]).output().expect("start docker for postgres fixture");
-    assert!(output.status.success(), "start postgres fixture: {}", String::from_utf8_lossy(&output.stderr));
-    let url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
-    let container = PostgresContainer { name, url: url.clone() };
-    let mut last_error = None;
-    for _ in 0..300 {
-        match PostgresDirectory::connect(&url).await {
-            Ok(directory) => return (directory, container),
-            Err(error) => last_error = Some(error),
-        }
-        tokio::time::sleep(Duration::from_millis(100)).await;
-    }
-    panic!("connect to postgres fixture: {}", last_error.expect("postgres fixture must report a connection error"));
+/// 🐘️ A fresh database of this lane's own on the claimed shared PostgreSQL and the directory over it.
+pub(super) async fn test_directory() -> (PostgresDirectory, PostgresFixture) {
+    let sequence = NEXT_DATABASE.fetch_add(1, Ordering::Relaxed);
+    let database = db::db_storage::claimed_backend::FreshPostgresDatabase::create(&format!("hub_{}_{sequence}", std::process::id()));
+    let directory = PostgresDirectory::connect(&database.url).await.expect("connect postgres directory on the claimed server");
+    (directory, PostgresFixture { database })
 }
 //#endregion 🔖️PostgresFixture
 
@@ -104,8 +86,9 @@ fn admin_audit_fact(phase: &str, outcome_code: &str) -> NewAdminOperationAuditRe
 }
 
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn admin_operation_audit_concurrent_absent_request_rereads_established_receipt() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     let directory = Arc::new(directory);
     let barrier = Arc::new(tokio::sync::Barrier::new(17));
     let accepted = admin_audit_fact("accepted", "accepted");
@@ -136,12 +119,13 @@ async fn admin_operation_audit_concurrent_absent_request_rereads_established_rec
 
 /// 🎟️ A real PostgreSQL row lock yields one immutable redemption, rolls faults back, and preserves direct invite decisions across rebuild.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn invite_redemption_claim_matches_neutral_contract() {
-    let (primary, container) = test_directory().await;
+    let (primary, fixture) = test_directory().await;
     primary.seed().await.expect("seed postgres invite fixture");
     let invited = primary.create_user("postgres-invite@example.com", "Postgres Invite", None, None, None).await.expect("create invited user");
     let issued = primary.issue_invite("default", SpaceRole::Spectator, 3600, "postgres-invite-race").await.expect("issue invite");
-    let secondary = container.connect().await;
+    let secondary = fixture.connect().await;
     let barrier = Arc::new(tokio::sync::Barrier::new(3));
     let first = {
         let barrier = barrier.clone();
@@ -173,7 +157,7 @@ async fn invite_redemption_claim_matches_neutral_contract() {
         .collect();
     assert_eq!(event_ids.len(), 1);
 
-    let directory = container.connect().await;
+    let directory = fixture.connect().await;
     let invite = directory.list_invites("default").await.expect("postgres claimed invite").into_iter().find(|record| record.id == issued.record.id).expect("claimed invite row");
     assert!(invite.accepted_at.is_some());
     assert_eq!(invite.accepted_event_id.as_deref(), event_ids.first().copied());
@@ -216,8 +200,9 @@ async fn invite_redemption_claim_matches_neutral_contract() {
 
 // 🔬️ Users, spaces, and role-based membership round-trip against a real Postgres.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn user_space_membership_round_trip() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     let mut clock = HubClock::new();
     let user = directory.create_user("a@example.com", "Ada", None, None, None).await.expect("create user");
     let space_id = seed_space(&directory, &mut clock, &user.id, DirectorySpaceKind::Studio).await;
@@ -228,8 +213,9 @@ async fn user_space_membership_round_trip() {
 // (`hub_space`/`hub_space_membership`, `author`/`spectator` role CHECK) matches this crate's
 // own queries against a real Postgres instance.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn seed_creates_default_space_and_membership() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let space = directory.get_space("default").await.unwrap().expect("default space");
     assert_eq!(space.kind, "studio");
@@ -240,8 +226,9 @@ async fn seed_creates_default_space_and_membership() {
 // 🔬️ Event log replay reproduces the same projections against a real Postgres, mirroring the
 // sqlite backend's `event_log_replay_matches_projections`.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn event_log_replay_matches_projections() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let head = directory.head_seq().await.expect("head seq");
     let before = directory.get_space("default").await.unwrap();
@@ -251,8 +238,9 @@ async fn event_log_replay_matches_projections() {
 }
 
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn directory_event_page_v1_append_admission_is_transactional_postgres() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let head = directory.head_seq().await.expect("head before boundary event");
     let mut event = NewDirectoryEvent {
@@ -282,8 +270,9 @@ async fn directory_event_page_v1_append_admission_is_transactional_postgres() {
 // the `credential-changed` fact move together, an unknown target writes neither, and a refused
 // sign-in's fact carries its public reason code and no credential material.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn credential_writes_and_facts_stay_in_one_transaction() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let user = directory.create_user("postgres-credential@example.com", "Credential", None, None, None).await.expect("create user");
     assert_eq!(directory.get_user(&user.id).await.expect("read user").expect("user").password_hash, None);
@@ -319,8 +308,9 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
 
 // 🔮️ The backend-neutral share-scope corpus (`🧪️tests/🔮️backend-corpus/`) over a real PostgreSQL.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn share_scope_corpus_v1_holds_on_postgres() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
 }
@@ -334,10 +324,11 @@ async fn share_scope_corpus_v1_holds_on_postgres() {
 // the catalog read the same way, so this law fails by process abort if the driver runtime seam
 // (`db_storage::DbIoAsyncDriverRuntime`) is ever bypassed again.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn document_storage_opens_over_real_postgres_off_the_pool_workers() {
-    let (_directory, container) = test_directory().await;
+    let (_directory, fixture) = test_directory().await;
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let storage = db::storage_postgres::PostgresStorage::connect(pool.clone(), &container.url).await.expect("a PostgreSQL document store must open through the WorkerPool I/O lane");
+    let storage = db::storage_postgres::PostgresStorage::connect(pool.clone(), fixture.url()).await.expect("a PostgreSQL document store must open through the WorkerPool I/O lane");
     let database = db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Prod), std::sync::Arc::new(db::storage::DbBackend::Postgres(storage))).await;
     assert!(database.is_ok(), "a db::Database over PostgreSQL must open: {:?}", database.err());
     drop(database);
@@ -346,8 +337,9 @@ async fn document_storage_opens_over_real_postgres_off_the_pool_workers() {
 
 // 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over a real PostgreSQL.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn space_administration_read_surface_v1_holds_on_postgres() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
 }
@@ -356,20 +348,21 @@ async fn space_administration_read_surface_v1_holds_on_postgres() {
 // stamped with a different format is refused rather than folded over (`📇️directory/🦀️.rs`
 // `admit_directory_format`). There is no migration framework, so silence here is the worst answer.
 #[tokio::test]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … directory-live-lanes postgres`"]
 async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_postgres() {
-    let (directory, container) = test_directory().await;
+    let (directory, fixture) = test_directory().await;
     let (schema, version): (String, i64) = sqlx_core::query_as::query_as("SELECT schema, version FROM hub_directory_format WHERE singleton").fetch_one(&directory.pool).await.expect("stamp written on creation");
     assert_eq!(schema, crate::directory::DIRECTORY_FORMAT_SCHEMA);
     assert_eq!(version, crate::directory::DIRECTORY_FORMAT_VERSION);
 
     sqlx_core::query::query("UPDATE hub_directory_format SET version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION + 1).execute(&directory.pool).await.expect("forge a newer format");
-    let refused = PostgresDirectory::connect(&container.url).await.err().map(|error| error.to_string()).unwrap_or_default();
+    let refused = PostgresDirectory::connect(fixture.url()).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
 
     sqlx_core::query::query("UPDATE hub_directory_format SET schema = 'semio/hub/directory-format/v9' , version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("forge an unknown schema");
-    let unknown = PostgresDirectory::connect(&container.url).await.err().map(|error| error.to_string()).unwrap_or_default();
+    let unknown = PostgresDirectory::connect(fixture.url()).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
 
     sqlx_core::query::query("UPDATE hub_directory_format SET schema = $1, version = $2 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_SCHEMA).bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("restore the stamp");
-    container.connect().await;
+    fixture.connect().await;
 }

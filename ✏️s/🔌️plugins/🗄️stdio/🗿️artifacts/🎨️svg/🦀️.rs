@@ -288,6 +288,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]

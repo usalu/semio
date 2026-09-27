@@ -131,13 +131,16 @@
     "RasterLayerMask": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["enabled", "linked", "invert"],
+      "description": "An absent imageKey is a constant reveal mask. Image coverage is sRGB luminance multiplied by alpha. A linked transform is relative to the layer center; an unlinked transform is relative to its parent.",
+      "required": ["enabled", "linked", "invert", "transform"],
       "properties": {
         "enabled": { "type": "boolean" },
         "linked": { "type": "boolean" },
         "invert": { "type": "boolean" },
-        "width": { "type": "integer", "minimum": 0 },
-        "height": { "type": "integer", "minimum": 0 }
+        "width": { "type": ["integer", "null"], "minimum": 1, "maximum": 16384 },
+        "height": { "type": ["integer", "null"], "minimum": 1, "maximum": 16384 },
+        "imageKey": { "type": ["string", "null"], "minLength": 1 },
+        "transform": { "$ref": "#/$defs/RasterTransform" }
       }
     },
     "RasterViewportSize": {

@@ -214,7 +214,7 @@ async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
 }
 
 /// 🗒️ `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`'s `NOTE_DOCUMENT_SCHEMA` — the PRIMARY key
-/// `plugin_artifact_codec_app` resolves on and the exact key the hub's `VerifiedTrustedCatalog` pin
+/// `plugin_artifact_codec` resolves on and the exact key the hub's `VerifiedTrustedCatalog` pin
 /// carries, so a law that asks by it walks the identical guest path a server does.
 const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 

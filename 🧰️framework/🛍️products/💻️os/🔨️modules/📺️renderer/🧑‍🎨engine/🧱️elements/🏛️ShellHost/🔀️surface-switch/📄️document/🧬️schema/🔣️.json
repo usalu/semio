@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "archive",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "archive": {
+      "type": "object",
+      "required": [
+        "parent_pack",
+        "parent_spr",
+        "members"
+      ],
+      "properties": {
+        "parent_pack": {
+          "$ref": "#/$defs/bytes"
+        },
+        "parent_spr": {
+          "$ref": "#/$defs/bytes"
+        },
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "ordinal",
+              "reference",
+              "owner",
+              "envelope_pack"
+            ],
+            "properties": {
+              "envelope_pack": {
+                "$ref": "#/$defs/bytes"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "events",
+          "ready"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "capture",
+                "create",
+                "restore",
+                "attach",
+                "release"
+              ]
+            }
+          },
+          "failure": {
+            "$ref": "#/$defs/stage"
+          },
+          "staleAfter": {
+            "$ref": "#/$defs/stage"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "initiallyCurrent": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "enum": [
+        "capture",
+        "create",
+        "restore",
+        "attach"
+      ]
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  }
+}

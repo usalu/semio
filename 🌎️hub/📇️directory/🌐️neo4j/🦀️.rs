@@ -1393,6 +1393,7 @@ impl Neo4jDirectory {
                 .await
                 .map_err(backend)?;
             }
+            DirectoryEventBody::UserPreferenceRecorded { .. } => {}
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 let scope_key = document_scope_key_v1(&checkpoint.scope);
                 let mut descriptors = txn.execute(query("MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) RETURN d.descriptor AS descriptor").param("scope_key", scope_key.clone())).await.map_err(backend)?;

@@ -741,7 +741,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -760,6 +760,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                }
               }
             }
           },
@@ -804,6 +814,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.",
+                  "de": "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."
+                },
+                "reuse": {
+                  "en": "Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.",
+                  "de": "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."
+                }
               }
             }
           },
@@ -848,6 +868,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.",
+                  "de": "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."
+                },
+                "reuse": {
+                  "en": "Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.",
+                  "de": "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."
+                }
               }
             }
           },
@@ -892,6 +922,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every currently selected tile from the deck.",
+                  "de": "Löscht alle aktuell ausgewählten Kacheln aus dem Deck."
+                },
+                "reuse": {
+                  "en": "Deletes every currently selected tile from the deck.",
+                  "de": "Löscht alle aktuell ausgewählten Kacheln aus dem Deck."
+                }
               }
             }
           },
@@ -936,6 +976,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Gives every tile with the given ids the same new name; an empty name changes nothing.",
+                  "de": "Gibt allen Kacheln mit den angegebenen Ids denselben neuen Namen; ein leerer Name ändert nichts."
+                },
+                "reuse": {
+                  "en": "Gives every tile with the given ids the same new name; an empty name changes nothing.",
+                  "de": "Gibt allen Kacheln mit den angegebenen Ids denselben neuen Namen; ein leerer Name ändert nichts."
+                }
               }
             }
           },
@@ -980,6 +1030,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one crop coordinate (x, y, width or height, as a fraction of the source image) on every tile with the given ids.",
+                  "de": "Setzt eine Zuschnittkoordinate (x, y, Breite oder Höhe, als Anteil des Quellbilds) auf allen Kacheln mit den angegebenen Ids."
+                },
+                "reuse": {
+                  "en": "Sets one crop coordinate (x, y, width or height, as a fraction of the source image) on every tile with the given ids.",
+                  "de": "Setzt eine Zuschnittkoordinate (x, y, Breite oder Höhe, als Anteil des Quellbilds) auf allen Kacheln mit den angegebenen Ids."
+                }
               }
             }
           },
@@ -1155,7 +1215,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -1174,6 +1234,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the source image the tiles are cut from; choosing a different image discards every existing tile.",
+                  "de": "Legt das Quellbild fest, aus dem die Kacheln geschnitten werden; ein anderes Bild verwirft alle vorhandenen Kacheln."
+                },
+                "reuse": {
+                  "en": "Sets the source image the tiles are cut from; choosing a different image discards every existing tile.",
+                  "de": "Legt das Quellbild fest, aus dem die Kacheln geschnitten werden; ein anderes Bild verwirft alle vorhandenen Kacheln."
+                }
               }
             }
           },
@@ -1314,6 +1384,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves and resizes the frame the source image is shown in within the presentation (x, y, width, height).",
+                  "de": "Verschiebt und skaliert den Rahmen, in dem das Quellbild in der Präsentation erscheint (x, y, Breite, Höhe)."
+                },
+                "reuse": {
+                  "en": "Moves and resizes the frame the source image is shown in within the presentation (x, y, width, height).",
+                  "de": "Verschiebt und skaliert den Rahmen, in dem das Quellbild in der Präsentation erscheint (x, y, Breite, Höhe)."
+                }
               }
             }
           },
@@ -1392,6 +1472,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."
+                }
               }
             }
           },
@@ -1436,6 +1526,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes every tile from the deck and keeps only the source image.",
+                  "de": "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."
+                },
+                "reuse": {
+                  "en": "Removes every tile from the deck and keeps only the source image.",
+                  "de": "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."
+                }
               }
             }
           },
@@ -1503,14 +1603,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -1522,6 +1622,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.",
+                  "de": "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.",
+                  "de": "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -1563,6 +1673,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "batchOnlyPendingRewrite"
+              },
+              "description": {
+                "native": {
+                  "en": "Renders a presentation scene (JSON) to video assets in the given output directory and downloads their list as animate-video-export.ops.",
+                  "de": "Rendert eine Präsentationsszene (JSON) als Videodateien in das angegebene Ausgabeverzeichnis und lädt deren Liste als animate-video-export.ops herunter."
+                },
+                "reuse": {
+                  "en": "Renders a presentation scene (JSON) to video assets in the given output directory and downloads their list as animate-video-export.ops.",
+                  "de": "Rendert eine Präsentationsszene (JSON) als Videodateien in das angegebene Ausgabeverzeichnis und lädt deren Liste als animate-video-export.ops herunter."
+                }
               }
             }
           },
@@ -1673,7 +1793,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -1700,7 +1820,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2431,6 +2552,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2536,6 +2667,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2629,6 +2770,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -2809,6 +2960,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                }
               }
             }
           }
@@ -3751,6 +3912,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3856,6 +4027,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3949,6 +4130,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4115,7 +4306,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -4218,8 +4409,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4c1b12efbaf9cb1aa719656f21c84ca8fd05ed1932b065d29014eb20a106a6c9",
-    "coreWasmSha256": "222a36ae306a7222703c8b5c4d0cc5fc866e50a7a27e1619d16d5e7e71648e43",
-    "descriptorSha256": "b014ffad44d54f1cdf3419355b1a2a2176399441ee1ce89f7b7ad43b6595162c"
+    "wasmSha256": "4883f196787848c1356a93673575e1aa860b23f53201df742cd5045513eac0a4",
+    "coreWasmSha256": "0dab97e524030e752fcfda42aa7427c4e20600e673178f9db3385b4629787fd1",
+    "descriptorSha256": "504919ca9079bef84c53cab64238841e051fb73aeb99a791b83d0859f6b534ea"
   }
 }

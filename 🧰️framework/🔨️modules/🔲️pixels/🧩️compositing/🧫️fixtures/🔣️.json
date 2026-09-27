@@ -1,0 +1,1246 @@
+{
+  "cases": [
+    {
+      "name": "isolated group opacity applies once to overlapping children",
+      "expected": [
+        0,
+        0,
+        255,
+        128
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "group",
+            "opacity": 0.5,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              },
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "blue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "isolated group blends once against backdrop",
+      "expected": [
+        128,
+        0,
+        128,
+        255
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "pixels",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "image": "red"
+          },
+          {
+            "kind": "group",
+            "opacity": 0.5,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              },
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "blue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "adjustment changes only existing colors",
+      "expected": [
+        115,
+        115,
+        115,
+        255
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "pixels",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "image": "gray"
+          },
+          {
+            "kind": "adjustment",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "brightness": 0.2,
+            "contrast": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "adjustment on empty canvas remains transparent",
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "adjustment",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "brightness": 0.5,
+            "contrast": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "pixel mask coverage multiplies alpha",
+      "expected": [
+        255,
+        0,
+        0,
+        128
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "pixels",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": {
+              "width": 1,
+              "height": 1,
+              "coverage": [
+                128
+              ],
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "invert": false
+            },
+            "image": "red"
+          }
+        ]
+      }
+    },
+    {
+      "name": "inverted group mask applies after children",
+      "expected": [
+        0,
+        0,
+        255,
+        127
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "group",
+            "opacity": 1,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": {
+              "width": 1,
+              "height": 1,
+              "coverage": [
+                128
+              ],
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "invert": true
+            },
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              },
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "blue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "hidden group does not contribute pixels",
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "input": {
+        "width": 1,
+        "height": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          "blue": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "gray": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              64,
+              64,
+              64,
+              255
+            ]
+          },
+          "back": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              60,
+              120,
+              180,
+              204
+            ]
+          },
+          "front": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              210,
+              90,
+              150,
+              153
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "group",
+            "opacity": 0.5,
+            "blend": "normal",
+            "visible": false,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              },
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "blue"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "blendModes": [
+    "normal",
+    "multiply",
+    "screen",
+    "overlay",
+    "darken",
+    "lighten",
+    "colorDodge",
+    "colorBurn",
+    "hardLight",
+    "softLight",
+    "difference",
+    "exclusion",
+    "hue",
+    "saturation",
+    "color",
+    "luminosity"
+  ],
+  "blendInput": {
+    "width": 1,
+    "height": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "images": {
+      "red": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "blue": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "gray": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          64,
+          64,
+          64,
+          255
+        ]
+      },
+      "back": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          60,
+          120,
+          180,
+          204
+        ]
+      },
+      "front": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          210,
+          90,
+          150,
+          153
+        ]
+      }
+    },
+    "layers": [
+      {
+        "kind": "pixels",
+        "opacity": 1,
+        "blend": "normal",
+        "visible": true,
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "mask": null,
+        "image": "back"
+      },
+      {
+        "kind": "pixels",
+        "opacity": 1,
+        "blend": "normal",
+        "visible": true,
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "mask": null,
+        "image": "front"
+      }
+    ]
+  },
+  "blendExpected": [
+    [
+      157,
+      99,
+      160,
+      235
+    ],
+    [
+      73,
+      74,
+      137,
+      235
+    ],
+    [
+      162,
+      141,
+      198,
+      235
+    ],
+    [
+      99,
+      97,
+      182,
+      235
+    ],
+    [
+      79,
+      99,
+      160,
+      235
+    ],
+    [
+      157,
+      116,
+      175,
+      235
+    ],
+    [
+      181,
+      149,
+      214,
+      235
+    ],
+    [
+      57,
+      53,
+      148,
+      235
+    ],
+    [
+      145,
+      97,
+      182,
+      235
+    ],
+    [
+      100,
+      106,
+      179,
+      235
+    ],
+    [
+      125,
+      69,
+      97,
+      235
+    ],
+    [
+      137,
+      118,
+      143,
+      235
+    ],
+    [
+      145,
+      87,
+      147,
+      235
+    ],
+    [
+      79,
+      116,
+      175,
+      235
+    ],
+    [
+      145,
+      87,
+      147,
+      235
+    ],
+    [
+      92,
+      128,
+      188,
+      235
+    ]
+  ],
+  "oracleTolerance": 2,
+  "spatialCases": [
+    {
+      "name": "Transformed Group Mask Across Three Tiles",
+      "input": {
+        "width": 513,
+        "height": 1,
+        "origin": [
+          -2,
+          -1
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "group",
+            "opacity": 0.5,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              -2,
+              -1
+            ],
+            "mask": {
+              "width": 3,
+              "height": 1,
+              "coverage": [
+                255,
+                128,
+                0
+              ],
+              "transform": [
+                171,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "invert": false
+            },
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  513,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              }
+            ]
+          }
+        ]
+      },
+      "runs": [
+        {
+          "count": 171,
+          "pixel": [
+            255,
+            0,
+            0,
+            128
+          ]
+        },
+        {
+          "count": 171,
+          "pixel": [
+            255,
+            0,
+            0,
+            64
+          ]
+        },
+        {
+          "count": 171,
+          "pixel": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Masked Adjustment Inside an Isolated Group",
+      "input": {
+        "width": 4,
+        "height": 1,
+        "origin": [
+          -2,
+          -1
+        ],
+        "images": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "pixels": [
+              255,
+              0,
+              0,
+              255
+            ]
+          }
+        },
+        "layers": [
+          {
+            "kind": "group",
+            "opacity": 0.5,
+            "blend": "normal",
+            "visible": true,
+            "transform": [
+              1,
+              0,
+              0,
+              1,
+              -2,
+              -1
+            ],
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixels",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  4,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": null,
+                "image": "red"
+              },
+              {
+                "kind": "adjustment",
+                "opacity": 1,
+                "blend": "normal",
+                "visible": true,
+                "transform": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "mask": {
+                  "width": 2,
+                  "height": 1,
+                  "coverage": [
+                    255,
+                    255
+                  ],
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    1,
+                    0
+                  ],
+                  "invert": false
+                },
+                "brightness": -0.5,
+                "contrast": 0
+              }
+            ]
+          }
+        ]
+      },
+      "runs": [
+        {
+          "count": 1,
+          "pixel": [
+            255,
+            0,
+            0,
+            128
+          ]
+        },
+        {
+          "count": 2,
+          "pixel": [
+            128,
+            0,
+            0,
+            128
+          ]
+        },
+        {
+          "count": 1,
+          "pixel": [
+            255,
+            0,
+            0,
+            128
+          ]
+        }
+      ]
+    }
+  ]
+}

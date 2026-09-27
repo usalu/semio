@@ -364,6 +364,7 @@ export type UiTranslationSchema = {
       readonly mixedValues: UiLabelValue;
       readonly name: UiLabelValue;
       readonly save: UiLabelValue;
+      readonly delete: UiLabelValue;
       readonly loading: UiLabelValue;
       readonly loadingPlugins: UiLabelValue;
       readonly renderError: UiLabelValue;

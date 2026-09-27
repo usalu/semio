@@ -1,7 +1,7 @@
 /** 🧪️ Pixel tools respect nested layer transforms and lossless selection transport. */
 import { expect, test } from "bun:test";
 import sharp from "sharp";
-import { pixelLayers, layerPoint, selectionSpans, selectionBounds } from "../🟦️.ts";
+import { pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
 import fixtures from "../🧫️fixtures/🔣️.json";
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
@@ -27,15 +27,15 @@ test("hidden ancestors prevent painting", () => {
   expect(layers[0]!.visible).toBe(false);
 });
 
-test("selection spans retain empty versus unrestricted selection", () => {
-  expect(selectionSpans(undefined)).toBe(null);
-  expect(selectionSpans(new Uint8Array(4))).toBe("[]");
-  expect(JSON.parse(selectionSpans(Uint8Array.of(0,255,255,0,128))!)).toEqual([[1,2,255],[4,1,128]]);
+test("selection spans retain empty versus unrestricted selection", async () => {
+  expect(await selectionSpans(undefined)).toBe(null);
+  expect(await selectionSpans(new Uint8Array(4))).toBe("[]");
+  expect(JSON.parse((await selectionSpans(Uint8Array.of(0,255,255,0,128)))!)).toEqual([[1,2,255],[4,1,128]]);
 });
 
-test("selection bounds use actual mask coverage", () => {
-  expect(selectionBounds(Uint8Array.of(0,255,0,0,255,0),3)).toEqual({x:1,y:0,width:1,height:2});
-  expect(selectionBounds(new Uint8Array(6),3)).toBe(null);
+test("selection bounds use actual mask coverage", async () => {
+  expect(await selectionBounds(Uint8Array.of(0,255,0,0,255,0),3)).toEqual({x:1,y:0,width:1,height:2});
+  expect(await selectionBounds(new Uint8Array(6),3)).toBe(null);
 });
 
 test("singular transforms reject interaction instead of inventing a location", () => {
@@ -53,4 +53,47 @@ for(const fixture of fixtures.cases) test(`${fixture.name}: SVG oracle maps the 
   const {data}=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   const px=Math.floor(50+(fixture.worldPoint[0]!-x)*zoom),py=Math.floor(50+(fixture.worldPoint[1]!-y)*zoom),at=(py*100+px)*4;
   expect(data[at]).toBe(255);expect(data[at+3]).toBeGreaterThan(200);
+});
+
+for(const fixture of fixtures.selectionTransport.cases) test(fixture.name+": bounded selection transport",async()=>{
+  const mask=Uint8Array.from(fixture.mask);
+  const spans=JSON.parse((await selectionSpans(mask))!);
+  expect(spans).toEqual(fixture.spans);
+  expect(await selectionBounds(mask,fixture.width)).toEqual(fixture.bounds);
+  const restored=new Uint8Array(mask.length);
+  for(const [start,count,value] of spans) restored.fill(value,start,start+count);
+  const png=await sharp(restored,{raw:{width:fixture.width,height:mask.length/fixture.width,channels:1}}).png().toBuffer();
+  const decoded=await sharp(png).greyscale().raw().toBuffer();
+  expect([...decoded]).toEqual(fixture.mask);
+});
+
+test("selection transport yields with exact progress across a run boundary",async()=>{
+  const f=fixtures.selectionTransport.boundary,mask=new Uint8Array(f.length);mask.fill(f.value,f.start,f.start+f.count);
+  const progress:number[]=[];let yielded=false;setTimeout(()=>{yielded=true;},0);
+  const result=await selectionSpans(mask,{onProgress:p=>progress.push(p.completed)});
+  expect(JSON.parse(result!)).toEqual([[f.start,f.count,f.value]]);
+  expect(progress).toEqual([32768,65536,f.length]);expect(yielded).toBe(true);
+});
+
+test("selection transport and bounds honor cancellation before publishing",async()=>{
+  const mask=new Uint8Array(65539).fill(255);
+  for(const operation of [selectionSpans,(mask:Uint8Array,options:SelectionScanOptions)=>selectionBounds(mask,1,options)]){
+    const controller=new AbortController();let progress=0;
+    await expect(operation(mask,{signal:controller.signal,onProgress:(p:{completed:number})=>{progress=p.completed;controller.abort();}})).rejects.toMatchObject({name:"AbortError"});
+    expect(progress).toBe(fixtures.selectionTransport.cancellationAfter);
+    await expect(operation(mask,{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
+  }
+});
+
+test("selection transport bounds fragmented output before allocating every run",async()=>{
+  const mask=Uint8Array.from({length:131072},(_,index)=>index%2?255:0);let progress=0;
+  await expect(selectionSpans(mask,{onProgress:p=>{progress=p.completed;}})).rejects.toThrow("too detailed");
+  expect(progress).toBe(0);
+});
+
+test("selection transport cancellation at the final grant cannot publish",async()=>{
+  for(const operation of [selectionSpans,(mask:Uint8Array,options:SelectionScanOptions)=>selectionBounds(mask,2,options)]) {
+    const controller=new AbortController();
+    await expect(operation(Uint8Array.of(0,255),{signal:controller.signal,onProgress:p=>{if(p.done)controller.abort();}})).rejects.toMatchObject({name:"AbortError"});
+  }
 });

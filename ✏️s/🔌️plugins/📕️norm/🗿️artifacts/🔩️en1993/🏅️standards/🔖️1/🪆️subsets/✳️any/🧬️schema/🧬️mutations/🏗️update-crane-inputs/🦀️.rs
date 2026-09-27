@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateCraneInput
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert crane runway {}", self.crane_runway.id),
-            &format!("Kranbahn setzen {}", self.crane_runway.id),
+            &format!("Update crane runway {}", self.crane_runway.id),
+            &format!("Kranbahn {} aktualisieren", self.crane_runway.id),
         )
     }
     fn target(&self) -> Vec<String> {

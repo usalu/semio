@@ -109,7 +109,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "category": "selection",
                 "semantics": {
                   "effects": {
@@ -136,7 +136,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -154,7 +155,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -181,7 +182,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -863,6 +865,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -952,6 +964,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -1041,6 +1063,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -1130,6 +1162,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -1219,6 +1261,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -1308,6 +1360,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -1373,6 +1435,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -2267,6 +2339,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -2356,6 +2438,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -2445,6 +2537,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -2534,6 +2636,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -2623,6 +2735,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -2712,6 +2834,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -2777,6 +2909,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -2850,6 +2992,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new generation, a named set of input values for the 2D generator, to the generation list and selects it.",
+                      "de": "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 2D-Generator, und wählt sie aus."
+                    },
+                    "reuse": {
+                      "en": "Adds a new generation, a named set of input values for the 2D generator, to the generation list and selects it.",
+                      "de": "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 2D-Generator, und wählt sie aus."
+                    }
                   }
                 }
               },
@@ -2896,6 +3048,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Selects the generation with the given id, whose input values the generator then evaluates and shows.",
+                      "de": "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."
+                    },
+                    "reuse": {
+                      "en": "Selects the generation with the given id, whose input values the generator then evaluates and shows.",
+                      "de": "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."
+                    }
                   }
                 }
               },
@@ -2940,6 +3102,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Renames one generation of the generation list.",
+                      "de": "Benennt eine Generation der Generationsliste um."
+                    },
+                    "reuse": {
+                      "en": "Renames one generation of the generation list.",
+                      "de": "Benennt eine Generation der Generationsliste um."
+                    }
                   }
                 }
               },
@@ -2984,6 +3156,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Removes one generation by id from the generation list, with its input values.",
+                      "de": "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."
+                    },
+                    "reuse": {
+                      "en": "Removes one generation by id from the generation list, with its input values.",
+                      "de": "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."
+                    }
                   }
                 }
               },
@@ -3666,6 +3848,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -3755,6 +3947,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -3844,6 +4046,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -3933,6 +4145,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -4022,6 +4244,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -4111,6 +4343,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -4176,6 +4418,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -4246,6 +4498,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."
+                    },
+                    "reuse": {
+                      "en": "Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."
+                    }
                   }
                 }
               },
@@ -4928,6 +5190,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -5017,6 +5289,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -5106,6 +5388,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -5195,6 +5487,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -5284,6 +5586,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -5373,6 +5685,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -5438,6 +5760,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -6330,6 +6662,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -6419,6 +6761,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -6508,6 +6860,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -6597,6 +6959,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -6686,6 +7058,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -6775,6 +7157,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -6840,6 +7232,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -6893,6 +7295,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one widget to the canvas position x, y.",
+                  "de": "Verschiebt ein Widget an die Position x, y der Fläche."
+                },
+                "reuse": {
+                  "en": "Moves one widget to the canvas position x, y.",
+                  "de": "Verschiebt ein Widget an die Position x, y der Fläche."
+                }
               }
             }
           },
@@ -7024,6 +7436,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new widget of the given kind (an input or an operator of the 2D generator graph) to the canvas.",
+                  "de": "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 2D-Generatorgraphen)."
+                },
+                "reuse": {
+                  "en": "Adds a new widget of the given kind (an input or an operator of the 2D generator graph) to the canvas.",
+                  "de": "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 2D-Generatorgraphen)."
+                }
               }
             }
           },
@@ -7068,6 +7490,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one widget by id from the generator graph together with its connections.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."
+                },
+                "reuse": {
+                  "en": "Removes one widget by id from the generator graph together with its connections.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."
+                }
               }
             }
           },
@@ -7112,6 +7544,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Connects an output port of one widget to an input port of another; an incompatible connection changes nothing.",
+                  "de": "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen; eine unverträgliche Verbindung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Connects an output port of one widget to an input port of another; an incompatible connection changes nothing.",
+                  "de": "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen; eine unverträgliche Verbindung ändert nichts."
+                }
               }
             }
           },
@@ -7138,7 +7580,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -7157,6 +7599,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                },
+                "reuse": {
+                  "en": "Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                }
               }
             }
           },
@@ -7203,6 +7655,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                  "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                  "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -7247,6 +7709,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 2D generator with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt den gesamten 2D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 2D generator with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt den gesamten 2D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -7293,6 +7765,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the editor to its generate view, which shows the generation list and the result of the selected generation.",
+                  "de": "Schaltet den Editor in seine Generieren-Ansicht, die die Generationsliste und das Ergebnis der ausgewählten Generation zeigt."
+                },
+                "reuse": {
+                  "en": "Switches the editor to its generate view, which shows the generation list and the result of the selected generation.",
+                  "de": "Schaltet den Editor in seine Generieren-Ansicht, die die Generationsliste und das Ergebnis der ausgewählten Generation zeigt."
+                }
               }
             }
           },
@@ -7338,6 +7820,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Hands the editor evaluated generator outputs (JSON) computed elsewhere so it can show them; the document is not changed.",
+                  "de": "Übergibt dem Editor anderswo berechnete Generatorausgaben (JSON), damit er sie zeigt; das Dokument ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Hands the editor evaluated generator outputs (JSON) computed elsewhere so it can show them; the document is not changed.",
+                  "de": "Übergibt dem Editor anderswo berechnete Generatorausgaben (JSON), damit er sie zeigt; das Dokument ändert sich nicht."
+                }
               }
             }
           },
@@ -8132,6 +8624,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -8237,6 +8739,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -8330,6 +8842,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -9989,6 +10511,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -10094,6 +10626,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -10187,6 +10729,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -10399,7 +10951,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -10425,7 +10977,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -10443,7 +10996,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -10470,7 +11023,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -10515,6 +11069,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -10560,6 +11124,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the graph selection to the next widget in the generator graph.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zum nächsten Widget."
+                    },
+                    "reuse": {
+                      "en": "Moves the graph selection to the next widget in the generator graph.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zum nächsten Widget."
+                    }
                   }
                 }
               },
@@ -10605,6 +11179,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the graph selection to the previous widget in the generator graph.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zum vorherigen Widget."
+                    },
+                    "reuse": {
+                      "en": "Moves the graph selection to the previous widget in the generator graph.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zum vorherigen Widget."
+                    }
                   }
                 }
               },
@@ -10650,6 +11234,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the graph selection to a widget feeding the selected one.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das das ausgewählte speist."
+                    },
+                    "reuse": {
+                      "en": "Moves the graph selection to a widget feeding the selected one.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das das ausgewählte speist."
+                    }
                   }
                 }
               },
@@ -10695,6 +11289,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the graph selection to a widget fed by the selected one.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das vom ausgewählten gespeist wird."
+                    },
+                    "reuse": {
+                      "en": "Moves the graph selection to a widget fed by the selected one.",
+                      "de": "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das vom ausgewählten gespeist wird."
+                    }
                   }
                 }
               },
@@ -10740,6 +11344,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Opens the ports of the selected widget in the graph window, as pressing Enter on it does; only the view changes.",
+                      "de": "Öffnet die Ports des ausgewählten Widgets im Graphfenster, wie ein Druck auf die Eingabetaste; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Opens the ports of the selected widget in the graph window, as pressing Enter on it does; only the view changes.",
+                      "de": "Öffnet die Ports des ausgewählten Widgets im Graphfenster, wie ein Druck auf die Eingabetaste; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -11422,6 +12036,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -11511,6 +12135,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -11600,6 +12234,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -11689,6 +12333,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -11778,6 +12432,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -11867,6 +12531,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -11932,6 +12606,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -11978,7 +12662,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -12005,7 +12689,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -12050,6 +12735,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                      "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                      "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -12095,6 +12790,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Switches the sun light of the 3D preview on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Switches the sun light of the 3D preview on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -12140,6 +12845,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the compass direction the 3D preview's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the compass direction the 3D preview's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -12185,6 +12900,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets how high the 3D preview's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets how high the 3D preview's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -12230,6 +12955,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the brightness of the 3D preview's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the brightness of the 3D preview's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -12275,6 +13010,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.",
+                      "de": "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                    },
+                    "reuse": {
+                      "en": "Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.",
+                      "de": "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                    }
                   }
                 }
               },
@@ -12320,6 +13065,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.",
+                      "de": "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."
+                    },
+                    "reuse": {
+                      "en": "Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.",
+                      "de": "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."
+                    }
                   }
                 }
               },
@@ -12365,6 +13120,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.",
+                      "de": "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."
+                    },
+                    "reuse": {
+                      "en": "Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.",
+                      "de": "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."
+                    }
                   }
                 }
               },
@@ -13047,6 +13812,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -13136,6 +13911,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -13225,6 +14010,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -13314,6 +14109,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -13403,6 +14208,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -13492,6 +14307,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -13557,6 +14382,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -13634,6 +14469,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new generation, a named set of input values for the 3D generator, to the generation list and selects it.",
+                      "de": "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 3D-Generator, und wählt sie aus."
+                    },
+                    "reuse": {
+                      "en": "Adds a new generation, a named set of input values for the 3D generator, to the generation list and selects it.",
+                      "de": "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 3D-Generator, und wählt sie aus."
+                    }
                   }
                 }
               },
@@ -13679,6 +14524,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Selects the generation with the given id, whose input values the generator then evaluates and shows.",
+                      "de": "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."
+                    },
+                    "reuse": {
+                      "en": "Selects the generation with the given id, whose input values the generator then evaluates and shows.",
+                      "de": "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."
+                    }
                   }
                 }
               },
@@ -13724,6 +14579,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Renames one generation of the generation list.",
+                      "de": "Benennt eine Generation der Generationsliste um."
+                    },
+                    "reuse": {
+                      "en": "Renames one generation of the generation list.",
+                      "de": "Benennt eine Generation der Generationsliste um."
+                    }
                   }
                 }
               },
@@ -13769,6 +14634,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Removes one generation by id from the generation list, with its input values.",
+                      "de": "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."
+                    },
+                    "reuse": {
+                      "en": "Removes one generation by id from the generation list, with its input values.",
+                      "de": "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."
+                    }
                   }
                 }
               },
@@ -14451,6 +15326,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -14540,6 +15425,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -14629,6 +15524,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -14718,6 +15623,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -14807,6 +15722,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -14896,6 +15821,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -14961,6 +15896,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -15032,6 +15977,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."
+                    },
+                    "reuse": {
+                      "en": "Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."
+                    }
                   }
                 }
               },
@@ -15714,6 +16669,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -15803,6 +16768,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -15892,6 +16867,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -15981,6 +16966,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -16070,6 +17065,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -16159,6 +17164,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -16224,6 +17239,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -16268,7 +17293,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -16295,7 +17320,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -16340,6 +17366,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                      "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets what the editor shows, such as the generator graph or the generated result; only the view changes.",
+                      "de": "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -16385,6 +17421,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Switches the sun light of the 3D preview on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Switches the sun light of the 3D preview on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -16430,6 +17476,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the compass direction the 3D preview's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the compass direction the 3D preview's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -16475,6 +17531,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets how high the 3D preview's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets how high the 3D preview's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -16520,6 +17586,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the brightness of the 3D preview's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the brightness of the 3D preview's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -16565,6 +17641,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.",
+                      "de": "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                    },
+                    "reuse": {
+                      "en": "Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.",
+                      "de": "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                    }
                   }
                 }
               },
@@ -16610,6 +17696,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.",
+                      "de": "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."
+                    },
+                    "reuse": {
+                      "en": "Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.",
+                      "de": "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."
+                    }
                   }
                 }
               },
@@ -16655,6 +17751,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.",
+                      "de": "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."
+                    },
+                    "reuse": {
+                      "en": "Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.",
+                      "de": "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."
+                    }
                   }
                 }
               },
@@ -17337,6 +18443,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -17426,6 +18542,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -17515,6 +18641,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -17604,6 +18740,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -17693,6 +18839,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -17782,6 +18938,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -17847,6 +19013,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -18028,6 +19204,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 3D generator with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt den gesamten 3D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 3D generator with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt den gesamten 3D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -18072,6 +19258,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected widget from the generator graph together with its connections.",
+                  "de": "Löscht alle ausgewählten Widgets samt ihrer Verbindungen aus dem Generatorgraphen."
+                },
+                "reuse": {
+                  "en": "Deletes every selected widget from the generator graph together with its connections.",
+                  "de": "Löscht alle ausgewählten Widgets samt ihrer Verbindungen aus dem Generatorgraphen."
+                }
               }
             }
           },
@@ -18117,6 +19313,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one widget by id from the generator graph together with its connections.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."
+                },
+                "reuse": {
+                  "en": "Removes one widget by id from the generator graph together with its connections.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."
+                }
               }
             }
           },
@@ -18235,6 +19441,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new widget of the given kind (an input or an operator of the 3D generator graph) to the canvas.",
+                  "de": "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 3D-Generatorgraphen)."
+                },
+                "reuse": {
+                  "en": "Adds a new widget of the given kind (an input or an operator of the 3D generator graph) to the canvas.",
+                  "de": "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 3D-Generatorgraphen)."
+                }
               }
             }
           },
@@ -18280,6 +19496,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one numeric field (such as a slider value) on several widgets at once; drags with the same gesture merge into one undo step.",
+                  "de": "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; Züge derselben Geste werden zu einem Rückgängig-Schritt zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Sets one numeric field (such as a slider value) on several widgets at once; drags with the same gesture merge into one undo step.",
+                  "de": "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; Züge derselben Geste werden zu einem Rückgängig-Schritt zusammengefasst."
+                }
               }
             }
           },
@@ -18306,7 +19532,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -18325,6 +19551,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                },
+                "reuse": {
+                  "en": "Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                }
               }
             }
           },
@@ -18366,6 +19602,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."
+                }
               }
             }
           },
@@ -18519,6 +19765,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -18544,7 +19800,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -18563,6 +19819,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the generator document with one read from an imported 3D artifact file, delivered in chunks.",
+                  "de": "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei, die in Teilen geliefert wird."
+                },
+                "reuse": {
+                  "en": "Replaces the generator document with one read from an imported 3D artifact file, delivered in chunks.",
+                  "de": "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei, die in Teilen geliefert wird."
+                }
               }
             }
           },
@@ -18608,6 +19874,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.",
+                  "de": "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.",
+                  "de": "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -18653,6 +19929,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the 3D preview to the next level of detail in turn; only the view changes.",
+                  "de": "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Switches the 3D preview to the next level of detail in turn; only the view changes.",
+                  "de": "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -19527,6 +20813,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -19632,6 +20928,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -19725,6 +21031,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -21055,6 +22371,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets what the 3D viewer shows of the generated result; only the view changes.",
+                      "de": "Legt fest, was der 3D-Betrachter vom erzeugten Ergebnis zeigt; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets what the 3D viewer shows of the generated result; only the view changes.",
+                      "de": "Legt fest, was der 3D-Betrachter vom erzeugten Ergebnis zeigt; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -21100,6 +22426,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the level of detail the 3D viewer draws with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der der 3D-Betrachter zeichnet; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the level of detail the 3D viewer draws with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der der 3D-Betrachter zeichnet; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -21118,7 +22454,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -21145,7 +22481,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -21190,6 +22527,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Switches the 3D viewer's sun light on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht des 3D-Betrachters ein oder aus; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Switches the 3D viewer's sun light on or off; only the view changes.",
+                      "de": "Schaltet das Sonnenlicht des 3D-Betrachters ein oder aus; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -21235,6 +22582,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the compass direction the 3D viewer's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne des 3D-Betrachters scheint; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the compass direction the 3D viewer's sun shines from; only the view changes.",
+                      "de": "Legt die Himmelsrichtung fest, aus der die Sonne des 3D-Betrachters scheint; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -21280,6 +22637,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets how high the 3D viewer's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne des 3D-Betrachters über dem Horizont steht; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets how high the 3D viewer's sun stands above the horizon; only the view changes.",
+                      "de": "Legt fest, wie hoch die Sonne des 3D-Betrachters über dem Horizont steht; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -21325,6 +22692,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the brightness of the 3D viewer's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne des 3D-Betrachters fest; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the brightness of the 3D viewer's sun; only the view changes.",
+                      "de": "Legt die Helligkeit der Sonne des 3D-Betrachters fest; nur die Ansicht ändert sich."
+                    }
                   }
                 }
               },
@@ -22007,6 +23384,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -22096,6 +23483,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -22185,6 +23582,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -22274,6 +23681,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -22363,6 +23780,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -22452,6 +23879,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -22517,6 +23954,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -22675,7 +24122,7 @@
                   "config:{self}"
                 ],
                 "external": false,
-                "destructive": true,
+                "destructive": false,
                 "reversible": false
               },
               "policy": {
@@ -22683,7 +24130,7 @@
                   "artifacts.read",
                   "shell.observe"
                 ],
-                "approval": "whenDestructive"
+                "approval": "never"
               },
               "execution": {
                 "preview": "none",
@@ -22695,6 +24142,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Shows one of the bundled generator examples in this viewer instead of the document; the document itself is not changed.",
+                  "de": "Zeigt in diesem Betrachter eines der mitgelieferten Generatorbeispiele statt des Dokuments; das Dokument selbst ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Shows one of the bundled generator examples in this viewer instead of the document; the document itself is not changed.",
+                  "de": "Zeigt in diesem Betrachter eines der mitgelieferten Generatorbeispiele statt des Dokuments; das Dokument selbst ändert sich nicht."
+                }
               }
             }
           },
@@ -22852,6 +24309,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the 3D result shown in the viewer in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das im Betrachter gezeigte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the 3D result shown in the viewer in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das im Betrachter gezeigte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -23646,6 +25113,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -23751,6 +25228,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -23844,6 +25331,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -25279,6 +26776,16 @@
             "cancellable": false,
             "class": "interactive",
             "interactiveJob": "unclassified"
+          },
+          "description": {
+            "native": {
+              "en": "Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.",
+              "de": "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert."
+            },
+            "reuse": {
+              "en": "Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.",
+              "de": "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert."
+            }
           }
         }
       }
@@ -25307,7 +26814,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -25356,6 +26863,16 @@
             "cancellable": false,
             "class": "interactive",
             "interactiveJob": "unclassified"
+          },
+          "description": {
+            "native": {
+              "en": "Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.",
+              "de": "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert."
+            },
+            "reuse": {
+              "en": "Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.",
+              "de": "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert."
+            }
           }
         }
       }
@@ -25831,8 +27348,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "eb723300dbbff706438643084d38101f35f4fd0a51d646719136ffa1f6d3600f",
-    "coreWasmSha256": "e4c06616cd9c8d7f0b45152a7d9515b77e34ce34e4ce1a69719e5d6a0f877452",
-    "descriptorSha256": "d11cf4bb0166112ac26c5e18c662a18c7f23c56d8aa8ef73717f552d03b813e4"
+    "wasmSha256": "f65071e9d6bd43259a403a9c9ad31aaa31f4c3fea9d0869dff1b41f604742677",
+    "coreWasmSha256": "33d684e1c75ba99677f0d45ce9cab57ca836009c9b8cd17f7df951d39452d80b",
+    "descriptorSha256": "5abfd7dbdb765d9d1d3e48dcf3143fedc1dfc504cd80a2a2bf01cf41be97482b"
   }
 }

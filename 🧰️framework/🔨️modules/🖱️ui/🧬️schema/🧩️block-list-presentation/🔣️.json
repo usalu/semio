@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "locales", "steps", "palette", "absentVisualText", "actions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locale", "steps", "addStep", "delete"],
+        "properties": {
+          "locale": { "enum": ["en", "de"] },
+          "steps": { "type": "string", "minLength": 1 },
+          "addStep": { "type": "string", "minLength": 1 },
+          "delete": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "palette": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["blockKind", "label", "iconId"],
+        "properties": {
+          "blockKind": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "iconId": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "absentVisualText": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["No steps", "Palette"] }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control", "action", "args", "role"],
+        "properties": {
+          "control": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["addStep", "addBlock"] },
+          "args": { "type": "object" },
+          "role": { "const": "button" }
+        }
+      }
+    }
+  }
+}

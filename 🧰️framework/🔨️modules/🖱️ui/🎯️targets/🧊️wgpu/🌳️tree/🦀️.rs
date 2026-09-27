@@ -79,15 +79,7 @@ impl UiDocumentTree {
     /// [`UiDocumentTree::credited_record_at`] one bounded unit at a time; this header alone owns no
     /// component, binding, or menu payload credits.
     pub(crate) fn credited_baseline(&self) -> Self {
-        Self {
-            generation: self.generation,
-            surface: self.surface.clone(),
-            revision: self.revision,
-            root: self.root,
-            layout_epoch: self.layout_epoch,
-            node_count: self.node_count,
-            nodes: UiNodeTable::default(),
-        }
+        Self { generation: self.generation, surface: self.surface.clone(), revision: self.revision, root: self.root, layout_epoch: self.layout_epoch, node_count: self.node_count, nodes: UiNodeTable::default() }
     }
 
     /// 🪙 Copies one record through the contract's explicit credit-accounting seam. A record is
@@ -275,6 +267,10 @@ pub struct EditState {
 #[derive(Clone, Debug, Default)]
 pub struct WidgetState {
     pub edit: Option<EditState>,
+    pub caret_visible: bool,
+    pub slider_draft_value: Option<f64>,
+    pub slider_readout_click_at: Option<f64>,
+    pub stepper_hovered_segment: Option<i8>,
     /// 🖱️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
     pub scroll_offset: (f32, f32),
     /// 🔽️ M5/W2 wiring: whether a `Select`'s synthesized popup (`reconcile::children_of`'s `Select`
@@ -309,6 +305,7 @@ pub struct LayoutBucket {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub inline_suffix_width: f32,
     pub cached_text_measure: TextMeasureCache,
 }
 
@@ -318,6 +315,7 @@ pub(crate) struct AcceptedLayout {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub inline_suffix_width: f32,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -519,7 +517,7 @@ impl UiTree {
             return Some(node.state.disclosure_open.unwrap_or(section.default_open.unwrap_or(true)));
         }
         if let Some(section) = self.authored_tree_section(id) {
-            return Some(node.state.disclosure_open.unwrap_or(section.default_open.unwrap_or(true)));
+            return Some(node.state.disclosure_open.unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section)));
         }
         let item = self.authored_tree_item(id)?;
         item.items.as_deref().filter(|items| !items.is_empty())?;
@@ -558,10 +556,7 @@ impl UiTree {
     }
 
     pub(crate) fn tree_section_open(&self, tree_id: NodeId, section_id: &str, default_open: bool) -> bool {
-        self.children(tree_id)
-            .find(|child| matches!(self.node(*child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == section_id))
-            .and_then(|child| self.disclosure_open(child))
-            .unwrap_or(default_open)
+        self.children(tree_id).find(|child| matches!(self.node(*child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == section_id)).and_then(|child| self.disclosure_open(child)).unwrap_or(default_open)
     }
 
     pub(crate) fn accepted_layout(&self, id: NodeId) -> Option<AcceptedLayout> {
@@ -570,8 +565,13 @@ impl UiTree {
         if self.mounted_layout_generation != 0 && mounted.generation == self.mounted_layout_generation {
             Some(mounted.layout)
         } else {
-            Some(AcceptedLayout { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height })
+            Some(AcceptedLayout { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height, inline_suffix_width: node.layout.inline_suffix_width })
         }
+    }
+
+    /// 🏷️ Width accepted by layout for a control's shrink-to-content inline suffix.
+    pub(crate) fn accepted_inline_suffix_width(&self, id: NodeId) -> Option<f32> {
+        self.accepted_layout(id).map(|layout| layout.inline_suffix_width)
     }
 
     pub(crate) fn write_inactive_layout(&mut self, id: NodeId, generation: u64, layout: AcceptedLayout) -> bool {
@@ -707,9 +707,7 @@ impl UiTree {
     }
 
     pub(crate) fn component_scene_host_is_mounted(&self, host_id: &str) -> bool {
-        self.document_nodes.iter().any(|(_, node)| {
-            self.node(*node).is_some_and(|node| matches!(&node.spec.0, UiNode::ComponentScene(scene) if scene.host_id == host_id))
-        })
+        self.document_nodes.iter().any(|(_, node)| self.node(*node).is_some_and(|node| matches!(&node.spec.0, UiNode::ComponentScene(scene) if scene.host_id == host_id)))
     }
 
     /// 🎞️ Copies one retained interaction record shared by the same authored identity and widget
@@ -868,11 +866,7 @@ impl UiTree {
     pub(crate) fn surviving_composite_owner(&self, row: NodeId) -> Option<NodeId> {
         let owner = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner))?;
         let document_id = self.document_id(owner)?;
-        self.document
-            .as_ref()
-            .and_then(|document| document.record(document_id))
-            .filter(|record| matches!(&record.component, ui_contract::Component::Select(_)))
-            .map(|_| owner)
+        self.document.as_ref().and_then(|document| document.record(document_id)).filter(|record| matches!(&record.component, ui_contract::Component::Select(_))).map(|_| owner)
     }
 
     /// 🔽️ Whether `owner` already has its synthesized rows this generation.

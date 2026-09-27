@@ -55,7 +55,7 @@ mod value_round_trip_tests {
             UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None }),
             UiControlNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "v".into() }], presence: UiPresence::default(), menu: None }),
             UiControlNode::Slider(UiSliderNode { id: "sld1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("slide"), presence: UiPresence::default(), menu: None }),
-            UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None }),
+            UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, min: None, max: None, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None }),
             UiControlNode::Ring(UiRingNode { id: "ring1".into(), orb_id: "orb".into(), t: 0.25, on_change: act("ring"), presence: UiPresence::default(), menu: None }),
             UiControlNode::IconSelect(UiIconSelectNode { id: "icn1".into(), value: "a".into(), uniform: true, classifier_kind: "kind".into(), on_change: act("iconSelect"), presence: UiPresence::default(), menu: None }),
         ];
@@ -88,7 +88,7 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_section_and_tree_node_round_trip() {
-        let section = UiTreeSectionNode { window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
+        let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
         assert_eq!(UiTreeSectionNode::from_value(section.clone().to_value()).expect("valid DslValue decodes"), section);
 
         let tree = UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };
@@ -100,6 +100,7 @@ mod value_round_trip_tests {
         let values = [
             TableCell::Text { value: "hi".into() },
             TableCell::Number { value: 3.5 },
+            TableCell::EditableText { value: "Grüße\n世界".into(), action: act("set-cell") },
             TableCell::Stepper { value: 1.0, min: 0.0, max: 10.0, step: 1.0, action: act("step") },
             TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: IconName::Save, label: None, action: act("btn"), placement: None }] },
         ];

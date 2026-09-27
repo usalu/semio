@@ -37,7 +37,7 @@ export type PluginRegistryEntry = {
   /** 🔗️ The RUNTIME actor dependencies this crate declares in `[package.metadata.semio].depends-on`
    * — sibling plugins whose own actor must be loaded beside this one (it embeds their surfaces,
    * contributes onto their artifacts, or exchanges messages with them), mirroring the same set the
-   * crate's builder declares through `.depends_on(id, VersionReq)`. A Cargo `[dependencies]` entry on
+   * crate's builder declares through `.depends_on(id, VersionPin)`. A Cargo `[dependencies]` entry on
    * `semio-s-plugin-<id>` is a BUILD-TIME rlib link (codecs, schema types, shared geometry) and is
    * deliberately never read here — see {@link parseSemioDependsOnIds}. For an extension, `extends` is
    * always `dependsOn[0]` (contract freeze §4 rule 1). Consumed by
@@ -470,7 +470,7 @@ export function parseTomlStringArray(block: string, key: string): string[] {
 /**
  * @emoji 🔗️ The runtime actor dependencies one crate DECLARES, read from
  * `[package.metadata.semio].depends-on` — the same plugin-id set its builder passes to
- * `.depends_on(id, VersionReq)` (`🔌️plugin/🦀️.rs`), kept in the Cargo manifest as well because the
+ * `.depends_on(id, VersionPin)` (`🔌️plugin/🦀️.rs`), kept in the Cargo manifest as well because the
  * registry is generated BEFORE any wasm build and therefore cannot read the descriptor a build
  * emits. Mirrors the root policy script's `policySemioMetadataDependsOnIds` so the derived catalog
  * and the `plugin-dependency/parity` gate can never read two different dependency sets.

@@ -258,6 +258,8 @@ declare module "bun:sqlite" {
     run(sql: string, ...values: unknown[]): { changes: number; lastInsertRowid: number | bigint };
     query(sql: string): Statement;
     prepare(sql: string): Statement;
+    /** 🔁️ Wraps `body` so every call runs inside one `BEGIN`/`COMMIT` (rolled back when it throws). */
+    transaction<Args extends unknown[], Result>(body: (...args: Args) => Result): (...args: Args) => Result;
     close(): void;
   }
 }

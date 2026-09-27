@@ -57,6 +57,10 @@ pub enum HubAccessActionV1 {
     BlobRead,
     #[serde(rename = "blob.write")]
     BlobWrite,
+    #[serde(rename = "preference.record")]
+    PreferenceRecord,
+    #[serde(rename = "preference.read")]
+    PreferenceRead,
 }
 
 /// ⚖️ Allow or deny.

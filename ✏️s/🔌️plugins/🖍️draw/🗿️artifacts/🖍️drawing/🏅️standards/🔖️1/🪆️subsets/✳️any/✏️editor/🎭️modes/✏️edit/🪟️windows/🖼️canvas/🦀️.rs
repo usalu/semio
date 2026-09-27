@@ -1,7 +1,7 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
 use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
-use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
+use crate::schema::resolve_drawing_artboard;
 use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use dsl::DslValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
@@ -86,15 +86,12 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 /// records this function used to bake into `layersJson` are gone; the client renders that highlight
 /// itself from the framework's own interaction state now.
 pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    let mut scene_nodes = flatten_drawing_document_to_scene_nodes(document);
+    let scene_nodes = crate::schema::flatten_drawing_document_with_translation(document,preview.translation.as_ref());
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
     records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
-    for node in &mut scene_nodes {
-        if let Some((layer_id,delta)) = &preview.translation {
-            if node.id == *layer_id { node.transform[4] += delta[0]; node.transform[5] += delta[1]; }
-        }
+    for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
     }
     if preview.phase == DrawingGesturePreviewPhase::Marquee {
@@ -122,6 +119,6 @@ pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowCo
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

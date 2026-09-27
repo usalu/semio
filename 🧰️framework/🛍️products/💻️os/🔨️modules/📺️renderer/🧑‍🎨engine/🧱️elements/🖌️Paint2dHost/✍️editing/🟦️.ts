@@ -32,25 +32,47 @@ export function layerPoint(layer:PixelLayer,x:number,y:number): readonly [number
   if (!Number.isFinite(determinant) || Math.abs(determinant)<1e-12) throw new Error("Layer transform is not invertible");
   return [(d*(x-e)-c*(y-f))/determinant,(-b*(x-e)+a*(y-f))/determinant];
 }
-export function selectionSpans(mask:Uint8Array|undefined): string|null {
-  if (!mask) return null;
-  const spans:number[][]=[];
-  for(let start=0;start<mask.length;) {
-    const value=mask[start]!;
-    let end=start+1;
-    while(end<mask.length && mask[end]===value) end++;
-    if(value) spans.push([start,end-start,value]);
-    start=end;
-  }
-  const encoded=JSON.stringify(spans);
-  if(encoded.length>40000) throw new Error("Selection is too detailed for one edit; simplify the selection");
-  return encoded;
+export type SelectionScanOptions = {signal?:AbortSignal;onProgress?:(progress:{completed:number;total:number;done:boolean})=>void};
+function checkSelectionScan(options:SelectionScanOptions):void {
+  if(options.signal?.aborted) throw new DOMException("Cancelled","AbortError");
 }
-export function selectionBounds(mask:Uint8Array,width:number): {x:number;y:number;width:number;height:number}|null {
-  let left=width,top=mask.length/width,right=-1,bottom=-1;
-  for(let i=0;i<mask.length;i++) if(mask[i]) {
-    const x=i%width,y=Math.floor(i/width);
-    left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);
+async function scanSelection(mask:Uint8Array,visit:(index:number,value:number)=>void,options:SelectionScanOptions):Promise<void> {
+  checkSelectionScan(options);
+  if(mask.length>16777216) throw new Error("Selection exceeds the pixel budget");
+  for(let start=0;start<mask.length;start+=32768) {
+    checkSelectionScan(options);
+    const end=Math.min(mask.length,start+32768);
+    for(let index=start;index<end;index++) visit(index,mask[index]!);
+    options.onProgress?.({completed:end,total:mask.length,done:end===mask.length});
+    checkSelectionScan(options);
+    if(end<mask.length) await new Promise<void>(resolve=>setTimeout(resolve,0));
   }
+  checkSelectionScan(options);
+}
+export async function selectionSpans(mask:Uint8Array|undefined,options:SelectionScanOptions={}):Promise<string|null> {
+  checkSelectionScan(options);
+  if(!mask) return null;
+  const spans:string[]=[];let start=0,value=0,length=2;
+  const append=(end:number)=>{
+    if(!value) return;
+    const span=JSON.stringify([start,end-start,value]);length+=span.length+(spans.length?1:0);
+    if(length>40000) throw new Error("Selection is too detailed for one edit; simplify the selection");
+    spans.push(span);
+  };
+  await scanSelection(mask,(index,next)=>{if(next!==value){append(index);start=index;value=next;}},options);
+  checkSelectionScan(options);
+  append(mask.length);
+  return "["+spans.join(",")+"]";
+}
+export async function selectionBounds(mask:Uint8Array,width:number,options:SelectionScanOptions={}):Promise<{x:number;y:number;width:number;height:number}|null> {
+  checkSelectionScan(options);
+  if(!Number.isInteger(width)||width<1||mask.length%width!==0) throw new Error("Selection dimensions are invalid");
+  let left=width,top=mask.length/width,right=-1,bottom=-1;
+  await scanSelection(mask,(index,value)=>{
+    if(!value) return;
+    const x=index%width,y=Math.floor(index/width);
+    left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);
+  },options);
+  checkSelectionScan(options);
   return right<0?null:{x:left,y:top,width:right-left+1,height:bottom-top+1};
 }

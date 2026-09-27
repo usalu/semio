@@ -15,6 +15,7 @@ export type AccessibilityProjectionNode = {
   readonly hidden?: boolean;
   readonly disabled?: boolean;
   readonly focusable?: boolean;
+  readonly tabbable?: boolean;
   readonly actionable?: boolean;
   readonly focused?: boolean;
   readonly checked?: boolean;
@@ -50,7 +51,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
   let restoringFocus = false;
 
   const projectedElement = (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode, ids: ReadonlyMap<string, string>): { readonly element: HTMLElement; readonly description?: HTMLSpanElement } => {
-    const element = (() => {
+    const element: HTMLElement = (() => {
       if (node.role === "button" || node.role === "switch" || (node.role === "combobox" && node.editable !== true)) {
         const button = document.createElement("button");
         button.type = "button";
@@ -71,7 +72,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       generic.setAttribute("role", node.role);
       return generic;
     })();
-    element.tabIndex = node.focusable === true ? 0 : -1;
+    element.tabIndex = node.tabbable === true ? 0 : -1;
     element.id = ids.get(node.key) ?? "";
     element.dataset.window = surface.windowId;
     element.dataset.windowGeneration = String(surface.windowGeneration);
@@ -124,6 +125,27 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.actionable === true && !(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement)) element.addEventListener("click", (event) => {
       event.stopPropagation();
       transport.enqueueLossless({ kind: "accessibility-activate", ...address });
+    });
+    if (node.role === "tab" && node.focusable === true) element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (node.actionable === true) transport.enqueueLossless({ kind: "accessibility-activate", ...address });
+        return;
+      }
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "Home" && event.key !== "End") return;
+      event.preventDefault();
+      event.stopPropagation();
+      const controls = element.getAttribute("aria-controls");
+      const tabs = Array.from(element.parentElement?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []).filter((tab) => tab.getAttribute("aria-controls") === controls);
+      const index = tabs.indexOf(element);
+      if (index < 0 || tabs.length === 0) return;
+      const next = event.key === "Home"
+        ? tabs[0]
+        : event.key === "End"
+          ? tabs[tabs.length - 1]
+          : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+      next?.focus({ preventScroll: true });
     });
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) element.addEventListener("input", (event) => {
       event.stopPropagation();

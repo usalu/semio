@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProp
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert member {}", self.member.id),
-            &format!("Bauteil setzen {}", self.member.id),
+            &format!("Update member {}", self.member.id),
+            &format!("Bauteil {} aktualisieren", self.member.id),
         )
     }
     fn target(&self) -> Vec<String> {

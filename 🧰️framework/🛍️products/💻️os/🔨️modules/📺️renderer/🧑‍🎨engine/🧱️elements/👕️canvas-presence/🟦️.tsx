@@ -254,3 +254,50 @@ export function CanvasPresenceOverlayV1(props: CanvasPresenceSurfaceV1): ReactEl
     </div>
   );
 }
+
+/** ✏️ Peer carets on a text surface: every other actor's `space: "text"` view of this window carries its caret in the
+ * editor's WORLD coordinates (the same text lays out identically for every peer), projected through the viewer's own
+ * editor camera by `project`; `frame` re-projects after the viewer's own scroll or relayout. */
+export function TextPeerCaretsOverlayV1(props: {
+  readonly windowId: string;
+  readonly project: (world: readonly [number, number]) => { readonly x: number; readonly y: number } | null;
+  readonly frame: number;
+  readonly lineHeightPx: number;
+  readonly locale?: string;
+}): ReactElement | null {
+  const roster = useArtifactRoster("local");
+  const myActor = useLocalPresenceActor("local", "");
+  const labels = peerOverlayLabels(props.locale);
+  const { project, frame } = props;
+  const carets = useMemo(
+    () =>
+      myActor
+        ? peersForWindow(roster, props.windowId, "text", undefined, myActor, 0).artifactPeers.flatMap((peer) => {
+            const screen = peer.pointer ? project([peer.pointer[0], peer.pointer[1]]) : null;
+            return screen === null || frame < 0 ? [] : [{ peer, screen }];
+          })
+        : [],
+    [roster, myActor, props.windowId, project, frame],
+  );
+  if (carets.length === 0) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[15] overflow-hidden" data-slot="canvas-presence-overlay" data-testid="text-presence-overlay">
+      {carets.map(({ peer, screen }, index) => {
+        const color = presenceColorCss(peer.color);
+        return (
+          <div
+            key={`caret-${peer.actor}`}
+            data-ui-path={peerOverlayPath(`text/${props.windowId}`, "Caret", index, peer.actor)}
+            data-peer-actor={peer.actor}
+            data-peer-color={peer.color ?? 0}
+            data-peer-cursor="" data-peer-caret="" data-testid="peer-caret"
+            aria-label={labels.caret(peer.label)}
+            style={{ position: "absolute", left: screen.x, top: screen.y, width: 2, height: props.lineHeightPx, background: color } as CSSProperties}
+          >
+            <span style={{ position: "absolute", left: 3, top: -props.lineHeightPx * 0.75, fontSize: 10, lineHeight: 1.2, padding: "1px 4px", borderRadius: 3, background: color, color: "white", whiteSpace: "nowrap" }}>{peer.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

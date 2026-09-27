@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.scene.text-editor-lanes.v1",
+  "type": "object",
+  "required": ["schema", "laneKey", "field", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "text-editor@1" },
+    "laneKey": { "const": "framework.scene.text.buffer" },
+    "field": { "const": "buffer" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "repeat"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "repeat": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

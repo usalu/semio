@@ -181,6 +181,7 @@ impl OsHost {
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn redraw_offscreen_worker(&mut self) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_offscreen_worker", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::InteractiveStep);
+        let _ = self.scheduler.should_render(self.clock.now_seconds());
         self.redraw_core()
     }
 
@@ -288,7 +289,12 @@ impl OsHost {
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
         loop {
             match self.presenter.present_step() {
-                Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
+                Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives }) => {
+                    self.animation_clock.accept(has_animated_primitives);
+                    self.animation_clock.sync(&mut self.scheduler, self.clock.now_seconds());
+                    self.runtime.publish_retained_control_deadline(retained_control_deadline);
+                    self.runtime.publish_shell_clock_deadline(shell_clock_deadline);
+                    self.scheduler.replace_deadline(crate::deadlines::RETAINED_CONTROL_CLOCK, self.runtime.retained_control_deadline(self.clock.now_seconds()));
                     if generation.0 != self.frame_generation {
                         self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
                         return;
@@ -340,14 +346,8 @@ impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let snapshot = self.snapshot_sink.acquire();
-
-        // ⌨️ Deviation from the packet brief's literal "only while a caret is visible": AppRuntime's
-        // own focus/caret-presence signal is not exposed at this layer (see report — a real, scoped
-        // follow-up, not guessed at here). Until that hook lands, `caret_present` stays `true`
-        // unconditionally, which is exact behavioural PARITY with the old code (which also blinked
-        // unconditionally on every frame) rather than a regression — it just does not yet earn the
-        // "idle window with no caret costs zero blink wakes" half of the optimization.
-        self.caret.sync(&mut self.scheduler, now, true);
+        self.animation_clock.sync(&mut self.scheduler, now);
+        self.scheduler.replace_deadline(crate::deadlines::RETAINED_CONTROL_CLOCK, self.runtime.retained_control_deadline(self.clock.now_seconds()));
 
         if self.hot_swap.is_due(now) {
             self.scheduler.request_deadline(now + crate::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
@@ -448,30 +448,26 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
                 Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } => {
-            match crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) {
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) {
+            Ok(true) => {}
+            Ok(false) => {
+                if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                    app.text_fault = Some(error);
+                }
+            }
+            Err(error) => app.text_fault = Some(error.to_string()),
+        },
+        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
+            Ok(true) => {}
+            Ok(false) => match crate::interpreter::push_focused_text_editor_stream(stream, &text) {
                 Ok(true) => {}
                 Ok(false) => {
-                    if let Err(error) = app.start_text_operation(stream, declared_bytes) {
-                        app.text_fault = Some(error);
+                    if let Err(error) = app.push_text_operation(stream, text) {
+                        app.text_fault = Some(error)
                     }
                 }
                 Err(error) => app.text_fault = Some(error.to_string()),
-            }
-        }
-        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
-            Ok(true) => {}
-            Ok(false) => {
-                match crate::interpreter::push_focused_text_editor_stream(stream, &text) {
-                    Ok(true) => {}
-                    Ok(false) => {
-                        if let Err(error) = app.push_text_operation(stream, text) {
-                            app.text_fault = Some(error)
-                        }
-                    }
-                    Err(error) => app.text_fault = Some(error.to_string()),
-                }
-            }
+            },
             Err(error) => app.text_fault = Some(error.to_string()),
         },
         DispatchEvent::TextEditCommit { stream } => {

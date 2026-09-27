@@ -9,6 +9,7 @@ pub use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingM
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::standards::v1::subsets::drawing::schema::mutations::{
+    set_snapshot::SetSnapshot,
     change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode, drag_nodes::DragNodes, flatten_node::FlattenNode,
     group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath, rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
 };
@@ -50,8 +51,15 @@ fn dec_indices(s: &str) -> Result<Vec<usize>, String> {
 
 //#region 🔖️OpText
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
+fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
+    if !value.len().is_multiple_of(2) { return Err("snapshot payload has odd hexadecimal length".into()); }
+    (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+}
+
 fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     match m {
+        SemioDrawingMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioDrawingMutation::CreateLayer(p) => format!("createLayer:{},{}", p.index, enc_layer(&p.layer)),
         SemioDrawingMutation::DeleteLayer(p) => format!("deleteLayer:{}", enc_str(&p.id)),
         SemioDrawingMutation::CreateNode(p) => format!("createNode:{},{},{}", enc_node_path(&p.parent), p.index, enc_node(&p.node)),
@@ -74,6 +82,13 @@ fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioDrawingMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("drawing mutation: missing ':' in {line:?}"))?;
     match tag {
         "createLayer" => {

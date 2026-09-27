@@ -18,7 +18,7 @@ import { interactiveJobsOfText, placeholderHitsOfText } from "../../📋️orche
 //#endregion 🔌️Adapters
 
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🧮️source-census", "🔣️.json"), "utf8")) as {
-  placeholders: { name: string; path: string; text: string; expected: { line: number; macro: string; testOnly: boolean; commented: boolean }[] }[];
+  placeholders: { name: string; path: string; text: string; expected: { line: number; macro: "todo" | "unimplemented"; testOnly: boolean; commented: boolean }[] }[];
   interactiveJobs: { name: string; path: string; text: string; expected: { command: string; classification: string; line: number }[]; calls: number; codeCalls: number }[];
 };
 const TEST_SEGMENT = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples)\//u;

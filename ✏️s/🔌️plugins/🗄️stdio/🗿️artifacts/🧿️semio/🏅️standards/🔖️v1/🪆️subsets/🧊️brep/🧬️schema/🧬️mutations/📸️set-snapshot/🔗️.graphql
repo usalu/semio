@@ -1,0 +1,2 @@
+# 📸️ Whole SemioBrepSnapshot replacement.
+input SetSnapshot { snapshot: SemioBrepSnapshot! }

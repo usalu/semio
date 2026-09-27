@@ -170,6 +170,36 @@ pub enum SpaceArtifactCreationPhaseV1 {
     Cancelled,
 }
 
+/// 🧭️ The stage a running creation reports (`SpaceArtifactCreationProgress.stage`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "kebab-case")]
+#[value(rename_all = "kebab-case")]
+pub enum SpaceArtifactCreationStageV1 {
+    Queued,
+    CompilingGuest,
+    Genesis,
+    Publishing,
+}
+
+/// 📈️ Where a running creation is (`SpaceArtifactCreationProgress`); `completed_units` never exceeds
+/// `total_units`, which is never zero.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SpaceArtifactCreationProgressV1 {
+    pub stage: SpaceArtifactCreationStageV1,
+    pub completed_units: u64,
+    pub total_units: u64,
+}
+
+impl SpaceArtifactCreationProgressV1 {
+    /// 🧮️ The bounds JSON Schema states, plus the ordering it cannot.
+    pub fn validate(&self) -> bool {
+        const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+        self.total_units >= 1 && self.total_units <= MAX_SAFE_INTEGER && self.completed_units <= self.total_units
+    }
+}
+
 /// 🧭️ The server-selected artifact dialect, without executable authority supplied by a client.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -222,11 +252,16 @@ pub struct SpaceArtifactCreationStatusV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub ready: Option<SpaceArtifactCreationReadyV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<SpaceArtifactCreationProgressV1>,
 }
 
 impl SpaceArtifactCreationStatusV1 {
-    /// 🔐️ Only Ready may contain document coordinates, and Ready must contain all of them.
+    /// 🔐️ Only Ready may contain document coordinates, and Ready must contain all of them; only an
+    /// unfinished creation reports progress.
     pub fn validate(&self) -> bool {
+        let running = matches!(self.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing);
         self.schema == "semio.hub.space-artifact-creation-status/v1"
             && request_id(&self.request_id)
             && identity(&self.space_id)
@@ -236,6 +271,7 @@ impl SpaceArtifactCreationStatusV1 {
                 (SpaceArtifactCreationPhaseV1::Ready, None) | (_, Some(_)) => false,
                 (_, None) => true,
             }
+            && self.progress.as_ref().is_none_or(|progress| running && progress.validate())
     }
 
     /// 🧾️ Reads one exact receipt, withholding malformed or authority-overposted results.

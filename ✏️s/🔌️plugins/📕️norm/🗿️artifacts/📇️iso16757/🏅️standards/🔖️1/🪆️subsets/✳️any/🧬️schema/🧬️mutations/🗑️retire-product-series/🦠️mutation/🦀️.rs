@@ -21,8 +21,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RetireProduc
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Retire productSeries \"{}\"", self.id),
-            &format!("productSeries \"{}\" löschen", self.id),
+            &format!("Retire product series \"{}\"", self.id),
+            &format!("Produktserie \"{}\" zurückziehen", self.id),
         )
     }
     fn target(&self) -> Vec<String> {

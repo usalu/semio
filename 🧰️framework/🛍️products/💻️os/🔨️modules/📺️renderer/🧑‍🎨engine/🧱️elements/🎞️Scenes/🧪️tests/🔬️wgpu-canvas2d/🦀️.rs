@@ -75,7 +75,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         pane_id: None,
         binding_id: None,
         presence: UiPresence::default(),
-        canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
+        canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
         world_3d: None,
         node_graph: None,
         text_editor: None,
@@ -457,4 +457,21 @@ fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_on
     assert!(cursor.terminal_is_empty());
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| assert_eq!(cell.borrow().len(), SCENE_CAMERA_DISPATCH_CAPACITY));
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
+}
+
+#[test]
+fn canvas_framing_waits_for_measurement_and_preserves_navigation() {
+    let mut scene = canvas_scene("framing-window", "[]".into());
+    scene.canvas_2d.as_mut().unwrap().framing = Some(ui_wgpu::wgpu::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
+    assert!(!apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 0.0, 0.0)));
+    assert!(apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 800.0, 600.0)));
+    let fitted = scene_state(&scene.host_id).viewport;
+    assert_eq!((fitted.x, fitted.y), (100.0, 50.0));
+    assert!((fitted.zoom - 1.8).abs() < 1e-6);
+    mutate_scene_state(&scene.host_id, |state| state.viewport.x = 777.0);
+    assert!(!apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 900.0, 700.0)));
+    assert_eq!(scene_state(&scene.host_id).viewport.x, 777.0);
+    scene.canvas_2d.as_mut().unwrap().framing.as_mut().unwrap().revision = 2;
+    assert!(apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 900.0, 700.0)));
+    assert_eq!(scene_state(&scene.host_id).viewport.x, 100.0);
 }

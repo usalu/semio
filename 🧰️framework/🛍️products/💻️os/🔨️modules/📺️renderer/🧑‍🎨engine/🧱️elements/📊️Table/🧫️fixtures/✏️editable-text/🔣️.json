@@ -1,0 +1,30 @@
+{
+  "schema": "semio.framework.table.editable-text-cell.v1",
+  "cell": {
+    "kind": "editableText",
+    "value": "Grüße\n世界",
+    "action": {
+      "controllerId": "s.stdio.csv@rfc4180/*#editor",
+      "action": "set-cell",
+      "args": { "row": 2, "column": 1 }
+    }
+  },
+  "replacement": "mehrzeilig\nΩ🙂",
+  "expectedAction": {
+    "controllerId": "s.stdio.csv@rfc4180/*#editor",
+    "action": "set-cell",
+    "args": { "row": 2, "column": 1, "value": "mehrzeilig\nΩ🙂" }
+  },
+  "keyboard": {
+    "append": " 文",
+    "afterAppend": "Grüße\n世界 文",
+    "afterShiftEnter": "Grüße\n世界 文\n"
+  },
+  "acceptance": {
+    "base": "A",
+    "draft": "B",
+    "acceptedPersisted": "B",
+    "refusedPersisted": "A",
+    "collaboratorPersisted": "C"
+  }
+}

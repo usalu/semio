@@ -9,6 +9,7 @@ pub use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutat
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::graph::schema::mutations::{
+    set_snapshot::SetSnapshot,
     add_node_port::AddNodePort, add_node_property::AddNodeProperty, change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode,
     move_node::MoveNode, remove_node_port::RemoveNodePort, remove_node_property::RemoveNodeProperty,
 };
@@ -114,6 +115,7 @@ fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_graph_mutation(m: &SemioGraphMutation) -> String {
     match m {
+        SemioGraphMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioGraphMutation::CreateNode(p) => format!(
             "createNode:{},{},{},{},[{}],[{}]",
             enc_node_id(&p.id),
@@ -138,6 +140,13 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioGraphMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("graph mutation: missing ':' in {line:?}"))?;
     match tag {
         "createNode" => {

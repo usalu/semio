@@ -1432,6 +1432,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Appends a new step of the given kind (for example a control, math, text or effect step) to the end of the procedure.",
+                  "de": "Hängt einen neuen Schritt der angegebenen Art (etwa einen Steuerungs-, Mathe-, Text- oder Effektschritt) an das Ende der Prozedur an."
+                },
+                "reuse": {
+                  "en": "Appends a new step of the given kind (for example a control, math, text or effect step) to the end of the procedure.",
+                  "de": "Hängt einen neuen Schritt der angegebenen Art (etwa einen Steuerungs-, Mathe-, Text- oder Effektschritt) an das Ende der Prozedur an."
+                }
               }
             }
           },
@@ -1476,6 +1486,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Appends a new step of the given kind inside a slot of a control step (such as the then or else branch of an if), or to the procedure's end without owner and slot.",
+                  "de": "Hängt einen neuen Schritt der angegebenen Art in einen Slot eines Steuerungsschritts (etwa den Dann- oder Sonst-Zweig eines Wenn) an, ohne Besitzer und Slot an das Ende der Prozedur."
+                },
+                "reuse": {
+                  "en": "Appends a new step of the given kind inside a slot of a control step (such as the then or else branch of an if), or to the procedure's end without owner and slot.",
+                  "de": "Hängt einen neuen Schritt der angegebenen Art in einen Slot eines Steuerungsschritts (etwa den Dann- oder Sonst-Zweig eines Wenn) an, ohne Besitzer und Slot an das Ende der Prozedur."
+                }
               }
             }
           },
@@ -1520,6 +1540,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one step by id from the top level of the procedure, including every step nested inside it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id aus der obersten Ebene der Prozedur, samt aller darin verschachtelten Schritte."
+                },
+                "reuse": {
+                  "en": "Removes one step by id from the top level of the procedure, including every step nested inside it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id aus der obersten Ebene der Prozedur, samt aller darin verschachtelten Schritte."
+                }
               }
             }
           },
@@ -1564,6 +1594,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one step by id from a control step's slot, or from the top level, including every step nested inside it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id aus dem Slot eines Steuerungsschritts oder der obersten Ebene, samt aller darin verschachtelten Schritte."
+                },
+                "reuse": {
+                  "en": "Removes one step by id from a control step's slot, or from the top level, including every step nested inside it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id aus dem Slot eines Steuerungsschritts oder der obersten Ebene, samt aller darin verschachtelten Schritte."
+                }
               }
             }
           },
@@ -1608,6 +1648,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one top-level step to a new position (index) in the procedure.",
+                  "de": "Verschiebt einen Schritt der obersten Ebene an eine neue Position (Index) in der Prozedur."
+                },
+                "reuse": {
+                  "en": "Moves one top-level step to a new position (index) in the procedure.",
+                  "de": "Verschiebt einen Schritt der obersten Ebene an eine neue Position (Index) in der Prozedur."
+                }
               }
             }
           },
@@ -1652,6 +1702,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one step to a new position (index) within its control step's slot or the top level.",
+                  "de": "Verschiebt einen Schritt an eine neue Position (Index) innerhalb des Slots seines Steuerungsschritts oder der obersten Ebene."
+                },
+                "reuse": {
+                  "en": "Moves one step to a new position (index) within its control step's slot or the top level.",
+                  "de": "Verschiebt einen Schritt an eine neue Position (Index) innerhalb des Slots seines Steuerungsschritts oder der obersten Ebene."
+                }
               }
             }
           },
@@ -1696,6 +1756,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the parameters of one top-level step with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."
+                },
+                "reuse": {
+                  "en": "Replaces the parameters of one top-level step with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."
+                }
               }
             }
           },
@@ -1740,6 +1810,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the parameters of one step inside a control step's slot, or at the top level, with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts im Slot eines Steuerungsschritts oder der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."
+                },
+                "reuse": {
+                  "en": "Replaces the parameters of one step inside a control step's slot, or at the top level, with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts im Slot eines Steuerungsschritts oder der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."
+                }
               }
             }
           },
@@ -1785,6 +1865,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Runs the procedure from its first step and shows the resulting variable scope in the output view; the procedure itself is not changed.",
+                  "de": "Führt die Prozedur ab dem ersten Schritt aus und zeigt den entstandenen Variablenbereich in der Ausgabeansicht; die Prozedur selbst ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Runs the procedure from its first step and shows the resulting variable scope in the output view; the procedure itself is not changed.",
+                  "de": "Führt die Prozedur ab dem ersten Schritt aus und zeigt den entstandenen Variablenbereich in der Ausgabeansicht; die Prozedur selbst ändert sich nicht."
+                }
               }
             }
           },
@@ -1829,7 +1919,7 @@
                   "config:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
@@ -1837,7 +1927,7 @@
                   "artifacts.read",
                   "shell.observe"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -1849,6 +1939,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole procedure with the bundled demo program, or with an empty procedure for any other example id.",
+                  "de": "Ersetzt die gesamte Prozedur durch das mitgelieferte Demoprogramm, bei jeder anderen Beispiel-Id durch eine leere Prozedur."
+                },
+                "reuse": {
+                  "en": "Replaces the whole procedure with the bundled demo program, or with an empty procedure for any other example id.",
+                  "de": "Ersetzt die gesamte Prozedur durch das mitgelieferte Demoprogramm, bei jeder anderen Beispiel-Id durch eine leere Prozedur."
+                }
               }
             }
           },
@@ -2580,6 +2680,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2685,6 +2795,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2778,6 +2898,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3948,6 +4078,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4053,6 +4193,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4146,6 +4296,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4317,7 +4477,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -4487,8 +4647,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "ffbfb5a83c801f8491c7530747bb281fc5f44f2daf82bb5cf6b9ac9d79cc24d9",
-    "coreWasmSha256": "70053b3fe1fb86fda77fbbcd3451df557f95693b20c6be6c495cc4b396e603f3",
-    "descriptorSha256": "4378cc83643937fd1858c0dea957e6f0603d58709524c68854ba35834442833e"
+    "wasmSha256": "e7a56dbe9b39c3c8e653c760e192b78a3976d34f02e17f3792894756847b543f",
+    "coreWasmSha256": "2313d57906e66e25b309bae1e974c993314fb11bd4ada707d2efa6e9076a2fc6",
+    "descriptorSha256": "4745288427cb0177a86cf3d4eda27c4f197df5f9507aaa6465a68b324a058c8a"
   }
 }

@@ -296,7 +296,7 @@ async fn python_oracle_within_half_percent() {
         .join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap();
-    let oracle = any.join("🔮️oracles").join("evaluate_en1991.py");
+    let oracle = any.join("🔮️oracles").join("⚖️compliance").join("🐍️.py");
     let tmp = std::env::temp_dir().join("en1991-oracle-snap.json");
     std::fs::write(&tmp, &json).unwrap();
     let out = Command::new("python3").arg(&oracle).arg(&tmp).output().expect("run oracle");

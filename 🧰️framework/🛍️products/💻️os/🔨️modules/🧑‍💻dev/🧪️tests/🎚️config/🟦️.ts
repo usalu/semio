@@ -51,7 +51,7 @@ export default defineConfig({
     environment: "node",
     // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
     // collect them twice. Dedicated regression files remain ordinary `include` entries.
-    include: ["../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts", "../../🧪️tests/🚀️local-hub/🟦️.ts"],
+    include: ["../../🧪️tests/✅️parity-verdict/🟦️.ts", "../../🧪️tests/🔖️channel-version/🟦️.ts", "../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts", "../../🧪️tests/🚀️local-hub/🟦️.ts", "../../🧪️tests/💤️idle-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/♨️hot-update/🟦️.ts"],
     includeSource: inSource,
     coverage: { include: ["../../**/🟦️.ts", ...WIT_MAPPING_IN_SOURCE] },
   },

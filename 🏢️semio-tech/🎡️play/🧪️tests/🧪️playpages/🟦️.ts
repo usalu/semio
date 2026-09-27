@@ -8,6 +8,7 @@ export async function registerTests1(
 ): Promise<void> {
   const { assignPlayPages, playPageOrigins, PLAY_PAGE_BUDGET_BYTES } = dependencies;
   const { describe, expect, it } = vitest;
+  const { shardWorkerUrl } = await import("../../../../🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
   const { publishedPageUrl, relocatePublishedRequestUrl } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts");
 
   describe("play CDN pages", () => {
@@ -27,10 +28,12 @@ export async function registerTests1(
 
     it("keeps every page under 1GB", () => {
       const { pages } = assignPlayPages(entries, "play.semio-tech.com");
-      expect(pages.map((page) => page.name)).toEqual(["play", "map", "media"]);
+      expect(pages.map((page) => page.name)).toEqual(["play", "map", "media", "modules"]);
       for (const page of pages) expect(page.bytes).toBeLessThan(PLAY_PAGE_BUDGET_BYTES);
       expect(pages.find((page) => page.name === "map")?.host).toBe("map.assets.semio-tech.com");
       expect(pages.find((page) => page.name === "media")?.host).toBe("media.assets.semio-tech.com");
+      expect(pages.find((page) => page.name === "modules")?.host).toBe("modules.assets.semio-tech.com");
+      expect(pages.find((page) => page.name === "modules")?.bytes).toBe(710_000_000);
     });
 
     it("refuses a page that reaches 1GB", () => {
@@ -44,8 +47,10 @@ export async function registerTests1(
       expect(publishedPageUrl("/cad-assets/a.3dm", origins)).toBe("https://media.assets.semio-tech.com/cad-assets/a.3dm");
       expect(publishedPageUrl("/infinite-assets/plan.jpg", origins)).toBe("https://media.assets.semio-tech.com/infinite-assets/plan.jpg");
       expect(publishedPageUrl("/🖼️assets/fonts/a.woff2", origins)).toBe("https://media.assets.semio-tech.com/🖼️assets/fonts/a.woff2");
-      expect(publishedPageUrl("/🔌️plugin-modules/cad/bridge.js", origins)).toBe("/🔌️plugin-modules/cad/bridge.js");
+      expect(publishedPageUrl("/🔌️plugin-modules/cad/bridge.js", origins)).toBe("https://modules.assets.semio-tech.com/🔌️plugin-modules/cad/bridge.js");
       expect(publishedPageUrl("./assets/app.js", origins)).toBe("./assets/app.js");
+      expect(shardWorkerUrl().includes("modules.assets")).toBe(false);
+      expect(shardWorkerUrl().startsWith("/")).toBe(true);
       expect(publishedPageUrl("https://cdn.example/osm/0/0/0.png", origins)).toBe("https://cdn.example/osm/0/0/0.png");
       expect(relocatePublishedRequestUrl("https://play.semio-tech.com/mesh/a.glb", "https://play.semio-tech.com", origins)).toBe("https://media.assets.semio-tech.com/mesh/a.glb");
       expect(relocatePublishedRequestUrl("https://cdn.example/mesh/a.glb", "https://play.semio-tech.com", origins)).toBe("https://cdn.example/mesh/a.glb");

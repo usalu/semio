@@ -1,7 +1,7 @@
 """🧊️ Third-party oracle half of `procedural-3d-1-example-geometry`.
 
 Re-derives every committed expected number in the eight bundled generation3d examples'
-`📚️examples/<example>/🧪️tests/🧩️example/🔣️.json` fixtures from two committed, language-neutral
+`📚️examples/<example>/🧫️fixtures/🧩️example/🔣️.json` fixtures from two committed, language-neutral
 inputs only — the example's own `🗣️.dsl.semio` graph and the packaged brep extension descriptor
 `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🔣️.json` (for the channel defaults an unwired port
 falls back to) — using `numpy`/`scipy` for the two solids whose volume has no closed form.
@@ -52,7 +52,7 @@ FIXTURE_SCHEMA = "s.procedural.generation3d.example-geometry/v1"
 # region 🔖️Readers
 def example_directories() -> list[Path]:
     """📚️ Every bundled example that ships an expected-geometry fixture, in name order."""
-    return sorted(path.parent.parent.parent for path in EXAMPLES.glob("*/🧪️tests/🧩️example/🔣️.json"))
+    return sorted(path.parent.parent.parent for path in EXAMPLES.glob("*/🧫️fixtures/🧩️example/🔣️.json"))
 
 
 def read_dsl(example_dir: Path) -> str:
@@ -65,7 +65,7 @@ def read_dsl(example_dir: Path) -> str:
 
 def read_fixture(example_dir: Path) -> dict:
     """📇️ The committed expected-geometry statement both lanes read."""
-    return json.loads((example_dir / "🧪️tests" / "🧩️example" / "🔣️.json").read_text(encoding="utf-8"))
+    return json.loads((example_dir / "🧫️fixtures" / "🧩️example" / "🔣️.json").read_text(encoding="utf-8"))
 
 
 def sliders(dsl: str) -> dict[str, float]:

@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneWind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-window-g-value", "change-zone-window-g-value")
+        protocol::LocalizedLabel::native("Change total solar energy transmittance g of the window", "Gesamtenergiedurchlassgrad g des Fensters ändern")
     }
 }

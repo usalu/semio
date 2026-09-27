@@ -81,7 +81,8 @@ fn tree_item(value: &Value) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: None,
-        inline_toolbar: None, detail: None,
+        inline_toolbar: None,
+        detail: None,
         dimmed: None,
         menu: None,
     }
@@ -92,12 +93,14 @@ fn tree_item(value: &Value) -> UiTreeItemNode {
 /// `Component::Container` record, so the arena this law lays out is the arena 6118 lays out.
 fn ui_node(value: &Value) -> UiNode {
     match value["kind"].as_str().expect("node kind") {
-        "tree" => UiNode::Tree(UiTreeNode { presentation: Default::default(),
+        "tree" => UiNode::Tree(UiTreeNode {
+            presentation: Default::default(),
             sections: value["sections"]
                 .as_array()
                 .expect("sections")
                 .iter()
                 .map(|section| UiTreeSectionNode {
+                    header_toolbar: None,
                     window: None,
                     id: section["id"].as_str().expect("section id").to_string(),
                     label: section["label"].as_str().map(Label::data),

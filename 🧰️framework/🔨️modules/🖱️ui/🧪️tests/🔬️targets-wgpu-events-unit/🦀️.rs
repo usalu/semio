@@ -1,5 +1,7 @@
 use super::*;
-use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{
+    UiButtonNode, UiComponentSceneNode, UiInputNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+};
 use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
@@ -59,6 +61,12 @@ fn input_ui(id: &str, value: &str) -> UiNode {
         presence: UiPresence::default(),
         menu: None,
     })
+}
+
+fn number_stepper_ui(value: f64, min: f64, max: f64, step: f64, uniform: bool, delta_binding: bool) -> UiNode {
+    let absolute = ActionDescriptor { controller_id: "ctrl".into(), action: "absolute".into(), args: None };
+    let delta = ActionDescriptor { controller_id: "ctrl".into(), action: if delta_binding { "delta" } else { "" }.into(), args: None };
+    UiNode::NumberStepper(UiNumberStepperNode { id: "stepper".into(), value, step, uniform, min: Some(min), max: Some(max), on_absolute: absolute, on_delta: delta, presence: UiPresence::default(), menu: None })
 }
 
 fn stack_ui() -> UiNode {
@@ -194,7 +202,13 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
     }
     let mut oracle = taffy::TaffyTree::<()>::new();
     oracle.disable_rounding();
-    let rows: Vec<_> = (0..20).map(|_| oracle.new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(120.0), height: taffy::style::Dimension::length(law["rowHeight"].as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() }).unwrap()).collect();
+    let rows: Vec<_> = (0..20)
+        .map(|_| {
+            oracle
+                .new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(120.0), height: taffy::style::Dimension::length(law["rowHeight"].as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() })
+                .unwrap()
+        })
+        .collect();
     let stack = oracle.new_with_children(taffy::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() }, &rows).unwrap();
     oracle.compute_layout(stack, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).unwrap();
     let maximum = oracle.layout(stack).unwrap().size.height + law["viewportPadding"].as_f64().unwrap() as f32 * 2.0 - crate::wgpu::select::select_popup_viewport_rect(popup).h;
@@ -213,9 +227,7 @@ fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() 
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, fixture["cases"][1]["viewportHeight"].as_f64().expect("viewport height") as f32));
     let mut authored = select_ui("reveal", "row-1");
     if let UiNode::Select(select) = &mut authored {
-        select.items = (0..fixture["optionCount"].as_u64().expect("option count") as usize)
-            .map(|index| UiSelectItem { value: format!("row-{index}"), label: Label::data(format!("Row {index}")) })
-            .collect();
+        select.items = (0..fixture["optionCount"].as_u64().expect("option count") as usize).map(|index| UiSelectItem { value: format!("row-{index}"), label: Label::data(format!("Row {index}")) }).collect();
     }
     let trigger = Rect::new(20.0, 120.0, fixture["triggerWidth"].as_f64().expect("trigger width") as f32, 22.4);
     let select = leaf(&mut tree, Some(root), 1, authored, (trigger.x, trigger.y, trigger.w, trigger.h));
@@ -684,6 +696,127 @@ fn ime_commit_inserts_the_composed_text_and_clears_composition() {
     assert_eq!(edit.text, "ねこ");
     assert_eq!(edit.composition, None);
 }
+
+/// 🔢 The retained NumberStepper consumes the same language-neutral focus/edit/key/hold law as
+/// the actual React Stepper oracle, including the browser-owned selection, clipboard and IME paths.
+#[test]
+fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("NumberStepper editing fixture");
+    let uniform = &fixture["uniform"];
+    let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");
+    let min = number(&uniform["min"]);
+    let max = number(&uniform["max"]);
+    let step = number(&uniform["step"]);
+    let app_payloads = |commands: &[UiCommand]| {
+        commands
+            .iter()
+            .filter_map(|command| match command {
+                UiCommand::App { intent, .. } => Some((intent.trigger, intent.payload())),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let scalar = |field: &str, value: f64| Some(DslValue::Object(vec![(field.into(), DslValue::float(value))]));
+
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let stepper = leaf(&mut tree, Some(root), 1, number_stepper_ui(number(&uniform["value"]), min, max, step, true, false), (0.0, 0.0, 120.0, 24.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 60.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let focused = tree.node(stepper).unwrap().state.edit.as_ref().unwrap();
+    assert_eq!(focused.text, uniform["focusDisplay"].as_str().unwrap());
+    assert_eq!((focused.anchor, focused.caret), (uniform["focusCaret"].as_u64().unwrap() as usize, uniform["focusCaret"].as_u64().unwrap() as usize));
+
+    let select_all = UiEvent::KeyDown { key: "a".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } };
+    assert!(app_payloads(&router.dispatch(&mut tree, root, &select_all)).is_empty(), "selection changes do not dispatch values");
+    let copied = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+    assert!(copied.iter().any(|command| matches!(command, UiCommand::ClipboardCopy { text, .. } if text == uniform["focusDisplay"].as_str().unwrap())));
+    assert!(app_payloads(&copied).is_empty());
+    let cut = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "x".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+    assert!(cut.iter().any(|command| matches!(command, UiCommand::ClipboardCut { text, .. } if text == uniform["focusDisplay"].as_str().unwrap())));
+    assert!(app_payloads(&cut).is_empty(), "an empty numeric edit is not a value");
+    assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().text, "");
+
+    let input = fixture["validEdit"]["input"].as_str().unwrap();
+    let edited = router.dispatch(&mut tree, root, &UiEvent::Paste { text: input.into() });
+    let expected = number(&fixture["validEdit"]["expectedValue"]);
+    assert_eq!(app_payloads(&edited), vec![(Trigger::Change, scalar("value", expected))]);
+    assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().text, fixture["validEdit"]["expectedDisplay"].as_str().unwrap());
+
+    router.dispatch(&mut tree, root, &select_all);
+    assert!(app_payloads(&router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Start))).is_empty());
+    assert!(app_payloads(&router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Update { text: "4".into(), cursor: 1 }))).is_empty());
+    assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().composition.as_deref(), Some("4"));
+    let composed = router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Commit { text: "4".into() }));
+    assert_eq!(app_payloads(&composed), vec![(Trigger::Change, scalar("value", 4.0))]);
+    assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().text, "4");
+    assert!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().composition.is_none());
+    assert!(app_payloads(&router.dispatch(&mut tree, root, &key("ArrowLeft"))).is_empty(), "caret motion alone does not dispatch");
+    assert!(app_payloads(&router.dispatch(&mut tree, root, &key("Enter"))).is_empty(), "Enter only blurs the per-change editor");
+    assert!(tree.node(stepper).unwrap().state.edit.is_none());
+
+    let mixed = leaf(&mut tree, Some(root), 2, number_stepper_ui(number(&fixture["mixed"]["value"]), number(&fixture["mixed"]["min"]), number(&fixture["mixed"]["max"]), number(&fixture["mixed"]["step"]), false, false), (0.0, 30.0, 120.0, 24.0));
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 60.0, y: 42.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let mixed_edit = tree.node(mixed).unwrap().state.edit.as_ref().unwrap();
+    assert_eq!(mixed_edit.text, fixture["mixed"]["focusDisplay"].as_str().unwrap());
+    assert_eq!(mixed_edit.caret, fixture["mixed"]["focusCaret"].as_u64().unwrap() as usize);
+
+    for key_case in fixture["boundedKeys"].as_array().unwrap() {
+        let mut keyed_tree = UiTree::new();
+        let keyed_root = leaf(&mut keyed_tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+        let delta = key_case["binding"].as_str().unwrap() == "delta";
+        let keyed = leaf(&mut keyed_tree, Some(keyed_root), 1, number_stepper_ui(number(&key_case["value"]), min, max, step, true, delta), (0.0, 0.0, 120.0, 24.0));
+        let mut keyed_router = EventRouter::new("main");
+        keyed_router.dispatch(&mut keyed_tree, keyed_root, &UiEvent::PointerDown { x: 60.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        let commands = keyed_router.dispatch(&mut keyed_tree, keyed_root, &key(key_case["key"].as_str().unwrap()));
+        let field = key_case["expectedField"].as_str().unwrap();
+        let expected_value = number(&key_case["expectedActionValue"]);
+        let trigger = if field == "delta" { Trigger::Delta } else { Trigger::Change };
+        assert_eq!(app_payloads(&commands), vec![(trigger, scalar(field, expected_value))], "{}", key_case["id"].as_str().unwrap());
+        assert_eq!(keyed_tree.node(keyed).unwrap().state.edit.as_ref().unwrap().text, key_case["expectedDisplay"].as_str().unwrap());
+    }
+
+    let pointer_case = &fixture["boundedPointer"];
+    let mut bounded_tree = UiTree::new();
+    let bounded_root = leaf(&mut bounded_tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let bounded = leaf(&mut bounded_tree, Some(bounded_root), 1, number_stepper_ui(number(&pointer_case["value"]), min, max, step, true, false), (0.0, 0.0, 120.0, 24.0));
+    let mut bounded_router = EventRouter::new("main");
+    let blocked = bounded_router.dispatch(&mut bounded_tree, bounded_root, &UiEvent::PointerDown { x: 108.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert_eq!(app_payloads(&blocked).len(), pointer_case["actionCount"].as_u64().unwrap() as usize);
+    assert!(bounded_tree.node(bounded).unwrap().state.edit.is_none(), "a disabled side button never focuses or starts an edit");
+
+    let hold = &fixture["hold"];
+    let mut held_tree = UiTree::new();
+    let held_root = leaf(&mut held_tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let held = leaf(&mut held_tree, Some(held_root), 1, number_stepper_ui(number(&hold["start"]), min, max, step, true, false), (0.0, 0.0, 120.0, 24.0));
+    let mut held_router = EventRouter::new("main");
+    let clock_origin = number(&hold["clockOriginSeconds"]);
+    assert!(!held_router.advance_clock(&mut held_tree, clock_origin).changed);
+    let pressed = held_router.dispatch(&mut held_tree, held_root, &UiEvent::PointerDown { x: 108.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert_eq!(app_payloads(&pressed), vec![(Trigger::Change, scalar("value", number(&hold["atDelay"])))]);
+    assert_eq!(held_tree.node(held).unwrap().state.edit.as_ref().unwrap().text, hold["atDelay"].as_i64().unwrap().to_string());
+    let tooltip_deadline = clock_origin + f64::from(TOOLTIP_DWELL_SECONDS);
+    let first_deadline = clock_origin + (number(&hold["delayMs"]) + number(&hold["intervalMs"])) / 1000.0;
+    assert_eq!(held_router.next_clock_deadline(), Some(tooltip_deadline), "the hovered control's tooltip dwell is earlier than its first held repeat");
+    let at_delay = held_router.advance_clock(&mut held_tree, clock_origin + number(&hold["delayMs"]) / 1000.0);
+    assert!(at_delay.changed, "the exact tooltip dwell changes presented hover state before the first repeat");
+    assert_eq!(at_delay.tooltip, TooltipStep::Reveal(held));
+    assert_eq!(at_delay.next_deadline, Some(first_deadline));
+    assert!(app_payloads(&at_delay.commands).is_empty());
+    assert_eq!(held_tree.node(held).unwrap().state.edit.as_ref().unwrap().text, hold["atDelay"].as_i64().unwrap().to_string());
+    let first_repeat = held_router.advance_clock(&mut held_tree, first_deadline);
+    assert!(first_repeat.changed, "the first repeat changes retained edit state exactly at its deadline");
+    assert_eq!(first_repeat.next_deadline, Some(first_deadline + number(&hold["intervalMs"]) / 1000.0));
+    assert!(app_payloads(&first_repeat.commands).is_empty());
+    assert_eq!(held_tree.node(held).unwrap().state.edit.as_ref().unwrap().text, hold["atFirstInterval"].as_i64().unwrap().to_string());
+    let second_repeat = held_router.advance_clock(&mut held_tree, first_deadline + number(&hold["intervalMs"]) / 1000.0);
+    assert!(second_repeat.changed);
+    assert!(app_payloads(&second_repeat.commands).is_empty());
+    assert_eq!(held_tree.node(held).unwrap().state.edit.as_ref().unwrap().text, hold["atSecondInterval"].as_i64().unwrap().to_string());
+    held_router.dispatch(&mut held_tree, held_root, &UiEvent::PointerMove { x: 60.0, y: 12.0, modifiers: Default::default() });
+    held_router.advance_clock(&mut held_tree, clock_origin + 2.0);
+    assert_eq!(held_tree.node(held).unwrap().state.edit.as_ref().unwrap().text, hold["atSecondInterval"].as_i64().unwrap().to_string(), "leaving the held side cancels local repeat");
+}
 //#endregion 🔖️EditStateTests
 
 //#region 🔖️HoverRevealTests
@@ -801,7 +934,7 @@ fn a_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through() 
 #[test]
 fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
     let item = UiTreeItemNode::base("row1", Label::data("Row One"));
-    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -822,7 +955,7 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     item.draggable = Some(true);
     let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
     item.drag_data = Some(payload.clone());
-    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -848,7 +981,7 @@ fn handle_driver_arms_only_the_canonical_trailing_tree_handle() {
     let mut item = UiTreeItemNode::base("row1", Label::data("Row One"));
     item.draggable = Some(true);
     item.drag_data = Some(DragPayload::from([("application/x-semio-catalogue-item".to_string(), "{}".to_string())]));
-    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
@@ -877,7 +1010,7 @@ fn handle_driver_arms_only_the_canonical_trailing_tree_handle() {
 fn changing_tree_drag_driver_cancels_an_in_flight_surface_drag() {
     let mut item = UiTreeItemNode::base("row1", Label::data("Row One"));
     item.draggable = Some(true);
-    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
@@ -1091,9 +1224,9 @@ fn a_hover_reveals_a_tooltip_only_after_the_react_dwell_elapses() {
     let mut router = EventRouter::new("main");
 
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 20.0, y: 15.0, modifiers: Default::default() });
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS - 0.01).0, TooltipStep::Idle, "nothing reveals before the dwell");
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(control));
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 1.0).0, TooltipStep::Idle, "one reveal per hover, not one per frame");
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) - 0.01).tooltip, TooltipStep::Idle, "nothing reveals before the dwell");
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS)).tooltip, TooltipStep::Reveal(control));
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) + 1.0).tooltip, TooltipStep::Idle, "one reveal per hover, not one per frame");
 }
 
 #[test]
@@ -1105,10 +1238,27 @@ fn moving_to_another_control_restarts_the_dwell() {
     let mut router = EventRouter::new("main");
 
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(first));
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS)).tooltip, TooltipStep::Reveal(first));
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 10.0, modifiers: Default::default() });
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 0.1).0, TooltipStep::Idle, "the second control's own dwell restarts from the move");
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS * 2.0).0, TooltipStep::Reveal(second));
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) + 0.1).tooltip, TooltipStep::Idle, "the second control's own dwell restarts from the move");
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) * 2.0).tooltip, TooltipStep::Reveal(second));
+}
+
+#[test]
+fn suspending_a_hidden_surface_clears_every_hover_tooltip_clock() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let control = leaf(&mut tree, Some(root), 1, button_ui("save"), (10.0, 10.0, 60.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.hover_since = Some((control, 10.0));
+    router.hover_revealed = Some(control);
+    router.tooltip_dismiss_at = Some(11.0);
+
+    assert!(router.suspend_clock(&mut tree));
+    assert!(router.hover_since.is_none());
+    assert!(router.hover_revealed.is_none());
+    assert!(router.tooltip_dismiss_at.is_none());
+    assert!(router.next_clock_deadline().is_none());
 }
 
 #[test]
@@ -1122,10 +1272,10 @@ fn an_open_tooltip_dismisses_only_after_the_hover_out_delay() {
 
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0, modifiers: Default::default() });
     assert!(router.topmost_overlay().is_some(), "hover-out arms the countdown instead of closing immediately");
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS - 0.05).0, TooltipStep::Idle);
-    let (step, commands) = router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS);
-    assert_eq!(step, TooltipStep::Dismissed);
-    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { kind: OverlayKind::Tooltip, .. })));
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_HOVER_OUT_SECONDS) - 0.05).tooltip, TooltipStep::Idle);
+    let step = router.advance_clock(&mut tree, f64::from(TOOLTIP_HOVER_OUT_SECONDS));
+    assert_eq!(step.tooltip, TooltipStep::Dismissed);
+    assert!(step.commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { kind: OverlayKind::Tooltip, .. })));
     assert!(router.topmost_overlay().is_none());
 }
 
@@ -1140,7 +1290,7 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
 
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0, modifiers: Default::default() });
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
-    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS * 4.0).0, TooltipStep::Idle);
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_HOVER_OUT_SECONDS) * 4.0).tooltip, TooltipStep::Idle);
     assert!(router.topmost_overlay().is_some(), "the pointer came back, so the tooltip stays open");
 }
 //#endregion 🔖️TooltipDwellTests
@@ -1154,6 +1304,49 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
 
 fn slider_ui(id: &str, value: f64) -> UiNode {
     UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })
+}
+
+#[test]
+fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    for pointer in law["pointer"].as_array().unwrap() {
+        let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == pointer["case"]).unwrap();
+        let bounds = Rect::new(case["bounds"][0].as_f64().unwrap() as f32, case["bounds"][1].as_f64().unwrap() as f32, case["bounds"][2].as_f64().unwrap() as f32, case["bounds"][3].as_f64().unwrap() as f32);
+        let node = Node::new(NodeKey::Explicit("slider".into()), WidgetSpec(slider_ui("slider", case["value"].as_f64().unwrap())));
+        let fired = pointer_commit_action(
+            &node,
+            bounds,
+            pointer["point"][0].as_f64().unwrap() as f32,
+            pointer["point"][1].as_f64().unwrap() as f32,
+            if case["inline"] == "rtl" { FlowInline::Rtl } else { FlowInline::Ltr },
+            1.0,
+            0.0,
+            crate::wgpu::theme::Theme::default().gap_standard,
+        );
+        match pointer["emits"].as_f64() {
+            Some(expected) => assert!((fired.and_then(|fired| fired.input).and_then(|value| value.as_f64()).unwrap() - expected).abs() < 0.000_001, "{}", pointer["case"]),
+            None => assert!(fired.is_none(), "{} value cell must be inert", pointer["case"]),
+        }
+    }
+}
+
+#[test]
+fn slider_external_unit_sibling_is_inert_and_never_enters_track_value_mapping() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let unit = &law["unit"];
+    let placement = unit["placements"].as_array().unwrap().iter().find(|placement| placement["kind"] == "standalone").unwrap();
+    let bounds = Rect::new(placement["bounds"][0].as_f64().unwrap() as f32, placement["bounds"][1].as_f64().unwrap() as f32, placement["bounds"][2].as_f64().unwrap() as f32, placement["bounds"][3].as_f64().unwrap() as f32);
+    let suffix_width = 40.0;
+    let gap = unit["gap"].as_f64().unwrap() as f32;
+    let mut slider = slider_ui("slider.unit", unit["value"].as_f64().unwrap());
+    let UiNode::Slider(slider_spec) = &mut slider else { unreachable!() };
+    slider_spec.unit = Some(unit["unit"].as_str().unwrap().to_string());
+    let (value, min, max) = (slider_spec.value, slider_spec.min, slider_spec.max);
+    let node = Node::new(NodeKey::Explicit("slider.unit".into()), WidgetSpec(slider));
+    let presentation = slider_control_presentation(bounds, value, min, max, Some(suffix_width), gap, FlowInline::Ltr);
+    let unit_cell = presentation.unit_cell.unwrap();
+    let fired = pointer_commit_action(&node, bounds, unit_cell.x + unit_cell.w * 0.5, unit_cell.y + unit_cell.h * 0.5, FlowInline::Ltr, 1.0, suffix_width, gap);
+    assert!(fired.is_none(), "the visible value-unit sibling is outside the Slider pointer target");
 }
 
 fn toggle_ui(id: &str, on: bool) -> UiNode {
@@ -1308,6 +1501,123 @@ fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
     assert_eq!(slider_key_value(&slider, "Enter", false), None, "a key the slider does not own is never swallowed");
 }
 
+/// 🎚️ The retained canvas consumes the same readout editing vectors as the mounted React Slider:
+/// only a double-click in the readout opens its numeric buffer, Enter validates/snaps once, and
+/// the local controlled draft drives later keys while an older declaration is still visible.
+#[test]
+fn slider_readout_editing_matches_the_neutral_react_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️slider-readout-editing/🔣️.json")).expect("Slider editing fixture");
+    let range = &fixture["slider"];
+    let double_click = &fixture["doubleClick"];
+    let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");
+    let make_slider = || {
+        let UiNode::Slider(mut slider) = slider_ui("slider.edit", number(&range["value"])) else { unreachable!() };
+        slider.min = number(&range["min"]);
+        slider.max = number(&range["max"]);
+        slider.step = number(&range["step"]);
+        UiNode::Slider(slider)
+    };
+    let payloads = |commands: &[UiCommand]| {
+        commands
+            .iter()
+            .filter_map(|command| match command {
+                UiCommand::App { intent, .. } => intent.payload(),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let pointer = |down: bool| {
+        if down {
+            UiEvent::PointerDown { x: 110.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() }
+        } else {
+            UiEvent::PointerUp { x: 110.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() }
+        }
+    };
+
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let slider = leaf(&mut tree, Some(root), 1, make_slider(), (0.0, 0.0, 120.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let clock_origin = number(&double_click["clockOriginSeconds"]);
+    router.advance_clock(&mut tree, clock_origin);
+    router.dispatch(&mut tree, root, &pointer(true));
+    router.dispatch(&mut tree, root, &pointer(false));
+    assert!(tree.node(slider).unwrap().state.edit.is_none(), "one readout click does not edit");
+    router.advance_clock(&mut tree, clock_origin + number(&double_click["intervalMs"]) / 1000.0);
+    router.dispatch(&mut tree, root, &pointer(true));
+    router.dispatch(&mut tree, root, &pointer(false));
+    assert_eq!(tree.node(slider).unwrap().state.edit.as_ref().unwrap().text, "2", "the second click seeds the displayed value at the caret");
+
+    let mut expired_tree = UiTree::new();
+    let expired_root = leaf(&mut expired_tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let expired_slider = leaf(&mut expired_tree, Some(expired_root), 1, make_slider(), (0.0, 0.0, 120.0, 24.0));
+    let mut expired_router = EventRouter::new("main");
+    expired_router.advance_clock(&mut expired_tree, clock_origin);
+    for event in [pointer(true), pointer(false)] {
+        expired_router.dispatch(&mut expired_tree, expired_root, &event);
+    }
+    expired_router.advance_clock(&mut expired_tree, clock_origin + number(&double_click["timeoutMs"]) / 1000.0 + 0.001);
+    for event in [pointer(true), pointer(false)] {
+        expired_router.dispatch(&mut expired_tree, expired_root, &event);
+    }
+    assert!(expired_tree.node(expired_slider).unwrap().state.edit.is_none(), "a second click after the neutral timeout starts a fresh pair even after long monotonic uptime");
+
+    let accessible_edit = router.dispatch_accessibility_slider_editor(&mut tree, slider, &AccessibilityUiEvent::Value(fixture["enter"]["input"].as_str().unwrap().into()));
+    assert!(payloads(&accessible_edit).is_empty(), "the mirrored spinbutton edits the same draft without committing before Enter");
+    assert_eq!(tree.node(slider).unwrap().state.edit.as_ref().unwrap().text, fixture["enter"]["input"].as_str().unwrap());
+    assert!(payloads(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "a".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } })).is_empty());
+    assert!(payloads(&router.dispatch(&mut tree, root, &UiEvent::TextInput { text: fixture["enter"]["input"].as_str().unwrap().into() })).is_empty(), "typing only updates the native input draft");
+    let committed = router.dispatch(&mut tree, root, &key("Enter"));
+    assert_eq!(payloads(&committed), vec![DslValue::Object(vec![("value".into(), DslValue::float(number(&fixture["enter"]["expectedValue"])))])]);
+    assert!(tree.node(slider).unwrap().state.edit.is_none());
+    assert_eq!(tree.node(slider).unwrap().state.slider_draft_value, Some(number(&fixture["enter"]["expectedValue"])), "the controlled local draft survives the stale declaration");
+
+    router.focus.set_focus(&mut tree, Some(slider), true);
+    let stepped = router.dispatch(&mut tree, root, &key("ArrowRight"));
+    assert_eq!(payloads(&stepped), vec![DslValue::Object(vec![("value".into(), DslValue::float(5.0))])], "keyboard stepping starts from the local draft, not the stale declared 2");
+    assert_eq!(tree.node(slider).unwrap().state.slider_draft_value, Some(5.0));
+
+    for rejected in fixture["rejected"].as_array().unwrap() {
+        let mut rejected_tree = UiTree::new();
+        let rejected_root = leaf(&mut rejected_tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+        let rejected_slider = leaf(&mut rejected_tree, Some(rejected_root), 1, make_slider(), (0.0, 0.0, 120.0, 24.0));
+        let mut rejected_router = EventRouter::new("main");
+        rejected_router.advance_clock(&mut rejected_tree, clock_origin);
+        for event in [pointer(true), pointer(false)] {
+            rejected_router.dispatch(&mut rejected_tree, rejected_root, &event);
+        }
+        rejected_router.advance_clock(&mut rejected_tree, clock_origin + number(&double_click["intervalMs"]) / 1000.0);
+        for event in [pointer(true), pointer(false)] {
+            rejected_router.dispatch(&mut rejected_tree, rejected_root, &event);
+        }
+        rejected_router.dispatch(&mut rejected_tree, rejected_root, &UiEvent::KeyDown { key: "a".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+        rejected_router.dispatch(&mut rejected_tree, rejected_root, &UiEvent::TextInput { text: rejected["input"].as_str().unwrap().into() });
+        let commands = match rejected["exit"].as_str().unwrap() {
+            "blur" => rejected_router.dispatch(&mut rejected_tree, rejected_root, &UiEvent::PointerDown { x: 180.0, y: 80.0, button: PointerButton::Primary, modifiers: Default::default() }),
+            key_name => rejected_router.dispatch(&mut rejected_tree, rejected_root, &key(key_name)),
+        };
+        assert_eq!(payloads(&commands).len(), rejected["actionCount"].as_u64().unwrap() as usize, "{}", rejected["id"]);
+        assert!(rejected_tree.node(rejected_slider).unwrap().state.edit.is_none(), "{} exits editing", rejected["id"]);
+        assert_eq!(rejected_tree.node(rejected_slider).unwrap().state.slider_draft_value, None, "{} preserves the declared value", rejected["id"]);
+    }
+
+    for key_case in fixture["keyboard"].as_array().unwrap() {
+        let UiNode::Slider(slider) = make_slider() else { unreachable!() };
+        assert_eq!(slider_key_value(&slider, key_case["key"].as_str().unwrap(), false), Some(number(&key_case["expectedValue"])), "{}", key_case["key"]);
+    }
+
+    let mut reconciled = UiTree::new();
+    reconciled.apply_tree(&make_slider());
+    let root = reconciled.root.unwrap();
+    reconciled.node_mut(root).unwrap().state.slider_draft_value = Some(number(&fixture["enter"]["expectedValue"]));
+    reconciled.apply_tree(&make_slider());
+    assert_eq!(reconciled.node(root).unwrap().state.slider_draft_value, Some(number(&fixture["enter"]["expectedValue"])), "a stale controlled declaration does not roll back local echo");
+    let UiNode::Slider(mut caught_up) = make_slider() else { unreachable!() };
+    caught_up.value = number(&fixture["enter"]["expectedValue"]);
+    reconciled.apply_tree(&UiNode::Slider(caught_up));
+    assert_eq!(reconciled.node(root).unwrap().state.slider_draft_value, None, "the draft retires when the declaration catches up");
+}
+
 /// 🔀️ A focused `Toggle` flips on `Enter`/`Space` — React renders it as a `<button>`, so both keys
 /// click it; wgpu used to answer neither.
 #[test]
@@ -1354,7 +1664,7 @@ async fn a_routers_flow_defaults_to_ltr_down_and_only_changes_once() {
 
 #[test]
 fn an_up_flow_tree_section_routes_its_bottom_header_through_the_event_router() {
-    let section = UiTreeSectionNode { window: None, id: "drivers".into(), label: Some(Label::data("Drivers")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new() };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "drivers".into(), label: Some(Label::data("Drivers")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new() };
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, tree_ui(vec![section]), (0.0, 0.0, 200.0, 100.0));
     let disclosure = insert_tree_row(&mut tree, root, "drivers", (0.0, 0.0, 200.0, 100.0));

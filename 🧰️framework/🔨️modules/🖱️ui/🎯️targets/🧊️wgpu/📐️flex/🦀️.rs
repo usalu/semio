@@ -10,7 +10,7 @@
 //! plain CSS rules: direction/align/justify/wrap/gap/padding/grow/basis, real grid tracks, in-flow
 //! overlay positioning contexts, and out-of-flow absolute positioning. A node that came off the LEGACY declarative `UiNode`
 //! path (in-crate chrome: `shell`, the wgpu `Interpreter`/`Shell` elements — content with no React
-//! counterpart at all) keeps the pre-parity rule that every child of a `Stack`/`Field` grows into the
+//! counterpart at all) keeps the pre-parity rule that every child of a `Stack` grows into the
 //! leftover main-axis space, because that chrome carries no `grow` information to replace it with.
 //! [`FlexTree::push`] picks the dialect from whether the arena node carries `Node::layout_spec`.
 //!
@@ -42,9 +42,12 @@ pub(crate) enum LayoutNodeKind {
     },
     Field {
         top: f32,
+        bottom: f32,
     },
     Section {
         gap: f32,
+        top: f32,
+        bottom: f32,
     },
     /// 🌳️ A `Tree`, measured from its own spec through `layout`'s shared row geometry rather than
     /// from arena children — a tree's rows carry no children of their own, so aggregating them
@@ -57,6 +60,11 @@ pub(crate) enum LayoutNodeKind {
         header: f32,
         height: f32,
         expanded: bool,
+        reversed: bool,
+    },
+    /// 🎛️ A section header's related Toolbar, positioned at the logical end inside the header band.
+    TreeHeaderToolbar {
+        header: f32,
         reversed: bool,
     },
     /// 🌳️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
@@ -294,11 +302,13 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
     if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. })) && !matches!(kind, LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TreeDetail { .. }) {
         let control_height = match kind {
             LayoutNodeKind::Control { height, .. } => height,
+            LayoutNodeKind::Stack { .. } => metrics.row_height,
             _ => metrics.control_height,
         };
         let rect = crate::wgpu::layout::tree_row_control_rect_with_height(0.0, control_height, metrics);
         let inset = if metrics.inline.is_rtl() { [Some(rect.y), None, None, Some(metrics.gap)] } else { [Some(rect.y), Some(metrics.gap), None, None] };
-        return FlowStyle { absolute: true, inset, width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..FlowStyle::default() };
+        let content = if matches!(kind, LayoutNodeKind::Stack { .. }) { flow_for(kind, None, authored, metrics) } else { FlowStyle::default() };
+        return FlowStyle { absolute: true, inset, width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..content };
     }
     let band = |height: f32, header: f32, reverse: bool| FlowStyle {
         height: Dim::Length(height),
@@ -315,10 +325,19 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
             Some(spec) => flow_from_spec(spec),
             None => FlowStyle { row: horizontal, gap_main: gap, gap_cross: gap, padding: EdgePx { top: padding, right: padding, bottom: padding, left: padding }, ..FlowStyle::default() },
         },
-        LayoutNodeKind::Field { top } => FlowStyle { padding: EdgePx { top, ..EdgePx::default() }, ..FlowStyle::default() },
-        LayoutNodeKind::Section { gap } => FlowStyle { gap_main: gap, padding: EdgePx { top: SECTION_HEADER_HEIGHT, ..EdgePx::default() }, ..FlowStyle::default() },
+        LayoutNodeKind::Field { top, bottom } => FlowStyle { padding: EdgePx { top, bottom, ..EdgePx::default() }, ..FlowStyle::default() },
+        LayoutNodeKind::Section { gap, top, bottom } => FlowStyle { gap_main: gap, padding: EdgePx { top, bottom, ..EdgePx::default() }, ..FlowStyle::default() },
         LayoutNodeKind::Tree { height, reversed } => band(height, 0.0, reversed),
         LayoutNodeKind::TreeSection { header, height, reversed, .. } => band(height, header, reversed),
+        LayoutNodeKind::TreeHeaderToolbar { header, reversed } => {
+            let inset = if reversed { [None, Some(metrics.gap), Some(0.0), None] } else { [Some(0.0), Some(metrics.gap), None, None] };
+            let mut content = authored.map_or_else(FlowStyle::default, flow_from_spec);
+            content.absolute = true;
+            content.inset = inset;
+            content.width = Dim::Auto;
+            content.height = Dim::Length(header);
+            content
+        }
         LayoutNodeKind::TreeRow { row, height, reversed, .. } => band(height, row, reversed),
         LayoutNodeKind::TreeDetail { height } => FlowStyle { width: Dim::Fill, height: Dim::Length(height), shrink: 0.0, ..FlowStyle::default() },
         LayoutNodeKind::Control { height, label_padding } => {
@@ -330,15 +349,7 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
             }
             flow
         }
-        LayoutNodeKind::OverlayRow { rect } => FlowStyle {
-            absolute: true,
-            inset: [Some(rect.y), None, None, Some(rect.x)],
-            width: Dim::Length(rect.width),
-            height: Dim::Length(rect.height),
-            shrink: 0.0,
-            text: true,
-            ..FlowStyle::default()
-        },
+        LayoutNodeKind::OverlayRow { rect } => FlowStyle { absolute: true, inset: [Some(rect.y), None, None, Some(rect.x)], width: Dim::Length(rect.width), height: Dim::Length(rect.height), shrink: 0.0, text: true, ..FlowStyle::default() },
         LayoutNodeKind::HostContent { height } => FlowStyle { height: Dim::Length(height), min_height: height, clips: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
         LayoutNodeKind::EngineSurface => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
@@ -440,16 +451,64 @@ fn taffy_dim(dim: Dim) -> taffy::style::Dimension {
     }
 }
 
-/// 🔖️ Mirrors `widgets`'/`paint`'s own `PANEL_HEADER` constant: the header-row height a
-/// `Section` reserves for its content unconditionally (only the header's chevron+text *paint* is
-/// gated on `label.is_some()`, not this offset).
-pub(crate) const SECTION_HEADER_HEIGHT: f32 = 24.0;
+pub(crate) const SECTION_TITLE_FONT_SIZE: f32 = ui_styling::metrics::typography::TEXT2XL_PX as f32;
+pub(crate) const SECTION_TITLE_LINE_HEIGHT: f32 = ui_styling::metrics::typography::TEXT2XL_LINE_HEIGHT_PX as f32;
+pub(crate) const SECTION_TITLE_BODY_GAP: f32 = ui_styling::metrics::dom::ROOT_REM_PX as f32;
+pub(crate) const SECTION_TRAILING_MARGIN: f32 = ui_styling::metrics::dom::ROOT_REM_PX as f32 * 2.0;
+pub(crate) const FIELD_LABEL_FONT_SIZE: f32 = ui_styling::metrics::typography::TEXT_SM_PX as f32;
+pub(crate) const FIELD_LABEL_LINE_HEIGHT: f32 = ui_styling::metrics::typography::TEXT_SM_LINE_HEIGHT_PX as f32;
+pub(crate) const FIELD_DETAIL_FONT_SIZE: f32 = ui_styling::metrics::typography::TEXT_XS_PX as f32;
 
-/// 🌱️ Whether `kind`'s children grow into leftover main-axis space by virtue of the PARENT's kind
-/// alone. True only for the legacy declarative dialect (see this file's header): an authored spec
-/// carries each child's own `StackLayout::grow`, exactly like React's `flex: grow ? "1 1 auto" : undefined`.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) struct ChromeBand {
+    pub y: f32,
+    pub height: f32,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) struct SectionFieldChromeMetrics {
+    pub title: Option<ChromeBand>,
+    pub label: Option<ChromeBand>,
+    pub description: Option<ChromeBand>,
+    pub control: Option<ChromeBand>,
+    pub error: Option<ChromeBand>,
+    pub top: f32,
+    pub bottom: f32,
+    pub total: f32,
+}
+
+pub(crate) fn section_chrome_metrics(title_height: Option<f32>, content_height: f32) -> SectionFieldChromeMetrics {
+    let title = title_height.map(|height| ChromeBand { y: 0.0, height: height.max(0.0) });
+    let top = title.map_or(0.0, |band| band.height + SECTION_TITLE_BODY_GAP);
+    SectionFieldChromeMetrics { title, top, bottom: SECTION_TRAILING_MARGIN, total: top + content_height.max(0.0) + SECTION_TRAILING_MARGIN, ..SectionFieldChromeMetrics::default() }
+}
+
+pub(crate) fn field_chrome_metrics(description_height: Option<f32>, control_height: f32, error_height: Option<f32>, gap: f32) -> SectionFieldChromeMetrics {
+    let gap = gap.max(0.0);
+    let mut cursor = FIELD_LABEL_LINE_HEIGHT;
+    let label = Some(ChromeBand { y: 0.0, height: FIELD_LABEL_LINE_HEIGHT });
+    cursor += gap;
+    let description = description_height.map(|height| {
+        let band = ChromeBand { y: cursor, height: height.max(0.0) };
+        cursor += band.height + gap;
+        band
+    });
+    let control = ChromeBand { y: cursor, height: control_height.max(0.0) };
+    cursor += control.height;
+    let error = error_height.map(|height| {
+        cursor += gap;
+        let band = ChromeBand { y: cursor, height: height.max(0.0) };
+        cursor += band.height;
+        band
+    });
+    SectionFieldChromeMetrics { label, description, control: Some(control), error, top: control.y, bottom: cursor - control.y - control.height, total: cursor, ..SectionFieldChromeMetrics::default() }
+}
+
+/// 🌱️ Whether `kind`'s children grow into leftover main-axis space by virtue of the parent's kind.
+/// This remains true only for legacy declarative stacks; an authored spec carries each child's own
+/// `StackLayout::grow`.
 fn grows_children(kind: LayoutNodeKind, authored: bool) -> bool {
-    !authored && matches!(kind, LayoutNodeKind::Stack { .. } | LayoutNodeKind::Field { .. })
+    !authored && matches!(kind, LayoutNodeKind::Stack { .. })
 }
 
 //#endregion 🎨️StyleMapping
@@ -551,6 +610,13 @@ impl FlexTree {
 
     pub(crate) fn intrinsic(&self, index: usize) -> Option<(f32, f32)> {
         self.intrinsic.get(index).copied()
+    }
+
+    pub(crate) fn set_composite_chrome(&mut self, index: usize, top: f32, bottom: f32) -> bool {
+        let Some(flow) = self.flows.get_mut(index) else { return false };
+        flow.padding.top = top.max(0.0);
+        flow.padding.bottom = bottom.max(0.0);
+        true
     }
 
     /// 📏️ Node `index`'s intrinsic (max-content) size, from its `children`'s already-measured intrinsic

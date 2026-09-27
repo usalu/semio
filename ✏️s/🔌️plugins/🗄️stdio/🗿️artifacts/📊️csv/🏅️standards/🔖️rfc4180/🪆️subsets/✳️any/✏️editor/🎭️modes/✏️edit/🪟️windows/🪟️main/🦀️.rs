@@ -4,7 +4,7 @@
 //! draws no structural distinction between a header and a data record, only this convention).
 
 use crate::CsvSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -34,7 +34,8 @@ pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResul
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
     let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
+    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.csv@rfc4180/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

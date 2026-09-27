@@ -6,7 +6,10 @@
     "allowJs": true,
     "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ESNext"],
     "tsBuildInfoFile": "../../../node_modules/.cache/tsconfig.os.tsbuildinfo",
-    "types": ["bun", "node", "react", "react-dom", "vite/client"]
+    "types": ["bun", "node", "react", "react-dom", "vite/client"],
+    "paths": {
+      "dom-accessibility-api": ["../../../node_modules/dom-accessibility-api/dist/index.d.ts"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [

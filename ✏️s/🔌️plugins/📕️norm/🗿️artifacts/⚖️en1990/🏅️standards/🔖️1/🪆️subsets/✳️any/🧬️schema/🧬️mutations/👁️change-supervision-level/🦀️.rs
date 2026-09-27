@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeSupervisio
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change supervision-level", "Ändern: supervision-level")
+        protocol::LocalizedLabel::native("Change design supervision level", "Überwachungsstufe der Planung ändern")
     }
 }
 //#endregion 🔖️Payload

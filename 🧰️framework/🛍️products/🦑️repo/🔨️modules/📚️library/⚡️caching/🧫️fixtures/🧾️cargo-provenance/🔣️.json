@@ -136,5 +136,37 @@
         "C:\\src\\semio\\..\\clone\\🦀️.rs"
       ]
     }
+  ],
+  "incrementalFree": [
+    {
+      "profile": "dev",
+      "package": "semio-framework-os-kernel",
+      "target": null
+    },
+    {
+      "profile": "test",
+      "package": "semio-framework-hash",
+      "target": null
+    },
+    {
+      "profile": "release",
+      "package": "semio-framework-hash",
+      "target": null
+    },
+    {
+      "profile": "wasm-dev",
+      "package": "semio-framework-os-kernel",
+      "target": "wasm32-wasip2"
+    },
+    {
+      "profile": "wasm-release",
+      "package": "semio-framework-hash",
+      "target": "wasm32-wasip2"
+    },
+    {
+      "profile": "dev",
+      "package": "semio-framework-hash",
+      "target": "wasm32-unknown-unknown"
+    }
   ]
 }

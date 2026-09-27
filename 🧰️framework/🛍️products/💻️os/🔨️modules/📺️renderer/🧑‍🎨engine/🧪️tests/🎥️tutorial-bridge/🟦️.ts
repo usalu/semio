@@ -3,8 +3,8 @@ import { Matrix3, Vector2 } from "three";
 import { dagWorldToScreen } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
 import graphFixture from "../../🧱️elements/⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
-import { describe, expect, it } from "vitest";
-import { ANCHORS, composeTutorialUi } from "@semio-tech/ui-react";
+import { describe, expect, it, vi } from "vitest";
+import { ANCHORS, composeTutorialUi, createTutorialClock } from "@semio-tech/ui-react";
 import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange, type TutorialUiSnapshot } from "@semio-tech/framework";
 import { initialShellState, shellReducer, type ShellAction, type ShellState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
@@ -68,6 +68,48 @@ describe("tutorial bridge parity", () => {
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(Object.keys(fixture.snapshot.activePanelTabByGroup)).toEqual(ANCHORS);
     expect(new Set(fixture.gestureMatrix.map((point) => point.kind))).toEqual(new Set(["scene", "canvas", "entity", "curve", "domain"]));
+  });
+
+  it("self-schedules the exported tutorial clock until the neutral terminal frame", () => {
+    let nextHandle = 0;
+    const frames = new Map<number, FrameRequestCallback>();
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const handle = ++nextHandle;
+      frames.set(handle, callback);
+      return handle;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (handle: number) => {
+      frames.delete(handle);
+    });
+    try {
+      const clock = createTutorialClock(fixture.clock.durationMs);
+      clock.setRate(fixture.clock.rate);
+      expect(frames.size).toBe(0);
+      clock.play();
+      expect(frames.size).toBe(1);
+      for (let index = 0; index < fixture.clock.wallFramesMs.length; index += 1) {
+        const entry = frames.entries().next().value as [number, FrameRequestCallback] | undefined;
+        expect(entry).toBeDefined();
+        const [handle, frame] = entry!;
+        frames.delete(handle);
+        frame(fixture.clock.wallFramesMs[index]);
+        expect(clock.getTimeMs()).toBeCloseTo(fixture.clock.expectedPlayheadMs[index], 8);
+        expect(clock.isPlaying()).toBe(fixture.clock.expectedPlaying[index]);
+        expect(frames.size).toBe(fixture.clock.expectedPlaying[index] ? 1 : 0);
+      }
+
+      clock.seek(0);
+      clock.play();
+      expect(frames.size).toBe(1);
+      clock.pause();
+      expect(frames.size).toBe(0);
+      clock.play();
+      expect(frames.size).toBe(1);
+      clock.dispose();
+      expect(frames.size).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("applies and captures every neutral field, including closing command search", () => {

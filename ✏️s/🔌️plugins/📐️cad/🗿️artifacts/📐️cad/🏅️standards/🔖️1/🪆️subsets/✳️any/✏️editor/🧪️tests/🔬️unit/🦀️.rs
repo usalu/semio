@@ -1819,9 +1819,8 @@ async fn import_cad_file_action_imports_obj_by_extension() {
     let scene = default_document();
     let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
     let obj_data_url = format!("data:model/obj;base64,{}", base64_codec::base64_standard_encode(obj_text));
-    let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
-    assert!(emit.artifact_mutations.is_empty(), "importCadFile's document write is a documented no-op until the child-dispatch seam lands");
-    assert!(emit.config_mutations.is_empty(), "importCadFile no longer touches config once selection moved to the framework");
+    let fault = drive_with_operation(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })), &CadConfig::default(), None).err().expect("an object import is refused until composed pane models accept it");
+    assert_eq!(fault.code.0, "cad.import-object-unavailable");
 }
 //#endregion 🔖️Import
 //#region 🔖️History

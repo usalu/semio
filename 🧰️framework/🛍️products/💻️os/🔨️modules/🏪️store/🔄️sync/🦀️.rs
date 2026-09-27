@@ -492,6 +492,14 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
                 for dependency in &envelope.dependencies {
                     text(&mut bytes, &dependency.0)?;
                 }
+                add(&mut bytes, 1)?;
+                if let Some(observed) = &envelope.observed {
+                    text(&mut bytes, &observed.0)?;
+                }
+                add(&mut bytes, 4)?;
+                for segment in &envelope.target {
+                    text(&mut bytes, segment)?;
+                }
                 text(&mut bytes, &envelope.diff.schema.0)?;
                 add(&mut bytes, field(envelope.diff.payload.len())?)?;
                 text(&mut bytes, &envelope.inverse.schema.0)?;

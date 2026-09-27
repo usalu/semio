@@ -1,0 +1,138 @@
+{
+  "schema": "semio.ui.styling.conditional-delivery-fixture/v1",
+  "file": {
+    "path": "🧩️probe/🔣️.json",
+    "content": "{\"manifest\":{\"pluginId\":\"probe\",\"apps\":[]}}",
+    "contentType": "application/json"
+  },
+  "rewrite": "{\"manifest\":{\"pluginId\":\"probe\",\"apps\":[],\"rebuilt\":true}}",
+  "cases": [
+    {
+      "name": "plain GET answers the file with validators",
+      "method": "GET",
+      "headers": {},
+      "afterRewrite": false,
+      "status": 200,
+      "body": "full"
+    },
+    {
+      "name": "HEAD answers the validators and length, no body",
+      "method": "HEAD",
+      "headers": {},
+      "afterRewrite": false,
+      "status": 200,
+      "body": "none"
+    },
+    {
+      "name": "the current tag is not modified",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "{etag}"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "weak comparison: the tag without W/ matches",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "{etag:weakless}"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "a list containing the current tag",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "W/\"0-0\", {etag}"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "the wildcard",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "*"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "a stale tag answers the file",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "W/\"0-0\""
+      },
+      "afterRewrite": false,
+      "status": 200,
+      "body": "full"
+    },
+    {
+      "name": "If-Modified-Since equal to the modification",
+      "method": "GET",
+      "headers": {
+        "if-modified-since": "{lastModified}"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "If-Modified-Since after the modification",
+      "method": "GET",
+      "headers": {
+        "if-modified-since": "{lastModified}+60s"
+      },
+      "afterRewrite": false,
+      "status": 304,
+      "body": "none"
+    },
+    {
+      "name": "If-Modified-Since before the modification",
+      "method": "GET",
+      "headers": {
+        "if-modified-since": "{lastModified}-60s"
+      },
+      "afterRewrite": false,
+      "status": 200,
+      "body": "full"
+    },
+    {
+      "name": "If-None-Match wins over If-Modified-Since",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "W/\"0-0\"",
+        "if-modified-since": "{lastModified}+60s"
+      },
+      "afterRewrite": false,
+      "status": 200,
+      "body": "full"
+    },
+    {
+      "name": "an unparsable If-Modified-Since answers the file",
+      "method": "GET",
+      "headers": {
+        "if-modified-since": "not a date"
+      },
+      "afterRewrite": false,
+      "status": 200,
+      "body": "full"
+    },
+    {
+      "name": "after a rewrite the old tag answers the new file",
+      "method": "GET",
+      "headers": {
+        "if-none-match": "{etag}"
+      },
+      "afterRewrite": true,
+      "status": 200,
+      "body": "full"
+    }
+  ]
+}

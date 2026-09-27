@@ -55,11 +55,7 @@ impl PreparedRenderUsage {
     }
 
     pub fn fits(self, limits: PreparedRenderLimits) -> bool {
-        self.draw_items <= limits.max_draw_items
-            && self.draw_bytes <= limits.max_draw_bytes
-            && self.upload_items <= limits.max_upload_items
-            && self.upload_bytes <= limits.max_upload_bytes
-            && self.scene_raster_bytes <= limits.max_scene_raster_bytes
+        self.draw_items <= limits.max_draw_items && self.draw_bytes <= limits.max_draw_bytes && self.upload_items <= limits.max_upload_items && self.upload_bytes <= limits.max_upload_bytes && self.scene_raster_bytes <= limits.max_scene_raster_bytes
     }
 }
 
@@ -1594,6 +1590,7 @@ impl PreparedRenderCommandPages {
 
 /// 🧱️ Send-capable frame data prepared without window, surface, device, or queue access.
 pub struct PreparedRenderPacket {
+    has_animated_primitives: bool,
     pub(crate) scene_revision: u64,
     pub(crate) preview_generation: u64,
     pub(crate) damage: PreparedRenderScissors,
@@ -1626,6 +1623,10 @@ pub enum PreparedRasterKeepStepV1<'a> {
 }
 
 impl PreparedRenderPacket {
+    pub fn has_animated_primitives(&self) -> bool {
+        self.has_animated_primitives
+    }
+
     #[cfg(test)]
     const RETIRE_PAGE_BYTES: usize = 16 * 1024;
 
@@ -1845,6 +1846,7 @@ impl Drop for PreparedRenderPacket {
             return;
         }
         let packet = Box::new(Self {
+            has_animated_primitives: self.has_animated_primitives,
             scene_revision: std::mem::take(&mut self.scene_revision),
             preview_generation: std::mem::take(&mut self.preview_generation),
             damage: std::mem::take(&mut self.damage),
@@ -2363,6 +2365,7 @@ impl Drop for PreparedRenderReceiver {
 
 /// ⚙️ Bounded worker job that measures and seals one owned render packet.
 pub struct PreparedRenderJob {
+    has_animated_primitives: bool,
     input: Option<PreparedRenderInput>,
     usage: PreparedRenderUsage,
     section: PreparationSection,
@@ -2502,6 +2505,7 @@ impl PreparedRenderJob {
 
     fn from_admitted(input: PreparedRenderInput, receiver: PreparedRenderReceiver, abandonment_slot: u8) -> Self {
         Self {
+            has_animated_primitives: false,
             input: Some(input),
             usage: PreparedRenderUsage::default(),
             section: PreparationSection::Draw,
@@ -2675,9 +2679,7 @@ impl PreparedRenderJob {
                 let draw_value = &draw.scene_passes[pass].shadow_draws[draw_index];
                 let instance_value = &draw_value.instances[instance];
                 let next = Self::next_shadow_instance(draw, pass, draw_index, instance);
-                let draw_bytes = size_of::<crate::wgpu::kernel_3d_scene::Instance3d>()
-                    + instance_value.id.len()
-                    + if instance == 0 { size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>() + draw_value.mesh_key.len() } else { 0 };
+                let draw_bytes = size_of::<crate::wgpu::kernel_3d_scene::Instance3d>() + instance_value.id.len() + if instance == 0 { size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>() + draw_value.mesh_key.len() } else { 0 };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassDraw { pass, draw: draw_index, translucent } => {
@@ -2753,26 +2755,16 @@ impl PreparedRenderJob {
             }
             DrawMeasureCursor::PassMaterial { pass, draw: draw_index, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index];
-                let next = if !value.mesh_key.is_empty() {
-                    DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: 0, translucent }
-                } else {
-                    Self::next_material_after_keys(draw, pass, draw_index, translucent)
-                };
+                let next = if !value.mesh_key.is_empty() { DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: 0, translucent } } else { Self::next_material_after_keys(draw, pass, draw_index, translucent) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index];
-                let next = if byte + 1 < value.mesh_key.len() {
-                    DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: byte + 1, translucent }
-                } else {
-                    Self::next_material_after_keys(draw, pass, draw_index, translucent)
-                };
+                let next = if byte + 1 < value.mesh_key.len() { DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: byte + 1, translucent } } else { Self::next_material_after_keys(draw, pass, draw_index, translucent) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte, translucent } => {
-                let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.scene_passes[pass].material_draws[draw_index].material else {
-                    unreachable!("only painted material draws measure a texture key")
-                };
+                let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.scene_passes[pass].material_draws[draw_index].material else { unreachable!("only painted material draws measure a texture key") };
                 let next = if byte + 1 < texture_key.len() {
                     DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: byte + 1, translucent }
                 } else if draw.scene_passes[pass].material_draws[draw_index].instances.is_empty() {
@@ -2784,20 +2776,12 @@ impl PreparedRenderJob {
             }
             DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index].instances[instance];
-                let next = if value.id.is_empty() {
-                    Self::next_material_instance(draw, pass, draw_index, instance, translucent)
-                } else {
-                    DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent }
-                };
+                let next = if value.id.is_empty() { Self::next_material_instance(draw, pass, draw_index, instance, translucent) } else { DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent } };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::Instance3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte, translucent } => {
                 let key = &draw.scene_passes[pass].material_draws[draw_index].instances[instance].id;
-                let next = if byte + 1 < key.len() {
-                    DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent }
-                } else {
-                    Self::next_material_instance(draw, pass, draw_index, instance, translucent)
-                };
+                let next = if byte + 1 < key.len() { DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent } } else { Self::next_material_instance(draw, pass, draw_index, instance, translucent) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::Glass(index) => {
@@ -2848,7 +2832,11 @@ impl PreparedRenderJob {
                 _ => {}
             }
         }
-        if from_channel < 3 { Self::next_after_layer(draw, layer) } else { DrawMeasureCursor::LayerHeader(layer + 1) }
+        if from_channel < 3 {
+            Self::next_after_layer(draw, layer)
+        } else {
+            DrawMeasureCursor::LayerHeader(layer + 1)
+        }
     }
 
     fn next_after_layer(draw: &DrawList, layer: usize) -> DrawMeasureCursor {
@@ -2919,11 +2907,7 @@ impl PreparedRenderJob {
     }
 
     fn first_material(draw: &DrawList, pass: usize, translucent: bool) -> Option<DrawMeasureCursor> {
-        draw.scene_passes[pass]
-            .material_draws
-            .iter()
-            .position(|value| value.translucent == translucent && !value.instances.is_empty())
-            .map(|draw| DrawMeasureCursor::PassMaterial { pass, draw, translucent })
+        draw.scene_passes[pass].material_draws.iter().position(|value| value.translucent == translucent && !value.instances.is_empty()).map(|draw| DrawMeasureCursor::PassMaterial { pass, draw, translucent })
     }
 
     fn next_material_after_keys(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
@@ -2944,13 +2928,7 @@ impl PreparedRenderJob {
     }
 
     fn next_material_draw(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
-        if let Some((next, _)) = draw.scene_passes[pass]
-            .material_draws
-            .iter()
-            .enumerate()
-            .skip(draw_index + 1)
-            .find(|(_, value)| value.translucent == translucent && !value.instances.is_empty())
-        {
+        if let Some((next, _)) = draw.scene_passes[pass].material_draws.iter().enumerate().skip(draw_index + 1).find(|(_, value)| value.translucent == translucent && !value.instances.is_empty()) {
             DrawMeasureCursor::PassMaterial { pass, draw: next, translucent }
         } else if translucent {
             Self::next_after_scene_pass(draw, pass)
@@ -3033,6 +3011,7 @@ impl PreparedRenderJob {
         match self.section {
             PreparationSection::Draw => {
                 let input = self.input.as_ref()?;
+                self.has_animated_primitives |= Self::animated_primitive_at(&input.draw, self.draw_cursor);
                 if let Some(usage) = Self::next_draw_usage(&input.draw, &mut self.draw_cursor) {
                     return Some(usage);
                 }
@@ -3042,6 +3021,7 @@ impl PreparedRenderJob {
             PreparationSection::Overlay => {
                 let input = self.input.as_ref()?;
                 if let Some(overlay) = &input.overlay {
+                    self.has_animated_primitives |= Self::animated_primitive_at(overlay, self.overlay_cursor);
                     if let Some(usage) = Self::next_draw_usage(overlay, &mut self.overlay_cursor) {
                         return Some(usage);
                     }
@@ -3122,6 +3102,16 @@ impl PreparedRenderJob {
             self.metadata_cursor = 0;
             Some(PreparedRenderUsage::default())
         }
+    }
+
+    fn animated_primitive_at(draw: &DrawList, cursor: DrawMeasureCursor) -> bool {
+        let DrawMeasureCursor::LayerUi { layer, item, overlay } = cursor else { return false };
+        let Some(layer) = draw.layers.get(layer) else { return false };
+        let items = if overlay { &layer.overlay_ui_instances } else { &layer.ui_instances };
+        items.get(item).is_some_and(|instance| {
+            let kind = instance.params[2];
+            kind == crate::wgpu::draw_types::KIND_LOADING_BORDER || kind == crate::wgpu::draw_types::KIND_WAITING_BORDER || kind == crate::wgpu::draw_types::KIND_INTRODUCING_BORDER
+        })
     }
 
     fn advance_pipeline(&mut self) -> Option<PreparedRenderUsage> {
@@ -3220,6 +3210,7 @@ impl PreparedRenderJob {
             };
             let input = std::mem::ManuallyDrop::new(input);
             let packet = PreparedRenderPacket {
+                has_animated_primitives: self.has_animated_primitives,
                 scene_revision: revision,
                 preview_generation: generation,
                 damage: unsafe { std::ptr::read(&input.damage) },
@@ -3269,6 +3260,7 @@ impl Drop for PreparedRenderJob {
             return;
         }
         let job = Box::new(Self {
+            has_animated_primitives: self.has_animated_primitives,
             input: self.input.take(),
             usage: std::mem::take(&mut self.usage),
             section: self.section,

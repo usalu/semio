@@ -21,11 +21,11 @@ fn write_report_json(doc: &En1996Snapshot, path: &PathBuf) {
 fn python_oracle_matches_compliant_and_noncompliant() {
     let oracle = {
         let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        p.push("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️evaluate-en1996-1/🐍️.py");
+        p.push("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/⚖️compliance/🐍️.py");
         p
     };
     assert!(oracle.exists(), "missing {}", oracle.display());
-    let tmp = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/🗑️generated/en1996");
+    let tmp = std::env::temp_dir().join("semio-norm-en1996-oracle");
     let _ = std::fs::create_dir_all(&tmp);
     for (name, doc) in [
         ("compliant", En1996Snapshot::compliant_clay_wall()),
@@ -56,7 +56,7 @@ fn json_schema_validates_example_snapshots() {
         p
     };
     assert!(schema.exists());
-    let tmp = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/🗑️generated/en1996");
+    let tmp = std::env::temp_dir().join("semio-norm-en1996-oracle");
     let _ = std::fs::create_dir_all(&tmp);
     let snap = tmp.join("schema-check.snap.json");
     write_snap_json(&En1996Snapshot::compliant_clay_wall(), &snap);

@@ -1,8 +1,9 @@
+import type { SetSnapshot } from "./📸️set-snapshot/🟦️.ts";
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseArtifactRef, type ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import { parseLinkPin, type LinkPin } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 import { parseSemioChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
-import { parseSemioKitConnection, parseSemioKitPiece, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
+import { parseSemioKitConnection, parseSemioKitPiece, parseSemioKitSnapshot, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
 
 export interface CreateObject { child_id: string; target: ArtifactRef }
 export interface DeleteObject { child_id: string }
@@ -35,7 +36,8 @@ export type SemioKitMutation =
   | { RenameType: RenameType }
   | { AddDesign: AddDesign }
   | { RemoveDesign: RemoveDesign }
-  | { EditDesign: EditDesign };
+  | { EditDesign: EditDesign }
+  | { SetSnapshot: SetSnapshot };
 
 function stringField(row: Record<string, unknown>, field: string, at: string): string {
   if (typeof row[field] !== "string") throw new Error(`${at}.${field}: string required`);
@@ -120,5 +122,9 @@ export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutatio
     return { AddDesign: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt) } };
   }
   if (variant === "RemoveDesign") return { RemoveDesign: id(payload, payloadAt) };
+  if (variant === "SetSnapshot") {
+    const entry = parseSchemaRecord(payload, ["snapshot"], payloadAt);
+    return { SetSnapshot: { snapshot: parseSemioKitSnapshot(entry.snapshot, `${payloadAt}.snapshot`) } };
+  }
   return { EditDesign: parseEditDesign(payload, payloadAt) };
 }

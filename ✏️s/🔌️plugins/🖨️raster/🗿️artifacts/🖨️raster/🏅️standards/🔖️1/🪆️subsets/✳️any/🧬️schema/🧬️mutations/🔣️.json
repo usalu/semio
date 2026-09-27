@@ -41,6 +41,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-mask/schema.json"
     }
   ]
 }

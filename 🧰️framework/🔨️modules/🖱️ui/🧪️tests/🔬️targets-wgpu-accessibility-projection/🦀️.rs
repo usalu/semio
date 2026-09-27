@@ -75,14 +75,8 @@ fn mounted_toggle_appearances_stamp_only_their_native_live_state_channel() {
             "accessibility": { "label": case["accessibleLabel"] }
         }))
         .unwrap_or_else(|error| panic!("{}: fixture record deserializes: {error}", case["id"].as_str().expect("case id")));
-        let header = UiDocumentLeaseHeader {
-            generation: FIXTURE_GENERATION,
-            surface: SurfaceId::try_from(format!("toggle.semantic.{index}").as_str()).expect("fixture surface id"),
-            revision: UiRevision(0),
-            root: record.id,
-            layout_epoch: 0,
-            node_count: 1,
-        };
+        let header =
+            UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from(format!("toggle.semantic.{index}").as_str()).expect("fixture surface id"), revision: UiRevision(0), root: record.id, layout_epoch: 0, node_count: 1 };
         let node_id = record.id;
         let mut document = UiDocumentTree::new(header).expect("fixture header admits");
         document.try_upsert_record(record).expect("fixture record admits");
@@ -108,6 +102,45 @@ fn mounted_toggle_appearances_stamp_only_their_native_live_state_channel() {
     }
 }
 
+#[test]
+fn an_editing_unit_slider_projects_its_live_spoken_value_and_numeric_spinbutton() {
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "gain",
+        "component": { "type": "slider", "value": 2.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "mm" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Gain" }
+    }))
+    .expect("Slider record");
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("slider.edit").expect("surface"), revision: UiRevision(0), root: record.id, layout_epoch: 0, node_count: 1 };
+    let node_id = record.id;
+    let mut document = UiDocumentTree::new(header).expect("header");
+    document.try_upsert_record(record).expect("record");
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let mut cursor = UiDocumentReconcileCursor::default();
+    cursor.rearm(FIXTURE_GENERATION);
+    for _ in 0..64 {
+        if matches!(tree.step_document_reconcile(&mut cursor, "procedural-main", "generation3d"), UiDocumentReconcileStep::Complete) {
+            break;
+        }
+    }
+    let mounted = tree.document_node(node_id).expect("mounted Slider");
+    let node = tree.node_mut(mounted).expect("live Slider");
+    node.flags.set(crate::wgpu::tree::NodeFlags::FOCUSED, true);
+    node.state.slider_draft_value = Some(4.5);
+    node.state.edit = Some(crate::wgpu::tree::EditState { text: "4.4".into(), caret: 3, anchor: 3, composition: None, scroll_x: 0.0 });
+
+    let projection = accessibility_projection(&tree);
+    let thumb = projection.iter().find(|node| node.key == "gain").expect("live slider thumb");
+    assert_eq!((thumb.role.as_str(), thumb.value_min, thumb.value_now, thumb.value_max, thumb.value_text.as_deref(), thumb.focused), ("slider", Some(0.0), Some(4.5), Some(10.0), Some("4.5 mm"), false));
+    let editor = projection.iter().find(|node| node.key == "gain::editor").expect("numeric editor");
+    assert_eq!((editor.role.as_str(), editor.label.as_deref(), editor.value_min, editor.value_now, editor.value_max, editor.value_text.as_deref()), ("spinbutton", Some("Gain"), Some(0.0), Some(4.4), Some(10.0), Some("4.4")));
+    assert!(editor.focusable && editor.tabbable && editor.actionable && editor.editable && editor.focused);
+}
+
 /// ♿️ The headline: a mounted document answers the FULL projection the shared fixture declares, in
 /// pre-order and with the right depth — the tree an assistive technology reads.
 #[test]
@@ -128,6 +161,7 @@ fn a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declar
         assert_eq!(node.shortcut.as_deref(), row["shortcut"].as_str(), "{}: shortcut", node.key);
         assert_eq!(node.hidden, row["hidden"].as_bool().expect("fixture hidden"), "{}: hidden", node.key);
         assert_eq!(node.focusable, row["focusable"].as_bool().expect("fixture focusable"), "{}: focusable", node.key);
+        assert_eq!(node.tabbable, row["tabbable"].as_bool().expect("fixture tabbable"), "{}: tabbable", node.key);
         assert_eq!(node.actionable, row["actionable"].as_bool().expect("fixture actionable"), "{}: actionable", node.key);
         assert_eq!(node.value_min, row["valueMin"].as_f64(), "{}: valueMin", node.key);
         assert_eq!(node.value_max, row["valueMax"].as_f64(), "{}: valueMax", node.key);
@@ -201,4 +235,22 @@ fn a_mounted_progress_bar_announces_its_value_or_busy_and_mounts_as_a_retained_p
         let crate::wgpu::component::ui::UiNode::Progress(node) = &tree.node(mounted).expect("the mounted node is live").spec.0 else { panic!("node {id:?} mounts as UiNode::Progress") };
         assert_eq!(node.total, total, "node {id:?}: the total survives reconcile verbatim");
     }
+}
+
+#[test]
+fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
+    let mut law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).unwrap();
+    let tree = mounted_tree(&law);
+    let projection = accessibility_projection(&tree);
+    assert_eq!(projection[0].label.as_deref(), law["document"]["nodes"][0]["component"]["label"].as_str());
+    for control in law["controls"].as_array().unwrap() {
+        let node = projection.iter().find(|node| Some(node.key.as_str()) == control["key"].as_str()).unwrap();
+        assert_eq!(node.label.as_deref(), control["label"].as_str());
+    }
+    law["document"]["nodes"][2]["key"] = serde_json::json!("differently-named-control");
+    let unmatched = accessibility_projection(&mounted_tree(&law));
+    assert!(unmatched.iter().find(|node| node.node_id == 2).unwrap().label.is_none());
+    law["document"]["nodes"][2]["accessibility"]["label"] = serde_json::json!("Explicit control name");
+    let projection = accessibility_projection(&mounted_tree(&law));
+    assert_eq!(projection.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), Some("Explicit control name"));
 }

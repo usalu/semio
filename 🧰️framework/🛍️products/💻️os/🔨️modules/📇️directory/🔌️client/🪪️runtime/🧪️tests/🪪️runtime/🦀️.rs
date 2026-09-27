@@ -57,8 +57,8 @@ async fn a_slow_answer_arrives_inside_the_callers_deadline_and_not_after_it() {
         for _ in 0..2 {
             let (mut stream, _) = listener.accept().unwrap();
             let mut request = [0u8; 1024];
-            let _ = std::io::Read::read(&mut stream, &mut request);
-            std::thread::sleep(std::time::Duration::from_millis(600));
+            let _ = stream.read(&mut request);
+            std::thread::sleep(Duration::from_millis(600));
             let _ = std::io::Write::write_all(&mut stream, b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
         }
     });

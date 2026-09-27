@@ -38,9 +38,12 @@ use super::ungroup_node;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing")]
 pub enum SemioDrawingMutation {
+    SetSnapshot(SetSnapshot),
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),
     CreateNode(create_node::CreateNode),
@@ -64,7 +67,7 @@ pub enum SemioDrawingMutation {
 /// vocabulary the `semio-v1-drawing` mutation catalog (`../../🔣️oracle.json`) declares
 /// and `🖊️mutate-semio-drawing`'s exhaustive test case measures itself against. The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest.
-pub const KINDS: &[&str] = &[
+pub const KINDS: &[&str] = &["set-snapshot", 
     "create-layer",
     "delete-layer",
     "create-node",

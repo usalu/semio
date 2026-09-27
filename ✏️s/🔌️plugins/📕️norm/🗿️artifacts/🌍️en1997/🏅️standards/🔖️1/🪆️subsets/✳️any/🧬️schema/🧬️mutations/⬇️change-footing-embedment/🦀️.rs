@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeFootingEmb
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-footing-embedment", "change-footing-embedment")
+        protocol::LocalizedLabel::native("Change footing embedment depth", "Einbindetiefe des Fundaments ändern")
     }
 }

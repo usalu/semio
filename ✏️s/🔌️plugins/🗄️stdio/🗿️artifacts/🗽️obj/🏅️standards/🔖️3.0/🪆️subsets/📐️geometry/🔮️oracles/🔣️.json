@@ -124,7 +124,8 @@
     },
     {
       "id": "semantic-obj-document-v1",
-      "description": "The OBJ DOCUMENT statements a mesh reader discards: the mtllib material-library list, the per-child usemtl material name, and the smoothing state as flatShading."
+      "description": "The OBJ DOCUMENT statements a mesh reader discards: the mtllib material-library list, the per-child usemtl material name, and the smoothing state as flatShading.",
+      "pipeline": "obj-3-0-document-compare-v1"
     }
   ],
   "mutationCatalogs": [
@@ -2352,6 +2353,36 @@
       }
     },
     {
+      "id": "obj-document-import",
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "engine": {
+        "family": "threejs",
+        "implementation": "three OBJLoader (document statements)",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "obj.document.import"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
+        "obj-document-import"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Reads every input with the same three OBJLoader document projection `obj-document-project` qualifies (validated both ways for all 10 kinds); it reports only whether each input parsed, as `bothImport` plus the per-input result — the admission stage `obj-3-0-document-compare-v1` gates on before its comparison."
+      }
+    },
+    {
       "id": "obj-document-project",
       "kind": "external-process",
       "ecosystem": "javascript",
@@ -2522,11 +2553,11 @@
       "description": "Document-statement equality through three's OBJLoader. GATING for the three kinds tobj's mesh resolution discards.",
       "stages": [
         {
-          "probe": "obj-document-project",
+          "probe": "obj-document-import",
           "description": "An independent document-aware reader accepts both files.",
           "inputs": [
-            "expected-before-obj",
-            "expected-after-obj"
+            "expected-obj",
+            "actual-obj"
           ],
           "assertions": {
             "bothImport": true
@@ -2536,8 +2567,8 @@
           "probe": "obj-document-compare",
           "description": "Equality over the document statements — the operative equality.",
           "inputs": [
-            "expected-before-obj",
-            "expected-after-obj"
+            "expected-obj",
+            "actual-obj"
           ],
           "assertions": {
             "equal": true

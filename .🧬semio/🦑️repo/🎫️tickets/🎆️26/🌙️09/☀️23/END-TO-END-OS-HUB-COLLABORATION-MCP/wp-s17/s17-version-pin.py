@@ -515,7 +515,7 @@ export type PluginDependency = {
   readonly pluginId: string;
   readonly version?: VersionPin;
 };""")
-rep(KERNEL_TS, """   * extension) and mirrored by the builder's `.depends_on(id, VersionReq)`. A Cargo `[dependencies]`""", """   * extension) and mirrored by the builder's `.depends_on(id, VersionPin)`. A Cargo `[dependencies]`""")
+rep(KERNEL_TS, """   * extension) and mirrored by the builder's `.depends_on(id, VersionPin)`. A Cargo `[dependencies]`""", """   * extension) and mirrored by the builder's `.depends_on(id, VersionPin)`. A Cargo `[dependencies]`""")
 rep(KERNEL_TS, """   * `VersionReq` travels with these (the registry's pre-build view has none to derive it from) —
    * `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for""", """   * pin travels with these (the registry's pre-build view has none to derive it from) —
    * `resolvePlaygroundBoot` maps each id to a versionless edge, which is enough for""")

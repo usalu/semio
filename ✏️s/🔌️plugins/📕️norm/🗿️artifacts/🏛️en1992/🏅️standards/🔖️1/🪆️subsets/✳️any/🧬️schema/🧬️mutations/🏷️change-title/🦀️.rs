@@ -18,6 +18,6 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeTitle {
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change title to {}", self.new_title), &format!("title auf {} ändern", self.new_title))
+        protocol::LocalizedLabel::native(&format!("Change report title to {}", self.new_title), &format!("Berichtstitel auf {} ändern", self.new_title))
     }
 }

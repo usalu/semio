@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeMixedTerra
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-mixed-terrain-upwind", "change-mixed-terrain-upwind")
+        protocol::LocalizedLabel::native("Change upwind terrain category", "Luvseitige Geländekategorie ändern")
     }
 }
 //#endregion 🔖️Payload

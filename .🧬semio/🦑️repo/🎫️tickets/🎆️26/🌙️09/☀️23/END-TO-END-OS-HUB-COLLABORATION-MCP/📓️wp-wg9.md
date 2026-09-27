@@ -10,8 +10,8 @@ Window. Guest requests: `wp-w3/requests/wg9.txt`.
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | Land `wp-wg7/s12-link-expiry-patch.py` (cuts > ~31.5 s expired the link) | dry run clean on the current tree (19:1x) |
-| 2 | Late joiners: lanes dedupe by operation id + hub catch-up tail carries a declared origin (kernel native + wasm32, React twin, hub) | dry runs clean (kernel + hub) (19:1x); React lane landed in S12 |
+| 1 | Land `wp-wg7/s12-link-expiry-patch.py` (cuts > ~31.5 s expired the link) | **LANDED** — applied 26 19:13; kernel native check + laws `document_link_shortage_tests` 6/6 green 27 05:17 (fleet-b, post rule 24); wasm32 kernel browser `sync` 05:50 + wasip2 05:52 green; TS 3/3; landing row ✓ |
+| 2 | Late joiners: lanes dedupe by operation id + hub catch-up tail carries a declared origin (kernel native + wasm32, React twin, hub) | **LANDED** (kernel + hub bootstrap) — kernel native + laws (echo 2/2, backbone parity 1/1) 05:17, wasm32 ×2 05:52, hub `--bins` green (H11 06:00); bin-unit pins reverted 06:32 (uncompilable before 07:00 in the convoys), prepared; live proof after W3's rebuild |
 | 3a | S12-1 open items (de chrome / locale door, sign-in freeze patch) | pending |
 | 3b | S12-2 peer cursors on a board-canvas kind | pending |
 | 3c | S12-3 the human sees the agent's block | pending (needs item 2 live) |
@@ -43,3 +43,36 @@ Window. Guest requests: `wp-w3/requests/wg9.txt`.
 - 20:17 kernel laws run 1: link 6/6, echo 2/2, but `os_store::sync::tests::backbone_parity` red — `ingestedMutationIds` read
   `known_op_ids`, which the native `Commands` arm no longer fills directly (only `persist_operations` does, and only with a folder). The
   test-only accessor now reports what the arm filters against (`known_op_ids ∪ applied_op_ids`). Re-run in progress.
+- 20:39–21:03 the kernel native re-check and the filtered law re-run each sat > 10 min behind the build-dir lock convoy (no rustc
+  child) → stopped (my pids 64125, 83844) per rule 25; chain `wp-wg9/wg9-land-chain.sh` (build-fleet-b, rule 26: kernel check →
+  kernel laws → hub check → hub catch-up law → wasm32 kernel checks through the mutex) launched 21:03 — then the ~21:30 usage cut.
+  `wp-w3/requests/wg9.txt` written (kernel ×2 reasons). Hub recipe copy `wp-wg9/wg9-hub.sh` (C11's, WG9 names) prepared.
+- **09-27 04:58 resume (rule 28).** Reconciled: every hunk of items 1 + 2 is in the tree (kernel `🔄️sync/🦀️.rs` untouched since my
+  20:18 edit; hub bootstrap edited by a peer 22:21, my 3 hunks intact; bin-unit 4 pins; echo law file present; TS twin + fixture
+  vectors present). Nothing of mine runs (chain 1 died with the session). Load 8.9, 0 rustc, 155 GiB free.
+- 05:01 landing chain 2 launched detached (`w2-detach.py`, pid 91474, log `.🧬semio/🌐hub/s13-wg9-logs/land-chain-2.txt`).
+- 05:01 chain 2: kernel check red on a PEER's half-written `🌱️value/🔁️codec/🦀️.rs` (replication, 53 lexer errors, file rewritten
+  05:04) → re-launched. Chain 3: **kernel native check green 05:12** (fleet-b, 2 m 35 s); filtered laws: 75/76 — the red one,
+  `wire_fixtures_stay_byte_identical_across_rust_and_ts`, is LD's in-flight envelope wire change (`observed`/`target`), not mine.
+- 05:17 chain 4 (laws narrowed to mine): **kernel check green 05:17; laws 9/9** — `document_link_shortage_tests` 6/6 (incl. the
+  retry-at-bound / ceiling vectors), `document_echo_suppression_tests` 2/2, `backbone_parity_scenarios_match_neutral_fixture` 1/1
+  (`land-chain-4.txt`).
+- 05:17–05:38 hub check `semio-hub --bin os-hub --tests` sat 21 min with no rustc child in a build-fleet-b lock convoy (two other
+  cargos idle 32–34 min holding ~700–800 unit locks: 93815, 95358 — not mine) → stopped mine (1823) per rule 25, told main.
+  Sign-in follow-up chain (`wg9-signin-chain.sh`, waiting on the landing chain) stopped too (2298) to keep one cargo at a time.
+- 05:37 kernel wasm32 hold queued early (`wg9-wasm-kernel-early.sh`, log `wasm-kernel-1.txt`; 2nd in the FIFO behind T13).
+- 05:43–05:52 **wasm32 kernel hold: browser `--features sync --target wasm32-unknown-unknown` rc=0 (7 m 02 s), `wasm32-wasip2` rc=0
+  (1 m 56 s)** (`wasm-kernel-1.txt`) — items 1 + 2 green on every kernel target. Landing rows added to `📓️landing.md`.
+- 06:03–06:23 hub check (30-rustc gate, told main) stalled again in a fleet-b convoy (4 idle cargos, 0 rustc); coordinator routed the
+  hub verification to H11: its current-tree `semio-hub --bins` check (build-landing) was **green 06:00** — covers my bootstrap hunk;
+  its `--bins --tests` runs stalled/restarted (no result before 07:00). Stopped mine (40976). Per the coordinator's rule (verify or
+  revert by 06:40): **06:32 reverted ONLY the bin-unit pins** (unverified test code) to the pre-landing lines; the verified bootstrap
+  hunk stays. Re-apply after the rebuild: LAW_EDITS of `wp-wg9/s13-echo-suppression-hub-patch.py` (+ `--revert` option added).
+- Deferred past 07:00 (not fitting the window): WG7's renderer-only `s12-hub-sign-in-off-interaction.py` (dry run clean 05:03;
+  `wp-wg9/wg9-signin-chain.sh` = dry run → apply → renderer check → laws → renderer wasm32 hold) — native apply allowed after REBUILD
+  START (renderer is not guest-linked), its browser build then needs a renderer release after PUBLISH DONE.
+- S12-4 finding (design, not landed): the two unnamed `application` nodes are note's ink-canvas surfaces (`scene_surface` in the SDK
+  builds a Surface with no accessible name); React's `SurfaceView` renders the same unnamed `role="application"` — parity gap on both
+  renderers. The window kind already carries the localized name (`LocalizedLabel::native("Canvas", "Zeichenfläche")`); the fix is a
+  host rule on both renderers: a Surface that is its window's body is named by that window kind's label (law over the shared
+  accessibility projection + React twin), not a guest change.

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedHNe
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-h-net", "change-assumed-h-net")
+        protocol::LocalizedLabel::native("Change assumed net heat flux", "Angenommenen Netto-Wärmestrom ändern")
     }
 }
 //#endregion 🔖️Payload

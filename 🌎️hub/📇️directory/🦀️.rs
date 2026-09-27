@@ -1959,6 +1959,7 @@ impl MemoryArtifactProjection {
                 }
                 self.index.insert(scope.clone(), row);
             }
+            DirectoryEventBody::UserPreferenceRecorded { .. } => {}
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 validate_checkpoint_shape(checkpoint)?;
                 let descriptor = self.descriptors.get(&checkpoint.scope).ok_or_else(|| DirectoryError::NotFound("memory artifact descriptor".into()))?;
@@ -2179,6 +2180,13 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
             let correlation_id = time_ordered_id();
             dir.revoke_invite_as(&space_id, &invite_id, "directory-command", actor_user_id, &correlation_id).await?;
             Ok(Decision { events: Vec::new(), result: None })
+        }
+        DirectoryCommand::RecordUserPreference { schema, mutation } => {
+            if !::directory::os_directory::valid_user_preference_record_v1(&schema, &mutation) {
+                return Err(DirectoryError::Conflict("user preference record is invalid".into()));
+            }
+            let user_id = actor_user_id(actor)?.to_string();
+            Ok(single(clock, actor, None, Some(user_id.clone()), DirectoryEventBody::UserPreferenceRecorded { user_id, schema, mutation }))
         }
         DirectoryCommand::AnnounceDocument { descriptor } => {
             validate_document_descriptor(&descriptor)?;

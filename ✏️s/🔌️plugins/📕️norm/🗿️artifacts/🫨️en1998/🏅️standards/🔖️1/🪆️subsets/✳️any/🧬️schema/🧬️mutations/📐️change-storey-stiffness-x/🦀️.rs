@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeStoreyStif
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-storey-stiffness-x", "change-storey-stiffness-x")
+        protocol::LocalizedLabel::native("Change storey stiffness", "Geschosssteifigkeit ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-stiffness-x".into()]

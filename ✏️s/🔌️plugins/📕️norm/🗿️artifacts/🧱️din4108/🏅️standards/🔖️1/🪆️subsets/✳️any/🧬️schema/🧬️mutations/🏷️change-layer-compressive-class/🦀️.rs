@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerCom
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-compressive-class", "change-layer-compressive-class")
+        protocol::LocalizedLabel::native("Change compressive strength class", "Druckbelastbarkeitsklasse ändern")
     }
 }

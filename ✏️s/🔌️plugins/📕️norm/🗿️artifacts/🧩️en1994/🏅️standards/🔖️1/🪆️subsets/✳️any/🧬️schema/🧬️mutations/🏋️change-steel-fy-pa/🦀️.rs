@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeSteelFYPa 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-steel-fy-pa", "change-steel-fy-pa")
+        protocol::LocalizedLabel::native("Change structural steel yield strength fy", "Streckgrenze fy des Baustahls ändern")
     }
 }
 //#endregion 🔖️Payload

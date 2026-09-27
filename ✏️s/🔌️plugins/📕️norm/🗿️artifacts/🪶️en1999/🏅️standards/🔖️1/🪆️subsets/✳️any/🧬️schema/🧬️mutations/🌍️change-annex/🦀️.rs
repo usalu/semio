@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeAnnex {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-annex", "change-annex")
+        protocol::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
     }
 }

@@ -1,12 +1,44 @@
 // #region 🔌️Adapters
 import * as React from "react";
+import Ajv2020 from "ajv/dist/2020.js";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import sliderPresentationFixture from "../../../../🧫️fixtures/🎚️slider-presentation/🔣️.json";
+import sliderPresentationSchema from "../../../../🧬️schema/🎚️slider-presentation/🔣️.json";
 import { Slider, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, resolveSliderDraftClear, sliderValuesMatch } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎚️SliderMatrix
 describe("Slider", () => {
+  it("matches the neutral track/readout geometry and track-only pointer contract", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(sliderPresentationSchema);
+    expect(validate(sliderPresentationFixture), JSON.stringify(validate.errors)).toBe(true);
+    const row = sliderPresentationFixture.cases.find(candidate => candidate.id === "outer-rtl-inner-ltr")!;
+    const changes = vi.fn();
+    const { container } = render(
+      <div dir="rtl">
+        <Slider id="slider.presentation" value={[row.value]} min={row.min} max={row.max} step={0.1} aria-valuetext="2.5 millimetres" onValueChange={changes} />
+      </div>,
+    );
+    const slider = container.querySelector<HTMLElement>('[data-slot="slider"]')!;
+    const track = container.querySelector<HTMLElement>('[data-slot="slider-track"]')!;
+    const trackCell = container.querySelector<HTMLElement>('[data-slot="slider-track-cell"]')!;
+    const valueCell = container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;
+    const thumb = container.querySelector<HTMLElement>('[data-slot="slider-thumb"]')!;
+    expect(slider.getAttribute("dir")).toBe("ltr");
+    expect(trackCell.nextElementSibling).toBe(valueCell);
+    expect(track.className).toContain("h-single");
+    expect(thumb.className).toContain("size-small");
+    expect(thumb.getAttribute("aria-valuetext")).toBe("2.5 millimetres");
+    expect(valueCell.textContent).toBe(row.formatted);
+    track.getBoundingClientRect = () => ({ left: row.trackCell[0], right: row.trackCell[0] + row.trackCell[2], top: row.trackCell[1], bottom: row.trackCell[1] + row.trackCell[3], width: row.trackCell[2], height: row.trackCell[3] }) as DOMRect;
+    fireEvent.pointerDown(valueCell, { pointerId: 1, clientX: row.valueCell[0] + 1, clientY: row.valueCell[1] + 1 });
+    expect(changes).not.toHaveBeenCalled();
+    const trackPointer = sliderPresentationFixture.pointer.find(pointer => pointer.case === row.id)!;
+    fireEvent.pointerDown(track, { pointerId: 2, clientX: trackPointer.point[0], clientY: trackPointer.point[1] });
+    expect(changes).toHaveBeenLastCalledWith([trackPointer.emits]);
+  });
+
   it("normalizes invalid ranges, steps, tuple values, and ready clamps", () => {
     expect(normalizeSliderRange(Number.NaN, Number.POSITIVE_INFINITY, 0)).toEqual({ min: 0, max: 0, step: 1 });
     expect(normalizeSliderRange(10, 5, -2)).toEqual({ min: 10, max: 10, step: 1 });

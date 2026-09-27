@@ -7,7 +7,9 @@
         "authenticated"
       ],
       "actions": [
-        "space.create"
+        "space.create",
+        "preference.record",
+        "preference.read"
       ]
     },
     {

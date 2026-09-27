@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import Ajv from "ajv";
 import { SHELL_KEYBINDINGS } from "@semio-tech/ui-react";
+import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId } from "@semio-tech/infinite-world-r3f";
 import { TOOL_RUN_STEP_CHORD } from "../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
 import {
   KEYBINDING_UNOWNED_LABEL,
@@ -44,6 +45,7 @@ type Fixture = {
   readonly apps: Readonly<Record<string, FixtureApp>>;
   readonly stacks: readonly { readonly id: string; readonly app: string; readonly mode: string; readonly expected: readonly WindowScopeStackV1[] }[];
   readonly dockSeed: readonly { readonly id: string; readonly app: string; readonly mode: string; readonly activeWindowId: string | null; readonly expected: string | null }[];
+  readonly tabPresentation: readonly { readonly id: string; readonly kindIconId: string; readonly templateId: string | null; readonly expectedIconId: string }[];
   readonly chords: readonly { readonly id: string; readonly app: string; readonly mode: string; readonly focusedWindowId: string | null; readonly actionId: string; readonly expectedKind: string; readonly expectedWindowId: string | null }[];
   readonly unownedHint: readonly { readonly locale: string; readonly chord: string; readonly label: string; readonly text: string }[];
   readonly reservedChords: {
@@ -62,7 +64,7 @@ const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 const FIXTURE_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
-  required: ["note", "apps", "stacks", "dockSeed", "chords", "unownedHint", "reservedChords"],
+  required: ["note", "apps", "stacks", "dockSeed", "tabPresentation", "chords", "unownedHint", "reservedChords"],
   properties: {
     note: { type: "string", minLength: 1 },
     apps: {
@@ -80,6 +82,7 @@ const FIXTURE_SCHEMA: Record<string, unknown> = {
     },
     stacks: { type: "array", minItems: 3, items: { type: "object", additionalProperties: false, required: ["id", "app", "mode", "expected"], properties: { id: { type: "string" }, app: { type: "string" }, mode: { type: "string" }, expected: { type: "array", items: { $ref: "#/$defs/stack" } } } } },
     dockSeed: { type: "array", minItems: 6, items: { type: "object", additionalProperties: false, required: ["id", "app", "mode", "activeWindowId", "expected"], properties: { id: { type: "string" }, app: { type: "string" }, mode: { type: "string" }, activeWindowId: { type: ["string", "null"] }, expected: { type: ["string", "null"] } } } },
+    tabPresentation: { type: "array", minItems: 4, items: { type: "object", additionalProperties: false, required: ["id", "kindIconId", "templateId", "expectedIconId"], properties: { id: { type: "string", minLength: 1 }, kindIconId: { type: "string", minLength: 1 }, templateId: { type: ["string", "null"] }, expectedIconId: { type: "string", minLength: 1 } } } },
     chords: {
       type: "array",
       minItems: 8,
@@ -183,6 +186,12 @@ export function testWindowScope(): void {
     }
   }
 
+  for (const row of fixture.tabPresentation) {
+    const spec = decodeWorldProjectionTemplateId(row.templateId ?? undefined);
+    const iconId = spec === null ? row.kindIconId : worldProjectionSpecIconId(spec);
+    assert.equal(iconId, row.expectedIconId, `${row.id}: React tab icon`);
+  }
+
   for (const row of fixture.chords) {
     const target = resolveKeybindingTargetWindowV1({ kinds: appOf(row.app).kinds, mounted: mountedOf(row.app, row.mode), focusedWindowId: row.focusedWindowId, actionId: row.actionId });
     assert.equal(target.kind, row.expectedKind, `${row.id}: kind`);
@@ -221,7 +230,7 @@ export function testWindowScope(): void {
   assert.ok(!reservedShellChordsV1(SHELL_KEYBINDINGS).has("mod+shift+g"), "an app chord the shell never names stays the app's");
 
   const generateOwner = fixture.chords.filter((row) => row.mode === "generate" && row.actionId === "addGeneration");
-  console.log(`[DEBUG] window-scope: ${fixture.stacks.length} stack projections, ${fixture.dockSeed.length} dock seeds, ${fixture.chords.length} chord targets (${generateOwner.length} addGeneration), ${fixture.unownedHint.length} hint locales, ${fixture.reservedChords.cases.length} reserved-chord rows (${reserved.size} reserved)`);
+  console.log(`[DEBUG] window-scope: ${fixture.stacks.length} stack projections, ${fixture.dockSeed.length} dock seeds, ${fixture.tabPresentation.length} tab presentations, ${fixture.chords.length} chord targets (${generateOwner.length} addGeneration), ${fixture.unownedHint.length} hint locales, ${fixture.reservedChords.cases.length} reserved-chord rows (${reserved.size} reserved)`);
 }
 
 describe("⌨️ window scope", () => {

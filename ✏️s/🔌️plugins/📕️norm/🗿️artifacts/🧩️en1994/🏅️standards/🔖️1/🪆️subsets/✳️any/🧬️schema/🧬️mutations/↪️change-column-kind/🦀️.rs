@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeColumnKind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-column-kind", "change-column-kind")
+        protocol::LocalizedLabel::native("Change column type", "Stützentyp ändern")
     }
 }
 //#endregion 🔖️Payload

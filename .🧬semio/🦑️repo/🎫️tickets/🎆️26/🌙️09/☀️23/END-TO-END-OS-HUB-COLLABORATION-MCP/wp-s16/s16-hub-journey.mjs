@@ -172,7 +172,7 @@ async function ensureSpace(page) {
 const indexRows = (page) =>
   page.evaluate(() =>
     [...document.querySelectorAll('[data-slot="window-body"] tr, [data-slot="window-body"] [role="row"], [data-slot="window-body"] [data-row-id]')]
-      .map((element) => ({ id: element.getAttribute("data-row-id"), text: (element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120) }))
+      .map((element) => ({ id: element.getAttribute("data-row-id") ?? (/^artifact:(.+)$/u.exec(element.getAttribute("data-ui-node-key") ?? "")?.[1] ?? null), text: (element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120) }))
       .filter((row) => row.text.length > 0)
       .slice(0, 40),
   );
@@ -540,7 +540,7 @@ try {
   } else if (target === undefined) result.opened = "space index rendered no artifact row to open";
   else {
     const before = await windowIds(page);
-    const locator = target.id !== null ? page.locator(`[data-slot="window-body"] [data-row-id="${target.id}"]`).first() : page.locator('[data-slot="window-body"] [role="row"]').last();
+    const locator = target.id !== null ? page.locator(`[data-slot="window-body"] [data-ui-node-key="artifact:${target.id}"]`).first() : page.locator('[data-slot="window-body"] [role="row"]').last();
     await locator.click({ force: true }).catch(() => undefined);
     await page.waitForTimeout(1_200);
     await locator.dblclick({ force: true }).catch(() => undefined);
@@ -618,7 +618,7 @@ try {
     const reopenTarget = (await indexRows(page)).filter((row) => row.id !== null).at(-1);
     if (reopenTarget) {
       const before = await windowIds(page);
-      const row = page.locator(`[data-slot="window-body"] [data-row-id="${reopenTarget.id}"]`).first();
+      const row = page.locator(`[data-slot="window-body"] [data-ui-node-key="artifact:${reopenTarget.id}"]`).first();
       await row.click({ force: true }).catch(() => undefined);
       await page.waitForTimeout(1_200);
       await row.dblclick({ force: true }).catch(() => undefined);

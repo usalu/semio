@@ -64,17 +64,17 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
     When the subject exports it as epJSON and a third-party JSON Schema validator checks those exact bytes against Energy+.schema.epJSON
     Then there are no schema violations and both implementations read the same object types, zones, surfaces, apertures and envelope numbers out of the document
     Examples:
-      | case   |
-      | 600    |
-      | 600FF  |
-      | 610    |
-      | 620    |
-      | 640    |
-      | 900    |
-      | 900FF  |
-      | 910    |
-      | 920    |
-      | 940    |
+      | id    | case  |
+      | 600   | 600   |
+      | 600ff | 600FF |
+      | 610   | 610   |
+      | 620   | 620   |
+      | 640   | 640   |
+      | 900   | 900   |
+      | 900ff | 900FF |
+      | 910   | 910   |
+      | 920   | 920   |
+      | 940   | 940   |
 
   @id-nothing-dropped
   @level-quick
@@ -84,9 +84,9 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
     When the subject exports it as epJSON and lists what the covered object subset could not represent
     Then nothing the model states is missing from the document without a structured diagnostic naming it
     Examples:
-      | case   |
-      | 600    |
-      | 900    |
+      | id  | case |
+      | 600 | 600  |
+      | 900 | 900  |
 
   @id-energyplus-run
   @level-long
@@ -98,8 +98,8 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
     When the subject exports it as epJSON and EnergyPlus 25.2.0 simulates those exact bytes directly, with no translator
     Then the annual energies, free-float temperatures and the building EnergyPlus reports back agree with the committed reference within the declared tolerance
     Examples:
-      | case   |
-      | 600    |
-      | 600FF  |
-      | 900    |
-      | 900FF  |
+      | id    | case  |
+      | 600   | 600   |
+      | 600ff | 600FF |
+      | 900   | 900   |
+      | 900ff | 900FF |

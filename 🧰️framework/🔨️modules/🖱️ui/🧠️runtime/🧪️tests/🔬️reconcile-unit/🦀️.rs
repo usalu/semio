@@ -922,6 +922,7 @@ fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::Co
     for section in 0..TREE_WINDOW_LAW_SECTIONS {
         let rows: Vec<crate::TreeNode> = (offset..TREE_WINDOW_LAW_SECTION_TOTAL.min(offset + rows_per_section)).map(|index| tree_window_law_row(section, index)).collect();
         let props = ui_contract::TreeSectionProps {
+            header_toolbar: None,
             label: Some(ui_contract::Label::try_from(format!("Section {section}").as_str()).expect("bounded fixture label")),
             default_open: Some(true),
             window: Some(ui_contract::TreeWindow { row_extent: Default::default(), total: u32::try_from(TREE_WINDOW_LAW_SECTION_TOTAL).expect("bounded fixture total"), offset: u32::try_from(offset).expect("bounded fixture offset") }),

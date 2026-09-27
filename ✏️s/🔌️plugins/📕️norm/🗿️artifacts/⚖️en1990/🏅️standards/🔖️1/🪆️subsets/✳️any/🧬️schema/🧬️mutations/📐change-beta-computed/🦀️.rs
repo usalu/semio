@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeBetaComput
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change beta-computed", "Ändern: beta-computed")
+        protocol::LocalizedLabel::native("Change computed reliability index β", "Berechneten Zuverlässigkeitsindex β ändern")
     }
 }
 //#endregion 🔖️Payload

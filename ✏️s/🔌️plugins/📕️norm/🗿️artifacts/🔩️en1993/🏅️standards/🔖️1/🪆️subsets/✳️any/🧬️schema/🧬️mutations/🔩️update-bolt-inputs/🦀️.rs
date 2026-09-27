@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBoltInputs
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert joint {}", self.joint.id),
-            &format!("Anschluss setzen {}", self.joint.id),
+            &format!("Update joint {}", self.joint.id),
+            &format!("Anschluss {} aktualisieren", self.joint.id),
         )
     }
     fn target(&self) -> Vec<String> {

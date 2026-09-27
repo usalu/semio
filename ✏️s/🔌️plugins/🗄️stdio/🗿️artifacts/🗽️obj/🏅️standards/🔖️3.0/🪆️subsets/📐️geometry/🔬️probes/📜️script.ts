@@ -144,6 +144,18 @@ const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>
   // the vertex/texcoord/normal insert-and-remove kinds do NOT — an unreferenced element is dropped by
   // this loader too — and an unknown statement is skipped with a warning. Only the three that move are
   // claimed.
+  "obj-document-import": async (inputs) => {
+    requireInputs(inputs, 1, "obj-document-import");
+    const perInput = inputs.map((input) => {
+      try {
+        documentProjection(input);
+        return { path: input, ok: true, error: undefined as string | undefined };
+      } catch (error) {
+        return { path: input, ok: false, error: String((error as Error).message ?? error) };
+      }
+    });
+    return { status: "ok", engine: DOCUMENT_ENGINE, probeVersion: DOCUMENT_PROBE_VERSION, measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } } as ProbeResult;
+  },
   "obj-document-project": async (inputs) => {
     requireInputs(inputs, 1, "obj-document-project");
     return { status: "ok", engine: DOCUMENT_ENGINE, probeVersion: DOCUMENT_PROBE_VERSION, measurements: documentProjection(inputs[0]!) } as ProbeResult;

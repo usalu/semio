@@ -553,7 +553,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
         }
         WidgetNode::Input { id, input_kind, value, placeholder, commit, min, max, step, accept, on_change } => {
             register_input_meta(ctx, id, input_kind, value, commit.clone(), (*min, *max, *step, accept.clone()), on_change.clone());
-            render_input(id, value, placeholder.as_deref(), bounds, ctx);
+            render_input(id, value, placeholder.as_deref(), bounds, false, ctx);
         }
         WidgetNode::Select { id, value, items, placeholder, on_change } => {
             register_select_meta(ctx, id, on_change.clone());
@@ -704,7 +704,7 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
         }
         ControlNode::Input { id, input_kind, value, placeholder, commit, min, max, step, accept, on_change } => {
             register_input_meta(ctx, id, input_kind, value, commit.clone(), (*min, *max, *step, accept.clone()), on_change.clone());
-            render_input(id, value, placeholder.as_deref(), bounds, ctx);
+            render_input(id, value, placeholder.as_deref(), bounds, false, ctx);
         }
         ControlNode::Select { id, value, items, placeholder, on_change } => {
             register_select_meta(ctx, id, on_change.clone());

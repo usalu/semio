@@ -1973,7 +1973,7 @@ async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_reti
         HistoryReplayPhase::Verify { index: 0 },
         HistoryReplayPhase::Frame { index: 0 },
         HistoryReplayPhase::CommittedBody { index: 0 },
-        HistoryReplayPhase::Envelope { index: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None } },
+        HistoryReplayPhase::Envelope { index: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, mutation_id: None } },
         HistoryReplayPhase::CopyMutation { index: 0, range: 0..0, copied: 0, result_start: 0 },
         HistoryReplayPhase::Frontier { index: 0, cursor: HistoryFrontierCursor { pos: 0, end: 0, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] } },
         HistoryReplayPhase::Publish { index: 0, head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 },

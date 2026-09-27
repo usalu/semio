@@ -8,7 +8,7 @@ import { chmodSync, closeSync, constants, copyFileSync, existsSync, fstatSync, f
 import { tmpdir } from "node:os";
 import { basename, dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { parseArgs } from "node:util";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
+import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
 import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -1489,31 +1489,6 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
   });
 });
 //#endregion 🧪️CompositionPolicy
-
-describe("Neo4j graph database registry", () => {
-  test("joins name segments with hyphen", () => {
-    expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
-  });
-
-  test("partitions argv into name segments and uvx passthrough", () => {
-    expect(partitionNeo4jGraphCliArgv(["metabolism", "--verbose"])).toEqual({
-      nameParts: ["metabolism"],
-      passthrough: ["--verbose"],
-    });
-  });
-
-  test("product graphs are the three current joined names", () => {
-    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["elements", "coda", "reuse"]);
-  });
-
-  test("NEO4J_EXTRA_GRAPH_DATABASES extends export specs", () => {
-    const env = { NEO4J_EXTRA_GRAPH_DATABASES: " foo , bar-baz " };
-    expect(parseExtraNeo4jGraphDatabaseNamesFromEnv(env)).toEqual(["foo", "bar-baz"]);
-    const names = getAllNeo4jGraphExportSpecs(env).map((s) => joinNeo4jGraphDatabaseName(s));
-    expect(names).toContain("foo");
-    expect(names).toContain("bar-baz");
-  });
-});
 
 //#region 🧩️NxUnicodeTransport
 describe("Nx Unicode project transport", () => {

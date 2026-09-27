@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for InsertColumn {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-column", "insert-column")
+        protocol::LocalizedLabel::native("Insert composite column", "Verbundstütze einfügen")
     }
 }
 //#endregion 🔖️Payload

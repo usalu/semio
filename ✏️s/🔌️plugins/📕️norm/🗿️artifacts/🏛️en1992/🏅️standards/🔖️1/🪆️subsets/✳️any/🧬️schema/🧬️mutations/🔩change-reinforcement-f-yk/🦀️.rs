@@ -19,7 +19,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeReinforcem
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change grade {} strength", self.grade_id), &format!("Festigkeit von Sorte {} ändern", self.grade_id))
+        protocol::LocalizedLabel::native(&format!("Change strength of grade {}", self.grade_id), &format!("Festigkeit der Sorte {} ändern", self.grade_id))
     }
     fn target(&self) -> Vec<String> { vec![self.grade_id.clone()] }
 }

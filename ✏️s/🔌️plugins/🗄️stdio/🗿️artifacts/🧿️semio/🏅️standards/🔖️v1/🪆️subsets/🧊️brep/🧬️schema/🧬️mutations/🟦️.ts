@@ -11,6 +11,7 @@
  * `../📸️snapshot/🟦️.ts`'s types are real). None of the 13 leaf structs carry
  * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
  * leaf's own field names are the literal Rust snake_case names verbatim. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioPoint3, BrepCurve, BrepSurface, BrepShellFace, BrepSolidShell } from "../📸️snapshot/🟦️.ts";
 
 export interface CreateVertex {
@@ -94,4 +95,5 @@ export type SemioBrepMutation =
   | { DeleteSolid: DeleteSolid }
   | { ReplaceCurve: ReplaceCurve }
   | { ReplaceSurface: ReplaceSurface }
-  | { MoveVertex: MoveVertex };
+  | { MoveVertex: MoveVertex }
+  | { SetSnapshot: SetSnapshot };

@@ -21,12 +21,7 @@ use serde_json::Value;
 fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
     let fixture = law();
-    let case = fixture["cases"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|case| case["name"] == "every-composited-kind-is-retained-alike")
-        .expect("cross-kind retained-surface case");
+    let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "every-composited-kind-is-retained-alike").expect("cross-kind retained-surface case");
     let rows = case["frames"][0]["drain"].as_array().expect("painted surface rows");
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
@@ -51,11 +46,7 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
                 scene.selection_method = row["selectionMethod"].as_str().unwrap_or("rectangle").into();
                 ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, &scene).expect("bounded TiledMap scene encodes")
             }
-            "board2d" => ui_wgpu::wgpu::encode_surface_doc(
-                ui_contract::SurfaceKind::Board2d,
-                &ui_wgpu::wgpu::Board2dScene::base(row["fixtureJson"].as_str().unwrap_or("{}").into(), "{}".into(), true),
-            )
-            .expect("bounded Board2d scene encodes"),
+            "board2d" => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &ui_wgpu::wgpu::Board2dScene::base(row["fixtureJson"].as_str().unwrap_or("{}").into(), "{}".into(), true)).expect("bounded Board2d scene encodes"),
             kind => panic!("unsupported retained surface kind {kind}"),
         };
         let records = vec![super::shell_input_tests::tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];

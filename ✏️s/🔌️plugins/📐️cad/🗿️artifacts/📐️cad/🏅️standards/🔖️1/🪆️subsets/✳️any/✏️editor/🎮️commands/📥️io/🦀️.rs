@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, sce
 use crate::CadSnapshot;
 use protocol::DslValue;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ImportCadFile
@@ -36,7 +36,7 @@ pub mod import_cad_file {
         // only through the injected `interactionSelect` verb; a host wanting "select on import" now
         // issues that as a follow-up command.
         if import_cad_object_by_extension(&name_lower, &payload_value).is_some() {
-            return Ok(Emit::default());
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-unavailable"), format!("importCadFile cannot place the object \"{}\": composed pane models accept no imported object yet", payload.name)));
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
         let scene = scene_from_spatial_payload(&unwrapped).or_else(|| <CadSnapshot as protocol::FromValue>::from_value(unwrapped).ok());
@@ -46,7 +46,7 @@ pub mod import_cad_file {
             emit.config_mutations = vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?];
             return Ok(emit);
         }
-        Ok(Emit::default())
+        Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-unreadable"), format!("importCadFile cannot read \"{}\" as a spatial scene or a CAD object", payload.name)))
     }
 }
 //#endregion 🔖️ImportCadFile

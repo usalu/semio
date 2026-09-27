@@ -26,6 +26,9 @@ use serde::{Deserialize, Serialize};
 /// Rust encoder and `🚪️host-io/🟦️.ts`'s decoder cannot drift into two spellings.
 pub const DIRECTORY_DOOR_OP: &str = "directory-http";
 
+/// ⏳️ The maximum wall time one page-owned directory fetch may retain the renderer interaction owner.
+pub const DIRECTORY_HTTP_TIMEOUT_MS: u64 = 5_000;
+
 /// 📨️ One directory HTTP request handed to the page. A request `body` is text because every payload the
 /// shell POSTs is JSON; a read that names its `accept` media type (the binary canonical checkpoint pair) is
 /// answered as base64 bytes (`bodyBase64`) instead of text.
@@ -35,6 +38,7 @@ pub struct DirectoryDoorRequestV1 {
     pub op: String,
     pub method: String,
     pub url: String,
+    pub timeout_ms: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bearer: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -75,13 +79,13 @@ pub fn encode_directory_door_request(method: HttpMethod, url: &str, bearer: Opti
         Some(bytes) => Some(String::from_utf8(bytes.to_vec()).map_err(|_| TransportError::Io("directory door body is not utf-8".into()))?),
         None => None,
     };
-    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: directory_door_method(method).to_string(), url: url.to_string(), bearer: bearer.map(str::to_string), body, accept: None };
+    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: directory_door_method(method).to_string(), url: url.to_string(), timeout_ms: DIRECTORY_HTTP_TIMEOUT_MS, bearer: bearer.map(str::to_string), body, accept: None };
     serde_json::to_string(&request).map_err(|error| TransportError::Io(error.to_string()))
 }
 
 /// 🪢️ Seals one binary read for the door: a GET naming the exact media type it accepts, answered as base64 bytes.
 pub fn encode_directory_door_binary_request(url: &str, bearer: Option<&str>, accept: &str) -> Result<String, TransportError> {
-    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: "GET".to_string(), url: url.to_string(), bearer: bearer.map(str::to_string), body: None, accept: Some(accept.to_string()) };
+    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: "GET".to_string(), url: url.to_string(), timeout_ms: DIRECTORY_HTTP_TIMEOUT_MS, bearer: bearer.map(str::to_string), body: None, accept: Some(accept.to_string()) };
     serde_json::to_string(&request).map_err(|error| TransportError::Io(error.to_string()))
 }
 

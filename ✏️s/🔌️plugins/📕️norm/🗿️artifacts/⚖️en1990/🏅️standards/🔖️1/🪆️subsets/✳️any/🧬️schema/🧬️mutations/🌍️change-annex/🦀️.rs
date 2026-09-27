@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeAnnex {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change annex", "Ändern: annex")
+        protocol::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
     }
 }
 //#endregion 🔖️Payload

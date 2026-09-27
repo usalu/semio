@@ -17,7 +17,7 @@ fn family_any_dir() -> PathBuf {
 }
 
 fn ticket_generated() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/🗑️generated/din4108")
+    std::env::temp_dir().join("semio-norm-din4108-oracle")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -371,7 +371,7 @@ async fn remedy_law_shading_fc_fixes_summer() {
 async fn python_oracle_matches_rust_u_s_r_frsi_glaser_within_half_percent() {
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);
-    let oracle = family_any_dir().join("🔮️oracles/🐍️.py");
+    let oracle = family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py");
     for (name, doc) in [("default", Din4108Snapshot::default()), ("failing", Din4108Snapshot::failing_thin_insulation())] {
         let report = evaluate(&doc);
         let snap_path = tmp.join(format!("{name}.snap.json"));

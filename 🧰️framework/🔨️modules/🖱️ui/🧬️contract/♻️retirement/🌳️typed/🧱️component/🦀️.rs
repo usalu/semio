@@ -214,6 +214,9 @@ impl<A: UiTypedRetire, B: UiTypedRetire> UiTypedRetire for (A, B) {
     }
 }
 
+/// 📋️ Retires the items last-first, then the emptied backing one page per turn. The byte grant meters payload
+/// (text, bytes, values), never backing: a page release is one item of O(1) work, reported as an item with zero
+/// bytes exactly like [`UiFixedBytes`]'s emptied buffer, so no grant is too narrow to finish a list.
 impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
     const DEPTH: usize = 1 + T::DEPTH;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
@@ -225,8 +228,8 @@ impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
             return Ok(UiValueRetirementStep::progress(1, 0));
         }
         let Some(field) = self.last_mut() else {
-            let released = self.release_empty_page(bytes)?;
-            return Ok(UiValueRetirementStep { complete: self.terminal_is_empty(), progressed: released.progressed, released_items: usize::from(released.progressed), released_bytes: released.released_allocation_bytes });
+            let released = self.release_empty_page(usize::MAX)?;
+            return Ok(UiValueRetirementStep { complete: self.terminal_is_empty(), progressed: released.progressed, released_items: usize::from(released.progressed), released_bytes: 0 });
         };
         let mut step = field.retire_typed(path, value, bytes)?;
         if step.complete {

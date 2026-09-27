@@ -3,7 +3,7 @@
 
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation};
+use crate::wgpu::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, QueuedActionDescriptor, RetainedStringAction, RetainedStringActionStep, RETAINED_ACTION_STRING_PAGE_BYTES};
 use std::rc::Rc;
 
 use std::collections::HashMap;
@@ -14,6 +14,38 @@ const PENDING_KEY_CAPACITY: usize = 64;
 const PENDING_KEY_BYTE_CAPACITY: usize = 4 * 1024;
 const DRAG_POINT_CAPACITY: usize = 4_096;
 const INPUT_TEXT_PAGE_BYTES: usize = 16 * 1024;
+
+struct RetainedInputAction {
+    source: RetainedInputActionSource,
+    action: RetainedStringAction,
+}
+
+enum RetainedInputActionSource {
+    Root(ui_contract::TextRoot),
+    Owned(String),
+}
+
+impl RetainedInputActionSource {
+    fn len(&self) -> usize {
+        match self {
+            Self::Root(root) => root.len(),
+            Self::Owned(value) => value.len(),
+        }
+    }
+
+    fn copy_page(&self, start: usize) -> Result<String, BoundedActionFault> {
+        match self {
+            Self::Root(root) => root.copy_page(start, RETAINED_ACTION_STRING_PAGE_BYTES).map_err(|_| BoundedActionFault::Structure),
+            Self::Owned(value) => {
+                let mut end = start.saturating_add(RETAINED_ACTION_STRING_PAGE_BYTES).min(value.len());
+                while !value.is_char_boundary(end) {
+                    end = end.checked_sub(1).ok_or(BoundedActionFault::Structure)?;
+                }
+                value.get(start..end).map(str::to_owned).ok_or(BoundedActionFault::Structure)
+            }
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct HitTarget<E> {
@@ -281,6 +313,7 @@ pub struct InputState<E> {
     pub cursor_pos: usize,
     hits: HitRegistry<E>,
     pending_actions: BoundedActionQueue,
+    retained_action: Option<RetainedInputAction>,
     pending_keys: FixedKeyQueue,
     pub right_click_pos: Option<(f32, f32)>,
 }
@@ -306,6 +339,7 @@ impl<E> Default for InputState<E> {
             cursor_pos: 0,
             hits: HitRegistry::default(),
             pending_actions: BoundedActionQueue::default(),
+            retained_action: None,
             pending_keys: FixedKeyQueue::default(),
             right_click_pos: None,
         }
@@ -468,6 +502,45 @@ impl<E: Clone> InputState<E> {
         reservation.publish()
     }
 
+    /// 📦️ Starts one large scalar action from the immutable paged text root without flattening it.
+    pub fn begin_retained_text_action(&mut self, descriptor: ActionDescriptor, argument: String) -> Result<(), BoundedActionFault> {
+        if self.retained_action.is_some() {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        let source = RetainedInputActionSource::Root(self.text_buffer.root().clone());
+        let action = RetainedStringAction::new(descriptor, argument, source.len())?;
+        self.retained_action = Some(RetainedInputAction { source, action });
+        Ok(())
+    }
+
+    pub fn begin_retained_string_action_owned(&mut self, descriptor: ActionDescriptor, argument: String, source: String) -> Result<(), BoundedActionFault> {
+        if self.retained_action.is_some() {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        let action = RetainedStringAction::new(descriptor, argument, source.len())?;
+        self.retained_action = Some(RetainedInputAction { source: RetainedInputActionSource::Owned(source), action });
+        Ok(())
+    }
+
+    /// 📄 Copies at most one retained payload page and yields the complete atomic action once.
+    pub fn drive_retained_action_step(&mut self) -> Result<Option<QueuedActionDescriptor>, BoundedActionFault> {
+        let Some(retained) = self.retained_action.as_mut() else { return Ok(None) };
+        let page = retained.source.copy_page(retained.action.copied_bytes())?;
+        if retained.action.push_page(&page)? == RetainedStringActionStep::Complete {
+            let retained = self.retained_action.take().ok_or(BoundedActionFault::Structure)?;
+            return retained.action.finish(None).map(Some);
+        }
+        Ok(None)
+    }
+
+    pub fn retained_action_pending(&self) -> bool {
+        self.retained_action.is_some()
+    }
+
+    pub fn cancel_retained_action(&mut self) -> bool {
+        self.retained_action.take().is_some()
+    }
+
     pub fn record_action_fault(&mut self, fault: BoundedActionFault) {
         self.action_fault = Some(fault);
         self.text_fault = Some(match fault {
@@ -493,11 +566,25 @@ impl<E: Clone> InputState<E> {
             self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
             return;
         }
-        if value.len() > INPUT_TEXT_PAGE_BYTES {
-            self.text_fault = Some(ui_contract::TextEditFault::ByteCredits);
-            return;
-        }
-        if let Err(fault) = self.text_buffer.replace_owned(value) {
+        let replacement = if value.len() <= INPUT_TEXT_PAGE_BYTES {
+            self.text_buffer.replace_owned(value)
+        } else {
+            let result = (|| {
+                let token = self.text_buffer.begin(self.text_buffer.generation(), value.len(), 0, self.text_buffer.root().len())?;
+                let mut start = 0usize;
+                while start < value.len() {
+                    let mut end = start.saturating_add(INPUT_TEXT_PAGE_BYTES).min(value.len());
+                    while !value.is_char_boundary(end) {
+                        end -= 1;
+                    }
+                    self.text_buffer.push(token, value[start..end].to_owned())?;
+                    start = end;
+                }
+                self.text_buffer.commit(token)
+            })();
+            result
+        };
+        if let Err(fault) = replacement {
             self.text_fault = Some(fault);
             return;
         }
@@ -605,6 +692,9 @@ impl<E: Clone> InputState<E> {
             if let Some(receipt) = action.receipt() {
                 on_receipt(receipt);
             }
+            return Ok(false);
+        }
+        if self.retained_action.take().is_some() {
             return Ok(false);
         }
         if !self.pending_actions.close_claim_step() {
@@ -788,23 +878,14 @@ pub fn retained_hit_registration(
                 entry(HitKind::Button, control_id, Some(activate), rect)
             }
         },
+        UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
         UiNode::Section(section) if section.label.is_some() => {
-            let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h));
+            let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::mounted_layout::retained_section_title_height(tree, id).min(rect.h));
             (band.h > 0.0).then(|| RetainedHitRegistration { node: id, rect: band, overlay: false, scene: None, kind: HitKind::Toggle, control_id: section.id.clone(), action: None, drag_axis: None, drag_data: None })
         }
-        UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
         UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
-        UiNode::Toggle(toggle) => entry(
-            HitKind::Toggle,
-            toggle.id.clone(),
-            None,
-            if toggle.appearance == ui_contract::ToggleAppearance::Checkbox {
-                crate::wgpu::layout::tree_checkbox_hit_rect(rect, metrics.inline)
-            } else {
-                rect
-            },
-        ),
+        UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, if toggle.appearance == ui_contract::ToggleAppearance::Checkbox { crate::wgpu::layout::tree_checkbox_hit_rect(rect, metrics.inline) } else { rect }),
         UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
         // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
         // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
@@ -824,28 +905,12 @@ pub fn retained_hit_registration(
 }
 
 #[cfg(feature = "wgpu-engine")]
-pub fn retained_tree_chevron_registration(
-    tree: &crate::wgpu::tree::UiTree,
-    id: crate::wgpu::arena::NodeId,
-    rect: Rect,
-    metrics: &crate::wgpu::layout::TreeRowMetrics,
-    reversed: bool,
-) -> Option<RetainedHitRegistration> {
+pub fn retained_tree_chevron_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, rect: Rect, metrics: &crate::wgpu::layout::TreeRowMetrics, reversed: bool) -> Option<RetainedHitRegistration> {
     let RetainedTreeRow::Item(item) = retained_tree_row(tree, id)? else { return None };
     item.items.as_deref().filter(|items| !items.is_empty())?;
     let depth = tree.tree_item_depth(id)?;
     let rect = crate::wgpu::layout::tree_item_chevron_rect(rect, depth, metrics, reversed);
-    (rect.w > 0.0 && rect.h > 0.0).then(|| RetainedHitRegistration {
-        node: id,
-        rect,
-        overlay: false,
-        scene: None,
-        kind: HitKind::TreeItem,
-        control_id: format!("tree.chevron.{}", item.id),
-        action: None,
-        drag_axis: None,
-        drag_data: None,
-    })
+    (rect.w > 0.0 && rect.h > 0.0).then(|| RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::TreeItem, control_id: format!("tree.chevron.{}", item.id), action: None, drag_axis: None, drag_data: None })
 }
 
 #[cfg(feature = "wgpu-engine")]

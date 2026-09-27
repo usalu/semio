@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedSil
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-silo-patch", "change-assumed-silo-patch")
+        protocol::LocalizedLabel::native("Change assumed silo patch load", "Angenommene Silo-Teilflächenlast ändern")
     }
 }
 //#endregion 🔖️Payload

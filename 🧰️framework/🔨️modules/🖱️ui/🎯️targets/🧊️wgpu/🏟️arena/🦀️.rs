@@ -12,7 +12,9 @@ pub struct NodeId {
 }
 
 impl NodeId {
-    pub const fn identity_parts(self) -> (u32, u32) { (self.index, self.generation) }
+    pub const fn identity_parts(self) -> (u32, u32) {
+        (self.index, self.generation)
+    }
 }
 
 enum Slot<T> {

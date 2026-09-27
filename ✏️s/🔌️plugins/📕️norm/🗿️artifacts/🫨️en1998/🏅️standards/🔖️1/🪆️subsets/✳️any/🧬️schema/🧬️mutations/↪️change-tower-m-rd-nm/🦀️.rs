@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerMRdNm
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-tower-m-rd-nm", "change-tower-m-rd-nm")
+        protocol::LocalizedLabel::native("Change design bending resistance of the tower", "Bemessungswert der Biegetragfähigkeit des Turms ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tower-m-rd-nm".into()]

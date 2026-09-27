@@ -40,7 +40,7 @@ fn every_gateway_to_shell_command_encodes_to_its_shared_fixture() {
     assert_eq!(encode_app_command(&AppCommand::ReadArtifact), fixture("readArtifact"));
     assert_eq!(encode_app_command(&AppCommand::PureCommand { capability_id: "note.note.appendParagraph".to_string(), input: serde_json::json!({ "text": "hello" }) }), fixture("pureCommand"));
     assert_eq!(
-        encode_app_command(&AppCommand::TransactionPrepare { txn_id: "txn_1".to_string(), ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new() }, label: "append paragraph".to_string(), origin: agent_origin() }),
+        encode_app_command(&AppCommand::TransactionPrepare { txn_id: "txn_1".to_string(), ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, label: "append paragraph".to_string(), origin: agent_origin() }),
         fixture("transactionPrepare")
     );
     assert_eq!(encode_app_command(&AppCommand::TransactionCommit { txn_id: "txn_1".to_string() }), fixture("transactionCommit"));
@@ -53,7 +53,7 @@ fn every_gateway_to_shell_command_encodes_to_its_shared_fixture() {
 #[test]
 fn every_shell_to_gateway_frame_decodes_from_its_shared_fixture() {
     assert_eq!(decode_app_frame(&fixture("historySnapshot")), Ok(AppFrame::HistorySnapshot(RevisionStamp { artifact_id: "note-1".to_string(), head_edit_id: "edit_7".to_string(), cursor: "7".to_string() })));
-    assert_eq!(decode_app_frame(&fixture("emit")), Ok(AppFrame::Emit { ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new() }, warnings: Vec::new() }));
+    assert_eq!(decode_app_frame(&fixture("emit")), Ok(AppFrame::Emit { ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new() }));
     assert_eq!(decode_app_frame(&fixture("transactionPrepared")), Ok(AppFrame::TransactionPrepared { txn_id: "txn_1".to_string() }));
     assert_eq!(decode_app_frame(&fixture("transactionCommitted")), Ok(AppFrame::TransactionCommitted { txn_id: "txn_1".to_string(), edit_id: "edit_8".to_string(), relay: None }));
     assert_eq!(decode_app_frame(&fixture("transactionRolledBack")), Ok(AppFrame::TransactionRolledBack { txn_id: "txn_1".to_string() }));

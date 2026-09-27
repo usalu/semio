@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { formatUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
@@ -339,7 +340,7 @@ export function formatNumber(value: number | string): string {
   const n = typeof value === "string" ? Number(value) : value;
   if (typeof value === "string" && !Number.isFinite(n)) return value;
   if (!Number.isFinite(n)) return "";
-  return Number.parseFloat(n.toPrecision(12)).toString();
+  return formatUiNumber(n);
 }
 
 //#endregion Number formatting

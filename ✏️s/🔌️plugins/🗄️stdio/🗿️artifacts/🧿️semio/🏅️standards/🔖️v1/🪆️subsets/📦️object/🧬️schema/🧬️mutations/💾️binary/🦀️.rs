@@ -11,7 +11,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 9] = [
+const TEXT_KEYWORDS: [(&str, &str); 10] = [
+    ("set-snapshot", "setSnapshot"),
     ("move-object", "moveObject"),
     ("rotate-object", "rotateObject"),
     ("scale-object", "scaleObject"),
@@ -26,6 +27,7 @@ const TEXT_KEYWORDS: [(&str, &str); 9] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioObjectMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_MOVE_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-object");
 const TAG_ROTATE_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rotate-object");
 const TAG_SCALE_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "scale-object");
@@ -40,6 +42,7 @@ const TAG_DELETE_PROPERTIES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "d
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioObjectMutation) -> u8 {
     match m {
+        SemioObjectMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioObjectMutation::MoveObject(_) => TAG_MOVE_OBJECT,
         SemioObjectMutation::RotateObject(_) => TAG_ROTATE_OBJECT,
         SemioObjectMutation::ScaleObject(_) => TAG_SCALE_OBJECT,

@@ -8,5 +8,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for RemoveMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemovedMember" };
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Remove member", "Entfernen: member") }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove member", "Bauteil entfernen")
+    }
 }

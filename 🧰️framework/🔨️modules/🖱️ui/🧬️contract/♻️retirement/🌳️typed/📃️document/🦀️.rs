@@ -38,30 +38,18 @@ impl UiDocumentArena {
         result
     }
 
-    /// 🧮️ Retires one unit of this document against the caller's grant, RAISED to admit the node
-    /// table's own allocation. A page is freed whole or not at all
-    /// (`PagedList::release_empty_page`, `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`, gated on
-    /// `items.capacity() * size_of::<T>() > maximum_bytes`), so a grant narrower than one page is a
-    /// ceiling that NO amount of further retirement can meet: the page stays reserved, the typed cursor
-    /// answers neither progress nor completion, and every owner above it spins on a value it is
-    /// forbidden to free. The caller's grant bounds the ITEMS retired per call, which stays one either
-    /// way, so raising the byte ceiling to the table's own footprint costs no extra work per call.
-    ///
-    /// 🐛️ One `UiNodeRecord` is 6 416 bytes against the reconciler's 4 096-byte copy grant
-    /// (`SURFACE_COMPONENT_COPY_WORK_BYTES`), so every published surface froze one step short of its
-    /// terminal: measured 67 667 consecutive `progressed: false, complete: false` steps on one
-    /// catalogue surface, which is the guest answering `more-work` forever while the host's refresh
-    /// reads back `unchanged` from the retained tree (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B52,
-    /// wave B50's 7 843-turn `more-work` streak with `sources=["reconcile"]`).
+    /// 🧮️ Retires one unit of this document against the caller's grant. Page releases are item-metered in the
+    /// typed cursor (`UiTypedRetire for UiFixedList`), so the reconciler's 4 096-byte copy grant retires a 6 416-byte
+    /// `UiNodeRecord` page without being raised (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B52: 67 667 consecutive
+    /// `progressed: false` steps on one catalogue surface while the page was byte-gated).
     fn retire_exact(&mut self, handle: UiDocumentHandle, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let Some(slot) = self.slot_mut(handle) else { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }) };
         if !slot.retiring || slot.aliases != 0 {
             return Ok(UiValueRetirementStep::default());
         }
-        let grant = maximum_bytes.max(slot.nodes.entries.allocated_bytes());
         let mut step = match slot.retire_scalar {
-            0 => slot.retirement.advance(&mut slot.nodes.entries, 1, grant)?,
-            1 => slot.retirement.advance(&mut slot.surface, 1, grant)?,
+            0 => slot.retirement.advance(&mut slot.nodes.entries, 1, maximum_bytes)?,
+            1 => slot.retirement.advance(&mut slot.surface, 1, maximum_bytes)?,
             2 => {
                 slot.root = None;
                 UiValueRetirementStep { complete: true, progressed: true, ..Default::default() }

@@ -7,7 +7,7 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::{render_xlsx_cell_value, xlsx_flat_cells};
 use crate::XlsxSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -30,7 +30,7 @@ pub fn render(document: &XlsxSnapshot) -> semio_framework_plugin::UiAssemblyResu
     let shared_strings = &document.workbook.shared_strings;
     let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
     let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.xlsx@ecma-376/strict#editor", &[EditableTableColumn::new(3, "set-cell").without_column_argument()])
 }
 //#endregion 🔖️Render
 

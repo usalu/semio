@@ -2,6 +2,54 @@
 use super::*;
 
 #[test]
+fn retained_composite_matches_shared_mask_oracles(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔲️pixels/🧩️compositing/🗂️layers/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap(){
+        let mut host=RasterHost::new();
+        host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":case["layers"]}).to_string()).unwrap();
+        for (key,value) in fixture["images"].as_object().unwrap(){
+            let image=semio_framework_pixels::RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|p|p.as_u64().unwrap() as u8).collect()};
+            host.upload_raster_image_key(key,&semio_framework_pixels::encode_png(&image).unwrap()).unwrap();
+        }
+        assert!(host.composite_pending());assert!(host.composite_pixels().is_none());
+        let mut complete=false;
+        for _ in 0..1000 {let progress=host.advance_composite(1).unwrap();if progress.done{complete=true;break;}assert!(host.composite_pixels().is_none());}
+        assert!(complete);assert!(!host.composite_pending());
+        let output=host.composite_pixels().unwrap();assert_eq!([output.width,output.height],[3,1]);
+        assert_eq!(output.pixels.chunks_exact(4).map(|p|p[3]).collect::<Vec<_>>(),case["alpha"].as_array().unwrap().iter().map(|p|p.as_u64().unwrap() as u8).collect::<Vec<_>>(),"{}",case["name"]);
+        let address=output.pixels.as_ptr();host.set_camera(5.0,6.0,2.0);host.sync_interaction(&["paint".into()],None);
+        assert!(!host.composite_pending());assert_eq!(host.composite_pixels().unwrap().pixels.as_ptr(),address);
+        assert!(!host.build_mask_scene(case["layers"][0]["id"].as_str().unwrap()).is_empty());
+        let expected=if case["invert"].as_bool().unwrap(){vec![0,127,255]}else{vec![255,128,0]};
+        assert_eq!(host.composite_pixels().unwrap().pixels.chunks_exact(4).map(|p|p[3]).collect::<Vec<_>>(),expected);
+        assert_eq!(host.composite.output.as_ref().unwrap().origin,[0.0,0.0]);
+    }
+}
+
+#[test]
+fn retained_composite_applies_adjustments_and_updates_implicit_image_extents(){
+    let mut host=RasterHost::new();
+    host.sync_document_json(r#"{"schema":"raster.document","layers":[{"kind":"pixel","id":"p","imageKey":"image","transform":{}},{"kind":"adjustment","id":"a","transform":{},"adjustmentKind":"brightnessContrast","params":{"brightness":0.25}}]}"#).unwrap();
+    let source=semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![10,20,30,128]};
+    host.upload_raster_image_key("image",&semio_framework_pixels::encode_png(&source).unwrap()).unwrap();
+    while !host.advance_composite(1).unwrap().done{}
+    let reference=image::imageops::brighten(&image::RgbaImage::from_pixel(1,1,image::Rgba([10,20,30,128])),64);
+    assert_eq!(&host.composite_pixels().unwrap().pixels,reference.as_raw());
+    assert!(matches!(&host.document.layers[0],LayerNode::Pixel {width:1,height:1,..}));
+}
+
+#[test]
+fn retained_composite_cancellation_keeps_the_last_complete_image(){
+    let mut host=RasterHost::new();
+    let document=serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","transform":{},"width":2,"height":1}]});
+    host.sync_document_json(&document.to_string()).unwrap();while !host.advance_composite(32).unwrap().done{}
+    let before=host.composite_pixels().unwrap().pixels.clone();
+    let mut next=document;next["layers"][0]["width"]=100.into();host.sync_document_json(&next.to_string()).unwrap();
+    assert!(!host.advance_composite(1).unwrap().done);host.cancel_composite();assert!(!host.composite_pending());
+    assert_eq!(host.composite_pixels().unwrap().pixels,before);
+}
+
+#[test]
 fn paint_image_transform_matches_pixel_gesture_coordinates() {
     let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
@@ -16,7 +64,13 @@ fn paint_image_transform_matches_pixel_gesture_coordinates() {
         let encoded=canvas::draw_list::scene_draw_list_json(&scene,canvas::draw_list::DrawListOptions::default());
         let value:serde_json::Value=serde_json::from_str(&encoded).unwrap();
         let command=value["commands"].as_array().unwrap().iter().find(|command|command[0]=="i").unwrap();
-        for index in 0..6 { assert!((command[4][index].as_f64().unwrap()-case["imageTransform"][index].as_f64().unwrap()).abs()<1e-8,"{}",case["name"]); }
+        let origin=host.composite.output.as_ref().unwrap().origin;
+        let point=[case["worldPoint"][0].as_f64().unwrap()-origin[0],case["worldPoint"][1].as_f64().unwrap()-origin[1]];
+        for axis in 0..2 {
+            let actual=command[4][axis].as_f64().unwrap()*point[0]+command[4][axis+2].as_f64().unwrap()*point[1]+command[4][axis+4].as_f64().unwrap();
+            let expected=case["imageTransform"][axis].as_f64().unwrap()*case["pixelPoint"][0].as_f64().unwrap()+case["imageTransform"][axis+2].as_f64().unwrap()*case["pixelPoint"][1].as_f64().unwrap()+case["imageTransform"][axis+4].as_f64().unwrap();
+            assert!((actual-expected).abs()<1e-8,"{}",case["name"]);
+        }
     }
 }
 
@@ -464,9 +518,10 @@ fn upload_layer_image_decodes_valid_png() {
     host.upload_layer_image("layer1", &bytes).expect("decode");
     let key = RasterHost::layer_pixel_buffer_key("layer1");
     let buf = host.buffers.paint.get(&key).expect("buffer stored");
-    assert_eq!(buf.len(), 4 * 4 * 4);
-    assert_eq!(&buf[0..4], &[10, 20, 30, 255]);
-    assert!(host.images.get(&key).is_some());
+    assert_eq!(buf.pixels.len(),4*4*4);
+    assert_eq!(&buf.pixels[0..4],&[10,20,30,255]);
+    assert_eq!([buf.width,buf.height],[4,4]);
+    assert_eq!(Arc::strong_count(buf),1);
 }
 
 #[test]
@@ -482,7 +537,7 @@ fn upload_raster_image_key_stores_under_given_key() {
     let bytes = png_bytes(2, 2);
     host.upload_raster_image_key("custom:key", &bytes).expect("decode");
     assert!(host.buffers.paint.contains_key("custom:key"));
-    assert!(host.images.get("custom:key").is_some());
+    assert_eq!(Arc::strong_count(host.buffers.paint.get("custom:key").unwrap()),1);
 }
 // #endregion 📤️ Image uploads
 
@@ -571,14 +626,15 @@ fn build_vector_scene_adds_stroke_for_selected_layer_when_chrome_enabled() {
 fn build_layer_scene_isolates_single_pixel_layer() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"back","name":"Back","transform":{},"width":50,"height":50},
-            {"kind":"pixel","id":"front","name":"Front","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"front","name":"Front","transform":{},"width":20,"height":10}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
     host.sync_document_json(json).expect("sync");
-    let full = host.build_vector_scene().path_count();
-    let isolated = host.build_layer_scene("front").path_count();
-    assert!(isolated > 0 && isolated < full, "isolated single-layer scene should draw less than the full composite");
+    assert!(!host.build_vector_scene().is_empty());
+    assert_eq!([host.composite_pixels().unwrap().width,host.composite_pixels().unwrap().height],[50,50]);
+    assert!(!host.build_layer_scene("front").is_empty());
+    assert_eq!([host.composite_pixels().unwrap().width,host.composite_pixels().unwrap().height],[20,10]);
 }
 
 #[test]
@@ -591,14 +647,15 @@ fn build_layer_scene_group_isolation_recurses_into_children() {
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
     host.sync_document_json(json).expect("sync");
-    assert!(!host.build_layer_scene("child").is_empty(), "isolating a group id should still recurse to draw its children");
+    assert!(!host.build_layer_scene("g").is_empty(), "isolating a group includes its children");
+    assert_eq!([host.composite_pixels().unwrap().width,host.composite_pixels().unwrap().height],[50,50]);
 }
 
 #[test]
-fn build_mask_scene_returns_nonempty_scene() {
+fn build_mask_scene_does_not_invent_a_mask_for_a_missing_layer() {
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
-    assert!(!host.build_mask_scene("any").is_empty());
+    assert!(host.build_mask_scene("any").is_empty());
 }
 
 #[test]
@@ -624,7 +681,7 @@ fn build_render_scene_scales_for_device_pixel_ratio() {
 }
 
 #[test]
-fn append_layer_node_draws_enabled_mask() {
+fn constant_inverted_mask_hides_pixels_instead_of_drawing_a_white_overlay() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50,
              "mask":{"enabled":true,"invert":true,"width":50,"height":50}}
@@ -632,7 +689,8 @@ fn append_layer_node_draws_enabled_mask() {
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
     host.sync_document_json(json).expect("sync");
-    let masked = host.build_vector_scene().path_count();
+    host.upload_layer_image("p",&png_bytes(2,2)).unwrap();host.build_vector_scene();
+    assert!(host.composite_pixels().unwrap().pixels.chunks_exact(4).all(|p|p[3]==0));
 
     let unmasked_json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
@@ -640,9 +698,8 @@ fn append_layer_node_draws_enabled_mask() {
     let mut host2 = RasterHost::new();
     host2.set_size(400, 400, 1.0);
     host2.sync_document_json(unmasked_json).expect("sync");
-    let unmasked = host2.build_vector_scene().path_count();
-
-    assert!(masked > unmasked, "enabled mask should draw an extra image");
+    host2.upload_layer_image("p",&png_bytes(2,2)).unwrap();host2.build_vector_scene();
+    assert!(host2.composite_pixels().unwrap().pixels.chunks_exact(4).all(|p|p[3]==255));
 }
 
 #[test]
@@ -730,10 +787,9 @@ fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asse
     let mut host = RasterHost::new();
     let width = fixture["layerWidth"].as_u64().unwrap() as u32;
     let height = fixture["layerHeight"].as_u64().unwrap() as u32;
-    let actual = host.layer_image("blank", width, height, &None);
-    let oracle = image::RgbaImage::new(fixture["storageWidth"].as_u64().unwrap() as u32, fixture["storageHeight"].as_u64().unwrap() as u32);
-    assert_eq!(oracle.as_raw(), &fixture["rgba"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u8).collect::<Vec<_>>());
-    let expected = image_from_rgba(oracle.width(), oracle.height(), oracle.into_raw());
-    assert_eq!(actual.as_ref(), &expected);
+    host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"blank","transform":{},"width":width,"height":height}]}).to_string()).unwrap();
+    while !host.advance_composite(65536).unwrap().done{}
+    let oracle=image::RgbaImage::new(width,height);
+    assert_eq!(host.composite_pixels().unwrap().pixels,oracle.into_raw());
     assert!(host.buffers.paint.is_empty());
 }

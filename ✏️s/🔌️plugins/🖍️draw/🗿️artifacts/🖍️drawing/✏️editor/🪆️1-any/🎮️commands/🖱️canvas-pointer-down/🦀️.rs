@@ -140,7 +140,6 @@ pub(crate) fn interaction_hover_effect_from_targets(targets: String) -> Effect {
     )
 }
 
-#[cfg(test)]
 pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     let items = ids.iter().map(|id| dsl::DslValue::object([("granularity".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_GRANULARITY.to_string())), ("id".to_string(), dsl::DslValue::String(id.clone()))])).collect::<Vec<_>>();
     let targets = dsl::json::to_json_string(&dsl::DslValue::Array(items));
@@ -260,11 +259,19 @@ fn commit_trace_source(doc: &DrawingSnapshot, source_key: Option<String>) -> Vec
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
 /// the canvas to the default select utility (the active utility is host-owned, never a document operation).
-fn commit_with_utility_reset(operations: Vec<DrawingMutation>, description: &str) -> Emit<DrawingMutation, NoConfigMutation> {
+fn commit_with_utility_reset(mut operations: Vec<DrawingMutation>, description: &str) -> Emit<DrawingMutation, NoConfigMutation> {
     if operations.is_empty() {
         return Emit::default();
     }
+    let mut created=Vec::new();
+    for operation in &mut operations {
+        if let DrawingMutation::CreateLayer(create)=operation {
+            crate::editor::drawing::commands::add_layer::initialize_appearance(&mut create.layer);
+            created.push(layer_id(&create.layer).to_string());
+        }
+    }
     let mut emit = Emit::commit(operations, description);
+    if !created.is_empty() { emit.effects.push(interaction_select_effect(&created,"replace")); }
     emit.effects.push(Effect::SetActiveUtility { window_id: crate::editor::drawing::DRAWING_PLAY_WINDOW_CANVAS.into(), utility_id: crate::editor::drawing::DRAWING_DEFAULT_UTILITY.into() });
     emit
 }
@@ -888,16 +895,72 @@ pub struct DrawingGesturePreview {
     pub sequence: u64,
     pub phase: DrawingGesturePreviewPhase,
     pub context: GestureContext,
-    pub translation: Option<(String,[f64;2])>,
+    pub translation: Option<(Vec<String>,[f64;2])>,
 }
 
-pub(crate) struct LayerMove {
+struct LayerMoveTarget {
+    path: TracePath,
     layer_id: String,
     original: crate::DrawingTransform,
     parent: [f64;6],
+}
+
+pub(crate) struct LayerMove {
+    targets: Vec<LayerMoveTarget>,
     start: [f64;2],
     cursor: [f64;2],
     active: bool,
+}
+
+struct LayerMovePreparation {
+    ids: Vec<String>,
+    next: Option<TracePath>,
+    found: usize,
+    movement: LayerMove,
+}
+
+fn next_layer_path(document: &DrawingSnapshot, mut path: TracePath) -> Option<TracePath> {
+    if matches!(drawing_layer_at_path(&document.layers,&path),Some(DrawingLayerNode::Group(group)) if !group.children.is_empty()) { return path.child(0); }
+    loop {
+        let depth=usize::from(path.len).checked_sub(1)?;
+        let count=if depth==0 { document.layers.len() } else {
+            let mut parent=path; parent.len-=1;
+            match drawing_layer_at_path(&document.layers,&parent)? { DrawingLayerNode::Group(group)=>group.children.len(),_=>0 }
+        };
+        if usize::from(path.indices[depth])+1<count {
+            path.indices[depth]=path.indices[depth].checked_add(1)?;
+            return Some(path);
+        }
+        path.len-=1;
+    }
+}
+
+impl LayerMovePreparation {
+    fn advance(&mut self, document: &DrawingSnapshot) -> Result<bool,Fault> {
+        if self.found==self.ids.len() { return Ok(true); }
+        let Some(path)=self.next else {
+            if self.found!=self.ids.len() { return Err(Fault::from("A selected layer no longer exists")); }
+            return Ok(true);
+        };
+        let layer=drawing_layer_at_path(&document.layers,&path).ok_or_else(||Fault::from("A selected layer no longer exists"))?;
+        if matches!(layer,DrawingLayerNode::Group(group) if !group.children.is_empty()) && usize::from(path.len)>=TRACE_POINTER_MAX_DEPTH { return Err(Fault::from("Selection exceeds the gesture traversal depth")); }
+        self.next=next_layer_path(document,path);
+        let base=trace_layer_base(layer);
+        if !self.ids.contains(&base.id) { return Ok(false); }
+        self.found+=1;
+        if self.movement.targets.iter().any(|target|crate::schema::geometry::translation::path_contains(&target.path.indices[..usize::from(target.path.len)],&path.indices[..usize::from(path.len)])) { return Ok(false); }
+        let mut prefix=path;
+        while prefix.len>0 {
+            let ancestor=trace_layer_base(drawing_layer_at_path(&document.layers,&prefix).ok_or_else(||Fault::from("Selected ancestry changed"))?);
+            if ancestor.locked || !ancestor.visible { return Err(Fault::from("Unlock and show the selected layers before moving")); }
+            prefix.len-=1;
+        }
+        let mut parent_path=path; parent_path.len-=1;
+        let parent=trace_path_matrix(&document.layers,&parent_path).ok_or_else(||Fault::from("Selected parent transform is unavailable"))?;
+        if crate::schema::geometry::inverse(parent).is_none() { return Err(Fault::from("Cannot move through a singular transform")); }
+        self.movement.targets.push(LayerMoveTarget { path,layer_id:base.id.clone(),original:base.transform.clone(),parent });
+        Ok(false)
+    }
 }
 
 pub(crate) struct DrawingPointQuery {
@@ -908,6 +971,9 @@ pub(crate) struct DrawingPointQuery {
     pub(crate) marquee: bool,
     pub(crate) traversal_complete: bool,
     pub(crate) drag_start: Option<[f64;2]>,
+    move_preparation: Option<LayerMovePreparation>,
+    move_prepared: bool,
+    pub(crate) preserve_selection: bool,
     target_cursor: usize,
     targets: String,
 }
@@ -920,7 +986,7 @@ pub(crate) enum DrawingQueryPublication {
 
 impl DrawingPointQuery {
     pub(crate) fn new(command_id: &'static str, cursor: TracePointerJob, hover: bool, merge: String, marquee: bool) -> Self {
-        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, drag_start: None, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
+        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, drag_start: None, move_preparation: None, move_prepared: false, preserve_selection: false, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
     }
 
     pub(crate) fn publication_step(&mut self) -> DrawingQueryPublication {
@@ -960,12 +1026,13 @@ pub(crate) struct DrawingDraftQuery {
     cursor: usize,
     path_segments: Vec<PathSegment>,
     polygon_points: Vec<[f64; 2]>,
+    operation: Option<semio_framework_plugin::AppOperationContext>,
 }
 
 impl DrawingDraftQuery {
     fn new(command_id: &'static str, utility: String, points: UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>) -> Self {
         let capacity = points.len().checked_add(1).map_or(DRAWING_GESTURE_PREVIEW_POINT_CAPACITY + 1, |value| value.min(DRAWING_GESTURE_PREVIEW_POINT_CAPACITY + 1));
-        Self { command_id, utility, points, cursor: 0, path_segments: Vec::with_capacity(capacity), polygon_points: Vec::with_capacity(capacity) }
+        Self { command_id, utility, points, cursor: 0, path_segments: Vec::with_capacity(capacity), polygon_points: Vec::with_capacity(capacity), operation: None }
     }
 
     pub(crate) fn advance(&mut self, document: &DrawingSnapshot) -> Option<Emit<DrawingMutation, NoConfigMutation>> {
@@ -981,7 +1048,7 @@ impl DrawingDraftQuery {
             self.cursor += 1;
             return None;
         }
-        let layer = if self.utility == "pen" {
+        let mut layer = if self.utility == "pen" {
             create_drawing_path_layer("Path", std::mem::take(&mut self.path_segments))
         } else {
             DrawingLayerNode::Shape(crate::DrawingShapeBody {
@@ -994,6 +1061,7 @@ impl DrawingDraftQuery {
                 polygon: Some(crate::DrawingPolygon { points: std::mem::take(&mut self.polygon_points) }),
             })
         };
+        crate::editor::drawing::commands::add_layer::identify_created_layer(document,&mut layer,if self.utility=="pen" {"path"} else {"shape:polygon"},self.operation.as_ref());
         Some(commit_with_utility_reset(vec![crate::mutations::create_layer(None, Some(document.layers.len()), layer)], "Commit draft"))
     }
 }
@@ -1018,15 +1086,28 @@ impl Default for DrawingSession {
 }
 
 impl DrawingSession {
-    pub(crate) fn prepare_layer_move(&mut self, document: &DrawingSnapshot, candidate: Option<&TracePickCandidate>, start: [f64;2]) {
-        self.layer_move = candidate.and_then(|candidate| {
-            let layer = drawing_layer_at_path(&document.layers,&candidate.path)?;
-            let mut parent_path = candidate.path;
-            parent_path.len = parent_path.len.saturating_sub(1);
-            let parent = trace_path_matrix(&document.layers,&parent_path)?;
-            crate::schema::geometry::inverse(parent)?;
-            Some(LayerMove { layer_id:candidate.layer_id.clone(),original:trace_layer_base(layer).transform.clone(),parent,start,cursor:start,active:false })
-        });
+    pub(crate) fn prepare_layer_move(&mut self, document: &DrawingSnapshot, ids: &[String]) -> Result<bool,Fault> {
+        let Some(query)=self.point_query.as_mut() else { return Ok(true); };
+        if query.move_prepared || query.drag_start.is_none() { return Ok(true); }
+        if query.move_preparation.is_none() {
+            let Some(candidate)=query.cursor.best.as_ref() else { query.move_prepared=true; return Ok(true); };
+            if ids.len()>DRAWING_QUERY_HIT_CAPACITY || ids.iter().map(String::len).sum::<usize>()>DRAWING_QUERY_TARGET_BYTES { return Err(Fault::from("Selection exceeds gesture capacity")); }
+            let mut prefix=candidate.path;
+            while prefix.len>0 {
+                if drawing_layer_at_path(&document.layers,&prefix).is_some_and(|layer|ids.contains(&trace_layer_base(layer).id)) { query.preserve_selection=true; break; }
+                prefix.len-=1;
+            }
+            let mut ids=if query.preserve_selection { ids.to_vec() } else { vec![candidate.layer_id.clone()] };
+            ids.sort(); ids.dedup();
+            let start=query.drag_start.unwrap();
+            query.move_preparation=Some(LayerMovePreparation { ids,next:(!document.layers.is_empty()).then(||TracePath::root(0)).flatten(),found:0,movement:LayerMove { targets:Vec::new(),start,cursor:start,active:false } });
+            return Ok(false);
+        }
+        let preparation=query.move_preparation.as_mut().unwrap();
+        if !preparation.advance(document)? { return Ok(false); }
+        self.layer_move=Some(query.move_preparation.take().unwrap().movement);
+        query.move_prepared=true;
+        Ok(true)
     }
 
     pub(crate) fn move_layer_preview(&mut self, world: [f64;2]) {
@@ -1043,10 +1124,13 @@ impl DrawingSession {
         let drag = self.layer_move.take();
         self.step_gesture(drawing_gesture::Event::PointerUp { utility:self.active_utility_id.clone(),world,shift:false,ctrl:false,meta:false },document,config);
         let Some(drag) = drag.filter(|drag| drag.active && drag.cursor != drag.start) else { return Ok(Emit::default()); };
-        let source = &drag.original;
         let delta = [drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]];
-        let [x,y,scale_x,scale_y,rotation] = crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],drag.parent,delta).ok_or_else(|| Fault::from("Cannot move through a singular transform"))?;
-        Ok(Emit::commit(vec![crate::mutations::update_layer_transform(drag.layer_id,crate::DrawingTransform { x,y,scale_x,scale_y,rotation })],"Move layer"))
+        let mutations=drag.targets.into_iter().map(|target| {
+            let source=&target.original;
+            let [x,y,scale_x,scale_y,rotation]=crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],target.parent,delta).ok_or_else(||Fault::from("Cannot move through a singular transform"))?;
+            Ok(crate::mutations::update_layer_transform(target.layer_id,crate::DrawingTransform { x,y,scale_x,scale_y,rotation }))
+        }).collect::<Result<Vec<_>,Fault>>()?;
+        Ok(Emit::commit(mutations,"Move selection"))
     }
 
     pub(crate) fn advance_lasso_move(&mut self, payload: &crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove, document: &DrawingSnapshot, config: &NoConfig) -> Option<Emit<DrawingMutation,NoConfigMutation>> {
@@ -1100,7 +1184,7 @@ impl DrawingSession {
         } else {
             DrawingGesturePreviewPhase::Idle
         };
-        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone(), translation: self.layer_move.as_ref().filter(|drag| drag.active).map(|drag| (drag.layer_id.clone(),[drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]])) }
+        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone(), translation: self.layer_move.as_ref().filter(|drag| drag.active).map(|drag| (drag.targets.iter().map(|target|target.layer_id.clone()).collect(),[drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]])) }
     }
 
     pub(crate) fn step_gesture_retained(
@@ -1139,7 +1223,9 @@ impl DrawingSession {
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
-                    self.draft_query = Some(DrawingDraftQuery::new(command_id, utility, points));
+                    let mut query=DrawingDraftQuery::new(command_id,utility,points);
+                    query.operation=Some(operation.clone());
+                    self.draft_query=Some(query);
                     return None;
                 }
                 GestureEffect::CommitTrace { .. } => return Some(Emit::default()),

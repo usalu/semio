@@ -33,6 +33,10 @@ fn shared_fixture() -> Value {
     serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared scene-list transfer fixture")
 }
 
+fn presentation_fixture() -> Value {
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧩️block-list-presentation/🔣️.json"))).expect("shared block-list presentation fixture")
+}
+
 fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
@@ -57,7 +61,7 @@ fn render(node: &UiComponentSceneNode, driver_drag: UiDriverDrag) -> InputState<
     let mut selects = HashMap::new();
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx, driver_drag);
+        render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx, driver_drag, BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" });
     }
     input
 }
@@ -178,4 +182,66 @@ fn step_card_draws_a_full_four_sided_border() {
     draw_ink_rect_outline(&mut draw, 10.0, 20.0, 200.0, 80.0, color, 1.0);
     let border_vertex_count = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).filter(|vertex| vertex.color == [color.r, color.g, color.b, color.a]).count();
     assert_eq!(border_vertex_count, 24);
+}
+
+#[test]
+fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_rejects_a_retired_palette_entry() {
+    let fixture = presentation_fixture();
+    let node = block_list_scene("presentation-block-list", "controller.block-list", fixture["steps"].clone(), fixture["palette"].clone());
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let plan = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
+    let palette = role_rect(&plan, |role| matches!(role, BlockListRole::Palette { kind } if kind == "filter"));
+    assert_eq!(palette.y, bounds.y + theme.padding_standard, "the palette begins at React's rail padding without a heading band");
+    assert_eq!(plan.body_range.len(), 0, "an empty scene has no invented empty-copy row");
+
+    let locales = fixture["locales"].as_array().expect("locales");
+    for (index, (locale, labels)) in locales.iter().zip([BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" }, BlockListChromeLabels { steps: "Schritte", add_step: "Schritt hinzufügen", delete: "Löschen" }]).enumerate()
+    {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+            render_block_list(&node, bounds, &mut ctx, UiDriverDrag::Handle, labels);
+        }
+        let epoch = 900 + index as u64;
+        seal_block_list_accessibility_candidates(epoch);
+        acknowledge_block_list_accessibility_candidates(epoch);
+        let controls = accepted_block_list_accessibility_controls(&node.host_id);
+        assert_eq!(controls.len(), fixture["actions"].as_array().expect("actions").len());
+        assert_eq!(controls.iter().find(|control| control.key.ends_with(".addStep")).map(|control| control.label.as_str()), locale["addStep"].as_str());
+        assert_eq!(controls.iter().find(|control| control.key.ends_with(".palette.filter")).map(|control| control.label.as_str()), Some("Filter"));
+    }
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    block_list_accessibility_activate(&node, "presentation-block-list.addStep", &mut input).expect("accepted add step").expect("bounded add step");
+    block_list_accessibility_activate(&node, "presentation-block-list.palette.filter", &mut input).expect("accepted palette entry").expect("bounded add block");
+    let actions = drain_actions(&mut input);
+    assert_eq!(actions.len(), 2);
+    assert_eq!(actions[0].action, fixture["actions"][0]["action"].as_str().expect("add step action"));
+    assert_eq!(actions[1].action, fixture["actions"][1]["action"].as_str().expect("add block action"));
+
+    let controller_successor = block_list_scene("presentation-block-list", "controller.successor", fixture["steps"].clone(), fixture["palette"].clone());
+    assert!(block_list_accessibility_activate(&controller_successor, "presentation-block-list.palette.filter", &mut input).is_none(), "a successor controller cannot replay the prior accepted action");
+
+    let successor = block_list_scene("presentation-block-list", "controller.block-list", fixture["steps"].clone(), json!([]));
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_block_list(&successor, bounds, &mut ctx, UiDriverDrag::Handle, BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" });
+    }
+    seal_block_list_accessibility_candidates(902);
+    acknowledge_block_list_accessibility_candidates(902);
+    assert!(block_list_accessibility_activate(&successor, "presentation-block-list.palette.filter", &mut input).is_none(), "the accepted successor retires the old palette action");
 }

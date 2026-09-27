@@ -12,10 +12,13 @@ pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use super::set_transform::{SetTransformMutation, SetTransformPayload};
 pub use super::set_view_box::{SetViewBoxMutation, SetViewBoxPayload};
 
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg")]
 pub enum SvgMutation {
+    SetSnapshot(SetSnapshot),
     SetDeclaration(SetDeclarationMutation),
     SetDoctype(SetDoctypeMutation),
     InsertElement(InsertElementMutation),

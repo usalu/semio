@@ -771,6 +771,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📸️snapshot/📸️set/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs"]
                         pub mod add_required_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🦀️.rs"]

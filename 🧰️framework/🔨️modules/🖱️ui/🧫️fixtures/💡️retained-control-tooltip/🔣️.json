@@ -1,0 +1,27 @@
+{
+  "provenance": {
+    "what": "React ChromeControlHint dwell, immediate dismissal, formatted label, and collision-aware top placement shared with the retained WGPU renderer.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+      "typescript": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx"
+    }
+  },
+  "timing": { "clockOriginSeconds": 31536000.123456, "dwellMs": 400, "dismissMs": 0 },
+  "text": { "label": "Close window", "shortcut": "Ctrl+W", "formatted": "Close window (Ctrl+W)" },
+  "placements": [
+    {
+      "id": "top-centered",
+      "anchor": [100, 100, 40, 20],
+      "content": [80, 20],
+      "viewport": [240, 180],
+      "expected": { "side": "top", "left": 80, "top": 72 }
+    },
+    {
+      "id": "top-collision-flips-bottom-and-clamps-inline",
+      "anchor": [4, 4, 32, 20],
+      "content": [100, 20],
+      "viewport": [160, 120],
+      "expected": { "side": "bottom", "left": 8, "top": 32 }
+    }
+  ]
+}

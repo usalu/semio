@@ -6,6 +6,16 @@ semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination
     /// compile-checked.
     pub struct RasterPlayLabels {
+        mask_present: native_en "Layer mask", native_de "Ebenenmaske", reuse_en "Layer mask", reuse_de "Ebenenmaske";
+        mask_enabled: native_en "Enable mask", native_de "Maske aktivieren", reuse_en "Enable mask", reuse_de "Maske aktivieren";
+        mask_invert: native_en "Invert mask", native_de "Maske umkehren", reuse_en "Invert mask", reuse_de "Maske umkehren";
+        mask_x: native_en "Mask X position", native_de "Maskenposition X", reuse_en "Mask X position", reuse_de "Maskenposition X";
+        mask_y: native_en "Mask Y position", native_de "Maskenposition Y", reuse_en "Mask Y position", reuse_de "Maskenposition Y";
+        mask_scale_x: native_en "Mask horizontal scale", native_de "Horizontale Maskenskalierung", reuse_en "Mask horizontal scale", reuse_de "Horizontale Maskenskalierung";
+        mask_scale_y: native_en "Mask vertical scale", native_de "Vertikale Maskenskalierung", reuse_en "Mask vertical scale", reuse_de "Vertikale Maskenskalierung";
+        mask_rotation: native_en "Mask rotation (°)", native_de "Maskendrehung (°)", reuse_en "Mask rotation (°)", reuse_de "Maskendrehung (°)";
+        mask_width: native_en "Mask display width", native_de "Maskenanzeigebreite", reuse_en "Mask display width", reuse_de "Maskenanzeigebreite";
+        mask_height: native_en "Mask display height", native_de "Maskenanzeigehöhe", reuse_en "Mask display height", reuse_de "Maskenanzeigehöhe";
         masks: native_en "Masks", native_de "Masken", reuse_en "Masks", reuse_de "Masken";
         no_masks: native_en "No masks", native_de "Keine Masken", reuse_en "No masks", reuse_de "Keine Masken";
         mask_suffix: native_en "mask", native_de "Maske", reuse_en "mask", reuse_de "Maske";
@@ -43,6 +53,16 @@ semio_framework_plugin::app_labels! {
         blend_darken: native_en "Darken", native_de "Abdunkeln", reuse_en "Darken", reuse_de "Abdunkeln";
         blend_lighten: native_en "Lighten", native_de "Aufhellen", reuse_en "Lighten", reuse_de "Aufhellen";
         blend_difference: native_en "Difference", native_de "Differenz", reuse_en "Difference", reuse_de "Differenz";
+        blend_overlay: native_en "Overlay", native_de "Ineinanderkopieren", reuse_en "Overlay", reuse_de "Ineinanderkopieren";
+        blend_color_dodge: native_en "Color dodge", native_de "Farbig abwedeln", reuse_en "Color dodge", reuse_de "Farbig abwedeln";
+        blend_color_burn: native_en "Color burn", native_de "Farbig nachbelichten", reuse_en "Color burn", reuse_de "Farbig nachbelichten";
+        blend_hard_light: native_en "Hard light", native_de "Hartes Licht", reuse_en "Hard light", reuse_de "Hartes Licht";
+        blend_soft_light: native_en "Soft light", native_de "Weiches Licht", reuse_en "Soft light", reuse_de "Weiches Licht";
+        blend_exclusion: native_en "Exclusion", native_de "Ausschluss", reuse_en "Exclusion", reuse_de "Ausschluss";
+        blend_hue: native_en "Hue", native_de "Farbton", reuse_en "Hue", reuse_de "Farbton";
+        blend_saturation: native_en "Saturation", native_de "Sättigung", reuse_en "Saturation", reuse_de "Sättigung";
+        blend_color: native_en "Color", native_de "Farbe", reuse_en "Color", reuse_de "Farbe";
+        blend_luminosity: native_en "Luminosity", native_de "Luminanz", reuse_en "Luminosity", reuse_de "Luminanz";
 
 
     }

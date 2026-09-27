@@ -109,7 +109,7 @@
           "maxLength": 256
         },
         "appChannelVersion": {
-          "const": 15
+          "const": 18
         },
         "activationGeneration": {
           "type": "string",
@@ -198,7 +198,7 @@
               "type": "string"
             },
             "appChannelVersion": {
-              "const": 15
+              "const": 18
             },
             "activationGeneration": {
               "type": "string"
@@ -330,7 +330,7 @@
               "type": "string"
             },
             "appChannelVersion": {
-              "const": 15
+              "const": 18
             },
             "activationGeneration": {
               "type": "string"
@@ -525,7 +525,8 @@
                 "config_ops",
                 "draft_ops",
                 "output",
-                "diagnostics"
+                "diagnostics",
+                "child_ops"
               ],
               "properties": {
                 "in_reply_to": {
@@ -568,6 +569,15 @@
                   }
                 },
                 "diagnostics": {
+                  "type": "array",
+                  "maxItems": 262144,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "child_ops": {
                   "type": "array",
                   "maxItems": 262144,
                   "items": {

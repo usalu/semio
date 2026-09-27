@@ -1,12 +1,13 @@
-# Direct identities: change-header, replace-palette, change-transparency, change-gamma, change-chromaticities, change-srgb-intent, change-physical-dims, change-timestamp, change-background, insert-text-chunk, remove-text-chunk, replace-text-chunk, replace-pixels, insert-unknown-chunk, remove-unknown-chunk
+# Direct identities: set-snapshot, change-header, replace-palette, change-transparency, change-gamma, change-chromaticities, change-srgb-intent, change-physical-dims, change-timestamp, change-background, insert-text-chunk, remove-text-chunk, replace-text-chunk, replace-pixels, insert-unknown-chunk, remove-unknown-chunk, patch-pixels
 dialect grammar
 grammar stdio.png.mutations
 start op
 
 comment none
 
-op = change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op
+op = set-snapshot-op | change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op | patch-pixels-op
 
+set-snapshot-op = "set-snapshot" "snapshot" "=" hex
 change-header-op = "change-header" "width" "=" INT "height" "=" INT "bit-depth" "=" INT "color-type" "=" color-type "interlace" "=" bit
 replace-palette-op = "replace-palette" "plte" "=" palette-opt
 change-transparency-op = "change-transparency" "trns" "=" transparency-opt
@@ -22,10 +23,12 @@ replace-text-chunk-op = "replace-text-chunk" "index" "=" INT "chunk" "=" text-ch
 replace-pixels-op = "replace-pixels" "pixels" "=" hex
 insert-unknown-chunk-op = "insert-unknown-chunk" "index" "=" INT "chunk" "=" chunk-value
 remove-unknown-chunk-op = "remove-unknown-chunk" "index" "=" INT
+patch-pixels-op = "patch-pixels" "index" "=" INT "remove-count" "=" INT "pixels" "=" hex "move-to" "=" int-none
 
 bit = "0" | "1"
 color-type = INT
 int-opt = "[" "0" "]" | "[" "1" "," INT "]"
+int-none = "none" | INT
 
 palette-opt = "[" "0" "]" | "[" "1" "," "[" palette-items? "]" "]"
 palette-items = rgb-value {"," rgb-value}*

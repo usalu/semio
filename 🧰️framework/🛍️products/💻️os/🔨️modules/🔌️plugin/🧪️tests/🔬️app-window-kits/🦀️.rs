@@ -97,6 +97,7 @@ mod window_kits_tests {
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
         let expected = semio_framework_ui_scene::TextEditorScene {
             buffer: "hello world".into(),
+            lanes: Vec::new(),
             language: Some("en".into()),
             selection_json: None,
             tokens_json: None,
@@ -113,7 +114,8 @@ mod window_kits_tests {
             newline_gates_json: None,
             rename_json: None,
         };
-        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
+        let (spine, _) = semio_framework_ui_scene::SceneDoc::split_lanes(&expected);
+        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &spine).expect("bounded fixture"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -123,6 +125,7 @@ mod window_kits_tests {
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
         let expected = semio_framework_ui_scene::TextEditorScene {
             buffer: "x".into(),
+            lanes: Vec::new(),
             language: None,
             selection_json: None,
             tokens_json: None,
@@ -139,17 +142,35 @@ mod window_kits_tests {
             newline_gates_json: None,
             rename_json: None,
         };
-        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
+        let (spine, _) = semio_framework_ui_scene::SceneDoc::split_lanes(&expected);
+        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &spine).expect("bounded fixture"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_renders_columns_and_rows_json() {
         let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
         let node = TableWindowKit::render(&view).expect("bounded fixture");
-        let Component::Surface(props) = node.component else { panic!("expected Surface") };
-        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
+        let Component::Surface(props) = &node.component else { panic!("expected Surface") };
+        let mut scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        for carrier in &node.children {
+            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+        }
         assert_eq!(scene.columns_json, r#"[{"id":"0","label":"a"},{"id":"1","label":"b"}]"#);
         assert_eq!(scene.rows_json, r#"[{"0":"1","1":"2","id":"0"}]"#);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_pages_large_tables_without_losing_rows() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
+        let count = fixture["rowCount"].as_u64().unwrap() as usize;
+        let value = fixture["row"]["0"].as_str().unwrap();
+        let view = TableView { columns: vec!["Name".into()], rows: (0..count).map(|_| vec![value.into()]).collect() };
+        let node = TableWindowKit::render(&view).expect("large table assembles");
+        let rows = node.children.iter().find(|child| child.key.as_str() == semio_framework_ui_scene::TABLE_ROWS_LANE_KEY).expect("paged row carrier");
+        let decoded: serde_json::Value = serde_json::from_str(&artifact_app_laws::built_carrier_text(rows)).unwrap();
+        assert_eq!(decoded.as_array().unwrap().len(), count);
+        assert_eq!(decoded[count - 1]["0"], value);
+        assert!(rows.children.len() > 1);
     }
 
     fn table_fixture_row(index: &usize) -> UiAssemblyResult<BuiltNode> {
@@ -322,8 +343,25 @@ mod window_kits_tests {
     async fn document_kit_renders_one_child_per_page() {
         let view = DocumentView { pages: vec![DocumentPage { text: "p1".into() }, DocumentPage { text: "p2".into() }] };
         let stack = DocumentWindowKit::render(&view).expect("bounded fixture");
-        assert!(matches!(stack.layout, LayoutSpec::Stack(_)));
+        assert!(matches!(stack.component, Component::TreeSection(_)));
         assert_eq!(stack.children.len(), 2);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_kit_pages_long_unicode_text_without_losing_later_pages() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️text-editor-lanes/🔣️.json")).unwrap();
+        let case = &fixture["cases"][2];
+        let source = case["text"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap() as usize);
+        let view = DocumentView { pages: (0..500).map(|index| DocumentPage { text: index.to_string() }).collect() };
+        let state = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }], ..Default::default() };
+        let node = DocumentWindowKit::render_windowed(&view, &TreeWindows::for_body(&state, "body")).expect("large document page range");
+        let Component::TreeSection(props) = &node.component else { panic!("windowed pages") };
+        assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 400)));
+        assert_eq!(node.children.len(), 10);
+        assert_eq!(node.children.get(0).unwrap().key.as_str(), "page-400");
+        let first = DocumentWindowKit::render(&DocumentView { pages: vec![DocumentPage { text: source }] }).expect("long first page");
+        assert_eq!(first.children.len(), 1);
+        assert!(!first.children.get(0).unwrap().children.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]

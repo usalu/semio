@@ -1062,6 +1062,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -1151,6 +1161,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -1240,6 +1260,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -1329,6 +1359,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -1418,6 +1458,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -1507,6 +1557,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -1572,6 +1632,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -2416,6 +2486,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -2505,6 +2585,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -2594,6 +2684,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -2683,6 +2783,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -2772,6 +2882,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -2861,6 +2981,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -2926,6 +3056,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -3766,6 +3906,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -3855,6 +4005,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -3944,6 +4104,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -4033,6 +4203,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -4122,6 +4302,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -4211,6 +4401,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -4276,6 +4476,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -4909,6 +5119,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a node of the given kind (a 2D block kind) to the puzzle at x, y.",
+                  "de": "Fügt dem Puzzle an x, y einen Knoten der angegebenen Art (einer 2D-Blockart) hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a node of the given kind (a 2D block kind) to the puzzle at x, y.",
+                  "de": "Fügt dem Puzzle an x, y einen Knoten der angegebenen Art (einer 2D-Blockart) hinzu."
+                }
               }
             }
           },
@@ -5000,6 +5220,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 2D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 2D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 2D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 2D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -5045,6 +5275,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected node from the 2D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Knoten samt ihrer Verbindungen aus dem 2D-Puzzle."
+                },
+                "reuse": {
+                  "en": "Deletes every selected node from the 2D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Knoten samt ihrer Verbindungen aus dem 2D-Puzzle."
+                }
               }
             }
           },
@@ -5090,6 +5330,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a copy of every selected node next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Knoten eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a copy of every selected node next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Knoten eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                }
               }
             }
           },
@@ -5115,7 +5365,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -5134,6 +5384,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Lays out every node of the 2D puzzle with a force-directed layout, overwriting their positions.",
+                  "de": "Ordnet alle Knoten des 2D-Puzzles mit einem kraftbasierten Layout an und überschreibt ihre Positionen."
+                },
+                "reuse": {
+                  "en": "Lays out every node of the 2D puzzle with a force-directed layout, overwriting their positions.",
+                  "de": "Ordnet alle Knoten des 2D-Puzzles mit einem kraftbasierten Layout an und überschreibt ihre Positionen."
+                }
               }
             }
           },
@@ -5179,6 +5439,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Frames the camera on the selected nodes; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Knoten aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Frames the camera on the selected nodes; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Knoten aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -5263,6 +5533,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the selected nodes by dx and dy.",
+                  "de": "Verschiebt die ausgewählten Knoten um dx und dy."
+                },
+                "reuse": {
+                  "en": "Moves the selected nodes by dx and dy.",
+                  "de": "Verschiebt die ausgewählten Knoten um dx und dy."
+                }
               }
             }
           },
@@ -5328,6 +5608,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rotates the selected nodes by the given angle.",
+                  "de": "Dreht die ausgewählten Knoten um den angegebenen Winkel."
+                },
+                "reuse": {
+                  "en": "Rotates the selected nodes by the given angle.",
+                  "de": "Dreht die ausgewählten Knoten um den angegebenen Winkel."
+                }
               }
             }
           },
@@ -5393,6 +5683,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Scales the selected nodes by the given factor.",
+                  "de": "Skaliert die ausgewählten Knoten um den angegebenen Faktor."
+                },
+                "reuse": {
+                  "en": "Scales the selected nodes by the given factor.",
+                  "de": "Skaliert die ausgewählten Knoten um den angegebenen Faktor."
+                }
               }
             }
           },
@@ -5435,6 +5735,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the whole 2D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 2D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the whole 2D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 2D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -5477,6 +5787,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                }
               }
             }
           },
@@ -5502,7 +5822,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -5521,6 +5841,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 2D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 2D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 2D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 2D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                }
               }
             }
           },
@@ -5601,6 +5931,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Connects two handles of two nodes (source and target) with an edge.",
+                  "de": "Verbindet zwei Griffe zweier Knoten (Quelle und Ziel) mit einer Kante."
+                },
+                "reuse": {
+                  "en": "Connects two handles of two nodes (source and target) with an edge.",
+                  "de": "Verbindet zwei Griffe zweier Knoten (Quelle und Ziel) mit einer Kante."
+                }
               }
             }
           },
@@ -5664,6 +6004,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one edge by id, disconnecting its two handles.",
+                  "de": "Entfernt eine Kante anhand ihrer Id und trennt ihre zwei Griffe."
+                },
+                "reuse": {
+                  "en": "Removes one edge by id, disconnecting its two handles.",
+                  "de": "Entfernt eine Kante anhand ihrer Id und trennt ihre zwei Griffe."
+                }
               }
             }
           },
@@ -5709,6 +6059,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Connects every pair of compatible handles that lie within the proximity radius of each other.",
+                  "de": "Verbindet jedes Paar verträglicher Griffe, die innerhalb des Näheradius beieinander liegen."
+                },
+                "reuse": {
+                  "en": "Connects every pair of compatible handles that lie within the proximity radius of each other.",
+                  "de": "Verbindet jedes Paar verträglicher Griffe, die innerhalb des Näheradius beieinander liegen."
+                }
               }
             }
           },
@@ -5821,6 +6181,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Extends the selection to every node of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Knoten derselben Art wie der ausgewählte."
+                },
+                "reuse": {
+                  "en": "Extends the selection to every node of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Knoten derselben Art wie der ausgewählte."
+                }
               }
             }
           },
@@ -5866,6 +6236,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected nodes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Knoten."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected nodes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Knoten."
+                }
               }
             }
           },
@@ -5910,6 +6290,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field on the given nodes, or on handles addressed by id (such as a handle's angle or radius); an empty id list addresses every node.",
+                  "de": "Setzt ein Feld auf den angegebenen Knoten oder per Id adressierten Griffen (etwa Winkel oder Radius eines Griffs); eine leere Id-Liste adressiert alle Knoten."
+                },
+                "reuse": {
+                  "en": "Sets one field on the given nodes, or on handles addressed by id (such as a handle's angle or radius); an empty id list addresses every node.",
+                  "de": "Setzt ein Feld auf den angegebenen Knoten oder per Id adressierten Griffen (etwa Winkel oder Radius eines Griffs); eine leere Id-Liste adressiert alle Knoten."
+                }
               }
             }
           },
@@ -5954,6 +6344,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Re-aims every connected handle at the edge it carries, updating the handle angles.",
+                  "de": "Richtet jeden verbundenen Griff neu auf seine Kante aus und aktualisiert die Griffwinkel."
+                },
+                "reuse": {
+                  "en": "Re-aims every connected handle at the edge it carries, updating the handle angles.",
+                  "de": "Richtet jeden verbundenen Griff neu auf seine Kante aus und aktualisiert die Griffwinkel."
+                }
               }
             }
           },
@@ -5979,7 +6379,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -5998,6 +6398,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Lays out every node of the 2D puzzle automatically, overwriting their manual positions.",
+                  "de": "Ordnet alle Knoten des 2D-Puzzles automatisch an und überschreibt ihre manuellen Positionen."
+                },
+                "reuse": {
+                  "en": "Lays out every node of the 2D puzzle automatically, overwriting their manual positions.",
+                  "de": "Ordnet alle Knoten des 2D-Puzzles automatisch an und überschreibt ihre manuellen Positionen."
+                }
               }
             }
           },
@@ -6042,7 +6452,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -6131,6 +6542,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                },
+                "reuse": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                }
               }
             }
           },
@@ -6717,6 +7138,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a rectangular target region at the given origin and size (the area brush size by default).",
+                  "de": "Fügt an Ursprung und Größe (standardmäßig der Flächenpinselgröße) einen rechteckigen Zielbereich hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a rectangular target region at the given origin and size (the area brush size by default).",
+                  "de": "Fügt an Ursprung und Größe (standardmäßig der Flächenpinselgröße) einen rechteckigen Zielbereich hinzu."
+                }
               }
             }
           },
@@ -6762,6 +7193,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one target region by id.",
+                  "de": "Löscht einen Zielbereich anhand seiner Id."
+                },
+                "reuse": {
+                  "en": "Deletes one target region by id.",
+                  "de": "Löscht einen Zielbereich anhand seiner Id."
+                }
               }
             }
           },
@@ -6807,6 +7248,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target regions.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielbereichen."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target regions.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielbereichen."
+                }
               }
             }
           },
@@ -6851,6 +7302,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves or resizes one target region to the given rectangle.",
+                  "de": "Verschiebt oder skaliert einen Zielbereich auf das angegebene Rechteck."
+                },
+                "reuse": {
+                  "en": "Moves or resizes one target region to the given rectangle.",
+                  "de": "Verschiebt oder skaliert einen Zielbereich auf das angegebene Rechteck."
+                }
               }
             }
           },
@@ -7479,6 +7940,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the Add Node dialog to pick a node kind to place.",
+                  "de": "Öffnet den Dialog Knoten hinzufügen, um eine zu setzende Knotenart zu wählen."
+                },
+                "reuse": {
+                  "en": "Opens the Add Node dialog to pick a node kind to place.",
+                  "de": "Öffnet den Dialog Knoten hinzufügen, um eine zu setzende Knotenart zu wählen."
+                }
               }
             }
           },
@@ -8353,6 +8824,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -8458,6 +8939,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -8551,6 +9042,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -10798,6 +11299,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -10903,6 +11414,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -10996,6 +11517,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -11883,6 +12414,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -11972,6 +12513,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -12061,6 +12612,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -12150,6 +12711,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -12239,6 +12810,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -12328,6 +12909,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -12393,6 +12984,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -12451,6 +13052,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 3D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 3D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 3D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 3D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -12493,6 +13104,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the Add Object dialog to pick an object kind to place.",
+                  "de": "Öffnet den Dialog Objekt hinzufügen, um eine zu setzende Objektart zu wählen."
+                },
+                "reuse": {
+                  "en": "Opens the Add Object dialog to pick an object kind to place.",
+                  "de": "Öffnet den Dialog Objekt hinzufügen, um eine zu setzende Objektart zu wählen."
+                }
               }
             }
           },
@@ -12741,6 +13362,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds an object of the given kind (a 3D block kind) to the puzzle.",
+                  "de": "Fügt dem Puzzle ein Objekt der angegebenen Art (einer 3D-Blockart) hinzu."
+                },
+                "reuse": {
+                  "en": "Adds an object of the given kind (a 3D block kind) to the puzzle.",
+                  "de": "Fügt dem Puzzle ein Objekt der angegebenen Art (einer 3D-Blockart) hinzu."
+                }
               }
             }
           },
@@ -12786,6 +13417,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected object from the 3D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Objekte samt ihrer Verbindungen aus dem 3D-Puzzle."
+                },
+                "reuse": {
+                  "en": "Deletes every selected object from the 3D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Objekte samt ihrer Verbindungen aus dem 3D-Puzzle."
+                }
               }
             }
           },
@@ -12831,6 +13472,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a copy of every selected object next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Objekt eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a copy of every selected object next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Objekt eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                }
               }
             }
           },
@@ -12873,6 +13524,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the whole 3D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 3D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the whole 3D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 3D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -12898,7 +13559,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -12917,6 +13578,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 3D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 3D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 3D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 3D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                }
               }
             }
           },
@@ -12959,6 +13630,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                }
               }
             }
           },
@@ -13003,6 +13684,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the selected objects by dx and dy.",
+                  "de": "Verschiebt die ausgewählten Objekte um dx und dy."
+                },
+                "reuse": {
+                  "en": "Moves the selected objects by dx and dy.",
+                  "de": "Verschiebt die ausgewählten Objekte um dx und dy."
+                }
               }
             }
           },
@@ -13047,6 +13738,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rotates the selected objects by the given angle.",
+                  "de": "Dreht die ausgewählten Objekte um den angegebenen Winkel."
+                },
+                "reuse": {
+                  "en": "Rotates the selected objects by the given angle.",
+                  "de": "Dreht die ausgewählten Objekte um den angegebenen Winkel."
+                }
               }
             }
           },
@@ -13091,6 +13792,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Scales the selected objects by the given factor.",
+                  "de": "Skaliert die ausgewählten Objekte um den angegebenen Faktor."
+                },
+                "reuse": {
+                  "en": "Scales the selected objects by the given factor.",
+                  "de": "Skaliert die ausgewählten Objekte um den angegebenen Faktor."
+                }
               }
             }
           },
@@ -13135,6 +13846,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one object to a new position and connects it to nearby compatible connection points.",
+                  "de": "Verschiebt ein Objekt an eine neue Position und verbindet es mit verträglichen Anschlusspunkten in der Nähe."
+                },
+                "reuse": {
+                  "en": "Moves one object to a new position and connects it to nearby compatible connection points.",
+                  "de": "Verschiebt ein Objekt an eine neue Position und verbindet es mit verträglichen Anschlusspunkten in der Nähe."
+                }
               }
             }
           },
@@ -13180,6 +13901,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected objects.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected objects.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."
+                }
               }
             }
           },
@@ -13224,6 +13955,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one inspector field on the given or selected objects or connection points.",
+                  "de": "Setzt ein Inspektorfeld auf den angegebenen oder ausgewählten Objekten oder Anschlusspunkten."
+                },
+                "reuse": {
+                  "en": "Sets one inspector field on the given or selected objects or connection points.",
+                  "de": "Setzt ein Inspektorfeld auf den angegebenen oder ausgewählten Objekten oder Anschlusspunkten."
+                }
               }
             }
           },
@@ -13287,7 +14028,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -13313,7 +14054,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -13357,6 +14099,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Creates an attraction that pulls two compatible connection points (vortices) of different objects together.",
+                  "de": "Erstellt eine Anziehung, die zwei verträgliche Anschlusspunkte (Wirbel) verschiedener Objekte zusammenzieht."
+                },
+                "reuse": {
+                  "en": "Creates an attraction that pulls two compatible connection points (vortices) of different objects together.",
+                  "de": "Erstellt eine Anziehung, die zwei verträgliche Anschlusspunkte (Wirbel) verschiedener Objekte zusammenzieht."
+                }
               }
             }
           },
@@ -13402,6 +14154,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one attraction by id, releasing its two connection points.",
+                  "de": "Löscht eine Anziehung anhand ihrer Id und gibt ihre zwei Anschlusspunkte frei."
+                },
+                "reuse": {
+                  "en": "Deletes one attraction by id, releasing its two connection points.",
+                  "de": "Löscht eine Anziehung anhand ihrer Id und gibt ihre zwei Anschlusspunkte frei."
+                }
               }
             }
           },
@@ -13446,6 +14208,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a target volume, a box region the fill tool packs pieces into.",
+                  "de": "Fügt ein Zielvolumen hinzu, einen Quaderbereich, in den das Füllwerkzeug Teile packt."
+                },
+                "reuse": {
+                  "en": "Adds a target volume, a box region the fill tool packs pieces into.",
+                  "de": "Fügt ein Zielvolumen hinzu, einen Quaderbereich, in den das Füllwerkzeug Teile packt."
+                }
               }
             }
           },
@@ -13491,6 +14263,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one target volume by id.",
+                  "de": "Löscht ein Zielvolumen anhand seiner Id."
+                },
+                "reuse": {
+                  "en": "Deletes one target volume by id.",
+                  "de": "Löscht ein Zielvolumen anhand seiner Id."
+                }
               }
             }
           },
@@ -13536,6 +14318,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target volumes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target volumes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."
+                }
               }
             }
           },
@@ -13580,6 +14372,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Places an object with the placement brush at the given contact point, as the brush suggests.",
+                  "de": "Setzt mit dem Platzierungspinsel ein Objekt am angegebenen Kontaktpunkt, wie der Pinsel es vorschlägt."
+                },
+                "reuse": {
+                  "en": "Places an object with the placement brush at the given contact point, as the brush suggests.",
+                  "de": "Setzt mit dem Platzierungspinsel ein Objekt am angegebenen Kontaktpunkt, wie der Pinsel es vorschlägt."
+                }
               }
             }
           },
@@ -13624,6 +14426,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                },
+                "reuse": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                }
               }
             }
           },
@@ -13642,7 +14454,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -13669,7 +14481,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -13687,7 +14500,7 @@
             "kind": "view",
             "iconId": "scan",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -13714,7 +14527,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -13732,7 +14546,7 @@
             "kind": "view",
             "iconId": "scan",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -13759,7 +14573,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -13804,6 +14619,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Frames the camera on the selected objects; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Objekte aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Frames the camera on the selected objects; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Objekte aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -13850,6 +14675,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Extends the selection to every piece of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."
+                },
+                "reuse": {
+                  "en": "Extends the selection to every piece of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."
+                }
               }
             }
           },
@@ -13895,6 +14730,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether connection points are shown always or only on selected objects; only the view changes.",
+                  "de": "Legt fest, ob Anschlusspunkte immer oder nur an ausgewählten Objekten gezeigt werden; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets whether connection points are shown always or only on selected objects; only the view changes.",
+                  "de": "Legt fest, ob Anschlusspunkte immer oder nur an ausgewählten Objekten gezeigt werden; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -13940,6 +14785,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how connection point directions are drawn; only the view changes.",
+                  "de": "Legt fest, wie die Richtungen der Anschlusspunkte gezeichnet werden; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how connection point directions are drawn; only the view changes.",
+                  "de": "Legt fest, wie die Richtungen der Anschlusspunkte gezeichnet werden; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -13985,6 +14840,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the 3D view's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Switches the 3D view's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14030,6 +14895,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the compass direction the 3D view's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Ansicht scheint; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the compass direction the 3D view's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Ansicht scheint; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14075,6 +14950,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how high the 3D view's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne der 3D-Ansicht über dem Horizont steht; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how high the 3D view's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne der 3D-Ansicht über dem Horizont steht; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14120,6 +15005,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the brightness of the 3D view's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne der 3D-Ansicht fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the brightness of the 3D view's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne der 3D-Ansicht fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14165,6 +15060,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns automatic level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die automatische Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Turns automatic level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die automatische Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14210,6 +15115,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns depth-dependent level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die tiefenabhängige Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Turns depth-dependent level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die tiefenabhängige Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14255,6 +15170,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Shows or hides the placement grid in the 3D view; only the view changes.",
+                  "de": "Blendet das Platzierungsraster in der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Shows or hides the placement grid in the 3D view; only the view changes.",
+                  "de": "Blendet das Platzierungsraster in der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14300,6 +15225,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets a fixed level of detail for the 3D view; only the view changes.",
+                  "de": "Legt eine feste Detailstufe für die 3D-Ansicht fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets a fixed level of detail for the 3D view; only the view changes.",
+                  "de": "Legt eine feste Detailstufe für die 3D-Ansicht fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14345,6 +15280,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns snapping to the placement grid on or off for moves in the 3D view.",
+                  "de": "Schaltet das Fangen am Platzierungsraster für Verschiebungen in der 3D-Ansicht ein oder aus."
+                },
+                "reuse": {
+                  "en": "Turns snapping to the placement grid on or off for moves in the 3D view.",
+                  "de": "Schaltet das Fangen am Platzierungsraster für Verschiebungen in der 3D-Ansicht ein oder aus."
+                }
               }
             }
           },
@@ -14390,6 +15335,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the spacing of the placement grid.",
+                  "de": "Legt den Abstand des Platzierungsrasters fest."
+                },
+                "reuse": {
+                  "en": "Sets the spacing of the placement grid.",
+                  "de": "Legt den Abstand des Platzierungsrasters fest."
+                }
               }
             }
           },
@@ -14435,6 +15390,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how close two pieces must come for a move or Connect Nearby to join their connection points.",
+                  "de": "Legt fest, wie nahe sich zwei Teile kommen müssen, damit ein Verschieben oder In der Nähe verbinden ihre Anschlusspunkte verbindet."
+                },
+                "reuse": {
+                  "en": "Sets how close two pieces must come for a move or Connect Nearby to join their connection points.",
+                  "de": "Legt fest, wie nahe sich zwei Teile kommen müssen, damit ein Verschieben oder In der Nähe verbinden ihre Anschlusspunkte verbindet."
+                }
               }
             }
           },
@@ -14480,6 +15445,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the size of the spatial chunks the 3D view loads and draws pieces in; only the view changes.",
+                  "de": "Legt die Größe der räumlichen Blöcke fest, in denen die 3D-Ansicht Teile lädt und zeichnet; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the size of the spatial chunks the 3D view loads and draws pieces in; only the view changes.",
+                  "de": "Legt die Größe der räumlichen Blöcke fest, in denen die 3D-Ansicht Teile lädt und zeichnet; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -14525,6 +15500,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether pieces, connection points or attractions can be picked in the 3D view.",
+                  "de": "Legt fest, ob Teile, Anschlusspunkte oder Anziehungen in der 3D-Ansicht gewählt werden können."
+                },
+                "reuse": {
+                  "en": "Sets whether pieces, connection points or attractions can be picked in the 3D view.",
+                  "de": "Legt fest, ob Teile, Anschlusspunkte oder Anziehungen in der 3D-Ansicht gewählt werden können."
+                }
               }
             }
           },
@@ -14635,7 +15620,7 @@
             "kind": "view",
             "iconId": "hand",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -14662,7 +15647,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -14680,7 +15666,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -14707,7 +15693,18 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "description": {
+                "native": {
+                  "en": "Switches one option of the transform gumball (such as translate, rotate or scale handles) on or off.",
+                  "de": "Schaltet eine Option des Transformationsgriffs (etwa Verschiebe-, Dreh- oder Skaliergriffe) ein oder aus."
+                },
+                "reuse": {
+                  "en": "Switches one option of the transform gumball (such as translate, rotate or scale handles) on or off.",
+                  "de": "Schaltet eine Option des Transformationsgriffs (etwa Verschiebe-, Dreh- oder Skaliergriffe) ein oder aus."
+                }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -14725,7 +15722,7 @@
             "kind": "view",
             "iconId": "move",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -14752,7 +15749,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -14770,7 +15768,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -14797,7 +15795,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -14842,6 +15841,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one dimension (width, depth or height) of the voxel volume the fill tool packs pieces into.",
+                  "de": "Legt eine Abmessung (Breite, Tiefe oder Höhe) des Voxelvolumens fest, in das das Füllwerkzeug Teile packt."
+                },
+                "reuse": {
+                  "en": "Sets one dimension (width, depth or height) of the voxel volume the fill tool packs pieces into.",
+                  "de": "Legt eine Abmessung (Breite, Tiefe oder Höhe) des Voxelvolumens fest, in das das Füllwerkzeug Teile packt."
+                }
               }
             }
           },
@@ -14886,6 +15895,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one target volume to a new position.",
+                  "de": "Verschiebt ein Zielvolumen an eine neue Position."
+                },
+                "reuse": {
+                  "en": "Moves one target volume to a new position.",
+                  "de": "Verschiebt ein Zielvolumen an eine neue Position."
+                }
               }
             }
           },
@@ -14931,6 +15950,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many pieces the fill tool places into the target volume.",
+                  "de": "Legt fest, wie viele Teile das Füllwerkzeug in das Zielvolumen setzt."
+                },
+                "reuse": {
+                  "en": "Sets how many pieces the fill tool places into the target volume.",
+                  "de": "Legt fest, wie viele Teile das Füllwerkzeug in das Zielvolumen setzt."
+                }
               }
             }
           },
@@ -14976,6 +16005,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how much overlap (0 to 1) the placement brush tolerates between a suggested piece and existing ones.",
+                  "de": "Legt fest, wie viel Überlappung (0 bis 1) der Platzierungspinsel zwischen einem vorgeschlagenen und vorhandenen Teilen zulässt."
+                },
+                "reuse": {
+                  "en": "Sets how much overlap (0 to 1) the placement brush tolerates between a suggested piece and existing ones.",
+                  "de": "Legt fest, wie viel Überlappung (0 bis 1) der Platzierungspinsel zwischen einem vorgeschlagenen und vorhandenen Teilen zulässt."
+                }
               }
             }
           },
@@ -15021,6 +16060,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how often the fill tool and brush pick one object kind relative to the others.",
+                  "de": "Legt fest, wie oft Füllwerkzeug und Pinsel eine Objektart im Verhältnis zu den anderen wählen."
+                },
+                "reuse": {
+                  "en": "Sets how often the fill tool and brush pick one object kind relative to the others.",
+                  "de": "Legt fest, wie oft Füllwerkzeug und Pinsel eine Objektart im Verhältnis zu den anderen wählen."
+                }
               }
             }
           },
@@ -15066,6 +16115,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how strongly one connection point kind is preferred when suggesting placements.",
+                  "de": "Legt fest, wie stark eine Anschlusspunktart bei Platzierungsvorschlägen bevorzugt wird."
+                },
+                "reuse": {
+                  "en": "Sets how strongly one connection point kind is preferred when suggesting placements.",
+                  "de": "Legt fest, wie stark eine Anschlusspunktart bei Platzierungsvorschlägen bevorzugt wird."
+                }
               }
             }
           },
@@ -15111,6 +16170,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the placement brush to the next suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum nächsten vorgeschlagenen Teil."
+                },
+                "reuse": {
+                  "en": "Switches the placement brush to the next suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum nächsten vorgeschlagenen Teil."
+                }
               }
             }
           },
@@ -15156,6 +16225,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the placement brush to the previous suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum vorherigen vorgeschlagenen Teil."
+                },
+                "reuse": {
+                  "en": "Switches the placement brush to the previous suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum vorherigen vorgeschlagenen Teil."
+                }
               }
             }
           },
@@ -15202,6 +16281,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the list of pieces that fit at one connection point.",
+                  "de": "Öffnet die Liste der Teile, die an einen Anschlusspunkt passen."
+                },
+                "reuse": {
+                  "en": "Opens the list of pieces that fit at one connection point.",
+                  "de": "Öffnet die Liste der Teile, die an einen Anschlusspunkt passen."
+                }
               }
             }
           },
@@ -15247,6 +16336,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Closes the list of suggested pieces.",
+                  "de": "Schließt die Liste der vorgeschlagenen Teile."
+                },
+                "reuse": {
+                  "en": "Closes the list of suggested pieces.",
+                  "de": "Schließt die Liste der vorgeschlagenen Teile."
+                }
               }
             }
           },
@@ -15311,7 +16410,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -15338,7 +16437,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -15356,7 +16456,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -15383,7 +16483,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -16348,6 +17449,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -16453,6 +17564,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -16546,6 +17667,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -19090,6 +20221,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -19195,6 +20336,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -19288,6 +20439,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -19841,7 +21002,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -19867,7 +21028,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -19885,7 +21047,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -19912,7 +21074,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -20594,6 +21757,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -20683,6 +21856,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -20772,6 +21955,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -20861,6 +22054,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -20950,6 +22153,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -21039,6 +22252,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -21104,6 +22327,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -21980,6 +23213,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the selected parts by dx and dy.",
+                      "de": "Verschiebt die ausgewählten Teile um dx und dy."
+                    },
+                    "reuse": {
+                      "en": "Moves the selected parts by dx and dy.",
+                      "de": "Verschiebt die ausgewählten Teile um dx und dy."
+                    }
                   }
                 }
               },
@@ -22024,6 +23267,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Rotates the selected parts by the given angle.",
+                      "de": "Dreht die ausgewählten Teile um den angegebenen Winkel."
+                    },
+                    "reuse": {
+                      "en": "Rotates the selected parts by the given angle.",
+                      "de": "Dreht die ausgewählten Teile um den angegebenen Winkel."
+                    }
                   }
                 }
               },
@@ -22068,6 +23321,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Scales the selected parts by the given factor.",
+                      "de": "Skaliert die ausgewählten Teile um den angegebenen Faktor."
+                    },
+                    "reuse": {
+                      "en": "Scales the selected parts by the given factor.",
+                      "de": "Skaliert die ausgewählten Teile um den angegebenen Faktor."
+                    }
                   }
                 }
               },
@@ -22112,6 +23375,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves one part to a new position and fastens it to nearby compatible grips.",
+                      "de": "Verschiebt ein Teil an eine neue Position und verbindet es mit verträglichen Griffen in der Nähe."
+                    },
+                    "reuse": {
+                      "en": "Moves one part to a new position and fastens it to nearby compatible grips.",
+                      "de": "Verschiebt ein Teil an eine neue Position und verbindet es mit verträglichen Griffen in der Nähe."
+                    }
                   }
                 }
               },
@@ -22130,7 +23403,7 @@
                 "kind": "view",
                 "iconId": "camera",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -22157,7 +23430,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -22839,6 +24113,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -22928,6 +24212,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -23017,6 +24311,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -23106,6 +24410,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -23195,6 +24509,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -23284,6 +24608,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -23349,6 +24683,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -23405,6 +24749,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the whole 5D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 5D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the whole 5D puzzle as JSON to a downloaded file named after the active example on the user's machine.",
+                  "de": "Schreibt das gesamte 5D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -23447,6 +24801,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."
+                }
               }
             }
           },
@@ -23472,7 +24836,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -23491,6 +24855,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 5D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 5D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 5D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.",
+                  "de": "Ersetzt das gesamte 5D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."
+                }
               }
             }
           },
@@ -23535,6 +24909,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 5D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 5D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 5D puzzle with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 5D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -23579,6 +24963,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a part of the given kind (a 5D block kind) to the puzzle at x, y.",
+                  "de": "Fügt dem Puzzle an x, y ein Teil der angegebenen Art (einer 5D-Blockart) hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a part of the given kind (a 5D block kind) to the puzzle at x, y.",
+                  "de": "Fügt dem Puzzle an x, y ein Teil der angegebenen Art (einer 5D-Blockart) hinzu."
+                }
               }
             }
           },
@@ -23621,6 +25015,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the Add Part dialog to pick a part kind to place.",
+                  "de": "Öffnet den Dialog Teil hinzufügen, um eine zu setzende Teileart zu wählen."
+                },
+                "reuse": {
+                  "en": "Opens the Add Part dialog to pick a part kind to place.",
+                  "de": "Öffnet den Dialog Teil hinzufügen, um eine zu setzende Teileart zu wählen."
+                }
               }
             }
           },
@@ -23856,6 +25260,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a part of the given kind to the puzzle.",
+                  "de": "Fügt dem Puzzle ein Teil der angegebenen Art hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a part of the given kind to the puzzle.",
+                  "de": "Fügt dem Puzzle ein Teil der angegebenen Art hinzu."
+                }
               }
             }
           },
@@ -23934,6 +25348,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Places a part of the given kind with the placement brush where the brush suggests.",
+                  "de": "Setzt mit dem Platzierungspinsel ein Teil der angegebenen Art dort, wo der Pinsel es vorschlägt."
+                },
+                "reuse": {
+                  "en": "Places a part of the given kind with the placement brush where the brush suggests.",
+                  "de": "Setzt mit dem Platzierungspinsel ein Teil der angegebenen Art dort, wo der Pinsel es vorschlägt."
+                }
               }
             }
           },
@@ -23979,6 +25403,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected part from the 5D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Teile samt ihrer Verbindungen aus dem 5D-Puzzle."
+                },
+                "reuse": {
+                  "en": "Deletes every selected part from the 5D puzzle together with its connections.",
+                  "de": "Löscht alle ausgewählten Teile samt ihrer Verbindungen aus dem 5D-Puzzle."
+                }
               }
             }
           },
@@ -24024,6 +25458,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a copy of every selected part next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Teil eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a copy of every selected part next to the original; nothing happens without a selection.",
+                  "de": "Fügt neben jedem ausgewählten Teil eine Kopie hinzu; ohne Auswahl geschieht nichts."
+                }
               }
             }
           },
@@ -24069,6 +25513,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected parts.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Teile."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given or selected parts.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Teile."
+                }
               }
             }
           },
@@ -24114,6 +25568,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Frames the camera on the selected parts; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Teile aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Frames the camera on the selected parts; only the view changes.",
+                  "de": "Richtet die Kamera auf die ausgewählten Teile aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -24177,7 +25641,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -24203,7 +25667,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -24247,6 +25712,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field on the given or selected parts.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Teilen."
+                },
+                "reuse": {
+                  "en": "Sets one field on the given or selected parts.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Teilen."
+                }
               }
             }
           },
@@ -24291,6 +25766,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field on the given or selected grips.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Griffen."
+                },
+                "reuse": {
+                  "en": "Sets one field on the given or selected grips.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Griffen."
+                }
               }
             }
           },
@@ -24335,6 +25820,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field on the given or selected fasteners.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Verbindern."
+                },
+                "reuse": {
+                  "en": "Sets one field on the given or selected fasteners.",
+                  "de": "Setzt ein Feld auf den angegebenen oder ausgewählten Verbindern."
+                }
               }
             }
           },
@@ -24379,6 +25874,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Creates a fastener joining two compatible grips of different parts.",
+                  "de": "Erstellt einen Verbinder, der zwei verträgliche Griffe verschiedener Teile verbindet."
+                },
+                "reuse": {
+                  "en": "Creates a fastener joining two compatible grips of different parts.",
+                  "de": "Erstellt einen Verbinder, der zwei verträgliche Griffe verschiedener Teile verbindet."
+                }
               }
             }
           },
@@ -24423,6 +25928,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one fastener by id, releasing its two grips.",
+                  "de": "Löscht einen Verbinder anhand seiner Id und gibt seine zwei Griffe frei."
+                },
+                "reuse": {
+                  "en": "Deletes one fastener by id, releasing its two grips.",
+                  "de": "Löscht einen Verbinder anhand seiner Id und gibt seine zwei Griffe frei."
+                }
               }
             }
           },
@@ -24467,6 +25982,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one end of a fastener to another compatible grip.",
+                  "de": "Hängt ein Ende eines Verbinders an einen anderen verträglichen Griff um."
+                },
+                "reuse": {
+                  "en": "Moves one end of a fastener to another compatible grip.",
+                  "de": "Hängt ein Ende eines Verbinders an einen anderen verträglichen Griff um."
+                }
               }
             }
           },
@@ -24511,6 +26036,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the gap, shift or rise of one fastener, absolutely or by a delta.",
+                  "de": "Setzt Abstand, Versatz oder Anhebung eines Verbinders, absolut oder um eine Differenz."
+                },
+                "reuse": {
+                  "en": "Sets the gap, shift or rise of one fastener, absolutely or by a delta.",
+                  "de": "Setzt Abstand, Versatz oder Anhebung eines Verbinders, absolut oder um eine Differenz."
+                }
               }
             }
           },
@@ -24555,6 +26090,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Fastens every pair of compatible grips that lie within the proximity radius of each other.",
+                  "de": "Verbindet jedes Paar verträglicher Griffe, die innerhalb des Näheradius beieinander liegen, mit Verbindern."
+                },
+                "reuse": {
+                  "en": "Fastens every pair of compatible grips that lie within the proximity radius of each other.",
+                  "de": "Verbindet jedes Paar verträglicher Griffe, die innerhalb des Näheradius beieinander liegen, mit Verbindern."
+                }
               }
             }
           },
@@ -24599,6 +26144,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a target volume, a box region the fill tool packs pieces into.",
+                  "de": "Fügt ein Zielvolumen hinzu, einen Quaderbereich, in den das Füllwerkzeug Teile packt."
+                },
+                "reuse": {
+                  "en": "Adds a target volume, a box region the fill tool packs pieces into.",
+                  "de": "Fügt ein Zielvolumen hinzu, einen Quaderbereich, in den das Füllwerkzeug Teile packt."
+                }
               }
             }
           },
@@ -24644,6 +26199,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one target volume by id.",
+                  "de": "Löscht ein Zielvolumen anhand seiner Id."
+                },
+                "reuse": {
+                  "en": "Deletes one target volume by id.",
+                  "de": "Löscht ein Zielvolumen anhand seiner Id."
+                }
               }
             }
           },
@@ -24689,6 +26254,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target volumes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."
+                },
+                "reuse": {
+                  "en": "Sets one flag (such as hidden or locked) on the given target volumes.",
+                  "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."
+                }
               }
             }
           },
@@ -24733,6 +26308,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one target volume to a new position.",
+                  "de": "Verschiebt ein Zielvolumen an eine neue Position."
+                },
+                "reuse": {
+                  "en": "Moves one target volume to a new position.",
+                  "de": "Verschiebt ein Zielvolumen an eine neue Position."
+                }
               }
             }
           },
@@ -24751,7 +26336,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -24778,7 +26363,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -24824,6 +26410,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Extends the selection to every piece of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."
+                },
+                "reuse": {
+                  "en": "Extends the selection to every piece of the same kind as the selected one.",
+                  "de": "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."
+                }
               }
             }
           },
@@ -24869,6 +26465,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the 3D view's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Switches the 3D view's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -24914,6 +26520,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the compass direction the 3D view's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Ansicht scheint; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the compass direction the 3D view's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Ansicht scheint; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -24959,6 +26575,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how high the 3D view's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne der 3D-Ansicht über dem Horizont steht; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how high the 3D view's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne der 3D-Ansicht über dem Horizont steht; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -25004,6 +26630,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the brightness of the 3D view's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne der 3D-Ansicht fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the brightness of the 3D view's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne der 3D-Ansicht fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -25114,7 +26750,7 @@
             "kind": "view",
             "iconId": "hand",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -25141,7 +26777,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -25186,6 +26823,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the placement brush to the next suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum nächsten vorgeschlagenen Teil."
+                },
+                "reuse": {
+                  "en": "Switches the placement brush to the next suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum nächsten vorgeschlagenen Teil."
+                }
               }
             }
           },
@@ -25231,6 +26878,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the placement brush to the previous suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum vorherigen vorgeschlagenen Teil."
+                },
+                "reuse": {
+                  "en": "Switches the placement brush to the previous suggested piece.",
+                  "de": "Schaltet den Platzierungspinsel zum vorherigen vorgeschlagenen Teil."
+                }
               }
             }
           },
@@ -25249,7 +26906,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -25276,7 +26933,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -25321,6 +26979,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the list of pieces that fit at one connection point.",
+                  "de": "Öffnet die Liste der Teile, die an einen Anschlusspunkt passen."
+                },
+                "reuse": {
+                  "en": "Opens the list of pieces that fit at one connection point.",
+                  "de": "Öffnet die Liste der Teile, die an einen Anschlusspunkt passen."
+                }
               }
             }
           },
@@ -25366,6 +27034,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Closes the list of suggested pieces.",
+                  "de": "Schließt die Liste der vorgeschlagenen Teile."
+                },
+                "reuse": {
+                  "en": "Closes the list of suggested pieces.",
+                  "de": "Schließt die Liste der vorgeschlagenen Teile."
+                }
               }
             }
           },
@@ -25456,6 +27134,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                },
+                "reuse": {
+                  "en": "Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.",
+                  "de": "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."
+                }
               }
             }
           },
@@ -25474,7 +27162,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -25501,7 +27189,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -25546,6 +27235,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how much overlap (0 to 1) the placement brush tolerates between a suggested piece and existing ones.",
+                  "de": "Legt fest, wie viel Überlappung (0 bis 1) der Platzierungspinsel zwischen einem vorgeschlagenen und vorhandenen Teilen zulässt."
+                },
+                "reuse": {
+                  "en": "Sets how much overlap (0 to 1) the placement brush tolerates between a suggested piece and existing ones.",
+                  "de": "Legt fest, wie viel Überlappung (0 bis 1) der Platzierungspinsel zwischen einem vorgeschlagenen und vorhandenen Teilen zulässt."
+                }
               }
             }
           },
@@ -25591,6 +27290,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how close two pieces must come for a move or Connect Nearby to join their connection points.",
+                  "de": "Legt fest, wie nahe sich zwei Teile kommen müssen, damit ein Verschieben oder In der Nähe verbinden ihre Anschlusspunkte verbindet."
+                },
+                "reuse": {
+                  "en": "Sets how close two pieces must come for a move or Connect Nearby to join their connection points.",
+                  "de": "Legt fest, wie nahe sich zwei Teile kommen müssen, damit ein Verschieben oder In der Nähe verbinden ihre Anschlusspunkte verbindet."
+                }
               }
             }
           },
@@ -25636,6 +27345,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the size of the spatial chunks the 3D view loads and draws pieces in; only the view changes.",
+                  "de": "Legt die Größe der räumlichen Blöcke fest, in denen die 3D-Ansicht Teile lädt und zeichnet; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the size of the spatial chunks the 3D view loads and draws pieces in; only the view changes.",
+                  "de": "Legt die Größe der räumlichen Blöcke fest, in denen die 3D-Ansicht Teile lädt und zeichnet; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -25681,6 +27400,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how often the fill tool and brush pick one part kind relative to the others.",
+                  "de": "Legt fest, wie oft Füllwerkzeug und Pinsel eine Teileart im Verhältnis zu den anderen wählen."
+                },
+                "reuse": {
+                  "en": "Sets how often the fill tool and brush pick one part kind relative to the others.",
+                  "de": "Legt fest, wie oft Füllwerkzeug und Pinsel eine Teileart im Verhältnis zu den anderen wählen."
+                }
               }
             }
           },
@@ -25726,6 +27455,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how strongly one grip kind is preferred when suggesting placements.",
+                  "de": "Legt fest, wie stark eine Griffart bei Platzierungsvorschlägen bevorzugt wird."
+                },
+                "reuse": {
+                  "en": "Sets how strongly one grip kind is preferred when suggesting placements.",
+                  "de": "Legt fest, wie stark eine Griffart bei Platzierungsvorschlägen bevorzugt wird."
+                }
               }
             }
           },
@@ -25771,6 +27510,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the level-of-detail mode of the views; only the view changes.",
+                  "de": "Legt den Detailstufenmodus der Ansichten fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the level-of-detail mode of the views; only the view changes.",
+                  "de": "Legt den Detailstufenmodus der Ansichten fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -25816,6 +27565,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many pieces the fill tool places into the target volume.",
+                  "de": "Legt fest, wie viele Teile das Füllwerkzeug in das Zielvolumen setzt."
+                },
+                "reuse": {
+                  "en": "Sets how many pieces the fill tool places into the target volume.",
+                  "de": "Legt fest, wie viele Teile das Füllwerkzeug in das Zielvolumen setzt."
+                }
               }
             }
           },
@@ -25861,6 +27620,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how far suggested parts are offset from the grip they would attach to.",
+                  "de": "Legt fest, wie weit vorgeschlagene Teile vom Griff, an den sie ansetzen würden, versetzt werden."
+                },
+                "reuse": {
+                  "en": "Sets how far suggested parts are offset from the grip they would attach to.",
+                  "de": "Legt fest, wie weit vorgeschlagene Teile vom Griff, an den sie ansetzen würden, versetzt werden."
+                }
               }
             }
           },
@@ -25906,6 +27675,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns snapping to the placement grid on or off for moves in the 3D view.",
+                  "de": "Schaltet das Fangen am Platzierungsraster für Verschiebungen in der 3D-Ansicht ein oder aus."
+                },
+                "reuse": {
+                  "en": "Turns snapping to the placement grid on or off for moves in the 3D view.",
+                  "de": "Schaltet das Fangen am Platzierungsraster für Verschiebungen in der 3D-Ansicht ein oder aus."
+                }
               }
             }
           },
@@ -25951,6 +27730,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the spacing factor of the 2D view's snap grid; only the view setting changes.",
+                  "de": "Legt den Abstandsfaktor des Fangrasters der 2D-Ansicht fest; nur die Ansichtseinstellung ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the spacing factor of the 2D view's snap grid; only the view setting changes.",
+                  "de": "Legt den Abstandsfaktor des Fangrasters der 2D-Ansicht fest; nur die Ansichtseinstellung ändert sich."
+                }
               }
             }
           },
@@ -25996,6 +27785,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one dimension (width, depth or height) of the voxel volume the fill tool packs pieces into.",
+                  "de": "Legt eine Abmessung (Breite, Tiefe oder Höhe) des Voxelvolumens fest, in das das Füllwerkzeug Teile packt."
+                },
+                "reuse": {
+                  "en": "Sets one dimension (width, depth or height) of the voxel volume the fill tool packs pieces into.",
+                  "de": "Legt eine Abmessung (Breite, Tiefe oder Höhe) des Voxelvolumens fest, in das das Füllwerkzeug Teile packt."
+                }
               }
             }
           },
@@ -26041,6 +27840,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Shows or hides the placement grid in the 3D view; only the view changes.",
+                  "de": "Blendet das Platzierungsraster in der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Shows or hides the placement grid in the 3D view; only the view changes.",
+                  "de": "Blendet das Platzierungsraster in der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26086,6 +27895,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the spacing of the placement grid.",
+                  "de": "Legt den Abstand des Platzierungsrasters fest."
+                },
+                "reuse": {
+                  "en": "Sets the spacing of the placement grid.",
+                  "de": "Legt den Abstand des Platzierungsrasters fest."
+                }
               }
             }
           },
@@ -26104,7 +27923,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -26131,7 +27950,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -26149,7 +27969,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -26176,7 +27996,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -26221,6 +28042,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether grip markers are shown always or only on selected parts; only the view changes.",
+                  "de": "Legt fest, ob Griffmarken immer oder nur an ausgewählten Teilen gezeigt werden; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets whether grip markers are shown always or only on selected parts; only the view changes.",
+                  "de": "Legt fest, ob Griffmarken immer oder nur an ausgewählten Teilen gezeigt werden; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26266,6 +28097,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how grip directions are drawn; only the view changes.",
+                  "de": "Legt fest, wie Griffrichtungen gezeichnet werden; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how grip directions are drawn; only the view changes.",
+                  "de": "Legt fest, wie Griffrichtungen gezeichnet werden; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26312,6 +28153,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether pieces, connection points or attractions can be picked in the 3D view.",
+                  "de": "Legt fest, ob Teile, Anschlusspunkte oder Anziehungen in der 3D-Ansicht gewählt werden können."
+                },
+                "reuse": {
+                  "en": "Sets whether pieces, connection points or attractions can be picked in the 3D view.",
+                  "de": "Legt fest, ob Teile, Anschlusspunkte oder Anziehungen in der 3D-Ansicht gewählt werden können."
+                }
               }
             }
           },
@@ -26357,6 +28208,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns automatic level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die automatische Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Turns automatic level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die automatische Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26402,6 +28263,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns depth-dependent level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die tiefenabhängige Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Turns depth-dependent level of detail in the 3D view on or off; only the view changes.",
+                  "de": "Schaltet die tiefenabhängige Detailstufe der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26447,6 +28318,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets a fixed level of detail for the 3D view; only the view changes.",
+                  "de": "Legt eine feste Detailstufe für die 3D-Ansicht fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets a fixed level of detail for the 3D view; only the view changes.",
+                  "de": "Legt eine feste Detailstufe für die 3D-Ansicht fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -26465,7 +28346,7 @@
             "kind": "view",
             "iconId": "move-3d",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -26492,7 +28373,18 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "description": {
+                "native": {
+                  "en": "Switches one option of the transform gumball (such as translate, rotate or scale handles) on or off.",
+                  "de": "Schaltet eine Option des Transformationsgriffs (etwa Verschiebe-, Dreh- oder Skaliergriffe) ein oder aus."
+                },
+                "reuse": {
+                  "en": "Switches one option of the transform gumball (such as translate, rotate or scale handles) on or off.",
+                  "de": "Schaltet eine Option des Transformationsgriffs (etwa Verschiebe-, Dreh- oder Skaliergriffe) ein oder aus."
+                }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -27458,6 +29350,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -27563,6 +29465,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -27656,6 +29568,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -29979,6 +31901,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -30084,6 +32016,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -30177,6 +32119,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -30502,7 +32454,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -30974,8 +32926,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "c91349c5b30f4f8710b04f0859db23762b932d6d2c78866d01aa7e0395f21375",
-    "coreWasmSha256": "255f5c7ba619867b797a6689aaebf353235795e71318374e6b2f4ab5091d5094",
-    "descriptorSha256": "6bfade563391c2175eda335a17667ec60889e2ba28d7c493d2c0f4d1346ef659"
+    "wasmSha256": "a7935d5ad0751dc9e47682b13959796295bc40a69ce05a9289b83b51ed86316f",
+    "coreWasmSha256": "967c7086c0dcf14d767cbe24239fb499b065ee01c86d49505cc4f8baf783310a",
+    "descriptorSha256": "b2a11fef4d7731e65242ecb94508b00826676a2e103f0dc05c5e14d769c65611"
   }
 }

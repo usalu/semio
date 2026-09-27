@@ -82,7 +82,7 @@ import {
   type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCodecAnswer, type ShardCodecRequest, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -1189,6 +1189,8 @@ export interface WgpuPluginHandle {
   readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
   /** 🗃️ Restores one encoded document archive (`AppCommand::LoadDocumentArchive`). */
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
+  /** 📚️ Captures the complete drawing, history and owned members before a surface transfer. */
+  readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
   /** 🗃️ Restores one `(pack, spr)` pair (`AppCommand::LoadDocument`). */
   readonly loadAppDocumentPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🧬️ Calls this program's component `codec` interface on a live instance's actor, serialized with
@@ -1863,6 +1865,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
     },
     loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(decodeDocumentArchiveBytes(archive)),
+    readAppDocumentArchive: async (instanceId) => encodeDocumentArchiveBytes(await requireChannel(instanceId).readDocumentArchive()),
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const failed = frames.find((frame) => "Error" in frame);
@@ -1920,6 +1923,7 @@ export interface WgpuJsBridge {
   readonly receiveDocumentBackbone: (instanceId: number, uri: string, payload: Uint8Array) => Promise<string>;
   readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
+  readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
   readonly loadAppArtifactPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🧬️ `codec.pack-schema-hash(artifactKind)`: the kind's 32-byte structural fingerprint. */
   readonly codecPackSchemaHash: (artifactKind: string) => Promise<Uint8Array>;
@@ -1983,6 +1987,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     receiveDocumentBackbone: (instanceId, uri, payload) => handle.receiveDocumentBackbone(instanceId, uri, payload).then(invocationResponseJson),
     applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
+    readAppDocumentArchive: (instanceId) => handle.readAppDocumentArchive(instanceId),
     loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
     codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),

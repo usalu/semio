@@ -1,3 +1,4 @@
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioDrawingMutation — real facet mirror of the Rust 🧬️mutations/🦀️.rs sibling. Seventeen
 # SMO-approved verb-dispatch variants (📌️important.md's binding vocabulary ruling; no
 # `setSnapshot`/`set*` — banned/superseded vocabulary, and no `SetSnapshot` variant at all).
@@ -50,4 +51,5 @@ type SemioDrawingMutation {
   newFill: Rgba
   newColor: Rgba
   newWidth: Float
+  snapshot: SemioDrawingSnapshot
 }

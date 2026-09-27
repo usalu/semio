@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeRoofAssume
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-roof-assumed-sk", "change-roof-assumed-sk")
+        protocol::LocalizedLabel::native("Change assumed roof snow load", "Angenommene Schneelast auf dem Dach ändern")
     }
 }
 //#endregion 🔖️Payload

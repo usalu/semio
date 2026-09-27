@@ -463,6 +463,27 @@
       "repeatEachFor": 4097,
       "expectReports": 1,
       "expectShape": "phase=Render engine=0 upload=2 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=RuntimeLock"
+    },
+    {
+      "why": "A live deferred checkout retains its exact work category and safe external request class in the terminal diagnostic.",
+      "signatures": [
+        [
+          "Render",
+          0,
+          1,
+          null,
+          [
+            0,
+            0,
+            0
+          ],
+          "InteractionCheckout",
+          0
+        ]
+      ],
+      "repeatEachFor": 4097,
+      "expectReports": 1,
+      "expectShape": "phase=Render engine=0 upload=1 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=InteractionCheckout { site: \"fixture\", request: \"none\" }"
     }
   ]
 }

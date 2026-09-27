@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeElementA
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-element-adjacent", "change-element-adjacent")
+        protocol::LocalizedLabel::native("Change adjacent space of the element", "Angrenzenden Bereich des Bauteils ändern")
     }
 }

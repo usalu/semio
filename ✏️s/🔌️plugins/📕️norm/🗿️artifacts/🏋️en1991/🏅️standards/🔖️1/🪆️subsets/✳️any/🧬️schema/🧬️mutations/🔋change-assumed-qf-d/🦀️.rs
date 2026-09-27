@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedQfD
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-qf-d", "change-assumed-qf-d")
+        protocol::LocalizedLabel::native("Change assumed design fire load density", "Angenommenen Bemessungswert der Brandlastdichte ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -8,11 +8,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct DrawingCanvasWindowConfig {
     #[dsl(block)]
     pub viewport: store::Viewport2d,
+    pub framed: bool,
 }
 
 impl Default for DrawingCanvasWindowConfig {
     fn default() -> Self {
-        Self { viewport: store::Viewport2d { x: 512.0, y: 512.0, zoom: 0.75 } }
+        Self { viewport: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 },framed: false }
     }
 }
 

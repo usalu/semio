@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ReplaceEleme
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace elements", "elements ersetzen")
+        protocol::LocalizedLabel::native("Replace envelope elements", "Hüllbauteile ersetzen")
     }
 }

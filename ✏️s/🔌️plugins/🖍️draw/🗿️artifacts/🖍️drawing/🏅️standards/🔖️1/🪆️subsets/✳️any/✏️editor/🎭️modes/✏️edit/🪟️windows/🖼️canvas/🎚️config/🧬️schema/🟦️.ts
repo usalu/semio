@@ -3,6 +3,7 @@ import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../
 /** 🎚️ Persisted navigation for one exact Drawing Canvas window. */
 export interface DrawingCanvasWindowConfig {
   viewport: Viewport2d;
+  framed: boolean;
 }
 
 /** 🧬️ Whole-record Drawing Canvas window configuration mutation. */
@@ -13,8 +14,8 @@ export function parseDrawingCanvasWindowConfig(value: unknown): DrawingCanvasWin
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError("$ must be an object");
   const row = value as Record<string, unknown>;
   const keys = Object.keys(row);
-  if (keys.length !== 1 || keys[0] !== "viewport") throw new TypeError("$ must contain only viewport");
-  return { viewport: parseViewport2d(row.viewport) };
+  if (keys.length !== 2 || keys.some(key => key !== "viewport" && key !== "framed") || typeof row.framed !== "boolean") throw new TypeError("$ must contain viewport and framed");
+  return { viewport: parseViewport2d(row.viewport),framed: row.framed };
 }
 
 /** 🔁️ Applies one exact Drawing Canvas configuration mutation. */

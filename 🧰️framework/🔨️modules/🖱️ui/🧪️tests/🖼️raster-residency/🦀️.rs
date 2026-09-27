@@ -164,21 +164,7 @@ impl RasterTableGpuHarness {
         for turn in 0..64 {
             if self
                 .table
-                .ensure_raster_step(
-                    &self.device,
-                    &self.queue,
-                    &self.globals,
-                    &self.glyph_view,
-                    &self.glyph_sampler,
-                    &self.glyph_view,
-                    &self.glyph_sampler,
-                    key,
-                    RasterUploadPixels::Scene(lease),
-                    descriptor.width,
-                    descriptor.height,
-                    owner,
-                    owner,
-                )
+                .ensure_raster_step(&self.device, &self.queue, &self.globals, &self.glyph_view, &self.glyph_sampler, &self.glyph_view, &self.glyph_sampler, key, RasterUploadPixels::Scene(lease), descriptor.width, descriptor.height, owner, owner)
                 .expect("scene raster uploads through the production table")
             {
                 return;
@@ -242,12 +228,7 @@ fn integration_scene_descriptor(source_revision: u64) -> crate::wgpu::raster_own
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn publish_integration_scene(
-    pool: &crate::wgpu::raster_ownership::SceneRasterPool,
-    descriptor: crate::wgpu::raster_ownership::SceneRasterDescriptor,
-    owner: u64,
-    byte: u8,
-) -> crate::wgpu::raster_ownership::SceneRasterLease {
+fn publish_integration_scene(pool: &crate::wgpu::raster_ownership::SceneRasterPool, descriptor: crate::wgpu::raster_ownership::SceneRasterDescriptor, owner: u64, byte: u8) -> crate::wgpu::raster_ownership::SceneRasterLease {
     use crate::wgpu::raster_ownership::{SceneRasterBegin, SceneRasterWriteMode};
     for turn in 0..4 {
         match pool.begin(descriptor, owner, SceneRasterWriteMode::Streamed) {
@@ -305,16 +286,7 @@ fn real_gpu_table_commits_six_scene_leases_retires_the_first_and_recovers_its_na
     assert_eq!(contract["upload"]["committedAckRequired"], true);
     assert_eq!(contract["profiles"][0]["id"], "reference-image-map-v1");
 
-    let pool = SceneRasterPool::try_new(SceneRasterPoolLimits {
-        item_bytes: 8,
-        pool_bytes: 32,
-        slot_capacity: 2,
-        lease_capacity_per_slot: 4,
-        transfer_bytes: 8,
-        retire_bytes: 8,
-        gpu_resident_bytes: 48,
-    })
-    .expect("private two-slot scene raster pool");
+    let pool = SceneRasterPool::try_new(SceneRasterPoolLimits { item_bytes: 8, pool_bytes: 32, slot_capacity: 2, lease_capacity_per_slot: 4, transfer_bytes: 8, retire_bytes: 8, gpu_resident_bytes: 48 }).expect("private two-slot scene raster pool");
     let mut keys = Vec::new();
     let mut descriptors = Vec::new();
     let mut identities = Vec::new();
@@ -594,7 +566,12 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
     let mut draw = DrawList::default();
     let mut pass = crate::wgpu::kernel_3d_scene::ScenePass3d::default();
     pass.textured_draws.push(crate::wgpu::kernel_3d_scene::TexturedDraw3d {
-        instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d { texture_key: "world-reference".into(), model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), background: [0.0; 4], appearance: [1.0, 0.0, 0.0, 0.0] }],
+        instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d {
+            texture_key: "world-reference".into(),
+            model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]),
+            background: [0.0; 4],
+            appearance: [1.0, 0.0, 0.0, 0.0],
+        }],
         ..Default::default()
     });
     pass.material_draws.push(crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d {

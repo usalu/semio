@@ -21,7 +21,9 @@ export type HubAccessActionV1 =
   | "document.check-in"
   | "artifact.create"
   | "blob.read"
-  | "blob.write";
+  | "blob.write"
+  | "preference.record"
+  | "preference.read";
 export type HubAccessGrantV1 = Readonly<{ effect: "allow" | "deny"; roles: readonly HubAccessRoleV1[]; actions: readonly HubAccessActionV1[]; spaceKinds?: readonly string[] }>;
 export type HubAccessPolicyV1 = Readonly<{ schema: "semio.hub.access-policy/v1"; grants: readonly HubAccessGrantV1[] }>;
 

@@ -177,7 +177,12 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
         assert_eq!(phases, vec![HubSessionPhase::SignedIn.as_str().to_string()]);
     }
     hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
-    println!("wg6-live open space={:?} members={:?} uri={:?}", shell.hub_workspace.open_space_id, shell.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(), shell.uri_history.get(shell.uri_index));
+    println!(
+        "wg6-live open space={:?} members={:?} uri={:?}",
+        shell.hub_workspace.open_space_id,
+        shell.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(),
+        shell.uri_history.get(shell.uri_index)
+    );
     assert_eq!(shell.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
     assert!(shell.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
     hub_verb(&mut shell, crate::hub_connection::action::SIGN_OUT, &[]);
@@ -518,7 +523,8 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
         format!("catalog={} kind={kind_id:?} trail={creation_trail:?} created={created:?} after={:?}", a.hub_workspace.creation.catalog_phase.as_str(), creation_started.elapsed()),
     );
     let document_id = created.as_ref().map(|ready| ready.artifact_id.clone()).unwrap_or_default();
-    let open_args = [("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str()), ("spaceId", space_id.as_str())];
+    let open_args =
+        [("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str()), ("spaceId", space_id.as_str())];
     shell_command(&mut b, "os.open-artifact", &open_args);
     let b_open = settle_document_opening(&mut b);
     println!("g7w-live B open frames={b_open:?}");
@@ -638,7 +644,11 @@ fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     let mut shell = ShellState::new(plugins, variant);
     let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
     let started = std::time::Instant::now();
-    shell_command(&mut shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str())]);
+    shell_command(
+        &mut shell,
+        "os.open-artifact",
+        &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str())],
+    );
     let command = started.elapsed();
     let frames = settle_document_opening(&mut shell);
     let session = shell.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
@@ -950,7 +960,8 @@ impl CrossShellMeeting {
         hub_verb(&mut a, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
         let creation_started = std::time::Instant::now();
         let mut creation_trail = Vec::new();
-        while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
+        while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
+        {
             let observed = a.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
             if creation_trail.last() != Some(&observed) {
                 creation_trail.push(observed);
@@ -959,7 +970,13 @@ impl CrossShellMeeting {
             std::thread::sleep(std::time::Duration::from_millis(25));
         }
         let a_open = settle_document_opening(&mut a);
-        println!("cross-shell native creation catalog={} trail={creation_trail:?} after={:?} open={a_open:?} phase={:?} error={:?}", a.hub_workspace.creation.catalog_phase.as_str(), creation_started.elapsed(), a.document_opening.as_ref().map(|opening| &opening.phase), a.error);
+        println!(
+            "cross-shell native creation catalog={} trail={creation_trail:?} after={:?} open={a_open:?} phase={:?} error={:?}",
+            a.hub_workspace.creation.catalog_phase.as_str(),
+            creation_started.elapsed(),
+            a.document_opening.as_ref().map(|opening| &opening.phase),
+            a.error
+        );
         let document_id = a.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.as_ref()).map(|ready| ready.artifact_id.clone()).unwrap_or_default();
         let live_after = pump_until(&mut a, std::time::Duration::from_secs(30), is_live);
         ledger.record(
@@ -1018,7 +1035,11 @@ fn a_native_and_a_react_user_collaborate_on_one_hub_document() {
     let a_ledger = applied_edits(a);
     handshake.publish("edit", serde_json::json!({ "verb": journey.verb, "ok": edit.is_ok(), "ledger": a_ledger.len() }));
     let react_ingested = handshake.await_react(a, "ingested", std::time::Duration::from_secs(120));
-    ledger.record("5-a-edits-b-ingests", edit.is_ok() && a_ledger.len() == before + 1 && react_ingested.as_ref().is_some_and(|value| value["ingested"] == true), format!("A outcome={edit:?} latency={latency:?} ledger {before}->{}; B {react_ingested:?}", a_ledger.len()));
+    ledger.record(
+        "5-a-edits-b-ingests",
+        edit.is_ok() && a_ledger.len() == before + 1 && react_ingested.as_ref().is_some_and(|value| value["ingested"] == true),
+        format!("A outcome={edit:?} latency={latency:?} ledger {before}->{}; B {react_ingested:?}", a_ledger.len()),
+    );
 
     let remote_before = applied_edits(a).iter().filter(|(action, _)| action == "apply").count();
     let react_edit = handshake.await_react(a, "edit", std::time::Duration::from_secs(120));
@@ -1073,7 +1094,10 @@ fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
     }
     let (views, _) = a.board_presence_views();
     let _ = pump_until(a, std::time::Duration::from_secs(2), |_| false);
-    handshake.publish("cursor", serde_json::json!({ "board": board.as_ref().map(|(window, _)| window), "views": views.iter().map(|view| serde_json::json!({ "windowId": view.window_id, "space": view.space, "pointer": view.pointer })).collect::<Vec<_>>() }));
+    handshake.publish(
+        "cursor",
+        serde_json::json!({ "board": board.as_ref().map(|(window, _)| window), "views": views.iter().map(|view| serde_json::json!({ "windowId": view.window_id, "space": view.space, "pointer": view.pointer })).collect::<Vec<_>>() }),
+    );
     let react_cursor = handshake.await_react(a, "cursor", std::time::Duration::from_secs(120));
     let b_actor = b_actor.clone();
     let native_sees = pump_until(a, std::time::Duration::from_secs(20), |shell| shell.board_peer_overlays().iter().any(|(_, overlays)| overlays.cursors.iter().any(|cursor| cursor.actor == b_actor)));

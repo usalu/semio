@@ -1,4 +1,5 @@
-use super::password::{hmac_sha256, pbkdf2_sha256, PasswordCredentialError, PasswordCredentialV1};
+use super::password::{PasswordCredentialError, PasswordCredentialV1};
+use semio_framework_hash::{hmac_sha256, pbkdf2_sha256};
 use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitSubjectV1, RATE_LIMIT_CLASSES};
 use super::*;
 

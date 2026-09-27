@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "cases", "workspace", "operationOwnership", "transport"],
+  "required": ["schemaVersion", "cases", "workspace", "footerPresentation", "operationOwnership", "transport"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "cases": {
@@ -38,6 +38,15 @@
           "items": { "enum": ["signIn", "spaces", "invitations"] },
           "uniqueItems": true
         }
+      }
+    },
+    "footerPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "action"],
+      "properties": {
+        "status": { "$ref": "#/definitions/footerStatus" },
+        "action": { "$ref": "#/definitions/footerAction" }
       }
     },
     "operationOwnership": {
@@ -132,6 +141,37 @@
         "state": { "enum": ["local", "signedOut", "live", "online", "connecting", "reconnecting"] },
         "peerCount": { "type": "integer", "minimum": 0 },
         "documentCount": { "type": "integer", "minimum": 0, "maximum": 64 }
+      }
+    },
+    "localizedLabels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    },
+    "footerStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "icon", "labels"],
+      "properties": {
+        "id": { "const": "s-hub-connection" },
+        "role": { "const": "status" },
+        "icon": { "const": "user" },
+        "labels": { "$ref": "#/definitions/localizedLabels" }
+      }
+    },
+    "footerAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "icon", "labels"],
+      "properties": {
+        "id": { "const": "framework.hub.signIn" },
+        "role": { "const": "button" },
+        "icon": { "const": "user" },
+        "labels": { "$ref": "#/definitions/localizedLabels" }
       }
     }
   }

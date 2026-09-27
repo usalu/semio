@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveSelfWeight
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-self-weight-elements", "remove-self-weight-elements")
+        protocol::LocalizedLabel::native("Remove self-weight element", "Eigenlastbauteil entfernen")
     }
 }
 //#endregion 🔖️Payload

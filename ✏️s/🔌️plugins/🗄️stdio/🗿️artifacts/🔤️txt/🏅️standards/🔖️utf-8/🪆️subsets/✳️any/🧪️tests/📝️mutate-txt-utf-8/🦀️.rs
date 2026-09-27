@@ -46,10 +46,20 @@ fn spec_vector_text(spec: &Json) -> Result<String, String> {
 //#endregion 🔖️SpecHelpers
 
 //#region 🔖️Oracle
+/// 🔒️ The reference's forward application with the feature's one documented refusal answered as the subject answers
+/// it: `set-trailing-newline` whose result is not representable leaves the bytes exactly where they were. Any other
+/// kind, or any other reason, is still an error — a reference that started refusing everything fails the row.
+fn oracle_apply_or_documented_refusal(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    match oracle_apply_mutation(input, spec) {
+        Err(refusal) if spec.str("kind") == "set-trailing-newline" && refusal.contains("not representable") => Ok(input.to_vec()),
+        applied => applied,
+    }
+}
+
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let output = oracle_apply_mutation(&input, &spec)?;
+    let output = oracle_apply_or_documented_refusal(&input, &spec)?;
     let projection = project_txt(&output)?;
     Ok(Outcome::with_raw(output, projection))
 }
@@ -61,7 +71,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let mutated = oracle_apply_or_documented_refusal(&input, &spec)?;
     let undo = oracle_inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_txt(&restored)?;

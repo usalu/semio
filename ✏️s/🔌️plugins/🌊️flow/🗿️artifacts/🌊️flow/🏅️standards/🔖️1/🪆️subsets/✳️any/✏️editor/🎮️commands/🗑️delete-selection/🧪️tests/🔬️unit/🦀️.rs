@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::unit_tests::context::{dispatch, dispatch_with_registry, flow_app_with_registry, select_graph, settle};
+use crate::editor::flow::unit_tests::context::{composed_scene, dispatch, dispatch_with_registry, flow_app_with_registry, select_graph, settle};
 use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
 #[semio_framework_async_macros::async_test]
@@ -9,20 +9,25 @@ async fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {
     let result = dispatch(&mut app, FlowCommand::DeleteSelection(DeleteSelection {})).await;
     assert!(result.mutations.is_empty(), "retained deleteSelection admission cannot publish document operations synchronously");
     settle(&mut app).await;
-    assert!(!app.snapshot().expect("snapshot").to_host_snapshot().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "slider must be deleted");
+    let after = composed_scene(&app).await;
+    assert!(!after.widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "slider must be deleted");
+    after.retire_cold();
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_action_removes_selected_synapses() {
     let mut app = flow_app_with_registry().await;
-    let before = app.snapshot().expect("snapshot").to_host_snapshot().synapses.len();
+    let before_scene = composed_scene(&app).await;
+    let before = before_scene.synapses.len();
+    before_scene.retire_cold();
     select_graph(&mut app, &[], &["s1"]).await;
     let result = dispatch_with_registry(&mut app, FlowCommand::DeleteSelection(DeleteSelection {})).await;
     assert!(result.mutations.is_empty(), "retained deleteSelection admission cannot publish document operations synchronously");
     settle(&mut app).await;
-    let after = app.snapshot().expect("snapshot").to_host_snapshot();
+    let after = composed_scene(&app).await;
     assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
     assert_eq!(after.synapses.len(), before - 1);
+    after.retire_cold();
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `contextMenuAt` no longer sets

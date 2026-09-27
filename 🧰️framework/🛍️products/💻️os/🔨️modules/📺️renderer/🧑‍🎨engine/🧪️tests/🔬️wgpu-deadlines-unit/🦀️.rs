@@ -1,57 +1,57 @@
 use super::*;
 
-//#region ⌨️CaretBlink
-
 #[test]
-fn caret_blink_never_arms_without_a_caret() {
-    let mut scheduler = FrameScheduler::new();
-    let mut blink = CaretBlink::new();
-    blink.sync(&mut scheduler, 0.0, false);
-    assert_eq!(scheduler.next_deadline(), None, "no caret, no timer — a blink timer with nothing focused is a frame generator");
+fn accepted_animation_clock_survives_discard_and_stops_after_static_presentation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    let mut clock = AcceptedAnimationClock::default();
+    let mut scheduler = ui_render::FrameScheduler::new();
+    for step in fixture["activity"].as_array().unwrap() {
+        let now = step["atMs"].as_f64().unwrap() / 1000.0;
+        assert_eq!(scheduler.should_render(now).is_some(), step["wake"].as_bool().unwrap(), "{step}");
+        if step["kind"] == "present" {
+            clock.accept(step["active"].as_bool().unwrap());
+        }
+        clock.sync(&mut scheduler, now);
+        match step["nextMs"].as_f64() {
+            Some(expected) => {
+                assert!((scheduler.next_deadline().unwrap().due * 1000.0 - expected).abs() < 0.000001, "{step}");
+                assert_eq!(scheduler.next_deadline().unwrap().reason, InvalidationReason::ANIMATION);
+            }
+            None => assert!(scheduler.next_deadline().is_none(), "{step}"),
+        }
+    }
+    clock.accept(false);
+    scheduler.replace_deadline(RETAINED_CONTROL_CLOCK, Some(ui_render::Deadline { due: 2.0, reason: InvalidationReason::INPUT_STATE }));
+    clock.sync(&mut scheduler, 1.0);
+    assert_eq!(scheduler.next_deadline().unwrap().due, 2.0);
+    clock.accept(true);
+    clock.sync(&mut scheduler, f64::NAN);
+    assert_eq!(scheduler.next_deadline().unwrap().due, 2.0);
 }
 
 #[test]
-fn caret_blink_arms_exactly_once_while_present() {
-    let mut scheduler = FrameScheduler::new();
-    let mut blink = CaretBlink::new();
-    blink.sync(&mut scheduler, 0.0, true);
-    let first = scheduler.next_deadline();
-    blink.sync(&mut scheduler, 0.1, true);
-    assert_eq!(scheduler.next_deadline(), first, "a still-present caret does not re-arm a second deadline");
-}
-
-/// 🔥️ `fire` is only ever reached AFTER the event loop has consumed the deadline that woke it —
-/// `FrameScheduler::should_render` drains every `due <= now` entry into `dirty`
-/// (`🖌️render/⏱️schedule/🦀️.rs:133-142`) and only then does the frame call `fire`. Without that
-/// drain the scheduler's append-only list still holds the half-period this law just consumed, and
-/// `next_deadline` answers the OLD 0.5 instead of the re-armed 1.0
-/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration; W1's §3.A2 hand-off).
-#[test]
-fn caret_blink_toggles_and_rearms_on_fire() {
-    let mut scheduler = FrameScheduler::new();
-    let mut blink = CaretBlink::new();
-    blink.sync(&mut scheduler, 0.0, true);
-    assert!(blink.is_visible());
-    assert!(scheduler.should_render(CARET_BLINK_SECONDS).is_some(), "the half-period is what woke this frame");
-    blink.fire(&mut scheduler, CARET_BLINK_SECONDS);
-    assert!(!blink.is_visible());
-    assert_eq!(scheduler.next_deadline().map(|deadline| deadline.due), Some(CARET_BLINK_SECONDS * 2.0));
+fn gpu_animation_clock_preserves_frame_precision_and_shader_periods_after_long_uptime() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    for row in fixture["samples"].as_array().unwrap() {
+        let expected = row["phaseUs"].as_u64().unwrap() as f32 / 1_000_000.0;
+        assert_eq!(ui_animation_seconds(row["nowUs"].as_u64()), expected, "{}", row["id"]);
+    }
+    let now = 1_790_000_000_000_000;
+    assert_ne!(ui_animation_seconds(Some(now)), ui_animation_seconds(Some(now + 16_000)));
+    assert_eq!(ui_animation_seconds(Some(u64::MAX)), (u64::MAX % 3_200_000) as f32 / 1_000_000.0);
 }
 
 #[test]
-fn caret_disappearing_disarms_and_resets_visible() {
-    let mut scheduler = FrameScheduler::new();
-    let mut blink = CaretBlink::new();
-    blink.sync(&mut scheduler, 0.0, true);
-    blink.fire(&mut scheduler, CARET_BLINK_SECONDS);
-    assert!(!blink.is_visible());
-    blink.sync(&mut scheduler, CARET_BLINK_SECONDS, false);
-    assert!(blink.is_visible(), "losing the caret resets to solid, not mid-blink invisible");
-    blink.sync(&mut scheduler, CARET_BLINK_SECONDS, true);
-    assert!(blink.is_visible(), "a freshly re-armed caret starts solid");
+fn retained_control_deadlines_translate_monotonic_origins_without_epoch_loss() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    for row in fixture["bridges"].as_array().unwrap() {
+        let deadline = retained_control_deadline(row["dueUs"].as_u64(), row["nowUs"].as_u64(), row["hostSeconds"].as_f64().unwrap());
+        assert_eq!(deadline.map(|deadline| deadline.reason), row["expectedSeconds"].as_f64().map(|_| InvalidationReason::INPUT_STATE));
+        assert_eq!(deadline.map(|deadline| deadline.due), row["expectedSeconds"].as_f64(), "{}", row["id"]);
+    }
+    assert!(retained_control_deadline(Some(5), None, 0.0).is_none());
+    assert!(retained_control_deadline(Some(5), Some(0), f64::NAN).is_none());
 }
-
-//#endregion ⌨️CaretBlink
 
 //#region 🧩️NativeHotSwapPoll
 

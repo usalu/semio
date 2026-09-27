@@ -32,6 +32,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWeldThroat
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-weld-throat", "change-weld-throat")
+        protocol::LocalizedLabel::native("Change weld throat thickness", "Schweißnahtdicke ändern")
     }
 }

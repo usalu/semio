@@ -1,3 +1,4 @@
+import { formatUiNumber } from "../🔢️number-format/🟦️.ts";
 /**
  * @emoji ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
  *
@@ -29,6 +30,7 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly hidden: boolean;
   readonly disabled: boolean;
   readonly focusable: boolean;
+  readonly tabbable: boolean;
   readonly actionable: boolean;
   readonly focused: boolean;
   readonly checked: boolean | null;
@@ -158,7 +160,7 @@ export function uiAccessibilityValueV1(component: Component): UiAccessibilityVal
   }
   if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false };
   if (component.type === "slider") return { valueMin: component.min, valueMax: component.max, valueNow: component.value, valueText: component.unit == null ? null : `${component.value} ${component.unit}`, busy: false };
-  if (component.type === "numberStepper") return { valueMin: null, valueMax: null, valueNow: component.value, valueText: String(component.value), busy: false };
+  if (component.type === "numberStepper") return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: component.uniform ? component.value : null, valueText: component.uniform ? formatUiNumber(component.value) : null, busy: false };
   if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false };
   if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
   if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };
@@ -179,8 +181,9 @@ export function uiProgressFractionV1(completed: number, total: number | null | u
 export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: number): UiAccessibilityProjectionNodeV1 {
   const bindings = record.bindings ?? [];
   const activatable = bindings.some((binding) => binding.trigger === "activate");
+  const focusable = uiAccessibilityIsFocusableV1(record.component, activatable);
   const accessibility = (record.accessibility ?? {}) as Partial<AccessibilitySpec>;
-  const componentLabel = record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" ? record.component.label : null;
+  const componentLabel = record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" || (record.component.type === "container" && (record.component.role === "section" || record.component.role === "group")) ? record.component.label : null;
   const treeItem = record.component.type === "treeItem" ? record.component : null;
   const treeItemHasOrdinaryChild = treeItem !== null && (record.children ?? []).some((child) => child !== treeItem.inlineToolbar && child !== treeItem.detail);
   const expanded = record.component.type === "select"
@@ -201,7 +204,8 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     shortcut: accessibility.shortcut ?? null,
     hidden: accessibility.hidden ?? false,
     disabled: record.disabled ?? false,
-    focusable: uiAccessibilityIsFocusableV1(record.component, activatable),
+    focusable,
+    tabbable: focusable,
     actionable: activatable || bindings.length > 0,
     focused: false,
     checked: record.component.type === "toggle" && record.component.appearance === "checkbox" ? record.component.on : null,

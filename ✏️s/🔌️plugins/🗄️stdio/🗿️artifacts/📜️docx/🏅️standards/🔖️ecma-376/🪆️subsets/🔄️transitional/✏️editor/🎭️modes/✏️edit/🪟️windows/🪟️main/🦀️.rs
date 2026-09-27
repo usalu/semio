@@ -9,7 +9,7 @@
 use crate::schema::snapshot::DocxBlock;
 use crate::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -41,6 +41,11 @@ fn block_text(block: &DocxBlock) -> String {
 pub fn render(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
+}
+
+pub fn render_windowed(document: &DocxSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
+    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
 }
 //#endregion 🔖️Render
 

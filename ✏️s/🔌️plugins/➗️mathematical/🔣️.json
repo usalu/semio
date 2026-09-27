@@ -144,6 +144,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.",
+                  "de": "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."
+                },
+                "reuse": {
+                  "en": "Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.",
+                  "de": "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."
+                }
               }
             }
           },
@@ -260,6 +270,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses the graph algorithm the equation evaluates: topological order, connected components, strongly connected components or breadth-first distances.",
+                  "de": "Wählt den Graphalgorithmus, den die Gleichung auswertet: topologische Ordnung, Zusammenhangskomponenten, starke Zusammenhangskomponenten oder Breitensuche-Distanzen."
+                },
+                "reuse": {
+                  "en": "Chooses the graph algorithm the equation evaluates: topological order, connected components, strongly connected components or breadth-first distances.",
+                  "de": "Wählt den Graphalgorithmus, den die Gleichung auswertet: topologische Ordnung, Zusammenhangskomponenten, starke Zusammenhangskomponenten oder Breitensuche-Distanzen."
+                }
               }
             }
           },
@@ -323,6 +343,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether the equation's graph is treated as directed or undirected, which changes every algorithm result.",
+                  "de": "Legt fest, ob der Graph der Gleichung gerichtet oder ungerichtet behandelt wird, was jedes Algorithmusergebnis ändert."
+                },
+                "reuse": {
+                  "en": "Sets whether the equation's graph is treated as directed or undirected, which changes every algorithm result.",
+                  "de": "Legt fest, ob der Graph der Gleichung gerichtet oder ungerichtet behandelt wird, was jedes Algorithmusergebnis ändert."
+                }
               }
             }
           },
@@ -389,6 +419,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Applies a JSON list of graph edits (addNode at x, y; move; connect; deleteSelection) to the equation's graph in one step.",
+                  "de": "Wendet eine JSON-Liste von Graphänderungen (addNode an x, y; move; connect; deleteSelection) in einem Schritt auf den Graphen der Gleichung an."
+                },
+                "reuse": {
+                  "en": "Applies a JSON list of graph edits (addNode at x, y; move; connect; deleteSelection) to the equation's graph in one step.",
+                  "de": "Wendet eine JSON-Liste von Graphänderungen (addNode an x, y; move; connect; deleteSelection) in einem Schritt auf den Graphen der Gleichung an."
+                }
               }
             }
           },
@@ -407,7 +447,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -434,7 +474,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -459,7 +500,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -478,6 +519,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the point set of the equation's geometry with the supplied points.",
+                  "de": "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."
+                },
+                "reuse": {
+                  "en": "Replaces the point set of the equation's geometry with the supplied points.",
+                  "de": "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."
+                }
               }
             }
           },
@@ -556,6 +607,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole equation document with the bundled demo example; any other example id changes nothing.",
+                  "de": "Ersetzt das gesamte Gleichungsdokument durch das mitgelieferte Demo-Beispiel; jede andere Beispiel-Id ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole equation document with the bundled demo example; any other example id changes nothing.",
+                  "de": "Ersetzt das gesamte Gleichungsdokument durch das mitgelieferte Demo-Beispiel; jede andere Beispiel-Id ändert nichts."
+                }
               }
             }
           },
@@ -1287,6 +1348,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -1392,6 +1463,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -1485,6 +1566,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -2442,6 +2533,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2547,6 +2648,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2640,6 +2751,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -2806,7 +2927,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -2852,8 +2973,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "1bf034256d4a9f5e608fba86c38647997e9c7d15f46a0ff695be6be9595aaf9f",
-    "coreWasmSha256": "a049c4391813199e7757eac5644e78a3e1ae896acec8bce47cd5ebd8cd5b224f",
-    "descriptorSha256": "c31918a5345b27f2dce34435b4e39022152df83ae97312b794a0e84f0820821d"
+    "wasmSha256": "63223d222e880c1f1ca6dc14d3e2ad517bc4174ca2f26b6198a50b3e8827bace",
+    "coreWasmSha256": "c874020623448c58fe2a9f806fcd87aa70874710d0dd1a50e98f41f7c69e96f1",
+    "descriptorSha256": "7f06f9f7fe8c60b0e3b4da2846641a338e2951b63c900241dd4f6f1f714a7807"
   }
 }

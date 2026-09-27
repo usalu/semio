@@ -9,6 +9,7 @@
  * TS mirror here — only `../📸️snapshot/🟦️.ts`'s types are real). None of the 11 leaf
  * structs carry `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc
  * comment), so every leaf's own field names are the literal Rust snake_case names verbatim. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { GraphNodeId, GraphEdgeId, SemioGraphPort } from "../📸️snapshot/🟦️.ts";
 
 export type SemioPoint2 = { x: number; y: number };
@@ -91,4 +92,5 @@ export type SemioGraphMutation =
   | { AddNodeProperty: AddNodeProperty }
   | { RemoveNodeProperty: RemoveNodeProperty }
   | { CreateEdge: CreateEdge }
-  | { DeleteEdge: DeleteEdge };
+  | { DeleteEdge: DeleteEdge }
+  | { SetSnapshot: SetSnapshot };

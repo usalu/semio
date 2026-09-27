@@ -73,14 +73,7 @@ fn reconcile_ui_window(ui: &mut Ui, window_id: &str, controller: &str, generatio
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
     for _ in 0..4096 {
-        let mut cx = semio_framework_job::StepContext::new(
-            operation,
-            semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(4096, u64::MAX),
-            cancel.clone(),
-            test_clock,
-            &mut sequence,
-        );
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(4096, u64::MAX), cancel.clone(), test_clock, &mut sequence);
         match ui.step_document_reconcile(window_id, controller, &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -267,12 +260,7 @@ fn a_synthesized_select_option_keeps_the_published_binding_scope() {
     let action_law = &law["actionScope"];
     let select_record = record(&action_law["selectRecord"]);
     let document = document_from(&law, &[], 7, 3, Some(&action_law["selectRecord"]));
-    let projected = ui_node_from_record(
-        &document,
-        &select_record,
-        law["document"]["surface"].as_str().expect("fixture surface"),
-        action_law["documentController"].as_str().expect("fixture document controller"),
-    );
+    let projected = ui_node_from_record(&document, &select_record, law["document"]["surface"].as_str().expect("fixture surface"), action_law["documentController"].as_str().expect("fixture document controller"));
     let UiNode::Select(select) = projected else { panic!("fixture Select projects as a retained Select") };
     assert_eq!(select.on_change.controller_id, action_law["bindingController"].as_str().expect("binding controller"));
 
@@ -284,10 +272,7 @@ fn a_synthesized_select_option_keeps_the_published_binding_scope() {
     assert_eq!(option.action.action, expected["action"].as_str().expect("expected action"));
     assert_eq!(
         option.action.args,
-        Some(DslValue::Object(vec![
-            ("windowId".into(), DslValue::String("framework.settings.general".into())),
-            ("value".into(), DslValue::String(chosen.into())),
-        ])),
+        Some(DslValue::Object(vec![("windowId".into(), DslValue::String("framework.settings.general".into())), ("value".into(), DslValue::String(chosen.into())),])),
         "the synthesized row preserves authored arguments and adds the chosen value",
     );
 }

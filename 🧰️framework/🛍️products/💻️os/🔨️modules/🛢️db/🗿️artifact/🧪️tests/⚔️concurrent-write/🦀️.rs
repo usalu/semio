@@ -97,3 +97,39 @@ async fn a_write_is_graded_only_against_unseen_foreign_writes_to_the_same_part()
     }
     assert!(commits >= 27, "the fixture walks every declared commit");
 }
+
+/// 📜️ Every committed write of the fixture — opaque ones with an observation and a declared target, readable
+/// path-map ones, history transitions — is durable and replays from the document's history in commit order,
+/// written and read back through the same WAL a hub reopens (ticket 26/09/23 LD item 2: the history walker did
+/// not know the envelope's `observed`/`target` fields and refused every new-wire record as trailing bytes).
+#[semio_framework_async_macros::async_test]
+async fn the_history_replays_every_committed_write_with_its_observation_and_target() {
+    if !crate::db_storage::process_isolated_law("db_artifact::concurrent_write_tests::the_history_replays_every_committed_write_with_its_observation_and_target") {
+        return;
+    }
+    let _history_capacity = history_capacity_test_lock();
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/⚔️concurrent-write/🔣️.json")).expect("concurrent write fixture");
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.expect("memory storage")));
+    let mut engine = ArtifactEngine::create_retained(protocol::ArtifactId("doc-1".to_string()), storage, ArtifactEngineConfig::default(), 0).await.expect("retained engine");
+    let mut committed: Vec<String> = Vec::new();
+    for vector in &fixture.vectors {
+        for commit in &vector.commits {
+            let mut envelope = fixture_envelope(&commit.write).await;
+            envelope.mutation_id = protocol::MutationId(format!("{}.{}", vector.id, commit.write.id));
+            envelope.observed = envelope.observed.map(|observed| protocol::MutationId(format!("{}.{}", vector.id, observed.0)));
+            let options = SubmitOptions { durability: DurabilityClass::Fsync, policy: protocol::MergePolicy::Normal };
+            engine.submit(CommandBatch::new(vec![envelope]).await.expect("batch"), options, committed.len() as u64 + 1).await.expect("normal commits every write");
+            committed.push(format!("{}.{}", vector.id, commit.write.id));
+        }
+    }
+    let mut replay = engine.history_replay(1, Arc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().expect("history reservation"));
+    let mut view = (&mut replay).await.expect("history replay");
+    assert!(replay.terminal_is_empty());
+    assert_eq!(view.entries.len(), committed.len(), "one history entry per committed write");
+    for (index, id) in committed.iter().enumerate() {
+        assert!(view.operation_id_eq(index, 0, id), "history entry {index} replays {id}");
+    }
+    while view.close_step() {}
+    assert!(view.terminal_is_empty());
+    assert!(committed.iter().any(|id| id.ends_with(".b1")) && committed.len() >= 27, "the fixture's observed and targeted writes are all in the replay");
+}

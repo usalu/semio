@@ -2,7 +2,7 @@
 //! full-pane Main window, the only mode this thin surface declares.
 
 use crate::editor::wav::modes::edit::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout};
 
 pub const MODE_ID: &str = "edit";
 
@@ -14,13 +14,6 @@ pub fn definition() -> ModeDefinition {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
-    WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
-        }),
-    }
+    semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")
 }
 //#endregion 🔖️Definition

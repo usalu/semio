@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for RemoveBuilding {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-building", "remove-building")
+        protocol::LocalizedLabel::native("Remove building", "Gebäude entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-building".into()]

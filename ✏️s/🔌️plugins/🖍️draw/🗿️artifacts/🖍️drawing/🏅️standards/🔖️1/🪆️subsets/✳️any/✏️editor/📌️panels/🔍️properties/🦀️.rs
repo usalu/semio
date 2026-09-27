@@ -104,7 +104,7 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
         if let Some(min) = field.min { input = input.min(min); }
         if let Some(max) = field.max { input = input.max(max); }
         if field.kind == InputKind::Number { input = input.step(if matches!(field.key, "opacity" | "traceThreshold") { 0.01 } else { 0.1 }); }
-        input.try_on_with(Trigger::Change, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
+        input.try_on_with(Trigger::Commit, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
     };
     ui::tree_item(ui::Label(text(field.label.as_str())?)).try_id(format!("{ROOT}.{}", field.key)).map_err(|_| error())?.try_child(control).map_err(|_| error())?.try_build().map_err(|_| error())
 }
@@ -126,7 +126,7 @@ fn node_row(layer_id: &str, index: usize, segment: &PathSegment, join_target: Op
             let (action, args) = drawing_play_action("editPath", Some(args))?;
             let input = ui::input(InputKind::Number).value(text(&value.to_string())?).step(0.1).commit(text("blur")?).disabled(disabled)
                 .try_id(format!("{id}.{point}.{axis}")).map_err(|_| error())?.try_label(format!("{} {}", label.as_str(), axis.to_uppercase())).map_err(|_| error())?
-                .try_on_with(Trigger::Change, action, args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())?;
+                .try_on_with(Trigger::Commit, action, args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())?;
             row = row.try_child(input).map_err(|_| error())?;
         }
     }
@@ -168,7 +168,7 @@ fn fill_input(layer_id: &str, id: &str, label: LabelText, kind: InputKind, value
     let mut input = ui::input(kind).value(text(value)?).disabled(disabled).commit(text("blur")?)
         .try_id(id).map_err(|_| error())?.try_label(label.as_str()).map_err(|_| error())?;
     if kind == InputKind::Number { input = input.step(0.01); }
-    input.try_on_with(Trigger::Change,action,args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())
+    input.try_on_with(Trigger::Commit,action,args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())
 }
 
 fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {

@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSystemBase
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-system-base-shear-resistance-n", "change-system-base-shear-resistance-n")
+        protocol::LocalizedLabel::native("Change base shear resistance of the system", "Widerstand gegen die Gesamterdbebenkraft des Systems ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-base-shear-resistance-n".into()]

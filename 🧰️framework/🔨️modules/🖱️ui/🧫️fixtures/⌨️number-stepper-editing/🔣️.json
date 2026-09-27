@@ -1,0 +1,12 @@
+{
+  "uniform": { "value": 2, "step": 1, "uniform": true, "min": 0, "max": 5, "focusDisplay": "2", "focusCaret": 1 },
+  "mixed": { "value": 0, "step": 1, "uniform": false, "min": -5, "max": 5, "focusDisplay": "0", "focusCaret": 1 },
+  "validEdit": { "input": "9", "expectedValue": 5, "expectedDisplay": "5" },
+  "boundedKeys": [
+    { "id": "delta-at-max-stays-visible-at-max", "value": 5, "key": "ArrowUp", "binding": "delta", "expectedField": "delta", "expectedActionValue": 1, "expectedDisplay": "5" },
+    { "id": "absolute-at-max-commits-the-bound", "value": 5, "key": "ArrowUp", "binding": "absolute", "expectedField": "value", "expectedActionValue": 5, "expectedDisplay": "5" },
+    { "id": "absolute-at-min-commits-the-bound", "value": 0, "key": "ArrowDown", "binding": "absolute", "expectedField": "value", "expectedActionValue": 0, "expectedDisplay": "0" }
+  ],
+  "boundedPointer": { "value": 5, "side": "plus", "disabled": true, "actionCount": 0 },
+  "hold": { "clockOriginSeconds": 31536000.123456, "delayMs": 500, "intervalMs": 100, "start": 2, "atDelay": 3, "atFirstInterval": 4, "atSecondInterval": 5, "actionCount": 1 }
+}

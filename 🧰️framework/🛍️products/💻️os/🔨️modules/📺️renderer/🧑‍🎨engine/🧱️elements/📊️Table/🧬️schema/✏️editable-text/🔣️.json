@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.table.editable-text-cell.v1",
+  "title": "Table Editable Text Cell",
+  "type": "object",
+  "required": ["kind", "value", "action"],
+  "properties": {
+    "kind": { "const": "editableText" },
+    "value": { "type": "string" },
+    "action": {
+      "type": "object",
+      "required": ["controllerId", "action"],
+      "properties": {
+        "controllerId": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "args": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

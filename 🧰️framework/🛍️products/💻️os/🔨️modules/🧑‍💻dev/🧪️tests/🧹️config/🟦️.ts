@@ -6,7 +6,7 @@
  * @vitest-environment node
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -170,7 +170,7 @@ describe("dev server watch policy", () => {
     const events: string[] = [];
     const closed: (() => void)[] = [];
     const siblings: string[] = [];
-    const freshness: Pick<ReturnType<typeof createSourceFreshnessRegistry>, "movedInDirectory"> = { movedInDirectory: (directory: string) => (siblings.push(directory), [join(directory, "source.ts")]) };
+    const freshness: Pick<ReturnType<typeof createSourceFreshnessRegistry>, "movedInDirectory" | "tracks"> = { movedInDirectory: (directory: string) => (siblings.push(directory), [join(directory, "source.ts")]), tracks: () => true };
     expect(fs.existsSync(target)).toBe(false);
     vi.mocked(existsSync).mockImplementation((path) => path === target ? watchPolicy.vanishedRename.previousExists : fs.existsSync(path));
     vi.mocked(watch).mockImplementation(((root: string, _options: unknown, callback: (event: string, name: string) => void) => {
@@ -226,8 +226,9 @@ describe("dev server watch policy", () => {
 
   it("reports source edits and stays silent for every unwatched store", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-watch-policy-"));
+    const canonical = realpathSync(sandbox);
     const seen: string[] = [];
-    const server = { watcher: { emit: (_event: string, path: string) => (seen.push(relative(sandbox, path).replaceAll("\\", "/")), true) }, httpServer: null };
+    const server = { watcher: { emit: (_event: string, path: string) => (seen.push(relative(canonical, path).replaceAll("\\", "/")), true) }, httpServer: null };
     try {
       for (const segment of ["🧰️framework", ...watchPolicy.forbiddenRoots, "🧰️framework/dist", "🧰️framework/🤖️generated"]) mkdirSync(join(sandbox, segment), { recursive: true });
       semioSourceWatchVitePlugin({ repoRoot: sandbox }).configureServer(server);
@@ -269,12 +270,13 @@ describe("dev server watch policy", () => {
     }],
   ])("replays %s over an existing source file as a change, the only event that invalidates Vite's module graph", async (_label, write) => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-watch-invalidate-"));
+    const canonical = realpathSync(sandbox);
     const events: string[] = [];
-    const server = { watcher: { emit: (event: string, path: string) => (events.push(`${event}:${relative(sandbox, path).replaceAll("\\", "/")}`), true) }, httpServer: null };
+    const server = { watcher: { emit: (event: string, path: string) => (events.push(`${event}:${relative(canonical, path).replaceAll("\\", "/")}`), true) }, httpServer: null };
     try {
-      mkdirSync(join(sandbox, "🧰️framework"), { recursive: true });
-      const target = join(sandbox, "🧰️framework/🟦️.ts");
-      const arming = join(sandbox, "🧰️framework/🔎️arm.ts");
+      mkdirSync(join(canonical, "🧰️framework"), { recursive: true });
+      const target = join(canonical, "🧰️framework/🟦️.ts");
+      const arming = join(canonical, "🧰️framework/🔎️arm.ts");
       writeFileSync(target, "export const value = 0;\n");
       const freshness = createSourceFreshnessRegistry();
       freshness.record(target);
@@ -293,6 +295,7 @@ describe("dev server watch policy", () => {
       const settle = Date.now() + 10_000;
       while (!events.includes("change:🧰️framework/🟦️.ts") && Date.now() < settle) await new Promise((resolve$) => setTimeout(resolve$, 100));
       expect(events, "one save of a modified module must reach Vite as a change").toContain("change:🧰️framework/🟦️.ts");
+      expect(events, "a tracked module answered with `add` as well is invalidated twice, one HMR update per event").not.toContain("add:🧰️framework/🟦️.ts");
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }

@@ -14,14 +14,16 @@ use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
-use crate::wgpu::events::{resolve_overlay_placement_side, AccessibilityUiEvent, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
+use crate::wgpu::events::{resolve_overlay_placement_side, AccessibilityUiEvent, CaretSource, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::input::{retained_hit_registration, retained_tree_chevron_registration, retained_tree_drag_handle_registration, HitKind, RetainedHitRegistration};
 use crate::wgpu::layout::TreeRowMetrics;
 use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
-use crate::wgpu::paint::{paint_node_step_with_driver, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+use crate::wgpu::paint::{
+    paint_node_step_with_driver, paint_tooltip, retained_overlay_chrome_step, sync_interactive_state_node_step, tooltip_surface_size, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep,
+};
 use crate::wgpu::reconcile::{UiComponentSceneWitness, UiDocumentReconcileCursor, UiDocumentReconcileFault, UiDocumentReconcileStep, UiRetiredComponentScene};
 #[cfg(test)]
 use crate::wgpu::scene_slots::collect_scene_slots;
@@ -52,6 +54,44 @@ pub struct UiOverlayPlacement {
 }
 //#endregion 🪟️OverlayPlacement
 
+/// ⏱️ One retained window's bounded monotonic-clock result.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiCaretSource {
+    Retained,
+    Scene,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UiPresentedCaret {
+    pub surface: UiSurfaceToken,
+    pub document_id: UiNodeId,
+    pub source: UiCaretSource,
+    pub visible: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct UiWindowClockStep {
+    pub surface: UiSurfaceToken,
+    pub tooltip: TooltipStep,
+    pub caret: Option<UiPresentedCaret>,
+    pub interaction_changed: bool,
+    pub next_deadline: Option<f64>,
+}
+
+struct PresentedTooltip {
+    surface: UiSurfaceToken,
+    document_id: UiNodeId,
+    label: String,
+    accessibility_generation: u64,
+    interaction_epoch: u64,
+}
+
+struct RetainedTooltipPaint {
+    label: String,
+    x: f32,
+    y: f32,
+}
+
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
 /// `LayoutEngine` that lays it out (`flex`), the `EventRouter` owning its capture/focus/hover state
@@ -75,6 +115,7 @@ struct UiWindow {
     candidate_preserves_prior_mounts: bool,
     candidate_interaction_cursor: Option<usize>,
     sealed_input_candidate: Option<(u64, u64)>,
+    presented_tooltip: Option<PresentedTooltip>,
     candidate_baseline: Option<Box<UiCandidateBaseline>>,
     draw: DrawList,
     viewport: (f32, f32),
@@ -131,6 +172,7 @@ impl UiWindow {
             candidate_preserves_prior_mounts: false,
             candidate_interaction_cursor: None,
             sealed_input_candidate: None,
+            presented_tooltip: None,
             candidate_baseline: None,
             draw: DrawList::default(),
             viewport: (0.0, 0.0),
@@ -225,6 +267,80 @@ impl UiWindow {
     }
 }
 
+fn tooltip_label_in_tree(tree: &UiTree, node: NodeId) -> Option<String> {
+    let document = tree.document()?;
+    let document_id = tree.document_id(node)?;
+    let record = document.record(document_id)?;
+    if record.accessibility.hidden {
+        return None;
+    }
+    let label = record.accessibility.label.as_ref()?.0.as_str();
+    if label.is_empty() {
+        return None;
+    }
+    match record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str()) {
+        Some(shortcut) if !shortcut.is_empty() => Some(format!("{label} ({shortcut})")),
+        _ => Some(label.to_string()),
+    }
+}
+
+fn synchronize_presented_tooltip(window: &mut UiWindow, surface: UiSurfaceToken) -> bool {
+    let valid = window.presented_tooltip.as_ref().is_some_and(|tooltip| {
+        let revealed = window.presented_tree.document_node(tooltip.document_id);
+        tooltip.surface == surface && tooltip.accessibility_generation == window.presented_accessibility_generation && revealed.is_some() && window.presented_router.revealed_tooltip_node() == revealed
+    });
+    if !valid {
+        return window.presented_tooltip.take().is_some();
+    }
+    if let Some(tooltip) = window.presented_tooltip.as_mut() {
+        tooltip.interaction_epoch = window.presented_interaction_epoch;
+    }
+    false
+}
+
+fn mark_tooltip_paint_dirty(window: &mut UiWindow) {
+    if let Some(root) = window.tree.root {
+        window.tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+    }
+}
+
+fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: crate::wgpu::events::CaretStep) -> Option<UiPresentedCaret> {
+    Some(UiPresentedCaret {
+        surface,
+        document_id: tree.document_id(step.node)?,
+        source: match step.source {
+            CaretSource::Retained => UiCaretSource::Retained,
+            CaretSource::Scene => UiCaretSource::Scene,
+        },
+        visible: step.visible,
+    })
+}
+
+fn retained_tooltip_paint(window: &mut UiWindow, surface: UiSurfaceToken, atlas: &mut FontAtlas, theme: &Theme) -> Option<RetainedTooltipPaint> {
+    let tooltip = window.presented_tooltip.as_ref()?;
+    let accepted_node = window.presented_tree.document_node(tooltip.document_id);
+    let valid = tooltip.surface == surface
+        && tooltip.accessibility_generation == window.presented_accessibility_generation
+        && tooltip.interaction_epoch == window.presented_interaction_epoch
+        && accepted_node.is_some()
+        && window.presented_router.revealed_tooltip_node() == accepted_node;
+    if !valid {
+        window.presented_tooltip = None;
+        return None;
+    }
+    let candidate_node = window.tree.document_node(tooltip.document_id)?;
+    let label = tooltip.label.clone();
+    let size = tooltip_surface_size(&label, theme, atlas);
+    let placement = resolve_overlay_placement_side(&window.tree, OverlayAnchor::Node(candidate_node), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline);
+    Some(RetainedTooltipPaint { label, x: placement.x, y: placement.y })
+}
+
+fn paint_retained_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, tooltip: RetainedTooltipPaint, offset: (f32, f32), theme: &Theme) {
+    draw.begin_overlay_route();
+    paint_tooltip(draw, atlas, &tooltip.label, (offset.0 + tooltip.x, offset.1 + tooltip.y), theme);
+    draw.end_overlay_route();
+}
+
 /// 🪙 A fallible, bounded initial candidate revision. The presented tree keeps the exact records
 /// required by accessibility and intent dispatch while this owner acquires one credited record per
 /// reconcile opportunity. Refusal drains the partial copy before surfacing a terminal fault.
@@ -306,14 +422,7 @@ impl UiCandidateBaseline {
     }
 }
 
-fn retire_surface_scene(
-    document_id: UiNodeId,
-    window_id: &str,
-    window_generation: u64,
-    retirements: &mut VecDeque<UiRetiredComponentScene>,
-    node_id: crate::wgpu::arena::NodeId,
-    node: &crate::wgpu::tree::Node,
-) -> bool {
+fn retire_surface_scene(document_id: UiNodeId, window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: crate::wgpu::arena::NodeId, node: &crate::wgpu::tree::Node) -> bool {
     let UiNode::ComponentScene(scene) = &node.spec.0 else { return true };
     if retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
         return false;
@@ -499,6 +608,7 @@ enum RetainedPaintPhase {
     Overlays,
     Paint,
     Scenes,
+    Tooltip,
     /// 🎯️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
     /// accumulated origin, the paint phase just drew from — one geometry for what is painted and
     /// what is hit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -607,13 +717,7 @@ fn push_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut 
     }
 }
 
-fn push_clipped_retained_hit(
-    out: &mut Vec<RetainedHitRegistration>,
-    overlay_hits: &mut usize,
-    overlay: bool,
-    clip: Option<crate::wgpu::geometry::Rect>,
-    mut registration: RetainedHitRegistration,
-) {
+fn push_clipped_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut usize, overlay: bool, clip: Option<crate::wgpu::geometry::Rect>, mut registration: RetainedHitRegistration) {
     let Some(rect) = intersect_rect(clip, registration.rect) else { return };
     if rect.w <= 0.0 || rect.h <= 0.0 {
         return;
@@ -673,7 +777,12 @@ fn register_retained_hit(
         if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
             return;
         }
-        push_retained_hit(out, overlay_hits, true, RetainedHitRegistration { node, rect, overlay: true, scene: None, kind: HitKind::DropdownItem, control_id: crate::wgpu::select::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None });
+        push_retained_hit(
+            out,
+            overlay_hits,
+            true,
+            RetainedHitRegistration { node, rect, overlay: true, scene: None, kind: HitKind::DropdownItem, control_id: crate::wgpu::select::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None },
+        );
     }
 }
 
@@ -700,6 +809,8 @@ struct RetainedPaintFrame {
     node_paint: RetainedNodePaintCursor,
     scene_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
     scene_paint: ScenePaintCursor,
+    tooltip: Option<RetainedTooltipPaint>,
+    interaction_epoch: u64,
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
@@ -830,6 +941,11 @@ impl UiSurfaceRegistry {
     fn ids(&self) -> impl Iterator<Item = &SurfaceId> {
         self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.id))
     }
+}
+
+struct UiSealedVisibilityCandidate {
+    witness: u64,
+    surfaces: [Option<(UiSurfaceToken, bool)>; UI_LAYOUT_SURFACE_SLOTS],
 }
 //#endregion 🔖️UiWindow
 
@@ -1047,6 +1163,7 @@ pub struct Ui {
     theme: Theme,
     driver_drag: UiDriverDrag,
     pending_commands: Vec<UiCommand>,
+    sealed_visibility_candidate: Option<UiSealedVisibilityCandidate>,
     layout_queues: [SurfaceLaneRing; 3],
     layout_pressure: Option<SurfaceLaneEntry>,
     lane_cursor: usize,
@@ -1070,6 +1187,7 @@ impl Ui {
             theme: Theme::default(),
             driver_drag: UiDriverDrag::Handle,
             pending_commands: Vec::new(),
+            sealed_visibility_candidate: None,
             layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()),
             layout_pressure: None,
             lane_cursor: 0,
@@ -1101,6 +1219,8 @@ impl Ui {
         let mut commands = Vec::new();
         for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
             let inline = window.router.flow().inline;
+            window.router.set_control_border(self.theme.stroke_hairline);
+            window.router.set_control_gap(self.theme.gap_standard);
             commands.extend(window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics.with_inline(inline)));
             let Some(next_revision) = window.theme_revision.checked_add(1) else { continue };
             window.theme_revision = next_revision;
@@ -1129,7 +1249,7 @@ impl Ui {
     /// 🎞️ Seals every visible candidate interaction revision under the Shell's exact presenter
     /// witness. A live presented capture holds publication until its matching terminal event.
     pub fn seal_presented_input_candidate(&mut self, witness: u64, visible_windows: &[String]) -> bool {
-        if self.windows.values().any(|window| window.sealed_input_candidate.is_some()) {
+        if self.sealed_visibility_candidate.is_some() || self.windows.values().any(|window| window.sealed_input_candidate.is_some()) {
             eprintln!("[DEBUG] seal refuse: existing seals visible={visible_windows:?}");
             return false;
         }
@@ -1137,6 +1257,14 @@ impl Ui {
             eprintln!("[DEBUG] seal refuse: presented without candidate visible={visible_windows:?}");
             return false;
         }
+        self.sealed_visibility_candidate = Some(UiSealedVisibilityCandidate {
+            witness,
+            surfaces: std::array::from_fn(|slot| {
+                let token = self.windows.token_at(slot)?;
+                let id = self.windows.id(token)?;
+                Some((token, visible_windows.iter().any(|window_id| window_id == id.as_ref())))
+            }),
+        });
         for window_id in visible_windows {
             let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { continue };
             if !window.candidate_ready {
@@ -1152,17 +1280,17 @@ impl Ui {
     }
 
     pub fn presented_input_candidate_matches(&self, witness: u64) -> bool {
-        self.windows.values().all(|window| match window.sealed_input_candidate {
-            Some((candidate, base)) => candidate == witness && base == window.presented_interaction_epoch,
-            None => true,
-        })
+        self.windows.values().all(|window| {
+            let input_matches = match window.sealed_input_candidate {
+                Some((candidate, base)) => candidate == witness && base == window.presented_interaction_epoch,
+                None => true,
+            };
+            input_matches
+        }) && self.sealed_visibility_candidate.as_ref().is_none_or(|candidate| candidate.witness == witness)
     }
 
     pub fn candidate_is_sealed_for(&self, window_id: &str, witness: u64) -> bool {
-        self.windows
-            .get(window_id)
-            .filter(|window| window.closing.is_none())
-            .is_some_and(|window| window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch))
+        self.windows.get(window_id).filter(|window| window.closing.is_none()).is_some_and(|window| window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch))
     }
 
     pub fn candidate_scene_node_for_presented_node(&self, window_id: &str, witness: u64, presented_node: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::arena::NodeId> {
@@ -1173,8 +1301,7 @@ impl Ui {
         }
         let document_id = window.presented_tree.document_id(presented_node)?;
         let candidate_node = window.tree.document_node(document_id)?;
-        matches!(&window.presented_tree.node(presented_node)?.spec.0, UiNode::ComponentScene(_))
-            .then_some(())?;
+        matches!(&window.presented_tree.node(presented_node)?.spec.0, UiNode::ComponentScene(_)).then_some(())?;
         matches!(&window.tree.node(candidate_node)?.spec.0, UiNode::ComponentScene(_)).then_some(candidate_node)
     }
 
@@ -1186,20 +1313,11 @@ impl Ui {
             return false;
         };
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return false };
-        node.key == *witness.key
-            && node.component_generation() == witness.component_generation
-            && scene.host_id == witness.host_id
-            && scene.component_kind == witness.kind
-            && scene.surface_id == witness.surface_id
+        node.key == *witness.key && node.component_generation() == witness.component_generation && scene.host_id == witness.host_id && scene.component_kind == witness.kind && scene.surface_id == witness.surface_id
     }
 
     /// 📐️ Resolves the exact candidate scene node and painted rectangle for one presented node.
-    pub fn candidate_scene_geometry_for_presented_node(
-        &self,
-        window_id: &str,
-        witness: u64,
-        presented_node: crate::wgpu::arena::NodeId,
-    ) -> Option<(crate::wgpu::arena::NodeId, crate::wgpu::geometry::Rect)> {
+    pub fn candidate_scene_geometry_for_presented_node(&self, window_id: &str, witness: u64, presented_node: crate::wgpu::arena::NodeId) -> Option<(crate::wgpu::arena::NodeId, crate::wgpu::geometry::Rect)> {
         let node = self.candidate_scene_node_for_presented_node(window_id, witness, presented_node)?;
         Some((node, self.windows.get(window_id)?.tree.absolute_rect(node)?))
     }
@@ -1229,6 +1347,21 @@ impl Ui {
             window.sealed_input_candidate = None;
             window.candidate_base_interaction_epoch = window.presented_interaction_epoch;
         }
+        let visibility = self.sealed_visibility_candidate.take().filter(|candidate| candidate.witness == witness);
+        if let Some(visibility) = visibility {
+            for (token, visible) in visibility.surfaces.into_iter().flatten() {
+                if visible {
+                    continue;
+                }
+                let Some(window) = self.windows.get_token_mut(token) else { continue };
+                let presented_changed = window.presented_router.suspend_clock(&mut window.presented_tree);
+                window.router.suspend_clock(&mut window.tree);
+                let tooltip_changed = window.presented_tooltip.take().is_some();
+                if window.presented_ready && (presented_changed || tooltip_changed) {
+                    window.advance_presented_interaction();
+                }
+            }
+        }
         true
     }
 
@@ -1240,13 +1373,18 @@ impl Ui {
                 matched = true;
             }
         }
-        matched || !self.windows.values().any(|window| window.sealed_input_candidate.is_some())
+        if self.sealed_visibility_candidate.as_ref().is_some_and(|candidate| candidate.witness == witness) {
+            self.sealed_visibility_candidate = None;
+            matched = true;
+        }
+        matched || (self.sealed_visibility_candidate.is_none() && !self.windows.values().any(|window| window.sealed_input_candidate.is_some()))
     }
 
     /// 🛑️ Latches retirement before topology removal and refuses further surface admission.
     pub fn begin_surface_close(&mut self, token: UiSurfaceToken) -> bool {
         let Some(window) = self.windows.get_token_mut(token) else { return false };
         if window.closing.is_none() {
+            window.presented_tooltip = None;
             window.closing = Some(UiSurfaceClosePhase::Router);
         }
         true
@@ -1619,11 +1757,7 @@ impl Ui {
         }
         let Some(next_revision) = window.revision.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
         let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
-        let next_accessibility_generation = if window.accessibility_generation == 0 {
-            Some(next_document_generation.ok_or(UiDocumentIngressFault::StaleGeneration)?)
-        } else {
-            None
-        };
+        let next_accessibility_generation = if window.accessibility_generation == 0 { Some(next_document_generation.ok_or(UiDocumentIngressFault::StaleGeneration)?) } else { None };
         let Some(ingress) = window.document_ingress.take() else { return Err(UiDocumentIngressFault::StaleGeneration) };
         if let Some(generation) = next_accessibility_generation {
             window.accessibility_generation = generation;
@@ -1759,15 +1893,25 @@ impl Ui {
         let window_generation = window.accessibility_generation;
         let UiWindow { tree, presented_tree, document_reconcile, scene_retirements, candidate_scene_retirements, accepted_scene_retirements, component_mount_generation, candidate_preserves_prior_mounts, .. } = window;
         let step = loop {
-            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner, window_generation, Some(presented_tree), *candidate_preserves_prior_mounts, component_mount_generation, &mut |retirement| {
-                let deferred = presented_tree.component_scene_host_is_mounted(&retirement.host_id);
-                if scene_retirements.len() + candidate_scene_retirements.len() + accepted_scene_retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
-                    return false;
-                }
-                let target = if deferred { &mut *candidate_scene_retirements } else { &mut *scene_retirements };
-                target.push_back(retirement);
-                true
-            });
+            let step = tree.step_document_reconcile_preserving(
+                document_reconcile,
+                window_id,
+                controller,
+                preserved_composite_owner,
+                window_generation,
+                Some(presented_tree),
+                *candidate_preserves_prior_mounts,
+                component_mount_generation,
+                &mut |retirement| {
+                    let deferred = presented_tree.component_scene_host_is_mounted(&retirement.host_id);
+                    if scene_retirements.len() + candidate_scene_retirements.len() + accepted_scene_retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
+                        return false;
+                    }
+                    let target = if deferred { &mut *candidate_scene_retirements } else { &mut *scene_retirements };
+                    target.push_back(retirement);
+                    true
+                },
+            );
             cx.consume_fuel(1);
             if !scene_retirements.is_empty() || !matches!(step, UiDocumentReconcileStep::Pending) || cx.is_cancelled() || cx.should_yield() {
                 break step;
@@ -1791,7 +1935,9 @@ impl Ui {
 
     pub fn acknowledge_retired_component_scene(&mut self, window_id: &str, expected: &UiRetiredComponentScene) -> bool {
         let Some(window) = self.windows.get_mut(window_id) else { return false };
-        if window.scene_retirements.front() != Some(expected) { return false; }
+        if window.scene_retirements.front() != Some(expected) {
+            return false;
+        }
         window.scene_retirements.pop_front();
         true
     }
@@ -2197,6 +2343,7 @@ impl Ui {
         let overlay_chrome = self.retained_overlay_chrome(window_id);
         let viewport_rect = crate::wgpu::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
         let theme = self.theme;
+        let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
@@ -2216,6 +2363,7 @@ impl Ui {
             if !dirty {
                 return UiFrameStep::Ready;
             }
+            let tooltip = retained_tooltip_paint(window, surface, atlas, &theme);
             window.paint_frame = Some(RetainedPaintFrame {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
@@ -2229,6 +2377,8 @@ impl Ui {
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
                 scene_paint: ScenePaintCursor::default(),
+                tooltip,
+                interaction_epoch: window.presented_interaction_epoch,
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
@@ -2238,7 +2388,10 @@ impl Ui {
             });
             return UiFrameStep::Pending;
         }
-        let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
+        let fresh = window
+            .paint_frame
+            .as_ref()
+            .is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && frame.interaction_epoch == window.presented_interaction_epoch);
         if !fresh {
             if let Some(frame) = window.paint_frame.as_mut() {
                 frame.node_paint.cancel_draw_route(&mut frame.candidate);
@@ -2289,7 +2442,21 @@ impl Ui {
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
                 }
-                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), window.router.flow().inline, &mut frame.candidate, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(
+                    &window.tree,
+                    node,
+                    origin_x,
+                    origin_y,
+                    &theme,
+                    atlas,
+                    icons,
+                    scene_host.is_some(),
+                    self.driver_drag,
+                    window.router.flow().block.is_reversed(),
+                    window.router.flow().inline,
+                    &mut frame.candidate,
+                    &mut frame.node_paint,
+                );
                 if frame.paint_overlay {
                     frame.candidate.end_overlay_route();
                 }
@@ -2397,10 +2564,7 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Hits;
-                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
-                    frame.hit_candidates.clear();
-                    frame.overlay_index = 0;
+                    frame.phase = RetainedPaintPhase::Tooltip;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -2408,6 +2572,16 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Tooltip => {
+                if let Some(tooltip) = frame.tooltip.take() {
+                    paint_retained_tooltip(&mut frame.candidate, atlas, tooltip, (0.0, 0.0), &theme);
+                }
+                frame.phase = RetainedPaintPhase::Hits;
+                frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                frame.hit_candidates.clear();
+                frame.overlay_index = 0;
+                UiFrameStep::Pending
+            }
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     register_retained_hit(
@@ -2460,6 +2634,7 @@ impl Ui {
         let overlay_chrome = self.retained_overlay_chrome(window_id);
         let viewport_rect = viewport;
         let theme = self.theme;
+        let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
@@ -2468,6 +2643,7 @@ impl Ui {
             return UiFrameStep::Pending;
         }
         if window.paint_frame.is_none() {
+            let tooltip = retained_tooltip_paint(window, surface, atlas, &theme);
             window.paint_frame = Some(RetainedPaintFrame {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
@@ -2481,6 +2657,8 @@ impl Ui {
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
                 scene_paint: ScenePaintCursor::default(),
+                tooltip,
+                interaction_epoch: window.presented_interaction_epoch,
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
@@ -2490,7 +2668,10 @@ impl Ui {
             });
             return UiFrameStep::Pending;
         }
-        let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
+        let fresh = window
+            .paint_frame
+            .as_ref()
+            .is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && frame.interaction_epoch == window.presented_interaction_epoch);
         if !fresh {
             if let Some(frame) = window.paint_frame.as_mut() {
                 frame.node_paint.cancel_draw_route(target);
@@ -2540,7 +2721,21 @@ impl Ui {
                 if frame.paint_overlay {
                     target.begin_overlay_route();
                 }
-                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), window.router.flow().inline, target, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(
+                    &window.tree,
+                    node,
+                    origin_x,
+                    origin_y,
+                    &theme,
+                    atlas,
+                    icons,
+                    scene_host.is_some(),
+                    self.driver_drag,
+                    window.router.flow().block.is_reversed(),
+                    window.router.flow().inline,
+                    target,
+                    &mut frame.node_paint,
+                );
                 if frame.paint_overlay {
                     target.end_overlay_route();
                 }
@@ -2657,10 +2852,7 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Hits;
-                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
-                    frame.hit_candidates.clear();
-                    frame.overlay_index = 0;
+                    frame.phase = RetainedPaintPhase::Tooltip;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -2669,6 +2861,16 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Tooltip => {
+                if let Some(tooltip) = frame.tooltip.take() {
+                    paint_retained_tooltip(target, atlas, tooltip, (offset_x, offset_y), &theme);
+                }
+                frame.phase = RetainedPaintPhase::Hits;
+                frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                frame.hit_candidates.clear();
+                frame.overlay_index = 0;
+                UiFrameStep::Pending
+            }
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     register_retained_hit(
@@ -2716,6 +2918,7 @@ impl Ui {
     pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
+        let surface = self.windows.token(window_id)?;
         let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
         let root = window.tree.root?;
         let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
@@ -2733,6 +2936,9 @@ impl Ui {
                 let mut cursor = ScenePaintCursor::default();
                 while matches!(host.paint_slot_step(&slot, &mut cursor, &mut window.draw, atlas, icons), ScenePaintStep::Pending) {}
             }
+        }
+        if let Some(tooltip) = retained_tooltip_paint(window, surface, atlas, &self.theme) {
+            paint_retained_tooltip(&mut window.draw, atlas, tooltip, (0.0, 0.0), &self.theme);
         }
         Some(&window.draw)
     }
@@ -2764,11 +2970,7 @@ impl Ui {
     /// the surface has no window, no root or no accepted layout yet.
     pub fn surface_content_height(&self, window_id: &str) -> Option<f32> {
         let window = self.windows.get(window_id)?;
-        let (tree, intrinsic) = if window.candidate_ready || !window.presented_ready {
-            (&window.tree, window.intrinsic_content_height)
-        } else {
-            (&window.presented_tree, window.presented_intrinsic_content_height)
-        };
+        let (tree, intrinsic) = if window.candidate_ready || !window.presented_ready { (&window.tree, window.intrinsic_content_height) } else { (&window.presented_tree, window.presented_intrinsic_content_height) };
         let root = tree.root?;
         let root_layout = tree.accepted_layout(root)?;
         if intrinsic.is_finite() && intrinsic > 0.0 {
@@ -2827,6 +3029,7 @@ impl Ui {
                 RetainedPaintPhase::Overlays => "overlays",
                 RetainedPaintPhase::Paint => "paint",
                 RetainedPaintPhase::Scenes => "scenes",
+                RetainedPaintPhase::Tooltip => "tooltip",
                 RetainedPaintPhase::Hits => "hits",
                 RetainedPaintPhase::Publish => "publish",
                 RetainedPaintPhase::Complete => "complete",
@@ -2857,8 +3060,10 @@ impl Ui {
     /// have one owner: this return value. `drain_commands` is reserved for asynchronous producers.
     #[allow(clippy::needless_pass_by_value, reason = "changing to &UiEvent is a breaking public API change across ~30 downstream plugins, out of T1 scope")]
     pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
+        let reset_caret = matches!(&event, UiEvent::PointerDown { .. } | UiEvent::KeyDown { .. } | UiEvent::TextInput { .. } | UiEvent::Paste { .. } | UiEvent::Ime(_));
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let driver_drag = self.driver_drag;
+        let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
         #[cfg(not(test))]
@@ -2869,8 +3074,11 @@ impl Ui {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let Some(root) = tree.root else { return Vec::new() };
             let inline = router.flow().inline;
+            router.set_control_border(self.theme.stroke_hairline);
+            router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch(tree, root, &event));
+            router.synchronize_retained_caret(tree, reset_caret);
             (commands, tree.take_disclosure_changed())
         };
         if layout_changed {
@@ -2880,6 +3088,9 @@ impl Ui {
         }
         if presented {
             window.advance_presented_interaction();
+            if synchronize_presented_tooltip(window, surface) {
+                mark_tooltip_paint_dirty(window);
+            }
         }
         if layout_changed {
             self.enqueue_layout(window_id);
@@ -2888,8 +3099,10 @@ impl Ui {
     }
 
     pub fn dispatch_pointer_event(&mut self, window_id: &str, pointer_id: u64, event: UiEvent) -> Vec<UiCommand> {
+        let reset_caret = matches!(&event, UiEvent::PointerDown { .. });
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let driver_drag = self.driver_drag;
+        let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
         #[cfg(not(test))]
@@ -2900,8 +3113,11 @@ impl Ui {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let Some(root) = tree.root else { return Vec::new() };
             let inline = router.flow().inline;
+            router.set_control_border(self.theme.stroke_hairline);
+            router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
+            router.synchronize_retained_caret(tree, reset_caret);
             (commands, tree.take_disclosure_changed())
         };
         if layout_changed {
@@ -2911,6 +3127,9 @@ impl Ui {
         }
         if presented {
             window.advance_presented_interaction();
+            if synchronize_presented_tooltip(window, surface) {
+                mark_tooltip_paint_dirty(window);
+            }
         }
         if layout_changed {
             self.enqueue_layout(window_id);
@@ -2921,6 +3140,7 @@ impl Ui {
     pub fn dispatch_accessibility_event(&mut self, window_id: &str, window_generation: u64, node_id: u64, node_key: &str, event: AccessibilityUiEvent) -> Option<Vec<UiCommand>> {
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let driver_drag = self.driver_drag;
+        let surface = self.windows.token(window_id)?;
         let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
         let presented = window.presented_ready;
         #[cfg(not(test))]
@@ -2936,19 +3156,27 @@ impl Ui {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let record = tree.document()?.record(document_id)?;
             let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
-            if record.key.as_str() != node_key && virtual_select_value.is_none() {
+            let virtual_slider_editor = record.key.as_str() != node_key && crate::wgpu::accessibility::is_slider_accessibility_editor(record, node_key);
+            if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor {
                 return None;
             }
             let target = tree.document_node(document_id)?;
             if virtual_select_value.is_some() && !tree.node(target).is_some_and(|node| node.state.open) {
                 return None;
             }
+            if virtual_slider_editor && !tree.node(target).is_some_and(|node| node.state.edit.is_some()) {
+                return None;
+            }
             let inline = router.flow().inline;
+            router.set_control_border(self.theme.stroke_hairline);
+            router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(match virtual_select_value {
                 Some(value) => router.dispatch_accessibility_select_option(tree, target, &value, &event),
+                None if virtual_slider_editor => router.dispatch_accessibility_slider_editor(tree, target, &event),
                 None => router.dispatch_accessibility(tree, target, &event),
             });
+            router.synchronize_retained_caret(tree, matches!(&event, AccessibilityUiEvent::Focus | AccessibilityUiEvent::Activate | AccessibilityUiEvent::Value(_)));
             (commands, tree.take_disclosure_changed())
         };
         if layout_changed {
@@ -2958,6 +3186,9 @@ impl Ui {
         }
         if presented {
             window.advance_presented_interaction();
+            if synchronize_presented_tooltip(window, surface) {
+                mark_tooltip_paint_dirty(window);
+            }
         }
         if layout_changed {
             self.enqueue_layout(window_id);
@@ -3019,12 +3250,7 @@ impl Ui {
      * (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`), where the children are ordinary
      * DOM inside the portalled box. */
     fn publish_overlay_origins(&mut self, window_id: &str) {
-        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self
-            .overlay_placements(window_id)
-            .into_iter()
-            .filter(|placement| placement.kind != OverlayKind::SelectPopup)
-            .map(|placement| (placement.root, placement.x, placement.y))
-            .collect();
+        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self.overlay_placements(window_id).into_iter().filter(|placement| placement.kind != OverlayKind::SelectPopup).map(|placement| (placement.root, placement.x, placement.y)).collect();
         if let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) {
             window.tree.set_overlay_origins(origins);
         }
@@ -3048,31 +3274,86 @@ impl Ui {
             .collect()
     }
 
-    /// ⏱️ Feeds the monotonic frame clock to every window's router and answers the hover reveals it
-    /// owes — the immediate-mode replacement for React's tooltip `setTimeout`. A `TooltipStep::Reveal`
-    /// carries the node whose tooltip the caller should now open; [`Ui::tooltip_label`] resolves its
-    /// text from the same `AccessibilitySpec` tiers React's `useControlTooltipText` reads.
-    pub fn advance_clock(&mut self, seconds: f32) -> Vec<(String, TooltipStep)> {
-        let mut steps = Vec::new();
-        let ids: Vec<String> = self.windows.ids().map(|id| id.as_ref().to_string()).collect();
-        for window_id in ids {
-            let Some(window) = self.windows.get_mut(&window_id).filter(|window| window.closing.is_none()) else { continue };
-            window.draw.set_clock_seconds(seconds);
-            let presented = window.presented_ready;
-            let (step, commands) = if presented {
-                window.presented_router.advance_clock(&mut window.presented_tree, seconds)
-            } else {
-                window.router.advance_clock(&mut window.tree, seconds)
-            };
-            self.pending_commands.extend(commands);
-            if presented && step != TooltipStep::Idle {
-                window.advance_presented_interaction();
-            }
-            if step != TooltipStep::Idle {
-                steps.push((window_id, step));
-            }
+    /// ⏱️ Advances one exact retained window against the process monotonic clock. Pure elapsed time
+    /// preserves a sealed candidate; a due repeat or tooltip transition advances interaction once.
+    pub fn arm_presented_scene_caret(&mut self, window_id: &str, surface: UiSurfaceToken, document_id: UiNodeId, seconds: f64) -> Option<UiPresentedCaret> {
+        let id_matches = self.windows.id(surface).is_some_and(|id| id.as_ref() == window_id);
+        if !id_matches {
+            return None;
         }
-        steps
+        let window = self.windows.get_token_mut(surface).filter(|window| window.closing.is_none() && window.presented_ready)?;
+        let node = window.presented_tree.document_node(document_id)?;
+        if !window.presented_tree.node(node).is_some_and(|node| matches!(node.spec.0, UiNode::ComponentScene(_))) {
+            return None;
+        }
+        let step = window.presented_router.arm_scene_caret(&mut window.presented_tree, node, seconds)?;
+        window.advance_presented_interaction();
+        presented_caret(surface, &window.presented_tree, step)
+    }
+
+    pub fn clear_presented_scene_caret(&mut self, window_id: &str, surface: UiSurfaceToken, document_id: UiNodeId) -> Option<UiPresentedCaret> {
+        let id_matches = self.windows.id(surface).is_some_and(|id| id.as_ref() == window_id);
+        if !id_matches {
+            return None;
+        }
+        let window = self.windows.get_token_mut(surface).filter(|window| window.closing.is_none() && window.presented_ready)?;
+        let node = window.presented_tree.document_node(document_id)?;
+        let step = window.presented_router.clear_scene_caret(node)?;
+        window.advance_presented_interaction();
+        presented_caret(surface, &window.presented_tree, step)
+    }
+
+    pub fn advance_window_clock(&mut self, window_id: &str, seconds: f64) -> Option<UiWindowClockStep> {
+        let surface = self.windows.token(window_id)?;
+        let window = self.windows.get_token_mut(surface).filter(|window| window.closing.is_none())?;
+        window.draw.set_clock_seconds(seconds as f32);
+        let presented = window.presented_ready;
+        let step = if presented { window.presented_router.advance_clock(&mut window.presented_tree, seconds) } else { window.router.advance_clock(&mut window.tree, seconds) };
+        self.pending_commands.extend(step.commands);
+        if presented && step.changed {
+            window.advance_presented_interaction();
+        }
+        let tooltip_changed = if !presented {
+            window.presented_tooltip.take().is_some()
+        } else {
+            match step.tooltip {
+                TooltipStep::Reveal(node) => match (window.presented_tree.document_id(node), tooltip_label_in_tree(&window.presented_tree, node)) {
+                    (Some(document_id), Some(label)) => {
+                        window.presented_tooltip = Some(PresentedTooltip { surface, document_id, label, accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+                        true
+                    }
+                    _ => window.presented_tooltip.take().is_some(),
+                },
+                TooltipStep::Dismissed => window.presented_tooltip.take().is_some(),
+                TooltipStep::Idle => synchronize_presented_tooltip(window, surface),
+            }
+        };
+        if tooltip_changed {
+            mark_tooltip_paint_dirty(window);
+        }
+        let caret = step.caret.and_then(|step| presented_caret(surface, if presented { &window.presented_tree } else { &window.tree }, step));
+        Some(UiWindowClockStep { surface, tooltip: step.tooltip, caret, interaction_changed: step.changed, next_deadline: step.next_deadline })
+    }
+
+    /// ⏰ Reads one live window's earliest armed deadline after pointer or key dispatch.
+    pub fn window_next_clock_deadline(&self, window_id: &str) -> Option<(UiSurfaceToken, Option<f64>)> {
+        let surface = self.windows.token(window_id)?;
+        let window = self.windows.get_token(surface).filter(|window| window.closing.is_none())?;
+        let router = if window.presented_ready { &window.presented_router } else { &window.router };
+        Some((surface, router.next_clock_deadline()))
+    }
+
+    /// ⏰️ Earliest finite clock deadline owned by an exact accepted surface roster.
+    pub fn surfaces_next_clock_deadline(&self, surfaces: &[(String, UiSurfaceToken)]) -> Option<f64> {
+        let mut earliest: Option<f64> = None;
+        for (window_id, expected) in surfaces {
+            let Some((surface, Some(deadline))) = self.window_next_clock_deadline(window_id) else { continue };
+            if surface != *expected || !deadline.is_finite() {
+                continue;
+            }
+            earliest = Some(earliest.map_or(deadline, |current| current.min(deadline)));
+        }
+        earliest
     }
 
     /// 💡️ The hover text for one arena node, composed exactly like React's
@@ -3081,18 +3362,7 @@ impl Ui {
     /// A node with no label of its own has no tooltip, matching `useControlTooltipText`'s own
     /// `if (!label) return undefined`.
     pub fn tooltip_label(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<String> {
-        let tree = self.tree(window_id)?;
-        let document = tree.document()?;
-        let id = tree.document_id(node)?;
-        let record = document.record(id)?;
-        if record.accessibility.hidden {
-            return None;
-        }
-        let label = record.accessibility.label.as_ref().map(|label| label.0.as_str().to_string())?;
-        match record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str()) {
-            Some(shortcut) if !shortcut.is_empty() => Some(format!("{label} ({shortcut})")),
-            _ => Some(label),
-        }
+        tooltip_label_in_tree(self.tree(window_id)?, node)
     }
     //#endregion 🪟️OverlayApi
 
@@ -3147,6 +3417,13 @@ impl Ui {
         self.windows.ids().map(AsRef::as_ref)
     }
 
+    /// 🪟️ Resolves one stable registry slot for a caller-owned `0..UI_LAYOUT_SURFACE_SLOTS` cursor.
+    pub fn clock_surface_at(&self, slot: usize) -> Option<(&str, UiSurfaceToken)> {
+        let token = self.windows.token_at(slot)?;
+        self.windows.get_token(token).filter(|window| window.closing.is_none())?;
+        self.windows.id(token).map(|id| (id.as_ref(), token))
+    }
+
     /// 📐️ `window_id`'s last `set_viewport`/`frame` viewport, if that window has any retained state.
     pub fn viewport(&self, window_id: &str) -> Option<(f32, f32)> {
         self.windows.get(window_id).map(|window| window.viewport)
@@ -3166,9 +3443,21 @@ impl Ui {
         self.windows.get(window_id)?.presented_tree.document_id(node)
     }
 
+    pub fn presented_node_at(&self, window_id: &str, surface: UiSurfaceToken, document_id: UiNodeId) -> Option<NodeId> {
+        if self.windows.id(surface).is_none_or(|id| id.as_ref() != window_id) {
+            return None;
+        }
+        let window = self.windows.get_token(surface).filter(|window| window.closing.is_none() && window.presented_ready)?;
+        window.presented_tree.document_node(document_id)
+    }
+
     pub fn retained_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
         let window = self.windows.get(window_id)?;
-        if window.presented_ready { window.presented_tree.document_id(node) } else { window.tree.document_id(node) }
+        if window.presented_ready {
+            window.presented_tree.document_id(node)
+        } else {
+            window.tree.document_id(node)
+        }
     }
 
     pub fn candidate_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {

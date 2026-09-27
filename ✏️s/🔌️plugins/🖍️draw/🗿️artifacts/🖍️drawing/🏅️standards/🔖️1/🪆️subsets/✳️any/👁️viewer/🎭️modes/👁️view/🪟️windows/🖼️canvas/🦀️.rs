@@ -10,6 +10,19 @@ use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use dsl::DslValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
+
+/// 📷️ Local camera navigation is available in a read-only canvas.
+fn set_camera_action() -> semio_framework_plugin::ActionDefinition {
+    let mut action = semio_framework_plugin::ActionDefinition::bounded_catalog(SET_CAMERA_ACTION_ID,LocalizedLabel::native("Set Camera","Kamera festlegen"),semio_framework_plugin::ActionKind::View)
+        .with_args(vec![semio_framework_plugin::ActionArgDef::text("camera",LocalizedLabel::native("Camera","Kamera")).required()]);
+    action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+    action.in_palette = false;
+    action
+}
+
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "drawing-view-canvas";
 pub const BODY_KEY: &str = "drawing.view.canvas";
@@ -28,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "pen-tool".into(),
         options: WindowOptions::default(),
-        actions: Vec::new(),
+        actions: vec![set_camera_action()],
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,
@@ -41,11 +54,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `DrawingSnapshot -> UiNode` read: a hardcoded default camera (a viewer has no persisted
-/// per-session camera — `Config = NoConfig`), no selection/gesture overlay, real artboard frame +
-/// document content read straight off the document.
+/// 👁️ Read-only scene with measured initial fitting to the artifact world bounds.
 pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let camera = store::Viewport2d { x: 512.0, y: 512.0, zoom: 0.75 };
+    render_with_camera(document,&config::DrawingViewerCanvasWindowConfig::default())
+}
+
+/// 🧭️ Restored local navigation suppresses the initial artwork fit.
+pub fn render_with_camera(document: &DrawingSnapshot,config: &config::DrawingViewerCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
+    let camera = config.viewport;
     let artboard_records = artboard_scene_records(document);
     let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());
@@ -53,7 +69,7 @@ pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

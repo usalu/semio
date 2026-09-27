@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamAction
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-action-q-area-pa", "change-beam-action-q-area-pa")
+        protocol::LocalizedLabel::native("Change imposed area load on the beam", "Flächenlast auf dem Träger ändern")
     }
 }
 //#endregion 🔖️Payload

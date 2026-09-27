@@ -7,7 +7,7 @@
 use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -41,6 +41,11 @@ fn shape_text(shape: &PptxShape) -> Option<String> {
 pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
+}
+
+pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
+    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
 }
 //#endregion 🔖️Render
 

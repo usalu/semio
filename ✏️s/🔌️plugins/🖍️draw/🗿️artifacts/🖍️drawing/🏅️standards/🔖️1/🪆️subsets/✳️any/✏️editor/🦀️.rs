@@ -429,7 +429,7 @@ mod args_bridge {
 //#region 🧵️GestureOperationJobs
 const DRAWING_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"];
 const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
-const DRAWING_GESTURE_RETAINED_BYTES: usize = 65_536;
+const DRAWING_GESTURE_RETAINED_BYTES: usize = 131_072;
 
 /// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
 /// off its `ActionKind`: every gesture that reaches a commit does so through
@@ -596,6 +596,13 @@ impl DrawingInstanceOperationOwner {
                 query.traversal_complete = true;
                 return Ok(None);
             }
+            let ids=payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
+            match session.prepare_layer_move(snapshot,ids) {
+                Ok(false)=>return Ok(None),
+                Err(fault)=>{ self.operations.cancel(live_key); self.active=None; return Err(fault); },
+                Ok(true)=>{},
+            }
+            let query=session.point_query.as_mut().expect("retained point query");
             let targets = match query.publication_step() {
                 canvas_pointer_down::DrawingQueryPublication::Pending => return Ok(None),
                 canvas_pointer_down::DrawingQueryPublication::Complete(targets) => targets,
@@ -607,10 +614,9 @@ impl DrawingInstanceOperationOwner {
                 }
             };
             let query = session.point_query.take().expect("the exact published query remains retained");
-            if let Some(start) = query.drag_start { session.prepare_layer_move(snapshot,query.cursor.best.as_ref(),start); }
             let effect = if query.hover { canvas_pointer_down::interaction_hover_effect_from_targets(targets) } else { canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge) };
             let mut emit = Emit::default();
-            emit.effects.push(effect);
+            if !query.preserve_selection { emit.effects.push(effect); }
             let window_transient = session.window_transient.clone();
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
@@ -770,6 +776,7 @@ struct DrawingGestureOperationPayload {
     window_transient: DrawingCanvasWindowTransient,
     view_state: semio_framework_plugin::ViewModel,
     history: std::sync::Arc<semio_framework_plugin::HistoryView>,
+    interaction_state: std::sync::Arc<protocol::InteractionState>,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     operation_context: semio_framework_plugin::AppOperationContext,
     active_utility_id: String,
@@ -1150,12 +1157,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                 let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
                 let mut config = session.window_config;
                 config.viewport = payload.camera;
+                config.framed = true;
                 emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
             }
             DrawingCommand::SetCameraZoom(payload) => {
                 let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
                 let mut config = session.window_config;
                 config.viewport.zoom = payload.value;
+                config.framed = true;
                 config.viewport.validate().map_err(|error| Fault::from(error.to_string()))?;
                 emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
             }
@@ -1644,6 +1653,7 @@ impl ArtifactEditor for DrawingPlayApp {
             window_transient,
             view_state,
             history: request.history,
+            interaction_state: request.interaction_state,
             instance_owner: request.instance_operation_owner,
             operation_context,
             active_utility_id: request.context.view_state.as_ref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),

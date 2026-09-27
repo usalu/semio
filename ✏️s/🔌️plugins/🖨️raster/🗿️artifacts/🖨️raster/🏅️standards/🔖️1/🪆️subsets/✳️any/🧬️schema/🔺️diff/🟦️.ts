@@ -3,6 +3,10 @@ import {
   parseRasterArtifact,
   parseRasterImageAsset,
   parseRasterLayerNode,
+  parseRasterLayerMask,
+  parseRasterTransform,
+  type RasterTransform,
+  type RasterLayerMask,
   type RasterArtifact,
   type RasterImageAsset,
   type RasterLayerNode,
@@ -51,7 +55,17 @@ export interface RasterLayerPatchEntry {
   patch: RasterLayerPatch;
 }
 
+export interface RasterPixelContent { imageKey: string | null; width: number | null; height: number | null }
+
+export interface RasterMaskContent { mask: RasterLayerMask | null }
+
+export interface RasterAdjustmentParameter {parameter: "brightness" | "contrast"; value: number | null}
+
 export interface RasterLayerPatch {
+  adjustmentParameter?: RasterAdjustmentParameter;
+  maskContent?: RasterMaskContent;
+  pixelContent?: RasterPixelContent;
+  pixelTransform?: RasterTransform;
   name?: string;
   visible?: boolean;
   opacity?: number;
@@ -168,6 +182,31 @@ export function parseRasterLayerPatchEntry(value: unknown, at = "$"): RasterLaye
   };
 }
 
+export function parseRasterPixelContent(value: unknown, at = "$"): RasterPixelContent {
+  const row = rasterRasterDiffGuardObject(value, at);
+  return {
+    imageKey: row.imageKey == null ? null : rasterRasterDiffGuardString(row.imageKey, `${at}.imageKey`, {minLength:1}),
+    width: row.width == null ? null : rasterRasterDiffGuardInteger(row.width, `${at}.width`, {minimum:1,maximum:16384}),
+    height: row.height == null ? null : rasterRasterDiffGuardInteger(row.height, `${at}.height`, {minimum:1,maximum:16384}),
+  };
+}
+
+export function parseRasterMaskContent(value: unknown, at = "$"): RasterMaskContent {
+  const row = rasterRasterDiffGuardObject(value, at);
+  if (!Object.hasOwn(row, "mask")) return rasterRasterDiffGuardReject(`${at}.mask`, "mask replacement is missing");
+  return {mask: row.mask === null ? null : parseRasterLayerMask(row.mask, `${at}.mask`)};
+}
+
+/** 🎚️ Parse a bounded tone parameter with an explicit nullable reset. */
+export function parseRasterAdjustmentParameter(value: unknown, at = "$"): RasterAdjustmentParameter {
+  const row = rasterRasterDiffGuardObject(value, at);
+  if (row.parameter !== "brightness" && row.parameter !== "contrast") return rasterRasterDiffGuardReject(at, "unsupported adjustment parameter");
+  if (!Object.hasOwn(row,"value")) return rasterRasterDiffGuardReject(at, "parameter value is missing");
+  const number = row.value === null ? null : rasterRasterDiffGuardNumber(row.value, at);
+  if (number !== null && (!Number.isFinite(number) || number < -1 || number > 1)) return rasterRasterDiffGuardReject(at, "adjustment is outside its range");
+  return {parameter:row.parameter,value:number};
+}
+
 export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatch {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
@@ -179,6 +218,10 @@ export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatc
     transformY: row["transformY"] == null ? undefined : rasterRasterDiffGuardNumber(row["transformY"], `${at}.transformY`),
     width: row["width"] == null ? undefined : rasterRasterDiffGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
     height: row["height"] == null ? undefined : rasterRasterDiffGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+    ...(row.pixelContent == null ? {} : {pixelContent: parseRasterPixelContent(row.pixelContent, `${at}.pixelContent`)}),
+    ...(row.pixelTransform == null ? {} : {pixelTransform: parseRasterTransform(row.pixelTransform, `${at}.pixelTransform`)}),
+    ...(row.adjustmentParameter == null ? {} : {adjustmentParameter: parseRasterAdjustmentParameter(row.adjustmentParameter, `${at}.adjustmentParameter`)}),
+    ...(row.maskContent == null ? {} : {maskContent: parseRasterMaskContent(row.maskContent, `${at}.maskContent`)}),
     adjustmentKind: row["adjustmentKind"] == null ? undefined : rasterRasterDiffGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
   };
 }

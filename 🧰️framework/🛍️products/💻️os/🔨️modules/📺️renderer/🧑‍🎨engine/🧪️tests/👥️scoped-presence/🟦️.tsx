@@ -22,7 +22,7 @@ import {
 import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/👥️presence-scope/🔣️.json";
 import presenceSchema from "../../../../🏪️store/👥️presence/🧬️schema/🔣️.json" with { type: "json" };
 import presenceLiveness from "../../../../../../../🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json" with { type: "json" };
-import { PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS, PRESENCE_HEARTBEAT_INTERVAL_MS, presenceEphemeralSnapshotWithinBoundV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS, PRESENCE_HEARTBEAT_INTERVAL_MS, PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS, presenceEphemeralSnapshotWithinBoundV1, presenceLiveViewBeatDelayMsV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 
 type Case = (typeof fixture.cases)[number];
 
@@ -136,6 +136,9 @@ describe("scope-safe Shell presence", () => {
     expect(PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
     expect(presenceLiveness.constants.leaseTtlMs).toBeGreaterThanOrEqual(law("lease-outlives-three-beats").missedBeatsTolerated! * PRESENCE_HEARTBEAT_INTERVAL_MS);
     expect(law("a-live-socket-is-always-a-row").removesRow).toEqual(["socket-close"]);
+    expect(presenceLiveness.constants.liveViewBeatIntervalMs).toBe(PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS);
+    expect(PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
+    for (const vector of law("a-moving-pointer-beats-live").vectors!) expect(presenceLiveViewBeatDelayMsV1(vector.lastBeatAtMs, vector.nowMs), JSON.stringify(vector)).toBe(vector.delayMs);
 
     // A document component that answers never is the exact shape that silenced the heartbeat: the
     // beat must still resolve, without a pack, well inside one interval.

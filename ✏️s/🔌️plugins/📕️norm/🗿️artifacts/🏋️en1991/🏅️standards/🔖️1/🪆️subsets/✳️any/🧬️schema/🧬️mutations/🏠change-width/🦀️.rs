@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWidth {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-width", "change-width")
+        protocol::LocalizedLabel::native("Change building width", "Gebäudebreite ändern")
     }
 }
 //#endregion 🔖️Payload

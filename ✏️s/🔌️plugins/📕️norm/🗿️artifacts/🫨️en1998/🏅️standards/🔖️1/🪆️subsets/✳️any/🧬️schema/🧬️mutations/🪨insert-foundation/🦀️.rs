@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertFoundation
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-foundation", "insert-foundation")
+        protocol::LocalizedLabel::native("Insert foundation", "Gründung einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-foundation".into()]

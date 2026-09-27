@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateColdFormed
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert cold-formed member {}", self.cold_formed_member.id),
-            &format!("Kaltprofil setzen {}", self.cold_formed_member.id),
+            &format!("Update cold-formed member {}", self.cold_formed_member.id),
+            &format!("Kaltprofil-Bauteil {} aktualisieren", self.cold_formed_member.id),
         )
     }
     fn target(&self) -> Vec<String> {

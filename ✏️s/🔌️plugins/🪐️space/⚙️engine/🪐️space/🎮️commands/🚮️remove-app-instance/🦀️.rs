@@ -12,7 +12,7 @@ pub struct RemoveAppInstance {
     pub node_id: Option<String>,
 }
 
-async fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let resolved_node_id = match payload.node_id.clone() {
         Some(node_id) => Some(node_id),
         None => crate::engine::space::primary_selected_node_id(selected, config).await,

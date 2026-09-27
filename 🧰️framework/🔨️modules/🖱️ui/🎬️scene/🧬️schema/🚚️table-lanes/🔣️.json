@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "lanes",
+    "columns",
+    "row",
+    "rowCount"
+  ],
+  "properties": {
+    "schema": {
+      "const": "table@1"
+    },
+    "lanes": {
+      "const": [
+        {
+          "lane": "columns",
+          "field": "columnsJson",
+          "bodyKey": "framework.scene.table.columns",
+          "optional": false
+        },
+        {
+          "lane": "rows",
+          "field": "rowsJson",
+          "bodyKey": "framework.scene.table.rows",
+          "optional": false
+        }
+      ]
+    },
+    "columns": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "rowCount": {
+      "type": "integer",
+      "minimum": 4096
+    }
+  }
+}

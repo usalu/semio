@@ -9,6 +9,28 @@ import { pluginWasmArtifactPath } from "../../../🖨️describe/🏗️componen
 type GeneratorContract = { readonly previewTarget?: string };
 
 describe("plugin registry generator preview targets", () => {
+  it("distinguishes standards and subsets with complete emoji taxonomy names", async () => {
+    const { default: Ajv } = await import("ajv");
+    const { default: emojiRegex } = await import("emoji-regex");
+    const { taxonomyFolderSlug, playgroundLaunchNamePrefix } = await import("../../🚀️launch/🏷️name-prefix/🟦️.ts");
+    const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
+    const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚀️launch/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🚀️launch/🔣️.json", import.meta.url), "utf8"));
+    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    for (const row of fixture.slugs) {
+      const independent = row.folder.replace(emojiRegex(), "").replaceAll("\uFE0F", "");
+      expect(independent).toBe(row.slug);
+      expect(taxonomyFolderSlug(row.folder)).toBe(independent);
+    }
+    const root = getWorkspaceRoot();
+    const playgrounds = generatePlaygroundRegistry(root);
+    for (const row of fixture.prefixes) {
+      const playground = playgrounds.find((entry) => entry.variant === row.variant);
+      expect(playground, row.variant).toBeDefined();
+      expect(playgroundLaunchNamePrefix(playground!, root, playgrounds)).toBe(row.prefix);
+    }
+  });
+
   it("names every owned generator preview target in taxonomy order", () => {
     const repoRoot = getWorkspaceRoot();
     const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as {
@@ -159,17 +181,21 @@ describe("WASI codegen profile policy", () => {
 type RenderedLaunch = {
   readonly configurations: readonly { name?: string; command?: string }[];
   readonly compounds?: readonly { name: string; configurations: readonly string[] }[];
+  readonly inputs?: readonly { id: string; options?: readonly string[] }[];
 };
 
-/** @emoji ♻️ Renders `.vscode/launch.json` once for the whole block — a playground discovery walk over
- * the workspace costs seconds, and every assertion below reads the same output. */
-let renderedLaunch: Promise<RenderedLaunch> | undefined;
-const launchOutput = (): Promise<RenderedLaunch> => (renderedLaunch ??= (async () => {
+/** ♻️ Renders `.vscode/launch.json` once for the whole block (seed + playground registry + every declared project target) —
+ * the discovery walks over the workspace cost seconds, and every assertion below reads the same output. */
+let renderedLaunch: Promise<{ readonly text: string; readonly launch: RenderedLaunch; readonly projects: readonly { readonly project: string; readonly targets: readonly string[] }[] }> | undefined;
+const renderLaunch = () => (renderedLaunch ??= (async () => {
   const repoRoot = getWorkspaceRoot();
   const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
-  const { generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
-  return Bun.JSONC.parse(generateLaunchJson(repoRoot, generatePlaygroundRegistry(repoRoot), [])) as RenderedLaunch;
+  const { declaredProjectTargets, generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
+  const projects = declaredProjectTargets(repoRoot);
+  const text = generateLaunchJson(repoRoot, generatePlaygroundRegistry(repoRoot), projects);
+  return { text, launch: Bun.JSONC.parse(text) as RenderedLaunch, projects };
 })());
+const launchOutput = async (): Promise<RenderedLaunch> => (await renderLaunch()).launch;
 
 describe("launch configuration identity", () => {
   it("gives every configuration a unique name and keeps the user slot out of the collapse", async () => {
@@ -196,5 +222,40 @@ describe("launch configuration identity", () => {
     for (const command of ["setup", "start", "dev", "generate", "lint", "format", "test", "build", "publish"]) {
       expect([...commands].some((row) => row === `bun nx run workspace:${command}` || row.startsWith(`bun nx run workspace:${command} `)), command).toBe(true);
     }
+  });
+});
+
+describe("declared project targets", () => {
+  it("registers every declared project target as a launch row or through its family's project picker", async () => {
+    const { launch, projects } = await renderLaunch();
+    const runnable = new Set<string>();
+    const pickers = new Map((launch.inputs ?? []).map((input) => [input.id, input.options ?? []]));
+    for (const entry of launch.configurations) {
+      const command = String(entry.command ?? "");
+      for (const match of command.matchAll(/nx run ([^\s:$]+):(\S+)/gu)) runnable.add(`${match[1]}:${match[2]}`);
+      for (const match of command.matchAll(/nx run \$\{input:([^}]+)\}:(\S+)/gu)) for (const project of pickers.get(match[1]!) ?? []) runnable.add(`${project}:${match[2]}`);
+    }
+    const missing = projects.flatMap((project) => project.targets.map((target) => `${project.project}:${target}`)).filter((pair) => !runnable.has(pair));
+    expect(projects.length).toBeGreaterThan(100);
+    expect(missing).toEqual([]);
+  });
+
+  it("gives every family picker the exact projects that declare its target", async () => {
+    const { launch, projects } = await renderLaunch();
+    for (const input of (launch.inputs ?? []).filter((entry) => entry.id.startsWith("projectTarget."))) {
+      const row = launch.configurations.find((entry) => String(entry.command ?? "").includes(`\${input:${input.id}}:`));
+      const target = /\}:(\S+)$/u.exec(String(row?.command ?? ""))?.[1];
+      expect(target, input.id).toBeDefined();
+      expect([...(input.options ?? [])]).toEqual(projects.filter((project) => project.targets.includes(target!)).map((project) => project.project).sort());
+    }
+  });
+
+  it("stays loadable by an independent JSONC reader and is byte-identical to the committed launch.json", async () => {
+    const { text } = await renderLaunch();
+    const ts = await import("typescript");
+    const parsed = ts.parseConfigFileTextToJson(".vscode/launch.json", text);
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.config).toEqual(Bun.JSONC.parse(text));
+    expect(readFileSync(join(getWorkspaceRoot(), ".vscode/launch.json"), "utf8")).toBe(text);
   });
 });

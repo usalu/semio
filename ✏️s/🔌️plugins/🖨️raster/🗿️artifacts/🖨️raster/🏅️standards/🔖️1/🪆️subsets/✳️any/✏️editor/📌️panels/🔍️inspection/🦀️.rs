@@ -18,7 +18,7 @@ pub fn definition() -> PanelTabDefinition {
 fn capacity() -> PluginAssemblyError { PluginAssemblyError::new("raster.inspector.capacity", "Raster inspection exceeds its UI capacity") }
 fn text(value: &str) -> UiAssemblyResult<UiText> { UiText::try_from_str(value).ok_or_else(capacity) }
 
-fn value(layer: &RasterLayerNode, field: &str) -> String {
+fn value(layer: &RasterLayerNode, field: &str, document: &RasterDocument) -> String {
     match field {
         "name" => layer_name(layer).into(),
         "visible" => layer_visible(layer).to_string(),
@@ -27,23 +27,44 @@ fn value(layer: &RasterLayerNode, field: &str) -> String {
         "transformX" => layer_transform(layer).x.to_string(),
         "transformY" => layer_transform(layer).y.to_string(),
         "width" => if let RasterLayerNode::Pixel { width, .. } = layer { width.unwrap_or(512).to_string() } else { String::new() },
+        "maskPresent" | "maskEnabled" | "maskInvert" => {
+            let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = layer else { return String::new(); };
+            match field {
+                "maskPresent" => mask.is_some(),
+                "maskEnabled" => mask.as_ref().is_some_and(|mask| mask.enabled),
+                _ => mask.as_ref().is_some_and(|mask| mask.invert),
+            }.to_string()
+        }
+        "maskX" | "maskY" | "maskScaleX" | "maskScaleY" | "maskRotation" | "maskWidth" | "maskHeight" => {
+            let (RasterLayerNode::Pixel { mask: Some(mask), .. } | RasterLayerNode::Group { mask: Some(mask), .. }) = layer else { return String::new(); };
+            let image = mask.image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<crate::SemioImageSnapshot>());
+            match field {
+                "maskX" => mask.transform.x.to_string(),
+                "maskY" => mask.transform.y.to_string(),
+                "maskScaleX" => mask.transform.scale_x.to_string(),
+                "maskScaleY" => mask.transform.scale_y.to_string(),
+                "maskRotation" => mask.transform.rotation.to_string(),
+                "maskWidth" => mask.width.or_else(|| image.map(|image| image.width)).unwrap_or(512).to_string(),
+                _ => mask.height.or_else(|| image.map(|image| image.height)).unwrap_or(512).to_string(),
+            }
+        }
         "height" => if let RasterLayerNode::Pixel { height, .. } = layer { height.unwrap_or(512).to_string() } else { String::new() },
         _ => String::new(),
     }
 }
 
-fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], labels: &RasterPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let initial = value(selected[0], field);
-    let mixed = selected.iter().skip(1).any(|layer| value(layer, field) != initial);
+fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], labels: &RasterPlayLabels, document: &RasterDocument) -> UiAssemblyResult<BuiltNode> {
+    let initial = value(selected[0], field, document);
+    let mixed = selected.iter().skip(1).any(|layer| value(layer, field, document) != initial);
     let args = ui_value_map([("field", ui_value_text(field)?), ("layerIds", ui_value_list(selected.iter().map(|layer| ui_value_text(layer_node_id(layer))).collect::<UiAssemblyResult<Vec<_>>>()?)?)])?;
     let (action, args) = raster_action("patchLayers", Some(args))?;
     let args = args.ok_or_else(capacity)?;
     let id = format!("{ROOT}.{field}.input");
-    let control = if field == "visible" {
+    let control = if matches!(field, "visible" | "maskPresent" | "maskEnabled" | "maskInvert") {
         ui::toggle(initial == "true").try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?.try_on_with(Trigger::Change, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
     } else if field == "blendMode" {
         let mut input = ui::select(text(if mixed { "" } else { &initial })?).try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?;
-        for (key, name) in [("normal", labels.blend_normal), ("multiply", labels.blend_multiply), ("screen", labels.blend_screen), ("darken", labels.blend_darken), ("lighten", labels.blend_lighten), ("difference", labels.blend_difference)] {
+        for (key,name) in [("normal",labels.blend_normal),("multiply",labels.blend_multiply),("screen",labels.blend_screen),("overlay",labels.blend_overlay),("darken",labels.blend_darken),("lighten",labels.blend_lighten),("colorDodge",labels.blend_color_dodge),("colorBurn",labels.blend_color_burn),("hardLight",labels.blend_hard_light),("softLight",labels.blend_soft_light),("difference",labels.blend_difference),("exclusion",labels.blend_exclusion),("hue",labels.blend_hue),("saturation",labels.blend_saturation),("color",labels.blend_color),("luminosity",labels.blend_luminosity)] {
             input = input.try_item(text(key)?, ui_label(name.as_str())?).map_err(|_| capacity())?;
         }
         input.try_on_with(Trigger::Change, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
@@ -52,8 +73,9 @@ fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], label
         let mut input = ui::input(kind).value(text(if mixed { "" } else { &initial })?).try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?.commit(text("blur")?);
         if mixed { input = input.placeholder(ui_label(labels.mixed.as_str())?); }
         if field == "opacity" { input = input.min(0.0).max(1.0).step(0.01); }
-        if matches!(field, "width" | "height") { input = input.min(1.0).max(16384.0).step(1.0); }
-        input.try_on_with(Trigger::Change, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
+        if matches!(field, "width" | "height" | "maskWidth" | "maskHeight") { input = input.min(1.0).max(16384.0).step(1.0); }
+        if matches!(field, "maskScaleX" | "maskScaleY") { input = input.step(0.01); }
+        input.try_on_with(Trigger::Commit, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
     };
     ui::tree_item(ui_label(label.as_str())?).try_id(format!("{ROOT}.{field}")).map_err(|_| capacity())?.try_child(control).map_err(|_| capacity())?.try_build().map_err(|_| capacity())
 }
@@ -63,11 +85,21 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
     let mut rows = Vec::new();
     if !selected.is_empty() {
         for (field, label) in [("name", labels.name), ("visible", labels.visible), ("opacity", labels.opacity), ("blendMode", labels.blend_mode), ("transformX", labels.position_x), ("transformY", labels.position_y)] {
-            rows.push(field_row(field, label, &selected, labels)?);
+            rows.push(field_row(field, label, &selected, labels, document)?);
+        }
+        if selected.iter().all(|layer| matches!(layer, RasterLayerNode::Pixel { .. } | RasterLayerNode::Group { .. })) {
+            rows.push(field_row("maskPresent", labels.mask_present, &selected, labels, document)?);
+            if selected.iter().all(|layer| value(layer, "maskPresent", document) == "true") {
+                rows.push(field_row("maskEnabled", labels.mask_enabled, &selected, labels, document)?);
+                rows.push(field_row("maskInvert", labels.mask_invert, &selected, labels, document)?);
+                for (field,label) in [("maskX",labels.mask_x),("maskY",labels.mask_y),("maskScaleX",labels.mask_scale_x),("maskScaleY",labels.mask_scale_y),("maskRotation",labels.mask_rotation),("maskWidth",labels.mask_width),("maskHeight",labels.mask_height)] {
+                    rows.push(field_row(field,label,&selected,labels,document)?);
+                }
+            }
         }
         if selected.iter().all(|layer| matches!(layer, RasterLayerNode::Pixel { .. })) {
-            rows.push(field_row("width", labels.width, &selected, labels)?);
-            rows.push(field_row("height", labels.height, &selected, labels)?);
+            rows.push(field_row("width", labels.width, &selected, labels, document)?);
+            rows.push(field_row("height", labels.height, &selected, labels, document)?);
         }
     }
     let (action, args) = raster_action("setBrushColor", Some(ui_value_map([])?))?;

@@ -7348,6 +7348,7 @@ impl HostTransactionCoordinator {
                 prepared_ops: draft.prepared_ops.clone(),
                 label: draft.label.clone(),
                 origin: origin_bytes,
+                prepared_child_ops: Vec::new(),
             };
             let frames = match exchange(&member.plugin_id, member.instance_id, command) {
                 Ok(frames) => frames,

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.text-editor.explicit-draft.v1",
+  "title": "Text Editor Explicit Draft Settings",
+  "type": "object",
+  "required": [
+    "readOnly",
+    "editAction",
+    "editArgument",
+    "commit",
+    "applyLabel",
+    "discardLabel",
+    "conflictLabel",
+    "applyingLabel",
+    "cancelLabel",
+    "failedLabel"
+  ],
+  "properties": {
+    "readOnly": {
+      "const": false
+    },
+    "editAction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "editArgument": {
+      "type": "string",
+      "minLength": 1
+    },
+    "editArguments": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/value"
+      }
+    },
+    "commit": {
+      "const": "explicit"
+    },
+    "applyLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "discardLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "conflictLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "applyingLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cancelLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "failedLabel": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/value"
+          }
+        }
+      ]
+    }
+  }
+}

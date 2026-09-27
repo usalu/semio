@@ -791,6 +791,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -880,6 +890,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -969,6 +989,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -1058,6 +1088,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -1147,6 +1187,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -1236,6 +1286,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -1301,6 +1361,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -2015,6 +2085,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -2104,6 +2184,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -2193,6 +2283,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -2282,6 +2382,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -2371,6 +2481,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -2460,6 +2580,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -2525,6 +2655,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -3238,6 +3378,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -3327,6 +3477,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -3416,6 +3576,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -3505,6 +3675,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -3594,6 +3774,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -3683,6 +3873,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -3748,6 +3948,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -3796,6 +4006,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for PNG or JPEG images and videos; every chosen file is imported as frames for the reconstruction.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für PNG- oder JPEG-Bilder und Videos; jede gewählte Datei wird als Einzelbilder für die Rekonstruktion importiert."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for PNG or JPEG images and videos; every chosen file is imported as frames for the reconstruction.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für PNG- oder JPEG-Bilder und Videos; jede gewählte Datei wird als Einzelbilder für die Rekonstruktion importiert."
+                }
               }
             }
           },
@@ -3840,6 +4060,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one image (name and data-URL payload) as a frame; the first image of a batch starts a new image-sequence stream, later ones join it.",
+                  "de": "Fügt ein Bild (Name und Data-URL-Inhalt) als Einzelbild hinzu; das erste Bild eines Stapels beginnt einen neuen Bildsequenz-Stream, weitere schließen sich an."
+                },
+                "reuse": {
+                  "en": "Adds one image (name and data-URL payload) as a frame; the first image of a batch starts a new image-sequence stream, later ones join it.",
+                  "de": "Fügt ein Bild (Name und Data-URL-Inhalt) als Einzelbild hinzu; das erste Bild eines Stapels beginnt einen neuen Bildsequenz-Stream, weitere schließen sich an."
+                }
               }
             }
           },
@@ -3881,6 +4111,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's video picker; the chosen video is sampled into frames according to the ingest parameters (stride, frame limit, downscaling).",
+                  "de": "Öffnet die Videoauswahl des Hosts; das gewählte Video wird gemäß den Ingest-Parametern (Schrittweite, Bildgrenze, Verkleinerung) in Einzelbilder zerlegt."
+                },
+                "reuse": {
+                  "en": "Opens the host's video picker; the chosen video is sampled into frames according to the ingest parameters (stride, frame limit, downscaling).",
+                  "de": "Öffnet die Videoauswahl des Hosts; das gewählte Video wird gemäß den Ingest-Parametern (Schrittweite, Bildgrenze, Verkleinerung) in Einzelbilder zerlegt."
+                }
               }
             }
           },
@@ -3925,6 +4165,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one sampled video frame (data URL) to the current video stream, skipping frames too blurry for the ingest sharpness threshold.",
+                  "de": "Fügt dem aktuellen Video-Stream ein abgetastetes Videobild (Data-URL) hinzu und überspringt Bilder, die für die Schärfeschwelle des Ingests zu unscharf sind."
+                },
+                "reuse": {
+                  "en": "Adds one sampled video frame (data URL) to the current video stream, skipping frames too blurry for the ingest sharpness threshold.",
+                  "de": "Fügt dem aktuellen Video-Stream ein abgetastetes Videobild (Data-URL) hinzu und überspringt Bilder, die für die Schärfeschwelle des Ingests zu unscharf sind."
+                }
               }
             }
           },
@@ -3969,6 +4219,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records the imported video's source metadata (name, duration, frame count, size and codec) on the last stream once sampling has finished.",
+                  "de": "Hält nach Abschluss der Abtastung die Quelldaten des importierten Videos (Name, Dauer, Bildanzahl, Größe und Codec) am letzten Stream fest."
+                },
+                "reuse": {
+                  "en": "Records the imported video's source metadata (name, duration, frame count, size and codec) on the last stream once sampling has finished.",
+                  "de": "Hält nach Abschluss der Abtastung die Quelldaten des importierten Videos (Name, Dauer, Bildanzahl, Größe und Codec) am letzten Stream fest."
+                }
               }
             }
           },
@@ -4013,6 +4273,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Imports a whole video file as bytes when the host cannot sample frames itself; the plugin decodes and samples it.",
+                  "de": "Importiert eine ganze Videodatei als Bytes, wenn der Host keine Einzelbilder abtasten kann; das Plugin dekodiert und tastet sie selbst ab."
+                },
+                "reuse": {
+                  "en": "Imports a whole video file as bytes when the host cannot sample frames itself; the plugin decodes and samples it.",
+                  "de": "Importiert eine ganze Videodatei als Bytes, wenn der Host keine Einzelbilder abtasten kann; das Plugin dekodiert und tastet sie selbst ab."
+                }
               }
             }
           },
@@ -4140,6 +4410,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds an empty media stream (image sequence or video) with the given name, optionally bound to a calibrated camera by id.",
+                  "de": "Fügt einen leeren Medien-Stream (Bildsequenz oder Video) mit dem angegebenen Namen hinzu, optional an eine kalibrierte Kamera gebunden."
+                },
+                "reuse": {
+                  "en": "Adds an empty media stream (image sequence or video) with the given name, optionally bound to a calibrated camera by id.",
+                  "de": "Fügt einen leeren Medien-Stream (Bildsequenz oder Video) mit dem angegebenen Namen hinzu, optional an eine kalibrierte Kamera gebunden."
+                }
               }
             }
           },
@@ -4202,6 +4482,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one media stream by id together with all of its frames.",
+                  "de": "Entfernt einen Medien-Stream anhand seiner Id samt aller seiner Einzelbilder."
+                },
+                "reuse": {
+                  "en": "Removes one media stream by id together with all of its frames.",
+                  "de": "Entfernt einen Medien-Stream anhand seiner Id samt aller seiner Einzelbilder."
+                }
               }
             }
           },
@@ -4283,6 +4573,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the time offset in milliseconds that aligns one stream with the other streams.",
+                  "de": "Legt den Zeitversatz in Millisekunden fest, der einen Stream mit den anderen Streams abgleicht."
+                },
+                "reuse": {
+                  "en": "Sets the time offset in milliseconds that aligns one stream with the other streams.",
+                  "de": "Legt den Zeitversatz in Millisekunden fest, der einen Stream mit den anderen Streams abgleicht."
+                }
               }
             }
           },
@@ -4629,6 +4929,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the intrinsics of one camera: model, focal lengths fx and fy, principal point cx and cy, skew, radial k1 to k3 and tangential p1 and p2 distortion, and whether it is locked.",
+                  "de": "Legt die inneren Parameter einer Kamera fest: Modell, Brennweiten fx und fy, Hauptpunkt cx und cy, Scherung, radiale Verzeichnung k1 bis k3, tangentiale p1 und p2 und ob sie gesperrt ist."
+                },
+                "reuse": {
+                  "en": "Sets the intrinsics of one camera: model, focal lengths fx and fy, principal point cx and cy, skew, radial k1 to k3 and tangential p1 and p2 distortion, and whether it is locked.",
+                  "de": "Legt die inneren Parameter einer Kamera fest: Modell, Brennweiten fx und fy, Hauptpunkt cx und cy, Scherung, radiale Verzeichnung k1 bis k3, tangentiale p1 und p2 und ob sie gesperrt ist."
+                }
               }
             }
           },
@@ -4673,6 +4983,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Creates an initial calibration for every camera a stream is bound to that has none yet, estimated from the size of that stream's first frame.",
+                  "de": "Erzeugt für jede an einen Stream gebundene Kamera ohne Kalibrierung eine Anfangskalibrierung, geschätzt aus der Größe des ersten Bildes dieses Streams."
+                },
+                "reuse": {
+                  "en": "Creates an initial calibration for every camera a stream is bound to that has none yet, estimated from the size of that stream's first frame.",
+                  "de": "Erzeugt für jede an einen Stream gebundene Kamera ohne Kalibrierung eine Anfangskalibrierung, geschätzt aus der Größe des ersten Bildes dieses Streams."
+                }
               }
             }
           },
@@ -4793,6 +5113,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a ground control point with a name and known world coordinates X, Y and Z for georeferencing the reconstruction.",
+                  "de": "Fügt einen Passpunkt mit Namen und bekannten Weltkoordinaten X, Y und Z zur Georeferenzierung der Rekonstruktion hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a ground control point with a name and known world coordinates X, Y and Z for georeferencing the reconstruction.",
+                  "de": "Fügt einen Passpunkt mit Namen und bekannten Weltkoordinaten X, Y und Z zur Georeferenzierung der Rekonstruktion hinzu."
+                }
               }
             }
           },
@@ -4855,6 +5185,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one ground control point by id from the reconstruction.",
+                  "de": "Entfernt einen Passpunkt anhand seiner Id aus der Rekonstruktion."
+                },
+                "reuse": {
+                  "en": "Removes one ground control point by id from the reconstruction.",
+                  "de": "Entfernt einen Passpunkt anhand seiner Id aus der Rekonstruktion."
+                }
               }
             }
           },
@@ -4988,6 +5328,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Marks where a ground control point appears in one frame of a stream, at pixel x and y.",
+                  "de": "Markiert, wo ein Passpunkt in einem Einzelbild eines Streams erscheint, an Pixel x und y."
+                },
+                "reuse": {
+                  "en": "Marks where a ground control point appears in one frame of a stream, at pixel x and y.",
+                  "de": "Markiert, wo ein Passpunkt in einem Einzelbild eines Streams erscheint, an Pixel x und y."
+                }
               }
             }
           },
@@ -5114,6 +5464,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how frames are ingested: sampling stride, maximum frame count, downscaling of the long edge in pixels and the minimum sharpness a frame needs.",
+                  "de": "Legt fest, wie Einzelbilder aufgenommen werden: Abtastschrittweite, maximale Bildanzahl, Verkleinerung der langen Kante in Pixeln und die nötige Mindestschärfe."
+                },
+                "reuse": {
+                  "en": "Sets how frames are ingested: sampling stride, maximum frame count, downscaling of the long edge in pixels and the minimum sharpness a frame needs.",
+                  "de": "Legt fest, wie Einzelbilder aufgenommen werden: Abtastschrittweite, maximale Bildanzahl, Verkleinerung der langen Kante in Pixeln und die nötige Mindestschärfe."
+                }
               }
             }
           },
@@ -5280,6 +5640,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the feature detection parameters: detector, target feature count, octaves and edge threshold.",
+                  "de": "Legt die Parameter der Merkmalserkennung fest: Detektor, angestrebte Merkmalsanzahl, Oktaven und Kantenschwelle."
+                },
+                "reuse": {
+                  "en": "Sets the feature detection parameters: detector, target feature count, octaves and edge threshold.",
+                  "de": "Legt die Parameter der Merkmalserkennung fest: Detektor, angestrebte Merkmalsanzahl, Oktaven und Kantenschwelle."
+                }
               }
             }
           },
@@ -5469,6 +5839,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the feature matching parameters: matcher, ratio test, cross check, sequential window, maximum pairs per frame and loop closure.",
+                  "de": "Legt die Parameter der Merkmalszuordnung fest: Zuordner, Verhältnistest, Kreuzprüfung, sequenzielles Fenster, maximale Paare pro Bild und Schleifenschluss."
+                },
+                "reuse": {
+                  "en": "Sets the feature matching parameters: matcher, ratio test, cross check, sequential window, maximum pairs per frame and loop closure.",
+                  "de": "Legt die Parameter der Merkmalszuordnung fest: Zuordner, Verhältnistest, Kreuzprüfung, sequenzielles Fenster, maximale Paare pro Bild und Schleifenschluss."
+                }
               }
             }
           },
@@ -5678,6 +6058,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the structure-from-motion parameters: RANSAC iterations and threshold, minimum track length, bundle adjustment iterations and the robust loss with its Huber delta.",
+                  "de": "Legt die Structure-from-Motion-Parameter fest: RANSAC-Iterationen und -Schwelle, minimale Spurlänge, Iterationen der Bündelausgleichung und die robuste Verlustfunktion mit Huber-Delta."
+                },
+                "reuse": {
+                  "en": "Sets the structure-from-motion parameters: RANSAC iterations and threshold, minimum track length, bundle adjustment iterations and the robust loss with its Huber delta.",
+                  "de": "Legt die Structure-from-Motion-Parameter fest: RANSAC-Iterationen und -Schwelle, minimale Spurlänge, Iterationen der Bündelausgleichung und die robuste Verlustfunktion mit Huber-Delta."
+                }
               }
             }
           },
@@ -5863,6 +6253,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the dense reconstruction parameters: resolution, window radius, minimum view consistency, confidence threshold and maximum point count.",
+                  "de": "Legt die Parameter der dichten Rekonstruktion fest: Auflösung, Fensterradius, minimale Ansichtskonsistenz, Konfidenzschwelle und maximale Punktanzahl."
+                },
+                "reuse": {
+                  "en": "Sets the dense reconstruction parameters: resolution, window radius, minimum view consistency, confidence threshold and maximum point count.",
+                  "de": "Legt die Parameter der dichten Rekonstruktion fest: Auflösung, Fensterradius, minimale Ansichtskonsistenz, Konfidenzschwelle und maximale Punktanzahl."
+                }
               }
             }
           },
@@ -6126,6 +6526,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the meshing parameters: TSDF voxel size and truncation, target triangle count, smoothing, texturing and texture size, watertightness, hole filling and self-intersection check.",
+                  "de": "Legt die Vernetzungsparameter fest: TSDF-Voxelgröße und -Abschneidung, angestrebte Dreieckszahl, Glättung, Texturierung und Texturgröße, Wasserdichtheit, Lochfüllung und Selbstschnittprüfung."
+                },
+                "reuse": {
+                  "en": "Sets the meshing parameters: TSDF voxel size and truncation, target triangle count, smoothing, texturing and texture size, watertightness, hole filling and self-intersection check.",
+                  "de": "Legt die Vernetzungsparameter fest: TSDF-Voxelgröße und -Abschneidung, angestrebte Dreieckszahl, Glättung, Texturierung und Texturgröße, Wasserdichtheit, Lochfüllung und Selbstschnittprüfung."
+                }
               }
             }
           },
@@ -6270,6 +6680,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the motion tracking parameters: whether tracking runs, maximum tracks, window size, minimum track quality and minimum track length in frames.",
+                  "de": "Legt die Parameter der Bewegungsverfolgung fest: ob verfolgt wird, maximale Spuren, Fenstergröße, minimale Spurqualität und minimale Spurlänge in Bildern."
+                },
+                "reuse": {
+                  "en": "Sets the motion tracking parameters: whether tracking runs, maximum tracks, window size, minimum track quality and minimum track length in frames.",
+                  "de": "Legt die Parameter der Bewegungsverfolgung fest: ob verfolgt wird, maximale Spuren, Fenstergröße, minimale Spurqualität und minimale Spurlänge in Bildern."
+                }
               }
             }
           },
@@ -6481,6 +6901,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the georeferencing parameters: whether geo products are made, origin longitude, latitude and altitude, ground sample distance, DSM cell size, DTM filter radius and orthophoto size.",
+                  "de": "Legt die Georeferenzierungsparameter fest: ob Geoprodukte entstehen, Ursprungslänge, -breite und -höhe, Bodenauflösung, DSM-Zellgröße, DTM-Filterradius und Orthofotogröße."
+                },
+                "reuse": {
+                  "en": "Sets the georeferencing parameters: whether geo products are made, origin longitude, latitude and altitude, ground sample distance, DSM cell size, DTM filter radius and orthophoto size.",
+                  "de": "Legt die Georeferenzierungsparameter fest: ob Geoprodukte entstehen, Ursprungslänge, -breite und -höhe, Bodenauflösung, DSM-Zellgröße, DTM-Filterradius und Orthofotogröße."
+                }
               }
             }
           },
@@ -6525,6 +6955,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the reconstructed mesh with the built-in placeholder mesh; the previous mesh result is discarded.",
+                  "de": "Ersetzt das rekonstruierte Netz durch das eingebaute Platzhalternetz; das bisherige Netzergebnis wird verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces the reconstructed mesh with the built-in placeholder mesh; the previous mesh result is discarded.",
+                  "de": "Ersetzt das rekonstruierte Netz durch das eingebaute Platzhalternetz; das bisherige Netzergebnis wird verworfen."
+                }
               }
             }
           },
@@ -6569,6 +7009,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards the sparse point cloud of the reconstruction.",
+                  "de": "Verwirft die dünne Punktwolke der Rekonstruktion."
+                },
+                "reuse": {
+                  "en": "Discards the sparse point cloud of the reconstruction.",
+                  "de": "Verwirft die dünne Punktwolke der Rekonstruktion."
+                }
               }
             }
           },
@@ -6613,6 +7063,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards the dense point cloud of the reconstruction.",
+                  "de": "Verwirft die dichte Punktwolke der Rekonstruktion."
+                },
+                "reuse": {
+                  "en": "Discards the dense point cloud of the reconstruction.",
+                  "de": "Verwirft die dichte Punktwolke der Rekonstruktion."
+                }
               }
             }
           },
@@ -6657,6 +7117,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards the reconstructed mesh, leaving the point clouds and other results in place.",
+                  "de": "Verwirft das rekonstruierte Netz; Punktwolken und übrige Ergebnisse bleiben erhalten."
+                },
+                "reuse": {
+                  "en": "Discards the reconstructed mesh, leaving the point clouds and other results in place.",
+                  "de": "Verwirft das rekonstruierte Netz; Punktwolken und übrige Ergebnisse bleiben erhalten."
+                }
               }
             }
           },
@@ -6701,6 +7171,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards every motion track of the reconstruction.",
+                  "de": "Verwirft alle Bewegungsspuren der Rekonstruktion."
+                },
+                "reuse": {
+                  "en": "Discards every motion track of the reconstruction.",
+                  "de": "Verwirft alle Bewegungsspuren der Rekonstruktion."
+                }
               }
             }
           },
@@ -6745,6 +7225,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards the georeferenced products (surface and terrain models and orthophoto) of the reconstruction.",
+                  "de": "Verwirft die georeferenzierten Produkte (Oberflächen- und Geländemodell sowie Orthofoto) der Rekonstruktion."
+                },
+                "reuse": {
+                  "en": "Discards the georeferenced products (surface and terrain models and orthophoto) of the reconstruction.",
+                  "de": "Verwirft die georeferenzierten Produkte (Oberflächen- und Geländemodell sowie Orthofoto) der Rekonstruktion."
+                }
               }
             }
           },
@@ -6789,6 +7279,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Discards every reconstruction result at once: mesh, sparse and dense clouds, camera trajectory, tracks, geo products and QC report.",
+                  "de": "Verwirft alle Rekonstruktionsergebnisse auf einmal: Netz, dünne und dichte Punktwolke, Kameratrajektorie, Spuren, Geoprodukte und QS-Bericht."
+                },
+                "reuse": {
+                  "en": "Discards every reconstruction result at once: mesh, sparse and dense clouds, camera trajectory, tracks, geo products and QC report.",
+                  "de": "Verwirft alle Rekonstruktionsergebnisse auf einmal: Netz, dünne und dichte Punktwolke, Kameratrajektorie, Spuren, Geoprodukte und QS-Bericht."
+                }
               }
             }
           },
@@ -7010,6 +7510,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.ops file on the user's machine; without a report nothing happens.",
+                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.ops auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.ops file on the user's machine; without a report nothing happens.",
+                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.ops auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
+                }
               }
             }
           },
@@ -7114,6 +7624,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads one of the plugin's bundled remodeling examples (streams, calibration and parameters) into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten Remodeling-Beispiele (Streams, Kalibrierung und Parameter) in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Loads one of the plugin's bundled remodeling examples (streams, calibration and parameters) into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten Remodeling-Beispiele (Streams, Kalibrierung und Parameter) in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -7988,6 +8508,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -8093,6 +8623,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -8186,6 +8726,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -10341,6 +10891,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -10446,6 +11006,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -10539,6 +11109,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -10751,7 +11331,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -10987,8 +11567,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "a57f279d250b985a14f8416533a3b798a93fa1d5f2876fbe5bcb1c88ae6a5878",
-    "coreWasmSha256": "f235596bdc9d12c03b40057e479aa6ad6dc0508fd75c81a74ddddab5bee7581f",
-    "descriptorSha256": "c387cc6478f7179cd303d6f892ece4ce66bdaf552d65894cab996e522662fd43"
+    "wasmSha256": "f727db8fa734745d7a02231ebba3572af397db4de08b2f1ef5fd8c668d564c55",
+    "coreWasmSha256": "ff351f184f4a82411edac43a141e24337b641d162540a288a546f6dc5963e782",
+    "descriptorSha256": "396ba933fec2a294aad67e3460bc01d2dcae10843ae39768becbe669f5b909fa"
   }
 }

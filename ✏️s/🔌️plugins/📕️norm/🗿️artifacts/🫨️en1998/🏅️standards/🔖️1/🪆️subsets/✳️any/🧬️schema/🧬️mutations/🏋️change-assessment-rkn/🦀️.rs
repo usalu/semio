@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeAssessment
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assessment-r-k-n", "change-assessment-r-k-n")
+        protocol::LocalizedLabel::native("Change characteristic resistance of the assessed element", "Charakteristischen Widerstand des bewerteten Bauteils ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-r-k-n".into()]

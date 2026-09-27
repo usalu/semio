@@ -478,8 +478,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { ReadChildren: { seq: 19 } },
       { ReadHistory: { seq: 20 } },
-      { transactionPrepare: { seq: 21, txn_id: "txn-1", mutation_id: "s.demo#kind", payload: [1, 2], prepared_ops: [], label: "", origin: [] } },
-      { transactionPrepare: { seq: 22, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "step-1", origin: [9] } },
+      { transactionPrepare: { seq: 21, txn_id: "txn-1", mutation_id: "s.demo#kind", payload: [1, 2], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
+      { transactionPrepare: { seq: 22, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "step-1", origin: [9], prepared_child_ops: [] } },
+      { transactionPrepare: { seq: 36, txn_id: "txn-2", mutation_id: "", payload: [], prepared_ops: [], label: "step-2", origin: [9], prepared_child_ops: [5, 6] } },
       { transactionCommit: { seq: 23, txn_id: "txn-1" } },
       { transactionRollback: { seq: 24, txn_id: "txn-1" } },
       { transactionUndo: { seq: 25, group_id: "grp-1" } },
@@ -509,7 +510,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
       { Error: { in_reply_to: 10, fault: [1, 2, 3], report: [6] } },
       { Error: { in_reply_to: null, fault: [4, 5], report: [] } },
-      { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5] } },
+      { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5], child_ops: [] } },
+      { Emit: { in_reply_to: 11, document_ops: [], config_ops: [], draft_ops: [], output: [4], diagnostics: [], child_ops: [6, 7, 8] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8] } },
@@ -566,7 +568,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ Command: { seq: 0, command: [], view_state: [] } })[0]).toBe(1);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(15);
       expect(encodeAppCommand({ ReadHistory: { seq: 0 } })[0]).toBe(16);
-      expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [] } })[0]).toBe(17);
+      expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } })[0]).toBe(17);
       expect(encodeAppCommand({ transactionCommit: { seq: 0, txn_id: "" } })[0]).toBe(18);
       expect(encodeAppCommand({ transactionRollback: { seq: 0, txn_id: "" } })[0]).toBe(19);
       expect(encodeAppCommand({ transactionUndo: { seq: 0, group_id: "" } })[0]).toBe(20);
@@ -703,7 +705,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
         ["Error", { Error: { in_reply_to: null, fault: [99], report: [] } }],
-        ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [] } }],
+        ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [], child_ops: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
         ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } }],
@@ -723,7 +725,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         Media: "0701017001010102",
         MediaFingerprint: "080101700101",
         Error: "0900016300",
-        Emit: "0a0101010000010200",
+        Emit: "0a010101000001020000",
         Draft: "0b01010101020164",
         Children: "0c01010173016301640101",
         Ephemeral: "0d02010203040000",
@@ -786,8 +788,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const commandCases: Readonly<Record<string, AppCommandValue>> = {
-        TransactionPrepareOwner: { transactionPrepare: { seq: 1, txn_id: "t", mutation_id: "m", payload: [9], prepared_ops: [], label: "", origin: [] } },
-        TransactionPreparePrePlanned: { transactionPrepare: { seq: 2, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "l", origin: [9] } },
+        TransactionPrepareOwner: { transactionPrepare: { seq: 1, txn_id: "t", mutation_id: "m", payload: [9], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
+        TransactionPreparePrePlanned: { transactionPrepare: { seq: 2, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "l", origin: [9], prepared_child_ops: [] } },
+        TransactionPreparePrePlannedChildren: { transactionPrepare: { seq: 7, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1]], label: "l", origin: [9], prepared_child_ops: [5, 6] } },
         TransactionCommit: { transactionCommit: { seq: 3, txn_id: "t" } },
         TransactionRollback: { transactionRollback: { seq: 4, txn_id: "t" } },
         TransactionUndo: { transactionUndo: { seq: 5, group_id: "g" } },
@@ -1394,8 +1397,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       await client.transactionRollback("txn-1");
       await client.transactionUndo("grp-1");
       await client.transactionRedo("grp-1");
-      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [] } });
-      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4] } });
+      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } });
+      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4], prepared_child_ops: [] } });
       expect(seen[2]).toEqual({ transactionCommit: { seq: 3, txn_id: "txn-1" } });
       expect(seen[3]).toEqual({ transactionRollback: { seq: 4, txn_id: "txn-1" } });
       expect(seen[4]).toEqual({ transactionUndo: { seq: 5, group_id: "grp-1" } });
@@ -2255,7 +2258,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, "hex"));
 
     it("retains one exact causal OpBinary through actor send and receive frames", () => {
-      const batch = fromHex("01016d0164016100017301aa016902bbcc03ffffffffffffffffff0105");
+      const batch = fromHex("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105");
       const message = encodeBackboneMessage({ kind: "mutations", envelopes: batch });
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
       const request = { kind: "send", documentId: "d", clientInstanceId, message: { kind: "documentBackbone", message } } as const;

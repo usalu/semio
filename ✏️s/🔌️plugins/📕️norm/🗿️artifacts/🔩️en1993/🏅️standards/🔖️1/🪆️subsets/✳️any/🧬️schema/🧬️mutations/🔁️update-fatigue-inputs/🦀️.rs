@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFatigueInp
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert fatigue detail {}", self.fatigue_detail.id),
-            &format!("Ermüdungsdetail setzen {}", self.fatigue_detail.id),
+            &format!("Update fatigue detail {}", self.fatigue_detail.id),
+            &format!("Kerbdetail {} aktualisieren", self.fatigue_detail.id),
         )
     }
     fn target(&self) -> Vec<String> {

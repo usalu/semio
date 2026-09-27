@@ -17,7 +17,7 @@ import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️mod
 
 type ToggleCase = {
   readonly id: string;
-  readonly component: Component;
+  readonly component: Extract<Component, { readonly type: "toggle" }>;
   readonly accessibleLabel: string;
   readonly expected: {
     readonly role: "button" | "checkbox";
@@ -40,7 +40,7 @@ function record(row: ToggleCase, id: number): UiNodeRecord {
     key: `#toggle-${id}`,
     component: row.component,
     layout: { kind: "leaf", width: "hug", height: "hug" },
-    style: {},
+    style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
     activity: "idle",
     disabled: false,
     transition: null,
@@ -48,7 +48,7 @@ function record(row: ToggleCase, id: number): UiNodeRecord {
     bindings: [],
     menu: null,
     children: [],
-  } as UiNodeRecord;
+  };
 }
 
 function renderInterpreter(row: ToggleCase, id: number): HTMLElement {

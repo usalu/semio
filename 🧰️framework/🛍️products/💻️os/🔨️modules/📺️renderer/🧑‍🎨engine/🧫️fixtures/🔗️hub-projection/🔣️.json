@@ -120,6 +120,20 @@
     ],
     "sections": ["signIn", "spaces", "invitations"]
   },
+  "footerPresentation": {
+    "status": {
+      "id": "s-hub-connection",
+      "role": "status",
+      "icon": "user",
+      "labels": { "en": "signed out", "de": "abgemeldet" }
+    },
+    "action": {
+      "id": "framework.hub.signIn",
+      "role": "button",
+      "icon": "user",
+      "labels": { "en": "Sign in", "de": "Anmelden" }
+    }
+  },
   "operationOwnership": {
     "selectedGeneration": 2,
     "completions": [

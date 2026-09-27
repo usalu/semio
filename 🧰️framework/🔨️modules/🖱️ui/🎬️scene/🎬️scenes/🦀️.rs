@@ -173,6 +173,8 @@ pub struct Canvas2dScene {
     pub zoom: f64,
     pub layers_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub framing: Option<crate::Canvas2dFraming>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<crate::Canvas2dSnapshotLease>,
     /// ⏯️ The base64url `ToolRunTraceDelta` paged to this window — the 2d twin of
     /// [`World3dScene::tool_run_trace`], carried outside the doc as [`Canvas2dSceneLane::ToolRunTrace`].
@@ -186,7 +188,7 @@ pub struct Canvas2dScene {
 impl Canvas2dScene {
     /** @emoji 🖼️ Builds a canvas-2d scene with every optional extension unset. */
     pub fn base(camera_x: f64, camera_y: f64, zoom: f64, layers_json: String) -> Self {
-        Self { camera_x, camera_y, zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }
+        Self { camera_x, camera_y, zoom, layers_json, framing: None, snapshot: None, tool_run_trace: None, lanes: Vec::new() }
     }
 }
 
@@ -195,6 +197,7 @@ scene_pack_wire!(Canvas2dScenePack, Canvas2dScene {
     camera_y: f64,
     zoom: f64,
     layers_json: String,
+    framing: Option<crate::Canvas2dFraming>,
     snapshot: Option<crate::Canvas2dSnapshotLease>,
     tool_run_trace: Option<String>,
     #[serde(default)]
@@ -239,6 +242,7 @@ impl ToValue for Canvas2dScene {
         value_push(&mut entries, "cameraY", &self.camera_y);
         value_push(&mut entries, "zoom", &self.zoom);
         value_push(&mut entries, "layersJson", &self.layers_json);
+        value_push_option(&mut entries, "framing", &self.framing);
         value_push_option(&mut entries, "snapshot", &self.snapshot);
         value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -254,6 +258,7 @@ impl FromValue for Canvas2dScene {
             camera_y: value_decode(&entries, "cameraY")?,
             zoom: value_decode(&entries, "zoom")?,
             layers_json: value_decode(&entries, "layersJson")?,
+            framing: value_decode_option(&entries, "framing")?,
             snapshot: value_decode_option(&entries, "snapshot")?,
             tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
@@ -1489,6 +1494,8 @@ impl FromValue for NodeGraphScene {
 #[serde(rename_all = "camelCase")]
 pub struct TextEditorScene {
     pub buffer: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1523,6 +1530,8 @@ pub struct TextEditorScene {
 
 scene_pack_wire!(TextEditorScenePack, TextEditorScene {
     buffer: String,
+    #[serde(default)]
+    lanes: Vec<SceneLaneRef>,
     language: Option<String>,
     selection_json: Option<String>,
     tokens_json: Option<String>,
@@ -1543,6 +1552,21 @@ scene_pack_wire!(TextEditorScenePack, TextEditorScene {
 impl SceneDoc for TextEditorScene {
     const SCHEMA: &'static str = "text-editor@1";
 
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let payload = std::mem::take(&mut spine.buffer);
+        spine.lanes = vec![SceneLaneRef { lane: "buffer".into(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) }];
+        (spine, vec![SceneLanePayload { key: TEXT_EDITOR_BUFFER_LANE_KEY, payload }])
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        if key != TEXT_EDITOR_BUFFER_LANE_KEY {
+            return false;
+        }
+        self.buffer = payload;
+        true
+    }
+
     fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
         crate::pack::to_bytes(&TextEditorScenePack::from(self))
     }
@@ -1552,11 +1576,15 @@ impl SceneDoc for TextEditorScene {
     }
 }
 
+/// 🚚️ The document buffer travels in paged carriers independently of the bounded scene header.
+pub const TEXT_EDITOR_BUFFER_LANE_KEY: &str = "framework.scene.text.buffer";
+
 impl TextEditorScene {
     /** @emoji ✍️ Builds a text-editor scene with optional extensions unset. */
     pub fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
         Self {
             buffer,
+            lanes: Vec::new(),
             language,
             selection_json,
             tokens_json: None,
@@ -1580,6 +1608,9 @@ impl ToValue for TextEditorScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
         value_push(&mut entries, "buffer", &self.buffer);
+        if !self.lanes.is_empty() {
+            value_push(&mut entries, "lanes", &self.lanes);
+        }
         value_push_option(&mut entries, "language", &self.language);
         value_push_option(&mut entries, "selectionJson", &self.selection_json);
         value_push_option(&mut entries, "tokensJson", &self.tokens_json);
@@ -1604,6 +1635,7 @@ impl FromValue for TextEditorScene {
         let entries = value.into_object()?;
         Ok(Self {
             buffer: value_decode(&entries, "buffer")?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
             language: value_decode_option(&entries, "language")?,
             selection_json: value_decode_option(&entries, "selectionJson")?,
             tokens_json: value_decode_option(&entries, "tokensJson")?,
@@ -1628,6 +1660,8 @@ impl FromValue for TextEditorScene {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableScene {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
     pub columns_json: String,
     pub rows_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1650,18 +1684,42 @@ pub struct TableScene {
 
 impl SceneDoc for TableScene {
     const SCHEMA: &'static str = "table@1";
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let columns = std::mem::take(&mut spine.columns_json);
+        let rows = std::mem::take(&mut spine.rows_json);
+        spine.lanes = vec![
+            SceneLaneRef { lane: "columns".into(), bytes: columns.len() as u32, hash: scene_lane_hash(&columns) },
+            SceneLaneRef { lane: "rows".into(), bytes: rows.len() as u32, hash: scene_lane_hash(&rows) },
+        ];
+        (spine, vec![SceneLanePayload { key: TABLE_COLUMNS_LANE_KEY, payload: columns }, SceneLanePayload { key: TABLE_ROWS_LANE_KEY, payload: rows }])
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        match key {
+            TABLE_COLUMNS_LANE_KEY => self.columns_json = payload,
+            TABLE_ROWS_LANE_KEY => self.rows_json = payload,
+            _ => return false,
+        }
+        true
+    }
 }
+
+pub const TABLE_COLUMNS_LANE_KEY: &str = "framework.scene.table.columns";
+pub const TABLE_ROWS_LANE_KEY: &str = "framework.scene.table.rows";
 
 impl TableScene {
     /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
     pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
-        Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: None, domain_granularity_id: None }
+        Self { lanes: Vec::new(), columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: None, domain_granularity_id: None }
     }
 }
 
 impl ToValue for TableScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
+        if !self.lanes.is_empty() { value_push(&mut entries, "lanes", &self.lanes); }
         value_push(&mut entries, "columnsJson", &self.columns_json);
         value_push(&mut entries, "rowsJson", &self.rows_json);
         value_push_option(&mut entries, "selectionJson", &self.selection_json);
@@ -1678,6 +1736,7 @@ impl FromValue for TableScene {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self {
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
             columns_json: value_decode(&entries, "columnsJson")?,
             rows_json: value_decode(&entries, "rowsJson")?,
             selection_json: value_decode_option(&entries, "selectionJson")?,
@@ -2845,3 +2904,17 @@ mod tests;
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️scenes-value-round-trip/🦀️.rs"]
 mod value_round_trip_tests;
+
+impl ToValue for crate::Canvas2dFraming {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![("revision".into(),self.revision.to_value()),("bounds".into(),self.bounds.to_vec().to_value()),("padding".into(),self.padding.to_value())])
+    }
+}
+
+impl FromValue for crate::Canvas2dFraming {
+    fn from_value(value: DslValue) -> Result<Self,ValueError> {
+        let entries = value.into_object()?;
+        let bounds: Vec<f64> = value_decode(&entries,"bounds")?;
+        Ok(Self { revision: value_decode(&entries,"revision")?,bounds: bounds.try_into().map_err(|_| ValueError::new("canvas framing requires four bounds"))?,padding: value_decode(&entries,"padding")? })
+    }
+}

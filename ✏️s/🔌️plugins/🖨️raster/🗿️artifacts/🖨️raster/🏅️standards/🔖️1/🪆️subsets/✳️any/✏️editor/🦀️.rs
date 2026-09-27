@@ -254,6 +254,7 @@ mod args_bridge {
         Ok(match action {
             "addLayer" => RasterCommand::AddLayer(decode(action, plain())?),
             "editPixels" => RasterCommand::EditPixels(decode(action, layer())?),
+            "maskFromSelection" => RasterCommand::MaskFromSelection(decode(action, layer())?),
             "dropLayerKind" => RasterCommand::DropLayerKind(decode(action, plain())?),
             "setLayerVisible" => RasterCommand::SetLayerVisible(decode(action, layer())?),
             "toggleLayerVisible" => RasterCommand::ToggleLayerVisible(decode(action, layer())?),
@@ -302,6 +303,7 @@ semio_framework_plugin::app_commands! {
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "editPixels" as "edit-pixels" => edit_pixels::EditPixels,
+        "maskFromSelection" as "mask-from-selection" => mask_from_selection::MaskFromSelection,
         "setBrushColor" as "brush-color" => set_brush_color::SetBrushColor,
         "setBrushHardness" as "brush-hardness" => set_brush_hardness::SetBrushHardness,
     }
@@ -310,7 +312,7 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::raster::commands::set_active_example;
-use crate::editor::raster::commands::edit_pixels;
+use crate::editor::raster::commands::{edit_pixels,mask_from_selection};
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
@@ -318,7 +320,7 @@ use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite
 
 //#region 🧵️RetainedCommands
 /// 🧵️ Every `RasterCommand` row, without exception — the retained route table, the manifest's
-/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME fifteen ids, which
+/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME command ids, which
 /// is exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩
 /// migrated` must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
 const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
@@ -338,6 +340,7 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCameraZoom",
     "setActiveExample",
     "editPixels",
+    "maskFromSelection",
     "setBrushColor",
     "setBrushHardness",
 ];
@@ -360,6 +363,7 @@ const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// says "this route publishes into the config store, not into artifact history".
 const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "editPixels", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "maskFromSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setLayerVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -1041,7 +1045,7 @@ impl ArtifactEditor for RasterPlayApp {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "editPixels", "setBrushColor", "setBrushHardness"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness"
         ]
     }
 
@@ -1060,6 +1064,8 @@ impl ArtifactEditor for RasterPlayApp {
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if tool_id == "editPixels" {
             Box::new(edit_pixels::PixelEditWork::default())
+        } else if tool_id == "maskFromSelection" {
+            Box::new(mask_from_selection::MaskFromSelectionWork::default())
         } else {
             Box::new(BoundedArtifactCommandWork::new(tool_id, raster_retained_reduce, raster_retained_extent))
         };
@@ -1333,19 +1339,11 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
     }
 }
 
-/// 🖼️ Composites the current raster document to a PNG `Media` payload for the `image:out` port —
-/// `crate::io::raster_document_json_to_svg` renders the document's real layer
-/// stack (not a placeholder title card) via the `s.stdio.semio/v1/drawing` bridge; the vector→pixels
-/// render step still has no stdio bridge (real pixel compositing is wgpu/canvas-host-side, out of
-/// this pure headless compute node's reach — see that function's own doc), so its raw renderer
-/// output is canonicalized through the real `s.stdio.semio/v1/image` ↔ png round trip inside
-/// `🚪️io/🦀️.rs` before leaving this port.
+/// 🖼️ Publishes the canonical layer composite as a PNG image port payload.
 pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
-    let (svg, width, height) = crate::io::raster_document_json_to_svg(document).map_err(|error| MediaError::Payload("image:out".into(), error))?;
-    let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("image:out".into(), error))?;
-    let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
-    let canonical = crate::io::canonicalize_png_bytes(&raw_bytes).map_err(|error| MediaError::Payload("image:out".into(), error))?;
-    let png_base64 = base64_codec::base64_standard_encode(canonical);
+    let image=crate::io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let bytes=crate::io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let png_base64=base64_codec::base64_standard_encode(bytes);
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 //#endregion 🔖️Io
@@ -1407,6 +1405,9 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("editPixels", LocalizedLabel::native("Edit Pixels", "Pixel bearbeiten"), ActionKind::Mutation))
             .action_describe("editPixels", LocalizedLabel::native("Applies a cancellable pixel operation to the selected layer and records the result in shared history.", "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."))
             .action_interactive_job("editPixels", InteractiveJobClassification::Migrated)
+            .action_with(raster_internal_action("maskFromSelection", LocalizedLabel::native("Mask From Selection", "Maske aus Auswahl"), ActionKind::Mutation))
+            .action_describe("maskFromSelection", LocalizedLabel::native("Creates an undoable layer mask from the current pixel selection.", "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."))
+            .action_interactive_job("maskFromSelection", InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))

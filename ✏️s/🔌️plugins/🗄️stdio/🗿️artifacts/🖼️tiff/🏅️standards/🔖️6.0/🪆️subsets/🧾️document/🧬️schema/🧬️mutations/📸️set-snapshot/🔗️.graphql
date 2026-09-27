@@ -1,0 +1,2 @@
+# 📸️ Whole TiffSnapshot replacement.
+input SetSnapshot { snapshot: TiffSnapshot! }

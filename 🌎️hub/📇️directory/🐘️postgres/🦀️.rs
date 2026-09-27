@@ -1015,6 +1015,7 @@ impl PostgresDirectory {
                     .await
                     .map_err(backend)?;
             }
+            DirectoryEventBody::UserPreferenceRecorded { .. } => {}
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 let descriptor: Option<(serde_json::Value,)> = sqlx_core::query_as::query_as("SELECT descriptor FROM hub_document_descriptor WHERE space_id = $1 AND document_id = $2 FOR UPDATE")
                     .bind(&checkpoint.scope.space_id)

@@ -35,9 +35,12 @@ use super::reorder_runs;
 /// (`extern crate semio_framework_os_kernel as dsl;`), the same spelling every other stdio subset's
 /// eventual `dsl::Mutations` derive uses (confirmed against `din4108`'s already-compiling facet,
 /// this ticket's binding reference).
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text")]
 pub enum SemioTextMutation {
+    SetSnapshot(SetSnapshot),
     InsertRun(insert_run::InsertRun),
     RemoveRun(remove_run::RemoveRun),
     EditRun(edit_run::EditRun),
@@ -52,7 +55,7 @@ pub enum SemioTextMutation {
 /// `🔤️mutate-semio-text`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

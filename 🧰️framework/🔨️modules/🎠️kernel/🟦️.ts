@@ -289,7 +289,8 @@ if (import.meta.vitest) {
 export type PluginDispatchHintV1 = Readonly<{ order?: number }>;
 
 export type PluginWasmHandle = {
-  readonly manifest: () => Promise<Uint8Array>;
+  /** 📇️ The admitted descriptor manifest of the plugin, as the loader read it — a value, never re-encoded per call. */
+  readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
   /** 🧵 Takes one capped operation-owned export chunk; `undefined` is the exact terminal option. */

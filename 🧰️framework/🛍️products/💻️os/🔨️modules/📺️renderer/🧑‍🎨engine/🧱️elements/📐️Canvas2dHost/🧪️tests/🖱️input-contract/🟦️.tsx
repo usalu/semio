@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧫️fixtures/🖱️input-contract/🔣️.json" with { type: "json" };
+import surfaceBehavior from "../../../../🧫️fixtures/🎬️surface-behavior/🔣️.json" with { type: "json" };
 
 import Ajv2020 from "ajv/dist/2020";
 import layoutCatalogue from "../../../../../../../../../../✏️s/🔌️plugins/📏️layout/🧫️fixtures/🛍️canvas-catalogue/🔣️.json" with { type: "json" };
@@ -17,6 +18,8 @@ import cataloguePointerTransferSchema from "../../../../../../../../../🔨️mo
 import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
 import cameraGesturesSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
 import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
+
+import framingFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📷️framing/🧫️fixtures/🔣️.json" with { type: "json" };
 
 const seam = vi.hoisted(() => ({ sessions: [] as any[] }));
 
@@ -185,6 +188,30 @@ describe("🖱️ Canvas2d mounted input contract", () => {
       height: fixture.surface.height,
       cancelled: true,
     });
+  });
+
+  it("matches the Draw terminal receipt, stale continuation, and fresh-gesture policy", async () => {
+    const law = surfaceBehavior.cases.find(({ id }) => id === "draw-canvas2d")!;
+    const surface = { id: "draw.surface.behavior", controllerId: law.controllerId, width: 800, height: 600 };
+    const { actions, canvas } = mountedHost(surface);
+    fireEvent.pointerDown(canvas, { pointerId: 7, button: 0, clientX: law.points.down.x, clientY: law.points.down.y });
+    fireEvent.pointerMove(canvas, { pointerId: 7, buttons: 1, clientX: law.points.move.x, clientY: law.points.move.y });
+    fireEvent.pointerCancel(canvas, { pointerId: 7, clientX: law.points.terminal.x, clientY: law.points.terminal.y });
+    await settle();
+    expect(actions.map(({ action }) => action)).toEqual([...law.acceptedBeforeCancel.map(({ action }) => action), law.publishedOnCancel[0]!.action]);
+    expect(actions.at(-1)?.args?.cancelled).toBe(true);
+
+    const cancelledCount = actions.length;
+    fireEvent.pointerCancel(canvas, { pointerId: 7 });
+    await settle();
+    expect(actions).toHaveLength(cancelledCount);
+
+    fireEvent.pointerDown(canvas, { pointerId: 8, button: 0, clientX: law.points.down.x, clientY: law.points.down.y });
+    fireEvent.pointerMove(canvas, { pointerId: 8, buttons: 1, clientX: law.points.move.x, clientY: law.points.move.y });
+    fireEvent.pointerUp(canvas, { pointerId: 8, button: 0, clientX: law.points.terminal.x, clientY: law.points.terminal.y });
+    await settle();
+    expect(actions.slice(cancelledCount).map(({ action }) => action)).toEqual(["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+    expect(actions.at(-1)?.args?.cancelled).toBe(false);
   });
 
   it("preserves catalogue MIME data and surface coordinates through drag-over and terminal leave/drop", async () => {
@@ -674,4 +701,41 @@ describe("🖱️ Canvas2d mounted input contract", () => {
       },
     ]);
   });
+
+
+it("publishes initial framing once and keeps navigation through same-window refreshes", async () => {
+  vi.useFakeTimers();
+  try {
+    const law = framingFixture.cases.find(item => item.name === "point")!;
+    const actions: HostAction[] = [];
+    const onAction = (action: HostAction) => { actions.push(action); return Promise.resolve(); };
+    const host = (revision: number) => createElement(Canvas2dHost, {
+      node: { type: "componentScene",surfaceId: "framed-canvas",controllerId: "framed-owner",componentKind: "canvas-2d",
+        canvas2d: { cameraX: 0,cameraY: 0,zoom: 8,layersJson: "[]",framing: { ...law.request,revision } } },
+      onAction,
+    } as never);
+    const view = render(host(1));
+    await vi.advanceTimersByTimeAsync(120);
+    expect(actions.at(-1)?.args?.camera).toEqual({ x: law.expected![0],y: law.expected![1],zoom: law.expected![2] });
+    const canvas = view.container.querySelector('[data-testid="canvas-input"]') as HTMLCanvasElement;
+    canvas.getBoundingClientRect = () => bounds;
+    canvas.dispatchEvent(new WheelEvent("wheel",{ bubbles: true,clientX: 50,clientY: 50,deltaY: -1 }));
+    await vi.advanceTimersByTimeAsync(120);
+    const navigated = actions.at(-1)?.args?.camera;
+    const count = actions.length;
+    view.rerender(host(1));
+    await vi.advanceTimersByTimeAsync(120);
+    expect(actions).toHaveLength(count);
+    expect(actions.at(-1)?.args?.camera).toEqual(navigated);
+    view.rerender(host(2));
+    await vi.advanceTimersByTimeAsync(120);
+    expect(actions).toHaveLength(count+1);
+    expect(actions.at(-1)?.args?.camera).toEqual({ x: law.expected![0],y: law.expected![1],zoom: law.expected![2] });
+    view.unmount();
+  } finally {
+    cleanup();
+    vi.useRealTimers();
+  }
+});
+
 });

@@ -513,6 +513,9 @@ pub struct RasterLayerMask {
     pub invert: bool,
     pub width: Option<u32>,
     pub height: Option<u32>,
+    pub image_key: Option<String>,
+    #[dsl(block)]
+    pub transform: RasterTransform,
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
@@ -721,11 +724,30 @@ pub struct RasterPixelContent {
     pub height: Option<u32>,
 }
 
+/// 🎭️ Explicit mask replacement, including removal.
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct RasterMaskContent {
+    #[dsl(block)]
+    pub mask: Option<RasterLayerMask>,
+}
+
+/// 🎚️ One parameter replacement; an absent value restores its implicit default.
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct RasterAdjustmentParameter {pub parameter:String,pub value:Option<f64>}
+
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerPatch {
+    #[dsl(block)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub adjustment_parameter: Option<RasterAdjustmentParameter>,
+    #[dsl(block)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub mask_content: Option<RasterMaskContent>,
     #[dsl(block)]
     #[value(skip_serializing_if = "Option::is_none")]
     pub pixel_content: Option<RasterPixelContent>,
@@ -1133,6 +1155,8 @@ pub mod standards {
                         }
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-layer-pixels/🦀️.rs"]
                         pub mod change_layer_pixels;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask/🦀️.rs"]
+                        pub mod change_layer_mask;
                         #[path = "."]
                         pub mod remove_layer_asset {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️remove-layer-asset/🦀️.rs"]
@@ -1457,6 +1481,8 @@ pub mod editor {
             pub mod set_composite_viewport;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-pixels/🦀️.rs"]
             pub mod edit_pixels;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🦀️.rs"]
+            pub mod mask_from_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👓️set-layer-visible/🦀️.rs"]
             pub mod set_layer_visible;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️toggle-layer-visible/🦀️.rs"]

@@ -2,6 +2,38 @@
 use super::*;
 
 #[test]
+fn replaceable_deadlines_match_the_shared_timer_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut scheduler = FrameScheduler::new();
+        for step in row["steps"].as_array().unwrap() {
+            if let Some(key) = step["key"].as_u64() {
+                let deadline = step["dueMs"].as_f64().map(|due| Deadline { due: due / 1000.0, reason: InvalidationReason::INPUT_STATE });
+                scheduler.replace_deadline(DeadlineKey(key), deadline);
+            } else {
+                assert_eq!(scheduler.should_render(step["nowMs"].as_f64().unwrap() / 1000.0).is_some(), step["fired"].as_bool().unwrap(), "{}: {step}", row["id"]);
+                assert_eq!(scheduler.next_deadline().map(|deadline| deadline.due), step["nextMs"].as_f64().map(|milliseconds| milliseconds / 1000.0), "{}: {step}", row["id"]);
+            }
+        }
+        eprintln!("[DEBUG] replaceable deadline contract {}", row["id"]);
+    }
+}
+
+#[test]
+fn replacing_a_deadline_never_accumulates_duplicate_wakes() {
+    let mut scheduler = FrameScheduler::new();
+    scheduler.request_deadline(3.0, InvalidationReason::PAINT);
+    for _ in 0..1000 {
+        scheduler.replace_deadline(DeadlineKey(1), Some(Deadline { due: 2.0, reason: InvalidationReason::INPUT_STATE }));
+    }
+    assert_eq!(scheduler.keyed_deadlines.len(), 1);
+    scheduler.replace_deadline(DeadlineKey(1), None);
+    assert_eq!(scheduler.next_deadline().unwrap().due, 3.0);
+    assert_eq!(scheduler.should_render(2.0), None);
+    assert_eq!(scheduler.should_render(3.0), Some(InvalidationReason::PAINT));
+}
+
+#[test]
 fn should_render_returns_none_for_a_clean_window() {
     let mut scheduler = FrameScheduler::new();
     assert_eq!(scheduler.should_render(0.0), None);

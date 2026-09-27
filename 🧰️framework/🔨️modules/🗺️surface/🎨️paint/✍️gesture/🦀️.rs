@@ -35,7 +35,7 @@ impl PixelGesture {
     pub fn begin(host: &RasterHost, point: Point) -> Option<Self> {
         let id = host.selected_ids.first()?;
         let (world, width, height, image_key) = target(&host.document.layers, id, Affine::IDENTITY)?;
-        let extent = image_key.as_ref().and_then(|key| host.images.get(key)).map(|image| (image.width(), image.height())).unwrap_or((width, height));
+        let extent = image_key.as_ref().and_then(|key| host.buffers.paint.get(key)).map(|image| (image.width,image.height)).unwrap_or((width,height));
         let matrix = world * Affine::new([f64::from(width) / f64::from(extent.0.max(1)), 0.0, 0.0, f64::from(height) / f64::from(extent.1.max(1)), 0.0, 0.0]);
         let [a, b, c, d, e, f] = matrix.as_coeffs();
         let determinant = a * d - b * c;

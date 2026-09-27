@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamStudCo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-stud-count", "change-beam-stud-count")
+        protocol::LocalizedLabel::native("Change number of shear studs", "Anzahl der Kopfbolzendübel ändern")
     }
 }
 //#endregion 🔖️Payload

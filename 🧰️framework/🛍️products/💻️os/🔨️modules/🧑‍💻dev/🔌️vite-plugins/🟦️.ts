@@ -6,10 +6,10 @@
  * runtime exists. */
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, STREAM_MUX_PATH, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, STREAM_MUX_ANNOUNCEMENT, STREAM_MUX_PATH, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
 import { AGENT_BRIDGE_OFFER_ENDPOINT, agentBridgeOfferAnswerV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -518,10 +518,14 @@ export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce
  * for read/write — a document nothing has written yet reads as `204 No Content`, the ordinary first-boot answer, never a
  * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus the `backbone.folder` stream route (key = the `folder://`
  * uri) on the dev stream channel for external-edit notices; `🏪️store/👷️worker/🟦️.ts`'s folder transport falls back to its slow
- * sanity poll while no stream is open. */
+ * sanity poll while no stream is open. While serving it announces the channel to the page (`STREAM_MUX_ANNOUNCEMENT`), so a
+ * page dials it exactly where it exists. */
 export function semioBackboneVitePlugin() {
   return {
     name: "semio-backbone",
+    config(_config: unknown, env: { readonly command: string }) {
+      return env.command === "serve" ? { define: { [`import.meta.env.${STREAM_MUX_ANNOUNCEMENT}`]: JSON.stringify(STREAM_MUX_PATH) } } : undefined;
+    },
     configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: DevUpgradeServer | null }) {
       devStreamMuxServer(server.httpServer).route(DEV_STREAM_ROUTES.backboneFolder, {
         admit: (uri) => backboneKindFromUri(uri) === "folder",
@@ -1020,16 +1024,16 @@ export function unwatchedRepositoryPathMatcher(): RegExp {
  * replayed on Vite's own (no-op) watcher emitter, so module invalidation, HMR boundary computation and
  * config-dependency restarts behave exactly as they did with chokidar.
  *
- * 🛰️ An existing FILE is replayed as `add` AND `change`, because macOS reports every write to it —
- * in place and atomic (temp + rename) alike — as `eventType: "rename"`, while Vite invalidates a
- * transformed module only from its `change` handler (`moduleGraph.onFileChange`); its `add` handler
- * recovers previously failed resolves and never touches the module graph. Chokidar told the two apart
- * from its own directory snapshots, which this watcher deliberately does not keep — so it states both
- * facts, which are both true of an atomic save (a new inode appeared, and the module changed) and
- * idempotent for a genuinely new file (nothing imports it yet, so the `change` finds no module).
- * Emitting only `add` served the pre-edit transform for the life of the server, and
- * `SEMIO_VITE_HMR=0` (`hmr: false`) removes the HMR pass that would otherwise have hidden it
- * (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2). */
+ * 🛰️ macOS reports every write to an existing file — in place and atomic (temp + rename) alike — as `eventType: "rename"`,
+ * while Vite invalidates a transformed module only from its `change` handler (`moduleGraph.onFileChange`). A file the module
+ * graph already holds (tracked by the freshness registry) is therefore replayed as `change` ONLY: Vite's `add` handler runs
+ * `handleHMRUpdate("create")`, which collects the file's modules too, so `add` + `change` sent every edit to the page as TWO
+ * hot updates (measured, ticket 26/09/23 F2). A file the graph does not hold is replayed as `add` + `change` (a new inode
+ * appeared; nothing imports it yet, so the `change` finds no module). Emitting only `add` served the pre-edit transform for
+ * the life of the server, and `SEMIO_VITE_HMR=0` (`hmr: false`) removes the HMR pass that would otherwise have hidden it
+ * (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2). The watched roots are the repository's REAL paths: Vite keys
+ * its module graph by resolved (symlink-free) ids, so a repository reached through a symlink (`/tmp` → `/private/tmp`, a
+ * devcontainer mount) otherwise named files no module matched and no edit ever reached the page (measured, same ticket). */
 const REACT_REFRESH_RUNTIME = "/@react-refresh";
 
 /** @emoji ⚛️ Preamble copied from `@vitejs/plugin-react` — semio-host-html replaces the whole document in
@@ -1114,6 +1118,7 @@ export function createSourceFreshnessRegistry() {
       stamps.set(file, stamp);
     },
     trackedCount: (): number => stamps.size,
+    tracks: (file: string): boolean => stamps.has(file),
     movedFile: (file: string): boolean => moved(file),
     movedInDirectory: (directory: string): readonly string[] => [...(siblings.get(directory) ?? [])].filter(moved),
     movedEverywhere: (): readonly string[] => [...stamps.keys()].filter(moved),
@@ -1139,14 +1144,14 @@ function retireStaleModule(server: FreshnessServer, file: string): void {
   server.watcher.emit("change", file);
 }
 
-export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedInDirectory"> }) {
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedInDirectory" | "tracks"> }) {
   return {
     name: "semio-source-watch",
     apply: "serve" as const,
     configureServer(server: FreshnessServer) {
       const unwatched = unwatchedRepositoryPathMatcher();
       const freshness = options.freshness;
-      const handles = repositorySourceWatchRoots(options.repoRoot).map((root) => watch(root, { recursive: true, persistent: false }, (eventType, name) => {
+      const handles = repositorySourceWatchRoots(realpathSync(options.repoRoot)).map((root) => watch(root, { recursive: true, persistent: false }, (eventType, name) => {
         if (name === null || unwatched.test(name)) return;
         const path = join(root, name);
         const directory = dirname(path);
@@ -1166,7 +1171,7 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
           for (const moved of freshness?.movedInDirectory(path) ?? []) server.watcher.emit("change", moved);
           return;
         }
-        server.watcher.emit("add", path);
+        if (freshness?.tracks(path) !== true) server.watcher.emit("add", path);
         server.watcher.emit("change", path);
         for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
       }));
@@ -1224,7 +1229,8 @@ export function semioTransformFreshnessVitePlugin(options: { readonly freshness:
       return null;
     },
     configureServer(server: FreshnessServer) {
-      const root = server.config?.root ?? "";
+      const configured = server.config?.root ?? "";
+      const root = configured === "" ? "" : realpathSync(configured);
       server.middlewares?.use((request, _response, next) => {
         const url = request.url ?? "";
         const accept = request.headers.accept;

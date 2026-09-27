@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Slider Readout Editing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slider", "doubleClick", "enter", "rejected", "keyboard", "accessibility"],
+  "properties": {
+    "slider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "min", "max", "step"],
+      "properties": {
+        "value": { "type": "number" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "doubleClick": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clockOriginSeconds", "intervalMs", "timeoutMs"],
+      "properties": {
+        "clockOriginSeconds": { "type": "number", "minimum": 31536000 },
+        "intervalMs": { "type": "integer", "minimum": 1 },
+        "timeoutMs": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "enter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "expectedValue", "expectedDisplay", "staleDeclaredDisplay"],
+      "properties": {
+        "input": { "type": "string" },
+        "expectedValue": { "type": "number" },
+        "expectedDisplay": { "type": "string" },
+        "staleDeclaredDisplay": { "type": "string" }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "input", "exit", "expectedDisplay", "actionCount"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "input": { "type": "string" },
+          "exit": { "enum": ["Enter", "Escape", "blur"] },
+          "expectedDisplay": { "type": "string" },
+          "actionCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "keyboard": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "expectedValue"],
+        "properties": {
+          "key": { "enum": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"] },
+          "expectedValue": { "type": "number" }
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "readoutRole", "editorRole", "thumbRole"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "readoutRole": { "const": "button" },
+        "editorRole": { "const": "spinbutton" },
+        "thumbRole": { "const": "slider" }
+      }
+    }
+  }
+}

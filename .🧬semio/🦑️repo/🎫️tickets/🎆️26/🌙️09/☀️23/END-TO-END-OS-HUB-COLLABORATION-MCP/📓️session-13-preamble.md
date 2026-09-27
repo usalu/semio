@@ -129,3 +129,28 @@ Session-12 rules (`📓️session-12-preamble.md`) apply unless overridden here.
     deleted by the coordinator at REBUILD START). Everyone else stays on `build-fleet-b` (rule 26). The default build-dir is
     left to the Codex peer until W3's coordinator-launched rebuild chain, which uses the default. The coordinator stopped our
     stuck cargos in the default build-dir at 21:1x (0 % CPU, no rustc, 6–34 min): just re-run yours in your new build-dir.
+28. **Overnight cut (2026-09-27 04:5x):** every agent was cut ~21:30 by the account usage limit mid-edit; at session end every
+    process of ours died — hub 7800 (hold + hub), all slice hubs/serves/holds, all nohup'd builds; only Codex peer processes
+    survived. Disk hit 9 GiB free (debug incremental 126 GB + wasm32 incremental 33 GB, someone builds with incremental on) →
+    pruned to 154 GiB; disk guard relaunched detached (pid 88284, log `.🧬semio/🌐hub/s13-coord-logs/disk-guard.txt`, now prunes
+    incremental below 130 GiB). **On resume, first reconcile YOUR in-flight edits** (re-read your report, `git diff` your files,
+    finish or revert to a compiling state), then continue. Always `CARGO_INCREMENTAL=0`. Live hubs you need: restart from your
+    recipe (fresh roots after the rebuild, rule 23). Landing roll-call: send main your landing status (landed / in flight + ETA /
+    will prepare instead) by **06:15**; REBUILD START target **06:30–07:00**. Launch long-lived processes (hubs, serves) with
+    `python3 .tmp-ticket/wp-w2/w2-detach.py <log> <cmd…>` (own session) so a session end does not kill them.
+29. **wasm32 proof moves into the rebuild (05:5x):** the wasm mutex queue is ~12 deep at ≤ 25 min per hold, so most landing
+    wasm32 checks cannot finish by 06:55. Landing rows may record "native + laws green; wasm32 = REBUILD fast-check/components".
+    At 06:50 every queued wasm-mutex waiter LEAVES the queue (stop your own waiting `fleet-mutex.sh wasm` process) so W3's chain
+    takes the mutex at 07:00. W3's chain starts with a fast wasm32 gate (kernel/plugin/SDK/renderer for wasm32-wasip2 +
+    wasm32-unknown-unknown) before the long components step; any wasm32 error the chain hits is routed to the owner, who fixes
+    it within minutes (compile-atomic, the only guest edits allowed after 07:00), and W3 relaunches via main. Do NOT revert
+    native-green work only because its wasm32 check was not reached. During the rebuild, non-chain cargo in build-fleet-b runs
+    one at a time via `zsh .tmp-ticket/📜️fleet-mutex.sh native <slice> -- nice -n 15 <cmd…>`; build-landing and build-wg10 are
+    deleted at 07:00.
+30. **REBUILD START = 2026-09-27 09:5x (coordinator).** The fleet was cut again ~06:35 (usage limit, reset 09:50); the 07:00 start
+    slipped. Orphaned cargos (10, 3.5 h idle in build-landing) and G11's default-dir law script were stopped; `build-wg10` deleted;
+    `build-landing` is deleted once LC's detached P8 law run there ends; `build-fleet-b` stays for the `native` lane.
+    Chain b3 runs detached (`.🧬semio/🌐hub/s13-w3-logs/chain-b3.txt`). From now until W3 announces 7800 on B3: no guest-linked edits,
+    no kernel-derive-input edits, no wasm32 builds by anyone but the chain, native cargo only through
+    `zsh .tmp-ticket/📜️fleet-mutex.sh native <slice> -- nice -n 15 <cmd…>` with `CARGO_BUILD_BUILD_DIR=…/cargo/build-fleet-b`.
+    Chain-reported compile errors are fixed by their owner (the only guest edits allowed), then the coordinator relaunches.

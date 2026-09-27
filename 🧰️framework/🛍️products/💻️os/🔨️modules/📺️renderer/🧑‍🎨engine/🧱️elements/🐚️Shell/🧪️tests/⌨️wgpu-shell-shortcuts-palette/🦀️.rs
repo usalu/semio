@@ -358,12 +358,7 @@ fn accept_find_fixture_action(_instance_id: u32, _action_json: &str, _view_state
     Ok(semio_framework::kernel::InvocationResult {
         output: DslValue::Null,
         mutations: Vec::new(),
-        inverse_group: semio_framework::kernel::UndoGroup {
-            invocation_id: semio_framework::kernel::InvocationId(String::new()),
-            mutations: Vec::new(),
-            inverse_mutations: Vec::new(),
-            member_edits: Vec::new(),
-        },
+        inverse_group: semio_framework::kernel::UndoGroup { invocation_id: semio_framework::kernel::InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
         diagnostics: Vec::new(),
         requested_effects: Vec::new(),
         events: Vec::new(),
@@ -496,12 +491,8 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(input_node.controls.as_deref(), Some("ui.search.list"));
     assert_eq!(input_node.value_text.as_deref(), Some(""));
     assert!(input_node.focused, "shortcut focus and accessibility focus are the same input");
-    let target = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: shell.presented_chrome_accessibility_generation,
-        node_id: input_node.node_id,
-        node_key: input_node.key,
-    };
+    let target =
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Set Theme".into()), &mut input)).expect("palette accessibility value"));
     assert_eq!(shell.search_query, "Set Theme");
 
@@ -549,12 +540,8 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     publish_palette_chrome(&mut shell, &mut input);
     let input_node = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.find.input").expect("Find textbox projects to accessibility");
     assert_eq!(input_node.role, "combobox");
-    let target = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: shell.presented_chrome_accessibility_generation,
-        node_id: input_node.node_id,
-        node_key: input_node.key,
-    };
+    let target =
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Media".into()), &mut input)).expect("Find accessibility value"));
     publish_palette_chrome(&mut shell, &mut input);
     let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.find.item.0")).expect("filtered Find row publishes a physical hit").rect;
@@ -634,12 +621,8 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
     let empty_nodes = shell.chrome_accessibility_nodes(input.hits());
     assert!(empty_nodes.iter().any(|node| node.role == "status" && node.live == "polite"), "no-results is an announced status");
     let close = empty_nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible close after filtering");
-    let target = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: shell.presented_chrome_accessibility_generation,
-        node_id: close.node_id,
-        node_key: close.key.clone(),
-    };
+    let target =
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: close.node_id, node_key: close.key.clone() };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("accessible Close activation"));
     assert_eq!(shell.overlay_state, OverlayState::None);
     assert_eq!(shell.search_query, "zzzz", "Close preserves the query");

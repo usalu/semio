@@ -1,0 +1,120 @@
+{
+  "schema": "semio.os-dev.tool-run-matrix/v1",
+  "programs": [
+    {
+      "pluginId": "wfc",
+      "appId": "s.wfc.bitmap@1/*#editor",
+      "toolId": "fill",
+      "mutating": false
+    },
+    {
+      "pluginId": "wfc",
+      "appId": "s.wfc.grid2d@1/*#editor",
+      "toolId": "fill",
+      "mutating": false
+    },
+    {
+      "pluginId": "wfc",
+      "appId": "s.wfc.wfc2d@1/*#editor",
+      "toolId": "fill",
+      "mutating": false
+    },
+    {
+      "pluginId": "wfc",
+      "appId": "s.wfc.grid3d@1/*#editor",
+      "toolId": "fill",
+      "mutating": false
+    },
+    {
+      "pluginId": "wfc",
+      "appId": "s.wfc.wfc3d@1/*#editor",
+      "toolId": "fill",
+      "mutating": false
+    },
+    {
+      "pluginId": "procedural",
+      "appId": "s.procedural.generation2d@1/*#editor",
+      "toolId": "previewEval",
+      "mutating": false
+    },
+    {
+      "pluginId": "procedural",
+      "appId": "s.procedural.generation3d@1/*#editor",
+      "toolId": "previewEval",
+      "mutating": false
+    },
+    {
+      "pluginId": "procedural",
+      "appId": "s.procedural.generation3d@1/*#viewer",
+      "toolId": "previewEval",
+      "mutating": false
+    },
+    {
+      "pluginId": "demonstrator",
+      "appId": "s.procedural.generation3d@1/*#editor",
+      "toolId": "previewEval",
+      "mutating": false
+    },
+    {
+      "pluginId": "demonstrator",
+      "appId": "s.puzzle.puzzle3d@1/*#editor",
+      "toolId": "fill",
+      "mutating": true,
+      "example": "first"
+    },
+    {
+      "pluginId": "reasoning",
+      "appId": "s.reasoning.wires@1/*#editor",
+      "toolId": "reorganize",
+      "mutating": true,
+      "example": "first"
+    },
+    {
+      "pluginId": "remodel",
+      "appId": "s.remodel.remodeling@1/*#editor",
+      "toolId": "reconstruction",
+      "mutating": true,
+      "example": "synthetic-orbit|Synthetic Orbit"
+    },
+    {
+      "pluginId": "energy",
+      "appId": "s.energy.model@1/*#editor",
+      "toolId": "energySimulation",
+      "mutating": false,
+      "example": "first"
+    },
+    {
+      "pluginId": "trinity",
+      "appId": "s.trinity.jack@1/*#editor",
+      "toolId": "reorganize",
+      "mutating": true
+    },
+    {
+      "pluginId": "dag",
+      "appId": "s.dag.dag@1/*#editor",
+      "toolId": "reorganize",
+      "mutating": true
+    },
+    {
+      "pluginId": "puzzle",
+      "appId": "s.puzzle.puzzle2d@1/*#editor",
+      "toolId": "fill",
+      "mutating": true,
+      "example": "concrete|Concrete"
+    },
+    {
+      "pluginId": "puzzle",
+      "appId": "s.puzzle.puzzle3d@1/*#editor",
+      "toolId": "fill",
+      "mutating": true,
+      "example": "first"
+    },
+    {
+      "pluginId": "puzzle",
+      "appId": "s.puzzle.puzzle5d@1/*#editor",
+      "toolId": "fill",
+      "mutating": true,
+      "example": "first"
+    }
+  ]
+}

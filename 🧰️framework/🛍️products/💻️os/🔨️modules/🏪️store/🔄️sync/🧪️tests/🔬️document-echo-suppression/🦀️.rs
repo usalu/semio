@@ -14,6 +14,8 @@ fn envelope(value: &serde_json::Value) -> MutationEnvelope {
         document_id: ArtifactId("artifact-echo".into()),
         actor: ActorId(value["actor"].as_str().expect("fixture actor").into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },

@@ -246,7 +246,13 @@ fn tree_item_height_at(item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: u
 /// 🌳️ A tree section row's own height: its header row (only when it is labelled, matching the
 /// painter's own `section.label.is_some()` gate) plus every visible item row.
 pub fn tree_section_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
-    tree_section_height_with_open(section, metrics, section.default_open.unwrap_or(true))
+    tree_section_height_with_open(section, metrics, tree_section_default_open(section))
+}
+
+/// 🌲️ React sections default closed when they own chrome; a headerless grouping remains transparent
+/// and always exposes its rows.
+pub fn tree_section_default_open(section: &UiTreeSectionNode) -> bool {
+    section.default_open.unwrap_or(section.label.is_none() && section.header_toolbar.is_none())
 }
 
 pub fn tree_section_height_with_open(section: &UiTreeSectionNode, metrics: &TreeRowMetrics, open: bool) -> f32 {
@@ -315,13 +321,7 @@ pub fn tree_checkbox_hit_rect(bounds: Rect, inline: ui_contract::FlowInline) -> 
 pub fn tree_inline_control_height(control: &UiControlNode, theme: &Theme) -> f32 {
     match control {
         UiControlNode::Input(_) | UiControlNode::Select(_) => theme.control_height_small,
-        UiControlNode::Toggle(_)
-        | UiControlNode::Button(_)
-        | UiControlNode::KeyValue(_)
-        | UiControlNode::Slider(_)
-        | UiControlNode::NumberStepper(_)
-        | UiControlNode::Ring(_)
-        | UiControlNode::IconSelect(_) => theme.control_height,
+        UiControlNode::Toggle(_) | UiControlNode::Button(_) | UiControlNode::KeyValue(_) | UiControlNode::Slider(_) | UiControlNode::NumberStepper(_) | UiControlNode::Ring(_) | UiControlNode::IconSelect(_) => theme.control_height,
     }
 }
 
@@ -333,16 +333,74 @@ pub fn tree_row_control_rect_before_drag(row_width: f32, metrics: &TreeRowMetric
 //#endregion 🌳️TreeRowGeometry
 
 //#region 🎛️ControlGeometry
-/// ➖️🔢️➕️ A `NumberStepper`'s three segments — decrement, value, increment — as thirds of its own
-/// box. ONE definition: `paint`'s stepper chrome draws these rects and `events`' press routing
-/// hit-tests the same three, so the `−` a user sees and the `−` a press resolves can never drift.
-pub fn number_stepper_segments(bounds: Rect) -> [Rect; 3] {
-    let segment = bounds.w / 3.0;
-    [Rect::new(bounds.x, bounds.y, segment, bounds.h), Rect::new(bounds.x + segment, bounds.y, segment, bounds.h), Rect::new(bounds.x + segment * 2.0, bounds.y, segment, bounds.h)]
+const SLIDER_SPACING: f32 = ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32;
+pub const SLIDER_READOUT_WIDTH: f32 = SLIDER_SPACING * 9.0;
+pub const SLIDER_RAIL_HEIGHT: f32 = SLIDER_SPACING;
+pub const SLIDER_THUMB_SIZE: f32 = SLIDER_SPACING * 5.0;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SliderPresentation {
+    pub track_cell: Rect,
+    pub value_cell: Rect,
+    pub rail: Rect,
+    pub range: Rect,
+    pub thumb: Rect,
 }
 
-/// 🎚️ The value a `Slider` press/drag at `x` reports, on the same full-width track
-/// `paint`'s slider arm draws (`bounds.x + bounds.w * t`), snapped onto `step` and clamped into
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SliderControlPresentation {
+    pub slider_bounds: Rect,
+    pub slider: SliderPresentation,
+    pub unit_cell: Option<Rect>,
+}
+
+/// 🏷️ React's declarative-control unit sibling: declared value plus one separating space and the
+/// authored unit. An empty unit has the same no-wrapper meaning as React's falsy `control.unit`.
+pub fn slider_unit_label(value: f64, unit: Option<&str>) -> Option<String> {
+    unit.filter(|unit| !unit.is_empty()).map(|unit| format!("{} {unit}", ui_contract::format_ui_number(value)))
+}
+
+/// 🧩️ Splits the conceptual Slider composite into its growing Slider and shrink-to-content unit
+/// sibling. The Slider then applies its own track/readout grid inside `slider_bounds`; its pointer
+/// math therefore never includes the inert unit or the wrapper's `gap-single`.
+pub fn slider_control_presentation(bounds: Rect, value: f64, min: f64, max: f64, unit_width: Option<f32>, gap: f32, outer_inline: ui_contract::FlowInline) -> SliderControlPresentation {
+    let unit_width = unit_width.map(|width| width.max(0.0).min((bounds.w - gap.max(0.0)).max(0.0)));
+    let unit_gap = unit_width.map_or(0.0, |_| gap.max(0.0).min(bounds.w.max(0.0)));
+    let slider_width = (bounds.w - unit_width.unwrap_or(0.0) - unit_gap).max(0.0);
+    let (slider_x, unit_cell) = match unit_width {
+        Some(width) if outer_inline.is_rtl() => (bounds.x + width + unit_gap, Some(Rect::new(bounds.x, bounds.y, width, bounds.h))),
+        Some(width) => (bounds.x, Some(Rect::new(bounds.x + slider_width + unit_gap, bounds.y, width, bounds.h))),
+        None => (bounds.x, None),
+    };
+    let slider_bounds = Rect::new(slider_x, bounds.y, slider_width, bounds.h);
+    SliderControlPresentation { slider_bounds, slider: slider_presentation(slider_bounds, value, min, max, outer_inline), unit_cell }
+}
+
+/// 🎚️ Resolves React's fixed readout cell and LTR value track inside an outer-flow row.
+pub fn slider_presentation(bounds: Rect, value: f64, min: f64, max: f64, outer_inline: ui_contract::FlowInline) -> SliderPresentation {
+    let value_width = SLIDER_READOUT_WIDTH.min(bounds.w.max(0.0));
+    let track_width = (bounds.w - value_width).max(0.0);
+    let (track_x, value_x) = if outer_inline.is_rtl() { (bounds.x + value_width, bounds.x) } else { (bounds.x, bounds.x + track_width) };
+    let track_cell = Rect::new(track_x, bounds.y, track_width, bounds.h);
+    let value_cell = Rect::new(value_x, bounds.y, value_width, bounds.h);
+    let rail = Rect::new(track_cell.x, track_cell.y + (track_cell.h - SLIDER_RAIL_HEIGHT) * 0.5, track_cell.w, SLIDER_RAIL_HEIGHT.min(track_cell.h.max(0.0)));
+    let span = max - min;
+    let fraction = if span.is_finite() && span > 0.0 { ((value - min) / span).clamp(0.0, 1.0) as f32 } else { 0.0 };
+    let range = Rect::new(rail.x, rail.y, rail.w * fraction, rail.h);
+    let thumb = Rect::new(rail.x + rail.w * fraction - SLIDER_THUMB_SIZE * 0.5, bounds.y + (bounds.h - SLIDER_THUMB_SIZE) * 0.5, SLIDER_THUMB_SIZE, SLIDER_THUMB_SIZE);
+    SliderPresentation { track_cell, value_cell, rail, range, thumb }
+}
+
+/// ➖️ Square step buttons flank the flexible value, sharing paint and pointer geometry.
+pub fn number_stepper_segments(bounds: Rect, inline: ui_contract::FlowInline, border: f32) -> [Rect; 3] {
+    let border = border.max(0.0);
+    let side = bounds.h.max(0.0);
+    let middle = (bounds.w - border * 2.0 - side * 2.0).max(0.0);
+    let x = |offset: f32, width: f32| if inline.is_rtl() { bounds.x + bounds.w - border - offset - width } else { bounds.x + border + offset };
+    [Rect::new(x(0.0, side), bounds.y + border, side, bounds.h), Rect::new(x(side, middle), bounds.y + border, middle, bounds.h), Rect::new(x(side + middle, side), bounds.y + border, side, bounds.h)]
+}
+
+/// 🎚️ The value a `Slider` press/drag at `x` reports on its resolved track cell, snapped onto `step` and clamped into
 /// `min..=max` — Radix's own `Slider` semantics, which React's `SliderView` delegates to.
 pub fn slider_value_at(bounds: Rect, x: f32, min: f64, max: f64, step: f64) -> f64 {
     let span = max - min;

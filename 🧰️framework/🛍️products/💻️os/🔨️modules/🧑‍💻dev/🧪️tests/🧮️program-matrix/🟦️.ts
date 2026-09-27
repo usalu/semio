@@ -21,7 +21,7 @@ import { join, resolve } from "node:path";
 import type { Browser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 //#region 🔖️Pins
 /** 📌️ `semio.os-dev.program-matrix-pins/v1` — the verb each kind is driven with and what it needs staged. */
@@ -35,6 +35,8 @@ export type MatrixPins = Readonly<{
   kindPre: Readonly<Record<string, string>>;
   kindArgs: Readonly<Record<string, Readonly<Record<string, string>>>>;
   kindOrigin: Readonly<Record<string, string>>;
+  hubKindVerbs: Readonly<Record<string, string>>;
+  hubKindPre: Readonly<Record<string, string>>;
 }>;
 
 /** 📌️ Reads the pins (`🧑‍💻dev/🧫️fixtures/🧮️program-matrix.json`). */
@@ -45,13 +47,13 @@ export function readMatrixPins(): MatrixPins {
 }
 
 /** 🗂️ One spawnable program of the shell's catalog probe. */
-type MatrixProgram = Readonly<{ pluginId: string; appId: string }>;
+export type MatrixProgram = Readonly<{ pluginId: string; appId: string }>;
 
-const kindOf = (appId: string): string => /^s\.[^.]+\.([^@]+)@/u.exec(appId)?.[1] ?? appId;
-const roleOf = (appId: string): string => appId.split("#").at(-1) ?? "editor";
+export const kindOf = (appId: string): string => /^s\.[^.]+\.([^@]+)@/u.exec(appId)?.[1] ?? appId;
+export const roleOf = (appId: string): string => appId.split("#").at(-1) ?? "editor";
 const subsetOf = (appId: string): string => /@[^/]+\/([^#]+)#/u.exec(appId)?.[1] ?? "*";
 const baseKeyOf = (program: MatrixProgram): string => `${program.pluginId}/${kindOf(program.appId)}`;
-const keyOf = (program: MatrixProgram): string => `${baseKeyOf(program)}${subsetOf(program.appId) === "*" ? "" : `/${subsetOf(program.appId)}`}`;
+export const keyOf = (program: MatrixProgram): string => `${baseKeyOf(program)}${subsetOf(program.appId) === "*" ? "" : `/${subsetOf(program.appId)}`}`;
 
 /** 📕️ Each norm standard's `setSnapshot` stages ITS OWN codec-canonical document: the `➡️after` snapshot of the
  * standard's first committed mutation fixture, folded to one line by deleting line breaks only — never re-serialized, so
@@ -141,7 +143,7 @@ function editCount(shell: ShellReading): number {
 
 /** 🔬️ What an interaction has to move: applied ledger rows, the edit count and a structural render digest (element
  * counts, svg nodes, canvases; the Actions pane subtracted, because unfolding it injects ~50 static labels). */
-function witness(shell: ShellReading): { applied: number; ledger: string[]; edits: number; render: string } {
+export function witness(shell: ShellReading): { applied: number; ledger: string[]; edits: number; render: string } {
   return {
     applied: shell.ledger.filter((entry) => !entry.dimmed).length,
     ledger: shell.ledger.map((entry) => `${entry.id}${entry.dimmed ? "~" : ""}:${entry.label}`),
@@ -150,7 +152,7 @@ function witness(shell: ShellReading): { applied: number; ledger: string[]; edit
   };
 }
 
-async function awaitBeacon(page: Page, deadline: number): Promise<string | null> {
+export async function awaitBeacon(page: Page, deadline: number): Promise<string | null> {
   while (Date.now() < deadline) {
     const beacon = await page.evaluate(() => {
       const data = document.documentElement.dataset;
@@ -165,12 +167,12 @@ async function awaitBeacon(page: Page, deadline: number): Promise<string | null>
   return null;
 }
 
-const windowIds = (page: Page): Promise<string[]> => page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")).filter((id): id is string => typeof id === "string"));
+export const windowIds = (page: Page): Promise<string[]> => page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")).filter((id): id is string => typeof id === "string"));
 
 type CatalogProbe = Readonly<{ plugins: readonly Readonly<{ pluginId: string; status: string }>[]; programs: readonly MatrixProgram[] }>;
 const readProbe = (page: Page): Promise<CatalogProbe | null> => page.evaluate(() => ((window as unknown as { __semioOsCatalogProbe?: unknown }).__semioOsCatalogProbe ?? null) as never);
 
-async function dismissIntroduction(page: Page): Promise<void> {
+export async function dismissIntroduction(page: Page): Promise<void> {
   const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
     if ((await page.locator('[data-slot="introduction-veil"]').count()) === 0) return;
@@ -181,7 +183,7 @@ async function dismissIntroduction(page: Page): Promise<void> {
   }
 }
 
-async function click(page: Page, selector: string): Promise<string> {
+export async function click(page: Page, selector: string): Promise<string> {
   const locator = page.locator(selector).first();
   if ((await locator.count()) === 0) return "absent";
   return locator
@@ -412,7 +414,7 @@ async function runVerb(page: Page, verbId: string, args: Readonly<Record<string,
 }
 
 /** 🎯️ Drives the kind's pinned verb first, then scanned document verbs, until one round-trips. */
-async function mutateUndoRedo(page: Page, refusals: readonly string[], key: string, verbs: Readonly<Record<string, string>>, args: Readonly<Record<string, Readonly<Record<string, string>>>>, liveId: string, maxRows: number) {
+export async function mutateUndoRedo(page: Page, refusals: readonly string[], key: string, verbs: Readonly<Record<string, string>>, args: Readonly<Record<string, Readonly<Record<string, string>>>>, liveId: string, maxRows: number) {
   const railToggles = await unfoldActionsRail(page);
   const ids = (await readShell(page)).actions.map((id) => id.replace(/^action\./u, ""));
   if (ids.length === 0) return { railToggles, railRows: 0, railRowIds: [] as string[], mutation: null, mutationDetail: "no Actions rail row after unfolding", attempts: [] as VerbAttempt[], known: verbs[key] ?? null };
@@ -435,7 +437,7 @@ async function mutateUndoRedo(page: Page, refusals: readonly string[], key: stri
 }
 
 /** 🇩🇪️ Seats the shell locale through the Settings surface's own language control and reports what it reached. */
-async function seatLocale(page: Page, wanted: string): Promise<string> {
+export async function seatLocale(page: Page, wanted: string): Promise<string> {
   if (wanted === "en") return "en(boot)";
   if ((await click(page, '[id="os.openSettings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings")')) === "absent") return `${wanted}:no-settings-control`;
   await page.waitForTimeout(3_000);
@@ -738,8 +740,9 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
     return row;
   };
 
-  /** ⏳️ Plugins install lazily after the beacon and the probe's programs grow with them: waits until every plugin reached
-   * a terminal status (`loaded`, `failed`, `crashed`) or nothing changed for `quietMs`, bounded by `budgetMs`. */
+  /** ⏳️ Plugins install after the beacon and the probe's programs grow with them: waits until every plugin reached a
+   * resting status (`loaded`, `failed`, `crashed`, or `available` — installable on demand, which a hub-joined serve leaves
+   * until a document needs it) or nothing changed for `quietMs`, bounded by `budgetMs`. */
   const settledProbe = async (budgetMs: number, quietMs = 20_000): Promise<{ probe: CatalogProbe | null; settled: boolean; waitedMs: number }> => {
     const began = Date.now();
     let last = "";
@@ -747,7 +750,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
     let reportedAt = 0;
     for (;;) {
       const probe = await readProbe(page);
-      const terminal = probe !== null && probe.plugins.length > 0 && probe.plugins.every((row) => ["loaded", "failed", "crashed"].includes(row.status));
+      const terminal = probe !== null && probe.plugins.length > 0 && probe.plugins.every((row) => ["loaded", "failed", "crashed", "available"].includes(row.status));
       const fingerprint = probe === null ? "none" : `${probe.plugins.filter((row) => row.status === "loaded").length}/${probe.plugins.length}:${probe.programs.length}`;
       if (fingerprint !== last) {
         last = fingerprint;
@@ -776,6 +779,8 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
     });
     report.census = { registryRows: probe.plugins.length, loaded: probe.plugins.filter((row) => row.status === "loaded").length, notLoaded: probe.plugins.filter((row) => row.status !== "loaded").map((row) => `${row.pluginId}:${row.status}`), programs: probe.programs.length, selected: selected.length, installsSettled: settled, installWaitMs: waitedMs };
     log(`boot ${JSON.stringify(report.boots.at(-1))} census ${JSON.stringify(report.census)}`);
+    const onDemand = probe.plugins.filter((row) => row.status === "available").length;
+    if (selected.length === 0 && onDemand > 0) throw new Error(`0 programs selected: ${onDemand}/${probe.plugins.length} plugins are only installable on demand on this serve (hub-joined lanes install per document); run the matrix against a local-only serve (launch row 🛠️dev🪐️space⚛️react🔒local-only, S_LOCAL_ONLY=1) where every plugin loads`);
     let sinceBoot = 0;
     for (const [index, program] of selected.entries()) {
       if (options.signal.aborted) {
@@ -849,7 +854,7 @@ export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: strin
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
   const startedAt = new Date();
-  try {
+  await withAcceptanceRecord(repoRoot, "program-matrix", async () => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
     const report = await runProgramMatrix(repoRoot, {
       baseUrl,
@@ -870,7 +875,8 @@ export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: strin
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
     const failed = report.rows.filter((row) => !row.pass).map((row) => `${row.key}#${row.role}`);
-    const status = report.fatal || report.cancelled || total === 0 ? "fail" : passed === total ? "pass" : "fail";
+    const unreachable = total === 0 && /ERR_CONNECTION_REFUSED|ECONNREFUSED|Unable to connect/u.test(report.fatal ?? "");
+    const status = unreachable ? "blocked" : report.fatal || report.cancelled || total === 0 ? "fail" : passed === total ? "pass" : "fail";
     publishAcceptanceCheckResult(
       repoRoot,
       acceptanceCheckResult({
@@ -879,17 +885,16 @@ export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: strin
         startedAt,
         measured: { locale, roles: roles.join(","), rows: total, passed, failed: total - passed, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled) },
         summary: {
-          en: `${passed}/${total} ${roles.join("+")} programs pass in ${locale}${failed.length ? `; failing: ${failed.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.slice(0, 160)}` : ""}`,
-          de: `${passed}/${total} ${roles.join("+")}-Programme bestehen in ${locale}${failed.length ? `; fehlgeschlagen: ${failed.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.slice(0, 160)}` : ""}`,
+          en: `${passed}/${total} ${roles.join("+")} programs pass in ${locale}${failed.length ? `; failing: ${failed.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
+          de: `${passed}/${total} ${roles.join("+")}-Programme bestehen in ${locale}${failed.length ? `; fehlgeschlagen: ${failed.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
         },
         evidence: [join(outDir, tag, "matrix.json"), join(outDir, tag, "table.md")],
       }),
     );
     console.log(`[matrix] === ${tag}: PASS ${passed}/${total} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
-  } finally {
-    process.removeListener("SIGINT", cancel);
-    process.removeListener("SIGTERM", cancel);
-  }
+  });
+  process.removeListener("SIGINT", cancel);
+  process.removeListener("SIGTERM", cancel);
 }
 //#endregion 🔖️Matrix

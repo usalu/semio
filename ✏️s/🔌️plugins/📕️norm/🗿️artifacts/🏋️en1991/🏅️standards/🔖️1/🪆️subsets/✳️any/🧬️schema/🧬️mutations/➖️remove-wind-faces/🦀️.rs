@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveWindFaces 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-wind-faces", "remove-wind-faces")
+        protocol::LocalizedLabel::native("Remove wind-loaded face", "Windbeanspruchte Fläche entfernen")
     }
 }
 //#endregion 🔖️Payload

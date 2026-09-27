@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedBri
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-bridge-lm2", "change-assumed-bridge-lm2")
+        protocol::LocalizedLabel::native("Change assumed load model 2 axle load", "Angenommene Achslast des Lastmodells 2 ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -1,0 +1,10 @@
+{
+  "title": "Complete Stdio Artifact Editing Experience",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Make all stdio artifact editors complete and usable for end users; all common file formats and every artifact detail editable. Requested coordinator GPT 6 Astra Extra High; GPT 5.6 Sol Extra High implementation and GPT 5.6 Terra Extra High audits at maximum parallelism. MCP model list does not recognize gpt-6-astra; codex used as metadata client identifier.",
+  "goal": "🎯runningstdio",
+  "sessions": [
+    "⚪7b530b1016814425820f188184fca926"
+  ]
+}

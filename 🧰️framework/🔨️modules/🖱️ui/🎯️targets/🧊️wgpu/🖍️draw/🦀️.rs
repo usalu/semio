@@ -3370,34 +3370,84 @@ impl UiPipelines {
             bias: if write { wgpu::DepthBiasState::default() } else { wgpu::DepthBiasState { constant: -2, slope_scale: -1.0, clamp: 0.0 } },
         };
         let world_standard_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_standard_translucent_pipeline"), layout: Some(&world_mesh_pipeline_layout),
+            label: Some("world3d_standard_translucent_pipeline"),
+            layout: Some(&world_mesh_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
-            primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() }, depth_stencil: Some(material_depth(true)), multisample: Default::default(), multiview_mask: None, cache: None,
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
         });
         let world_painted_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_painted_pipeline"), layout: Some(&world_painted_pipeline_layout),
+            label: Some("world3d_painted_pipeline"),
+            layout: Some(&world_painted_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_painted_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
-            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() }, depth_stencil: Some(material_depth(true)), multisample: Default::default(), multiview_mask: None, cache: None,
+            fragment: Some(wgpu::FragmentState {
+                module: &world_painted_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
         });
         let world_painted_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_painted_pipeline_translucent"), layout: Some(&world_painted_pipeline_layout),
+            label: Some("world3d_painted_pipeline_translucent"),
+            layout: Some(&world_painted_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_painted_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
-            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() }, depth_stencil: Some(material_depth(true)), multisample: Default::default(), multiview_mask: None, cache: None,
+            fragment: Some(wgpu::FragmentState {
+                module: &world_painted_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
         });
         let world_celebration_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_celebration_pipeline"), layout: Some(&world_celebration_pipeline_layout),
+            label: Some("world3d_celebration_pipeline"),
+            layout: Some(&world_celebration_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_celebration_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), celebration_instance_layout()], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_celebration_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
-            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() }, depth_stencil: Some(material_depth(true)), multisample: Default::default(), multiview_mask: None, cache: None,
+            fragment: Some(wgpu::FragmentState {
+                module: &world_celebration_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
         });
         let world_celebration_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_celebration_pipeline_translucent"), layout: Some(&world_celebration_pipeline_layout),
+            label: Some("world3d_celebration_pipeline_translucent"),
+            layout: Some(&world_celebration_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_celebration_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), celebration_instance_layout()], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_celebration_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
-            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() }, depth_stencil: Some(material_depth(false)), multisample: Default::default(), multiview_mask: None, cache: None,
+            fragment: Some(wgpu::FragmentState {
+                module: &world_celebration_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(false)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
         });
 
         let world_textured_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_textured_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_TEXTURED_SHADER.into()) });
@@ -3469,21 +3519,15 @@ impl UiPipelines {
                 count: None,
             }],
         });
-        let world_grid_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("world3d_grid_uniforms"),
-            contents: bytemuck::bytes_of(&World3dGridUniforms::zeroed()),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
+        let world_grid_uniform_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_grid_uniforms"), contents: bytemuck::bytes_of(&World3dGridUniforms::zeroed()), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
         let world_grid_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("world3d_grid_bind_group"),
             layout: &world_grid_bind_group_layout,
             entries: &[wgpu::BindGroupEntry { binding: 0, resource: world_grid_uniform_buffer.as_entire_binding() }],
         });
-        let world_grid_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("world3d_grid_pipeline_layout"),
-            bind_group_layouts: &[Some(&world_bind_group_layout), Some(&world_grid_bind_group_layout)],
-            immediate_size: 0,
-        });
+        let world_grid_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_grid_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout), Some(&world_grid_bind_group_layout)], immediate_size: 0 });
         let world_grid_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_grid_pipeline"),
             layout: Some(&world_grid_pipeline_layout),
@@ -4347,10 +4391,7 @@ impl UiPipelines {
                     instance.material.roughness,
                     pass_owner.shadow.enabled,
                 );
-                frame_buffers
-                    .world_instances
-                    .upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_painted")
-                    .ok_or("prepared world painted buffer admission failed")?
+                frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_painted").ok_or("prepared world painted buffer admission failed")?
             }
             crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration { stops, angle } => {
                 painted_bind_group = None;

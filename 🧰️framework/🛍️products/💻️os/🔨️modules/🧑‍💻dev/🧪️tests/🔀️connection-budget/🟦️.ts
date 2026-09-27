@@ -109,7 +109,7 @@ export type ConnectionBudgetReport = Readonly<{
   fetches: Readonly<{ count: number; ok: number; within20s: number; p50Ms: number | null; maxMs: number | null }>;
   notices: Readonly<{ folders: number; freshOpens: number; firstTouch: number; secondTouch: number; expectedSecond: number }>;
   inventory: ConnectionInventory;
-  violations: readonly string[];
+  violations: readonly Readonly<{ en: string; de: string }>[];
 }>;
 
 /** 🏋️ Boots `s`, stresses the page's stream channel and judges the budget law. */
@@ -131,7 +131,15 @@ export async function runConnectionBudget(repoRoot: string, options: ConnectionB
     page.setDefaultNavigationTimeout(300_000);
     await page.goto(options.baseUrl, { waitUntil: "commit" });
     const beacon = await page
-      .waitForFunction(() => document.documentElement.getAttribute("data-semio-os-ready") ?? document.documentElement.getAttribute("data-semio-os-error"), undefined, { timeout: 300_000, polling: 1_000 })
+      .waitForFunction(
+        () => {
+          const ready = document.documentElement.getAttribute("data-semio-os-ready");
+          const error = document.documentElement.getAttribute("data-semio-os-error");
+          return ready !== null ? `ready:${ready}` : error !== null ? `error:${error}` : null;
+        },
+        undefined,
+        { timeout: 300_000, polling: 1_000 },
+      )
       .then((handle) => handle.jsonValue() as Promise<string>)
       .catch(() => null);
     console.log(`[connection-budget] ${options.tag}: shell ${beacon ?? "never ready"}`);
@@ -185,15 +193,15 @@ export async function runConnectionBudget(repoRoot: string, options: ConnectionB
     const inventory = connectionInventory(readFileSync(netLog, "utf8"), origin);
     const firstTotal = firstTouch.filter((value) => value >= 1).length;
     const secondTotal = final.notices.filter((value, index) => value - firstTouch[index]! >= 1).length;
-    const violations = [
-      ...(beacon?.startsWith("ready") ? [] : [`the shell never became ready (${beacon ?? "no beacon"})`]),
-      ...inventory.idleHolds.map((hold) => `a request idled on a ${origin} connection: ${hold}`),
-      ...(inventory.streamMuxSockets === 1 ? [] : [`expected exactly one stream-mux WebSocket, saw ${inventory.streamMuxSockets}`]),
-      ...(completed.length === options.fetches ? [] : [`${options.fetches - completed.length} of ${options.fetches} fetches did not finish within 20 s`]),
-      ...(final.freshOpens === folders.length ? [] : [`${folders.length - final.freshOpens} folder streams never opened`]),
-      ...(firstTotal === folders.length ? [] : [`${folders.length - firstTotal} folders missed their first change notice`]),
-      ...(secondTotal === touchedAgain.length ? [] : [`${secondTotal} folders got a second notice, ${touchedAgain.length} were touched again`]),
-      ...(JSON.stringify(final.after) === JSON.stringify(opened.before) ? [] : [`the channel did not return to its baseline: ${JSON.stringify(opened.before)} → ${JSON.stringify(final.after)}`]),
+    const violations: Readonly<{ en: string; de: string }>[] = [
+      ...(beacon?.startsWith("ready:") ? [] : [{ en: `the shell never became ready (${beacon ?? "no beacon"})`, de: `die Shell wurde nie bereit (${beacon ?? "kein Signal"})` }]),
+      ...inventory.idleHolds.map((hold) => ({ en: `a request idled on a ${origin} connection: ${hold}`, de: `eine Anfrage hielt eine Verbindung zu ${origin} im Leerlauf: ${hold}` })),
+      ...(inventory.streamMuxSockets === 1 ? [] : [{ en: `expected exactly one stream-mux WebSocket, saw ${inventory.streamMuxSockets}`, de: `genau ein Stromkanal-WebSocket erwartet, ${inventory.streamMuxSockets} gesehen` }]),
+      ...(completed.length === options.fetches ? [] : [{ en: `${options.fetches - completed.length} of ${options.fetches} fetches did not finish within 20 s`, de: `${options.fetches - completed.length} von ${options.fetches} Abrufen endeten nicht innerhalb von 20 s` }]),
+      ...(final.freshOpens === folders.length ? [] : [{ en: `${folders.length - final.freshOpens} folder streams never opened`, de: `${folders.length - final.freshOpens} Ordnerströme wurden nie geöffnet` }]),
+      ...(firstTotal === folders.length ? [] : [{ en: `${folders.length - firstTotal} folders missed their first change notice`, de: `${folders.length - firstTotal} Ordnern fehlte die erste Änderungsmeldung` }]),
+      ...(secondTotal === touchedAgain.length ? [] : [{ en: `${secondTotal} folders got a second notice, ${touchedAgain.length} were touched again`, de: `${secondTotal} Ordner erhielten eine zweite Meldung, ${touchedAgain.length} wurden erneut berührt` }]),
+      ...(JSON.stringify(final.after) === JSON.stringify(opened.before) ? [] : [{ en: `the channel did not return to its baseline: ${JSON.stringify(opened.before)} → ${JSON.stringify(final.after)}`, de: `der Kanal kehrte nicht zu seinem Ausgangszustand zurück: ${JSON.stringify(opened.before)} → ${JSON.stringify(final.after)}` }]),
     ];
     return {
       baseUrl: options.baseUrl,
@@ -263,13 +271,13 @@ export async function runConnectionBudgetCli(repoRoot: string, defaultOutDir: st
           socketPoolStalls: report.inventory.stalls,
         },
         summary: {
-          en: `${report.inventory.idleHolds.length} idle HTTP holds on ${new URL(baseUrl).origin}, ${report.inventory.streamMuxSockets} stream channel, ${report.notices.folders} streams, ${report.fetches.within20s}/${report.fetches.count} fetches within 20 s${report.violations.length ? `; ${report.violations.slice(0, 3).join("; ")}` : ""}`,
-          de: `${report.inventory.idleHolds.length} ruhende HTTP-Verbindungen auf ${new URL(baseUrl).origin}, ${report.inventory.streamMuxSockets} Stromkanal, ${report.notices.folders} Ströme, ${report.fetches.within20s}/${report.fetches.count} Abrufe innerhalb von 20 s${report.violations.length ? `; ${report.violations.slice(0, 3).join("; ")}` : ""}`,
+          en: `${report.inventory.idleHolds.length} idle HTTP holds on ${new URL(baseUrl).origin}, ${report.inventory.streamMuxSockets} stream channel, ${report.notices.folders} streams, ${report.fetches.within20s}/${report.fetches.count} fetches within 20 s${report.violations.length ? `; ${report.violations.slice(0, 3).map((violation) => violation.en).join("; ")}` : ""}`,
+          de: `${report.inventory.idleHolds.length} ruhende HTTP-Verbindungen auf ${new URL(baseUrl).origin}, ${report.inventory.streamMuxSockets} Stromkanal, ${report.notices.folders} Ströme, ${report.fetches.within20s}/${report.fetches.count} Abrufe innerhalb von 20 s${report.violations.length ? `; ${report.violations.slice(0, 3).map((violation) => violation.de).join("; ")}` : ""}`,
         },
         evidence: [reportPath, join(outDir, tag, "netlog.json")],
       }),
     );
-    for (const violation of report.violations) console.log(`[connection-budget] VIOLATION ${violation}`);
+    for (const violation of report.violations) console.log(`[connection-budget] VIOLATION ${violation.en}`);
     console.log(`[connection-budget] === ${tag}: ${status.toUpperCase()} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
   } finally {

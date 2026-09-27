@@ -33,6 +33,7 @@ function sectionRole(component: RetainedUiNodeRecord["component"]): boolean { re
 
 function inlineToolbarRole(record: RetainedUiNodeRecord): number {
   if (record.component.type === "treeItem") return record.component.inlineToolbar ?? -1;
+  if (record.component.type === "treeSection") return record.component.headerToolbar ?? -1;
   if (record.component.type === "container" && record.component.role === "toolbar") return -2;
   if (record.component.type === "button") return -3;
   return -4;

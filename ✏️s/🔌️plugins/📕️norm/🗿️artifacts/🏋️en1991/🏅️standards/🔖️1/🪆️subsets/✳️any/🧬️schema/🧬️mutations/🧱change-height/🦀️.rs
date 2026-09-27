@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHeight {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-height", "change-height")
+        protocol::LocalizedLabel::native("Change building height", "Gebäudehöhe ändern")
     }
 }
 //#endregion 🔖️Payload

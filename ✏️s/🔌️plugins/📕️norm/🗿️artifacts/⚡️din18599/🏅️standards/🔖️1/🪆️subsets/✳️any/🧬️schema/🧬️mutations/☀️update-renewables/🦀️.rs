@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateRenewa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update renewables", "renewables aktualisieren")
+        protocol::LocalizedLabel::native("Update renewable energy systems", "Anlagen für erneuerbare Energien aktualisieren")
     }
 }

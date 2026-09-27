@@ -85,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const nodes: AnyRecord[] = [node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, containers.map((_, index) => 2 + index * 2))];
     containers.forEach((container, index) => {
       const sectionId = 2 + index * 2;
-      nodes.push(node(sectionId, container.key, { type: "treeSection", label: container.key, defaultOpen: true, window: { rowExtent: "standard", total: container.total, offset: 0 } }, [sectionId + 1]));
+      nodes.push(node(sectionId, container.key, { type: "treeSection", label: container.key, defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: container.total, offset: 0 } }, [sectionId + 1]));
       nodes.push(treeItem(sectionId + 1, `${container.key}.0`, `${container.key} row`));
     });
     return renderWindowedTree(nodes, reportWindows, (tree) => createElement(Scrollable, null, tree));
@@ -111,7 +111,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     ];
     return [
       node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
-      node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { rowExtent: "standard", total: sectionTotal, offset: 0 } }, sectionRows.map((row) => row.id)),
+      node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: sectionTotal, offset: 0 } }, sectionRows.map((row) => row.id)),
       ...sectionRows,
       ...childRows,
     ];
@@ -149,7 +149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rendered = mount(
         [
           node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2], [selectBinding]),
-          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: null }, [3]),
+          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: null }, [3]),
           treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece" }),
         ],
         1,
@@ -170,7 +170,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rendered = mount(
         [
           node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2], [selectBinding]),
-          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: null }, [3]),
+          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: null }, [3]),
           treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece" }, [], [own]),
         ],
         1,
@@ -205,7 +205,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("falls back to a plain overflow ancestor, and to the page itself, for a tree outside any Scrollable", () => {
       const nodes = [
         node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
-        node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { rowExtent: "standard", total: 200, offset: 0 } }, [3]),
+        node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 200, offset: 0 } }, [3]),
         treeItem(3, "objects.0", "Row 0"),
       ];
       const overflowing = renderWindowedTree(nodes, () => {}, (tree) => createElement("div", { "data-testid": "plain", style: { overflowY: "auto" } }, tree));
@@ -388,8 +388,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       ];
       const nodes: AnyRecord[] = [
         node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2, 3]),
-        node(2, "left", { type: "treeSection", label: "Left", defaultOpen: true, window: { rowExtent: "standard", total: 4, offset: 0 } }, [10]),
-        node(3, "right", { type: "treeSection", label: "Right", defaultOpen: true, window: { rowExtent: "standard", total: 4, offset: 0 } }, [20]),
+        node(2, "left", { type: "treeSection", label: "Left", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 4, offset: 0 } }, [10]),
+        node(3, "right", { type: "treeSection", label: "Right", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 4, offset: 0 } }, [20]),
         ...shared("left", 10),
         ...shared("right", 20),
       ];

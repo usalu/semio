@@ -10,7 +10,7 @@ use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emi
 #[dsl(keyword = "reorganize-workflow")]
 pub struct ReorganizeWorkflow {}
 
-async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let node_ids: Vec<String> = if selected.is_empty() { doc.snapshot.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { selected.to_vec() };
     let artifact_mutations = node_ids
         .iter()

@@ -41,3 +41,5 @@ segment-item = segment-lit ","?
 opt-frame-header = "[" "0" "]" | "[" "1" "," frame-header-lit "]"
 frame-header-lit = "[" INT "," INT "," INT "," "[" frame-component* "]" "]"
 frame-component = "[" INT "," INT "," INT "," INT "]" ","?
+
+set-snapshot-op = "set-snapshot" "snapshot" "=" (IDENT | TEXT)

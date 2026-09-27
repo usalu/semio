@@ -44,7 +44,8 @@ import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsFo
 
 import { BootStatus, ParityPlaygroundReport, ParityRenderer, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure } from "../🏗️structure/🟦️.ts";
 
-import { isParityStaleBridge, parityOutDir, writeParityReport } from "../📊️report/🟦️.ts";
+import { parityOutDir, writeParityReport } from "../📊️report/🟦️.ts";
+import { parityVerdict } from "../✅️verdict/🟦️.ts";
 
 import { PARITY_PROBE_CATALOG, PARITY_STATE_PROBE_SUITE, ProbeRunResult, runParityProbe, runParityProbeSuite } from "../🔬️probe/🟦️.ts";
 
@@ -190,7 +191,7 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
       variant,
       boot: { react: reactBoot.status, wgpu: wgpuBoot.status },
       structural,
-      pixel: { status: failingRegions.length === 0 ? "PASS" : "FAIL", regions: failingRegions },
+      pixel: { status: failingRegions.length === 0 ? "PASS" : "FAIL", comparedRegions: regions.length, regions: failingRegions },
       behavioral,
       durationMs: Date.now() - start,
     };
@@ -206,8 +207,8 @@ class ParitySmokeScript extends BundleScript {
     const variant = process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const report = await verifyParityVariant(variant, findFreeParityPortPair());
     console.log(JSON.stringify(report, null, 2));
-    if (report.boot.react !== "PASS" || report.boot.wgpu !== "PASS") {
-      throw new Error(`parity smoke FAILED: boot react=${report.boot.react} wgpu=${report.boot.wgpu}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
+    if (parityVerdict(report) !== "PASS") {
+      throw new Error(`parity smoke ${parityVerdict(report)}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "missing"} pixel=${report.pixel?.status ?? "missing"} behavioral=${report.behavioral?.status ?? "missing"}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
     }
     console.log(`parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} behavioral=${report.behavioral?.status} (${report.durationMs}ms)`);
   }
@@ -297,11 +298,8 @@ class ParityVerifyScript extends BundleScript {
       console.log(`${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
-    // 🪜️terra-parity-rebaseline: STALE-BRIDGE excluded — see `isParityStaleBridge`'s doc on `writeParityReport`.
-    const staleBridge = reports.filter(isParityStaleBridge);
-    const failed = reports.filter((r) => !isParityStaleBridge(r) && (r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL"));
-    if (staleBridge.length > 0) console.log(`parity verify: ${staleBridge.length}/${reports.length} STALE-BRIDGE, excluded from the pass/fail verdict: ${staleBridge.map((r) => r.variant).join(", ")}`);
-    if (failed.length > 0) throw new Error(`parity verify: ${failed.length}/${reports.length} playground(s) failed`);
+    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
+    if (unresolved.length > 0) throw new Error(`parity verify: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
   }
 }
 
@@ -322,13 +320,9 @@ class ParitySweepScript extends BundleScript {
       console.log(`sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
-    // 🪜️terra-parity-rebaseline: STALE-BRIDGE excluded — see `isParityStaleBridge`'s doc on `writeParityReport`.
-    const staleBridge = reports.filter(isParityStaleBridge);
-    const failed = reports.filter((r) => !isParityStaleBridge(r) && (r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL"));
-    const passed = reports.length - failed.length - staleBridge.length;
-    console.log(`parity sweep complete: ${passed}/${reports.length} PASS · ${staleBridge.length}/${reports.length} STALE-BRIDGE · ${failed.length}/${reports.length} FAIL`);
-    if (staleBridge.length > 0) console.log(`stale-bridge (excluded from verdict): ${staleBridge.map((r) => r.variant).join(", ")}`);
-    if (failed.length > 0) throw new Error(`parity sweep: ${failed.length}/${reports.length} playground(s) failed`);
+    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
+    console.log(`parity sweep complete: ${reports.length - unresolved.length}/${reports.length} PASS`);
+    if (unresolved.length > 0) throw new Error(`parity sweep: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
   }
 }
 

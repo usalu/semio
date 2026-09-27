@@ -45,3 +45,5 @@ record replace-texture-bytes tag=15
 field payload bytes
 record move-vertex tag=16
 field payload bytes
+record set-snapshot tag=17
+field payload bytes

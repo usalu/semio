@@ -13,7 +13,7 @@ export type RetainedUiGraphNodes = { readonly size: number; lookup(id: number): 
 function finite(component: Component | RetainedUiComponent): boolean {
   switch (component.type) {
     case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step);
-    case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step);
+    case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step) && (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.min == null || component.max == null || component.min <= component.max);
     case "ring": return Number.isFinite(component.t);
     case "progress": return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
     case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step));
@@ -26,9 +26,7 @@ function* violation(value: UiContractViolation, frontier: RetainedUiGraphFrontie
   yield* violations.set(frontier.count++, value);
 }
 
-function* validInlineToolbar(record: Record, nodes: RetainedUiGraphNodes): Program<boolean> {
-  if (record.component.type !== "treeItem" || record.component.inlineToolbar === null) return true;
-  const id = record.component.inlineToolbar;
+function* validTreeToolbar(record: Record, id: number, nodes: RetainedUiGraphNodes): Program<boolean> {
   if (!(record.children ?? []).includes(id)) return false;
   const toolbar = yield* nodes.lookup(id);
   if (!toolbar || toolbar.component.type !== "container" || toolbar.component.role !== "toolbar" || toolbar.layout.kind !== "stack" || toolbar.layout.axis !== "horizontal") return false;
@@ -75,7 +73,8 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     const section = record.component.type === "container" && record.component.role === "section";
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
-    if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validInlineToolbar(record, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
+    if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validTreeToolbar(record, record.component.inlineToolbar, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
+    if (record.component.type === "treeSection" && record.component.headerToolbar !== null && !(yield* validTreeToolbar(record, record.component.headerToolbar, nodes))) yield* violation({ type: "invalidTreeSectionHeaderToolbar", node: frame.id, toolbar: record.component.headerToolbar }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
     if (frame.depth > limits.maxDepth) { yield* violation({ type: "depthQuota", node: frame.id, depth: frame.depth, max: limits.maxDepth }, frontier, violations); continue; }
     yield* marks.set(frame.id, 3);

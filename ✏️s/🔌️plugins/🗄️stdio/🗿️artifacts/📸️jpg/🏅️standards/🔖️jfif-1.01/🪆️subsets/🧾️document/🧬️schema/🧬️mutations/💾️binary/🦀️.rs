@@ -13,6 +13,7 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::binary::CODEC,
     crate::schema::mutations::change_jfif_header::binary::CODEC,
     crate::schema::mutations::replace_quant_table::binary::CODEC,
     crate::schema::mutations::remove_quant_table::binary::CODEC,

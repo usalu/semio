@@ -54,6 +54,9 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
             }
             dependencies[index] = value;
         }
+        if cursor.integer()? != 0 || cursor.integer()? != 0 {
+            return Err(InferenceErrorV1::Invalid);
+        }
         let value = Self {
             mutation_id,
             document_id,
@@ -113,6 +116,8 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
         for dependency in &self.dependencies[..self.dependency_count] {
             protocol::write_str(output, dependency);
         }
+        protocol::wire::write_varint_u64(output, 0);
+        protocol::wire::write_varint_u64(output, 0);
         protocol::write_str(output, self.diff_schema);
         protocol::write_bytes(output, self.diff_payload);
         protocol::write_str(output, self.inverse_schema);

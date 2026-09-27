@@ -35,6 +35,13 @@ declare module "semver" {
   export default semver;
 }
 
+/** 🧊️ HTTP conditional-request judge (the `fresh` package Express uses), the reference oracle the styling asset server's
+ * `304` answers are checked against. */
+declare module "fresh" {
+  /** 🧊️ Reports whether a response with `responseHeaders` is still fresh for a request carrying `requestHeaders`. */
+  export default function fresh(requestHeaders: Readonly<Record<string, string | readonly string[] | undefined>>, responseHeaders: Readonly<Record<string, string | readonly string[] | undefined>>): boolean;
+}
+
 /** 🕸️ Vite's `?url` asset query: a wasm-pack payload imported as a served URL rather than a module.
  *
  * `🧊️3d`'s brep loader hands this URL to `initFlow({ module_or_path })`; the bundler rewrites the

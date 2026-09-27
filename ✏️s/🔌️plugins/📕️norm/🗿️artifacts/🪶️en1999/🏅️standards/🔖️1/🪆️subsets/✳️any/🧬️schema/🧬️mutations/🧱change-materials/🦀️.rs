@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMaterials 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-materials", "change-materials")
+        protocol::LocalizedLabel::native("Change materials", "Werkstoffe ändern")
     }
 }

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:renderer-parity:complete-evidence:v1",
+  "type": "object",
+  "required": [
+    "boot",
+    "structural",
+    "pixel",
+    "behavioral"
+  ],
+  "properties": {
+    "boot": {
+      "type": "object",
+      "required": [
+        "react",
+        "wgpu"
+      ],
+      "properties": {
+        "react": {
+          "const": "PASS"
+        },
+        "wgpu": {
+          "const": "PASS"
+        }
+      }
+    },
+    "structural": {
+      "type": "object",
+      "required": [
+        "status",
+        "nodeCount"
+      ],
+      "properties": {
+        "status": {
+          "const": "PASS"
+        },
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "pixel": {
+      "type": "object",
+      "required": [
+        "status",
+        "comparedRegions"
+      ],
+      "properties": {
+        "status": {
+          "const": "PASS"
+        },
+        "comparedRegions": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "behavioral": {
+      "type": "object",
+      "required": [
+        "status",
+        "steps"
+      ],
+      "properties": {
+        "status": {
+          "const": "PASS"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

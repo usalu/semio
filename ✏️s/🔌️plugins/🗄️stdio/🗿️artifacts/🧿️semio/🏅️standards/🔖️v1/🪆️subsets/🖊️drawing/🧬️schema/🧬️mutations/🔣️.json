@@ -207,6 +207,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/ungroup-node/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

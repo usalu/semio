@@ -102,9 +102,10 @@ impl<'a> Context<'a> {
         self.scenario.data_tables.first().ok_or_else(|| format!("scenario {} carries no data table", self.scenario.id))
     }
 
-    /// 📦️ Absolute path to write one named result artifact to, creating parent directories.
+    /// 📦️ Absolute path to write one named result artifact to — `<artifact_dir>/<scenario id>/<role>/<filename>`, so a
+    /// scenario's artifacts never overwrite another's — creating parent directories.
     pub fn artifact(&self, role: &str, filename: &str) -> Result<PathBuf, String> {
-        let dir = self.artifact_dir.join(role);
+        let dir = self.artifact_dir.join(&self.scenario.id).join(role);
         std::fs::create_dir_all(&dir).map_err(|error| format!("cannot create artifact directory {}: {error}", dir.display()))?;
         Ok(dir.join(filename))
     }

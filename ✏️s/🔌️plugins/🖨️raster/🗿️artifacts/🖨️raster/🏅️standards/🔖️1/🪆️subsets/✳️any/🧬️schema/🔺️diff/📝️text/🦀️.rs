@@ -96,7 +96,7 @@ fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> pro
     let invalid = match node {
         RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
         RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
-        RasterLayerNode::Adjustment { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
+        RasterLayerNode::Adjustment { .. } => patch.mask_content.is_some() || patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
     };
     if invalid {
         return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch contains fields unsupported by the target layer kind"));
@@ -106,6 +106,9 @@ fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> pro
 
 fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
     let mut inverse = RasterLayerPatch::default();
+    if let (Some(content), RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = (&patch.mask_content, &mut *node) {
+        inverse.mask_content = Some(crate::RasterMaskContent { mask: std::mem::replace(mask, content.mask.clone()) });
+    }
     match node {
         RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, image_key, .. } => {
             if let Some(content) = &patch.pixel_content {
@@ -502,6 +505,7 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     take!(width);
     take!(height);
     take!(adjustment_kind);
+    take!(mask_content);
     take!(pixel_content);
     take!(pixel_transform);
 }

@@ -1,0 +1,10 @@
+{
+  "title": "Publish Plugins On The Modules Asset Page",
+  "emoji": "🔌️",
+  "status": "open",
+  "description": "Publish every plugin module and extension module on a fourth CDN page at modules.assets.semio-tech.com. Keep each page under 1GB. Keep the shard worker script on the play origin so the browser can construct it. Prefix plugin and extension URLs with that modules host.",
+  "goal": "🎯runningos",
+  "sessions": [
+    "⚪cc3ac7d5ab1745cfa942fe5d92f391ce"
+  ]
+}

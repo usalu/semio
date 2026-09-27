@@ -1,0 +1,1248 @@
+{
+ "schema": "semio.os-dev.idle-budget-fixture/v1",
+ "trace": {
+  "seconds": 10,
+  "events": [
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 10,
+    "tid": 1,
+    "args": {
+     "name": "CrRendererMain"
+    }
+   },
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 10,
+    "tid": 2,
+    "args": {
+     "name": "Compositor"
+    }
+   },
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 10,
+    "tid": 3,
+    "args": {
+     "name": "DedicatedWorker thread"
+    }
+   },
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 20,
+    "tid": 1,
+    "args": {
+     "name": "VizCompositorThread"
+    }
+   },
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 10,
+    "tid": 4,
+    "args": {
+     "name": "CompositorTileWorker1"
+    }
+   },
+   {
+    "ph": "M",
+    "name": "thread_name",
+    "pid": 30,
+    "tid": 1,
+    "args": {
+     "name": "CrRendererMain"
+    }
+   },
+   {
+    "ph": "X",
+    "name": "RunTask",
+    "pid": 30,
+    "tid": 1,
+    "ts": 0,
+    "dur": 1000
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 0,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 1000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 2000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 3000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 4000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 5000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "BeginMainThreadFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 6000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "FireAnimationFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 0,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "FireAnimationFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 1000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "FireAnimationFrame",
+    "pid": 10,
+    "tid": 1,
+    "ts": 2000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 2,
+    "ts": 0,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 2,
+    "ts": 1000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 2,
+    "ts": 2000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 2,
+    "ts": 3000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 20,
+    "tid": 1,
+    "ts": 0,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 20,
+    "tid": 1,
+    "ts": 1000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 4,
+    "ts": 0,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 4,
+    "ts": 1000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 4,
+    "ts": 2000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 4,
+    "ts": 3000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "DrawFrame",
+    "pid": 10,
+    "tid": 4,
+    "ts": 4000,
+    "dur": 10
+   },
+   {
+    "ph": "X",
+    "name": "ThreadControllerImpl::RunTask",
+    "pid": 10,
+    "tid": 1,
+    "ts": 0,
+    "dur": 100000
+   },
+   {
+    "ph": "X",
+    "name": "ThreadControllerImpl::RunTask",
+    "pid": 10,
+    "tid": 1,
+    "ts": 50000,
+    "dur": 100000
+   },
+   {
+    "ph": "X",
+    "name": "ThreadControllerImpl::RunTask",
+    "pid": 10,
+    "tid": 1,
+    "ts": 1000000,
+    "dur": 200000
+   },
+   {
+    "ph": "X",
+    "name": "ThreadControllerImpl::RunTask",
+    "pid": 10,
+    "tid": 1,
+    "ts": 2000000,
+    "dur": 0
+   },
+   {
+    "ph": "X",
+    "name": "RunTask",
+    "pid": 10,
+    "tid": 3,
+    "ts": 0,
+    "dur": 250000
+   }
+  ],
+  "expected": {
+   "seconds": 10,
+   "framesPerSec": 0.7,
+   "rafPerSec": 0.3,
+   "drawsPerSec": 0.6,
+   "mainBusyPct": 3.5,
+   "workersBusyPct": 2.5
+  }
+ },
+ "soaks": [
+  {
+   "name": "warm-up then flat",
+   "samples": [
+    {
+     "minute": 0,
+     "jsHeapMB": 108.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 1,
+     "jsHeapMB": 106.97,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 2,
+     "jsHeapMB": 105.33,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 3,
+     "jsHeapMB": 104.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 4,
+     "jsHeapMB": 102.67,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 5,
+     "jsHeapMB": 101.63,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 6,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 7,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 8,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 9,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 10,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 11,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 12,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 13,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 14,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 15,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 16,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 17,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 18,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 19,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 20,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 21,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 22,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 23,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 24,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 25,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 26,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 27,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 28,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5001,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 29,
+     "jsHeapMB": 100.3,
+     "workersHeapMB": 40.0,
+     "nodes": 5002,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 30,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    }
+   ],
+   "expected": {
+    "heapSlopeMBPerMin": 0.0,
+    "workersSlopeMBPerMin": 0.0,
+    "domGrowthRatio": 0.0,
+    "listenerGrowthRatio": 0.0,
+    "maxFramesPerSec": 0,
+    "violationKinds": []
+   }
+  },
+  {
+   "name": "leaking heap, DOM and a frame burst",
+   "samples": [
+    {
+     "minute": 0,
+     "jsHeapMB": 100.0,
+     "workersHeapMB": 40.0,
+     "nodes": 5000,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 1,
+     "jsHeapMB": 100.9,
+     "workersHeapMB": 40.1,
+     "nodes": 5020,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 2,
+     "jsHeapMB": 101.8,
+     "workersHeapMB": 40.2,
+     "nodes": 5040,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 3,
+     "jsHeapMB": 102.7,
+     "workersHeapMB": 40.3,
+     "nodes": 5060,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 4,
+     "jsHeapMB": 103.6,
+     "workersHeapMB": 40.4,
+     "nodes": 5080,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 5,
+     "jsHeapMB": 104.5,
+     "workersHeapMB": 40.5,
+     "nodes": 5100,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 6,
+     "jsHeapMB": 105.4,
+     "workersHeapMB": 40.6,
+     "nodes": 5120,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 7,
+     "jsHeapMB": 106.3,
+     "workersHeapMB": 40.7,
+     "nodes": 5140,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 8,
+     "jsHeapMB": 107.2,
+     "workersHeapMB": 40.8,
+     "nodes": 5160,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 9,
+     "jsHeapMB": 108.1,
+     "workersHeapMB": 40.9,
+     "nodes": 5180,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 10,
+     "jsHeapMB": 109.0,
+     "workersHeapMB": 41.0,
+     "nodes": 5200,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 11,
+     "jsHeapMB": 109.9,
+     "workersHeapMB": 41.1,
+     "nodes": 5220,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 12,
+     "jsHeapMB": 110.8,
+     "workersHeapMB": 41.2,
+     "nodes": 5240,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 13,
+     "jsHeapMB": 111.7,
+     "workersHeapMB": 41.3,
+     "nodes": 5260,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 14,
+     "jsHeapMB": 112.6,
+     "workersHeapMB": 41.4,
+     "nodes": 5280,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 15,
+     "jsHeapMB": 113.5,
+     "workersHeapMB": 41.5,
+     "nodes": 5300,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 16,
+     "jsHeapMB": 114.4,
+     "workersHeapMB": 41.6,
+     "nodes": 5320,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 17,
+     "jsHeapMB": 115.3,
+     "workersHeapMB": 41.7,
+     "nodes": 5340,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 2.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 18,
+     "jsHeapMB": 116.2,
+     "workersHeapMB": 41.8,
+     "nodes": 5360,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 19,
+     "jsHeapMB": 117.1,
+     "workersHeapMB": 41.9,
+     "nodes": 5380,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 20,
+     "jsHeapMB": 118.0,
+     "workersHeapMB": 42.0,
+     "nodes": 5400,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 21,
+     "jsHeapMB": 118.9,
+     "workersHeapMB": 42.1,
+     "nodes": 5420,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 22,
+     "jsHeapMB": 119.8,
+     "workersHeapMB": 42.2,
+     "nodes": 5440,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 23,
+     "jsHeapMB": 120.7,
+     "workersHeapMB": 42.3,
+     "nodes": 5460,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 24,
+     "jsHeapMB": 121.6,
+     "workersHeapMB": 42.4,
+     "nodes": 5480,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 25,
+     "jsHeapMB": 122.5,
+     "workersHeapMB": 42.5,
+     "nodes": 5500,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 26,
+     "jsHeapMB": 123.4,
+     "workersHeapMB": 42.6,
+     "nodes": 5520,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 27,
+     "jsHeapMB": 124.3,
+     "workersHeapMB": 42.7,
+     "nodes": 5540,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 28,
+     "jsHeapMB": 125.2,
+     "workersHeapMB": 42.8,
+     "nodes": 5560,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 29,
+     "jsHeapMB": 126.1,
+     "workersHeapMB": 42.9,
+     "nodes": 5580,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    },
+    {
+     "minute": 30,
+     "jsHeapMB": 127.0,
+     "workersHeapMB": 43.0,
+     "nodes": 5600,
+     "listeners": 900,
+     "idle": {
+      "seconds": 5,
+      "framesPerSec": 0.0,
+      "rafPerSec": 0,
+      "drawsPerSec": 0,
+      "mainBusyPct": 0.1,
+      "workersBusyPct": 0.1
+     }
+    }
+   ],
+   "expected": {
+    "heapSlopeMBPerMin": 0.9,
+    "workersSlopeMBPerMin": 0.1,
+    "domGrowthRatio": 0.0938,
+    "listenerGrowthRatio": 0.0,
+    "maxFramesPerSec": 2.0,
+    "violationKinds": [
+     "heap",
+     "dom",
+     "frames"
+    ]
+   }
+  }
+ ]
+}

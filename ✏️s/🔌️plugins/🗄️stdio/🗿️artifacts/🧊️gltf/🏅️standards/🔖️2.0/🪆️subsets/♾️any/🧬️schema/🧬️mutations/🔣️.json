@@ -1923,6 +1923,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-used-extensions/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

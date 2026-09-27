@@ -38,7 +38,7 @@ use directory::os_directory::{
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
-use futures::stream::SplitSink;
+use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
@@ -863,6 +863,16 @@ enum PresenceLeaseTransition {
 struct PresenceSnapshot {
     peers: Vec<Vec<u8>>,
     actors: Vec<DirectoryPresenceActor>,
+}
+
+/// @emoji 🗂️ The member-directory presence projection each document last published, held by the presence publication
+/// gate: a peer beat that only moves its pointer, camera or caret changes the document roster (every delta goes to the
+/// document's sockets) but not the projection (actor, user, surface, colour), so it is not republished to every
+/// member's directory socket. A document whose roster emptied is forgotten after publishing the empty projection, and a
+/// document that never had a directory row publishes none.
+#[derive(Default)]
+struct PresenceDirectoryProjections {
+    published: BTreeMap<String, Vec<DirectoryPresenceActor>>,
 }
 
 #[cfg(test)]
@@ -2176,7 +2186,7 @@ struct HubState {
     /// a surface-scoped channel; identity and the plan-bound surface are reconstructed by Hub
     /// before canonical peer bytes are stored or published.
     presence: Arc<ShardedMap<(String, String), PresenceLeaseSlot>>,
-    presence_publication_gate: Arc<tokio::sync::Mutex<()>>,
+    presence_publication_gate: Arc<tokio::sync::Mutex<PresenceDirectoryProjections>>,
     #[cfg(test)]
     presence_clock: Option<Arc<TestPresenceClock>>,
     /// @emoji 🎨️ Contract §C7.3 session colors: `space_id` -> that space's live `(actor -> palette
@@ -2335,9 +2345,18 @@ impl HubState {
         PresenceSnapshot { peers, actors }
     }
 
-    /// 📡️ Publishes one document roster before its matching member-directory projection.
-    fn publish_presence_delta(&self, key: &str, space_id: &str, document_id: &str, snapshot: PresenceSnapshot) {
+    /// 📡️ Publishes one document roster, then its member-directory projection when that differs from the one this
+    /// document last published ([`PresenceDirectoryProjections`]); `projections` is the held publication gate.
+    fn publish_presence_delta(&self, projections: &mut PresenceDirectoryProjections, key: &str, space_id: &str, document_id: &str, snapshot: PresenceSnapshot) {
         let _ = self.fanout_for(key).send(ServerFrame::Presence { peers: snapshot.peers });
+        if projections.published.get(key).map_or(snapshot.actors.is_empty(), |published| published == &snapshot.actors) {
+            return;
+        }
+        if snapshot.actors.is_empty() {
+            projections.published.remove(key);
+        } else {
+            projections.published.insert(key.to_string(), snapshot.actors.clone());
+        }
         self.directory_service.publish(DirectoryStreamMessage::Presence { space_id: space_id.to_string(), document_id: document_id.to_string(), actors: snapshot.actors });
     }
 
@@ -2353,12 +2372,12 @@ impl HubState {
 
     /// 🆕️ Selects one live socket as the actor's current owner without making it visible.
     async fn install_presence_slot(&self, key: &str, space_id: &str, document_id: &str, actor: &str, slot: PresenceLeaseSlot) -> PresenceLeaseTransition {
-        let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
+        let Ok(mut publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let replaced_visible = self.presence.with(&map_key, |slot| slot.is_some_and(|slot| slot.peer.is_some()));
         self.presence.insert(map_key, slot);
         if replaced_visible {
-            self.publish_presence_delta(key, space_id, document_id, self.presence_snapshot(key));
+            self.publish_presence_delta(&mut publication, key, space_id, document_id, self.presence_snapshot(key));
             PresenceLeaseTransition::Published
         } else {
             PresenceLeaseTransition::NoChange
@@ -2400,7 +2419,7 @@ impl HubState {
         if peer.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES {
             return PresenceLeaseTransition::Rejected;
         }
-        let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
+        let Ok(mut publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let Some((was_visible, old_len, changed)) =
             self.presence.with(&map_key, |slot| slot.filter(|slot| slot.socket_live_id == socket_live_id).map(|slot| (slot.peer.is_some(), slot.peer.as_ref().map_or(0, Vec::len), slot.peer.as_ref() != Some(&peer))))
@@ -2429,7 +2448,7 @@ impl HubState {
             }
         });
         if changed {
-            self.publish_presence_delta(key, space_id, document_id, self.presence_snapshot(key));
+            self.publish_presence_delta(&mut publication, key, space_id, document_id, self.presence_snapshot(key));
             if !was_visible {
                 self.note_presence("server.presence.join", space_id, document_id, actor);
             }
@@ -2454,7 +2473,7 @@ impl HubState {
             return PresenceLeaseTransition::NoChange;
         };
         let stripped_peer = identity.encode(actor).await;
-        let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
+        let Ok(mut publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let expired = self.presence.with_mut(&map_key, |slot| {
             let Some(slot) = slot.filter(|slot| slot.socket_live_id == socket_live_id && slot.peer.is_some() && now >= slot.expires_at) else { return false };
@@ -2466,7 +2485,7 @@ impl HubState {
             true
         });
         if expired {
-            self.publish_presence_delta(key, space_id, document_id, self.presence_snapshot(key));
+            self.publish_presence_delta(&mut publication, key, space_id, document_id, self.presence_snapshot(key));
             self.note_presence("server.presence.expiry", space_id, document_id, actor);
             PresenceLeaseTransition::Published
         } else {
@@ -2476,14 +2495,14 @@ impl HubState {
 
     /// 🧹️ Removes only the matching live owner; a stale handler cannot erase its replacement.
     async fn close_presence_for_live(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str) -> PresenceLeaseTransition {
-        let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
+        let Ok(mut publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let visible = self.presence.with(&map_key, |slot| slot.filter(|slot| slot.socket_live_id == socket_live_id).is_some_and(|slot| slot.peer.is_some()));
         if !self.presence.remove_if(&map_key, |slot| slot.socket_live_id == socket_live_id) {
             return PresenceLeaseTransition::NoChange;
         }
         if visible {
-            self.publish_presence_delta(key, space_id, document_id, self.presence_snapshot(key));
+            self.publish_presence_delta(&mut publication, key, space_id, document_id, self.presence_snapshot(key));
             self.note_presence("server.presence.leave", space_id, document_id, actor);
             PresenceLeaseTransition::Published
         } else {
@@ -5178,8 +5197,16 @@ async fn handle_client_frame(
 /// (e.g. directory hiccup) falls back to a `Notify` nobody can ever reach, i.e. un-kickable, which
 /// matches this crate's generally forgiving stance on directory-write failures elsewhere in this
 /// handler.
+/// @emoji 🔌️ One document socket, whatever ends it: the session, then a close frame (a no-op when the session already
+/// sent its own typed close) and the closing handshake, so no exit — a refused hello, a storage fault after an error
+/// frame, a revocation — drops the connection under the client's unread frames.
 async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: SocketGrantAdmissionV1) {
     let (mut sender, mut receiver) = socket.split();
+    serve_document_socket(&mut sender, &mut receiver, space_id, document_id, surface, state, socket_admission).await;
+    close_socket(&mut sender, &mut receiver, Message::Close(Some(CloseFrame { code: 1000, reason: "session-ended".into() }))).await;
+}
+
+async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, receiver: &mut SplitStream<WebSocket>, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: SocketGrantAdmissionV1) {
     let Some(mut drain) = state.socket_drain.admit() else {
         let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(hub_shutdown_close_frame())).await;
         return;
@@ -5204,6 +5231,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
         _ => {
             let _ = sender.send(error_frame("protocol", "expected socket hello").await).await;
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
             return;
         }
     };
@@ -5223,6 +5251,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         AuthOutcome::ShareToken => (None, None, None, 0, protocol::PresencePrincipalKind::Human),
         AuthOutcome::Denied => {
             let _ = sender.send(error_frame("unauthorized", "unauthorized").await).await;
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
             return;
         }
     };
@@ -5552,7 +5581,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                             };
                             match tokio::time::timeout(
                                 DOCUMENT_SOCKET_FRAME_DEADLINE,
-                                handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &socket_live.id, &gate, &principal, &tenant, frame, &mut sender),
+                                handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &socket_live.id, &gate, &principal, &tenant, frame, sender),
                             )
                             .await
                             {
@@ -5606,7 +5635,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                             live_gate.socket_lag_received.add_permits(1);
                             live_gate.socket_lag_release.acquire().await.expect("socket lag test release").forget();
                         }
-                        match send_socket_document_rebootstrap(&mut sender, &state, &socket_grant, &socket_live.id, &scope).await {
+                        match send_socket_document_rebootstrap(sender, &state, &socket_grant, &socket_live.id, &scope).await {
                             SocketBindingValidityV1::Active => {
                                 let _ = tokio::time::timeout(
                                     std::time::Duration::from_secs(2),
@@ -5648,6 +5677,31 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     }
     let _ = state.close_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id).await;
     state.release_color(&space_id, &actor.0);
+}
+
+/// @emoji ⏳️ How long a socket the hub is closing keeps reading the client's remaining frames for its closing reply.
+const SOCKET_CLOSE_DRAIN: std::time::Duration = std::time::Duration::from_secs(1);
+
+/// @emoji 🚪️ Ends a socket the way the WebSocket closing handshake asks: `close` sent — refused, and harmless, when a
+/// typed close already went out — then [`drain_closing_socket`].
+async fn close_socket(sender: &mut SplitSink<WebSocket, Message>, receiver: &mut SplitStream<WebSocket>, close: Message) {
+    let _ = sender.send(close).await;
+    drain_closing_socket(receiver).await;
+}
+
+/// @emoji 🧽️ Reads and discards what the client still sends until its own close, its disconnect or
+/// [`SOCKET_CLOSE_DRAIN`]. Dropping a socket with unread frames resets the TCP connection, and a reset can
+/// discard the close frame the client has not read yet: a client that kept sending after a refusal saw a bare
+/// `Connection reset by peer` instead of the hub's typed close (found by the generative hostile-input law).
+async fn drain_closing_socket(receiver: &mut SplitStream<WebSocket>) {
+    let _ = tokio::time::timeout(SOCKET_CLOSE_DRAIN, async {
+        while let Some(Ok(message)) = receiver.next().await {
+            if matches!(message, Message::Close(_)) {
+                break;
+            }
+        }
+    })
+    .await;
 }
 //#endregion 🔖️WebSocket
 
@@ -6017,6 +6071,7 @@ struct ArtifactCreationHttpControlV1 {
     cancelled: std::sync::atomic::AtomicBool,
     shutdown_cancelled: Option<Arc<std::sync::atomic::AtomicBool>>,
     fault: Mutex<Option<String>>,
+    progress: Mutex<Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1>>,
 }
 
 #[cfg(feature = "native-artifact-execution")]
@@ -6028,7 +6083,7 @@ impl ArtifactCreationHttpControlV1 {
     /// in the context alone now (`ARTIFACT_CREATION_STALL_BOUND_MS`), which is the single place
     /// ticket 26/09/18 slice HT16 put operation bounds.
     fn new() -> Self {
-        Self { cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None, fault: Mutex::new(None) }
+        Self { cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None, fault: Mutex::new(None), progress: Mutex::new(None) }
     }
 
     fn recovery(shutdown_cancelled: Arc<std::sync::atomic::AtomicBool>) -> Self {
@@ -6043,6 +6098,41 @@ impl ArtifactCreationHttpControlV1 {
     fn take_fault(&self) -> Option<String> {
         self.fault.lock().ok().and_then(|mut held| held.take())
     }
+
+    /// 📈️ Where this running creation is: `queued` until its operation reports anything.
+    fn progress(&self) -> directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1 {
+        use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreationProgressV1, SpaceArtifactCreationStageV1};
+        self.progress.lock().ok().and_then(|held| *held).unwrap_or(SpaceArtifactCreationProgressV1 { stage: SpaceArtifactCreationStageV1::Queued, completed_units: 0, total_units: 1 })
+    }
+}
+
+/// 🧭️ The creation stage an authority progress stage belongs to; a stage that says nothing about
+/// where the creation is keeps the stage already reported.
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_stage(stage: semio_hub::artifact_authority::AuthorityProgressStage) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1> {
+    use semio_hub::artifact_authority::AuthorityProgressStage;
+    use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1;
+    match stage {
+        AuthorityProgressStage::GuestCompiling => Some(SpaceArtifactCreationStageV1::CompilingGuest),
+        AuthorityProgressStage::GuestCodecExecuting => Some(SpaceArtifactCreationStageV1::Genesis),
+        AuthorityProgressStage::CasChunkStored
+        | AuthorityProgressStage::CasChunkVerified
+        | AuthorityProgressStage::CasManifestStored
+        | AuthorityProgressStage::CasManifestVerified
+        | AuthorityProgressStage::PackStaged
+        | AuthorityProgressStage::SprStaged
+        | AuthorityProgressStage::PackVerified
+        | AuthorityProgressStage::SprVerified
+        | AuthorityProgressStage::Published => Some(SpaceArtifactCreationStageV1::Publishing),
+        AuthorityProgressStage::Preflight
+        | AuthorityProgressStage::CatalogLoading
+        | AuthorityProgressStage::CatalogResolved
+        | AuthorityProgressStage::InputValidated
+        | AuthorityProgressStage::ApplyingOperations
+        | AuthorityProgressStage::OutputValidated
+        | AuthorityProgressStage::Derived
+        | AuthorityProgressStage::CasSweep => None,
+    }
 }
 
 #[cfg(feature = "native-artifact-execution")]
@@ -6055,7 +6145,14 @@ impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
         self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire))
     }
 
-    fn report(&self, _progress: AuthorityProgress) {}
+    fn report(&self, progress: AuthorityProgress) {
+        let Some(stage) = artifact_creation_stage(progress.stage) else { return };
+        let total_units = progress.total_units.max(1);
+        let reported = directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1 { stage, completed_units: progress.completed_units.min(total_units), total_units };
+        if let Ok(mut held) = self.progress.lock() {
+            *held = Some(reported);
+        }
+    }
 
     fn fault(&self, detail: &str) {
         if let Ok(mut held) = self.fault.lock() {
@@ -6144,6 +6241,13 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.tasks.retain(|_, task| !task.task.is_finished());
         state.reservations.contains_key(key) || state.tasks.contains_key(key)
+    }
+
+    /// 📈️ The progress of the live execution this process runs for `key`, if it runs one.
+    fn live_progress(&self, key: &str) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1> {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.tasks.retain(|_, task| !task.task.is_finished());
+        state.tasks.get(key).map(|task| task.control.progress()).or_else(|| state.reservations.get(key).map(|pending| pending.control.progress()))
     }
 
     fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>, tracer: Tracer) {
@@ -6483,7 +6587,12 @@ async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(
         Err(status) => return status.into_response(),
     };
     match service.status(&actor, &space_id, &request_id, u64::try_from(now_ms()).unwrap_or_default()).await {
-        Ok(status) => artifact_creation_status_response(status),
+        Ok(mut status) => {
+            if matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing) {
+                status.progress = state.artifact_creation_tasks.live_progress(&artifact_creation_task_key_v1(&actor.user_id, &space_id, &request_id));
+            }
+            artifact_creation_status_response(status)
+        }
         Err(error) => artifact_creation_error_status(error).into_response(),
     }
 }
@@ -6680,6 +6789,7 @@ fn directory_command_access_action(command: &DirectoryCommand) -> HubAccessActio
         DirectoryCommand::CreateInvite { .. } => HubAccessActionV1::InviteCreate,
         DirectoryCommand::RevokeInvite { .. } => HubAccessActionV1::InviteRevoke,
         DirectoryCommand::AnnounceDocument { .. } => HubAccessActionV1::DocumentAnnounce,
+        DirectoryCommand::RecordUserPreference { .. } => HubAccessActionV1::PreferenceRecord,
     }
 }
 
@@ -6731,6 +6841,7 @@ fn directory_command_space(command: &DirectoryCommand) -> Option<&str> {
         | DirectoryCommand::CreateInvite { space_id, .. }
         | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id),
         DirectoryCommand::AnnounceDocument { descriptor } => Some(&descriptor.space_id),
+        DirectoryCommand::RecordUserPreference { .. } => None,
     }
 }
 
@@ -6838,6 +6949,7 @@ fn directory_command_trace_kind(command: &DirectoryCommand) -> &'static str {
         DirectoryCommand::CreateInvite { .. } => "create-invite",
         DirectoryCommand::RevokeInvite { .. } => "revoke-invite",
         DirectoryCommand::AnnounceDocument { .. } => "announce-document",
+        DirectoryCommand::RecordUserPreference { .. } => "record-user-preference",
     }
 }
 
@@ -6855,6 +6967,7 @@ fn directory_command_trace_space(command: &DirectoryCommand) -> Option<String> {
         | DirectoryCommand::CreateInvite { space_id, .. }
         | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id.clone()),
         DirectoryCommand::AnnounceDocument { descriptor } => Some(descriptor.space_id.clone()),
+        DirectoryCommand::RecordUserPreference { .. } => None,
     }
 }
 
@@ -7431,6 +7544,23 @@ async fn directory_member_space_ids(state: &HubState, user_id: &str) -> Result<B
     Ok(state.directory.list_spaces_for_user(user_id).await.map_err(directory_error_status)?.into_iter().map(|(space, _)| space.id).collect())
 }
 
+/// 🌐️ Which lane a directory event page serves: the directory (every event the caller may see, never a preference) or the
+/// caller's own preferences (`user.preference-recorded` of the caller, nothing else). Both share one seq, one receipt and
+/// one page machinery; an event of the other lane is skipped like an invisible one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DirectoryEventLaneV1 {
+    Directory,
+    Preferences,
+}
+
+/// 🌐️ The page lane an event belongs to: a `user.preference-recorded` event rides only the preference lane.
+fn directory_event_lane_v1(event: &DirectoryEvent) -> DirectoryEventLaneV1 {
+    match event.body {
+        os_directory::DirectoryEventBody::UserPreferenceRecorded { .. } => DirectoryEventLaneV1::Preferences,
+        _ => DirectoryEventLaneV1::Directory,
+    }
+}
+
 fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &DirectoryEvent, caller: &AuthedUser) -> bool {
     match event.space_id.as_deref() {
         Some(space_id) => member_spaces.contains(space_id),
@@ -7465,7 +7595,7 @@ fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, 
     Ok(page)
 }
 
-async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, after: u64, control: &DirectoryEventPageHttpControl) -> Result<DirectoryEventPageV1, StatusCode> {
+async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, after: u64, control: &DirectoryEventPageHttpControl, lane: DirectoryEventLaneV1) -> Result<DirectoryEventPageV1, StatusCode> {
     control.checkpoint()?;
     let binding = directory_event_page_session_binding_v1(caller)?;
     let raw = state.directory.events_since(after, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -7503,7 +7633,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
         if event.seq <= through || validate_directory_event_page_event(&event).is_err() {
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
-        if !directory_event_page_event_visible(&member_spaces, &event, &caller) {
+        if directory_event_lane_v1(&event) != lane || !directory_event_page_event_visible(&member_spaces, &event, &caller) {
             if directory_event_page_bytes_bound(envelope_bytes, event_bytes, events.len()) > DIRECTORY_EVENT_PAGE_MAX_BYTES {
                 match seal_directory_event_page_v1(binding, caller.authorization_generation, after, event.seq, true, events.clone()) {
                     Ok(_) => {}
@@ -7538,6 +7668,15 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
 }
 
 async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
+    serve_directory_event_page_v1(uri, headers, state, DirectoryEventLaneV1::Directory).await
+}
+
+/// 🌐️ `GET /directory/preference-page/v1?after=` — the caller's own preference lane on the directory page machinery.
+async fn get_directory_preference_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
+    serve_directory_event_page_v1(uri, headers, state, DirectoryEventLaneV1::Preferences).await
+}
+
+async fn serve_directory_event_page_v1(uri: axum::http::Uri, headers: HeaderMap, state: HubState, lane: DirectoryEventLaneV1) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
     let after = directory_event_page_request_admission(&uri)?;
     let control = Arc::new(DirectoryEventPageHttpControl::new());
     let mut request = DirectoryEventPageHttpRequest::new(control.clone());
@@ -7549,7 +7688,10 @@ async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: Hea
     }
     let operation = async {
         let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
-        build_directory_event_page_v1(&state, &caller, after, control.as_ref()).await.map(DirectoryJson)
+        if lane == DirectoryEventLaneV1::Preferences && !hub_access_permits(&[HubAccessRoleV1::Authenticated], HubAccessActionV1::PreferenceRead, None) {
+            return Err(StatusCode::FORBIDDEN);
+        }
+        build_directory_event_page_v1(&state, &caller, after, control.as_ref(), lane).await.map(DirectoryJson)
     };
     let response = match tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_EVENT_PAGE_DEADLINE_MS), operation).await {
         Ok(result) => result,
@@ -7723,7 +7865,8 @@ fn directory_message_matches_scope(scope: &DocumentScope, message: &DirectoryStr
             | os_directory::DirectoryEventBody::SpaceDeleted { .. }
             | os_directory::DirectoryEventBody::MemberUpserted { .. }
             | os_directory::DirectoryEventBody::MemberRemoved { .. }
-            | os_directory::DirectoryEventBody::InviteRedeemed { .. } => false,
+            | os_directory::DirectoryEventBody::InviteRedeemed { .. }
+            | os_directory::DirectoryEventBody::UserPreferenceRecorded { .. } => false,
         },
         DirectoryStreamMessage::Connection { connection, .. } => connection.space_id == scope.space_id && connection.document_id == scope.document_id,
         DirectoryStreamMessage::Presence { space_id, document_id, .. } => space_id == &scope.space_id && document_id == &scope.document_id,
@@ -10006,7 +10149,8 @@ fn observability_view(tracer: &Tracer, routes: &HubRouteMetricsV1, catalog: Opti
 
 /// @emoji 🛣️ Counts every answer of a matched route under its method and route template, with the time the
 /// route took to answer — the per-route table of `GET /admin/api/observability`. It runs inside routing
-/// (`route_layer`), so the template is known and a concrete path never becomes a key.
+/// (`route_layer`), so the template is known and a concrete path never becomes a key, and outside
+/// [`rate_limit_middleware`], so an address-bucket refusal is counted as the route's `rateLimited`.
 async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let method = request.method().as_str().to_string();
     let route = request.extensions().get::<axum::extract::MatchedPath>().map_or_else(|| "unmatched".to_string(), |matched| matched.as_str().to_string());
@@ -10019,7 +10163,7 @@ async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>,
 /// @emoji 📝️ `GET /admin/api/observability` — behind `authenticate_admin_principal`, exactly like
 /// every other `/admin/api` route, so a hub bound to a network interface never exposes its own
 /// internals unauthenticated. See [`observability_view`] for why the body is counters.
-async fn admin_observability(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
+async fn admin_observability(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<HubObservabilityV1>, StatusCode> {
     let _principal = authenticate_admin_principal(&state, &headers, Some(peer)).await?;
     let response = observability_view(&state.tracer, &state.route_metrics, state.verified_catalog.as_deref());
     if serde_json::to_vec(&response).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.len() > ADMIN_RESPONSE_MAX_BYTES {
@@ -10248,19 +10392,17 @@ fn extension_asset_content_type(path: &std::path::Path) -> &'static str {
     }
 }
 
+/// @emoji 🧩️ The file one extension asset request names, or `None` for a name that is not an extension id plus a
+/// relative path of plain components: every component must be a normal, control-free name — no root, prefix,
+/// `.` or `..`, and no NUL, which the file system refuses rather than resolves (a `%00` segment answered `500`).
 fn extension_asset_path(root: &std::path::Path, extension_id: &str, rest: &str) -> Option<std::path::PathBuf> {
-    if extension_id.is_empty() || extension_id.contains('/') || extension_id.contains('\\') || extension_id.contains("..") {
+    let plain = |path: &std::path::Path| path.components().all(|component| matches!(component, std::path::Component::Normal(part) if part.to_str().is_some_and(|part| !part.chars().any(|character| character.is_control() || character == '\\'))));
+    let id = std::path::Path::new(extension_id);
+    let relative = std::path::Path::new(rest);
+    if extension_id.is_empty() || rest.is_empty() || id.components().count() != 1 || !plain(id) || !plain(relative) {
         return None;
     }
-    if rest.is_empty() || rest.contains("..") {
-        return None;
-    }
-    let base = root.join(extension_id);
-    let path = base.join(rest);
-    if !path.starts_with(&base) {
-        return None;
-    }
-    Some(path)
+    Some(root.join(id).join(relative))
 }
 
 async fn list_extensions(State(state): State<HubState>) -> Result<Json<ExtensionListResponse>, StatusCode> {
@@ -10288,7 +10430,11 @@ async fn list_extensions(State(state): State<HubState>) -> Result<Json<Extension
 
 async fn get_extension_asset(Path((extension_id, rest)): Path<(String, String)>, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
     let path = extension_asset_path(&state.extensions_root, &extension_id, &rest).ok_or(StatusCode::BAD_REQUEST)?;
-    let bytes = tokio::fs::read(&path).await.map_err(|error| if error.kind() == std::io::ErrorKind::NotFound { StatusCode::NOT_FOUND } else { StatusCode::INTERNAL_SERVER_ERROR })?;
+    let bytes = tokio::fs::read(&path).await.map_err(|error| match error.kind() {
+        std::io::ErrorKind::NotFound | std::io::ErrorKind::IsADirectory | std::io::ErrorKind::NotADirectory => StatusCode::NOT_FOUND,
+        std::io::ErrorKind::InvalidInput | std::io::ErrorKind::InvalidFilename => StatusCode::BAD_REQUEST,
+        _ => StatusCode::SERVICE_UNAVAILABLE,
+    })?;
     let content_type = extension_asset_content_type(&path);
     Ok(([(axum::http::header::CONTENT_TYPE, content_type)], bytes))
 }
@@ -10755,6 +10901,7 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .route("/directory/invites/{token}/redeem", post(post_redeem_invite))
         .route("/directory/events", get(get_directory_events))
         .route("/directory/event-page/v1", get(get_directory_event_page_v1))
+        .route(os_directory::DIRECTORY_PREFERENCE_PAGE_PATH_V1, get(get_directory_preference_page_v1))
         .route("/directory/socket-grants", post(issue_directory_socket_grant).layer(DefaultBodyLimit::max(0)))
         .route("/directory/socket/v1", get(directory_ws_v1))
         .route("/directory/spaces/{space_id}/documents/{document_id}/socket-grants", post(issue_scoped_directory_socket_grant).layer(DefaultBodyLimit::max(256)))
@@ -10792,8 +10939,8 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .route("/spaces/{space_id}/documents/{id}/execution-target/component", post(issue_document_execution_target_component))
         .route("/spaces/{space_id}/documents/{id}/execution-target/descriptor", post(issue_document_execution_target_descriptor))
         .route("/spaces/{space_id}/documents/{id}/execution-target/browser-actor", post(issue_document_execution_target_browser_actor))
+        .route_layer(axum::middleware::from_fn_with_state(state.clone(), rate_limit_middleware))
         .route_layer(axum::middleware::from_fn_with_state(state.route_metrics.clone(), route_metrics_middleware))
-        .layer(axum::middleware::from_fn_with_state(state.clone(), rate_limit_middleware))
         .layer(axum::middleware::from_fn_with_state(cross_origin, cors_middleware))
         .layer(axum::middleware::from_fn_with_state(forwarded_tls, transport_security_middleware))
         .layer(axum::middleware::from_fn_with_state(state.tracer.clone(), refusal_middleware))
@@ -11393,7 +11540,7 @@ async fn serve() -> Result<(), HubError> {
             #[cfg(test)]
             document_open_plan_deadline_ms: None,
             presence: Arc::new(ShardedMap::new()),
-            presence_publication_gate: Arc::new(tokio::sync::Mutex::new(())),
+            presence_publication_gate: Arc::new(tokio::sync::Mutex::new(PresenceDirectoryProjections::default())),
             #[cfg(test)]
             presence_clock: None,
             session_colors: Arc::new(ShardedMap::new()),

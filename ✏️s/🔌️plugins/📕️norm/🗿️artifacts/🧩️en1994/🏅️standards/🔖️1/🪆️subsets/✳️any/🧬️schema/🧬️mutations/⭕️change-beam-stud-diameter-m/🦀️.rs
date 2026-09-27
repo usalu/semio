@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamStudDi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-stud-diameter-m", "change-beam-stud-diameter-m")
+        protocol::LocalizedLabel::native("Change shear stud diameter", "Schaftdurchmesser der Kopfbolzendübel ändern")
     }
 }
 //#endregion 🔖️Payload

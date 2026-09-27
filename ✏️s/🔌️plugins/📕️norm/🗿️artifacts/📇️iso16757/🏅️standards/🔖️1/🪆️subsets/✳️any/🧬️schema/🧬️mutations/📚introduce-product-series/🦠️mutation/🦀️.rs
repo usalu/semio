@@ -22,8 +22,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for IntroducePro
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Introduce productSeries \"{}\"", self.product_series.id),
-            &format!("productSeries \"{}\" erstellen", self.product_series.id),
+            &format!("Introduce product series \"{}\"", self.product_series.id),
+            &format!("Produktserie \"{}\" einführen", self.product_series.id),
         )
     }
     fn target(&self) -> Vec<String> {

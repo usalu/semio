@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamTransv
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-transverse-as", "change-beam-transverse-as")
+        protocol::LocalizedLabel::native("Change transverse reinforcement", "Querbewehrung ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -1,0 +1,7 @@
+{
+  "$schema": "./🧬️schema.json",
+  "controllerId": "s.stdio.json@rfc8259/*#editor",
+  "action": "replaceSnapshotSource",
+  "largeDraftBytes": 65536,
+  "expectedSteps": 16
+}

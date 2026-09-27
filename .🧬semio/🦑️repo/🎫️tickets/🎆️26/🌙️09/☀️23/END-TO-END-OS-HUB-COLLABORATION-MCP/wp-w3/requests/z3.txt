@@ -1,0 +1,1 @@
+semio-framework-ui — Cargo.toml: Linux-only winit backend table (x11/wayland/wayland-dlopen); wasm32 unaffected (cfg target_os=linux), unit fingerprint changes → every guest linking ui recompiles once (Z3, 26 19:2x)

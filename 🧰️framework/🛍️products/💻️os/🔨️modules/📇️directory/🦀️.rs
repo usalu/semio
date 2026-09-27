@@ -43,6 +43,7 @@ pub use schema::{
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
+pub use schema::{valid_user_preference_record_v1, DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
 pub use schema::{decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
 
 //#region 🔖️ReadModel
@@ -201,7 +202,7 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                 }
             }
         }
-        DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::ArtifactRetentionAdvanced { .. } => {}
+        DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::ArtifactRetentionAdvanced { .. } | DirectoryEventBody::UserPreferenceRecorded { .. } => {}
     }
     next
 }

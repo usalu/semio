@@ -6560,8 +6560,8 @@ pub mod app {
     /// and items it and the unbuilt rest held; any other error propagates. Rows are built with the
     /// ledger's `nested` flag raised, so a row that is itself a windowed container does not charge its own
     /// node twice, and its subtree's item price replaces what its nested windows charged.
-    fn tree_window_rows<B: HasChildren, T>(mut builder: B, windows: &TreeWindows<'_>, id: &str, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
-        for (built, entry) in entries[slice.offset..slice.offset + slice.len].iter().enumerate() {
+    fn tree_window_indexed_rows<B: HasChildren>(mut builder: B, windows: &TreeWindows<'_>, id: &str, slice: &TreeSlice, mut row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
+        for (built, index) in (slice.offset..slice.offset + slice.len).enumerate() {
             let (nodes, items) = (windows.nodes.get(), windows.items.get());
             let unbuilt = || {
                 windows.nodes.set(nodes);
@@ -6569,7 +6569,7 @@ pub mod app {
                 windows.refund(slice.len - built);
             };
             windows.path.borrow_mut().push(id.to_owned());
-            let materialised = row(entry);
+            let materialised = row(index);
             windows.path.borrow_mut().pop();
             let node = match materialised {
                 Ok(node) => node,
@@ -6595,6 +6595,10 @@ pub mod app {
         Ok(builder)
     }
 
+    fn tree_window_rows<B: HasChildren, T>(builder: B, windows: &TreeWindows<'_>, id: &str, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
+        tree_window_indexed_rows(builder, windows, id, slice, |index| row(&entries[index]))
+    }
+
     /// 🪟️ One windowed section node: only the host's slice is built, `window` carries the full extent,
     /// never a `+N` continuation row. The section node itself is charged to the body-wide node ledger
     /// before its rows are — see [`TreeWindows`].
@@ -6606,6 +6610,23 @@ pub mod app {
         let slice = windows.sliced(&path, default_open, entries.len());
         let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
         let builder = tree_window_rows(builder, windows, id, entries, &slice, row)?;
+        let builder = match windows.stamp(&path, &slice) {
+            Some(window) => builder.window(window),
+            None => builder,
+        };
+        builder.try_build().map_err(|_| ui_assembly_error("tree-window.section-build"))
+    }
+
+    /// 🪟️ One windowed section whose logical rows are addressed by ordinal, keeping large lazy
+    /// projections reachable without allocating a temporary entry collection.
+    pub fn tree_window_indexed_section(windows: &TreeWindows<'_>, id: &str, label: Label, default_open: bool, total: usize, row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        TreeWindows::admit_key(id)?;
+        let path = windows.path_of(id);
+        windows.claim_window(&path, total)?;
+        windows.debit_container();
+        let slice = windows.sliced(&path, default_open, total);
+        let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
+        let builder = tree_window_indexed_rows(builder, windows, id, &slice, row)?;
         let builder = match windows.stamp(&path, &slice) {
             Some(window) => builder.window(window),
             None => builder,
@@ -6651,6 +6672,23 @@ pub mod app {
         windows.debit_container();
         let slice = windows.sliced(&path, default_open, entries.len());
         let builder = tree_window_rows(item.default_open(default_open), windows, id, entries, &slice, row)?;
+        let builder = match windows.stamp(&path, &slice) {
+            Some(window) => builder.window(window),
+            None => builder,
+        };
+        builder.try_build().map_err(|_| ui_assembly_error("tree-window.item-build"))
+    }
+
+    /// 🪟️ One windowed group whose logical rows are addressed by ordinal without first allocating a
+    /// collection of row records. Lazy artifact projections use this for byte, pixel, vertex, and
+    /// document collections whose complete cardinality must remain reachable without materialisation.
+    pub fn tree_window_indexed_item(windows: &TreeWindows<'_>, item: TreeItemBuilder, id: &str, default_open: bool, total: usize, row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        TreeWindows::admit_key(id)?;
+        let path = windows.path_of(id);
+        windows.claim_window(&path, total)?;
+        windows.debit_container();
+        let slice = windows.sliced(&path, default_open, total);
+        let builder = tree_window_indexed_rows(item.default_open(default_open), windows, id, &slice, row)?;
         let builder = match windows.stamp(&path, &slice) {
             Some(window) => builder.window(window),
             None => builder,
@@ -7207,6 +7245,62 @@ pub mod app {
 
         use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, TypedOperationResultLane, VcsArtifactApp};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
+
+        /// ⌨️ One long typing run (fixture `🧫️fixtures/⌨️typing-run/🔣️.json`: ≥ 1000 typed characters with pauses, caret moves back
+        /// into the run and Backspace/Delete corrections) as the full texts a text-editor host delivers, one per changed key.
+        pub struct TypingRun {
+            pub initial: String,
+            pub texts: Vec<String>,
+            pub expected: String,
+        }
+
+        /// ⌨️ Replays the typing-run fixture under the caret-relative text-input model (typing inserts at the caret,
+        /// Backspace/Delete remove one character, arrows move one character, Home/End reach the line edges, Enter inserts a line
+        /// break) — the model the editor's own text-input law and Chromium's native textarea answer identically.
+        pub fn typing_run() -> TypingRun {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/⌨️typing-run/🔣️.json")).expect("typing-run fixture");
+            let initial = fixture["initial"].as_str().expect("typing-run initial").to_string();
+            let mut text: Vec<char> = initial.chars().collect();
+            let mut caret = text.len();
+            let mut texts = Vec::new();
+            for key in fixture["keys"].as_array().expect("typing-run keys") {
+                let before = text.clone();
+                match key.as_str().expect("typing-run key") {
+                    "pause" => {}
+                    "Backspace" => {
+                        if caret > 0 {
+                            caret -= 1;
+                            text.remove(caret);
+                        }
+                    }
+                    "Delete" => {
+                        if caret < text.len() {
+                            text.remove(caret);
+                        }
+                    }
+                    "ArrowLeft" => caret = caret.saturating_sub(1),
+                    "ArrowRight" => caret = (caret + 1).min(text.len()),
+                    "Home" => caret = text[..caret].iter().rposition(|ch| *ch == '\n').map_or(0, |index| index + 1),
+                    "End" => caret = text[caret..].iter().position(|ch| *ch == '\n').map_or(text.len(), |index| caret + index),
+                    "Enter" => {
+                        text.insert(caret, '\n');
+                        caret += 1;
+                    }
+                    typed => {
+                        for ch in typed.chars() {
+                            text.insert(caret, ch);
+                            caret += 1;
+                        }
+                    }
+                }
+                if text != before {
+                    texts.push(text.iter().collect());
+                }
+            }
+            let expected = fixture["expect"]["text"].as_str().expect("typing-run expected text").to_string();
+            assert_eq!(texts.last(), Some(&expected), "the typing-run model reaches the fixture's expected text");
+            TypingRun { initial, texts, expected }
+        }
 
         /// 🧪️ Replays `seed_genesis_children`'s roster lookup over a surface's initial document without
         /// constructing the app, so a bundle proves at test time what `with_registry_on_bus` would only
@@ -8087,6 +8181,22 @@ pub mod app {
             view: super::ViewModel,
         }
 
+        /// 🎬️ The arguments the shell's example picker boots with: the staged declared defaults, and for every
+        /// closed choice still without a value its first option — the example the navbar opens first.
+        fn declared_verb_boot_args(action: &semio_framework::ActionDefinition, staged: semio_framework::DslValue) -> semio_framework::DslValue {
+            use semio_framework::{ArgSchema, DslValue};
+            let DslValue::Object(mut entries) = staged else { return staged };
+            for argument in &action.args {
+                let ArgSchema::String { options, .. } = &argument.schema else { continue };
+                let Some(first) = options.first() else { continue };
+                if !entries.iter().any(|(key, value)| key == &argument.id && !matches!(value, DslValue::Null) && value.as_str() != Some("")) {
+                    entries.retain(|(key, _)| key != &argument.id);
+                    entries.push((argument.id.clone(), DslValue::String(first.value.clone())));
+                }
+            }
+            DslValue::Object(entries)
+        }
+
         /// 🧫️ The per-probe fixture: the registered app, bound as instance 1, booted with the app's own
         /// example when it declares one.
         async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>) -> VcsArtifactApp<A, M>
@@ -8244,7 +8354,7 @@ pub mod app {
                 .window_kinds
                 .iter()
                 .enumerate()
-                .find_map(|(index, window)| window_kind_actions(&definition, window).into_iter().find(|action| action.id == "setActiveExample").map(|action| DeclaredVerbBoot { args: staged_of(action), view: view_of(index) }));
+                .find_map(|(index, window)| window_kind_actions(&definition, window).into_iter().find(|action| action.id == "setActiveExample").map(|action| DeclaredVerbBoot { args: declared_verb_boot_args(action, staged_of(action)), view: view_of(index) }));
             let mut order: Vec<(semio_framework::ActionDefinition, Vec<usize>)> = Vec::new();
             for (index, window) in definition.window_kinds.iter().enumerate() {
                 for action in window_kind_actions(&definition, window) {
@@ -8533,7 +8643,7 @@ pub mod app {
             for op in ops.iter() {
                 prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
             }
-            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(origin.clone())).await;
+            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, &[], label, Some(origin.clone())).await;
             assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
             let edit_id = app.transaction_commit(txn_id, &meta("local")).await.expect("commit prepared transaction");
             assert_eq!(app.store.envelope().vcs.edits.len(), edits_before + 1, "commit must produce exactly one new Edit");
@@ -8557,7 +8667,7 @@ pub mod app {
             for op in ops.iter() {
                 prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
             }
-            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(protocol::MutationOrigin::Owner)).await;
+            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, &[], label, Some(protocol::MutationOrigin::Owner)).await;
             assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected");
             app.transaction_rollback(txn_id).await.expect("rollback the pending transaction");
             assert_eq!(app.store.generation(), generation_before, "rollback must not change the store generation");
@@ -12020,7 +12130,7 @@ pub mod app {
     /// captured BEFORE encoding — the vocabulary a history UI shows for this child's edit without
     /// ever decoding the raw bytes back into a concrete `Mutation` type it has no way to name
     /// generically.
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
     pub struct ChildEmit {
         pub slot: String,
         pub child_id: String,
@@ -12030,6 +12140,26 @@ pub mod app {
     }
 
     impl ChildEmit {
+        /// 🧩️ The wire form of one agent gesture's owned-child share (`AppFrame::Emit.child_ops` →
+        /// gateway → `AppCommand::TransactionPrepare.prepared_child_ops`): the exact `ChildEmit` list as one
+        /// wire pack, empty bytes when the gesture touches no owned child, so a childless transaction's wire
+        /// is unchanged.
+        pub fn encode_groups(children: &[ChildEmit]) -> Vec<u8> {
+            if children.is_empty() {
+                return Vec::new();
+            }
+            store::pack_rt::encode_wire_value(&store::ToValue::to_value(&children.to_vec()))
+        }
+
+        /// 🧩️ Decodes [`ChildEmit::encode_groups`]; a pack that is not a `ChildEmit` list is refused by name.
+        pub fn decode_groups(bytes: &[u8]) -> Result<Vec<ChildEmit>, Fault> {
+            if bytes.is_empty() {
+                return Ok(Vec::new());
+            }
+            let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("transaction.child-groups-malformed"), format!("owned-child op groups did not decode: {error}")))?;
+            <Vec<ChildEmit> as store::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("transaction.child-groups-malformed"), format!("owned-child op groups are not a ChildEmit list: {error}")))
+        }
+
         pub(crate) fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -13570,7 +13700,7 @@ pub mod app {
         /// Msg-from-Cmd: it APPLIES, exactly once, against CURRENT state.
         async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
-        async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
+        async fn take_last_emit_wire(&mut self) -> Option<EmitWire>;
         /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains the render-plane presence outbox
         /// `stamp_and_cache_interaction_ui` fills every render (`VcsArtifactApp::pending_presence`) —
         /// `plugin_runtime::plugin_render_surface`'s object-safe entry point (mirrors
@@ -13588,7 +13718,8 @@ pub mod app {
         /// `origin`). Never fails structurally — a rejection is reported through the returned
         /// `TransactionPrepareOutcome::rejection`, not `Err`, so a caller can always frame a
         /// `TransactionPrepared` reply.
-        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome;
+        /// `prepared_child_ops` is the pre-planned form's owned-child share ([`ChildEmit::encode_groups`]).
+        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome;
         /// 🔀️ Handles a `TransactionCommit` wire command (contract §5.6/§5.8): applies this
         /// member's prepared ops as exactly ONE `Edit` (`group_id = txn_id`, every
         /// `MutationMeta.origin` stamped to the prepared origin), clearing the pending transaction,
@@ -13702,27 +13833,6 @@ pub mod app {
         /// {@link store::ArtifactPackFiles} (pack-encoded initial snapshot plus the same `ops` op-log
         /// text — the op grammar is format-invariant) via `store::print_document_pack`.
         async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
-        /// 🧬️ Structural fingerprint of this app's snapshot record shape — the same 32 bytes
-        /// `store::ArtifactCodec::pack_schema_hash` carries, read straight off the app's own
-        /// `Snapshot::record_spec()`. `None` when the snapshot is a hand-written `ArtifactPack` with
-        /// no `RecordSpec`, exactly as the native codec table reports `[0; 32]` for that case.
-        async fn artifact_pack_schema_hash(&self) -> Option<[u8; 32]>;
-        /// 🌱️ The canonical empty document of this app's kind at `document_id`: this app's initial
-        /// snapshot, its own dialect, and an exactly zero history (no edits, changes, checkpoints or
-        /// alternatives, and an empty cursor). It is a pure function of `(Self, document_id)` — the
-        /// instance's own live document is neither read nor replaced.
-        async fn artifact_genesis_pair(&self, document_id: &str) -> Result<store::ArtifactPackFiles, Fault>;
-        /// 📥️ `(pack, spr) -> (dsl, ops)` mirror of a pair belonging to this app's kind, without
-        /// loading it into this instance. A host uses it as the pair-validation fence for a package
-        /// whose codec it does not link.
-        async fn artifact_print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault>;
-        /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to a pair of this app's kind and returns the
-        /// next pair, again without touching this instance's own document.
-        async fn artifact_apply_ops(&self, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault>;
-        /// 📜️ Folds one `os_spr::encode_envelopes` ledger stream onto a pair of this app's kind through
-        /// the replica merge gate (`store::replay_envelopes_onto_pair`), again without touching this
-        /// instance's own document.
-        async fn artifact_replay_envelopes(&self, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
         async fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
@@ -14439,9 +14549,22 @@ pub mod app {
     pub(crate) struct PendingTransaction<Op> {
         pub(crate) txn_id: String,
         pub(crate) ops: Vec<Op>,
+        pub(crate) children: Vec<ChildEmit>,
         pub(crate) label: String,
         pub(crate) origin: protocol::MutationOrigin,
         pub(crate) base_generation: u64,
+    }
+
+    /// 🧾️ The op packs one dispatch produced, per lane, as the channel's `AppFrame::Emit` carries them:
+    /// `document`/`config`/`draft` are `protocol::encode_ops_vec` packs, `children` the owned-child share
+    /// ([`ChildEmit::encode_groups`]), filled only by the agent preview (an applying dispatch has already
+    /// committed its children in-guest).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct EmitWire {
+        pub document: Vec<u8>,
+        pub config: Vec<u8>,
+        pub draft: Vec<u8>,
+        pub children: Vec<u8>,
     }
 
     /// 🔀️ A `dispatch_emit` gesture whose `artifact_mutations` carried foreign steps (contract
@@ -22492,7 +22615,7 @@ pub mod app {
         transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>,
         unsupported_publication_contracts: BTreeMap<String, &'static str>,
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
-        last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
+        last_emit_wire: Option<EmitWire>,
         typed_effect_outbox: ArtifactFixedQueue<Effect>,
         typed_event_outbox: ArtifactFixedQueue<AppEvent>,
         typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
@@ -26420,7 +26543,7 @@ pub mod app {
             for op in draft_mutations.iter() {
                 draft_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
-            self.last_emit_wire = Some((protocol::encode_ops_vec(&artifact_op_bytes), protocol::encode_ops_vec(&config_op_bytes), protocol::encode_ops_vec(&draft_op_bytes)));
+            self.last_emit_wire = Some(EmitWire { document: protocol::encode_ops_vec(&artifact_op_bytes), config: protocol::encode_ops_vec(&config_op_bytes), draft: protocol::encode_ops_vec(&draft_op_bytes), children: Vec::new() });
 
             // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
             if !draft_mutations.is_empty() {
@@ -26472,7 +26595,7 @@ pub mod app {
             // path below. See that method's own doc comment for why the two paths stay genuinely
             // separate rather than being unified into one (the group protocol has no `AmendLast`).
             if !child_emits.is_empty() {
-                let result = self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta).await?;
+                let result = self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta, None).await?;
                 self.apply_interaction_writes(&interaction_writes, meta).await?;
                 return Ok(result);
             }
@@ -26621,6 +26744,59 @@ pub mod app {
             }
         }
 
+        /// @emoji 🧩️ Commits an agent transaction that carries owned-child op groups as ONE composite gesture
+        /// (`dispatch_emit_group`, the same path the shell lane's child-group verbs take) whose group identity is
+        /// `txn_id` on every member it touches, so the gateway's `TransactionUndo{group_id: txn_id}` moves them all.
+        /// The parent's tail edit (when the group touched the parent) carries the prepared origin like a solitary
+        /// commit does. Returns the parent's edit id, else the first touched child's.
+        async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, description: Option<String>, origin: protocol::MutationOrigin, meta: &ActionMeta) -> Result<String, Fault> {
+            let parent_edits_before = self.store.envelope().vcs.edits.len();
+            let result = self
+                .dispatch_emit_group(&format!("transaction:{txn_id}"), &ops, &children, &description, Vec::new(), Vec::new(), UiDirtyScope::Full, None, meta, Some(txn_id.to_string()))
+                .await
+                .map_err(|fault| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", fault.message))?;
+            if self.store.envelope().vcs.edits.len() > parent_edits_before {
+                self.store.stamp_tail_origin(origin).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
+                return Ok(self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default());
+            }
+            Ok(result.inverse_group.member_edits.first().map(|edit| edit.edit_id.clone()).unwrap_or_default())
+        }
+
+        /// @emoji ↩️ `transaction_undo`/`transaction_redo` for a composing instance: moves every member (parent and
+        /// owned children) whose tail carries `group_id` through `CompositionCoordinator::undo_group`/`redo_group`,
+        /// republishing each moved child's content like the shell lane's group history does. A group no member
+        /// carries is refused by name, exactly like the solitary path.
+        async fn transaction_group_history(&mut self, action: &str, group_id: &str) -> Result<(), Fault> {
+            self.admit_child_content_publication_span(self.children.len())?;
+            let parent_id = self.store.envelope().id.clone();
+            let parent_dialect: ArtifactDialect = A::DIALECT.into();
+            if self.store.envelope().dialect.as_ref() != Some(&parent_dialect) {
+                return Err(plugin_sdk_fault("composition history requires the parent's exact declared dialect"));
+            }
+            let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
+            let child_refs: Vec<ArtifactRef> = self.children.entries_physical().map(|entry| entry.reference.clone()).collect();
+            let mut members: Vec<(&ArtifactRef, &mut M)> = Vec::with_capacity(child_refs.len());
+            for (reference, entry) in child_refs.iter().zip(self.children.entries_mut_physical()) {
+                members.push((reference, &mut entry.member));
+            }
+            let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut self.store, &mut members, group_id).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut self.store, &mut members, group_id).await };
+            drop(members);
+            self.cache = None;
+            for (reference, _) in report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id) {
+                let Some((slot, child_id)) = self.children.entries().find(|entry| entry.reference.artifact_id == reference.artifact_id).map(|entry| (entry.owner.slot.clone(), entry.reference.artifact_id.clone())) else {
+                    return Err(plugin_sdk_fault("group history moved a child without exact immutable-root authority"));
+                };
+                let publication_generation = self.admit_child_content_publication()?;
+                self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
+            }
+            if report.undone.is_empty() {
+                let skipped = report.skipped.iter().map(|(reference, error)| format!("{} ({error})", reference.artifact_id)).collect::<Vec<_>>().join(", ");
+                return Err(plugin_sdk_fault(format!("transaction_{action}: no member of this instance carries group {group_id:?} at its {} tail{}", if action == "undo" { "applied" } else { "redo" }, if skipped.is_empty() { String::new() } else { format!(" (skipped: {skipped})") })));
+            }
+            self.record_command(action, ActionKind::History, None, None, None, None);
+            Ok(())
+        }
+
         #[allow(clippy::too_many_arguments)]
         async fn dispatch_emit_group(
             &mut self,
@@ -26633,6 +26809,7 @@ pub mod app {
             ui_scope: UiDirtyScope,
             config_edit_id: Option<String>,
             meta: &ActionMeta,
+            group_id: Option<String>,
         ) -> Result<InvocationResult, Fault> {
             if !artifact_mutations.is_empty() {
                 self.require_operation_emitting_kind(verb, self.declared_dispatch_kind(verb))?;
@@ -26682,7 +26859,7 @@ pub mod app {
             // — `GroupMeta.coalesce_key` is accepted-but-not-wired by `dispatch_group` itself today
             // (per B2's own scoping note: `SpaceMember` has no object-safe `AmendLast` seam yet), and
             // this whole branch is already documented as never coalescing.
-            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: (*description).clone(), coalesce_key: None };
+            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: (*description).clone(), coalesce_key: None, group_id };
             // 🎯️ RESOLVED (was BLOCKED — see `📓️terra-dedyn-fw-os-spacemember-report.md` §dispatch_group,
             // and `📓️terra-dispatch-group-split-report.md` for the fix): `store::CompositionCoordinator::
             // dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>` now takes SEPARATE type
@@ -28563,7 +28740,6 @@ pub mod app {
             let command = A::command_from_action(&address.action_id, Some(&args)).await?;
             let emit = self.preview_retained_command(Box::new(command), &proof, &ActionMeta { view_state: Some(view.clone()), ..meta.clone() }).await?;
             let uncarried = [
-                ("owned children", !emit.child_emits.is_empty()),
                 ("a whole-document replacement", emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. }))),
                 ("a file download", emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. } | Effect::IconRenderExport { .. }))),
                 ("a file request", emit.effects.iter().any(|effect| matches!(effect, Effect::RequestFileOpen { .. } | Effect::RequestMediaFrames { .. }))),
@@ -28581,13 +28757,23 @@ pub mod app {
                     format!("action '{}' publishes {} that an agent transaction cannot carry; it runs only from the shell", address.action_id, uncarried.join(", ")),
                 ));
             }
-            if A::ROLE == AppRole::Viewer && !emit.artifact_mutations.is_empty() {
+            if A::ROLE == AppRole::Viewer && (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) {
                 return Err(viewer_read_only_fault(&address.action_id));
             }
             let mut artifact_op_bytes = Vec::with_capacity(emit.artifact_mutations.len());
             for op in emit.artifact_mutations.iter() {
                 artifact_op_bytes.push(::protocol::OpBinary::encode_op(op).map_err(|error| error.into_fault())?);
             }
+            for child in emit.child_emits.iter() {
+                if self.children.get(&(child.slot.clone(), child.child_id.clone())).is_none() {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("interactive-job.agent-lane-child-missing"),
+                        format!("action '{}' edits owned child {:?} in slot {:?}, which this instance does not hold", address.action_id, child.child_id, child.slot),
+                    ));
+                }
+            }
+            let child_op_bytes = ChildEmit::encode_groups(&emit.child_emits);
             let mut config_op_bytes = Vec::with_capacity(emit.config_mutations.len());
             for op in emit.config_mutations.iter() {
                 config_op_bytes.push(::protocol::OpBinary::encode_op(op).map_err(|error| error.into_fault())?);
@@ -28605,7 +28791,7 @@ pub mod app {
                     format!("previewed action '{}' produced {priced} op byte(s); its exact output cap is {}", address.action_id, contract.max_output_bytes),
                 ));
             }
-            self.last_emit_wire = Some((protocol::encode_ops_vec(&artifact_op_bytes), protocol::encode_ops_vec(&config_op_bytes), protocol::encode_ops_vec(&draft_op_bytes)));
+            self.last_emit_wire = Some(EmitWire { document: protocol::encode_ops_vec(&artifact_op_bytes), config: protocol::encode_ops_vec(&config_op_bytes), draft: protocol::encode_ops_vec(&draft_op_bytes), children: child_op_bytes });
             let mut result = Self::empty_result(&address.action_id, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
             result.output = DslValue::Object(vec![
                 ("previewedAction".into(), DslValue::String(address.action_id.clone())),
@@ -28613,6 +28799,7 @@ pub mod app {
                 ("documentOps".into(), DslValue::String(artifact_op_bytes.len().to_string())),
                 ("configOps".into(), DslValue::String(config_op_bytes.len().to_string())),
                 ("draftOps".into(), DslValue::String(draft_op_bytes.len().to_string())),
+                ("childGroups".into(), DslValue::String(emit.child_emits.len().to_string())),
                 ("opBytes".into(), DslValue::String(priced.to_string())),
             ]);
             Ok(result)
@@ -29441,7 +29628,7 @@ pub mod app {
                 mounted.pending_child_publication = Some(pending);
                 return Err(fault);
             }
-            let result = self.dispatch_emit_group(&mounted.verb, &pending.artifact_mutations, &pending.child_emits, &pending.description, Vec::new(), Vec::new(), UiDirtyScope::None, None, &mounted.meta).await;
+            let result = self.dispatch_emit_group(&mounted.verb, &pending.artifact_mutations, &pending.child_emits, &pending.description, Vec::new(), Vec::new(), UiDirtyScope::None, None, &mounted.meta, None).await;
             match result {
                 Ok(result) => {
                     mounted.artifact_generation = self.store.generation_now();
@@ -30683,6 +30870,14 @@ pub mod app {
                     drop(operation);
                     return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
+                if let Some(child) = transaction.children.last_mut() {
+                    let step = child.close_one(1, maximum_bytes);
+                    if step == PluginCloseStep::Complete {
+                        transaction.children.pop();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    return step;
+                }
             }
             if let Some(transaction) = self.pending_transaction.take() {
                 drop(transaction);
@@ -30710,7 +30905,7 @@ pub mod app {
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(wire) = self.last_emit_wire.as_mut() {
-                for bytes in [&mut wire.0, &mut wire.1, &mut wire.2] {
+                for bytes in [&mut wire.document, &mut wire.config, &mut wire.draft, &mut wire.children] {
                     if let Some(step) = Self::close_retained_bytes_page(bytes, maximum_bytes) {
                         return step;
                     }
@@ -32467,7 +32662,7 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "task-resume-emit", result).await)
         }
 
-        async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+        async fn take_last_emit_wire(&mut self) -> Option<EmitWire> {
             self.last_emit_wire.take()
         }
 
@@ -32479,14 +32674,24 @@ pub mod app {
             self.pending_transaction_proposal.take()
         }
 
-        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
+        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
             if self.pending_transaction.is_some() {
                 return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", "a transaction is already pending on this instance")) };
+            }
+            let children = match ChildEmit::decode_groups(prepared_child_ops) {
+                Ok(children) => children,
+                Err(fault) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(fault) },
+            };
+            if let Some(missing) = children.iter().find(|child| self.children.get(&(child.slot.clone(), child.child_id.clone())).is_none()) {
+                return TransactionPrepareOutcome {
+                    foreign: Vec::new(),
+                    rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.member-rejected", format!("owned child {:?} in slot {:?} is not held by this instance", missing.child_id, missing.slot))),
+                };
             }
             // 🔀️ Decodes EITHER wire form (contract §2/§5.3): pre-planned (`prepared_ops`
             // non-empty) carries its own `label`/`origin`; owner-mutation (`prepared_ops` empty)
             // decodes the single `payload` op and has no origin on the wire — see the 🚧️ note below.
-            let (ops, resolved_label, resolved_origin): (Vec<A::Mutation>, String, protocol::MutationOrigin) = if !prepared_ops.is_empty() {
+            let (ops, resolved_label, resolved_origin): (Vec<A::Mutation>, String, protocol::MutationOrigin) = if !prepared_ops.is_empty() || !children.is_empty() {
                 let mut decoded = Vec::with_capacity(prepared_ops.len());
                 for op_bytes in prepared_ops {
                     match <A::Mutation as ::protocol::OpBinary>::decode_op(op_bytes) {
@@ -32534,7 +32739,7 @@ pub mod app {
                 };
             }
             let base_generation = self.store.generation();
-            self.pending_transaction = Some(PendingTransaction { txn_id: txn_id.to_string(), ops, label: resolved_label, origin: resolved_origin, base_generation });
+            self.pending_transaction = Some(PendingTransaction { txn_id: txn_id.to_string(), ops, children, label: resolved_label, origin: resolved_origin, base_generation });
             TransactionPrepareOutcome { foreign, rejection: None }
         }
 
@@ -32556,8 +32761,11 @@ pub mod app {
                 self.pending_transaction = Some(pending);
                 return Err(Self::transaction_fault(FaultOrigin::Plugin, "transaction.generation-mismatch", message));
             }
-            let PendingTransaction { txn_id, ops, label, origin, .. } = pending;
+            let PendingTransaction { txn_id, ops, children, label, origin, .. } = pending;
             let description = if label.is_empty() { None } else { Some(label) };
+            if !children.is_empty() {
+                return self.commit_transaction_group(&txn_id, ops, children, description, origin, meta).await;
+            }
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             // 🔀️ Contract §5.6: this member's prepared ops land as exactly ONE `Edit` — the
             // one-edit-per-member invariant `CompositionCoordinator::undo_group`'s tail-based group
@@ -32582,6 +32790,9 @@ pub mod app {
         }
 
         async fn transaction_undo(&mut self, group_id: &str) -> Result<(), Fault> {
+            if !self.children.is_empty() {
+                return self.transaction_group_history("undo", group_id).await;
+            }
             if self.store.tail_group_id().await.as_deref() != Some(group_id) {
                 return Err(plugin_sdk_fault(format!("transaction_undo: this instance's tail edit does not belong to group {group_id:?}")));
             }
@@ -32591,6 +32802,9 @@ pub mod app {
         }
 
         async fn transaction_redo(&mut self, group_id: &str) -> Result<(), Fault> {
+            if !self.children.is_empty() {
+                return self.transaction_group_history("redo", group_id).await;
+            }
             match self.store.redo_tail().await {
                 Some((_, Some(tail_group))) if tail_group == group_id => {
                     self.store.redo().await.map_err(|error| plugin_sdk_fault(format!("{error:?}")))?;
@@ -32930,33 +33144,6 @@ pub mod app {
 
         async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
             store::print_document_pack(self.store.envelope()).await.map_err(|error| error.into_fault())
-        }
-
-        async fn artifact_pack_schema_hash(&self) -> Option<[u8; 32]> {
-            match <A::Snapshot as store::ArtifactPack>::record_spec() {
-                Some(spec) => Some(store::os_pack::schema_hash(&spec)),
-                None => None,
-            }
-        }
-
-        async fn artifact_genesis_pair(&self, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
-            artifact_app_genesis_pair::<A>(document_id).await.map_err(|error| error.into_fault())
-        }
-
-        async fn artifact_print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault> {
-            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(pack, spr).await.map_err(|error| error.into_fault())?;
-            let envelope = parsed.into_envelope();
-            let mirror = store::print_document_text(&envelope).await;
-            drop(envelope.into_owners());
-            mirror.map_err(|error| error.into_fault())
-        }
-
-        async fn artifact_apply_ops(&self, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
-            artifact_app_apply_ops::<A>(pack, spr, ops).await.map_err(|error| error.into_fault())
-        }
-
-        async fn artifact_replay_envelopes(&self, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
-            artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(|error| error.into_fault())
         }
 
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
@@ -33536,6 +33723,12 @@ pub mod app {
         pub fn app_document_schema(&self, app_id: &str) -> Option<&'static str> {
             self.apps.get(app_id).map(|factory| factory.document_schema)
         }
+
+        /// 🧬️ The registered app's `codec` answers — functions of its type, recorded at registration, so a codec
+        /// call constructs nothing.
+        pub fn app_codec(&self, app_id: &str) -> Option<ArtifactCodecTableV1> {
+            self.apps.get(app_id).map(|factory| factory.codec)
+        }
     }
 
     impl<PA: PluginApp> PluginProgram for Plugin<PA> {
@@ -33608,6 +33801,40 @@ pub mod app {
         pub read_only: bool,
     }
 
+    /// 📝 One locally buffered text edit committed through an artifact-owned action.
+    #[derive(Debug, PartialEq)]
+    pub struct TextDraftView {
+        pub surface_id: String,
+        pub text: String,
+        pub language: Option<String>,
+        pub action_id: String,
+        pub argument: String,
+        pub arguments: Option<UiValue>,
+        pub apply_label: String,
+        pub discard_label: String,
+        pub conflict_label: String,
+        pub applying_label: String,
+        pub cancel_label: String,
+        pub failed_label: String,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct TextDraftSettings<'a> {
+        read_only: bool,
+        edit_action: &'a str,
+        edit_argument: &'a str,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        edit_arguments: &'a Option<UiValue>,
+        commit: &'static str,
+        apply_label: &'a str,
+        discard_label: &'a str,
+        conflict_label: &'a str,
+        applying_label: &'a str,
+        cancel_label: &'a str,
+        failed_label: &'a str,
+    }
+
     pub struct TextWindowKit;
 
     impl WindowKit for TextWindowKit {
@@ -33625,8 +33852,8 @@ pub mod app {
                 "Text",
                 SurfaceKind::TextEditor,
                 "type",
-                vec![ActionDefinition::bounded_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)
-                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])
+                vec![ActionDefinition::bounded_catalog("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), ActionKind::Mutation)
+                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required()])
                     .describe(LocalizedLabel::native(
                         "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                         "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird.",
@@ -33636,8 +33863,16 @@ pub mod app {
         }
 
         fn render(view: &TextView) -> UiAssemblyResult<BuiltNode> {
+            Self::render_read_only(Self::KIND_ID, view)
+        }
+    }
+
+    impl TextWindowKit {
+        /// 📖️ Renders read-only text on a caller-owned surface identity.
+        pub fn render_read_only(surface_id: &str, view: &TextView) -> UiAssemblyResult<BuiltNode> {
             let scene = semio_framework_ui_scene::TextEditorScene {
                 buffer: view.text.clone(),
+                lanes: Vec::new(),
                 language: view.language.clone(),
                 selection_json: None,
                 tokens_json: None,
@@ -33654,9 +33889,28 @@ pub mod app {
                 newline_gates_json: None,
                 rename_json: None,
             };
-            let props = semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene).map_err(|error| ui_assembly_error_because("text-window.scene", error))?;
-            let builder = surface(props);
-            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("text-window.id"))?.try_build().map_err(|_| ui_assembly_error("text-window.build"))
+            scene_surface(surface_id, SurfaceKind::TextEditor, &scene)
+        }
+
+        /// 💾 Renders a prepopulated local draft with explicit, localized apply and discard controls.
+        pub fn render_draft(view: &TextDraftView) -> UiAssemblyResult<BuiltNode> {
+            let settings = TextDraftSettings {
+                read_only: false,
+                edit_action: &view.action_id,
+                edit_argument: &view.argument,
+                edit_arguments: &view.arguments,
+                commit: "explicit",
+                apply_label: &view.apply_label,
+                discard_label: &view.discard_label,
+                conflict_label: &view.conflict_label,
+                applying_label: &view.applying_label,
+                cancel_label: &view.cancel_label,
+                failed_label: &view.failed_label,
+            };
+            let settings_json = serde_json::to_string(&settings).map_err(|_| ui_assembly_error("text-window.draft-settings"))?;
+            let mut scene = semio_framework_ui_scene::TextEditorScene::base(view.text.clone(), view.language.clone(), None);
+            scene.settings_json = Some(settings_json);
+            scene_surface(&view.surface_id, SurfaceKind::TextEditor, &scene)
         }
     }
     //#endregion 🔖️TextWindowKit
@@ -33668,6 +33922,26 @@ pub mod app {
     pub struct TableView {
         pub columns: Vec<String>,
         pub rows: Vec<Vec<String>>,
+    }
+
+    /// ✏️ One table column whose text cells publish a local draft through an artifact action.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct EditableTableColumn {
+        pub index: usize,
+        pub action_id: String,
+        pub row_argument: String,
+        pub column_argument: Option<String>,
+    }
+
+    impl EditableTableColumn {
+        pub fn new(index: usize, action_id: impl Into<String>) -> Self {
+            Self { index, action_id: action_id.into(), row_argument: "row".into(), column_argument: Some("column".into()) }
+        }
+
+        pub fn without_column_argument(mut self) -> Self {
+            self.column_argument = None;
+            self
+        }
     }
 
     pub struct TableWindowKit;
@@ -33723,9 +33997,46 @@ pub mod app {
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
             let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
-            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|error| ui_assembly_error_because("table-window.scene", error))?;
-            let builder = surface(props);
-            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-window.id"))?.try_build().map_err(|_| ui_assembly_error("table-window.build"))
+            scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
+        }
+    }
+
+    impl TableWindowKit {
+        /// ✏️ Emits typed text-input cells that commit artifact-owned actions with stable row and column ordinals.
+        pub fn render_editable(view: &TableView, controller_id: &str, editable_columns: &[EditableTableColumn]) -> UiAssemblyResult<BuiltNode> {
+            let columns: Vec<serde_json::Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": index.to_string(), "label": label })).collect();
+            let rows: Vec<serde_json::Value> = view
+                .rows
+                .iter()
+                .enumerate()
+                .map(|(row_index, cells)| {
+                    let mut record = serde_json::Map::new();
+                    record.insert("id".into(), serde_json::Value::String(row_index.to_string()));
+                    for (column_index, cell) in cells.iter().enumerate() {
+                        let value = editable_columns.iter().find(|editable| editable.index == column_index).map_or_else(
+                            || serde_json::Value::String(cell.clone()),
+                            |editable| {
+                                let mut args = serde_json::Map::new();
+                                args.insert(editable.row_argument.clone(), serde_json::json!(row_index));
+                                if let Some(argument) = &editable.column_argument {
+                                    args.insert(argument.clone(), serde_json::json!(column_index));
+                                }
+                                serde_json::json!({
+                                    "kind": "editableText",
+                                    "value": cell,
+                                    "action": { "controllerId": controller_id, "action": editable.action_id.as_str(), "args": args }
+                                })
+                            },
+                        );
+                        record.insert(column_index.to_string(), value);
+                    }
+                    serde_json::Value::Object(record)
+                })
+                .collect();
+            let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
+            let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
+            let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+            scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
         }
     }
 
@@ -33988,15 +34299,23 @@ pub mod app {
         }
 
         fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
-            let mut children = BuiltChildren::default();
-            for (index, page) in view.pages.iter().enumerate() {
-                let id = UiText::try_format(format_args!("page-{index}")).ok_or_else(|| ui_assembly_error("document-window.page-id"))?;
-                let builder = text(ui_label(page.text.clone(), "document-window.page-text")?);
-                let page = builder.try_id(&id).map_err(|_| ui_assembly_error("document-window.page-id"))?.try_build().map_err(|_| ui_assembly_error("document-window.page-build"))?;
-                children.try_push(page).map_err(|_| ui_assembly_error("document-window.pages"))?;
-            }
-            let builder = column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("document-window.id"))?;
-            builder.try_children(children).map_err(|_| ui_assembly_error("document-window.pages"))?.try_build().map_err(|_| ui_assembly_error("document-window.build"))
+            Self::render_windowed(view, &TreeWindows::unhosted())
+        }
+    }
+
+    impl DocumentWindowKit {
+        /// 📄️ Pages are expandable and windowed; each complete page buffer uses the text scene carrier.
+        pub fn render_windowed(view: &DocumentView, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+            let pages: Vec<_> = view.pages.iter().enumerate().collect();
+            tree_window_section(windows, Self::KIND_ID, Label::default(), true, &pages, |(index, page)| {
+                let id = format!("page-{index}");
+                let item = ui::tree_item(ui_label((index + 1).to_string(), "document-window.page-label")?).try_id(&id).map_err(|_| ui_assembly_error("document-window.page-id"))?;
+                tree_window_item(windows, item, &id, *index == 0, &[*page], |page| {
+                    let mut scene = semio_framework_ui_scene::TextEditorScene::base(page.text.clone(), None, None);
+                    scene.settings_json = Some("{\"readOnly\":true}".into());
+                    scene_surface("content", SurfaceKind::TextEditor, &scene)
+                })
+            })
         }
     }
     //#endregion 🔖️DocumentWindowKit
@@ -34639,6 +34958,65 @@ pub mod app {
     pub async fn artifact_app_replay_envelopes<A: ArtifactApp>(pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, store::VcsError> {
         store::replay_envelopes_onto_pair::<A::Snapshot, A::Mutation>(pack, spr, envelopes, || A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners)).await
     }
+
+    /// 🧬️ The future one `codec` answer of an [`ArtifactCodecTableV1`] resolves to.
+    pub type ArtifactCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, Fault>> + 'a>>;
+
+    /// 🧬️ One registered app's `world actor` `codec` answers as plain functions of its type, recorded when the app
+    /// is registered. Every answer is a pure function of the app's TYPE — its snapshot record shape, its initial
+    /// snapshot and dialect, its owner catalogue — never of a constructed instance, so a `codec` call reads this
+    /// table and constructs no app: no store around an initial snapshot, no action registry, no window owners,
+    /// nothing to drain and close afterwards.
+    #[derive(Clone, Copy)]
+    pub struct ArtifactCodecTableV1 {
+        /// 🧬️ Structural fingerprint of the app's snapshot record shape — the same 32 bytes
+        /// `store::ArtifactCodec::pack_schema_hash` carries, read off `Snapshot::record_spec()`. `None` when the
+        /// snapshot is a hand-written `ArtifactPack` with no `RecordSpec`, exactly as the native codec table reports
+        /// `[0; 32]` for that case.
+        // 🚫️async: E4 fn-pointer slot
+        pub pack_schema_hash: fn() -> Option<[u8; 32]>,
+        /// 🌱️ The canonical empty document of the app's kind at `document_id`: its initial snapshot, its own
+        /// dialect, and an exactly zero history (no edits, changes, checkpoints or alternatives, and an empty cursor).
+        // 🚫️async: E4 fn-pointer slot
+        pub genesis: for<'a> fn(&'a str) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles>,
+        /// 📥️ `(pack, spr) -> (dsl, ops)` mirror of a pair of the app's kind — the pair-validation fence of a host
+        /// whose codec it does not link.
+        // 🚫️async: E4 fn-pointer slot
+        pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactTextFiles>,
+        /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to a pair of the app's kind and returns the next pair.
+        // 🚫️async: E4 fn-pointer slot
+        pub apply_ops: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles>,
+        /// 📜️ Folds one `os_spr::encode_envelopes` ledger stream onto a pair of the app's kind through the replica
+        /// merge gate (`store::replay_envelopes_onto_pair`).
+        // 🚫️async: E4 fn-pointer slot
+        pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles>,
+    }
+
+    /// 🧬️ The [`ArtifactCodecTableV1`] of every app built on `A`.
+    pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
+        fn pack_schema_hash<A: ArtifactApp>() -> Option<[u8; 32]> {
+            <A::Snapshot as store::ArtifactPack>::record_spec().map(|spec| store::os_pack::schema_hash(&spec))
+        }
+        fn genesis<A: ArtifactApp>(document_id: &str) -> ArtifactCodecFuture<'_, store::ArtifactPackFiles> {
+            Box::pin(async move { artifact_app_genesis_pair::<A>(document_id).await.map_err(|error| error.into_fault()) })
+        }
+        fn print_mirror<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactTextFiles> {
+            Box::pin(async move {
+                let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(pack, spr).await.map_err(|error| error.into_fault())?;
+                let envelope = parsed.into_envelope();
+                let mirror = store::print_document_text(&envelope).await;
+                drop(envelope.into_owners());
+                mirror.map_err(|error| error.into_fault())
+            })
+        }
+        fn apply_ops<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles> {
+            Box::pin(async move { artifact_app_apply_ops::<A>(pack, spr, ops).await.map_err(|error| error.into_fault()) })
+        }
+        fn replay_envelopes<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles> {
+            Box::pin(async move { artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(|error| error.into_fault()) })
+        }
+        ArtifactCodecTableV1 { pack_schema_hash: pack_schema_hash::<A>, genesis: genesis::<A>, print_mirror: print_mirror::<A>, apply_ops: apply_ops::<A>, replay_envelopes: replay_envelopes::<A> }
+    }
     //#endregion 🔖️ArtifactEditor
 
     //#region 🔖️ArtifactViewer
@@ -34650,6 +35028,21 @@ pub mod app {
         /// 🧩️ Read-only twin of `ArtifactEditor::Members` — the roster this viewer's composed children
         /// are opened through, carried by the app rather than by whoever registers it.
         type Members: store::SpaceMember + store::MemberFactory + Send + 'static = store::NoMembers;
+        /// 📖️ Supplies domain-owned decoding for saved documents and their editor-authored history.
+        fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        /// 🏗️ Restores a saved document through the viewer's retained validation and replay authority.
+        #[expect(clippy::result_large_err, reason = "A refused initialization returns ownership of the original completed envelope.")]
+        fn build_document_store_initialization_job(
+            envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+            _operation: semio_framework_job::OperationId,
+            _generation: semio_framework_job::Generation,
+        ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+            Err(envelope)
+        }
+
         /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
         /// adapter forwards these answers to `ArtifactApp`, so a `None` here beside a default disposer
         /// faulted every viewer close (the trusted codec probe's throwaway viewer included) with
@@ -35322,6 +35715,18 @@ pub mod app {
     }
 
     impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
+        fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+            V::build_envelope_decode_owner_bundle()
+        }
+
+        fn build_document_store_initialization_job(
+            envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+        ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+            V::build_document_store_initialization_job(envelope, operation, generation)
+        }
+
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             V::build_document_store_owners()
         }
@@ -35835,6 +36240,7 @@ pub mod app {
             // 🚫️async: E4 fn-pointer slot
             pub app_schema: fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>,
             pub document_schema: &'static str,
+            pub codec: super::ArtifactCodecTableV1,
             pub mutation_roster: Option<OwnerMutationRoster>,
             pub rights: Rights,
         }
@@ -35860,7 +36266,7 @@ pub mod app {
             if def.io.artifact_schema.is_empty() {
                 def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
             }
-            SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, mutation_roster: None, rights: Rights::Write }
+            SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, codec: super::artifact_codec_table::<EditorApp<E>>(), mutation_roster: None, rights: Rights::Write }
         }
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
@@ -35878,7 +36284,7 @@ pub mod app {
             if def.io.artifact_schema.is_empty() {
                 def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
             }
-            SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, mutation_roster: None, rights: Rights::Read }
+            SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, codec: super::artifact_codec_table::<ViewerApp<V>>(), mutation_roster: None, rights: Rights::Read }
         }
 
         //#endregion 🔖️SurfaceDeclaration
@@ -35940,6 +36346,7 @@ pub mod app {
             // 🚫️async: E4 fn-pointer slot
             pub create: fn(&AppDefinition) -> PA,
             pub document_schema: &'static str,
+            pub codec: super::ArtifactCodecTableV1,
         }
 
         /// 🏗️ Everything `PluginBuilder::try_build` folds into its own `app_defs`/
@@ -36148,7 +36555,7 @@ pub mod app {
                             // and stamped with the subset's dialect there, which is what makes them
                             // resolve for the viewer surface too (`manifest::examples_for_app`).
                             let examples = if surface.definition.role == AppRole::Editor { subset.examples.to_vec() } else { Vec::new() };
-                            result.app_defs.push((App { definition: definition.clone(), examples }, AppFactory { definition, create: surface.factory, document_schema: surface.document_schema }));
+                            result.app_defs.push((App { definition: definition.clone(), examples }, AppFactory { definition, create: surface.factory, document_schema: surface.document_schema, codec: surface.codec }));
                             result.app_schema_descriptors.push(surface.app_schema);
                             result.capabilities.extend(capability_rows_for(surface));
                         }
@@ -36240,7 +36647,7 @@ pub mod plugin_runtime {
     //! 📤️ WASM component export glue for plugin bundles.
 
     use crate::app::{
-        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
+        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EmitWire, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
         PresenceRosterAdmission, TransactionProposalDraft, TypedOperationLeftover, TypedOperationResultPage, TypedOperationResultToken,
     };
     use crate::{ArtifactApp, WindowConfigPack};
@@ -38720,14 +39127,13 @@ pub mod plugin_runtime {
         .await
     }
 
-    /// 🧬️ Resolves the ONE app of the installed bundle that owns `artifact_schema`, as a fresh
-    /// throwaway instance carrying nothing but its own initial document. This is the guest half of
-    /// `world actor`'s `codec` interface: a host that links no Rust codec for this package selects a
-    /// document kind by the same `schema` string `store::ArtifactCodec` is keyed by, and the bundle
-    /// answers from its own registered apps. An editor is preferred over a viewer because only an
-    /// editor's snapshot is the kind's creation authority; an ambiguous schema is refused rather
-    /// than resolved by order.
-    async fn plugin_artifact_codec_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<PA, Fault> {
+    /// 🧬️ Resolves the `codec` answers of the ONE app of the installed bundle that owns `artifact_schema`. This is
+    /// the guest half of `world actor`'s `codec` interface: a host that links no Rust codec for this package selects
+    /// a document kind by the same `schema` string `store::ArtifactCodec` is keyed by, and the bundle answers from its
+    /// own registered apps. An editor is preferred over a viewer because only an editor's snapshot is the kind's
+    /// creation authority; an ambiguous schema is refused rather than resolved by order. Nothing is constructed: the
+    /// answers are the functions of the owner's type its registration recorded ([`crate::app::ArtifactCodecTableV1`]).
+    fn plugin_artifact_codec<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<crate::app::ArtifactCodecTableV1, Fault> {
         if artifact_schema.is_empty() || artifact_schema.len() > 256 || artifact_schema.chars().any(char::is_control) {
             return Err(plugin_internal_fault("artifact codec schema identity is empty, oversized or control-bearing"));
         }
@@ -38737,12 +39143,7 @@ pub mod plugin_runtime {
         let program = runtime.plugin.try_borrow().map_err(|_| plugin_internal_fault("plugin factory authority busy"))?;
         let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
         let definition = artifact_codec_owner(program, artifact_schema)?;
-        let app = program.create_app(&definition.id).ok_or_else(|| plugin_internal_fault("artifact codec owner has no registered factory"))?;
-        if app.artifact_schema().await == artifact_schema || definition.dialect.artifact_kind == artifact_schema {
-            return Ok(app);
-        }
-        close_artifact_codec_app(app)?;
-        Err(plugin_internal_fault("artifact codec owner does not open the schema its registration declares"))
+        program.app_codec(&definition.id).ok_or_else(|| plugin_internal_fault("artifact codec owner has no registered codec"))
     }
 
     /// 🪪️ The apps of `program` that own `artifact_schema`: those whose registered type opens that document
@@ -38754,9 +39155,9 @@ pub mod plugin_runtime {
         program.manifest.apps.iter().filter(move |definition| program.app_document_schema(&definition.id) == Some(artifact_schema) || definition.dialect.artifact_kind == artifact_schema)
     }
 
-    /// 🎯️ The ONE app a codec call for `artifact_schema` constructs: the owning editor — only an editor's
-    /// snapshot is the kind's creation authority — else the owning viewer. Two owners of the same role are
-    /// refused rather than resolved by order, and no owner is refused; all of it decided on the declarations.
+    /// 🎯️ The ONE app whose codec answers `artifact_schema`: the owning editor — only an editor's snapshot is the
+    /// kind's creation authority — else the owning viewer. Two owners of the same role are refused rather than
+    /// resolved by order, and no owner is refused; all of it decided on the declarations.
     pub(crate) fn artifact_codec_owner<'a, PA: PluginApp>(program: &'a Plugin<PA>, artifact_schema: &'a str) -> Result<&'a crate::app::AppDefinition, Fault> {
         let (mut editor, mut viewer) = (None, None);
         for definition in artifact_codec_candidates(program, artifact_schema) {
@@ -38768,100 +39169,30 @@ pub mod plugin_runtime {
         editor.or(viewer).ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
     }
 
-    /// 🧹️ Drains one THROWAWAY codec app to its exact terminal-empty shell before releasing it —
-    /// the same `close_step`-until-`Complete` plus `close_terminal_is_empty` contract the runtime's
-    /// own instance-close job enforces, reduced to a synchronous drain because a codec app was never
-    /// opened, never bound an instance id and never attached a backbone, so nothing in it can block.
-    ///
-    /// 🪤️ This is the root of ticket 26/09/18 slice TC3c §5f. `plugin_artifact_codec_app` used to
-    /// construct every app of the installed bundle, keep one and DROP the rest, and each of the four
-    /// `codec` entry points then dropped the one it kept. `VcsArtifactApp` owns an `ArtifactStore`
-    /// whose `Drop` asserts that witness, and in a `panic = "abort"` wasm32 guest that assert IS the
-    /// `unreachable` the host reported: every `codec.genesis`, `codec.pack-schema-hash`,
-    /// `codec.print-mirror` and `codec.apply-ops` call trapped, for EVERY plugin whose bundle holds
-    /// more than one app — which is every plugin, since an artifact declares an editor and a viewer.
-    pub(crate) fn close_artifact_codec_app<PA: PluginApp>(mut app: PA) -> Result<(), Fault> {
-        for _ in 0..ARTIFACT_CODEC_APP_CLOSE_MAXIMUM_STEPS {
-            if app.close_terminal_is_empty() {
-                return Ok(());
-            }
-            // 🪦️ `?` is deliberately NOT used on this call: it would return while `app` is still
-            // owned here, dropping a live `ArtifactStore` and aborting the guest with exactly the
-            // `unreachable` this cursor exists to prevent. Every exit retains the app instead.
-            let step = match app.close_step(ARTIFACT_CODEC_APP_CLOSE_ITEMS_PER_STEP, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
-                Ok(step) => step,
-                Err(error) => return Err(retain_unclosed_artifact_codec_app(app, format!("throwaway artifact codec app close faulted: {error:?}"))),
-            };
-            match step {
-                crate::PluginCloseStep::Pending { .. } => {}
-                crate::PluginCloseStep::AwaitingInput { reason } | crate::PluginCloseStep::Blocked { reason } => {
-                    return Err(retain_unclosed_artifact_codec_app(app, format!("throwaway artifact codec app cannot close: {reason}")));
-                }
-                crate::PluginCloseStep::Complete => break,
-            }
-        }
-        if !app.close_terminal_is_empty() {
-            return Err(retain_unclosed_artifact_codec_app(app, "throwaway artifact codec app did not reach its terminal-empty witness".to_string()));
-        }
-        Ok(())
-    }
-
-    /// 🪦️ An app that could not be closed must not be DROPPED either: its `ArtifactStore`'s `Drop`
-    /// would abort the whole guest, turning a reportable fault into the very `unreachable` this
-    /// close cursor exists to prevent. The allocation is retained instead and the fault is returned.
-    /// A codec instance is created and thrown away per call, so the guest's whole linear memory goes
-    /// with it — leaking one app inside it costs nothing, while aborting costs the caller's answer.
-    fn retain_unclosed_artifact_codec_app<PA: PluginApp>(app: PA, detail: String) -> Fault {
-        std::mem::forget(app);
-        plugin_internal_fault(detail)
-    }
-
-    /// 🧹️ How many close units one throwaway codec app may spend. A never-opened app closes in a
-    /// handful of steps; the ceiling is what turns a close cursor that stops making progress into a
-    /// returned fault rather than an unbounded loop inside a guest call.
-    const ARTIFACT_CODEC_APP_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
-
-    /// 🧹️ Items per close unit, matching the runtime's own instance-close grant shape.
-    const ARTIFACT_CODEC_APP_CLOSE_ITEMS_PER_STEP: usize = 1_024;
-
     /// 🧬️ `codec.pack-schema-hash` — the kind's own 32-byte snapshot-record fingerprint.
     pub async fn plugin_artifact_pack_schema_hash<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<[u8; 32], Fault> {
-        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        let answered = app.artifact_pack_schema_hash().await;
-        close_artifact_codec_app(app)?;
-        answered.ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
+        let codec = plugin_artifact_codec(runtime, artifact_schema)?;
+        (codec.pack_schema_hash)().ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
     }
 
     /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
     pub async fn plugin_artifact_genesis<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
-        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        let produced = app.artifact_genesis_pair(document_id).await;
-        close_artifact_codec_app(app)?;
-        produced
+        (plugin_artifact_codec(runtime, artifact_schema)?.genesis)(document_id).await
     }
 
     /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
     pub async fn plugin_artifact_print_mirror<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault> {
-        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        let mirrored = app.artifact_print_mirror(pack, spr).await;
-        close_artifact_codec_app(app)?;
-        mirrored
+        (plugin_artifact_codec(runtime, artifact_schema)?.print_mirror)(pack, spr).await
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn plugin_artifact_apply_ops<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
-        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        let applied = app.artifact_apply_ops(pack, spr, ops).await;
-        close_artifact_codec_app(app)?;
-        applied
+        (plugin_artifact_codec(runtime, artifact_schema)?.apply_ops)(pack, spr, ops).await
     }
 
     /// 📜️ `codec.replay-envelopes` — the hub's Check In fold for an unlinked package.
     pub async fn plugin_artifact_replay_envelopes<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
-        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        let replayed = app.artifact_replay_envelopes(pack, spr, envelopes).await;
-        close_artifact_codec_app(app)?;
-        replayed
+        (plugin_artifact_codec(runtime, artifact_schema)?.replay_envelopes)(pack, spr, envelopes).await
     }
 
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes
@@ -40061,8 +40392,8 @@ pub mod plugin_runtime {
                 })
                 .await
                 .unwrap_or_default();
-                let (document_ops, config_ops, draft_ops) = emit_wire;
-                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics) });
+                let EmitWire { document: document_ops, config: config_ops, draft: draft_ops, children: child_ops } = emit_wire;
+                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics), child_ops });
                 push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
             }
             Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -40139,8 +40470,8 @@ pub mod plugin_runtime {
                 })
                 .await
                 .unwrap_or_default();
-                let (document_ops, config_ops, draft_ops) = emit_wire;
-                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics) });
+                let EmitWire { document: document_ops, config: config_ops, draft: draft_ops, children: child_ops } = emit_wire;
+                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics), child_ops });
                 push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
             }
             Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -40241,8 +40572,8 @@ pub mod plugin_runtime {
                     })
                     .await
                     .unwrap_or_default();
-                    let (document_ops, config_ops, draft_ops) = emit_wire;
-                    frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics) });
+                    let EmitWire { document: document_ops, config: config_ops, draft: draft_ops, children: child_ops } = emit_wire;
+                    frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics), child_ops });
                     push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                 }
                 Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -40938,11 +41269,11 @@ pub mod plugin_runtime {
                         Ok((result, emit_wire))
                     });
                     match dispatched.await {
-                        Ok((result, (document_ops, config_ops, draft_ops))) => {
+                        Ok((result, EmitWire { document: document_ops, config: config_ops, draft: draft_ops, children: child_ops })) => {
                             mutated = true;
                             let output = encode_wire_serialized(&result.output);
                             let diagnostics = encode_wire_serialized(&result.diagnostics);
-                            frames.push(protocol::AppFrame::Emit { in_reply_to: seq, document_ops, config_ops, draft_ops, output, diagnostics });
+                            frames.push(protocol::AppFrame::Emit { in_reply_to: seq, document_ops, config_ops, draft_ops, output, diagnostics, child_ops });
                             push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
@@ -40950,14 +41281,14 @@ pub mod plugin_runtime {
                 }
                 // 🔀️ Member state machine (contract §5.3-§5.10) — see `📓️w1-b-report.md` for the
                 // full frame/rejection-code table.
-                protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
+                protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops } => {
                     let decoded_origin = if origin.is_empty() { Ok(None) } else { decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some) };
                     match decoded_origin {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                         Ok(decoded_origin) => {
                             let outcome = with_instances_mut(runtime, |list| {
                                 let mut instance = find_instance(list, instance_id)?;
-                                Ok(resolve_ready(instance.app.transaction_prepare(&txn_id, &mutation_id, &payload, &prepared_ops, &label, decoded_origin)))
+                                Ok(resolve_ready(instance.app.transaction_prepare(&txn_id, &mutation_id, &payload, &prepared_ops, &prepared_child_ops, &label, decoded_origin)))
                             });
                             match outcome.await {
                                 Ok(outcome) => {
@@ -42968,7 +43299,7 @@ pub use app::{
     MAINTENANCE_STAGES,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
-pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
+pub use app::{tree_window_indexed_item, tree_window_indexed_section, tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —

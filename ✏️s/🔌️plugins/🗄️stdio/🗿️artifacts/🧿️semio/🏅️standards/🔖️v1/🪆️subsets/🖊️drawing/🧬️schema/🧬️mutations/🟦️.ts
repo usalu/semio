@@ -13,6 +13,7 @@
  * previously declared. None of the leaf structs carry `#[serde(rename_all = ...)]` (confirmed by
  * this artifact's own `🦀️.rs` doc comment), so every leaf's own field names are the literal Rust
  * snake_case names verbatim. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { DrawLayer, DrawNode, PathSegment, Rgba, SemioPoint2 } from "../📸️snapshot/🟦️";
 
 export type SemioPoint3 = { x: number; y: number; z: number };
@@ -125,4 +126,5 @@ export type SemioDrawingMutation =
   | { ReplacePath: ReplacePath }
   | { ReplaceFill: ReplaceFill }
   | { ChangeStrokeColor: ChangeStrokeColor }
-  | { ChangeStrokeWidth: ChangeStrokeWidth };
+  | { ChangeStrokeWidth: ChangeStrokeWidth }
+  | { SetSnapshot: SetSnapshot };

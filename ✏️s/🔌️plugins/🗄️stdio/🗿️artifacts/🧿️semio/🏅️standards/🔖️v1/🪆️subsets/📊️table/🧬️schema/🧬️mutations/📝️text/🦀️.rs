@@ -11,6 +11,7 @@ pub use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutat
 
 use crate::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::standards::v1::subsets::table::schema::mutations::{
+    set_snapshot::SetSnapshot,
     create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn, reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
 };
 use crate::standards::v1::subsets::table::schema::snapshot::{dec_cell_kind, dec_row, enc_cell_kind, enc_row};
@@ -46,8 +47,15 @@ fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
 
 //#region 🔖️OpText
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
+fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
+    if !value.len().is_multiple_of(2) { return Err("snapshot payload has odd hexadecimal length".into()); }
+    (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+}
+
 fn print_table_mutation(m: &SemioTableMutation) -> String {
     match m {
+        SemioTableMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioTableMutation::CreateColumn(p) => format!("createColumn:{},{},{}", enc_str(&p.name), enc_cell_kind(p.kind), enc_opt_usize(p.index)),
         SemioTableMutation::DeleteColumn(p) => format!("deleteColumn:{}", enc_str(&p.name)),
         SemioTableMutation::RenameColumn(p) => format!("renameColumn:{},{}", enc_str(&p.name), enc_str(&p.new_name)),
@@ -61,6 +69,13 @@ fn print_table_mutation(m: &SemioTableMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioTableMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("table mutation: missing ':' in {line:?}"))?;
     match tag {
         "createColumn" => {

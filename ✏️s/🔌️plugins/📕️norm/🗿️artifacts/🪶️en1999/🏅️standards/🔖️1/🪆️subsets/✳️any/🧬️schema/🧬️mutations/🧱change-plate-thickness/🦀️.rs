@@ -33,6 +33,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangePlateThick
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-plate-thickness", "change-plate-thickness")
+        protocol::LocalizedLabel::native("Change plate thickness", "Blechdicke ändern")
     }
 }

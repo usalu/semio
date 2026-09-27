@@ -60,9 +60,12 @@ use super::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
 pub enum SemioBrepMutation {
+    SetSnapshot(SetSnapshot),
     CreateVertex(create_vertex::CreateVertex),
     DeleteVertex(delete_vertex::DeleteVertex),
     CreateEdge(create_edge::CreateEdge),
@@ -83,7 +86,7 @@ pub enum SemioBrepMutation {
 /// `🧊️mutate-semio-brep`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
+pub const KINDS: &[&str] = &["set-snapshot", "create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -123,8 +126,15 @@ pub fn decode_semio_brep_mutation_json(text: &str) -> Result<SemioBrepMutation, 
 /// facet's now-`pub(crate)` hex/value primitives (one source of truth for entity encoding, same
 /// convention this file's pre-rewrite version and `🌊️flow`'s mutations facet both established).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
+fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
+    if !value.len().is_multiple_of(2) { return Err("snapshot payload has odd hexadecimal length".into()); }
+    (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+}
+
 fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
+        SemioBrepMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), p.tol),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), p.tol),
@@ -144,6 +154,13 @@ fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
+    if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
@@ -187,6 +204,7 @@ impl OpText for SemioBrepMutation {
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioBrepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_CREATE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-vertex");
 const TAG_DELETE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-vertex");
 const TAG_CREATE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-edge");
@@ -205,6 +223,7 @@ const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-ve
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
+        SemioBrepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioBrepMutation::CreateVertex(_) => TAG_CREATE_VERTEX,
         SemioBrepMutation::DeleteVertex(_) => TAG_DELETE_VERTEX,
         SemioBrepMutation::CreateEdge(_) => TAG_CREATE_EDGE,

@@ -1,0 +1,39 @@
+{
+  "provenance": {
+    "what": "React Section and Field compact-density text bands shared with the retained WGPU renderer.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx"
+    }
+  },
+  "density": {
+    "gap": 3.2,
+    "fieldLabelFontSize": 12.8,
+    "fieldLabelLineHeight": 19.2,
+    "fieldDetailFontSize": 11.2,
+    "fieldDetailLineHeight": 16.0,
+    "sectionTitleFontSize": 21.6,
+    "sectionTitleLineHeight": 30.4,
+    "sectionTitleBodyGap": 16.0,
+    "sectionTrailingMargin": 32.0
+  },
+  "section": {
+    "width": 140.0,
+    "title": "Localized settings",
+    "titleLines": 2,
+    "titleHeight": 60.8,
+    "contentTop": 76.8,
+    "trailingMargin": 32.0
+  },
+  "field": {
+    "width": 112.0,
+    "label": "Threshold value",
+    "description": "Shown before control",
+    "error": "Fix this value now",
+    "detailLines": 2,
+    "controlHeight": 22.4,
+    "controlTop": 57.6,
+    "errorTop": 83.2,
+    "totalHeight": 115.2
+  }
+}

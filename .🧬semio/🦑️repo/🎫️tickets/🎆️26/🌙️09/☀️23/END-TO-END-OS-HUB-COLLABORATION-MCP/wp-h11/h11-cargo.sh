@@ -9,7 +9,8 @@ export CARGO_BUILD_BUILD_DIR=${H11_BUILD_DIR:-/Users/ueli/Documents/semio/.🧬s
 export SEMIO_TEST_ARTIFACT_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-h11-test-artifacts/$LABEL"
 mkdir -p "$SEMIO_TEST_ARTIFACT_DIR" && chmod 700 "$SEMIO_TEST_ARTIFACT_DIR"
 echo "=== start $(date +%T) $LABEL: cargo $*" | tee "$LOG"
-nice -n 10 cargo "$@" >> "$LOG" 2>&1
+nice -n ${H11_NICE:-10} cargo "$@" >> "$LOG" 2>&1
 rc=$?
 echo "EXIT $rc $(date +%T)" | tee -a "$LOG"
 /usr/bin/grep -E '^error(\[|:)|test result|^test .* FAILED|panicked at|Summary|^        (FAIL|TIMEOUT|SIGABRT|SIGSEGV)' "$LOG" | head -60
+exit $rc

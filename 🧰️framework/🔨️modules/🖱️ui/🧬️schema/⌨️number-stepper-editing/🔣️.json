@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Number Stepper Editing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["uniform", "mixed", "validEdit", "boundedKeys", "boundedPointer", "hold"],
+  "properties": {
+    "uniform": { "$ref": "#/$defs/stepper" },
+    "mixed": { "$ref": "#/$defs/stepper" },
+    "validEdit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["input", "expectedValue", "expectedDisplay"],
+      "properties": {
+        "input": { "type": "string" },
+        "expectedValue": { "type": "number" },
+        "expectedDisplay": { "type": "string" }
+      }
+    },
+    "boundedKeys": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "value", "key", "binding", "expectedField", "expectedActionValue", "expectedDisplay"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "value": { "type": "number" },
+          "key": { "enum": ["ArrowUp", "ArrowDown"] },
+          "binding": { "enum": ["absolute", "delta"] },
+          "expectedField": { "enum": ["value", "delta"] },
+          "expectedActionValue": { "type": "number" },
+          "expectedDisplay": { "type": "string" }
+        }
+      }
+    },
+    "boundedPointer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "side", "disabled", "actionCount"],
+      "properties": {
+        "value": { "type": "number" },
+        "side": { "enum": ["minus", "plus"] },
+        "disabled": { "type": "boolean" },
+        "actionCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "hold": {
+      "type": "object", "additionalProperties": false,
+      "required": ["clockOriginSeconds", "delayMs", "intervalMs", "start", "atDelay", "atFirstInterval", "atSecondInterval", "actionCount"],
+      "properties": {
+        "clockOriginSeconds": { "type": "number", "minimum": 31536000 },
+        "delayMs": { "type": "integer", "minimum": 0 },
+        "intervalMs": { "type": "integer", "minimum": 1 },
+        "start": { "type": "number" },
+        "atDelay": { "type": "number" },
+        "atFirstInterval": { "type": "number" },
+        "atSecondInterval": { "type": "number" },
+        "actionCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "stepper": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "step", "uniform", "min", "max", "focusDisplay", "focusCaret"],
+      "properties": {
+        "value": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 },
+        "uniform": { "type": "boolean" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "focusDisplay": { "type": "string" },
+        "focusCaret": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

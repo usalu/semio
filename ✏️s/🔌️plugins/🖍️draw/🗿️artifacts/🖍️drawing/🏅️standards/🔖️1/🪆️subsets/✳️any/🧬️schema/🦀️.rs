@@ -597,17 +597,26 @@ fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> D
 }
 
 pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<DrawingSceneNode> {
+    flatten_drawing_document_with_translation(doc,None)
+}
+
+/// ↔️ Preview world-space movement through the same group traversal as the committed scene.
+pub fn flatten_drawing_document_with_translation(doc: &DrawingSnapshot, translation: Option<&(Vec<String>,[f64;2])>) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], translation: Option<&(Vec<String>,[f64;2])>, out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
                 continue;
             }
+            let mut parent=parent;
+            if let Some((ids,delta))=translation {
+                if ids.contains(&base.id) { parent[4]+=delta[0]; parent[5]+=delta[1]; }
+            }
             let first = out.len();
             match layer {
                 DrawingLayerNode::Group(group) => {
-                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), out);
+                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), translation, out);
                     continue;
                 }
                 DrawingLayerNode::Boolean(boolean) => {
@@ -670,7 +679,7 @@ pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<Dra
             for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); }
         }
     }
-    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &mut out);
+    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], translation, &mut out);
     out
 }
 
@@ -930,7 +939,7 @@ pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, 
     path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])
 }
 
-fn path_segments_bounds_with_matrix(segments: &[PathSegment], matrix: [f64;6]) -> Option<(f64, f64, f64, f64)> {
+pub(crate) fn path_segments_bounds_with_matrix(segments: &[PathSegment], matrix: [f64;6]) -> Option<(f64, f64, f64, f64)> {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
     let mut current = [0.0; 2];

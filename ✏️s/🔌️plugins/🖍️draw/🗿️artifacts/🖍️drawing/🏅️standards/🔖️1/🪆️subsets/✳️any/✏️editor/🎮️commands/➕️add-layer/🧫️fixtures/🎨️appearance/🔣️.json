@@ -1,0 +1,175 @@
+[
+  {
+    "kind": "shape:rect",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0.2,
+          0.7,
+          0.65,
+          1
+        ]
+      },
+      "stroke": {
+        "color": [
+          0.1,
+          0.15,
+          0.2,
+          1
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": null
+      }
+    }
+  },
+  {
+    "kind": "shape:ellipse",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0.2,
+          0.7,
+          0.65,
+          1
+        ]
+      },
+      "stroke": {
+        "color": [
+          0.1,
+          0.15,
+          0.2,
+          1
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": null
+      }
+    }
+  },
+  {
+    "kind": "shape:line",
+    "attributes": {
+      "fill": null,
+      "stroke": {
+        "color": [
+          0.1,
+          0.15,
+          0.2,
+          1
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": null
+      }
+    }
+  },
+  {
+    "kind": "shape:polygon",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0.2,
+          0.7,
+          0.65,
+          1
+        ]
+      },
+      "stroke": {
+        "color": [
+          0.1,
+          0.15,
+          0.2,
+          1
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": null
+      }
+    }
+  },
+  {
+    "kind": "path",
+    "attributes": {
+      "fill": null,
+      "stroke": {
+        "color": [
+          0.1,
+          0.15,
+          0.2,
+          1
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": null
+      }
+    }
+  },
+  {
+    "kind": "text",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    }
+  },
+  {
+    "kind": "group",
+    "attributes": {
+      "fill": null,
+      "stroke": null
+    }
+  },
+  {
+    "kind": "image",
+    "attributes": {
+      "fill": null,
+      "stroke": null
+    }
+  },
+  {
+    "kind": "boolean",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0.2,
+          0.7,
+          0.65,
+          1
+        ]
+      },
+      "stroke": null
+    }
+  },
+  {
+    "kind": "trace",
+    "attributes": {
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0.2,
+          0.7,
+          0.65,
+          1
+        ]
+      },
+      "stroke": null
+    }
+  }
+]

@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeActionNEd 
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change {} of {}/{}", "n_ed", self.member_id, self.action_id), &format!("{} von {}/{} ändern", "n_ed", self.member_id, self.action_id))
+        protocol::LocalizedLabel::native(&format!("Change characteristic axial force of action {}/{}", self.member_id, self.action_id), &format!("Charakteristische Normalkraft der Einwirkung {}/{} ändern", self.member_id, self.action_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }

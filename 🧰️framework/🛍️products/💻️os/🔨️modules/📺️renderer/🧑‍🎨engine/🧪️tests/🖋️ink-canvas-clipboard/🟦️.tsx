@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import Ajv2020 from "ajv/dist/2020.js";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import {
   InkCanvasHost,
@@ -20,6 +20,7 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
 const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
+const surfaceBehavior = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"), "utf8")) as any;
 
 type ClipboardDataStub = {
   readonly items: readonly unknown[];
@@ -36,7 +37,7 @@ function mountedHost(selectedIds: readonly string[] = [], activeUtility?: string
     componentKind: "ink-canvas",
     inkCanvas: {
       selectionJson: JSON.stringify(selectedIds),
-      activeUtility: "selectDirect",
+      activeUtility: activeUtility ?? "selectDirect",
       viewMode: "edit",
       interactive: true,
       documentJson: JSON.stringify(activeUtility == null ? fixture.document : { ...fixture.document, activeUtility }),
@@ -218,5 +219,33 @@ describe("InkCanvas clipboard", () => {
     fireEvent.pointerDown(root, { button: 0, clientX: 72, clientY: 80, pointerId: 8 });
     fireEvent.pointerUp(root, { button: 0, clientX: 72, clientY: 80, pointerId: 8 });
     expect(inkActions(actions).map((action) => action.args.phase)).toContain("commit");
+  });
+
+  it("retains accepted Note begin/live events while cancellation blocks stale continuation", async () => {
+    vi.useFakeTimers();
+    try {
+      const law = surfaceBehavior.cases.find((entry: any) => entry.id === "note-ink-canvas")!;
+      const { actions, root } = mountedHost([], law.utility);
+      fireEvent.pointerDown(root, { button: 0, buttons: 1, clientX: law.points.down.x, clientY: law.points.down.y, pointerId: 17 });
+      fireEvent.pointerMove(root, { buttons: 1, clientX: law.points.move.x, clientY: law.points.move.y, pointerId: 17 });
+      await vi.runOnlyPendingTimersAsync();
+      expect(inkActions(actions).map((action) => action.args.phase)).toEqual(law.acceptedBeforeCancel.map((entry: any) => entry.phase));
+
+      fireEvent.pointerCancel(root, { pointerId: 17, clientX: law.points.terminal.x, clientY: law.points.terminal.y });
+      const acceptedCount = inkActions(actions).length;
+      fireEvent.pointerMove(root, { buttons: 1, pointerId: 17, clientX: 80, clientY: 88 });
+      fireEvent.pointerUp(root, { button: 0, pointerId: 17, clientX: 80, clientY: 88 });
+      fireEvent.pointerCancel(root, { pointerId: 17 });
+      await vi.runOnlyPendingTimersAsync();
+      expect(inkActions(actions)).toHaveLength(acceptedCount);
+
+      fireEvent.pointerDown(root, { button: 0, buttons: 1, clientX: 96, clientY: 104, pointerId: 18 });
+      fireEvent.pointerMove(root, { buttons: 1, clientX: 112, clientY: 120, pointerId: 18 });
+      await vi.runOnlyPendingTimersAsync();
+      fireEvent.pointerUp(root, { button: 0, clientX: 112, clientY: 120, pointerId: 18 });
+      expect(inkActions(actions).slice(acceptedCount).map((action) => action.args.phase)).toEqual(["begin", "live", "commit"]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -31,16 +31,22 @@ struct PendingProjection {
     id: UiNodeId,
     depth: usize,
     origin: (f32, f32),
+    field_label: Option<ui_contract::Label>,
 }
 
 const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
 const SELECT_OPTION_KEY_INFIX: &str = "::option::";
+const SLIDER_EDITOR_KEY_SUFFIX: &str = "::editor";
 
 pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
     let ui_contract::Component::Select(select) = &record.component else { return None };
     let prefix = format!("{}{SELECT_OPTION_KEY_INFIX}", record.key.as_str());
     let value = key.strip_prefix(&prefix)?;
     select.items.iter().find(|item| item.value.as_str() == value).map(|item| item.value.as_str().to_string())
+}
+
+pub(crate) fn is_slider_accessibility_editor(record: &ui_contract::UiNodeRecord, key: &str) -> bool {
+    matches!(record.component, ui_contract::Component::Slider(_)) && key == format!("{}{SLIDER_EDITOR_KEY_SUFFIX}", record.key.as_str())
 }
 
 fn select_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
@@ -95,13 +101,28 @@ fn select_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, 
 pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNode> {
     let Some(document) = tree.document() else { return Vec::new() };
     let mut projection = Vec::new();
-    let mut stack = vec![PendingProjection { id: document.root_id(), depth: 0, origin: (0.0, 0.0) }];
+    let mut stack = vec![PendingProjection { id: document.root_id(), depth: 0, origin: (0.0, 0.0), field_label: None }];
     while let Some(pending) = stack.pop() {
         if projection.len() >= UI_DOCUMENT_NODES || pending.depth >= UI_ACCESSIBILITY_PROJECTION_DEPTH {
             continue;
         }
         let Some(record) = document.record(pending.id) else { continue };
         let mut node = accessibility_projection_node(record, pending.depth);
+        let mut slider_editor_text = None;
+        if node.label.is_none()
+            && matches!(
+                record.component,
+                ui_contract::Component::Input(_)
+                    | ui_contract::Component::Select(_)
+                    | ui_contract::Component::Toggle(_)
+                    | ui_contract::Component::Slider(_)
+                    | ui_contract::Component::NumberStepper(_)
+                    | ui_contract::Component::Ring(_)
+                    | ui_contract::Component::IconSelect(_)
+            )
+        {
+            node.label = pending.field_label.as_ref().map(|label| label.0.as_str().to_string());
+        }
         let mut origin = pending.origin;
         let mut children_visible = true;
         if let Some(mounted) = tree.document_node(pending.id) {
@@ -112,6 +133,19 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                 }
                 match &arena_node.spec.0 {
                     crate::wgpu::UiNode::Input(input) => node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone())),
+                    crate::wgpu::UiNode::Slider(slider) => {
+                        let value = arena_node.state.slider_draft_value.unwrap_or(slider.value);
+                        node.value_now = Some(value);
+                        node.value_text = Some(crate::wgpu::layout::slider_unit_label(value, slider.unit.as_deref()).unwrap_or_else(|| ui_contract::format_ui_number(value)));
+                        if let Some(edit) = arena_node.state.edit.as_ref() {
+                            node.focused = false;
+                            slider_editor_text = Some(edit.text.clone());
+                        }
+                    }
+                    crate::wgpu::UiNode::NumberStepper(stepper) => {
+                        node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { ui_contract::format_ui_number(stepper.value) } else { String::new() }));
+                        node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or_else(|| stepper.uniform.then_some(stepper.value));
+                    }
                     crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
                     crate::wgpu::UiNode::Toggle(toggle) => match toggle.appearance {
                         ui_contract::ToggleAppearance::Button => node.pressed = Some(toggle.presence.selected),
@@ -129,11 +163,23 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                 node.rect = Some([origin.0, origin.1, width, height]);
             }
         }
-        let select_open = tree
-            .document_node(pending.id)
-            .and_then(|mounted| tree.node(mounted))
-            .is_some_and(|arena_node| matches!(&arena_node.spec.0, crate::wgpu::UiNode::Select(_)) && arena_node.state.open);
+        let select_open = tree.document_node(pending.id).and_then(|mounted| tree.node(mounted)).is_some_and(|arena_node| matches!(&arena_node.spec.0, crate::wgpu::UiNode::Select(_)) && arena_node.state.open);
         projection.push(node.clone());
+        if let Some(text) = slider_editor_text {
+            if projection.len() < UI_DOCUMENT_NODES {
+                let mut editor = node.clone();
+                editor.key = format!("{}{SLIDER_EDITOR_KEY_SUFFIX}", record.key.as_str());
+                editor.role = "spinbutton".to_string();
+                editor.focusable = true;
+                editor.tabbable = true;
+                editor.actionable = true;
+                editor.focused = true;
+                editor.editable = true;
+                editor.value_now = text.parse().ok();
+                editor.value_text = Some(text);
+                projection.push(editor);
+            }
+        }
         if select_open {
             for virtual_node in select_accessibility_nodes(record, pending.depth, &node) {
                 if projection.len() >= UI_DOCUMENT_NODES {
@@ -145,7 +191,13 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
         if children_visible {
             for index in (0..record.children.len()).rev() {
                 if let Some(child) = record.children.get(index) {
-                    stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin });
+                    let field_label = match &record.component {
+                        ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Field => {
+                            document.record(*child).filter(|child| child.key.as_str().strip_suffix(".control") == Some(record.key.as_str())).and(props.label.clone())
+                        }
+                        _ => None,
+                    };
+                    stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin, field_label });
                 }
             }
         }
@@ -163,8 +215,8 @@ pub fn accessibility_announced(projection: &[AccessibilityProjectionNode]) -> Ve
 //#endregion ♿️Projection
 
 #[cfg(test)]
-#[path = "../../../🧪️tests/🔬️targets-wgpu-accessibility-projection/🦀️.rs"]
-mod tests;
-#[cfg(test)]
 #[path = "../../../🧪️tests/♿️retained-section-accessibility/🦀️.rs"]
 mod retained_section_collapse_tests;
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️targets-wgpu-accessibility-projection/🦀️.rs"]
+mod tests;

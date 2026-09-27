@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeConstructi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-construction-activity", "change-construction-activity")
+        protocol::LocalizedLabel::native("Change construction activity", "Bautätigkeit ändern")
     }
 }
 //#endregion 🔖️Payload

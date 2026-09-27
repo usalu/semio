@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateStainlessI
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert material {}", self.material.id),
-            &format!("Werkstoff setzen {}", self.material.id),
+            &format!("Update material {}", self.material.id),
+            &format!("Werkstoff {} aktualisieren", self.material.id),
         )
     }
     fn target(&self) -> Vec<String> {

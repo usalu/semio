@@ -8,7 +8,7 @@
 // #endregion Header
 
 import { parseDirectorySessionAuthorityJsonV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
-import { parseDirectoryEventPageV1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_PREFERENCE_PAGE_PATH_V1, parseDirectoryEventPageV1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
 import { directoryStreamWakeV1 } from "../../📇️directory/🟦️.ts";
 import { StreamMuxPortEndpointV1, type StreamMuxEndpointV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 
@@ -2345,12 +2345,9 @@ class DocumentBrowserActorReservation {
   async dispatchAction(raw: BrowserActorActionRequestV1): Promise<BrowserActorActionResultV1> {
     const request = parseBrowserActorActionRequestV1(raw);
     let invoked = false;
-    console.warn(`[DEBUG] c11 act start seq=${request.actionSequence} kind=${request.payload.kind} t=${Date.now()} patch=${this.pendingUiPatch !== null} refresh=${this.viewRefresh !== null}`);
     try {
       await this.awaitUiQuiescence();
-      console.warn(`[DEBUG] c11 act quiet seq=${request.actionSequence} t=${Date.now()}`);
       return await this.enqueueTurn(async () => {
-        console.warn(`[DEBUG] c11 act turn seq=${request.actionSequence} t=${Date.now()}`);
         // 🩹️ Offers are acknowledged inside the turn that made them, so this is null at a turn boundary today; it is
         // awaited (never refused) so the contract holds if an offer ever outlives its turn.
         if (this.pendingUiPatch !== null) await this.pendingUiPatch.settled;
@@ -2408,13 +2405,11 @@ class DocumentBrowserActorReservation {
           }
           if (terminal !== "command-complete") throw new Error("action-command-ingress-unconfirmed");
         }
-        console.warn(`[DEBUG] c11 act applied seq=${request.actionSequence} frames=${publication.frames} mutations=${mutationCount} t=${Date.now()}`);
         if (publication.frames !== 1) throw new Error("action-publication-mismatch");
         await this.refreshDocumentSurfaces(child, () => this.assertDocumentOwnerCurrent(), command !== null || mutationCount > 0);
         return browserActorActionDisposition(request, "guest-applied", mutationCount, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
       });
     } catch (error) {
-      console.warn(`[DEBUG] c11 act error seq=${request.actionSequence} invoked=${invoked} t=${Date.now()} ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
       const explicitRefusal = error instanceof Error && error.message === "action-guest-refused";
       if (invoked && !explicitRefusal) this.close();
       const reason = error instanceof Error && /^(action-owner-mismatch|action-child-unavailable|action-guest-refused)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
@@ -2768,14 +2763,12 @@ class DocumentBrowserActorReservation {
     const settled = result.then(() => undefined);
     settled.catch(() => {});
     this.pendingUiPatch = { offer, resolve, reject, timer, settled };
-    console.warn(`[DEBUG] c11 patch offer t=${Date.now()} surfaces=${offer.patches.map((patch) => `${patch.surface}@${patch.revision}`).join(",")}`);
     post({ ...offer, clientInstanceId: this.state.openClientInstanceId });
     return result;
   }
 
   settleUiPatch(result: BrowserActorUiPatchResultV1): void {
     const pending = this.pendingUiPatch;
-    console.warn(`[DEBUG] c11 patch result t=${Date.now()} pending=${pending !== null} verdicts=${result.verdicts.map((verdict) => `${verdict.surface}:${verdict.outcome}`).join(",")}`);
     if (pending === null || !browserActorUiPatchOwnerMatchesV1(pending.offer, result)) return;
     clearTimeout(pending.timer);
     this.pendingUiPatch = null;
@@ -3415,11 +3408,17 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
   }
 }
 
+/** 🚦️ The only hub directory routes a page's worker may call with the human's session: the space list and one space, the event
+ * page and the caller's own PREFERENCE page (each one canonical safe-decimal `after` and nothing else), the event stream and
+ * the command lane. Rows: `💻️os/🧫️fixtures/📇️directory/🚦️browser-directory-routes.json`. The preference page was missing, so
+ * every device's preference lane failed before it reached the network and no preference ever crossed devices (ticket
+ * 26/09/23 S16). */
 function browserDirectoryRequest(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
   const url = new URL(input, "http://hub-session.invalid");
   const method = init.method ?? "GET";
   const after = url.searchParams.get("after") ?? "";
-  const eventPage = url.pathname === "/directory/event-page/v1" && [...url.searchParams].length === 1 && /^(?:0|[1-9]\d*)$/u.test(after) && Number.isSafeInteger(Number(after));
+  const canonicalAfter = [...url.searchParams].length === 1 && /^(?:0|[1-9]\d*)$/u.test(after) && Number.isSafeInteger(Number(after));
+  const eventPage = (url.pathname === "/directory/event-page/v1" || url.pathname === DIRECTORY_PREFERENCE_PAGE_PATH_V1) && canonicalAfter;
   const allowed =
     (method === "GET" &&
       (((url.pathname === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") ||
@@ -4066,7 +4065,6 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
   }
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
-  console.warn(`[DEBUG] c11 relay batch=${batchId} envelopes=${envelopes.length} ids=${envelopes.map((envelope) => envelope.id).join(",")} t=${Date.now()}`);
   const wireEnvelopes = envelopes.map((envelope) => {
     const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
     const timestamp = nextWireTimestamp(state);

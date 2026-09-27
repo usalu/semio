@@ -15,12 +15,17 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 base64 = "0.22.1"
+json-patch = "4.1.0"
+semio-framework-ui-scene = { workspace = true }
 serde_json.workspace = true

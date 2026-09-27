@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireCompar
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fire-compartment-area", "change-fire-compartment-area")
+        protocol::LocalizedLabel::native("Change fire compartment floor area", "Grundfläche des Brandabschnitts ändern")
     }
 }
 //#endregion 🔖️Payload

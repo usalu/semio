@@ -1,3 +1,4 @@
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioGraphMutation schema — real facet mirror of the Rust `🦀️.rs` sibling.
 input CreateNodeInput { id: GraphNodeIdInput! kind: String! label: String! position: SemioPoint2Input! ports: [SemioGraphPortInput!]! properties: [SemioValueEntryInput!]! }
 input DeleteNodeInput { id: GraphNodeIdInput! }
@@ -16,3 +17,4 @@ input GraphEdgeIdInput { value: String! }
 input SemioPoint2Input { x: Float! y: Float! }
 input SemioGraphPortInput { name: String! kind: String! }
 input SemioValueEntryInput { key: String! value: String! }
+input SemioGraphMutation { set_snapshot: SetSnapshot }

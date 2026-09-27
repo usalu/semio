@@ -131,7 +131,8 @@ fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: None,
-        inline_toolbar: None, detail: None,
+        inline_toolbar: None,
+        detail: None,
         dimmed: None,
         menu: None,
     }
@@ -214,7 +215,7 @@ fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
 fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
     let mut tree = UiTree::new();
     let nested = UiTreeItemNode { window: None, granularity: None, items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
-    let ui = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
+    let ui = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
     tree.apply_tree(&ui);
     let root = tree.root.unwrap();
 
@@ -243,11 +244,12 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         window: None,
         granularity: None,
         control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
-        inline_toolbar: None, detail: None,
+        inline_toolbar: None,
+        detail: None,
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
         ..tree_item("leaf", "Leaf")
     };
-    let ui = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
+    let ui = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
     tree.apply_tree(&ui);
     let root = tree.root.unwrap();
     let section = tree.children(root).next().unwrap();
@@ -268,7 +270,7 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
     assert!(!any_dirty(&tree, root), "re-applying an identical Select must not dirty its synthesized rows");
 
     let mut tree = UiTree::new();
-    let tree_ui_value = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }], None);
+    let tree_ui_value = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }], None);
     tree.apply_tree(&tree_ui_value);
     let root = tree.root.unwrap();
     clear_dirty(&mut tree, root);
@@ -276,3 +278,29 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
     assert!(!any_dirty(&tree, root), "re-applying an identical Tree must not dirty its synthesized rows");
 }
 //#endregion 🔖️CompositeExpansionTests
+
+#[test]
+fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
+    let field = |error: Option<&str>| {
+        UiNode::Field(crate::wgpu::component::ui::UiFieldNode {
+            id: "field".into(),
+            label: Label::data("Field"),
+            description: Some("Description".into()),
+            required: None,
+            error: error.map(String::from),
+            child: Box::new(button("field.control", "Control")),
+            presence: UiPresence::default(),
+            menu: None,
+        })
+    };
+    let mut tree = UiTree::new();
+    tree.apply_tree(&field(None));
+    let root = tree.root.expect("field root");
+    clear_dirty(&mut tree, root);
+
+    tree.apply_tree(&field(Some("Validation error")));
+
+    let node = tree.node(root).expect("retained field");
+    assert!(node.flags.contains(NodeFlags::DIRTY_LAYOUT));
+    assert!(node.flags.contains(NodeFlags::DIRTY_PAINT));
+}

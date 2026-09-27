@@ -886,40 +886,62 @@ fn the_command_dock_opens_the_expanded_commands_staged_form() {
     let key = command_address_stable_key(&entry.address);
     let category = entry.definition.category.clone();
     shell.expanded_command_id = Some(key.clone());
-    let UiNode::Stack(panel) = shell.build_command_category_ui(&category) else { panic!("expected a stack root") };
-    let UiNode::Section(form) = panel.children.first().expect("the form section") else { panic!("the expanded form is the FIRST section, so a bottom anchor paints it above the list") };
+    let UiNode::Tree(panel) = shell.build_command_category_ui(&category) else { panic!("expected a Tree root") };
+    let form = panel.sections.first().expect("the expanded form is the FIRST section, so a bottom anchor paints it above the list");
     assert_eq!(form.id, format!("command.category.{category}.form"));
-    let buttons: Vec<&str> = form.children.iter().filter_map(|node| if let UiNode::Button(button) = node { button.id.as_deref() } else { None }).collect();
+    assert_eq!(form.default_open, None, "React TreeDataSection defaults closed");
+    let toolbar = form.header_toolbar.as_ref().expect("form header toolbar");
+    let buttons: Vec<&str> = toolbar.children.iter().filter_map(|node| if let UiNode::Button(button) = node { button.id.as_deref() } else { None }).collect();
     assert_eq!(buttons.len(), 2, "🎛️ Execute and Reset, React's own two section actions");
     assert!(buttons[0].ends_with("-execute") && buttons[1].ends_with("-reset"));
-    let arg_rows = form.children.iter().filter(|node| matches!(node, UiNode::Field(_))).count();
+    let arg_rows = form.items.iter().filter(|row| row.control.is_some()).count();
     assert_eq!(arg_rows, entry.definition.args.len(), "🎛️ one control per declared argument");
-    let list = panel.children.iter().find_map(|node| if let UiNode::Section(section) = node { (section.id == "command.category.list").then_some(section) } else { None });
-    let listed: Vec<String> = list.map(|section| section.children.iter().filter_map(|node| if let UiNode::Select(select) = node { Some(select.id.clone()) } else { None }).collect()).unwrap_or_default();
-    assert!(!listed.contains(&format!("shell.commands.{}", entry.definition.id)), "🎛️ the expanded command is not also listed");
+    let list = panel.sections.iter().find(|section| section.id == "command.category.list");
+    let listed: Vec<&str> = list.map(|section| section.items.iter().map(|row| row.id.as_str()).collect()).unwrap_or_default();
+    let expanded_id = format!("command.{}", key.replace(':', "."));
+    assert!(!listed.contains(&expanded_id.as_str()), "🎛️ the expanded command is not also listed");
+    let records = panel_ui_records("command.fixture", &UiNode::Tree(panel)).expect("command Tree projects");
+    let form_record = records.iter().find(|record| record.key.as_str() == format!("command.category.{category}.form")).expect("form record");
+    let ui_contract::Component::TreeSection(props) = &form_record.component else { panic!("form is a TreeSection") };
+    let toolbar_id = props.header_toolbar.expect("TreeSection carries its header Toolbar relation");
+    let toolbar_record = records.iter().find(|record| record.id == toolbar_id).expect("toolbar record");
+    assert!(matches!(&toolbar_record.component, ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Toolbar));
+    assert_eq!(toolbar_record.children.len(), 2);
+    assert!(toolbar_record.children.iter().all(|id| records.iter().find(|record| record.id == *id).is_some_and(|record| matches!(&record.component, ui_contract::Component::Button(_)))));
 }
 
 /// 🎛️ An Execute is DISABLED while a required argument is unstaged — React's `missing.length > 0` gate.
 #[test]
 fn execute_is_disabled_until_every_required_argument_is_staged() {
     let mut shell = fresh_state();
-    let entry = shell
-        .resolved_commands()
-        .into_iter()
-        .find(|entry| entry.definition.in_palette && entry.definition.args.iter().any(|arg| arg.required))
-        .map(|entry| (command_address_stable_key(&entry.address), entry.definition.category.clone(), entry.definition.args.iter().find(|arg| arg.required).expect("a required arg").id.clone()));
-    let Some((key, category, arg_id)) = entry else {
+    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && ShellState::resolved_execute_args(&entry.definition.args, &serde_json::Map::new()).is_none()).and_then(|entry| {
+        let arg = entry.definition.args.iter().find(|arg| arg.required && arg.default.is_none())?;
+        let value = match arg.control() {
+            semio_framework::ActionArgControl::Select { options } => serde_json::Value::String(options.first()?.value.clone()),
+            semio_framework::ActionArgControl::Toggle => serde_json::Value::Bool(true),
+            semio_framework::ActionArgControl::Number { min, .. } => serde_json::json!(min.unwrap_or(0.0)),
+            semio_framework::ActionArgControl::Slider { min, .. } => serde_json::json!(min),
+            _ => serde_json::Value::String("x".into()),
+        };
+        Some((command_address_stable_key(&entry.address), entry.definition.category.clone(), arg.id.clone(), value))
+    });
+    let Some((key, category, arg_id, value)) = entry else {
         eprintln!("[DEBUG] no os command declares a required argument — gate exercised by the assembler only");
         return;
     };
     shell.expanded_command_id = Some(key.clone());
     let disabled = |shell: &ShellState| {
-        let UiNode::Stack(panel) = shell.build_command_category_ui(&category) else { panic!("stack root") };
-        let UiNode::Section(form) = panel.children.first().expect("form") else { panic!("form section") };
-        form.children.iter().any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)))
+        let UiNode::Tree(panel) = shell.build_command_category_ui(&category) else { panic!("Tree root") };
+        let form = panel.sections.first().expect("form section");
+        form.header_toolbar
+            .as_ref()
+            .expect("header toolbar")
+            .children
+            .iter()
+            .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)))
     };
     assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
-    shell.staged_command_args.entry(key).or_default().insert(arg_id, serde_json::Value::String("x".into()));
+    shell.staged_command_args.entry(key).or_default().insert(arg_id, value);
     assert!(!disabled(&shell), "🎛️ staging it enables Execute");
 }
 //#endregion 🎛️StagedCommandForm

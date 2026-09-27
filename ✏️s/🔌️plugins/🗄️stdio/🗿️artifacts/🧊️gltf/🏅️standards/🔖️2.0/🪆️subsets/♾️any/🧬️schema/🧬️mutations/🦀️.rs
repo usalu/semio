@@ -125,10 +125,13 @@ pub use super::unbind_primitive_material::UnbindPrimitiveMaterialMutation;
 pub use super::unbind_scene_root_node::UnbindSceneRootNodeMutation;
 
 /// 🧬️ The complete glTF 2.0 semantic mutation vocabulary.
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf")]
 pub enum GltfMutation {
+    SetSnapshot(SetSnapshot),
     BindDefaultScene(BindDefaultSceneMutation),
     BindMorphTargetAttribute(BindMorphTargetAttributeMutation),
     BindNodeCamera(BindNodeCameraMutation),

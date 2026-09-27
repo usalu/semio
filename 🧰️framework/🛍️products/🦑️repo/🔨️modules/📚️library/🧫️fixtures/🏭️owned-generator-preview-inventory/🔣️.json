@@ -42,6 +42,7 @@
     "framework-manifest",
     "graph-catalog",
     "jco-package-adapter",
+    "mutation-source-authority",
     "playground-session",
     "plugin-registry",
     "print-latex-tokens",

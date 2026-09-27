@@ -12,10 +12,8 @@
   "exports": {
     ".": "./🟦️.ts"
   },
-  "dependencies": {
-    "ajv": "^8.20.0"
-  },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "typescript": "^5.9.3"
   },
   "author": {

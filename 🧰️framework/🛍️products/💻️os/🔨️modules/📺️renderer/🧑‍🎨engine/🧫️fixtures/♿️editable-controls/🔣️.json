@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "kind": "text",
+      "label": {
+        "en": "Name",
+        "de": "Name"
+      },
+      "value": "Rectangle",
+      "draft": "Renamed"
+    },
+    {
+      "kind": "number",
+      "label": {
+        "en": "Position X",
+        "de": "Position X"
+      },
+      "value": "0",
+      "draft": "120"
+    },
+    {
+      "kind": "longText",
+      "label": {
+        "en": "Text",
+        "de": "Text"
+      },
+      "value": "First",
+      "draft": "Second"
+    },
+    {
+      "kind": "color",
+      "label": {
+        "en": "Fill",
+        "de": "Füllung"
+      },
+      "value": "#33b3a6",
+      "draft": "#ff0000"
+    },
+    {
+      "kind": "select",
+      "label": {
+        "en": "Blend Mode",
+        "de": "Mischmodus"
+      },
+      "value": "normal"
+    },
+    {
+      "kind": "number",
+      "label": {
+        "en": "Mixed mask position",
+        "de": "Gemischte Maskenposition"
+      },
+      "value": "",
+      "draft": "12.5"
+    }
+  ],
+  "commitCounts": {
+    "untouched": 0,
+    "edited": 1,
+    "repeatedBlur": 1
+  },
+  "commitGestures": [
+    "blur",
+    "enter"
+  ],
+  "selectionChange": {
+    "first": "paint.a",
+    "next": "paint.b",
+    "value": "0",
+    "draft": "12.5"
+  }
+}

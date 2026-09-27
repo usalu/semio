@@ -135,3 +135,41 @@ fn sha256_agrees_with_the_sha2_oracle_across_lengths() {
         assert_eq!(segmented.finalize(), oracle, "segmented length {length}");
     }
 }
+
+/// 🔑️ RFC 2104 HMAC and RFC 8018 PBKDF2 composed over the third-party `sha2` oracle.
+fn oracle_hmac(key: &[u8], message: &[u8]) -> [u8; 32] {
+    use sha2::Digest;
+    let mut block = [0u8; 64];
+    if key.len() > 64 {
+        block[..32].copy_from_slice(&sha2::Sha256::digest(key));
+    } else {
+        block[..key.len()].copy_from_slice(key);
+    }
+    let inner = sha2::Sha256::new().chain_update(block.map(|byte| byte ^ 0x36)).chain_update(message).finalize();
+    sha2::Sha256::new().chain_update(block.map(|byte| byte ^ 0x5c)).chain_update(inner).finalize().into()
+}
+
+#[test]
+fn hmac_and_pbkdf2_agree_with_the_rfc_composition_over_the_sha2_oracle() {
+    for (key_len, message_len) in [(0, 0), (3, 43), (32, 32), (64, 64), (65, 7), (200, 1000)] {
+        let key: Vec<u8> = (0..key_len).map(|index| (index * 7 + 1) as u8).collect();
+        let message: Vec<u8> = (0..message_len).map(|index| (index * 13 + 5) as u8).collect();
+        let mac = HmacSha256::new(&key);
+        assert_eq!(mac.mac(&message), oracle_hmac(&key, &message), "hmac key {key_len} message {message_len}");
+        if let Ok(fixed) = <[u8; 32]>::try_from(message.as_slice()) {
+            assert_eq!(mac.mac32(&fixed), mac.mac(&message), "mac32 key {key_len}");
+        }
+    }
+    let (password, salt) = (b"correct horse battery staple".as_slice(), [0x2au8; 16]);
+    let mut seed = salt.to_vec();
+    seed.extend_from_slice(&1u32.to_be_bytes());
+    let mut block = oracle_hmac(password, &seed);
+    let mut expected = block;
+    for _ in 1..1_000 {
+        block = oracle_hmac(password, &block);
+        for (sum, byte) in expected.iter_mut().zip(block) {
+            *sum ^= byte;
+        }
+    }
+    assert_eq!(pbkdf2_sha256(password, &salt, 1_000), expected);
+}

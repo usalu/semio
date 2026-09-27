@@ -764,13 +764,7 @@ fn hub_artifact_creation_section(state: &HubWorkspaceState, locale: Locale) -> U
         children.push(button(&format!("{HUB_ARTIFACT_CREATION_ID}.kind.{}", kind.kind_id), if selected { IconName::Check } else { IconName::CircleDot }, label, descriptor(action::SELECT_ARTIFACT_KIND, one_arg("kindId", &kind.kind_id)), !busy));
     }
     children.push(input(HUB_ARTIFACT_NAME_INPUT_ID, &creation.name_draft, hub_artifact_creation_label(HubArtifactCreationLabel::Name, locale), action::SET_ARTIFACT_NAME, Some(action::CREATE_ARTIFACT)));
-    children.push(button(
-        &format!("{HUB_ARTIFACT_CREATION_ID}.create"),
-        IconName::Plus,
-        hub_artifact_creation_label(HubArtifactCreationLabel::Create, locale),
-        descriptor(action::CREATE_ARTIFACT, None),
-        hub_artifact_creation_intent(state).is_some(),
-    ));
+    children.push(button(&format!("{HUB_ARTIFACT_CREATION_ID}.create"), IconName::Plus, hub_artifact_creation_label(HubArtifactCreationLabel::Create, locale), descriptor(action::CREATE_ARTIFACT, None), hub_artifact_creation_intent(state).is_some()));
     if let Some(operation) = &creation.operation {
         let phase = hub_artifact_creation_phase_str(operation.phase);
         children.push(tagged_row(hub_artifact_creation_label(HubArtifactCreationLabel::Heading, locale), &[("data-semio-hub-artifact-creation", operation.intent.request_id.as_str()), ("data-semio-hub-artifact-creation-phase", phase)]));

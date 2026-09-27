@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📕️ Norm TypeScript package. */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -82,27 +82,13 @@ class TestScript extends BundleScript {
     }
     console.log(`norm retained cohort ok: ${fixture.apps.length} editors × ${fixture.routes.length} migrated routes, ${classified} descriptor rows carried a classification`);
     if (classified === 0) console.warn("norm retained cohort: the committed 🔣️.json predates interactiveJob — re-run describe to make the drift check bite");
-    const examples = [
-      ["🌬️din16798", "🎬️demo"],
-      ["⚡️din18599", "🎬️demo"],
-      ["🧱️din4108", "🎬️demo"],
-      ["⚖️en1990", "🏢️high-consequence-office"],
-      ["🏋️en1991", "🔥️retail-hydrocarbon-fire"],
-      ["🏛️en1992", "🛢️liquid-retaining-fem-anchor"],
-      ["🔩️en1993", "🔩️high-strength-connection"],
-      ["🧩️en1994", "🌉️composite-bridge-girder"],
-      ["🪵️en1995", "🌉️glulam-footbridge"],
-      ["🪨️en1996", "🧱️loadbearing-wall"],
-      ["🌍️en1997", "🎬️demo"],
-      ["🫨️en1998", "🏢️seismic-rc-frame"],
-      ["🪶️en1999", "🏠️aluminium-roof-purlin"],
-      ["📇️iso16757", "🎬️demo"],
-      ["🏭️vdi3805", "🎬️demo"],
-    ] as const;
-    const tests = examples.flatMap(([artifact, example]) => {
-      const subset = join(plugin, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any");
-      return [join(subset, "📚️examples", example, "🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")];
+    const artifacts = join(plugin, "🗿️artifacts");
+    const tests = readdirSync(artifacts, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((artifact) => {
+      const subset = join(artifacts, artifact.name, "🏅️standards/🔖️1/🪆️subsets/✳️any");
+      const examples = existsSync(join(subset, "📚️examples")) ? readdirSync(join(subset, "📚️examples")).map((example) => join(subset, "📚️examples", example, "🧪️tests/🧩️example/🟦️.ts")) : [];
+      return [...examples, join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")].filter((path) => existsSync(path));
     });
+    tests.push(join(plugin, "🧪️tests/🏷️mutation-label-census/🟦️.ts"));
     runCmd(process.execPath, ["test", ...tests]);
   }
 }

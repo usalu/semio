@@ -183,6 +183,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/unbind-representation/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

@@ -53,3 +53,30 @@ Native check exposed DSL enum/required-field codec declaration errors in the new
 Exact arc subdivision, affine arc bounds, nested canvas picking, ancestor visibility/locking and frontmost picking are implemented with shared fixtures. See [Path Editing](📐️path-editing.md). Native library checks for the path command and selection geometry passed; native tests remain live. TypeScript arc/extrema tests passed (13 tests, 264 assertions, 26 field-patch cases and 27 publication routes).
 
 [Runtime Verification](🖥️runtime-verification.md) records the actual blank browser result and pending activation. No browser workflow is claimed working. The goal and ticket remain open.
+
+## Regression Verification Checkpoint
+
+Resolved the full native suite's twelve failures. Production corrections remove close-only phantom path bounds and decode Boolean child layer IDs without confusing dots or Unicode in IDs. Fixture corrections use typed numeric comparisons, real retained envelope admission, explicit inspector pages and drawable stroke targets. Registered editor runtime verifies drag preview/cancel/commit and exact undo/redo for contour joins, segment conversion and whole-shape conversion. The final full native suite passes 327/327 (no skips). See `🖥️runtime-verification.md`, `↔️direct-manipulation.md`, and `📐️path-editing.md` for evidence and limitations. Goal remains active.
+
+## Verified Group Movement and First Browser Workflow
+
+The new full native suite passes 331/331. Browser inspection now reaches actual local Draw editing: layer creation and selection expose the real property controls. This revealed invisible creation defaults, missing automatic selection and an unfitted initial camera, all recorded in `🖥️runtime-verification.md`. These are next concrete usability fixes. The current targeted component/descriptor build remains live (21529); the hub build failed on the remaining eleven lifetime errors after its observability response type was corrected. Goal/ticket remain active.
+
+## Creation Workflow Repair
+
+The browser-discovered unpainted/unselected creation problem is addressed by a shared editor creation policy. Add Layer and gesture commits now initialize visible paint and request framework selection of the created IDs. Existing explicitly supplied paint is preserved. Rust and TypeScript share ten appearance fixtures; the TypeScript/Immer oracle passes 24 tests/948 assertions. The full native suite passed 334/334 after the paint and selection change, including registered editor layer-panel, rectangle tool and pen creation.
+
+A targeted regression then reproduced repeated pen-draft identity reuse (`tests-draft-identity-red.txt`: failed on the second pen creation). Retained pen/polygon draft completion now uses the same document/operation-aware identity assignment as Add Layer. The helper was extracted without changing Add Layer's ID algorithm. Each retained draft captures its exact operation context; the fallback fixture path also checks existing document IDs. The full post-fix native run is active as 38978 (`tests-creation-final.txt`). No passing post-fix result is yet claimed.
+
+The prior matching component/descriptor build 21529 succeeded but predates this creation workflow repair. A new matching build and browser verification remain necessary. Initial camera framing and individually labeled inspector controls remain open findings.
+
+### Creation Verification Complete in Native Runtime
+
+The post-fix full suite passed: **335 tests run, 335 passed, zero skipped**, assertion duration 2.028s, Nx task 17.3s (`tests-creation-final.txt`). This includes visible/default-preserving creation paint, immediate selection and distinct repeated pen/polygon drafts. It supersedes the pending native identity-fix status. TypeScript remains passing at 24 tests/948 assertions. `git diff --check` passes.
+
+A fresh matching Draw-only component/descriptor build is now running (`draw-describe-creation.txt`) for browser verification. The previous matching build is terminal-successful and must not be polled or restarted as if it were still active. Browser creation controls should be retested only after the new build completes, because hot reload reset the demo during the prior browser edit attempt. No browser paint/automatic-selection pass is claimed yet.
+
+
+## Inspector Usability Dispatch and Accessibility
+
+Corrected Draw blur input bindings to Commit for property, fill/gradient and path-coordinate edits. Restored labels and disabled states in the shared React input/select interpreter. Added neutral event/locale fixtures, a native projection regression, and 20 mounted React cases with a third-party accessible-name oracle. Browser verification now covers rename, position persistence across selection, locked controls, and undo/redo of locking; see `🖥️runtime-verification.md` for exact evidence and test limits. Full native validation remains unresolved after two runner budget terminations. Canvas framing, direct manipulation and the remaining acceptance matrix are still open; the overall goal and ticket remain active.

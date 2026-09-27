@@ -23,3 +23,5 @@ record remove-tag tag=6
 field payload bytes
 record replace-pixels tag=7
 field payload bytes
+record set-snapshot tag=8
+field payload bytes

@@ -33,7 +33,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 use crate::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_framework::{io::io_compose_via, io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_artifact_stdio_png::PngSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{compose_affine, flatten_segments, semio_transform_affine, transformed_segments};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
@@ -83,63 +83,6 @@ fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) 
         format_kind: counterpart.artifact_kind.into(),
         format_standard: counterpart.standard.0.into(),
         format_subset: counterpart.subset.0.into(),
-    }
-}
-
-fn semio_transform_from_raster(transform: &RasterTransform) -> SemioTransform {
-    let half = transform.rotation.to_radians() / 2.0;
-    SemioTransform { translation: SemioPoint3 { x: transform.x, y: transform.y, z: 0.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() }, scale: SemioPoint3 { x: transform.scale_x, y: transform.scale_y, z: 1.0 } }
-}
-
-/// 🖼️ Builds one real `DrawNode` per visible pixel layer (its embedded asset bytes, positioned/
-/// scaled/rotated by the layer's own `RasterTransform`), recursing into group layers; adjustment
-/// layers carry no geometry of their own and are honestly skipped.
-fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &crate::RasterOwnedMap<crate::RasterAssetChild>) -> Option<DrawNode> {
-    match layer {
-        RasterLayerNode::Pixel { visible, transform, width, height, image_key, .. } => {
-            if !*visible {
-                return None;
-            }
-            let asset = image_key.as_ref().and_then(|key| crate::raster_asset(assets, key))?;
-            let w = width.unwrap_or(0) as f64;
-            let h = height.unwrap_or(0) as f64;
-            if w <= 0.0 || h <= 0.0 {
-                return None;
-            }
-            Some(DrawNode::Group { transform: semio_transform_from_raster(transform), children: vec![DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: w, height: h, mime: asset.mime.clone(), bytes: asset.data }] })
-        }
-        RasterLayerNode::Group { visible, transform, children, .. } => {
-            if !*visible {
-                return None;
-            }
-            let kids: Vec<DrawNode> = children.iter().filter_map(|child| draw_node_for_raster_layer(child, assets)).collect();
-            if kids.is_empty() {
-                return None;
-            }
-            Some(DrawNode::Group { transform: semio_transform_from_raster(transform), children: kids })
-        }
-        RasterLayerNode::Adjustment { .. } => None,
-    }
-}
-
-/// 🧬️ Builds a real `SemioDrawingSnapshot` from a raster document's own layer stack (its own
-/// domain document model), replacing the `title_card_svg` placeholder.
-fn drawing_snapshot_from_raster(document: &RasterSnapshot) -> SemioDrawingSnapshot {
-    let mut max_x = 0.0f64;
-    let mut max_y = 0.0f64;
-    for layer in &document.layers {
-        if let RasterLayerNode::Pixel { transform, width, height, .. } = layer {
-            max_x = max_x.max(transform.x + width.unwrap_or(0) as f64);
-            max_y = max_y.max(transform.y + height.unwrap_or(0) as f64);
-        }
-    }
-    let canvas = DrawCanvas { width: if max_x > 0.0 { max_x } else { 1024.0 }, height: if max_y > 0.0 { max_y } else { 1024.0 }, background: None };
-    let children: Vec<DrawNode> = document.layers.iter().filter_map(|layer| draw_node_for_raster_layer(layer, &document.assets)).collect();
-    SemioDrawingSnapshot {
-        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas,
-        styles: Vec::new(),
-        layers: vec![DrawLayer { id: document.id.clone(), name: document.title.clone().unwrap_or_default(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
     }
 }
 
@@ -292,257 +235,74 @@ pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
 //#endregion 🔖️SemioBridge
 
 //#region 🔖️Composite
-/// 🎨️ The separable blend functions this compositor implements, per W3C Compositing-1 §11 (the
-/// `blend_mode` field is a free `String` in the schema, so an unrecognized value is reported as a
-/// typed error rather than silently painted as `normal` — that would fabricate a picture the app
-/// never showed).
-#[derive(Clone, Copy)]
-enum RasterBlend {
-    Normal,
-    Multiply,
-    Screen,
-    Darken,
-    Lighten,
-    Difference,
+use semio_framework_pixels::compositing::layers::{RasterStackContent,RasterStackInput,RasterStackJob,RasterStackLayer,RasterStackMask,RasterStackTransform};
+use semio_framework_pixels::{editing::validate_extent,RasterImage};
+use std::{collections::BTreeMap,sync::Arc};
+
+fn stack_transform(value:&RasterTransform)->RasterStackTransform {
+    RasterStackTransform {x:value.x,y:value.y,scale_x:value.scale_x,scale_y:value.scale_y,rotation:value.rotation}
 }
 
-impl RasterBlend {
-    fn parse(mode: &str) -> Result<Self, String> {
-        match mode {
-            "normal" => Ok(Self::Normal),
-            "multiply" => Ok(Self::Multiply),
-            "screen" => Ok(Self::Screen),
-            "darken" => Ok(Self::Darken),
-            "lighten" => Ok(Self::Lighten),
-            "difference" => Ok(Self::Difference),
-            other => Err(format!("unsupported blend mode {other:?} (this compositor implements normal/multiply/screen/darken/lighten/difference)")),
-        }
-    }
-
-    fn apply(self, backdrop: f32, source: f32) -> f32 {
-        match self {
-            Self::Normal => source,
-            Self::Multiply => backdrop * source,
-            Self::Screen => backdrop + source - backdrop * source,
-            Self::Darken => backdrop.min(source),
-            Self::Lighten => backdrop.max(source),
-            Self::Difference => (backdrop - source).abs(),
-        }
-    }
+/// 🌉️ Resolves materialized asset children once; geometry and mask coverage belong to the shared stack job.
+struct RasterStackAssets<'a> {
+    assets:&'a crate::RasterOwnedMap<crate::RasterAssetChild>,
+    images:BTreeMap<String,Arc<RasterImage>>,
+    nodes:usize,
 }
-
-/// 📐️ A 2D affine `[a c e; b d f]` in the same column convention SVG/`SemioTransform` use:
-/// `x' = a·x + c·y + e`, `y' = b·x + d·y + f`.
-#[derive(Clone, Copy)]
-struct RasterAffine {
-    a: f64,
-    b: f64,
-    c: f64,
-    d: f64,
-    e: f64,
-    f: f64,
-}
-
-impl RasterAffine {
-    const IDENTITY: Self = Self { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 };
-
-    /// 🧭️ `translate(x, y) ∘ rotate(rotation) ∘ scale(scale_x, scale_y)` — the exact order
-    /// `semio_transform_from_raster` above already assumes when it hands the same `RasterTransform`
-    /// to the drawing bridge, so the pixel and vector exports agree on what a layer transform means.
-    fn from_transform(transform: &RasterTransform) -> Self {
-        let (sin, cos) = transform.rotation.to_radians().sin_cos();
-        Self { a: cos * transform.scale_x, b: sin * transform.scale_x, c: -sin * transform.scale_y, d: cos * transform.scale_y, e: transform.x, f: transform.y }
+impl RasterStackAssets<'_> {
+    fn image(&mut self,key:&str)->Result<(),String>{
+        if self.images.contains_key(key){return Ok(());}
+        let handle=self.assets.get(key).ok_or_else(||format!("layer references missing asset {key:?}"))?;
+        let image=handle.local_owner::<SemioImageSnapshot>().ok_or_else(||format!("asset {key:?} must be materialized before rendering"))?;
+        let count=validate_extent(image.width,image.height).map_err(|error|error.to_string())?;
+        let frame=image.frames.first().ok_or("a layer's image asset carries no decoded frame")?;
+        if frame.rgba8.len()!=count*4{return Err("a layer's image asset frame length does not match width*height*4".into());}
+        self.images.insert(key.to_owned(),Arc::new(RasterImage {width:image.width,height:image.height,pixels:frame.rgba8.clone()}));Ok(())
     }
-
-    fn then(self, outer: Self) -> Self {
-        Self {
-            a: outer.a * self.a + outer.c * self.b,
-            b: outer.b * self.a + outer.d * self.b,
-            c: outer.a * self.c + outer.c * self.d,
-            d: outer.b * self.c + outer.d * self.d,
-            e: outer.a * self.e + outer.c * self.f + outer.e,
-            f: outer.b * self.e + outer.d * self.f + outer.f,
+    fn mask(&mut self,value:&Option<crate::RasterLayerMask>)->Result<Option<RasterStackMask>,String>{
+        let Some(mask)=value else{return Ok(None);};
+        if mask.enabled{if let Some(key)=&mask.image_key{self.image(key)?;}}
+        Ok(Some(RasterStackMask {enabled:mask.enabled,linked:mask.linked,invert:mask.invert,width:mask.width,height:mask.height,image_key:mask.image_key.clone(),transform:stack_transform(&mask.transform)}))
+    }
+    fn layers(&mut self,layers:&[RasterLayerNode],depth:usize)->Result<Vec<RasterStackLayer>,String>{
+        use crate::standards::v1::subsets::any::schema::{layer_node_id,layer_visible,layer_opacity,layer_blend_mode,layer_transform};
+        if depth>32{return Err("layer nesting exceeds compositor budget".into());}
+        let mut output=Vec::with_capacity(layers.len());
+        for layer in layers{
+            self.nodes+=1;if self.nodes>1024{return Err("layer count exceeds compositor budget".into());}
+            let (content,mask)=match layer{
+                RasterLayerNode::Pixel {image_key,width,height,mask,..}=>{
+                    if let Some(key)=image_key{self.image(key)?;}
+                    (RasterStackContent::Pixel {width:*width,height:*height,image_key:image_key.clone()},self.mask(mask)?)
+                }
+                RasterLayerNode::Group {children,mask,..}=>(RasterStackContent::Group(self.layers(children,depth+1)?),self.mask(mask)?),
+                RasterLayerNode::Adjustment {adjustment_kind,params,..}=>{
+                    if adjustment_kind!="brightnessContrast"{return Err(format!("unsupported adjustment layer kind {adjustment_kind:?}"));}
+                    let parameter=|key:&str|->Result<f64,String>{match params.get(key){None=>Ok(0.0),Some(value)=>value.as_f64().ok_or_else(||format!("adjustment parameter {key:?} must be numeric"))}};
+                    (RasterStackContent::BrightnessContrast {brightness:parameter("brightness")?,contrast:parameter("contrast")?},None)
+                }
+            };
+            output.push(RasterStackLayer {id:layer_node_id(layer).to_owned(),visible:layer_visible(layer),opacity:f64::from(layer_opacity(layer)),blend_mode:layer_blend_mode(layer).parse().map_err(|_|format!("unsupported blend mode {:?}",layer_blend_mode(layer)))?,transform:stack_transform(layer_transform(layer)),mask,content});
         }
-    }
-
-    fn apply(self, x: f64, y: f64) -> (f64, f64) {
-        (self.a * x + self.c * y + self.e, self.b * x + self.d * y + self.f)
-    }
-
-    fn invert(self) -> Option<Self> {
-        let determinant = self.a * self.d - self.b * self.c;
-        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
-            return None;
-        }
-        let (a, b, c, d) = (self.d / determinant, -self.b / determinant, -self.c / determinant, self.a / determinant);
-        Some(Self { a, b, c, d, e: -(a * self.e + c * self.f), f: -(b * self.e + d * self.f) })
+        Ok(output)
     }
 }
 
-/// 🖼️ One pixel layer resolved to everything the rasterizer needs: its materialized child content
-/// (real decoded RGBA8, never re-encoded bytes), its local→device matrix, its local box, and the
-/// accumulated group opacity.
-struct RasterPlacement {
-    image: std::sync::Arc<SemioImageSnapshot>,
-    matrix: RasterAffine,
-    width: f64,
-    height: f64,
-    alpha: f32,
-    blend: RasterBlend,
+/// 🧱️ Prepares exports with the same bounded mask and layer compositor used by interactive surfaces.
+pub fn raster_composite_job(document:&RasterSnapshot)->Result<RasterStackJob,String>{
+    let mut assets=RasterStackAssets {assets:&document.assets,images:BTreeMap::new(),nodes:0};
+    let layers=assets.layers(&document.layers,0)?;
+    RasterStackJob::new(RasterStackInput {layers,images:assets.images}).map_err(|error|error.to_string())
 }
 
-/// 🛡️ Refuses a canvas no honest single-frame encoder should be asked to allocate inside a
-/// `wasm32-wasip2` guest (4 bytes/pixel; 64 MPx is already a 256 MB buffer).
-const RASTER_COMPOSITE_MAX_SIDE: u32 = 16_384;
-const RASTER_COMPOSITE_MAX_PIXELS: u64 = 64 * 1024 * 1024;
-
-/// 🌉️ Resolves the exact `s.stdio.semio/v1/image` content this snapshot's own asset child owns —
-/// the same materialization rule `crate::raster_asset` follows, minus its
-/// re-encode to PNG bytes (this compositor wants the decoded frames, not a wire encoding).
-fn placement_image(assets: &crate::RasterOwnedMap<crate::RasterAssetChild>, image_key: &str) -> Result<std::sync::Arc<SemioImageSnapshot>, String> {
-    let handle = assets.get(image_key).ok_or_else(|| format!("layer references asset {image_key:?}, which this document does not carry"))?;
-    handle.local_owner::<SemioImageSnapshot>().ok_or_else(|| format!("asset {image_key:?} is not materialized in this snapshot — its content must be resolved before a composite can be produced"))
-}
-
-/// 🧭️ Walks the layer stack in painter's order (index 0 paints first, exactly as
-/// `draw_node_for_raster_layer` already orders the vector bridge), pushing one `RasterPlacement`
-/// per visible pixel layer that actually carries image content.
-fn collect_placements(layers: &[RasterLayerNode], assets: &crate::RasterOwnedMap<crate::RasterAssetChild>, parent: RasterAffine, parent_alpha: f32, out: &mut Vec<RasterPlacement>) -> Result<(), String> {
-    for layer in layers {
-        match layer {
-            RasterLayerNode::Pixel { visible, opacity, blend_mode, transform, width, height, image_key, .. } => {
-                if !*visible {
-                    continue;
-                }
-                let Some(key) = image_key.as_deref() else { continue };
-                let image = placement_image(assets, key)?;
-                let box_width = width.map_or(image.width as f64, |value| value as f64);
-                let box_height = height.map_or(image.height as f64, |value| value as f64);
-                if box_width <= 0.0 || box_height <= 0.0 || image.width == 0 || image.height == 0 {
-                    continue;
-                }
-                let centered=RasterAffine {e:-box_width/2.0,f:-box_height/2.0,..RasterAffine::IDENTITY};
-                out.push(RasterPlacement { image, matrix: centered.then(RasterAffine::from_transform(transform)).then(parent), width: box_width, height: box_height, alpha: parent_alpha * opacity, blend: RasterBlend::parse(blend_mode)? });
-            }
-            RasterLayerNode::Group { visible, opacity, blend_mode, transform, children, .. } => {
-                if !*visible {
-                    continue;
-                }
-                // 🚧️ A non-`normal` group blend needs the group rendered to its own offscreen buffer
-                // first and only then blended as one unit; painting its children individually with
-                // that mode is a DIFFERENT picture, so it is refused rather than approximated.
-                if !matches!(RasterBlend::parse(blend_mode)?, RasterBlend::Normal) {
-                    return Err(format!("group layer declares blend mode {blend_mode:?}; group-level (offscreen) blending is not implemented, only per-layer blending"));
-                }
-                collect_placements(children, assets, RasterAffine::from_transform(transform).then(parent), parent_alpha * opacity, out)?;
-            }
-            RasterLayerNode::Adjustment { visible, adjustment_kind, name, .. } => {
-                if !*visible {
-                    continue;
-                }
-                return Err(format!(
-                    "visible adjustment layer {name:?} of kind {adjustment_kind:?} cannot be applied: this document model carries no pixel-level adjustment evaluator, and flattening without it would encode a picture the editor never showed"
-                ));
-            }
-        }
-    }
-    Ok(())
-}
-
-/// 🖼️ Flattens the document's visible pixel layers into one canonical RGBA8 canvas, as an
-/// `s.stdio.semio/v1/image` snapshot — the ONE hub every real pixel export in this subset then
-/// hands to stdio's own png/bmp/gif/jpg/tiff serializer.
-///
-/// 📐️ Canvas: the union of every placement's device-space axis-aligned bounding box, including
-/// negative coordinates. Layers are centered on their transforms, matching the editor compositor.
-/// Sampling is nearest-neighbour through each placement's
-/// inverse matrix, so translation, non-uniform scale and rotation are all honoured exactly.
-///
-/// 🚧️ Honest limitations, each of which is an `Err` and never a silent approximation: a visible
-/// adjustment layer, a group-level non-`normal` blend, an unrecognized blend mode, an unmaterialized
-/// asset child, and a canvas past `RASTER_COMPOSITE_MAX_*`. `RasterLayerMask` carries no pixel
-/// payload at all in this schema (`enabled`/`linked`/`invert`/`width`/`height`, no `image_key`), so
-/// there is nothing a mask could mask out — it is honestly inert here, not dropped.
-pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSnapshot, String> {
-    let mut placements = Vec::new();
-    collect_placements(&document.layers, &document.assets, RasterAffine::IDENTITY, 1.0, &mut placements)?;
-    if placements.is_empty() {
-        return Err("no visible pixel layer with materialized image content: there is nothing to flatten into a raster composite".into());
-    }
-
-    let mut min_x = f64::INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
-    for placement in &placements {
-        for (x, y) in [(0.0, 0.0), (placement.width, 0.0), (0.0, placement.height), (placement.width, placement.height)] {
-            let (device_x, device_y) = placement.matrix.apply(x, y);
-            if !device_x.is_finite() || !device_y.is_finite() {
-                return Err("a layer transform maps its box to a non-finite device coordinate".into());
-            }
-            max_x = max_x.max(device_x);
-            max_y = max_y.max(device_y);
-            min_x = min_x.min(device_x);
-            min_y = min_y.min(device_y);
-        }
-    }
-    let width = ((max_x-min_x).ceil().max(1.0)) as u64;
-    let height = ((max_y-min_y).ceil().max(1.0)) as u64;
-    if width > RASTER_COMPOSITE_MAX_SIDE as u64 || height > RASTER_COMPOSITE_MAX_SIDE as u64 || width * height > RASTER_COMPOSITE_MAX_PIXELS {
-        return Err(format!("composite canvas {width}x{height} exceeds this encoder's {RASTER_COMPOSITE_MAX_SIDE} px side / {RASTER_COMPOSITE_MAX_PIXELS} px area budget"));
-    }
-    let (width, height) = (width as u32, height as u32);
-
-    let mut canvas = vec![0u8; width as usize * height as usize * 4];
-    for placement in &placements {
-        let frame = placement.image.frames.first().ok_or_else(|| "a layer's image asset carries no decoded frame".to_string())?;
-        let (source_width, source_height) = (placement.image.width as usize, placement.image.height as usize);
-        if frame.rgba8.len() != source_width * source_height * 4 {
-            return Err("a layer's image asset frame length does not match width*height*4".into());
-        }
-        let Some(inverse) = placement.matrix.invert() else {
-            return Err("a layer transform is singular (zero scale) and cannot be sampled".into());
-        };
-        let mut min_device = (f64::MAX, f64::MAX);
-        let mut max_device = (f64::MIN, f64::MIN);
-        for (x, y) in [(0.0, 0.0), (placement.width, 0.0), (0.0, placement.height), (placement.width, placement.height)] {
-            let (device_x, device_y) = placement.matrix.apply(x, y);
-            min_device = (min_device.0.min(device_x), min_device.1.min(device_y));
-            max_device = (max_device.0.max(device_x), max_device.1.max(device_y));
-        }
-        let x0 = (min_device.0-min_x).floor().max(0.0) as u32;
-        let y0 = (min_device.1-min_y).floor().max(0.0) as u32;
-        let x1 = ((max_device.0-min_x).ceil().max(0.0) as u64).min(width as u64) as u32;
-        let y1 = ((max_device.1-min_y).ceil().max(0.0) as u64).min(height as u64) as u32;
-        for y in y0..y1 {
-            for x in x0..x1 {
-                let (u, v) = inverse.apply(x as f64 + 0.5 + min_x, y as f64 + 0.5 + min_y);
-                if u < 0.0 || v < 0.0 || u >= placement.width || v >= placement.height {
-                    continue;
-                }
-                let source_x = ((u / placement.width) * source_width as f64) as usize;
-                let source_y = ((v / placement.height) * source_height as f64) as usize;
-                let source_index = (source_y.min(source_height - 1) * source_width + source_x.min(source_width - 1)) * 4;
-                let source_alpha = (frame.rgba8[source_index + 3] as f32 / 255.0) * placement.alpha;
-                if source_alpha <= 0.0 {
-                    continue;
-                }
-                let destination_index = (y as usize * width as usize + x as usize) * 4;
-                let backdrop_alpha = canvas[destination_index + 3] as f32 / 255.0;
-                let out_alpha = source_alpha + backdrop_alpha * (1.0 - source_alpha);
-                for channel in 0..3 {
-                    let source_channel = frame.rgba8[source_index + channel] as f32 / 255.0;
-                    let backdrop_channel = canvas[destination_index + channel] as f32 / 255.0;
-                    let blended = (1.0 - backdrop_alpha) * source_channel + backdrop_alpha * placement.blend.apply(backdrop_channel, source_channel);
-                    let out_channel = if out_alpha > 0.0 { ((1.0 - source_alpha) * backdrop_alpha * backdrop_channel + source_alpha * blended) / out_alpha } else { 0.0 };
-                    canvas[destination_index + channel] = (out_channel.clamp(0.0, 1.0) * 255.0).round() as u8;
-                }
-                canvas[destination_index + 3] = (out_alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
-            }
-        }
-    }
-
-    Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: canvas }], icc: None, metadata: Vec::new() })
+/// 🖼️ Flattens visible layers through the shared compositor into the image export hub.
+pub fn raster_composite_image(document:&RasterSnapshot)->Result<SemioImageSnapshot,String> {
+    let mut job=raster_composite_job(document)?;
+    while !job.advance(65536).map_err(|e|e.to_string())?.done {}
+    let output=job.into_result().map_err(|e|e.to_string())?;
+    if output.empty{return Err("no visible pixel layer: there is nothing to flatten into a raster composite".into());}
+    let image=output.image;
+    Ok(SemioImageSnapshot {schema:STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),width:image.width,height:image.height,colorspace:SemioColorspace::Rgba,bit_depth:8,frames:vec![SemioImageFrame {delay_ms:0,rgba8:image.pixels}],icc:None,metadata:Vec::new()})
 }
 
 /// 📥️ The inverse hub hop every real pixel IMPORT in this subset ends on: one decoded
@@ -623,13 +383,16 @@ pub(crate) mod gif87a {
 //#endregion 🔖️Gif87aBridge
 
 //#region 🔖️MediaExport
-/// 📤️ Real vector export: the document's visible layer stack becomes a `SemioDrawingSnapshot`
-/// (real geometry, own domain model), composed into real SVG text via stdio's `s.stdio.semio/v1/
-/// drawing` → `s.stdio.svg` bridge (`io_dispatch`) — no more `title_card_svg` placeholder.
+/// 📤️ Embeds the canonical raster composite in SVG using the shared drawing serializer.
 pub fn raster_document_json_to_svg(document: &RasterSnapshot) -> Result<(String, u32, u32), String> {
-    let drawing = drawing_snapshot_from_raster(document);
-    let svg = dispatch_drawing_to_svg(&drawing)?;
-    Ok((svg, drawing.canvas.width.round().max(1.0) as u32, drawing.canvas.height.round().max(1.0) as u32))
+    let image=raster_composite_image(document)?;
+    let drawing=SemioDrawingSnapshot {
+        schema:STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
+        canvas:DrawCanvas {width:f64::from(image.width),height:f64::from(image.height),background:None},
+        styles:Vec::new(),
+        layers:vec![DrawLayer {id:document.id.clone(),name:document.title.clone().unwrap_or_default(),visible:true,root:DrawNode::Image {at:SemioPoint2 {x:0.0,y:0.0},width:f64::from(image.width),height:f64::from(image.height),mime:"image/png".into(),bytes:png_bytes_from_semio_image(&image)?}}],
+    };
+    Ok((dispatch_drawing_to_svg(&drawing)?,image.width,image.height))
 }
 //#endregion 🔖️MediaExport
 

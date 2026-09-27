@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeStoreyPerm
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-storey-permanent-gk-n", "change-storey-permanent-gk-n")
+        protocol::LocalizedLabel::native("Change permanent storey load", "Ständige Geschosslast ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-permanent-gk-n".into()]

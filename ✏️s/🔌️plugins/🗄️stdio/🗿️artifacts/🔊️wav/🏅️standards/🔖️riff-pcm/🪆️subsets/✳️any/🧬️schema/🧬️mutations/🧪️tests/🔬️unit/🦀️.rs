@@ -13,6 +13,7 @@ fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
         WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: WavSnapshot { fmt: WavFmt { sample_rate: 48000, ..base.fmt.clone() }, ..base.clone() } }),
         WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
         WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
+        WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
         WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2] }] }),
     ]
 }
@@ -60,6 +61,7 @@ fn kind_of(m: &WavMutation) -> &'static str {
         WavMutation::SetSnapshot(_) => "set-snapshot",
         WavMutation::SetFmt(_) => "set-fmt",
         WavMutation::SetData(_) => "set-data",
+        WavMutation::PatchData(_) => "patch-data",
         WavMutation::SetOtherChunks(_) => "set-other-chunks",
     }
 }

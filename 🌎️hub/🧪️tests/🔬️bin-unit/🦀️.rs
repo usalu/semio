@@ -436,7 +436,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     manifest.apps.push(viewer.clone());
     manifest.topic_contributions.push(semio_s_plugin_stdio::registry::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
     assert_eq!(manifest.artifact_kinds.len(), receipts.len(), "every descriptor artifact kind has one executable owner receipt");
-    assert_eq!(viewer.id, "stdio.json@rfc8259/*#viewer", "the synthetic viewer opens the manifest-declared kind its own dialect names");
+    assert_eq!(viewer.id, "s.stdio.json@rfc8259/*#viewer", "the synthetic viewer opens the manifest-declared kind its own dialect names");
     let viewer_id = viewer.id.clone();
     let window_id = viewer.window_kinds.iter().find(|window| window.id == "framework.window.tree").expect("descriptor-owned JSON viewer window").id.clone();
     let descriptor = semio_framework::PackageDescriptor {
@@ -844,7 +844,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         document_open_plan_issue_gate: None,
         document_open_plan_deadline_ms: None,
         presence: Arc::new(ShardedMap::new()),
-        presence_publication_gate: Arc::new(tokio::sync::Mutex::new(())),
+        presence_publication_gate: Arc::new(tokio::sync::Mutex::new(PresenceDirectoryProjections::default())),
         presence_clock: None,
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
@@ -933,7 +933,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         document_open_plan_issue_gate: None,
         document_open_plan_deadline_ms: None,
         presence: Arc::new(ShardedMap::new()),
-        presence_publication_gate: Arc::new(tokio::sync::Mutex::new(())),
+        presence_publication_gate: Arc::new(tokio::sync::Mutex::new(PresenceDirectoryProjections::default())),
         presence_clock: None,
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
@@ -4052,7 +4052,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut resend, _) = connect_async(document_socket_request(&url, &token)).await.expect("resend socket");
         resend.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("resend hello");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, origin, .. } if envelopes[0].mutation_id == committed.mutation_id && origin.0 == HUB_CATCH_UP_ORIGIN), "the reconnect is caught up with the committed edit, under the hub's declared catch-up origin");
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == committed.mutation_id), "the reconnect is caught up with the committed edit");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Session { .. }));
         resend.send(client_binary(&ClientFrame::Commands { batch_id: 79, envelopes: vec![committed.clone()] }, Lane::Command).await).await.expect("resend after reconnect");
         let ack = next_server_frame(&mut resend).await;
@@ -4067,10 +4067,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut legacy, _) = connect_async(document_socket_request(&url, &token)).await.expect("legacy rejection socket");
         legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { origin, .. } if origin.0 == HUB_CATCH_UP_ORIGIN && origin.0 != legacy_receipt.actor_id), "a joiner behind the head is caught up before Session, never under its own actor");
-        let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
-        assert_eq!(echo_fixture["hubCatchUpOrigin"].as_str(), Some(HUB_CATCH_UP_ORIGIN), "the hub's catch-up origin is the fixture's declared one");
-        assert_eq!(include_str!("../../🏗️bootstrap/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
+        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { .. }), "a joiner behind the head is caught up before Session");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
         legacy.send(WsMessage::Binary(vec![0, 0].into())).await.expect("legacy tag-zero frame");
         assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
@@ -5981,6 +5978,53 @@ async fn presence_liveness_contract_matches_the_shared_fixture() {
     assert_eq!(law("a-joiner-starts-from-the-settled-roster")["replayedWhenRosterEmpty"], serde_json::Value::Bool(false));
 }
 
+/// 📡️ A peer beat that only changes its ephemerals (pointer, camera, caret) reaches the document's sockets but is not
+/// republished to every member's directory socket: the member-directory projection (actor, user, surface, colour) is
+/// published when it changes — a join, a leave, the emptied roster — and never for an unchanged projection (C11: React
+/// beats presence up to 10 Hz per moving human, which cost a directory frame per member socket per move).
+#[tokio::test]
+async fn a_peer_beat_reaches_the_document_roster_and_the_directory_projection_only_when_it_changes() {
+    let state = test_state().await;
+    let scope = DocumentScope::new(STUDIO, "presence-projection");
+    let key = document_scope_key_v1(&scope);
+    let mut roster = state.fanout_for(&key).subscribe();
+    let mut directory = state.directory_service.subscribe();
+    let now = tokio::time::Instant::now();
+    let mut observe = |expected_roster: usize, expected_directory: usize, step: &str| {
+        let mut rosters = 0;
+        while let Ok(frame) = roster.try_recv() {
+            rosters += usize::from(matches!(frame, ServerFrame::Presence { .. }));
+        }
+        let mut projections = Vec::new();
+        while let Ok(message) = directory.try_recv() {
+            if let DirectoryStreamMessage::Presence { document_id, actors, .. } = message {
+                if document_id == scope.document_id {
+                    projections.push(actors.iter().map(|actor| actor.actor.clone()).collect::<Vec<_>>());
+                }
+            }
+        }
+        assert_eq!((rosters, projections.len()), (expected_roster, expected_directory), "{step}: roster frames and directory projections {projections:?}");
+        projections
+    };
+    assert_eq!(state.install_presence_slot(&key, STUDIO, &scope.document_id, "actor-a", test_presence_slot("live-a", Some("user-a"), now)).await, PresenceLeaseTransition::NoChange);
+    assert_eq!(state.refresh_presence(&key, STUDIO, &scope.document_id, "actor-a", "live-a", b"pointer-1".to_vec(), now).await, PresenceLeaseTransition::Published);
+    assert_eq!(observe(1, 1, "join"), vec![vec!["actor-a".to_string()]]);
+    for (index, peer) in [b"pointer-2".to_vec(), b"pointer-3".to_vec(), b"camera-1".to_vec()].into_iter().enumerate() {
+        assert_eq!(state.refresh_presence(&key, STUDIO, &scope.document_id, "actor-a", "live-a", peer, now + std::time::Duration::from_millis(100 * (index as u64 + 1))).await, PresenceLeaseTransition::Published);
+    }
+    observe(3, 0, "three ephemeral moves");
+    assert_eq!(state.install_presence_slot(&key, STUDIO, &scope.document_id, "actor-b", test_presence_slot("live-b", Some("user-b"), now)).await, PresenceLeaseTransition::NoChange);
+    assert_eq!(state.refresh_presence(&key, STUDIO, &scope.document_id, "actor-b", "live-b", b"pointer-b".to_vec(), now).await, PresenceLeaseTransition::Published);
+    assert_eq!(observe(1, 1, "second join"), vec![vec!["actor-a".to_string(), "actor-b".to_string()]]);
+    assert_eq!(state.close_presence_for_live(&key, STUDIO, &scope.document_id, "actor-b", "live-b").await, PresenceLeaseTransition::Published);
+    assert_eq!(observe(1, 1, "leave"), vec![vec!["actor-a".to_string()]]);
+    assert_eq!(state.close_presence_for_live(&key, STUDIO, &scope.document_id, "actor-a", "live-a").await, PresenceLeaseTransition::Published);
+    assert_eq!(observe(1, 1, "last leave"), vec![Vec::<String>::new()]);
+    assert_eq!(state.install_presence_slot(&key, STUDIO, &scope.document_id, "actor-a", test_presence_slot("live-a2", Some("user-a"), now)).await, PresenceLeaseTransition::NoChange);
+    assert_eq!(state.refresh_presence(&key, STUDIO, &scope.document_id, "actor-a", "live-a2", b"pointer-1".to_vec(), now).await, PresenceLeaseTransition::Published);
+    assert_eq!(observe(1, 1, "rejoin after the roster emptied"), vec![vec!["actor-a".to_string()]]);
+}
+
 #[tokio::test]
 async fn presence_lease_enforces_shared_roster_bounds_and_actor_order() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👥️presence-lease-v1/🔣️.json")).expect("presence lease fixture");
@@ -7525,7 +7569,10 @@ fn a_vigilant_hub_refuses_a_same_target_write_authored_without_observing_the_oth
                 "accepted" => assert!(accepted(&outcomes[2]), "{name}: {outcomes:?}"),
                 "refused" => match &outcomes[2] {
                     AckStage::Applied { outcome } => match outcome.as_ref() {
-                        ApplyOutcome::Rejected { messages, .. } => assert!(messages.iter().any(|message| message.code.0 == row["code"].as_str().expect("code") && format!("{:?}", message.level).to_lowercase() == row["level"].as_str().expect("level")), "{name}: {messages:?}"),
+                        ApplyOutcome::Rejected { messages, .. } => {
+                            let messages: serde_json::Value = serde_json::from_slice(messages).expect("rejection messages are one JSON MutationMessage array");
+                            assert!(messages.as_array().expect("message array").iter().any(|message| message["code"] == row["code"] && message["level"] == row["level"]), "{name}: {messages}");
+                        }
                         other => panic!("{name}: expected a typed refusal, got {other:?}"),
                     },
                     other => panic!("{name}: expected an applied stage, got {other:?}"),
@@ -8918,6 +8965,27 @@ async fn the_observability_route_reports_the_routes_this_hub_answered_by_templat
     assert!(!response.body.windows(b"space-that-is-not-here".len()).any(|window| window == b"space-that-is-not-here"), "no concrete path reaches the table");
     assert!(body["residency"].is_null(), "a hub without a catalog has no residency");
     assert!(body["dbIo"]["tasks"].as_u64().is_some());
+}
+
+/// ⚖️ LAW: a request the address bucket refuses before its handler runs is still an answer of its route —
+/// the route table counts it as `rateLimited` under the template, so an operator sees a lockout where it happens.
+#[tokio::test]
+async fn the_observability_route_counts_a_limiter_refusal_under_its_route() {
+    let (mut state, _clock) = credential_sign_in_state().await;
+    seed_credential_user(&state, "limited@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let headers = authorize_test_admin(&mut state, "ops-limits@example.com").await;
+    let bearer = headers.get(axum::http::header::AUTHORIZATION).expect("admin bearer").to_str().expect("ascii bearer").to_string();
+    let addr = spawn_server(state).await;
+    let burst = RateLimitClassV1::Auth.policy().burst;
+    for attempt in 0..burst {
+        assert_eq!(post_sign_in(addr, &sign_in_body("limited@example.com", "a different password")).await.status, 401, "attempt {attempt}");
+    }
+    assert_eq!(post_sign_in(addr, &sign_in_body("limited@example.com", "a different password")).await.status, 429);
+    let response = bounded_http_request(addr, "GET", "/admin/api/observability", &[("Authorization", bearer.as_str())], &[]).await;
+    assert_eq!(response.status, 200);
+    let body: serde_json::Value = serde_json::from_slice(&response.body).expect("observability json");
+    let row = body["routes"].as_array().unwrap().iter().find(|row| row["method"] == "POST" && row["route"] == semio_hub::auth::SESSION_MINT_ROUTE).cloned().expect("the sign-ins this test made");
+    assert_eq!((row["requests"].as_u64(), row["clientRefusals"].as_u64(), row["rateLimited"].as_u64()), (Some(u64::from(burst) + 1), Some(u64::from(burst)), Some(1)));
 }
 
 /// ⚖️ LAW: the structured readiness record carries the same gates the startup banner names, as

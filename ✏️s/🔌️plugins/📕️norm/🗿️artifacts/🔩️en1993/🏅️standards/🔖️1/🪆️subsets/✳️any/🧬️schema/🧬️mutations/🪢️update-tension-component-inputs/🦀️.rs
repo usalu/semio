@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTensionCom
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert tension component {}", self.tension_component.id),
-            &format!("Zugglied setzen {}", self.tension_component.id),
+            &format!("Update tension component {}", self.tension_component.id),
+            &format!("Zugglied {} aktualisieren", self.tension_component.id),
         )
     }
     fn target(&self) -> Vec<String> {

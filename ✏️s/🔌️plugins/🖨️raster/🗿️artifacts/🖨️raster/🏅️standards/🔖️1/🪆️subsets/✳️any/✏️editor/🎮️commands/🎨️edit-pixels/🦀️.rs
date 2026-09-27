@@ -174,9 +174,9 @@ fn publish(image: EncodedPngImage, layer: RasterLayerNode, _parent_id: Option<St
     }));
     if let Some(previous) = previous_key {
         let shared = flatten_raster_layers(&document.layers).iter().any(|node| {
-            if layer_node_id(node) == layer_id { return false; }
             match node {
-                RasterLayerNode::Pixel { image_key, .. } => image_key.as_deref() == Some(previous.as_str()),
+                RasterLayerNode::Pixel { image_key, mask, .. } => (layer_node_id(node)!=layer_id&&image_key.as_deref()==Some(previous.as_str()))||mask.as_ref().and_then(|m|m.image_key.as_deref())==Some(previous.as_str()),
+                RasterLayerNode::Group {mask,..}=>mask.as_ref().and_then(|m|m.image_key.as_deref())==Some(previous.as_str()),
                 _ => false,
             }
         });

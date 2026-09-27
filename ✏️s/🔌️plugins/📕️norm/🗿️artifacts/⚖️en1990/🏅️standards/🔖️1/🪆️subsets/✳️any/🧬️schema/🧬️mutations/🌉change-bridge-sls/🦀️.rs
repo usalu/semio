@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeBridgeSls 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change bridge-sls", "Ändern: bridge-sls")
+        protocol::LocalizedLabel::native("Change bridge serviceability data", "Gebrauchstauglichkeitsangaben der Brücke ändern")
     }
 }
 //#endregion 🔖️Payload

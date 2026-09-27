@@ -8,5 +8,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for InsertZone {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "zone", kind: "insert-zone", record: "InsertZone" };
     fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Insert zone", "Zone einfügen") }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Insert zone", "Zone einfügen")
+    }
 }

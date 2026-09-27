@@ -34,13 +34,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const wireExtent = { Standard: "standard", CompactText: "compactText", CompactSmallControl: "compactSmallControl", CompactControl: "compactControl" } as const;
     for (const extent of rowExtentFixture.extents) {
       const rowExtent = wireExtent[extent.name as keyof typeof wireExtent];
-      const owner = prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent } });
-      expect(owner.value).toMatchObject({ type: "treeSection", window: { total: 10, offset: 4, rowExtent } });
+      const owner = prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent }, headerToolbar: 41 });
+      expect(owner.value).toMatchObject({ type: "treeSection", window: { total: 10, offset: 4, rowExtent }, headerToolbar: 41 });
       const retirement = owner.beginClose();
       while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
     }
-    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4 } })).toThrow("Unknown UI schema discriminator");
-    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent: "compactCheckbox" } })).toThrow("Unknown UI schema discriminator");
+    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, headerToolbar: null, window: { total: 10, offset: 4 } })).toThrow("Unknown UI schema discriminator");
+    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, headerToolbar: null, window: { total: 10, offset: 4, rowExtent: "compactCheckbox" } })).toThrow("Unknown UI schema discriminator");
   });
 
   it("requires and owns the explicit Tree inline toolbar and detail relations", () => {

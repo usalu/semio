@@ -2,12 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "snapshot", "mutated", "deltas", "afterDeltas", "gestureMatrix"],
+  "required": [
+    "schemaVersion",
+    "snapshot",
+    "mutated",
+    "deltas",
+    "afterDeltas",
+    "gestureMatrix",
+    "clock"
+  ],
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "snapshot": { "$ref": "#/definitions/snapshot" },
-    "mutated": { "$ref": "#/definitions/snapshot" },
-    "afterDeltas": { "$ref": "#/definitions/snapshot" },
+    "schemaVersion": {
+      "const": 1
+    },
+    "snapshot": {
+      "$ref": "#/definitions/snapshot"
+    },
+    "mutated": {
+      "$ref": "#/definitions/snapshot"
+    },
+    "afterDeltas": {
+      "$ref": "#/definitions/snapshot"
+    },
     "deltas": {
       "type": "array",
       "minItems": 6,
@@ -16,37 +32,111 @@
           {
             "type": "object",
             "additionalProperties": false,
-            "required": ["kind", "domainId", "granularity", "ids"],
+            "required": [
+              "kind",
+              "domainId",
+              "granularity",
+              "ids"
+            ],
             "properties": {
-              "kind": { "const": "selection" },
-              "domainId": { "type": "string", "minLength": 1 },
-              "granularity": { "type": "string", "minLength": 1 },
-              "ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+              "kind": {
+                "const": "selection"
+              },
+              "domainId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "granularity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
             }
           },
           {
             "type": "object",
             "additionalProperties": false,
-            "required": ["kind", "id", "expanded"],
-            "properties": { "kind": { "const": "treeExpansion" }, "id": { "type": "string", "minLength": 1 }, "expanded": { "type": "boolean" } }
+            "required": [
+              "kind",
+              "id",
+              "expanded"
+            ],
+            "properties": {
+              "kind": {
+                "const": "treeExpansion"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expanded": {
+                "type": "boolean"
+              }
+            }
           },
           {
             "type": "object",
             "additionalProperties": false,
-            "required": ["kind", "id"],
-            "properties": { "kind": { "const": "dialog" }, "id": { "type": ["string", "null"] } }
+            "required": [
+              "kind",
+              "id"
+            ],
+            "properties": {
+              "kind": {
+                "const": "dialog"
+              },
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           },
           {
             "type": "object",
             "additionalProperties": false,
-            "required": ["kind", "group", "tabId"],
-            "properties": { "kind": { "const": "panelTab" }, "group": { "$ref": "#/definitions/anchor" }, "tabId": { "type": ["string", "null"] } }
+            "required": [
+              "kind",
+              "group",
+              "tabId"
+            ],
+            "properties": {
+              "kind": {
+                "const": "panelTab"
+              },
+              "group": {
+                "$ref": "#/definitions/anchor"
+              },
+              "tabId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           },
           {
             "type": "object",
             "additionalProperties": false,
-            "required": ["kind", "open"],
-            "properties": { "kind": { "const": "commandPanel" }, "open": { "type": "boolean" } }
+            "required": [
+              "kind",
+              "open"
+            ],
+            "properties": {
+              "kind": {
+                "const": "commandPanel"
+              },
+              "open": {
+                "type": "boolean"
+              }
+            }
           }
         ]
       }
@@ -57,34 +147,102 @@
       "maxItems": 5,
       "items": {
         "type": "object",
-        "required": ["kind", "id"],
+        "required": [
+          "kind",
+          "id"
+        ],
         "properties": {
-          "kind": { "enum": ["scene", "canvas", "entity", "curve", "domain"] },
-          "id": { "type": "string", "minLength": 1 },
-          "position": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
-          "x": { "type": "number" },
-          "y": { "type": "number" },
-          "domain": { "type": "string" },
-          "entity": { "type": "string" },
-          "offset": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
-          "t": { "type": "number" },
-          "value": { "type": "number" }
+          "kind": {
+            "enum": [
+              "scene",
+              "canvas",
+              "entity",
+              "curve",
+              "domain"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "entity": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "t": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
         }
       }
+    },
+    "clock": {
+      "$ref": "#/definitions/clock"
     }
   },
   "definitions": {
-    "anchor": { "enum": ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] },
+    "anchor": {
+      "enum": [
+        "top-left",
+        "top-middle",
+        "top-right",
+        "right-middle",
+        "bottom-right",
+        "bottom-middle",
+        "bottom-left",
+        "left-middle"
+      ]
+    },
     "selection": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["granularity", "ids"],
+        "required": [
+          "granularity",
+          "ids"
+        ],
         "properties": {
-          "granularity": { "type": "string", "minLength": 1 },
-          "ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-          "anchorId": { "type": "string" }
+          "granularity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "anchorId": {
+            "type": "string"
+          }
         }
       }
     },
@@ -92,23 +250,219 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "top-left": { "type": "string" }, "top-middle": { "type": "string" }, "top-right": { "type": "string" }, "right-middle": { "type": "string" },
-        "bottom-right": { "type": "string" }, "bottom-middle": { "type": "string" }, "bottom-left": { "type": "string" }, "left-middle": { "type": "string" }
+        "top-left": {
+          "type": "string"
+        },
+        "top-middle": {
+          "type": "string"
+        },
+        "top-right": {
+          "type": "string"
+        },
+        "right-middle": {
+          "type": "string"
+        },
+        "bottom-right": {
+          "type": "string"
+        },
+        "bottom-middle": {
+          "type": "string"
+        },
+        "bottom-left": {
+          "type": "string"
+        },
+        "left-middle": {
+          "type": "string"
+        }
       }
     },
     "snapshot": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["focusedWindowId", "activeUtilityByWindowId", "activeToolId", "activePanelTabByGroup", "interactionSelection", "openDialogId", "expandedTreeIds", "commandPanelOpen"],
+      "required": [
+        "focusedWindowId",
+        "activeUtilityByWindowId",
+        "activeToolId",
+        "activePanelTabByGroup",
+        "interactionSelection",
+        "openDialogId",
+        "expandedTreeIds",
+        "commandPanelOpen"
+      ],
       "properties": {
-        "focusedWindowId": { "type": "string" },
-        "activeUtilityByWindowId": { "type": "object", "additionalProperties": { "type": "string" } },
-        "activeToolId": { "type": "string" },
-        "activePanelTabByGroup": { "$ref": "#/definitions/tabs" },
-        "interactionSelection": { "$ref": "#/definitions/selection" },
-        "openDialogId": { "type": "string" },
-        "expandedTreeIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
-        "commandPanelOpen": { "type": "boolean" }
+        "focusedWindowId": {
+          "type": "string"
+        },
+        "activeUtilityByWindowId": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "activeToolId": {
+          "type": "string"
+        },
+        "activePanelTabByGroup": {
+          "$ref": "#/definitions/tabs"
+        },
+        "interactionSelection": {
+          "$ref": "#/definitions/selection"
+        },
+        "openDialogId": {
+          "type": "string"
+        },
+        "expandedTreeIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "commandPanelOpen": {
+          "type": "boolean"
+        }
+      }
+    },
+    "deadline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "lastTickWallMs",
+        "playheadMs",
+        "durationMs",
+        "rate",
+        "convergeEndWallMs",
+        "expectedWallMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "playing",
+            "paused",
+            "recording",
+            "deviated"
+          ]
+        },
+        "lastTickWallMs": {
+          "type": "number"
+        },
+        "playheadMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rate": {
+          "type": "number"
+        },
+        "convergeEndWallMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "expectedWallMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameIntervalMs",
+        "durationMs",
+        "rate",
+        "wallFramesMs",
+        "expectedPlayheadMs",
+        "expectedPlaying",
+        "deadlines",
+        "merge"
+      ],
+      "properties": {
+        "frameIntervalMs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rate": {
+          "type": "number"
+        },
+        "wallFramesMs": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "expectedPlayheadMs": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "expectedPlaying": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "deadlines": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "$ref": "#/definitions/deadline"
+          }
+        },
+        "merge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wallNowMs",
+            "monotonicNowSeconds",
+            "chromeWallMs",
+            "tutorialWallMs",
+            "expectedMonotonicSeconds"
+          ],
+          "properties": {
+            "wallNowMs": {
+              "type": "number"
+            },
+            "monotonicNowSeconds": {
+              "type": "number"
+            },
+            "chromeWallMs": {
+              "type": "number"
+            },
+            "tutorialWallMs": {
+              "type": "number"
+            },
+            "expectedMonotonicSeconds": {
+              "type": "number"
+            }
+          }
+        }
       }
     }
   }

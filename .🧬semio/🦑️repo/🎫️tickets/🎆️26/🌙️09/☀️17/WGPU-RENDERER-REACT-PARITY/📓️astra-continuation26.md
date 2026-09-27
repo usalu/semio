@@ -2,6 +2,26 @@
 
 ## Latest Verification — Coherent WASM Check and Native 157
 
+### Live Window Journey — Interaction Checkout Stall
+
+The mounted accessibility interaction oracle now passes all 17 tests (3.20 seconds), including a shared-fixture focus-only mirror refresh followed by activation at the same address. A new native regression checks whether Shell publication preserves that address while publishing focused state; it has not executed yet. The native159 rerun stopped before tests on an in-progress Table accessibility signature call; the owning agent corrected it. Ordinary deferred owner integration remains in progress, so the next renderer native run waits for a coherent source handoff.
+
+The painted WGPU Focus control at x55/y45 successfully maximized Top and published Unfocus; React's Focus/Unfocus also worked. The earlier automation click on a clipped DOM mirror did not emit the temporary diagnostic event, so it is not evidence that production pointer Focus is broken. Temporary mirror logs were removed.
+
+The WGPU run then faulted during real keyboard navigation: Tab reached the application surface, followed by two further Tabs. The alert reports `worker-present-failed: presentation stalled: phase=Render engine=0 upload=1 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=InteractionCheckout`; boot was ready and the silence exceeded 71 seconds. The surface is quarantined and input is no longer accepted. This is a confirmed live runtime failure, now assigned to the runtime execution owner. No successful keyboard/close journey or full parity is claimed. The raw DOM alert and console trace are retained temporarily in generated/astra-runtime/browser26/wgpu-focus-stall.md.
+
+The fresh WGPU preview is live on port 6113. Browser inspection confirmed Top/Perspective tabs, their Focus/Close controls, the welcome tutorial, and successful Skip activation; no warning/error console entries were returned. Its first screenshot is retained temporarily in generated/astra-runtime/browser26. This is successful boot and one working interaction, not layout parity. A fresh React reference tab is being paired because the earlier tab ceased belonging to this browser session.
+
+Root traced the conflict toolbar failure to `flex::flow_for`: the Tree row's absolute inline-control placement returned a default flow and erased the toolbar's authored horizontal axis. The fix preserves Stack content flow while applying the row's absolute rectangle. The two other Shell failures were stale assertions: the accepted accessibility tree correctly includes a noninteractive presence status, and React offers Focus on each tab even when two windows share one stack. The focused native158 rerun is pending.
+
+Canonical WASM build 4 passed and published both renderer files in 3 minutes 40 seconds. The canonical Puzzle3d WGPU serve graph is starting from that output. Native157 executed 82 tests: 71 passed and 11 failed (1391 skipped). Root owns three Shell regressions, SolSelect six editor/Table/VFS regressions, and SolTree two temporal regressions. Detailed diagnostics are retained under generated/native157 until fixes are verified.
+
+The first Playbook command selected no tests (14 skipped); it targeted the artifact package rather than the authored app producer. This is not a passing receipt for the seven new surface laws. SolTree is locating the exact owning test targets.
+
+The parity acceptance tooling now requires successful boot, nonempty structural and pixel comparisons, and executed passing interactions. Boot-only, omitted axes, zero comparisons, skipped steps and stale bridges cannot pass smoke/verify/sweep. Its language-neutral evidence fixture was tested fail-first against the missing evaluator, then passed all 15 cases against both the implemented evaluator and an independent Ajv JSON Schema oracle (292 ms). This fixes acceptance reporting; it does not establish live renderer parity.
+
+The corrected full WGPU TypeScript run 3 passed all 415 tests across 40 files (15.85 seconds). This includes the Chromium-dependent cases with the configured bundled browser cache and the actual React intent conversion against the neutral action-scope fixture. The passing command is the Nx scoped executor using the WGPU Vitest configuration.
+
 The second direct locked/offline WASM check passed in 1 minute 45 seconds. Canonical browser build 4 is now running; the type-check is not yet a browser artifact or runtime parity claim. The native production library also compiled, but test compilation found an unbound Ink test node and an unqualified VFS InputState. SolSelect corrected both. Native157 is running the combined pending laws through the registered `test-wgpu-unit` target; an initial invocation accidentally named nonexistent `test-unit` and ran no tests.
 
 UI40 passed all four selected native tests (681 skipped): receipt identity for duplicate payloads, poisoned duplicate receipt publication, exact input cancellation reporting, and mounted toggle semantics. UI41 passed the rounded avatar raster law (1 passed, 684 skipped). The old avatar include failure is resolved.

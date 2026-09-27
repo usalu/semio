@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedGas
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-assumed-gas-temperature", "change-assumed-gas-temperature")
+        protocol::LocalizedLabel::native("Change assumed gas temperature", "Angenommene Heißgastemperatur ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeUsage {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-usage", "change-usage")
+        protocol::LocalizedLabel::native("Change building usage", "Gebäudenutzung ändern")
     }
 }

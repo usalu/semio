@@ -6,6 +6,7 @@ pub use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMut
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::object::schema::mutations::{
+    set_snapshot::SetSnapshot,
     create_brep::CreateBrep, create_mesh::CreateMesh, create_properties::CreateProperties, delete_brep::DeleteBrep, delete_mesh::DeleteMesh, delete_properties::DeleteProperties, move_object::MoveObject, rotate_object::RotateObject,
     scale_object::ScaleObject,
 };
@@ -54,6 +55,7 @@ fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_object_mutation(m: &SemioObjectMutation) -> String {
     match m {
+        SemioObjectMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioObjectMutation::MoveObject(p) => format!("moveObject:{},{},{}", p.translation.x, p.translation.y, p.translation.z),
         SemioObjectMutation::RotateObject(p) => format!("rotateObject:{},{},{},{}", p.rotation.x, p.rotation.y, p.rotation.z, p.rotation.w),
         SemioObjectMutation::ScaleObject(p) => format!("scaleObject:{},{},{}", p.scale.x, p.scale.y, p.scale.z),
@@ -68,6 +70,13 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioObjectMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     if line == "deleteBrep" {
         return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {}));
     }

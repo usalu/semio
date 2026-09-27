@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "replace-without-stale-wake",
+      "steps": [
+        {
+          "key": 1,
+          "dueMs": 600
+        },
+        {
+          "key": 1,
+          "dueMs": 800
+        },
+        {
+          "nowMs": 600,
+          "fired": false,
+          "nextMs": 800
+        },
+        {
+          "nowMs": 800,
+          "fired": true,
+          "nextMs": null
+        },
+        {
+          "nowMs": 900,
+          "fired": false,
+          "nextMs": null
+        }
+      ]
+    },
+    {
+      "id": "cancel-before-due",
+      "steps": [
+        {
+          "key": 1,
+          "dueMs": 600
+        },
+        {
+          "key": 1,
+          "dueMs": null
+        },
+        {
+          "nowMs": 600,
+          "fired": false,
+          "nextMs": null
+        }
+      ]
+    },
+    {
+      "id": "independent-owners",
+      "steps": [
+        {
+          "key": 1,
+          "dueMs": 600
+        },
+        {
+          "key": 2,
+          "dueMs": 100
+        },
+        {
+          "key": 1,
+          "dueMs": 800
+        },
+        {
+          "nowMs": 100,
+          "fired": true,
+          "nextMs": 800
+        },
+        {
+          "nowMs": 600,
+          "fired": false,
+          "nextMs": 800
+        },
+        {
+          "nowMs": 800,
+          "fired": true,
+          "nextMs": null
+        }
+      ]
+    },
+    {
+      "id": "late-wake-is-once",
+      "steps": [
+        {
+          "key": 1,
+          "dueMs": 600
+        },
+        {
+          "nowMs": 900,
+          "fired": true,
+          "nextMs": null
+        },
+        {
+          "nowMs": 901,
+          "fired": false,
+          "nextMs": null
+        }
+      ]
+    },
+    {
+      "id": "long-uptime-repeat",
+      "steps": [
+        {
+          "nowMs": 429496729600,
+          "fired": false,
+          "nextMs": null
+        },
+        {
+          "key": 1,
+          "dueMs": 429496729700
+        },
+        {
+          "nowMs": 429496729699,
+          "fired": false,
+          "nextMs": 429496729700
+        },
+        {
+          "nowMs": 429496729700,
+          "fired": true,
+          "nextMs": null
+        }
+      ]
+    }
+  ],
+  "sources": [
+    { "id": "shell-before-ui", "uiDueUs": 1600000, "shellDueUs": 1400000, "expectedDueUs": 1400000 },
+    { "id": "ui-before-shell", "uiDueUs": 1200000, "shellDueUs": 1400000, "expectedDueUs": 1200000 },
+    { "id": "ui-cancellation-keeps-shell", "uiDueUs": null, "shellDueUs": 1400000, "expectedDueUs": 1400000 },
+    { "id": "shell-cancellation-keeps-ui", "uiDueUs": 1600000, "shellDueUs": null, "expectedDueUs": 1600000 },
+    { "id": "all-owners-idle", "uiDueUs": null, "shellDueUs": null, "expectedDueUs": null }
+  ],
+  "bridges": [
+    {
+      "id": "distinct-origins",
+      "nowUs": 5000000,
+      "dueUs": 5600000,
+      "hostSeconds": 91.25,
+      "expectedSeconds": 91.85
+    },
+    {
+      "id": "overdue",
+      "nowUs": 7000000,
+      "dueUs": 5600000,
+      "hostSeconds": 17,
+      "expectedSeconds": 17
+    },
+    {
+      "id": "long-uptime",
+      "nowUs": 429496729600000,
+      "dueUs": 429496729700000,
+      "hostSeconds": 20000000,
+      "expectedSeconds": 20000000.1
+    },
+    {
+      "id": "cancelled",
+      "nowUs": 5000000,
+      "dueUs": null,
+      "hostSeconds": 91.25,
+      "expectedSeconds": null
+    }
+  ]
+}

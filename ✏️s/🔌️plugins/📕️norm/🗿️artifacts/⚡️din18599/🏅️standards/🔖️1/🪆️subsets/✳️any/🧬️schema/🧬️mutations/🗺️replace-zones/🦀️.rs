@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ReplaceZones
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace zones", "zones ersetzen")
+        protocol::LocalizedLabel::native("Replace zones", "Zonen ersetzen")
     }
 }

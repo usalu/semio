@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/patch-data/schema.json",
+  "title": "PatchData",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["index", "removeCount", "data"],
+  "properties": {
+    "index": { "type": "integer", "minimum": 0 },
+    "removeCount": { "type": "integer", "minimum": 0 },
+    "data": { "$ref": "../set-data/schema.json#/$defs/WavData" },
+    "moveTo": { "type": ["integer", "null"], "minimum": 0 },
+    "mutation": { "const": "patchData", "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone." }
+  }
+}

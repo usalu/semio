@@ -468,7 +468,11 @@ function materializeScenario(block: FeatureBlock, example: { row: Record<string,
     return [];
   }
   const row = example?.row ?? {};
-  const id = example === null ? baseId : `${baseId}-${row.id ?? String(example.index + 1)}`;
+  if (example !== null && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.id ?? "")) {
+    errors.push(`Scenario Outline ${where} Examples row ${example.index + 1} needs a kebab-case \`id\` cell: its scenario id is @id-${baseId}-<id>, and a row index would rename every later row when one is inserted`);
+    return [];
+  }
+  const id = example === null ? baseId : `${baseId}-${row.id}`;
   const implementations = tagValues(tags, "@implementation-").filter((value) => (IMPLEMENTATIONS as readonly string[]).includes(value)) as Implementation[];
   const steps = block.steps.map((step) => ({ ...step, text: substitute(step.text, row), docString: step.docString === undefined ? undefined : substitute(step.docString, row), dataTable: step.dataTable?.map((cells) => cells.map((cell) => substitute(cell, row))) }));
   return [
@@ -653,6 +657,21 @@ export function oracleLinkedPackages(entry: OracleEntry): OracleLinkedPackage[] 
 /** 🧩️ The names alone of every package one registered oracle links — what the import probe scans for. */
 export function oraclePackages(entry: OracleEntry): string[] {
   return oracleLinkedPackages(entry).map((linked) => linked.package);
+}
+
+/** 🎯️ How each language's adapter registers a SUBJECT handler (`Adapter::subject`, `subject:` in a TS scenario, …). */
+export const ADAPTER_SUBJECT_REGISTRATION: Readonly<Record<Implementation, RegExp>> = {
+  rust: /\.subject\(/,
+  typescript: /\bsubject\s*:/,
+  go: /\.Subject\(/,
+  python: /\.subject\(/,
+  dotnet: /\.Subject\(/,
+};
+
+/** 🎯️ Whether the case's adapter in `implementation` registers any subject handler — read from its source, like its entry point. */
+export function adapterRegistersSubject(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): boolean {
+  const path = discovered.adapters[implementation];
+  return path !== undefined && ADAPTER_SUBJECT_REGISTRATION[implementation].test(readFileSync(join(repoRoot, path), "utf8"));
 }
 
 /**
@@ -3089,7 +3108,8 @@ export type AdapterContext = Readonly<{
   copyFixture(uri: string, as?: string): string;
   /** 📦️ Directory a handler writes its produced artifact bundle into. */
   artifactDir: string;
-  /** 📦️ Absolute path to write one named result artifact to; creates parent directories. */
+  /** 📦️ Absolute path to write one named result artifact to — `<artifactDir>/<scenario id>/<role>/<filename>`, so a
+   *  scenario's artifacts never overwrite another's; creates parent directories. */
   artifact(role: string, filename: string): string;
   /** 🎲️ Deterministic seed for this scenario, from its `@seed-…` tag. */
   seed: string;
@@ -3114,6 +3134,20 @@ export type TestAdapter = Readonly<{ implementation: Implementation; scenarios: 
 /** 🧭️ Declares a TypeScript adapter. The coordinator validates the registration against the feature. */
 export function defineTestAdapter(adapter: TestAdapter): TestAdapter {
   return adapter;
+}
+
+/**
+ * 📦️ The answer of a READER oracle whose expected state is committed, not computed: the one fixture the scenario's
+ * steps name whose URI ends with `/<leaf>`, copied into the artifact bundle under `role` for the case's comparison
+ * pipeline, with its URI and digest as the projection. A scenario naming no such fixture, or more than one, is an error.
+ */
+export function committedArtifact(ctx: AdapterContext, leaf: string, role: string, mediaType: string): AdapterOutcome {
+  const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(FIXTURE_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
+  if (uris.length !== 1) throw new Error(`scenario ${ctx.scenario.id} names ${uris.length} committed fixture(s) ending in /${leaf}; a reader oracle answers with exactly one`);
+  const bytes = ctx.fixtureBytes(uris[0]!);
+  const path = ctx.artifact(role, leaf);
+  writeFileSync(path, bytes);
+  return { projection: { role, uri: uris[0], sha256: digest(bytes) }, artifacts: [{ role, path, mediaType }] };
 }
 
 /** 🧭️ Checks a registration against the plan: no unknown scenario, no unregistered scenario. */
@@ -3155,7 +3189,7 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
     workDir,
     artifactDir,
     artifact: (role_, filename) => {
-      const target = join(artifactDir, role_, filename);
+      const target = join(artifactDir, scenario.id, role_, filename);
       mkdirSync(dirname(target), { recursive: true });
       return target;
     },
@@ -6223,6 +6257,56 @@ export function evaluatePipeline(pipeline: ComparisonPipeline, reports: Readonly
   // `missingProbes` was computed and then ignored, which made an unrunnable pipeline read as passing.
   const equal = missingProbes.length === 0 && verdicts.every((verdict) => verdict.ok || verdict.optional);
   return { pipeline: pipeline.id, equal, verdicts, missingProbes, unqualifiedStages, overclaimedOptional };
+}
+
+/** 📦️ The artifacts one scenario pair produced, keyed by role: the oracle's and the subject's, merged. A role both
+ * results produce is a problem, because a stage could then read either side's file. */
+export function pipelineRoleArtifacts(results: readonly Pick<TestResult, "role" | "artifacts">[]): { artifacts: ReadonlyMap<string, string>; problems: string[] } {
+  const artifacts = new Map<string, string>();
+  const problems: string[] = [];
+  for (const result of results)
+    for (const artifact of result.artifacts ?? []) {
+      if (artifacts.has(artifact.role)) problems.push(`artifact role ${artifact.role} is produced by more than one result`);
+      else artifacts.set(artifact.role, artifact.path);
+    }
+  return { artifacts, problems };
+}
+
+/**
+ * ⚖️ Runs one comparison pipeline over one scenario pair's artifacts and evaluates it. Every stage input role must name
+ * an artifact one side produced — a role nobody produced is a stage without a report, which `evaluatePipeline` fails,
+ * never a skip. Each stage runs its probe's registered `command` with one `--input <path>` per declared input, in the
+ * declared order; its whole stdout is the one report it prints, validated before a single assertion is read. Stages run in order; `signal`
+ * cancels between stages and `progress` reports each finished stage.
+ */
+export function executePipeline(repoRoot: string, pipeline: ComparisonPipeline, probes: ReadonlyMap<string, ProbeEntry>, artifacts: ReadonlyMap<string, string>, options: Readonly<{ budgetMs: number; signal?: AbortSignal; progress?: (done: number, total: number) => void }>): { verdict: PipelineVerdict; reports: ReadonlyMap<number, ProbeReport>; problems: string[] } {
+  const reports = new Map<number, ProbeReport>();
+  const problems: string[] = [];
+  for (const [index, stage] of pipeline.stages.entries()) {
+    if (options.signal?.aborted === true) {
+      problems.push(`pipeline ${pipeline.id} cancelled before stage ${index} (${stage.probe})`);
+      break;
+    }
+    const probe = probes.get(stage.probe);
+    const unresolved = stage.inputs.filter((role) => !artifacts.has(role));
+    if (probe === undefined || probe.command === undefined || probe.command.length === 0) problems.push(`stage ${index} (${stage.probe}): the probe is not registered with a command`);
+    else if (unresolved.length > 0) problems.push(`stage ${index} (${stage.probe}): no artifact for role(s) ${unresolved.join(", ")}`);
+    else {
+      const [command, ...fixed] = probe.command;
+      const run = runProbe(command!, [...fixed, ...(stage.args ?? []), ...stage.inputs.flatMap((role) => ["--input", artifacts.get(role)!])], { cwd: repoRoot, budgetMs: options.budgetMs });
+      let report: unknown;
+      try {
+        report = JSON.parse(run.stdout);
+      } catch {
+        report = undefined;
+      }
+      const invalid = probeReportProblems(report);
+      if (invalid.length > 0) problems.push(`stage ${index} (${stage.probe}) exited ${run.status} without a valid report: ${invalid.join("; ")}${run.stderr.trim().length > 0 ? ` — ${run.stderr.trim().split("\n").slice(-3).join(" / ")}` : ""}`);
+      else reports.set(index, report as ProbeReport);
+    }
+    options.progress?.(index + 1, pipeline.stages.length);
+  }
+  return { verdict: evaluatePipeline(pipeline, reports, probes), reports, problems };
 }
 
 /** ⚖️ The effective pipeline table: every contributed pipeline, keyed by id. */

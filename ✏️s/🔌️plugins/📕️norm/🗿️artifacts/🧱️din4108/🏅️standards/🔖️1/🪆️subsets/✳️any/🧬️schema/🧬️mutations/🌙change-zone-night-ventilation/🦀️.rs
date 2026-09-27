@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneNigh
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-night-ventilation", "change-zone-night-ventilation")
+        protocol::LocalizedLabel::native("Change night ventilation of the zone", "Nachtlüftung der Zone ändern")
     }
 }

@@ -116,13 +116,22 @@ mod quick {
             let selected = NativeCodecProviderPackageV1 { plugin_id, package_id, version: &descriptor.manifest.version };
             let before = directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash));
             for row in fixture["nativeCases"].as_array().unwrap() {
-                let mut candidate = descriptor.clone();
-                candidate.manifest.dependencies = serde_json::from_value(row["dependencies"].clone()).unwrap();
-                let result = NativeCodecProviderSourceV1::preview(&providers, selected, &candidate, &context);
-                assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{plugin_id}: {}: {:?}", row["id"], result.as_ref().err());
-                if let Ok(bindings) = result {
-                    assert_eq!(bindings.len(), count);
-                }
+                let accepted = match serde_json::from_value::<Vec<semio_framework::PluginDependency>>(row["dependencies"].clone()) {
+                    Err(refusal) => {
+                        assert!(refusal.to_string().contains("exact version"), "{plugin_id}: {}: a range pin is refused when the manifest decodes: {refusal}", row["id"]);
+                        false
+                    }
+                    Ok(dependencies) => {
+                        let mut candidate = descriptor.clone();
+                        candidate.manifest.dependencies = dependencies;
+                        let result = NativeCodecProviderSourceV1::preview(&providers, selected, &candidate, &context);
+                        if let Ok(bindings) = &result {
+                            assert_eq!(bindings.len(), count);
+                        }
+                        result.is_ok()
+                    }
+                };
+                assert_eq!(accepted, row["accepted"].as_bool().unwrap(), "{plugin_id}: {}", row["id"]);
                 assert_eq!(directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
             }
             for row in fixture["consumerCatalogCases"].as_array().unwrap() {

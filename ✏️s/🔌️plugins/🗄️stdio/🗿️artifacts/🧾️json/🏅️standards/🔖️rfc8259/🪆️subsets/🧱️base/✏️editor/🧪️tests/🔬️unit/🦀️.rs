@@ -20,18 +20,52 @@ async fn editor_declares_the_tree_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_path_id_roundtrips_root_and_nested() {
-    assert_eq!(decode_path_id("").unwrap(), Vec::<JsonPathSegment>::new());
+    assert!(decode_path_id("").is_err());
     assert_eq!(decode_path_id(main::JSON_ROOT_NODE_ID).unwrap(), Vec::<JsonPathSegment>::new());
-    assert_eq!(decode_path_id("k=a/i=0").unwrap(), vec![JsonPathSegment::Key("a".into()), JsonPathSegment::Index(0)]);
+    let nested = main::encode_path_id(&[main::member_segment("a"), "i=0".into()]);
+    assert_eq!(decode_path_id(&nested).unwrap(), vec![JsonPathSegment::Key("a".into()), JsonPathSegment::Index(0)]);
     assert!(decode_path_id("bad").is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = JsonAnyEditorCommand::SetNode { node_id: "k=a/i=0".into(), value: "hello world".into() };
+    let command = JsonAnyEditorCommand::SetNode { node_id: main::encode_path_id(&[main::member_segment("%20"), "i=0".into()]), value: "\"literal %20\\nGrüße 🌍\"".into() };
     let printed = <JsonAnyEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <JsonAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
+
+    let source = JsonAnyEditorCommand::EditSnapshot {
+        event: SnapshotEditEvent::ReplaceSource { source: "{\"literal\":\"%20\\nGrüße 🌍\"}".into() },
+    };
+    let printed = <JsonAnyEditorCommand as protocol::OpText>::print_op(&source);
+    let parsed = <JsonAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse snapshot edit");
+    assert_eq!(parsed, source);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn editor_declares_all_typed_snapshot_edit_actions() {
+    let definition = create_json_editor();
+    for action_id in semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS {
+        let action = definition.actions.iter().find(|action| action.id == *action_id).expect("typed snapshot edit action");
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
+    for source in ["null", "true", "-123.4500e+9", "\"text %20\\n日本語\"", "[1,false,null]", "{\"answer\":42}"] {
+        let command = JsonAnyEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), value: source.into() };
+        let emit = json_any_emit(&command, &JsonSnapshot::default()).expect("valid JSON value");
+        let JsonMutation::SetScalar(SetScalarMutation::Apply(payload)) = &emit.artifact_mutations[0] else {
+            panic!("set-node emits one typed set-scalar mutation")
+        };
+        let native = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("native parser").value;
+        let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
+        assert_eq!(payload.value, native);
+        assert_eq!(serde_json::Value::from(&payload.value), expected);
+    }
+    let invalid = JsonAnyEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), value: "{invalid".into() };
+    assert!(json_any_emit(&invalid, &JsonSnapshot::default()).is_err());
 }
 
 //#region 🎬️ExampleSwitchLaws
@@ -121,9 +155,19 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
-    dispatch_settled(&mut app, "set-node", &[("nodeId", &main::encode_path_id(&[main::member_segment("name")])), ("value", "semio-edited")]).await.expect("set-node settles");
+    dispatch_settled(&mut app, "set-node", &[("nodeId", &main::encode_path_id(&[main::member_segment("name")])), ("value", "\"semio-edited\"")]).await.expect("set-node settles");
     let printed = <JsonSnapshot as store::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
     assert!(printed.contains("\"semio-edited\"") && !printed.contains("\"semio\","), "{printed}");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn source_edit_reaches_the_document_through_the_retained_event_route() {
+    let mut app = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
+    let source = "{\"kind\":\"typed\",\"count\":3,\"enabled\":true}";
+    dispatch_settled(&mut app, semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID, &[("source", source)]).await.expect("source edit settles");
+    let after = app.snapshot().expect("json snapshot");
+    assert_eq!(after, <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("expected source"));
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws

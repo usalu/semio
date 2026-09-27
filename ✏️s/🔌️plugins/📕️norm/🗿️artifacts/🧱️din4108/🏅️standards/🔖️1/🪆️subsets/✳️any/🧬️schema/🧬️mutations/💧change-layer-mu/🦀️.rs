@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerMu 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-mu", "change-layer-mu")
+        protocol::LocalizedLabel::native("Change vapour diffusion resistance factor μ of the layer", "Wasserdampf-Diffusionswiderstandszahl μ der Schicht ändern")
     }
 }

@@ -297,6 +297,65 @@ fn row_without_an_id_is_keyed_by_its_ordinal() {
     let node = table_scene("table-press-ordinal", TableScene::base(columns_json(&[("name", "Name", false)]), rows));
     assert_eq!(press(&node, 40.0, row_center_y(1)).expect("row hit").control_id, "table-press-ordinal.row.1");
 }
+
+#[test]
+fn editable_text_cell_matches_the_shared_fixture_and_preserves_conflicting_drafts() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/✏️editable-text/🔣️.json"))).expect("editable table fixture");
+    let rows = json!([{ "id": "r1", "value": fixture["cell"] }]).to_string();
+    let node = table_scene("editable-table", TableScene::base(columns_json(&[("value", "Value", false)]), rows));
+    let target = table_editable_text_focus_target(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 200.0, row_center_y(0), UiDriverDrag::Handle).expect("editable cell focus");
+    assert_eq!((target.row_id.as_str(), target.column_id.as_str(), target.value.as_str()), ("r1", "value", fixture["cell"]["value"].as_str().unwrap()));
+    assert_eq!(target.control_id(&node.host_id), "editable-table.row.r1.value.editable");
+    assert!(press(&node, 200.0, row_center_y(0)).expect("editable cell hit").action.is_none(), "the editor swallows the row action");
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    let outcome = table_editable_text_commit_owned(&node, "r1", "value", target.value.as_str(), fixture["replacement"].as_str().unwrap().into(), &mut input).expect("live cell").expect("admitted action");
+    assert_eq!(outcome, TableEditableTextCommitOutcome::Publishing);
+    let action = loop {
+        if let Some(action) = input.drive_retained_action_step().expect("retained cell page") {
+            break action.descriptor;
+        }
+    };
+    assert_eq!(serde_json::to_value(&action).expect("action json"), fixture["expectedAction"]);
+
+    let changed_rows = json!([{ "id": "r1", "value": {
+        "kind": "editableText",
+        "value": "collaborator",
+        "action": fixture["cell"]["action"]
+    } }])
+    .to_string();
+    let changed = table_scene("editable-table", TableScene::base(columns_json(&[("value", "Value", false)]), changed_rows));
+    let conflict = table_editable_text_commit(&changed, "r1", "value", target.value.as_str(), fixture["replacement"].as_str().unwrap(), &mut input).expect("live cell").expect("conflict result");
+    assert_eq!(conflict, TableEditableTextCommitOutcome::Conflict);
+    assert!(drain_actions(&mut input).is_empty());
+
+    let acceptance = &fixture["acceptance"];
+    for (persisted, expected) in [
+        (acceptance["acceptedPersisted"].as_str().unwrap(), TableEditableTextCommitOutcome::Unchanged),
+        (acceptance["refusedPersisted"].as_str().unwrap(), TableEditableTextCommitOutcome::Publishing),
+        (acceptance["collaboratorPersisted"].as_str().unwrap(), TableEditableTextCommitOutcome::Conflict),
+    ] {
+        input.cancel_retained_action();
+        let rows = json!([{ "id": "r1", "value": {
+            "kind": "editableText",
+            "value": persisted,
+            "action": fixture["cell"]["action"]
+        } }])
+        .to_string();
+        let scene = table_scene("editable-table", TableScene::base(columns_json(&[("value", "Value", false)]), rows));
+        let outcome = table_editable_text_commit_owned(
+            &scene,
+            "r1",
+            "value",
+            acceptance["base"].as_str().unwrap(),
+            acceptance["draft"].as_str().unwrap().into(),
+            &mut input,
+        )
+        .expect("live acceptance fixture cell")
+        .expect("acceptance fixture result");
+        assert_eq!(outcome, expected, "persisted {persisted}");
+    }
+}
 //#endregion TablePointerTests
 
 /// 🎯️ React `🖱️ui/🎯️targets/⚛️react/🟦️.tsx` `interactionMergeFromModifiers`, pinned by its own vitest

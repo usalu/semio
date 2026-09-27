@@ -1,19 +1,57 @@
 use super::*;
 
 #[test]
+fn retained_string_action_pages_a_large_utf8_value_and_publishes_once() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️retained-string-action/🔣️.json")).unwrap();
+    let bytes = fixture["largeDraftBytes"].as_u64().unwrap() as usize;
+    let source = format!("{}🚀", "a".repeat(bytes - "🚀".len()));
+    let descriptor =
+        ActionDescriptor { controller_id: fixture["controllerId"].as_str().unwrap().into(), action: fixture["action"].as_str().unwrap().into(), args: Some(DslValue::Object(vec![("path".into(), DslValue::String("/description".into()))])) };
+    let mut retained = RetainedStringAction::new(descriptor, "value".into(), source.len()).unwrap();
+    let mut steps = 0usize;
+    while retained.copied_bytes() < source.len() {
+        let start = retained.copied_bytes();
+        let mut end = start.saturating_add(RETAINED_ACTION_STRING_PAGE_BYTES).min(source.len());
+        while !source.is_char_boundary(end) {
+            end -= 1;
+        }
+        retained.push_page(&source[start..end]).unwrap();
+        steps += 1;
+    }
+    assert_eq!(steps, fixture["expectedSteps"].as_u64().unwrap() as usize);
+    let queued = retained.finish(None).unwrap();
+    assert_eq!(queued.descriptor.args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_str), Some(source.as_str()));
+    let oracle = serde_json::to_value(&queued.descriptor).unwrap();
+    assert_eq!(oracle["args"]["value"].as_str(), Some(source.as_str()));
+}
+
+#[test]
+fn retained_string_action_refusal_and_cancel_keep_the_source_owner() {
+    let source = "draft".repeat(16_384);
+    assert_eq!(RetainedStringAction::new(ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None }, "value".into(), RETAINED_ACTION_STRING_BYTE_CAPACITY + 1).err(), Some(BoundedActionFault::ByteCredits));
+    let mut retained = RetainedStringAction::new(ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None }, "value".into(), source.len()).unwrap();
+    retained.push_page(&source[..RETAINED_ACTION_STRING_PAGE_BYTES]).unwrap();
+    drop(retained);
+    assert_eq!(source.len(), 81_920);
+    assert!(source.starts_with("draft"));
+}
+
+#[test]
 fn correlated_receipts_survive_identical_payloads_without_entering_the_domain_descriptor() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut queue = BoundedActionQueue::default();
     let mut batch = queue.reserve_batch(rows.len(), rows.len() * 256).unwrap();
     for row in rows {
-        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-            builder.set_receipt(ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
-            builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
-            builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
-            builder.end_container()
-        }).unwrap();
+        batch
+            .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
+                builder.set_receipt(ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
+                builder.begin_object(None)?;
+                builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
+                builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
+                builder.end_container()
+            })
+            .unwrap();
     }
     batch.publish().unwrap();
     let mut descriptors = Vec::new();

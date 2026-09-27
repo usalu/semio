@@ -4,7 +4,7 @@
 
 use crate::editor::semio_presentation::modes::edit;
 use crate::editor::semio_presentation::modes::edit::windows::main;
-use crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation;
+use crate::standards::v1::subsets::presentation::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot, SemioPresentationMutation};
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -12,6 +12,7 @@ use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,  ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, EditorApp, InteractiveJobClassification,
 };
 use store::EngineHandles;
+use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_PRESENTATION_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
@@ -19,23 +20,15 @@ pub const SEMIO_PRESENTATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.presentation
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-/// ✏️ The Main window declares the shared `MeshWindowKit::editable_window_kind()`'s
-/// `set-vertex` action (contract §2.6), but this subset's own `🧬️schema/🧬️mutations` declares
-/// no by-index "replace"/"set" op that action could honestly back today (only insert/remove and
-/// whole-document `SetSnapshot`) — per this ticket's explicit allowance, the editor still exists
-/// with a MINIMAL command set: the window really advertises the action, `handle` is a real dispatch
-/// (not `unreachable!()`) that is a no-op today, rather than inventing a mutation the schema does
-/// not have. Report, don't invent.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum SemioPresentationEditCommand {
-    #[default]
-    SetVertex,
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
+    EditSnapshot { event: editing::SnapshotEditEvent },
 }
 
 impl protocol::OpBinary for SemioPresentationEditCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = SEMIO_PRESENTATION_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(pack::to_json_string(self).into_bytes())
@@ -50,6 +43,15 @@ impl protocol::OpBinary for SemioPresentationEditCommand {
 const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 
 const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "s.stdio.semio.presentation.tool-command.v1";
 const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
@@ -62,6 +64,7 @@ fn semioPresentationEditor_example_snapshot(example_id: &str) -> SemioPresentati
 }
 
 fn semioPresentationEditor_command_id(command: &SemioPresentationEditCommand) -> &'static str {
+    if let SemioPresentationEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         SemioPresentationEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
         _ => "other",
@@ -69,6 +72,7 @@ fn semioPresentationEditor_command_id(command: &SemioPresentationEditCommand) ->
 }
 
 fn semioPresentationEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SemioPresentationEditCommand, Fault> {
+    if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| SemioPresentationEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(SemioPresentationEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
@@ -157,10 +161,10 @@ impl ArtifactEditor for SemioPresentationEditor {
     const DIALECT: Dialect = SEMIO_PRESENTATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_PRESENTATION_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SemioPresentationEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs",
-        controller: "s.stdio.semio@v1/*#editor",
+        controller: "s.stdio.semio@v1/presentation#editor",
         artifact_schema: "s.stdio.semio.presentation",
         factory: "SemioPresentationEditorExampleFactory",
         factory_type: SemioPresentationEditorExampleFactory,
@@ -169,10 +173,12 @@ impl ArtifactEditor for SemioPresentationEditor {
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        registry.register(SemioPresentationEditorExampleFactory::new(registry.controller_id()))
+        registry.register(SemioPresentationEditorExampleFactory::new(registry.controller_id()))?;
+        editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if !SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -206,6 +212,9 @@ impl ArtifactEditor for SemioPresentationEditor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    }
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -232,40 +241,55 @@ impl ArtifactEditor for SemioPresentationEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
+            SemioPresentationEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             SemioPresentationEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semioPresentationEditor_example_snapshot(example_id), SEMIO_PRESENTATION_DOCUMENT_SCHEMA)],
                 description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
-            _ => Ok(Emit::default()),
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/presentation#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Editor
 
+
+impl editing::SnapshotEditingEditor for SemioPresentationEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
+        match command { SemioPresentationEditCommand::EditSnapshot { event } => Some(event), _ => None }
+    }
+    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioPresentationMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
+    }
+}
+
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_presentation_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(SEMIO_PRESENTATION_DIALECT)
+    let builder = Editor::builder(SEMIO_PRESENTATION_DIALECT)
         .document(["stdio", "semio"])
         .icon_id("box")
         .mode_def(edit::definition())
         .default_mode_id(edit::SEMIO_PRESENTATION_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
+        .window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition())
         .default_layout(edit::layout())
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        ;
+    editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

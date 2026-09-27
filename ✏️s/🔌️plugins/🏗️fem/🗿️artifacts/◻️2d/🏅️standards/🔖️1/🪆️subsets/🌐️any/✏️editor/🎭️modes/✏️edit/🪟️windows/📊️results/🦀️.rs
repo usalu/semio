@@ -357,7 +357,7 @@ fn render_static(
         Err(error) => return placeholder(Label::data(format!("Analysis error: {error}"))),
     };
     let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 📊️ Every layer one static frame paints. `amplitude` is the waveform read of the playback phase:
@@ -503,7 +503,7 @@ fn render_modal(
         Err(error) => return placeholder(Label::data(format!("Modal analysis error: {error}"))),
     };
     let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -541,7 +541,7 @@ fn render_buckling(
         Err(error) => return placeholder(Label::data(format!("Buckling analysis error: {error}"))),
     };
     let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

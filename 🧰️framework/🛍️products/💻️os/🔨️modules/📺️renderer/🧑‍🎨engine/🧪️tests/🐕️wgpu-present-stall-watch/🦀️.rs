@@ -39,7 +39,7 @@ mod present_stall_watch_tests {
         let upload = (upload[0].as_u64().expect("mesh vertex") as u32, upload[1].as_u64().expect("mesh index") as u32, upload[2].as_u64().expect("atlas page") as usize);
         let input_wait = match row.get(5).and_then(serde_json::Value::as_str) {
             Some("RuntimeLock") => AppPresentInputWait::RuntimeLock,
-            Some("InteractionCheckout") => AppPresentInputWait::InteractionCheckout,
+            Some("InteractionCheckout") => AppPresentInputWait::InteractionCheckout { site: "fixture", request: "none" },
             Some("SceneIntent") => AppPresentInputWait::SceneIntent,
             _ => AppPresentInputWait::None,
         };

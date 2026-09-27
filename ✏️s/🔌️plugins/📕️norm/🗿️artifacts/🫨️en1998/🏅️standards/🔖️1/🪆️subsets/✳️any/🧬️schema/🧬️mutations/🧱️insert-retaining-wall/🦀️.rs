@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertRetainingW
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-retaining-wall", "insert-retaining-wall")
+        protocol::LocalizedLabel::native("Insert retaining wall", "Stützwand einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-retaining-wall".into()]

@@ -1,0 +1,298 @@
+{
+  "windows": [
+    "a",
+    "b"
+  ],
+  "maximized": 1,
+  "initialWeights": [
+    0.5,
+    0.5
+  ],
+  "cases": [
+    {
+      "id": "identical-override",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "A",
+      "maximized": 1,
+      "layoutLabel": "A"
+    },
+    {
+      "id": "identical-default",
+      "source": "default",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "A",
+      "maximized": 1,
+      "layoutLabel": "A"
+    },
+    {
+      "id": "changed-ratio",
+      "source": "override",
+      "weights": [
+        0.25,
+        0.75
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "A",
+      "maximized": null,
+      "layoutLabel": "A"
+    },
+    {
+      "id": "reordered-roster",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "b",
+        "a"
+      ],
+      "label": "A",
+      "maximized": null,
+      "layoutLabel": "A"
+    },
+    {
+      "id": "presentation-only",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "Renamed A",
+      "maximized": 1,
+      "layoutLabel": "A"
+    },
+    {
+      "id": "changed-layout-title",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "A",
+      "layoutLabel": "Renamed A",
+      "maximized": null
+    },
+    {
+      "id": "template-only",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "label": "A",
+      "layoutLabel": "A",
+      "templateId": "front",
+      "maximized": 1
+    },
+    {
+      "id": "extra-instance",
+      "source": "override",
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "windows": [
+        "a",
+        "b",
+        "b-2"
+      ],
+      "label": "A",
+      "layoutLabel": "A",
+      "extraId": "b-2",
+      "maximized": null
+    }
+  ],
+  "localeRetitle": {
+    "extraId": "b-2",
+    "kindId": "b",
+    "bakedTitle": "Top",
+    "resolvedTitle": "B",
+    "locale": "de"
+  },
+  "ingressCases": [
+    {
+      "id": "unknown-extra-pruned",
+      "stacks": [
+        [
+          {
+            "windowKindId": "a"
+          }
+        ],
+        [
+          {
+            "windowKindId": "missing",
+            "instanceId": "missing-2",
+            "templateId": "bad"
+          }
+        ],
+        [
+          {
+            "windowKindId": "b",
+            "instanceId": "b-2",
+            "templateId": "good"
+          }
+        ]
+      ],
+      "windows": [
+        "a",
+        "b-2"
+      ],
+      "extras": [
+        "b-2"
+      ],
+      "stackPaths": [
+        "0",
+        "1"
+      ],
+      "templates": {
+        "b-2": "good"
+      }
+    },
+    {
+      "id": "unknown-kind-under-base-id-kept",
+      "stacks": [
+        [
+          {
+            "windowKindId": "missing",
+            "instanceId": "a",
+            "templateId": "bad"
+          }
+        ],
+        [
+          {
+            "windowKindId": "b"
+          }
+        ]
+      ],
+      "windows": [
+        "a",
+        "b"
+      ],
+      "extras": [],
+      "stackPaths": [
+        "0",
+        "1"
+      ],
+      "templates": {}
+    },
+    {
+      "id": "only-unknown-produces-empty-dock",
+      "stacks": [
+        [
+          {
+            "windowKindId": "missing",
+            "instanceId": "missing-2",
+            "templateId": "bad"
+          }
+        ]
+      ],
+      "windows": [],
+      "extras": [],
+      "stackPaths": [],
+      "templates": {}
+    },
+    {
+      "id": "empty-peer-hoisted",
+      "stacks": [
+        [
+          {
+            "windowKindId": "missing"
+          }
+        ],
+        [
+          {
+            "windowKindId": "a"
+          },
+          {
+            "windowKindId": "b",
+            "instanceId": "b-2",
+            "templateId": "good"
+          }
+        ]
+      ],
+      "windows": [
+        "a",
+        "b-2"
+      ],
+      "extras": [
+        "b-2"
+      ],
+      "stackPaths": [
+        ""
+      ],
+      "templates": {
+        "b-2": "good"
+      }
+    },
+    {
+      "id": "retired-extra-not-admitted-by-history",
+      "previousStacks": [
+        [
+          {
+            "windowKindId": "a"
+          }
+        ],
+        [
+          {
+            "windowKindId": "b",
+            "instanceId": "b-2",
+            "templateId": "good"
+          }
+        ]
+      ],
+      "stacks": [
+        [
+          {
+            "windowKindId": "a"
+          }
+        ],
+        [
+          {
+            "windowKindId": "missing",
+            "instanceId": "b-2",
+            "templateId": "bad"
+          }
+        ]
+      ],
+      "windows": [
+        "a"
+      ],
+      "extras": [],
+      "stackPaths": [
+        ""
+      ],
+      "templates": {}
+    }
+  ]
+}

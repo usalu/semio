@@ -20,6 +20,20 @@ async fn render_walks_object_and_array_members() {
     assert_eq!(item0.key.as_str(), "i=0", "a node is keyed by its SIBLING segment, never by its path from the root");
 }
 
+#[test]
+fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
+    let document = JsonSnapshot {
+        schema: "stdio.json".into(),
+        value: JsonValue::Object { members: vec![JsonMember { key: "greeting".into(), value: JsonValue::String { value: "Grüße\n%20".into() } }] },
+    };
+    let node = render_editor(&document, semio_framework_plugin::Locale::De, &semio_framework_plugin::TreeWindows::unhosted()).expect("editor render");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
+    assert!(json.contains("Grüße\\n%20"), "natural JSON text remains in the draft: {json}");
+    assert!(json.contains("\\\"editAction\\\":\\\"set-node\\\""), "the draft applies through the retained whole-document route: {json}");
+    assert!(json.contains("\\\"nodeId\\\":\\\"$\\\""), "the draft targets the JSON root: {json}");
+    assert!(json.contains("Anwenden") && json.contains("Verwerfen"), "draft controls follow the active locale: {json}");
+}
+
 //#region 🪟️WindowLaws
 
 /// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost

@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBridgeInpu
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert bridge fatigue {}", self.bridge_fatigue_item.id),
-            &format!("Brückenermüdung setzen {}", self.bridge_fatigue_item.id),
+            &format!("Update bridge fatigue {}", self.bridge_fatigue_item.id),
+            &format!("Ermüdungsnachweis der Brücke {} aktualisieren", self.bridge_fatigue_item.id),
         )
     }
     fn target(&self) -> Vec<String> {

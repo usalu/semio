@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertZoneWind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-zone-window", "insert-zone-window")
+        protocol::LocalizedLabel::native("Insert window", "Fenster einfügen")
     }
 }

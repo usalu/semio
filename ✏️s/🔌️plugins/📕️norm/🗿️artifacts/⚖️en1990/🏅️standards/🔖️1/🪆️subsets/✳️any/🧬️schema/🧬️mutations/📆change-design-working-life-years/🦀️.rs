@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeDesignWork
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change design-working-life-years", "Ändern: design-working-life-years")
+        protocol::LocalizedLabel::native("Change design working life", "Geplante Nutzungsdauer ändern")
     }
 }
 //#endregion 🔖️Payload

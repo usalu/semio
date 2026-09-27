@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for InsertFooting {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-footing", "insert-footing")
+        protocol::LocalizedLabel::native("Insert footing", "Fundament einfügen")
     }
 }

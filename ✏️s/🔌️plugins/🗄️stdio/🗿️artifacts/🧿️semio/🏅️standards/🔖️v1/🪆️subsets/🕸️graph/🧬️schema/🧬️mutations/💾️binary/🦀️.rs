@@ -13,7 +13,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 11] = [
+const TEXT_KEYWORDS: [(&str, &str); 12] = [
+    ("set-snapshot", "setSnapshot"),
     ("create-node", "createNode"),
     ("delete-node", "deleteNode"),
     ("change-node-kind", "changeNodeKind"),
@@ -30,6 +31,7 @@ const TEXT_KEYWORDS: [(&str, &str); 11] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioGraphMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_CREATE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-node");
 const TAG_DELETE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-node");
 const TAG_CHANGE_NODE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-node-kind");
@@ -46,6 +48,7 @@ const TAG_DELETE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioGraphMutation) -> u8 {
     match m {
+        SemioGraphMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioGraphMutation::CreateNode(_) => TAG_CREATE_NODE,
         SemioGraphMutation::DeleteNode(_) => TAG_DELETE_NODE,
         SemioGraphMutation::ChangeNodeKind(_) => TAG_CHANGE_NODE_KIND,

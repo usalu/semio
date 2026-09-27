@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneWind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-window-inclination-deg", "change-zone-window-inclination-deg")
+        protocol::LocalizedLabel::native("Change window inclination", "Fensterneigung ändern")
     }
 }

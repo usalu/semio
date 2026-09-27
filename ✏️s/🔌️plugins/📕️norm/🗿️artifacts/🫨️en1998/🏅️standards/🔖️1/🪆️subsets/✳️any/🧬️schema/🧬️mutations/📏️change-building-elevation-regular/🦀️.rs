@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBuildingEl
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-building-elevation-regular", "change-building-elevation-regular")
+        protocol::LocalizedLabel::native("Change regularity in elevation", "Regelmäßigkeit im Aufriss ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-elevation-regular".into()]

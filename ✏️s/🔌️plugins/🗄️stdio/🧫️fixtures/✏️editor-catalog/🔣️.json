@@ -1,0 +1,590 @@
+{
+  "editorCount": 88,
+  "formatCount": 36,
+  "detailsWindow": "s.stdio.window.snapshot-details",
+  "actions": [
+    {
+      "id": "setSnapshotValue",
+      "arguments": {
+        "path": "/name",
+        "value": "Grüße 🌍\n%20\\s"
+      }
+    },
+    {
+      "id": "insertSnapshotValue",
+      "arguments": {
+        "path": "/items/-",
+        "value": {
+          "name": "new",
+          "visible": true,
+          "weight": 1.25
+        }
+      }
+    },
+    {
+      "id": "removeSnapshotValue",
+      "arguments": {
+        "path": "/items/0"
+      }
+    },
+    {
+      "id": "moveSnapshotValue",
+      "arguments": {
+        "from": "/items/0",
+        "path": "/items/1"
+      }
+    },
+    {
+      "id": "renameSnapshotKey",
+      "arguments": {
+        "path": "/metadata/old~1key",
+        "value": "new/key~日本語"
+      }
+    },
+    {
+      "id": "replaceSnapshotSource",
+      "arguments": {
+        "value": "{\"literal\":\"%20\\nGrüße 🌍\"}"
+      }
+    }
+  ],
+  "snapshotEdits": {
+    "png": {
+      "path": "/gama",
+      "value": 50000
+    },
+    "txt": {
+      "path": "/trailingNewline",
+      "value": true
+    },
+    "md": {
+      "path": "/blocks",
+      "value": [
+        {
+          "kind": "paragraph",
+          "inlines": [
+            {
+              "kind": "text",
+              "text": "Edited"
+            }
+          ]
+        }
+      ]
+    },
+    "csv": {
+      "path": "/hasHeader",
+      "value": false
+    },
+    "tsv": {
+      "path": "/trailingNewline",
+      "value": true
+    },
+    "json": {
+      "path": "/value",
+      "value": true
+    },
+    "xml": {
+      "path": "/doc/root",
+      "value": {
+        "kind": "element",
+        "name": "root",
+        "attrs": [],
+        "children": []
+      }
+    },
+    "html": {
+      "path": "/doctype",
+      "value": "DOCTYPE HTML"
+    },
+    "xlsx": {
+      "path": "/workbook/sharedStrings",
+      "value": [
+        "Edited"
+      ]
+    },
+    "docx": {
+      "path": "/document/body",
+      "value": [
+        {
+          "kind": "paragraph",
+          "runs": [
+            {
+              "text": "Edited",
+              "bold": false,
+              "italic": false,
+              "underline": false,
+              "extraRunProperties": []
+            }
+          ],
+          "style": null,
+          "extraParagraphProperties": []
+        }
+      ]
+    },
+    "pptx": {
+      "path": "/presentation/slides",
+      "value": [
+        {
+          "shapes": []
+        }
+      ]
+    },
+    "pdf": {
+      "path": "/pages/0/text",
+      "value": "Edited"
+    },
+    "zip": {
+      "path": "/comment",
+      "value": "Edited"
+    },
+    "deflate": {
+      "path": "/windowBits",
+      "value": 6
+    },
+    "binary": {
+      "path": "/bytes",
+      "value": [
+        0,
+        255,
+        92,
+        32
+      ]
+    },
+    "bcf": {
+      "path": "/version",
+      "value": "2.1"
+    },
+    "epw": {
+      "path": "/location/city",
+      "value": "Hannover"
+    },
+    "s.stdio.pdf@1.7/*#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/a#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/e#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/h#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/ua#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/vt#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "s.stdio.pdf@1.7/x#editor": {
+      "path": "/metadata",
+      "value": "<xmp>Edited</xmp>"
+    },
+    "jpg": {
+      "path": "/reEncodeQuality",
+      "value": 80
+    },
+    "gif": {
+      "path": "/loopCount",
+      "value": 1
+    },
+    "s.stdio.gif@87a/*#editor": {
+      "path": "/pixelAspectRatio",
+      "value": 1
+    },
+    "bmp": {
+      "path": "/xPixelsPerMeter",
+      "value": 2835
+    },
+    "tiff": {
+      "path": "/byteOrder",
+      "value": "bigEndian"
+    },
+    "wav": {
+      "path": "/fmt/sampleRate",
+      "value": 48000
+    },
+    "mp3": {
+      "path": "/id3v1",
+      "value": {
+        "raw": [
+          84,
+          65,
+          71
+        ]
+      }
+    },
+    "mp4": {
+      "path": "/ftyp/minorVersion",
+      "value": 1
+    },
+    "avi": {
+      "path": "/idx1Present",
+      "value": true
+    },
+    "obj": {
+      "path": "/mtllib",
+      "value": "materials.mtl"
+    },
+    "stl": {
+      "path": "/solidName",
+      "value": "edited"
+    },
+    "ply": {
+      "path": "/comments",
+      "value": [
+        "edited"
+      ]
+    },
+    "gltf": {
+      "path": "/document/asset/generator",
+      "value": "semio-editor"
+    },
+    "dwg": {
+      "path": "/maintenanceVersion",
+      "value": 1
+    },
+    "las": {
+      "path": "/header/systemIdentifier",
+      "value": "semio-editor"
+    },
+    "svg": {
+      "path": "/doc/root/name",
+      "value": "svg:svg"
+    },
+    "step": {
+      "path": "/header/fileName/name",
+      "value": "edited.step"
+    },
+    "dxf": {
+      "path": "/headerVars",
+      "value": [
+        {
+          "name": "$LTSCALE",
+          "groupCode": 40,
+          "value": {
+            "kind": "double",
+            "value": 1.25
+          }
+        }
+      ]
+    },
+    "s.stdio.ifc@4/*#editor": {
+      "path": "/header/fileName/0",
+      "value": {
+        "kind": "string",
+        "value": "edited.ifc"
+      }
+    },
+    "ifc": {
+      "path": "/edmPreamble",
+      "value": {
+        "producer": "semio-editor",
+        "module": "",
+        "creationDate": "",
+        "host": "",
+        "database": "",
+        "databaseVersion": "",
+        "databaseCreationDate": "",
+        "schema": "",
+        "model": "",
+        "modelCreationDate": "",
+        "headerModel": "",
+        "headerModelCreationDate": "",
+        "user": "",
+        "group": "",
+        "license": "",
+        "options": ""
+      }
+    },
+    "s.stdio.semio@v1/*#editor": {
+      "path": "/subset/nextLabel",
+      "value": 1
+    },
+    "s.stdio.semio@v1/brep#editor": {
+      "path": "/nextLabel",
+      "value": 1
+    },
+    "s.stdio.semio@v1/object#editor": {
+      "path": "/transform/translation/x",
+      "value": 1.25
+    },
+    "s.stdio.semio@v1/drawing#editor": {
+      "path": "/canvas/width",
+      "value": 321.5
+    },
+    "s.stdio.semio@v1/image#editor": {
+      "path": "/width",
+      "value": 2
+    },
+    "s.stdio.semio@v1/audio#editor": {
+      "path": "/sampleRate",
+      "value": 48000
+    },
+    "s.stdio.semio@v1/animation#editor": {
+      "path": "/timelines",
+      "value": [
+        {
+          "name": "Edited",
+          "channels": []
+        }
+      ]
+    },
+    "s.stdio.semio@v1/video#editor": {
+      "path": "/streams",
+      "value": [
+        {
+          "kind": "video",
+          "codec": "raw",
+          "width": 1,
+          "height": 1,
+          "rate": {
+            "num": 25,
+            "den": 1
+          },
+          "samples": []
+        }
+      ]
+    },
+    "s.stdio.semio@v1/presentation#editor": {
+      "path": "/masters",
+      "value": [
+        {
+          "id": "edited",
+          "shapes": []
+        }
+      ]
+    },
+    "s.stdio.semio@v1/value#editor": {
+      "path": "/root",
+      "value": {
+        "kind": "str",
+        "value": "Edited"
+      }
+    },
+    "s.stdio.semio@v1/text#editor": {
+      "path": "/runs",
+      "value": [
+        {
+          "language": "en",
+          "content": "Edited",
+          "marks": []
+        }
+      ]
+    },
+    "s.stdio.semio@v1/flow#editor": {
+      "path": "/nodes",
+      "value": [
+        {
+          "id": "edited",
+          "kind": "input",
+          "label": "Edited",
+          "params": [],
+          "position": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      ]
+    },
+    "s.stdio.semio@v1/graph#editor": {
+      "path": "/nodes",
+      "value": [
+        {
+          "id": {
+            "value": "edited"
+          },
+          "kind": "node",
+          "label": "Edited",
+          "position": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ports": [],
+          "properties": []
+        }
+      ]
+    },
+    "s.stdio.semio@v1/kit#editor": {
+      "path": "/types",
+      "value": [
+        {
+          "id": "edited",
+          "name": "Edited",
+          "category": "example"
+        }
+      ]
+    },
+    "s.stdio.semio@v1/cad#editor": {
+      "path": "/layers",
+      "value": [
+        {
+          "name": "Edited",
+          "colorIndex": 7,
+          "lineType": "CONTINUOUS",
+          "visible": true
+        }
+      ]
+    },
+    "s.stdio.semio@v1/document#editor": {
+      "path": "/blocks",
+      "value": [
+        {
+          "kind": "code",
+          "language": "text",
+          "text": "Edited"
+        }
+      ]
+    },
+    "s.stdio.semio@v1/table#editor": {
+      "path": "/columns",
+      "value": [
+        {
+          "name": "Edited",
+          "kind": "str"
+        }
+      ]
+    },
+    "s.stdio.semio@v1/model#editor": {
+      "path": "/spatial",
+      "value": [
+        {
+          "id": "edited",
+          "kind": "site",
+          "name": "Edited",
+          "parentId": null,
+          "placement": {
+            "translation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        }
+      ]
+    },
+    "s.stdio.semio@v1/mesh#editor": {
+      "path": "/materials",
+      "value": [
+        {
+          "id": "edited",
+          "baseColor": {
+            "r": 1.0,
+            "g": 0.0,
+            "b": 0.0,
+            "a": 1.0
+          },
+          "metallic": 0.0,
+          "roughness": 0.5
+        }
+      ]
+    }
+  },
+  "editorApps": [
+    "s.stdio.avi@1.0/*#editor",
+    "s.stdio.bcf@2.1/*#editor",
+    "s.stdio.binary@raw/*#editor",
+    "s.stdio.bmp@v3/*#editor",
+    "s.stdio.csv@rfc4180/*#editor",
+    "s.stdio.deflate@rfc1950/*#editor",
+    "s.stdio.docx@ecma-376/*#editor",
+    "s.stdio.docx@ecma-376/strict#editor",
+    "s.stdio.docx@ecma-376/transitional#editor",
+    "s.stdio.dwg@ac1018/*#editor",
+    "s.stdio.dwg@ac1024/*#editor",
+    "s.stdio.dxf@r12/*#editor",
+    "s.stdio.epw@energyplus/*#editor",
+    "s.stdio.gif@87a/*#editor",
+    "s.stdio.gif@89a/*#editor",
+    "s.stdio.gltf@2.0/*#editor",
+    "s.stdio.html@5/*#editor",
+    "s.stdio.ifc@2x3/*#editor",
+    "s.stdio.ifc@2x3/cobie#editor",
+    "s.stdio.ifc@2x3/cv20#editor",
+    "s.stdio.ifc@2x3/sav#editor",
+    "s.stdio.ifc@4/*#editor",
+    "s.stdio.jpg@jfif-1.01/*#editor",
+    "s.stdio.jpg@jfif-1.01/baseline#editor",
+    "s.stdio.json@rfc8259/*#editor",
+    "s.stdio.json@rfc8259/i-json#editor",
+    "s.stdio.las@1.0/*#editor",
+    "s.stdio.md@commonmark/*#editor",
+    "s.stdio.mp3@mpeg1-layer3/*#editor",
+    "s.stdio.mp4@isobmff/*#editor",
+    "s.stdio.obj@3.0/*#editor",
+    "s.stdio.pdf@1.4/*#editor",
+    "s.stdio.pdf@1.4/a#editor",
+    "s.stdio.pdf@1.4/x#editor",
+    "s.stdio.pdf@1.7/*#editor",
+    "s.stdio.pdf@1.7/a#editor",
+    "s.stdio.pdf@1.7/e#editor",
+    "s.stdio.pdf@1.7/h#editor",
+    "s.stdio.pdf@1.7/ua#editor",
+    "s.stdio.pdf@1.7/vt#editor",
+    "s.stdio.pdf@1.7/x#editor",
+    "s.stdio.ply@1.0/*#editor",
+    "s.stdio.png@1.2/*#editor",
+    "s.stdio.pptx@ecma-376/*#editor",
+    "s.stdio.pptx@ecma-376/strict#editor",
+    "s.stdio.pptx@ecma-376/transitional#editor",
+    "s.stdio.semio@v1/*#editor",
+    "s.stdio.semio@v1/animation#editor",
+    "s.stdio.semio@v1/audio#editor",
+    "s.stdio.semio@v1/brep#editor",
+    "s.stdio.semio@v1/cad#editor",
+    "s.stdio.semio@v1/document#editor",
+    "s.stdio.semio@v1/drawing#editor",
+    "s.stdio.semio@v1/flow#editor",
+    "s.stdio.semio@v1/graph#editor",
+    "s.stdio.semio@v1/image#editor",
+    "s.stdio.semio@v1/kit#editor",
+    "s.stdio.semio@v1/mesh#editor",
+    "s.stdio.semio@v1/model#editor",
+    "s.stdio.semio@v1/object#editor",
+    "s.stdio.semio@v1/presentation#editor",
+    "s.stdio.semio@v1/table#editor",
+    "s.stdio.semio@v1/text#editor",
+    "s.stdio.semio@v1/value#editor",
+    "s.stdio.semio@v1/video#editor",
+    "s.stdio.step@ap214/*#editor",
+    "s.stdio.step@ap214/cc1#editor",
+    "s.stdio.step@ap214/cc2#editor",
+    "s.stdio.step@ap214/cc3#editor",
+    "s.stdio.step@ap214/cc4#editor",
+    "s.stdio.step@ap214/cc5#editor",
+    "s.stdio.step@ap214/cc6#editor",
+    "s.stdio.stl@ascii/*#editor",
+    "s.stdio.svg@1.1/*#editor",
+    "s.stdio.svg@1.1/basic#editor",
+    "s.stdio.svg@1.1/tiny#editor",
+    "s.stdio.tiff@6.0/*#editor",
+    "s.stdio.tiff@6.0/baseline#editor",
+    "s.stdio.tsv@iana/*#editor",
+    "s.stdio.txt@utf-8/*#editor",
+    "s.stdio.wav@riff-pcm/*#editor",
+    "s.stdio.xlsx@ecma-376/*#editor",
+    "s.stdio.xlsx@ecma-376/strict#editor",
+    "s.stdio.xlsx@ecma-376/transitional#editor",
+    "s.stdio.xml@1.0/*#editor",
+    "s.stdio.xml@1.0/valid#editor",
+    "s.stdio.zip@2.0/*#editor",
+    "s.stdio.zip@2.0/iso21320#editor"
+  ]
+}

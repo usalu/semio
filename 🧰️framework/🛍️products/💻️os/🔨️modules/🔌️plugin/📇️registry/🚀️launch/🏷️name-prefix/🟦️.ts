@@ -3,12 +3,9 @@ import { join } from "node:path";
 import { moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 
-const VARIATION_SELECTOR = "\uFE0F";
-
-/** @emoji 🔤️ Returns the ASCII slug after an emoji identity's variation selector in a taxonomy folder name. */
+/** 🔤️ Removes complete leading emoji clusters while preserving numeric standard identifiers. */
 export function taxonomyFolderSlug(folderName: string): string {
-  const index = folderName.lastIndexOf(VARIATION_SELECTOR);
-  return index === -1 ? folderName : folderName.slice(index + 1);
+  return folderName.replace(/^(?:[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji_Modifier}|\uFE0F|\u200D)+/u, "");
 }
 
 /** @emoji 📂 Resolves the owning plugin directory (`✏️s/🔌️plugins/…`) from a crate path. */
@@ -43,17 +40,19 @@ function appDialect(app: string | undefined): { readonly artifact: string; reado
   return match ? { artifact: match[1]!, standard: match[2]!, subset: match[3]! } : undefined;
 }
 
-/** @emoji 🪆️ The `🏅️standards/🔖️<standard>/🪆️subsets/<subset>` folder a row pins, or `undefined` for the
- * wildcard subset every single-dialect row carries. Two rows on the SAME artifact differ only here
- * (`🗄️stdio`'s `json` vs its `i-json` profile, `xml` vs `valid`), so the segment is what keeps their
- * launch names apart. */
-function findSubsetFolder(pluginRoot: string, artifactFolder: string, standard: string, subset: string, repoRoot: string): string | undefined {
-  if (subset === "*") return undefined;
+/** 🏅️ Resolves the exact standard folder, including keycap and emoji presentation identities. */
+function findStandardFolder(pluginRoot: string, artifactFolder: string, standard: string, repoRoot: string): string | undefined {
   const standards = join(repoRoot, pluginRoot, "🗿️artifacts", artifactFolder, "🏅️standards");
   if (!existsSync(standards)) return undefined;
-  const standardFolder = readdirSync(standards).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === standard.toLowerCase());
+  return readdirSync(standards).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === standard.toLowerCase());
+}
+
+/** 🪆️ Resolves a named subset within its standard; wildcard subsets need no extra name segment. */
+function findSubsetFolder(pluginRoot: string, artifactFolder: string, standard: string, subset: string, repoRoot: string): string | undefined {
+  if (subset === "*") return undefined;
+  const standardFolder = findStandardFolder(pluginRoot, artifactFolder, standard, repoRoot);
   if (!standardFolder) return undefined;
-  const subsets = join(standards, standardFolder, "🪆️subsets");
+  const subsets = join(repoRoot, pluginRoot, "🗿️artifacts", artifactFolder, "🏅️standards", standardFolder, "🪆️subsets");
   if (!existsSync(subsets)) return undefined;
   return readdirSync(subsets).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === subset.toLowerCase());
 }
@@ -78,7 +77,7 @@ function prefixForHostedApp(app: string, playgrounds: readonly PlaygroundEntry[]
 
 /**
  * @emoji 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy
- * paths: `<plugin folder><artifact folder><subset folder>`, each segment a real taxonomy folder name.
+ * paths: `<plugin folder><artifact folder>[<standard folder>]<subset folder>`, each segment a real taxonomy folder name.
  *
  * 🔒️ INJECTIVE over playground variants — `🚀️launch/🟦️.ts` names every launcher after this prefix and
  * only synthesizes the ones the seed has not placed yet, so two variants sharing a prefix silently
@@ -100,8 +99,14 @@ export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot
   const collapseEponymous = playgrounds.filter((row) => row.pluginId === playground.pluginId).length === 1;
   const dialect = appDialect(playground.app);
   const withArtifact = (artifactFolder: string | undefined): string => {
-    const combined = combinePluginAndArtifact(pluginDirectoryName, artifactFolder, collapseEponymous);
+    let combined = combinePluginAndArtifact(pluginDirectoryName, artifactFolder, collapseEponymous);
     if (!artifactFolder || !dialect) return combined;
+    const standards = new Set(playgrounds.filter((row) => row.pluginId === playground.pluginId).map((row) => appDialect(row.app)).filter((sibling) => sibling?.artifact === dialect.artifact).map((sibling) => sibling!.standard));
+    if (standards.size > 1) {
+      const standardFolder = findStandardFolder(pluginRoot, artifactFolder, dialect.standard, repoRoot);
+      if (!standardFolder) throw new Error(`playground ${playground.variant} has no taxonomy folder for standard ${dialect.standard}`);
+      combined += standardFolder;
+    }
     const subsetFolder = findSubsetFolder(pluginRoot, artifactFolder, dialect.standard, dialect.subset, repoRoot);
     return subsetFolder ? `${combined}${subsetFolder}` : combined;
   };

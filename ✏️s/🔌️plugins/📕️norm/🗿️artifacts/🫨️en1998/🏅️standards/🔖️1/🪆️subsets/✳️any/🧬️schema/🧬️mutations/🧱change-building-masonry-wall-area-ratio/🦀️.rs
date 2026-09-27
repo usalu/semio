@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBuildingMa
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-building-masonry-wall-area-ratio", "change-building-masonry-wall-area-ratio")
+        protocol::LocalizedLabel::native("Change masonry wall area ratio", "Mauerwerkswand-Flächenanteil ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-masonry-wall-area-ratio".into()]

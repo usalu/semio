@@ -6,6 +6,7 @@
 use crate::editor::csv::modes::edit;
 use crate::editor::csv::modes::edit::windows::main;
 use crate::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
@@ -29,6 +30,7 @@ pub const CSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum CsvEditorCommand {
     SetCell { row: u32, column: u32, value: String },
+    EditSnapshot { event: SnapshotEditEvent },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
@@ -36,13 +38,21 @@ pub enum CsvEditorCommand {
 impl protocol::OpText for CsvEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            CsvEditorCommand::SetCell { row, column, value } => format!("set-cell row={row} column={column} value={}", value.replace('\\', "\\\\").replace(' ', "\\s")),
-            CsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", example_id.replace('\\', "\\\\").replace(' ', "\\s")),
+            CsvEditorCommand::SetCell { row, column, value } => format!("set-cell row={row} column={column} value={}", crate::schema::diff::hex_encode(value.as_bytes())),
+            CsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::schema::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
+            CsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::schema::diff::hex_encode(example_id.as_bytes())),
         }
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            return Ok(CsvEditorCommand::SetActiveExample { example_id: rest.replace("\\s", " ").replace("\\\\", "\\") });
+            let bytes = crate::schema::diff::hex_decode(rest).map_err(|error| store::TextError::new(format!("csv editor command: invalid id hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+            let example_id = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("csv editor command: invalid id utf8: {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(CsvEditorCommand::SetActiveExample { example_id });
+        }
+        if let Some(raw) = line.strip_prefix("snapshot-edit event=") {
+            let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("csv editor command: invalid snapshot edit hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("csv editor command: invalid snapshot edit: {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(CsvEditorCommand::EditSnapshot { event });
         }
         let rest = line.strip_prefix("set-cell ").ok_or_else(|| store::TextError::new(format!("csv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut row = None;
@@ -50,11 +60,13 @@ impl protocol::OpText for CsvEditorCommand {
         let mut value = String::new();
         for token in rest.split(' ') {
             let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("csv editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
-            let decoded = raw.replace("\\s", " ").replace("\\\\", "\\");
             match key {
-                "row" => row = decoded.parse::<u32>().ok(),
-                "column" => column = decoded.parse::<u32>().ok(),
-                "value" => value = decoded,
+                "row" => row = raw.parse::<u32>().ok(),
+                "column" => column = raw.parse::<u32>().ok(),
+                "value" => {
+                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("csv editor command: invalid value hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+                    value = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("csv editor command: invalid value utf8: {error}"), dsl::TextSpan::at(1, 1)))?;
+                }
                 _ => {}
             }
         }
@@ -68,7 +80,7 @@ impl protocol::OpBinary for CsvEditorCommand {
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TableWindowKit`
     /// mints `set-cell`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
-    const TOOL_JOB_IDS: &'static [&'static str] = CSV_RETAINED_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = CSV_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
@@ -103,6 +115,15 @@ const CSV_KIT_ACTION_ID: &str = "set-cell";
 /// ids. Without the kit verb's row the reactor refused every `set-cell` with
 /// `interactive-job.missing-factory`.
 const CSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, CSV_KIT_ACTION_ID];
+const CSV_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, CSV_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const CSV_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.csv.tool-command.v1";
 const CSV_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
@@ -135,6 +156,9 @@ fn csv_example_snapshot(example_id: &str) -> CsvSnapshot {
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<CsvEditorCommand, Fault> {
+    if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
+        return Ok(CsvEditorCommand::EditSnapshot { event });
+    }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(CsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         CSV_KIT_ACTION_ID => Ok(CsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
@@ -151,6 +175,7 @@ fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
 fn csv_command_id(command: &CsvEditorCommand) -> &'static str {
     match command {
         CsvEditorCommand::SetCell { .. } => CSV_KIT_ACTION_ID,
+        CsvEditorCommand::EditSnapshot { event } => event.action_id(),
         CsvEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
@@ -164,6 +189,11 @@ fn csv_retained_extent(_command: &CsvEditorCommand, _snapshot: &CsvSnapshot, _in
 /// its document, `set-cell` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_emit(command: &CsvEditorCommand, snapshot: &CsvSnapshot) -> Result<Emit<CsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    if let CsvEditorCommand::EditSnapshot { event } = command {
+        return semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| {
+            CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot })
+        });
+    }
     let (row, column, value) = match command {
         CsvEditorCommand::SetActiveExample { example_id } => {
             return Ok(Emit {
@@ -173,6 +203,7 @@ fn csv_emit(command: &CsvEditorCommand, snapshot: &CsvSnapshot) -> Result<Emit<C
             })
         }
         CsvEditorCommand::SetCell { row, column, value } => (row, column, value),
+        CsvEditorCommand::EditSnapshot { .. } => unreachable!(),
     };
     let record_index = grid_row_to_record_index(snapshot.has_header, *row);
     let Some(record) = snapshot.records.get(record_index) else { return Ok(Emit::default()) };
@@ -275,7 +306,7 @@ impl ArtifactEditor for CsvEditor {
     const DIALECT: Dialect = CSV_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_CSV_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<CsvEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.stdio.csv@rfc4180/*#editor",
@@ -288,10 +319,14 @@ impl ArtifactEditor for CsvEditor {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(CsvRetainedCommandJobFactory::new(&controller))
+        registry.register(CsvRetainedCommandJobFactory::new(&controller))?;
+        semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&request.tool_id) {
+            return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request);
+        }
         if !CSV_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -420,11 +455,35 @@ impl ArtifactEditor for CsvEditor {
         csv_emit(command, doc.snapshot)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.csv@rfc4180/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for CsvEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent> {
+        match command {
+            CsvEditorCommand::EditSnapshot { event } => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -432,20 +491,21 @@ impl ArtifactEditor for CsvEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_csv_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(CSV_EDITOR_DIALECT)
+    let builder = Editor::builder(CSV_EDITOR_DIALECT)
         .document(["semio", "stdio", "csv"])
         .icon_id("table-2")
         .mode_def(edit::definition())
         .default_mode_id(edit::CSV_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Table"))
         // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

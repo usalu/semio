@@ -164,6 +164,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     readOnly = false,
     clampToReady = false,
     thumbClassName,
+    "aria-valuetext": ariaValueText,
     ...props
   },
   forwardedRef,
@@ -479,6 +480,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             aria-valuemin={range.min}
             aria-valuemax={range.max}
             aria-valuenow={sliderValue}
+            aria-valuetext={ariaValueText}
             aria-orientation={orientation}
             aria-label={props["aria-label"] ?? sliderTitle}
             aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]}

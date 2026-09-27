@@ -1188,7 +1188,7 @@ export interface DocumentOpenCatalogV1 {
   generationId: string;
 }
 
-export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 17;
+export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 18;
 
 export interface DocumentExecutionProtocolV1 {
   appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;

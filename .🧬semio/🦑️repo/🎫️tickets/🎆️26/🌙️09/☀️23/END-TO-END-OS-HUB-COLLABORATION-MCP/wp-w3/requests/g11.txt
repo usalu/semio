@@ -1,0 +1,6 @@
+g11 (2026-09-27 05:05–06:3x, session 13) — landing set `wp-g11/g11-child-carrier.py` (owned-child op groups ride the agent transaction):
+  semio-framework-os-kernel — `🏪️store` GroupMeta.group_id; `📡️spr/🧵️channel` CHANNEL_VERSION 18: AppFrame::Emit.child_ops +
+    AppCommand::TransactionPrepare.prepared_child_ops (both codecs + paged decoder + close stages; TS twin + hex fixtures).
+  semio-framework-plugin — ChildEmit wire (encode_groups/decode_groups, FromValue), EmitWire, preview carries child groups,
+    transaction_prepare/commit/undo/redo of owned-child groups via dispatch_emit_group with group_id = txn_id.
+  → every guest re-describes/rebuilds (channel v18 wire); host (plugin-host, os-mcp, React/wgpu TS twin) must match the guests.

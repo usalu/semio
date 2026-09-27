@@ -1,0 +1,3 @@
+# C11 (session 13) guest-linked crates whose code changed — crate + reason
+semio-framework-os-kernel — C11: directory stream message `access-changed {spaceId, change: granted|revoked}` (📇️directory/🧬️schema Rust + TS twin + JSON schema; `DirectoryAccessChange` re-exported) — the hub tells a reader its own access to a space moved so its projection re-reads from the origin (collab STEP 2: a human added to an existing space never saw its `space.created`). Every guest links the kernel; no WIT change.
+semio-s-artifact-space-home — C11: `HomeConfig::apply_directory_event_page` rebuilds the projection from a page with `after_seq_exclusive == 0` under any authority (was `frontier-race` under the same authority) + unit law. No descriptor change.

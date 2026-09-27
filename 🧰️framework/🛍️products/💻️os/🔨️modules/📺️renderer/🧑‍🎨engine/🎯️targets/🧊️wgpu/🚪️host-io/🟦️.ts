@@ -35,7 +35,7 @@ export type WgpuHostIoRequest =
   | { readonly op: "extension-store-install-file" }
   | { readonly op: "extension-store-uninstall"; readonly extensionId: string }
   | ({ readonly op: "format-temporal-values" } & HostTemporalFormatRequestV1)
-  | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly bearer?: string; readonly body?: string; readonly accept?: string }
+  | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly timeoutMs: number; readonly bearer?: string; readonly body?: string; readonly accept?: string }
   | { readonly op: "storage"; readonly verb: "get" | "set" | "remove"; readonly scope?: WgpuHostStorageScope; readonly key: string; readonly value?: string }
   | { readonly op: "socket"; readonly verb: "open"; readonly socketId: number; readonly url: string; readonly protocols?: readonly string[] }
   | { readonly op: "socket"; readonly verb: "send"; readonly socketId: number; readonly text?: string; readonly binary?: string }
@@ -99,6 +99,9 @@ export const WGPU_SOCKET_POLL_MAX_BYTES = 48 * 1024;
 /** 📤️ The largest single frame this door writes — the Rust encoder refuses a larger one before it
  * is ever sealed, and this is the second half of that same law. */
 export const WGPU_SOCKET_SEND_MAX_BYTES = 48 * 1024;
+
+/** ⏳️ The longest one page-owned directory fetch may retain the renderer interaction owner. */
+export const WGPU_DIRECTORY_HTTP_TIMEOUT_MS = 5_000;
 
 /** 📤️ One file a picker handed back. The NAME is half the payload: every import leaf in the repo
  * resolves the file's format from its extension, so contents alone can only be guessed at. */
@@ -188,7 +191,7 @@ function openFiles(accept: string, readAs: string | undefined, multiple: boolean
   });
 }
 
-function pickExtensionPackage(): Promise<Uint8Array | null> {
+function pickExtensionPackage(): Promise<Uint8Array<ArrayBuffer> | null> {
   if (typeof document === "undefined") return Promise.resolve(null);
   return new Promise((resolve) => {
     const input = document.createElement("input");
@@ -310,16 +313,21 @@ function pickNativeFolderPath(): Promise<string | null> {
  * a fetch that never reached the hub and a hub that answered 5xx are different outcomes, and the
  * shell's directory client branches its retry policy on exactly that distinction. */
 async function directoryHttp(request: Extract<WgpuHostIoRequest, { op: "directory-http" }>): Promise<WgpuDirectoryHttpAnswer> {
+  if (!Number.isInteger(request.timeoutMs) || request.timeoutMs < 1 || request.timeoutMs > WGPU_DIRECTORY_HTTP_TIMEOUT_MS) return { error: "directory-http deadline is invalid" };
   const headers: Record<string, string> = {};
   if (request.body !== undefined) headers["content-type"] = "application/json";
   if (request.bearer !== undefined) headers.authorization = `Bearer ${request.bearer}`;
   if (request.accept !== undefined) headers.accept = request.accept;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(new Error("directory-http deadline exceeded")), request.timeoutMs);
   try {
-    const response = await fetch(request.url, { body: request.body, credentials: "include", headers, method: request.method });
+    const response = await fetch(request.url, { body: request.body, credentials: "include", headers, method: request.method, signal: controller.signal });
     if (request.accept !== undefined) return { bodyBase64: socketBytesToBase64(await response.arrayBuffer()), status: response.status };
     return { body: await response.text(), status: response.status };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

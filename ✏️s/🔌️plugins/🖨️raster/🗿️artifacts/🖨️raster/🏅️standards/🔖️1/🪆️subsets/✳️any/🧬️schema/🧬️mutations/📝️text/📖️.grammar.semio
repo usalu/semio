@@ -22,7 +22,7 @@ start mutation
 # byte-exact token order.
 mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible
      / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
-     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels
+     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -48,7 +48,7 @@ adjustment-layer = "adjustment" SP id SP text SP bool SP number SP transform-blo
 # unit-suffix convention `draw.document`'s fixture confirms for its own `#[dsl(angle="rad")]`
 # (`rotation=0rad`); raster's own unit is degrees, so `<number>deg`.
 transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "deg" "}"
-mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? "}"
+mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"
 param = IDENT "=" TEXT
 
 # `asset` is a whole `RasterImageAsset` value (mime/data), printed via its own dsl record shape.
@@ -61,3 +61,6 @@ bool = "true" / "false"
 
 change-layer-pixels = "change-layer-pixels" SP "id=" id SP id? SP content-block SP transform-block?
 content-block = "content" "{" "image-key=" id? SP "width=" number? SP "height=" number? "}"
+
+change-layer-mask = "change-layer-mask" SP "id=" id SP expected-mask-block? SP mask-block?
+expected-mask-block = "expected" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"

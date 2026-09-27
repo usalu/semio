@@ -14,9 +14,29 @@ pub struct AddLayer {
     pub kind: String,
 }
 
+/// 🎨️ Paint new artwork without replacing an explicitly supplied appearance.
+pub(crate) fn initialize_appearance(layer: &mut crate::DrawingLayerNode) {
+    use crate::{DrawingLayerNode,FillStyle,StrokeStyle};
+    let filled=matches!(layer,DrawingLayerNode::Shape(shape) if shape.shape_kind!="line") || matches!(layer,DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_));
+    let outlined=matches!(layer,DrawingLayerNode::Shape(_) | DrawingLayerNode::Path(_));
+    let text=matches!(layer,DrawingLayerNode::Text(_));
+    let attributes=&mut crate::schema::layer_base_mut(layer).attributes;
+    if attributes.fill.is_some() || attributes.stroke.is_some() { return; }
+    if filled { attributes.fill=Some(FillStyle::Solid { color:[0.2,0.7,0.65,1.0] }); }
+    else if text { attributes.fill=Some(FillStyle::Solid { color:[0.0,0.0,0.0,1.0] }); }
+    if outlined { attributes.stroke=Some(StrokeStyle { color:[0.1,0.15,0.2,1.0],width:2.0,cap:"round".into(),join:"round".into(),dash:None }); }
+}
+
 pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) -> Result<crate::DrawingLayerNode, Fault> {
     if !matches!(kind, "shape:rect" | "shape:ellipse" | "shape:line" | "shape:polygon" | "path" | "text" | "image" | "group" | "boolean" | "trace") { return Err(Fault::from("Unknown layer kind")); }
     let mut layer = create_layer_by_kind(kind);
+    initialize_appearance(&mut layer);
+    identify_created_layer(document,&mut layer,kind,operation);
+    Ok(layer)
+}
+
+/// 🪪️ Assigns a fresh layer identity within the document and retained operation scope.
+pub(crate) fn identify_created_layer(document: &DrawingSnapshot, layer: &mut crate::DrawingLayerNode, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) {
     let mut material = document.id.as_bytes().to_vec();
     material.extend_from_slice(kind.as_bytes());
     if let Some(operation) = operation {
@@ -30,14 +50,17 @@ pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: Opt
         let mut candidate = material.clone();
         candidate.extend_from_slice(&(ordinal as u64).to_be_bytes());
         let id = crate::schema::create_drawing_id("layer", &candidate);
-        if crate::schema::find_drawing_layer(document, &id).is_none() { crate::schema::layer_base_mut(&mut layer).id = id; return Ok(layer); }
+        if crate::schema::find_drawing_layer(document, &id).is_none() { crate::schema::layer_base_mut(layer).id = id; return; }
         ordinal += 1;
     }
 }
 
 pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let layer = build_layer(doc.snapshot, &payload.kind, doc.operation_optional())?;
-    Ok(Emit::commit(vec![crate::mutations::create_layer(None, Some(doc.snapshot.layers.len()), layer)], "Add layer"))
+    let id=crate::schema::layer_id(&layer).to_string();
+    let mut emit=Emit::commit(vec![crate::mutations::create_layer(None, Some(doc.snapshot.layers.len()), layer)], "Add layer");
+    emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&[id],"replace"));
+    Ok(emit)
 }
 
 #[cfg(test)]

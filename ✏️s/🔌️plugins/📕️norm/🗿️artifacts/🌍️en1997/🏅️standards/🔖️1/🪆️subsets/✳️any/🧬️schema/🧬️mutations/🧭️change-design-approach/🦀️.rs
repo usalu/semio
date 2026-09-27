@@ -24,6 +24,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeDesignAppr
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-design-approach", "change-design-approach")
+        protocol::LocalizedLabel::native("Change design approach", "Nachweisverfahren ändern")
     }
 }

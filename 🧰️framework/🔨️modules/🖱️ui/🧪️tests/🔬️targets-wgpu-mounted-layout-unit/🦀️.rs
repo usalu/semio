@@ -1,5 +1,6 @@
 use super::*;
-use crate::wgpu::component::ui::{UiPresence, UiStackNode, UiTextNode};
+use crate::wgpu::component::layout::ActionDescriptor;
+use crate::wgpu::component::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 use crate::wgpu::Label;
 
 fn clock_zero() -> Option<u64> {
@@ -414,6 +415,84 @@ fn mounted_layout_wraps_text_inside_a_narrow_flex_item() {
     assert!(narrow_height > wide_height, "a narrower item wraps onto more lines, got {narrow_height} vs {wide_height}");
     assert!(narrow_width <= wide_width);
 }
+
+fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -> f32 {
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(5, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    let mut job = MountedLayoutJob::try_new(tree, root, identity, Theme::default(), width, 400.0, false, ui_contract::FlowInline::Ltr).expect("composite layout job");
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview = 0;
+    while !job.is_admitted() {
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview);
+        assert!(!matches!(job.admit_one(tree, &mut cx), LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled));
+    }
+    while job.stage() != LayoutJobStage::PublishResults {
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview);
+        assert!(!matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut cx), semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled));
+    }
+    let intrinsic = job.root_intrinsic_height().expect("root intrinsic height");
+    let identity = job.identity();
+    while !matches!(job.publish_one(tree, identity), LayoutJobStep::Complete) {}
+    job.begin_close();
+    while !job.close_one() {}
+    intrinsic
+}
+
+fn geometry_button() -> UiNode {
+    UiNode::Button(UiButtonNode {
+        id: Some("geometry.control".into()),
+        icon_id: crate::wgpu::IconName::CircleDot,
+        label: Label::data("Control"),
+        action: ActionDescriptor { controller_id: "geometry".into(), action: "change".into(), args: None },
+        style: None,
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+#[test]
+fn section_and_field_measure_the_shared_wrapped_chrome_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
+    let number = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_f64().expect("fixture number") as f32;
+    let text = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_str().expect("fixture text");
+
+    let field = UiNode::Field(UiFieldNode {
+        id: "geometry".into(),
+        label: Label::data(text(&["field", "label"])),
+        description: Some(text(&["field", "description"]).into()),
+        required: Some(true),
+        error: Some(text(&["field", "error"]).into()),
+        child: Box::new(geometry_button()),
+        presence: UiPresence::default(),
+        menu: None,
+    });
+    let mut field_tree = UiTree::new();
+    field_tree.apply_tree(&field);
+    let field_root = field_tree.root.expect("field root");
+    let field_control = field_tree.node(field_root).and_then(|node| node.first_child).expect("field control");
+    let field_height = composite_intrinsic_and_layout(&mut field_tree, field_root, number(&["field", "width"]));
+    let control = solved(&field_tree, field_control);
+    assert!(close(field_height, number(&["field", "totalHeight"])), "field hug height {field_height}");
+    assert!(close(control.1, number(&["field", "controlTop"])), "control follows label, description and both gaps: {control:?}");
+    assert!(close(control.3, number(&["field", "controlHeight"])), "control keeps its own line: {control:?}");
+    let metrics =
+        field_chrome_metrics(Some(number(&["density", "fieldDetailLineHeight"]) * number(&["field", "detailLines"])), control.3, Some(number(&["density", "fieldDetailLineHeight"]) * number(&["field", "detailLines"])), number(&["density", "gap"]));
+    assert!(close(metrics.error.expect("error band").y, number(&["field", "errorTop"])));
+
+    let section = |width: f32| {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&UiNode::Section(UiSectionNode { id: "settings".into(), label: Some(Label::data(text(&["section", "title"]))), default_open: Some(true), presence: UiPresence::default(), menu: None, children: vec![geometry_button()] }));
+        let root = tree.root.expect("section root");
+        let child = tree.node(root).and_then(|node| node.first_child).expect("section child");
+        let intrinsic = composite_intrinsic_and_layout(&mut tree, root, width);
+        (intrinsic, solved(&tree, child))
+    };
+    let (narrow_height, narrow_child) = section(number(&["section", "width"]));
+    let (wide_height, _) = section(500.0);
+    assert!(close(narrow_child.1, number(&["section", "contentTop"])), "wrapped title owns two complete line boxes: {narrow_child:?}");
+    assert!(close(narrow_height - wide_height, number(&["density", "sectionTitleLineHeight"])), "one extra title line increases hug height exactly once");
+    assert!(close(narrow_height, number(&["section", "contentTop"]) + narrow_child.3 + number(&["section", "trailingMargin"])));
+}
+
 //#endregion 📐️AuthoredLayoutRects
 
 //#region 🧩️HostContentLeaf

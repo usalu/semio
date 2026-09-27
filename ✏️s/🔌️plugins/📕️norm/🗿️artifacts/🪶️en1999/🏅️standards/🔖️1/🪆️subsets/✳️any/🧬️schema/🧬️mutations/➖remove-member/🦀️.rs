@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for RemoveMember {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-member", "remove-member")
+        protocol::LocalizedLabel::native("Remove member", "Bauteil entfernen")
     }
 }

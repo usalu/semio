@@ -676,6 +676,2506 @@
               "blocks"
             ],
             "capabilities": []
+          },
+          {
+            "id": "playbook-steps",
+            "label": {
+              "native": {
+                "en": "Steps",
+                "de": "Schritte"
+              },
+              "reuse": {
+                "en": "Steps",
+                "de": "Schritte"
+              }
+            },
+            "bodyKey": "playbook.play.steps",
+            "surfaceKind": "table",
+            "iconId": "circle",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-changes",
+            "label": {
+              "native": {
+                "en": "Changes",
+                "de": "Änderungen"
+              },
+              "reuse": {
+                "en": "Changes",
+                "de": "Änderungen"
+              }
+            },
+            "bodyKey": "playbook.play.changes",
+            "surfaceKind": "diff-view",
+            "iconId": "circle",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-activity",
+            "label": {
+              "native": {
+                "en": "Activity",
+                "de": "Aktivität"
+              },
+              "reuse": {
+                "en": "Activity",
+                "de": "Aktivität"
+              }
+            },
+            "bodyKey": "playbook.play.activity",
+            "surfaceKind": "event-feed",
+            "iconId": "list-checks",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-source",
+            "label": {
+              "native": {
+                "en": "Source",
+                "de": "Quelle"
+              },
+              "reuse": {
+                "en": "Source",
+                "de": "Quelle"
+              }
+            },
+            "bodyKey": "playbook.play.source",
+            "surfaceKind": "text-editor",
+            "iconId": "file-code",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
           }
         ],
         "actions": [
@@ -720,6 +3220,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Appends a new, empty step to the end of the playbook.",
+                  "de": "Hängt dem Playbook am Ende einen neuen, leeren Schritt an."
+                },
+                "reuse": {
+                  "en": "Appends a new, empty step to the end of the playbook.",
+                  "de": "Hängt dem Playbook am Ende einen neuen, leeren Schritt an."
+                }
               }
             }
           },
@@ -764,6 +3274,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one step by id from the playbook together with every block it contains.",
+                  "de": "Entfernt einen Schritt anhand seiner Id samt aller enthaltenen Bausteine aus dem Playbook."
+                },
+                "reuse": {
+                  "en": "Removes one step by id from the playbook together with every block it contains.",
+                  "de": "Entfernt einen Schritt anhand seiner Id samt aller enthaltenen Bausteine aus dem Playbook."
+                }
               }
             }
           },
@@ -808,6 +3328,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one step to a new position (index) in the playbook.",
+                  "de": "Verschiebt einen Schritt an eine neue Position (Index) im Playbook."
+                },
+                "reuse": {
+                  "en": "Moves one step to a new position (index) in the playbook.",
+                  "de": "Verschiebt einen Schritt an eine neue Position (Index) im Playbook."
+                }
               }
             }
           },
@@ -1042,6 +3572,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new block of the given kind (such as a procedural building component) to the named step, or to the default step when none is named.",
+                  "de": "Fügt einem Schritt einen neuen Baustein der angegebenen Art (etwa ein prozedurales Bauteil) hinzu, ohne Angabe dem Standardschritt."
+                },
+                "reuse": {
+                  "en": "Adds a new block of the given kind (such as a procedural building component) to the named step, or to the default step when none is named.",
+                  "de": "Fügt einem Schritt einen neuen Baustein der angegebenen Art (etwa ein prozedurales Bauteil) hinzu, ohne Angabe dem Standardschritt."
+                }
               }
             }
           },
@@ -1086,6 +3626,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one block by id from the given step of the playbook.",
+                  "de": "Entfernt einen Baustein anhand seiner Id aus dem angegebenen Schritt des Playbooks."
+                },
+                "reuse": {
+                  "en": "Removes one block by id from the given step of the playbook.",
+                  "de": "Entfernt einen Baustein anhand seiner Id aus dem angegebenen Schritt des Playbooks."
+                }
               }
             }
           },
@@ -1130,6 +3680,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one block from its step to a position (index) in another step or the same one.",
+                  "de": "Verschiebt einen Baustein aus seinem Schritt an eine Position (Index) in einem anderen oder demselben Schritt."
+                },
+                "reuse": {
+                  "en": "Moves one block from its step to a position (index) in another step or the same one.",
+                  "de": "Verschiebt einen Baustein aus seinem Schritt an eine Position (Index) in einem anderen oder demselben Schritt."
+                }
               }
             }
           },
@@ -1174,6 +3734,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the playbook's title; an empty value clears it, and consecutive edits merge into one undo step.",
+                  "de": "Legt den Titel des Playbooks fest; ein leerer Wert entfernt ihn, aufeinanderfolgende Änderungen werden zu einem Rückgängig-Schritt zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Sets the playbook's title; an empty value clears it, and consecutive edits merge into one undo step.",
+                  "de": "Legt den Titel des Playbooks fest; ein leerer Wert entfernt ihn, aufeinanderfolgende Änderungen werden zu einem Rückgängig-Schritt zusammengefasst."
+                }
               }
             }
           },
@@ -1218,7 +3788,7 @@
                   "config:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
@@ -1226,7 +3796,7 @@
                   "artifacts.read",
                   "shell.observe"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -1238,6 +3808,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole playbook with the bundled demo playbook, or with an empty playbook for any other example id.",
+                  "de": "Ersetzt das gesamte Playbook durch das mitgelieferte Demo-Playbook, bei jeder anderen Beispiel-Id durch ein leeres Playbook."
+                },
+                "reuse": {
+                  "en": "Replaces the whole playbook with the bundled demo playbook, or with an empty playbook for any other example id.",
+                  "de": "Ersetzt das gesamte Playbook durch das mitgelieferte Demo-Playbook, bei jeder anderen Beispiel-Id durch ein leeres Playbook."
+                }
               }
             }
           },
@@ -1969,6 +4549,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2074,6 +4664,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2167,6 +4767,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -2389,17 +4999,27 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "playbook-builder",
-                    "title": "playbook-builder"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "playbook-builder"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "playbook-steps"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "playbook-changes"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "playbook-activity"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "playbook-source"
               }
             ]
           }
@@ -3264,6 +5884,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3369,6 +5999,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3462,6 +6102,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3628,7 +6278,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -3674,8 +6324,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "c53b46b351f5683e8e32ccc025d4aeaa710dd0313460dc0cf8b199a90705303c",
-    "coreWasmSha256": "5e246cc3e4abd5982473f161bfd26fd14015837e6452a4c329d607737ccdf6e3",
-    "descriptorSha256": "36c264970297ecc61d2807d123a283a0032b90326532c5dd3bf011e5fbbb46bb"
+    "wasmSha256": "2a0fe4a8d65c5316124df8675344fc1521805fee7622fe40679335bba2f07c8f",
+    "coreWasmSha256": "aa542eda3fdcc7099213c779099cc57d3077ac9623b78bdab9226034d8dc6ab7",
+    "descriptorSha256": "4bbb6c4214563246853ee8da8eb1d8173582bca838fd014e7ded3b6983faa277"
   }
 }

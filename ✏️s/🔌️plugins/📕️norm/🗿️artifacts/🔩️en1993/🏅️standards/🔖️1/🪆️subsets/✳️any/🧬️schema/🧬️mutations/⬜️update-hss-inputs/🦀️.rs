@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateHssInputs 
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert load case {}", self.load_case.id),
-            &format!("Lastfall setzen {}", self.load_case.id),
+            &format!("Update load case {}", self.load_case.id),
+            &format!("Lastfall {} aktualisieren", self.load_case.id),
         )
     }
     fn target(&self) -> Vec<String> {

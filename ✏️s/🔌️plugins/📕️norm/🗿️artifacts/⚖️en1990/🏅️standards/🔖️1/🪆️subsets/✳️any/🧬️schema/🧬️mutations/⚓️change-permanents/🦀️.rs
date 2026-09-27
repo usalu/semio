@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanents
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change permanents", "Ändern: permanents")
+        protocol::LocalizedLabel::native("Change permanent actions", "Ständige Einwirkungen ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeSlopeAngle
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-slope-angle", "change-slope-angle")
+        protocol::LocalizedLabel::native("Change slope angle", "Böschungswinkel ändern")
     }
 }

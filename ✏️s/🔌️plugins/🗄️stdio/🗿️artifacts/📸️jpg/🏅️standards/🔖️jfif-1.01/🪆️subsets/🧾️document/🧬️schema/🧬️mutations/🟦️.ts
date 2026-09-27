@@ -1,4 +1,5 @@
 /** 🧬️ Transparent JpgMutation union. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { ChangeJfifHeaderMutation } from './🪪️change-jfif-header/🟦️.ts';
 import type { ReplaceQuantTableMutation } from './📊️replace-quant-table/🟦️.ts';
 import type { RemoveQuantTableMutation } from './🧹️remove-quant-table/🟦️.ts';
@@ -19,4 +20,5 @@ export type JpgMutation =
   | { readonly mutation: 'insert-other-segment'; readonly payload: InsertOtherSegmentMutation }
   | { readonly mutation: 'remove-other-segment'; readonly payload: RemoveOtherSegmentMutation }
   | { readonly mutation: 'replace-pixels'; readonly payload: ReplacePixelsMutation }
-  | { readonly mutation: 'change-re-encode-quality'; readonly payload: ChangeReEncodeQualityMutation };
+  | { readonly mutation: 'change-re-encode-quality'; readonly payload: ChangeReEncodeQualityMutation }
+  | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot };

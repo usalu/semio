@@ -43,9 +43,12 @@ use super::remove_node_property;
 /// (`change-node-kind`/`change-node-label`/`move-node`), node nested collections
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph")]
 pub enum SemioGraphMutation {
+    SetSnapshot(SetSnapshot),
     CreateNode(create_node::CreateNode),
     DeleteNode(delete_node::DeleteNode),
     ChangeNodeKind(change_node_kind::ChangeNodeKind),
@@ -64,7 +67,7 @@ pub enum SemioGraphMutation {
 /// `🌳️mutate-semio-graph`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["create-node", "delete-node", "change-node-kind", "change-node-label", "move-node", "add-node-port", "remove-node-port", "add-node-property", "remove-node-property", "create-edge", "delete-edge"];
+pub const KINDS: &[&str] = &["set-snapshot", "create-node", "delete-node", "change-node-kind", "change-node-label", "move-node", "add-node-port", "remove-node-port", "add-node-property", "remove-node-property", "create-edge", "delete-edge"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

@@ -29,7 +29,7 @@ unsafe extern "C" {
     fn CFStringCreateWithCString(allocator: CfRef, text: *const c_char, encoding: u32) -> CfStringRef;
     fn CFStringGetLength(text: CfStringRef) -> CfIndex;
     fn CFStringGetMaximumSizeForEncoding(length: CfIndex, encoding: u32) -> CfIndex;
-    fn CFStringGetCString(text: CfStringRef, buffer: *mut c_char, capacity: CfIndex, encoding: u32) -> bool;
+    fn CFStringGetCString(text: CfStringRef, buffer: *mut c_char, capacity: CfIndex, encoding: u32) -> u8;
     fn CFDateCreate(allocator: CfRef, absolute_time: f64) -> CfRef;
     fn CFDateFormatterCreate(allocator: CfRef, locale: CfRef, date_style: CfIndex, time_style: CfIndex) -> CfRef;
     fn CFDateFormatterCreateDateFormatFromTemplate(allocator: CfRef, template: CfStringRef, options: usize, locale: CfRef) -> CfStringRef;
@@ -78,7 +78,7 @@ fn cf_text(value: CfStringRef) -> Result<String, String> {
     }
     let capacity = unsafe { CFStringGetMaximumSizeForEncoding(CFStringGetLength(value), UTF8) }.checked_add(1).ok_or_else(|| "host-temporal-format.macos-string-capacity".to_string())?;
     let mut buffer = vec![0u8; usize::try_from(capacity).map_err(|_| "host-temporal-format.macos-string-capacity".to_string())?];
-    if !unsafe { CFStringGetCString(value, buffer.as_mut_ptr().cast(), capacity, UTF8) } {
+    if unsafe { CFStringGetCString(value, buffer.as_mut_ptr().cast(), capacity, UTF8) } == 0 {
         return Err("host-temporal-format.macos-string-encoding".to_string());
     }
     Ok(unsafe { CStr::from_ptr(buffer.as_ptr().cast()) }.to_string_lossy().into_owned())
@@ -97,6 +97,34 @@ fn cf_string(value: &str) -> Result<OwnedCf, String> {
 fn localized_pattern(locale: CfRef, skeleton: &str) -> Result<OwnedCf, String> {
     let skeleton = cf_string(skeleton)?;
     OwnedCf::new(unsafe { CFDateFormatterCreateDateFormatFromTemplate(ptr::null(), skeleton.0, 0, locale) }, "host-temporal-format.macos-pattern")
+}
+
+fn absolute_pattern(locale: CfRef, skeleton: &str) -> Result<OwnedCf, String> {
+    let localized = localized_pattern(locale, skeleton)?;
+    let localized = cf_text(localized.0)?;
+    let mut pattern = String::new();
+    let mut characters = localized.chars().peekable();
+    let mut quoted = false;
+    while let Some(character) = characters.next() {
+        if character == '\'' {
+            quoted = !quoted;
+            pattern.push(character);
+            continue;
+        }
+        if !quoted && matches!(character, 'K' | 'h' | 'H' | 'k') {
+            let mut width = 1;
+            while characters.peek() == Some(&character) {
+                characters.next();
+                width += 1;
+            }
+            for _ in 0..width.max(2) {
+                pattern.push(character);
+            }
+        } else {
+            pattern.push(character);
+        }
+    }
+    cf_string(&pattern)
 }
 
 fn hour_cycle(pattern: &str) -> Result<HostHourCycleV1, String> {
@@ -119,7 +147,10 @@ fn hour_cycle(pattern: &str) -> Result<HostHourCycleV1, String> {
 
 fn finish_profile(locale: OwnedCf, time_zone: OwnedCf) -> Result<MacProfile, String> {
     let locale_id = cf_text(unsafe { CFLocaleGetIdentifier(locale.0) })?.split('@').next().unwrap_or_default().replace('_', "-");
-    let time_zone_id = cf_text(unsafe { CFTimeZoneGetName(time_zone.0) })?;
+    let time_zone_id = match cf_text(unsafe { CFTimeZoneGetName(time_zone.0) })?.as_str() {
+        "GMT" | "Etc/GMT" | "Etc/UTC" => "UTC".to_string(),
+        name => name.to_string(),
+    };
     let cycle_pattern = localized_pattern(locale.0, "j")?;
     let hour_cycle = hour_cycle(&cf_text(cycle_pattern.0)?)?;
     Ok(MacProfile { locale, time_zone, locale_id, time_zone_id, hour_cycle })
@@ -153,14 +184,14 @@ fn absolute_text(profile: &MacProfile, timestamp_ms: i64, format: HostTemporalFo
         (HostTemporalFormatV1::DateTime, HostHourCycleV1::H24) => "yyyyMMddkkmm",
         (HostTemporalFormatV1::Relative, _) => return Err("host-temporal-format.macos-relative-routed-as-absolute".to_string()),
     };
-    let pattern = localized_pattern(profile.locale.0, skeleton)?;
+    let pattern = absolute_pattern(profile.locale.0, skeleton)?;
     let formatter = OwnedCf::new(unsafe { CFDateFormatterCreate(ptr::null(), profile.locale.0, 0, 0) }, "host-temporal-format.macos-formatter")?;
     unsafe {
         CFDateFormatterSetFormat(formatter.0, pattern.0);
         CFDateFormatterSetProperty(formatter.0, kCFDateFormatterTimeZone, profile.time_zone.0);
     }
     let date = OwnedCf::new(unsafe { CFDateCreate(ptr::null(), timestamp_ms as f64 / 1_000.0 - CF_UNIX_EPOCH_DELTA) }, "host-temporal-format.macos-date")?;
-    cf_owned_text(unsafe { CFDateFormatterCreateStringWithDate(ptr::null(), formatter.0, date.0) })
+    Ok(cf_owned_text(unsafe { CFDateFormatterCreateStringWithDate(ptr::null(), formatter.0, date.0) })?.replace(['\u{a0}', '\u{202f}'], " "))
 }
 
 fn selector(name: &'static [u8]) -> ObjcSel {

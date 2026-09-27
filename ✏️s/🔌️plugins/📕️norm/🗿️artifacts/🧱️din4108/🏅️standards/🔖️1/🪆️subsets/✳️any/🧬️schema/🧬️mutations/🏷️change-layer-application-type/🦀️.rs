@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerApp
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-application-type", "change-layer-application-type")
+        protocol::LocalizedLabel::native("Change insulation application type", "Anwendungstyp der Wärmedämmung ändern")
     }
 }

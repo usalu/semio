@@ -73,7 +73,7 @@ const TREE_TREE: BuiltNode = node({
   children: [
     node({
       key: "sec-layers",
-      component: { type: "treeSection", label: "Layers", defaultOpen: true, window: null },
+      component: { type: "treeSection", label: "Layers", defaultOpen: true, headerToolbar: null, window: null },
       children: [
         node({
           key: "item-background",
@@ -91,7 +91,7 @@ const TREE_TREE: BuiltNode = node({
     }),
     node({
       key: "sec-settings",
-      component: { type: "treeSection", label: "Settings", defaultOpen: true, window: null },
+      component: { type: "treeSection", label: "Settings", defaultOpen: true, headerToolbar: null, window: null },
       children: [
         node({
           key: "item-visible",

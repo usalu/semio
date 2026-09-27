@@ -755,6 +755,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -844,6 +854,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -933,6 +953,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -1022,6 +1052,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -1111,6 +1151,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -1200,6 +1250,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -1265,6 +1325,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -1318,6 +1388,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole reasoning board with the bundled metabolism example, or with an empty board for any other example id.",
+                  "de": "Ersetzt das gesamte Denkbrett durch das mitgelieferte Stoffwechsel-Beispiel, bei jeder anderen Beispiel-Id durch ein leeres Brett."
+                },
+                "reuse": {
+                  "en": "Replaces the whole reasoning board with the bundled metabolism example, or with an empty board for any other example id.",
+                  "de": "Ersetzt das gesamte Denkbrett durch das mitgelieferte Stoffwechsel-Beispiel, bei jeder anderen Beispiel-Id durch ein leeres Brett."
+                }
               }
             }
           },
@@ -1335,7 +1415,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "kind",
+                "label": {
+                  "native": {
+                    "en": "Node Kind",
+                    "de": "Knotenart"
+                  },
+                  "reuse": {
+                    "en": "Node Kind",
+                    "de": "Knotenart"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -1362,6 +1460,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new node of the given kind (identity by default) to the reasoning board and selects it.",
+                  "de": "Fügt dem Denkbrett einen neuen Knoten der angegebenen Art (standardmäßig Identität) hinzu und wählt ihn aus."
+                },
+                "reuse": {
+                  "en": "Adds a new node of the given kind (identity by default) to the reasoning board and selects it.",
+                  "de": "Fügt dem Denkbrett einen neuen Knoten der angegebenen Art (standardmäßig Identität) hinzu und wählt ihn aus."
+                }
               }
             }
           },
@@ -1379,7 +1487,59 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "sourceId",
+                "label": {
+                  "native": {
+                    "en": "Source Node",
+                    "de": "Quellknoten"
+                  },
+                  "reuse": {
+                    "en": "Source Node",
+                    "de": "Quellknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "targetId",
+                "label": {
+                  "native": {
+                    "en": "Target Node",
+                    "de": "Zielknoten"
+                  },
+                  "reuse": {
+                    "en": "Target Node",
+                    "de": "Zielknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "kind",
+                "label": {
+                  "native": {
+                    "en": "Relationship Kind",
+                    "de": "Beziehungsart"
+                  },
+                  "reuse": {
+                    "en": "Relationship Kind",
+                    "de": "Beziehungsart"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -1406,6 +1566,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Connects the node sourceId to the node targetId (or the first two selected nodes) with a new relationship edge of the given kind (owns by default) and selects it; unknown or missing nodes are refused by name.",
+                  "de": "Verbindet den Knoten sourceId mit dem Knoten targetId (oder die ersten beiden ausgewählten Knoten) durch eine neue Beziehungskante der angegebenen Art (standardmäßig besitzt) und wählt sie aus; unbekannte oder fehlende Knoten werden namentlich abgelehnt."
+                },
+                "reuse": {
+                  "en": "Connects the node sourceId to the node targetId (or the first two selected nodes) with a new relationship edge of the given kind (owns by default) and selects it; unknown or missing nodes are refused by name.",
+                  "de": "Verbindet den Knoten sourceId mit dem Knoten targetId (oder die ersten beiden ausgewählten Knoten) durch eine neue Beziehungskante der angegebenen Art (standardmäßig besitzt) und wählt sie aus; unbekannte oder fehlende Knoten werden namentlich abgelehnt."
+                }
               }
             }
           },
@@ -1450,6 +1620,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every currently selected node and relationship from the reasoning board; with nothing selected it is refused.",
+                  "de": "Löscht alle aktuell ausgewählten Knoten und Beziehungen vom Denkbrett; ohne Auswahl wird es abgelehnt."
+                },
+                "reuse": {
+                  "en": "Deletes every currently selected node and relationship from the reasoning board; with nothing selected it is refused.",
+                  "de": "Löscht alle aktuell ausgewählten Knoten und Beziehungen vom Denkbrett; ohne Auswahl wird es abgelehnt."
+                }
               }
             }
           },
@@ -1605,7 +1785,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -1632,7 +1812,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2426,6 +2607,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2531,6 +2722,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2624,6 +2825,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4020,6 +4231,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4125,6 +4346,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4218,6 +4449,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4390,7 +4631,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -4512,8 +4753,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "839ea62783f371e2fdca7d46b4624725f330c26001afcdcb084b8a8ea0637517",
-    "coreWasmSha256": "aae26dca817a0b4754ff2b7b3d023f85a3c16f4f303098e05984b45fb608e772",
-    "descriptorSha256": "27da7a843b072ed19abcd11307ccf4b278cfa67362c5f58731952493579e0b97"
+    "wasmSha256": "5917c19c4d9354c8b3c7da2909a54f5c24720ffefea3188a9202e9861beedfcd",
+    "coreWasmSha256": "d9995feaa7521eb11aac930f90c1acf2830f141a063582bbd42637d59704a9a5",
+    "descriptorSha256": "be92237cd6569e1c2f4d4e018fc2fc39ad9b437bbba47fe1f7d09ad044b0e0e6"
   }
 }

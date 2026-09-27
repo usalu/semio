@@ -55,6 +55,9 @@ fn parse_digits(value: &str, start: usize, length: usize) -> Option<i64> {
 }
 
 fn parse_iso_epoch_ms(input: &str) -> Option<i64> {
+    if !ui_contract::is_host_temporal_iso_v1(input) {
+        return None;
+    }
     let date_only;
     let value = if input.len() == 10 {
         date_only = format!("{input}T00:00:00Z");
@@ -214,6 +217,13 @@ mod tests {
         assert_eq!(parse_iso_epoch_ms("2026-03-08T07:00:01"), None);
         assert_eq!(parse_iso_epoch_ms("+002026-03-08T07:00Z"), None);
         assert_eq!(parse_iso_epoch_ms("2026-02-30"), None);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧫️fixtures/🔣️.json")).expect("shared temporal fixture");
+        for value in fixture["isoGrammar"]["valid"].as_array().expect("valid ISO grammar cases") {
+            assert!(parse_iso_epoch_ms(value.as_str().unwrap()).is_some(), "{value}");
+        }
+        for value in fixture["isoGrammar"]["invalid"].as_array().expect("invalid ISO grammar cases") {
+            assert!(parse_iso_epoch_ms(value.as_str().unwrap()).is_none(), "{value}");
+        }
     }
 
     #[cfg(target_os = "macos")]

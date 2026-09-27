@@ -7,12 +7,7 @@ fn secondary_pointer_button_uses_context_menu_code() {
 
 #[test]
 fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
-    for (key, expected) in [
-        ("Home", ui_wgpu::wgpu::KeyAction::Home),
-        ("End", ui_wgpu::wgpu::KeyAction::End),
-        ("PageUp", ui_wgpu::wgpu::KeyAction::PageUp),
-        ("PageDown", ui_wgpu::wgpu::KeyAction::PageDown),
-    ] {
+    for (key, expected) in [("Home", ui_wgpu::wgpu::KeyAction::Home), ("End", ui_wgpu::wgpu::KeyAction::End), ("PageUp", ui_wgpu::wgpu::KeyAction::PageUp), ("PageDown", ui_wgpu::wgpu::KeyAction::PageDown)] {
         assert_eq!(key_action_from_dispatch(key, true), Some(expected));
         assert_eq!(key_action_from_dispatch(key, false), None);
     }
@@ -61,8 +56,6 @@ fn keyboard_interaction() -> crate::AppInteractionState {
         modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
-        caret_blink_at_ms: 0.0,
-        caret_blink_visible: true,
         text_streams: std::array::from_fn(|_| None),
         text_fault: None,
         frame_fault: None,
@@ -145,13 +138,7 @@ fn component_close_handoff_keeps_unrelated_window_ingress_routable() {
                 token,
                 &mut generation,
                 FrameGenerationHold::Free,
-                DispatchEvent::PointerDown {
-                    pointer,
-                    x: turn["inputSequence"].as_u64().expect("input sequence") as f32,
-                    y: 1.0,
-                    button: PointerButton::Primary,
-                    modifiers: EventModifiers::default(),
-                },
+                DispatchEvent::PointerDown { pointer, x: turn["inputSequence"].as_u64().expect("input sequence") as f32, y: 1.0, button: PointerButton::Primary, modifiers: EventModifiers::default() },
             ),
             ui_host::EnqueueOutcome::Accepted
         );

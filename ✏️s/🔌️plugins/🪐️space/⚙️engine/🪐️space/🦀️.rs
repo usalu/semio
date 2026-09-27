@@ -296,12 +296,6 @@ const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
     "openInstance",
     "importSpacePackPayload",
     "setAppRegistrations",
-];
-/// 🧵️ Still batch-only, honestly: every id here is a workflow-graph or media edit the shell never
-/// dispatches on its own (no `🏛️ShellHost`/`🕸️NodeGraph` call site, verified by id), and each needs
-/// its own reducer/extent review before it can claim a bounded first step.
-#[cfg(test)]
-const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "patchParameter",
     "addParameter",
     "removeParameter",
@@ -370,6 +364,15 @@ fn space_bounded_reduce(
     }
     if let SpaceCommand::DeleteSelection(_) = command {
         return Ok(crate::engine::space::engine::resolve_future(delete_selection::delete_selected(config, &selected())));
+    }
+    match command {
+        SpaceCommand::NodeGraphEdit(payload) => return Ok(crate::engine::space::engine::resolve_future(node_graph_edit::edit_with_selection(payload, snapshot, &selected()))),
+        SpaceCommand::ReorganizeWorkflow(_) => return Ok(crate::engine::space::engine::resolve_future(reorganize_workflow::reorganize_selected(&doc, &selected()))),
+        SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: selected() }])),
+        SpaceCommand::DuplicateAppInstance(_) => return Ok(crate::engine::space::engine::resolve_future(duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
+        SpaceCommand::RemoveAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(remove_app_instance::remove_with_selection(payload, config, &selected()))),
+        SpaceCommand::RenameAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(rename_app_instance::rename_with_selection(payload, &doc, config, &selected()))),
+        _ => {}
     }
     if let SpaceCommand::PresenceHeartbeat(payload) = command {
         let identity = context
@@ -450,6 +453,30 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFact
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePackPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setAppRegistrations", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnectMediaEdge", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "copyAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "pasteAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchMediaNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchAppInstances", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "bindParameterField", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "unbindParameterField", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganizeWorkflow", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportMedia", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMedia", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMediaPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioPack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioDsl", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -779,6 +806,30 @@ impl ArtifactApp for SpaceApp {
             "openInstance",
             "importSpacePackPayload",
             "setAppRegistrations",
+            "patchParameter",
+            "addParameter",
+            "removeParameter",
+            "moveMediaNode",
+            "connectMediaPorts",
+            "disconnectMediaEdge",
+            "removeAppInstance",
+            "copyAppInstance",
+            "duplicateAppInstance",
+            "pasteAppInstance",
+            "renameAppInstance",
+            "patchMediaNodes",
+            "patchAppInstances",
+            "bindParameterField",
+            "unbindParameterField",
+            "reorganizeWorkflow",
+            "workflowEngagementSubmit",
+            "compiledDagEngagementSubmit",
+            "nodeGraphEdit",
+            "exportMedia",
+            "importMedia",
+            "importMediaPayload",
+            "exportStudioPack",
+            "exportStudioDsl",
         ]
     }
 
@@ -1117,40 +1168,40 @@ pub async fn create_space_app() -> App {
         .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen")).await
         .action_with(ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), ActionKind::Shell, "home")).await
         .action_with(ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), ActionKind::Shell, "folder")).await
-        .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("patchParameter", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("addParameter", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("removeParameter", InteractiveJobClassification::Migrated).await
         .action_interactive_job("spawnApp", InteractiveJobClassification::Migrated).await
-        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("removeAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("removeAppInstance", InteractiveJobClassification::Migrated).await
         .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated).await
-        .action_interactive_job("copyAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("pasteAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("renameAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("patchMediaNodes", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("patchAppInstances", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("bindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("unbindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("reorganizeWorkflow", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("workflowEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("compiledDagEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("copyAppInstance", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("pasteAppInstance", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("renameAppInstance", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("patchMediaNodes", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("patchAppInstances", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("bindParameterField", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("unbindParameterField", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("reorganizeWorkflow", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("workflowEngagementSubmit", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("compiledDagEngagementSubmit", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated).await
         .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated).await
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated).await
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated).await
         .action_interactive_job("workflowEngagementInput", InteractiveJobClassification::Migrated).await
         .action_interactive_job("compiledDagEngagementInput", InteractiveJobClassification::Migrated).await
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated).await
-        .action_interactive_job("exportMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("exportMedia", InteractiveJobClassification::Migrated).await
         .action_destructive("exportMedia").await
-        .action_interactive_job("importMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("importMediaPayload", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("importMedia", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("importMediaPayload", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("exportStudioPack", InteractiveJobClassification::Migrated).await
         .action_destructive("exportStudioPack").await
-        .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("exportStudioDsl", InteractiveJobClassification::Migrated).await
         .action_destructive("exportStudioDsl").await
         .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated).await
         .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::Migrated).await

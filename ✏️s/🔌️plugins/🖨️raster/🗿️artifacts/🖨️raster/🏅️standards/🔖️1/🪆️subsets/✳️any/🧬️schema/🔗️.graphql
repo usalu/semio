@@ -79,6 +79,8 @@ type RasterLayerMask {
   invert: Boolean!
   width: Int
   height: Int
+  imageKey: String
+  transform: RasterTransform!
 }
 
 type RasterViewportSize {

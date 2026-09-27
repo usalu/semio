@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneFloo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-floor-area", "change-zone-floor-area")
+        protocol::LocalizedLabel::native("Change net floor area of the zone", "Nettogrundfläche der Zone ändern")
     }
 }

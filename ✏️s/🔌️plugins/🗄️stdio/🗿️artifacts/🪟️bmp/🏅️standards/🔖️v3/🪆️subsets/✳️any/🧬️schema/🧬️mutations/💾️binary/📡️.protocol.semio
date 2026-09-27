@@ -21,3 +21,5 @@ record replace-palette-entry tag=5
 field payload bytes
 record replace-pixel-data tag=6
 field payload bytes
+record set-snapshot tag=7
+field payload bytes

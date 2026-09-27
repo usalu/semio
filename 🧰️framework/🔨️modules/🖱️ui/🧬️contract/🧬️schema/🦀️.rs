@@ -488,7 +488,7 @@ export type MenuRef = { id: string, args: UiValue | null, };"####,
  * 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
  * `bindings`, distinguished by `Trigger`.
  */
-export type NumberStepperProps = { value: number, step: number, uniform: boolean, };"####,
+export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, };"####,
     },
     SchemaMetadata {
         name: "OverlayLayout",
@@ -917,7 +917,7 @@ interactionDomain: string | null, };"####,
         typescript: r####"/**
  * 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
  */
-export type TreeSectionProps = { label: Label | null, defaultOpen: boolean | null,
+export type TreeSectionProps = { label: Label | null, defaultOpen: boolean | null, headerToolbar: UiNodeId | null,
 /**
  * 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
  */
@@ -957,7 +957,7 @@ export type Trigger = "activate" | "change" | "commit" | "delta" | "drop" | "sub
  * ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
  * shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
  */
-export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, };"####,
+export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, };"####,
     },
     SchemaMetadata {
         name: "UiDocumentLimits",

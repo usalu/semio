@@ -108,6 +108,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transi
         SemanticSurfaceKind::TextEditor,
         &TextEditorScene {
             buffer: text.clone(),
+            lanes: Vec::new(),
             language: Some(document.language_id.clone()),
             selection_json,
             tokens_json,

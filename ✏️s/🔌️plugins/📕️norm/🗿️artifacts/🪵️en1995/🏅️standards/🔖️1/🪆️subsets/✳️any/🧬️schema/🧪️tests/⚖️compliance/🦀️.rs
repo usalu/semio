@@ -286,7 +286,7 @@ fn family_any_dir() -> PathBuf {
 }
 
 fn oracle_script() -> PathBuf {
-    family_any_dir().join("🔮️oracles").join("🐍️evaluate.py")
+    family_any_dir().join("🔮️oracles").join("⚖️compliance").join("🐍️.py")
 }
 
 fn snapshot_schema_path() -> PathBuf {

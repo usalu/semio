@@ -18,6 +18,6 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeDeltaCDev 
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change delta-c-dev to {}", self.new_delta_c_dev), &format!("delta-c-dev auf {} ändern", self.new_delta_c_dev))
+        protocol::LocalizedLabel::native(&format!("Change cover allowance for deviation Δc,dev to {}", self.new_delta_c_dev), &format!("Vorhaltemaß Δc,dev auf {} ändern", self.new_delta_c_dev))
     }
 }

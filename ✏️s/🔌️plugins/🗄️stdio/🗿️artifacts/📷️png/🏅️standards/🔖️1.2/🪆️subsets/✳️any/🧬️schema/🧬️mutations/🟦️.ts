@@ -12,9 +12,12 @@ import type { InsertTextChunkMutation } from './📥️insert-text-chunk/🟦️
 import type { RemoveTextChunkMutation } from './🗑️remove-text-chunk/🟦️.ts';
 import type { ReplaceTextChunkMutation } from './✏️replace-text-chunk/🟦️.ts';
 import type { ReplacePixelsMutation } from './🔲️replace-pixels/🟦️.ts';
+import type { PatchPixelsMutation } from './🩹️patch-pixels/🟦️.ts';
 import type { InsertUnknownChunkMutation } from './📦️insert-unknown-chunk/🟦️.ts';
 import type { RemoveUnknownChunkMutation } from './📤️remove-unknown-chunk/🟦️.ts';
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 export type PngMutation =
+  | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot }
   | { readonly mutation: 'change-header'; readonly payload: ChangeHeaderMutation }
   | { readonly mutation: 'replace-palette'; readonly payload: ReplacePaletteMutation }
   | { readonly mutation: 'change-transparency'; readonly payload: ChangeTransparencyMutation }
@@ -28,5 +31,6 @@ export type PngMutation =
   | { readonly mutation: 'remove-text-chunk'; readonly payload: RemoveTextChunkMutation }
   | { readonly mutation: 'replace-text-chunk'; readonly payload: ReplaceTextChunkMutation }
   | { readonly mutation: 'replace-pixels'; readonly payload: ReplacePixelsMutation }
+  | { readonly mutation: 'patch-pixels'; readonly payload: PatchPixelsMutation }
   | { readonly mutation: 'insert-unknown-chunk'; readonly payload: InsertUnknownChunkMutation }
   | { readonly mutation: 'remove-unknown-chunk'; readonly payload: RemoveUnknownChunkMutation };

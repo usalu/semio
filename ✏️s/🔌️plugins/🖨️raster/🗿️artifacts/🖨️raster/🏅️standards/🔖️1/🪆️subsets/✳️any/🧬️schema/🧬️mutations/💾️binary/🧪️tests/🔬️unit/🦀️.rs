@@ -576,6 +576,26 @@ fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, ope
     panic!("retained Raster apply did not reach a bounded terminal")
 }
 
+#[test]
+fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    for (index,case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let mask:crate::RasterLayerMask=dsl::json::from_json_str(&case["mask"].to_string()).unwrap();
+        let mut base=empty_raster_document();
+        let id=crate::standards::v1::subsets::any::schema::layer_node_id(&base.layers[0]).to_owned();
+        if let RasterLayerNode::Pixel {mask:target,..}=&mut base.layers[0] {*target=Some(mask.clone());}
+        let children=std::mem::take(&mut base.layers);
+        base.layers.push(RasterLayerNode::Group {id:"masked-group".into(),name:"Masked Group".into(),visible:true,opacity:1.0,blend_mode:"normal".into(),transform:RasterTransform::default(),mask:Some(mask.clone()),children});
+        let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:id,new_name:"Renamed".into()});
+        let candidate=drive_raster_candidate(&base,&operation,700+index as u64);
+        let RasterLayerNode::Group {mask:group_mask,children,..}=&candidate.layers[0] else {panic!("group missing")};
+        assert_eq!(group_mask.as_ref(),Some(&mask));
+        let RasterLayerNode::Pixel {mask:pixel_mask,..}=&children[0] else {panic!("pixel missing")};
+        assert_eq!(pixel_mask.as_ref(),Some(&mask));
+        retirement::retire_raster_snapshot(candidate);retirement::retire_raster_snapshot(base);
+    }
+}
+
 /// 🖼️ Play-grid boot regression (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, pane measured
 /// blank on :6033 2026-09-21): the interactive document lane applies `add-layer-asset` through this
 /// candidate authority, and the composite surface reads its pixels back out of the asset pool
@@ -1200,7 +1220,14 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "pixel".into(), new_adjustment_kind: "levels".into() }),
         RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset".into(), asset: RasterImageAsset { mime: "image/png".into(), data: vec![1, 2, 3] } }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset".into() }),
+        RasterMutation::ChangeLayerPixels(crate::mutations::change_layer_pixels::ChangeLayerPixels { layer_id: "pixel".into(), expected_image_key: Some("previous".into()), content: crate::RasterPixelContent { image_key: Some("next".into()), width: None, height: None }, transform: None }),
+        RasterMutation::ChangeLayerMask(crate::mutations::change_layer_mask::ChangeLayerMask {
+            layer_id: "pixel".into(),
+            expected: Some(crate::RasterLayerMask { enabled: true, linked: true, invert: false, width: None, height: None, image_key: Some("previous".into()), transform: RasterTransform::default() }),
+            mask: Some(crate::RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(2), height: Some(3), image_key: Some("next".into()), transform: RasterTransform::default() }),
+        }),
     ];
+    assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterMutationRetirementFactory, mutation);
         assert!(matches!(retirement.close_step(0, RASTER_OWNED_FIELD_BYTES).expect("zero-grant Raster retirement"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
@@ -1278,3 +1305,27 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store::os_store::test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🔖️CommandEnvelopeTests
+
+#[test]
+fn retained_mask_mutations_match_cold_apply_and_undo() {
+    use protocol::{Mutation, MutationDiff};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎭️change-layer-mask/🧪️tests/🔣️.json")).unwrap();
+    for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let mut source = fixture["before"].clone();
+        let resolve = |key: &serde_json::Value| key.as_str().map(|key| fixture[key].clone()).unwrap_or(serde_json::Value::Null);
+        source["layers"][0]["mask"] = resolve(&case["before"]);
+        let base: RasterSnapshot = dsl::json::from_json_str(&source.to_string()).unwrap();
+        let operation: RasterMutation = dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":resolve(&case["before"]),"mask":resolve(&case["after"])}).to_string()).unwrap();
+        let inverse = operation.inverse(&base).remove(0);
+        let (diff, _) = operation.diff(&base).into_parts();
+        let cold = diff.apply(&base).unwrap();
+        let candidate = drive_raster_candidate(&base, &operation, 930 + index as u64);
+        assert_eq!(candidate, cold);
+        let restored = drive_raster_candidate(&candidate, &inverse, 940 + index as u64);
+        assert_eq!(restored, base);
+        protocol::MutationDiff::retire_cold(diff);
+        for document in [base, cold, candidate, restored] { retirement::retire_raster_snapshot(document); }
+        protocol::Mutation::retire_cold(operation);
+        protocol::Mutation::retire_cold(inverse);
+    }
+}

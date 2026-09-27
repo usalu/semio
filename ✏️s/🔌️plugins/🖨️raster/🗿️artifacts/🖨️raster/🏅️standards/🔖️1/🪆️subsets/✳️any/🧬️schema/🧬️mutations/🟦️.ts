@@ -1,31 +1,7 @@
-/** 🖼️ Minimal local mirror of `RasterLayerNode` — the snapshot facet's own `🟦️.ts` is a
- *  stale generic scaffold (out of this facet's scope), so `create-layer`'s payload type is defined
- *  inline here instead of importing it. */
-export interface RasterTransform {
-  x: number;
-  y: number;
-  scaleX: number;
-  scaleY: number;
-  rotation: number;
-}
-
-export interface RasterLayerMask {
-  enabled: boolean;
-  linked: boolean;
-  invert: boolean;
-  width?: number;
-  height?: number;
-}
-
-export type RasterLayerNode =
-  | { kind: 'pixel'; id: string; name: string; visible: boolean; opacity: number; blend: string; transform: RasterTransform; mask?: RasterLayerMask; width?: number; height?: number; image?: string }
-  | { kind: 'group'; id: string; name: string; visible: boolean; opacity: number; blend: string; transform: RasterTransform; mask?: RasterLayerMask; children: RasterLayerNode[] }
-  | { kind: 'adjustment'; id: string; name: string; visible: boolean; opacity: number; blend: string; transform: RasterTransform; adjustmentKind: string; params: Record<string, unknown> };
-
-export interface RasterImageAsset {
-  mime: string;
-  data: string;
-}
+/** 🎭️ Canonical document types shared by mutation payloads. */
+import type {RasterLayerNode, RasterLayerMask, RasterTransform, RasterImageAsset} from "../🟦️.ts";
+export type {RasterLayerNode, RasterLayerMask, RasterTransform, RasterImageAsset} from "../🟦️.ts";
+export interface RasterPixelContent { imageKey: string | null; width: number | null; height: number | null }
 
 /** 🧬️ RasterMutation union — closed semantic mutation vocabulary for the raster document. */
 export type RasterMutation =
@@ -40,4 +16,6 @@ export type RasterMutation =
   | { mutation: 'resizeLayer'; layerId: string; newWidth: number; newHeight: number }
   | { mutation: 'changeLayerAdjustmentKind'; layerId: string; newAdjustmentKind: string }
   | { mutation: 'addLayerAsset'; assetId: string; asset: RasterImageAsset }
-  | { mutation: 'removeLayerAsset'; assetId: string };
+  | { mutation: 'removeLayerAsset'; assetId: string }
+  | { mutation: 'changeLayerPixels'; layerId: string; expectedImageKey: string | null; content: RasterPixelContent; transform?: RasterTransform | null }
+  | { mutation: 'changeLayerMask'; layerId: string; expected: RasterLayerMask | null; mask: RasterLayerMask | null };

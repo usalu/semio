@@ -13,7 +13,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 7] = [
+const TEXT_KEYWORDS: [(&str, &str); 8] = [
+    ("set-snapshot", "setSnapshot"),
     ("insert-run", "insertRun"),
     ("remove-run", "removeRun"),
     ("edit-run", "editRun"),
@@ -26,6 +27,7 @@ const TEXT_KEYWORDS: [(&str, &str); 7] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioTextMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_INSERT_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-run");
 const TAG_REMOVE_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-run");
 const TAG_EDIT_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "edit-run");
@@ -38,6 +40,7 @@ const TAG_REMOVE_MARK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioTextMutation) -> u8 {
     match m {
+        SemioTextMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioTextMutation::InsertRun(_) => TAG_INSERT_RUN,
         SemioTextMutation::RemoveRun(_) => TAG_REMOVE_RUN,
         SemioTextMutation::EditRun(_) => TAG_EDIT_RUN,

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertBridge {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-bridge", "insert-bridge")
+        protocol::LocalizedLabel::native("Insert bridge", "Brücke einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-bridge".into()]

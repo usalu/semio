@@ -10,7 +10,7 @@
   "runtimeTurns": [
     { "phase": "uploads", "requestFrame": true, "continueFrame": true },
     { "phase": "finish", "requestFrame": true, "continueFrame": true },
-    { "phase": "terminal", "requestFrame": true, "continueFrame": false }
+    { "phase": "terminal", "requestFrame": false, "continueFrame": false }
   ],
   "assetDecodeTurns": [
     { "phase": "acquire", "outcome": "pending", "pending": true, "presentationChanged": false },
@@ -32,7 +32,7 @@
     "frameMessages": 0
   },
   "nonRunnableTurns": [
-    { "owner": "future-deadline", "requestFrame": true, "continueFrame": false },
+    { "owner": "future-deadline", "requestFrame": false, "continueFrame": false, "nextDeadlineDelayMs": 600 },
     { "owner": "hub-status-external", "requestFrame": false, "continueFrame": false }
   ],
   "textIngressTurns": [

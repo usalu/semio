@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeStructureK
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-structure-kind", "change-structure-kind")
+        protocol::LocalizedLabel::native("Change structure type", "Tragwerksart ändern")
     }
 }
 //#endregion 🔖️Payload

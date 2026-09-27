@@ -182,6 +182,7 @@ export function resolvePluginCanvasStatus(hasSession: boolean, error: string | n
 }
 
 export type ActiveSession = {
+  readonly documentInitialized?: boolean;
   readonly pluginId: string;
   readonly instanceId: number;
   readonly app: AppDefinition;

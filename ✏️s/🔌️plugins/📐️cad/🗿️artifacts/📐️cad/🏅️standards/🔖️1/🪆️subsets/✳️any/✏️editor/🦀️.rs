@@ -1338,7 +1338,7 @@ impl CadPlayApp {
 // 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` route through the artifact
 // lane: an interaction step that reaches its commit state lands objects (Artifact) besides the
 // session snapshot (Config).
-const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown"];
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setProjection",
@@ -1357,7 +1357,10 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setSunIntensity",
     "setContributions",
     "setActiveExample",
+    "importCadFile",
 ];
+/// 📤️ The exports read the scene and hand the host a download; they touch no store.
+const CAD_RETAINED_EXPORT_TOOL_IDS: &[&str] = &["saveSelected", "saveInPlay", "saveCurrent"];
 const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
     "renameNode",
@@ -1391,6 +1394,11 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "setContributions",
     "setActiveExample",
     "loadRawRequest",
+    "applyTransformation",
+    "importCadFile",
+    "saveSelected",
+    "saveInPlay",
+    "saveCurrent",
 ];
 const CAD_RETAINED_COMMAND_SCHEMA: &str = "cad.scene.tool-command.v1";
 const CAD_RETAINED_RAW_BYTES: usize = 8_192;
@@ -1438,6 +1446,12 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     // `build_document_store_initialization_job` — never an in-history artifact edit.
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "applyTransformation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    // 🗃️ A whole spatial scene imports like an example switch: the session config plus ONE host `LoadDocument`.
+    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "saveSelected", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "saveInPlay", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "saveCurrent", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 🧾️ The ONE execution contract every retained cad tool is admitted under. Its wire ceiling is
@@ -1455,7 +1469,7 @@ fn cad_retained_contract() -> ToolExecutionContract {
 /// contract, which the wire factory and the payload builder must both honour or an admitted pack
 /// is refused one layer deeper.
 fn cad_retained_raw_bytes(tool_id: &str) -> usize {
-    if tool_id == "setContributions" {
+    if tool_id == "setContributions" || tool_id == "importCadFile" {
         semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
     } else {
         CAD_RETAINED_RAW_BYTES
@@ -1489,6 +1503,10 @@ fn cad_retained_reduce(
     }
     if CAD_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
         admit_cad_config(config).map_err(Fault::from)?;
+        return command.dispatch(&doc, &cfg, &mut ctx);
+    }
+    if CAD_RETAINED_EXPORT_TOOL_IDS.contains(&command.command_id()) {
+        admit_cad_snapshot(snapshot).map_err(Fault::from)?;
         return command.dispatch(&doc, &cfg, &mut ctx);
     }
     match command {
@@ -2164,7 +2182,12 @@ impl ArtifactEditor for CadPlayApp {
             "setSunIntensity",
             "setContributions",
             "setActiveExample",
-            "loadRawRequest"
+            "loadRawRequest",
+            "applyTransformation",
+            "importCadFile",
+            "saveSelected",
+            "saveInPlay",
+            "saveCurrent"
         ]
     }
 
@@ -2500,8 +2523,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected objects by an angle around a given axis.", "Dreht die ausgewählten Objekte um einen Winkel um eine angegebene Achse."))
             .action_use_when("rotateSelection", vec!["rotate the selection 90 degrees".into()])
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by a factor per axis.", "Skaliert die ausgewählten Objekte um einen Faktor je Achse."))
-            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the selected objects' geometry.", "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."))
-            .action_describe("importCadFile", LocalizedLabel::native("Reads a CAD file (STEP, OBJ, STL) into the model.", "Liest eine CAD-Datei (STEP, OBJ, STL) in das Modell ein."))
+            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the selected objects' geometry; refused until composed pane models support it.", "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."))
+            .action_describe("importCadFile", LocalizedLabel::native("Replaces the whole CAD scene with a spatial scene file; single STEP, OBJ or STL objects are refused until composed pane models support them.", "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei; einzelne STEP-, OBJ- oder STL-Objekte werden abgelehnt, bis zusammengesetzte Bereichsmodelle sie unterstützen."))
             .action_use_when("importCadFile", vec!["import a step file".into(), "load this geometry".into()])
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole model with one of the plugin's declared playground examples.", "Ersetzt das gesamte Modell durch eines der deklarierten Beispiele des Plugins."))
             .action_describe("saveCurrent", LocalizedLabel::native("Exports the current model to a downloadable CAD file in the chosen format.", "Exportiert das aktuelle Modell als herunterladbare CAD-Datei im gewählten Format."))
@@ -2568,8 +2591,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("applyTransformation", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("applyTransformation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importCadFile", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
@@ -2590,9 +2613,9 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveSelected", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("saveInPlay", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("saveCurrent", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveSelected", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveInPlay", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveCurrent", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadRawRequest", InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no

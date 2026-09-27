@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "owner": {
+    "identity": ["surfaceId", "generation", "pointerId"],
+    "staleContinuation": "inert",
+    "duplicateCancel": "inert",
+    "freshGesture": "accepted"
+  },
+  "cases": [
+    {
+      "id": "draw-canvas2d",
+      "pluginId": "s.draw",
+      "appId": "s.draw.drawing@1/*#editor",
+      "exampleId": "demo",
+      "windowKindId": "drawing-composite",
+      "surfaceKind": "canvas-2d",
+      "controllerId": "s.draw.drawing@1/*#editor",
+      "utility": "selectDirect",
+      "points": {
+        "down": { "x": 400, "y": 300 },
+        "move": { "x": 430, "y": 320 },
+        "terminal": { "x": 430, "y": 320 }
+      },
+      "terminalPolicy": "cancelled-action-discards-draft",
+      "acceptedBeforeCancel": [
+        { "action": "canvasPointerDown", "phase": null, "cancelled": null },
+        { "action": "canvasPointerMove", "phase": null, "cancelled": null }
+      ],
+      "publishedOnCancel": [
+        { "action": "canvasPointerUp", "phase": null, "cancelled": true }
+      ],
+      "blockedAfterCancel": ["canvasPointerMove", "canvasPointerUp"],
+      "artifactAfterCancel": "unchanged",
+      "previewAfterCancel": "cleared",
+      "freshGestureResult": "one-artifact-publication"
+    },
+    {
+      "id": "note-ink-canvas",
+      "pluginId": "s.note",
+      "appId": "s.note.note@1/*#editor",
+      "exampleId": "demo",
+      "windowKindId": "note-composite",
+      "surfaceKind": "ink-canvas",
+      "controllerId": "s.note.note@1/*#editor",
+      "utility": "pencil",
+      "points": {
+        "down": { "x": 32, "y": 40 },
+        "move": { "x": 48, "y": 52 },
+        "terminal": { "x": 48, "y": 52 }
+      },
+      "terminalPolicy": "retain-accepted-events",
+      "acceptedBeforeCancel": [
+        { "action": "inkApplyEvents", "phase": "begin", "cancelled": null },
+        { "action": "inkApplyEvents", "phase": "live", "cancelled": null }
+      ],
+      "publishedOnCancel": [],
+      "blockedAfterCancel": ["inkApplyEvents:live", "inkApplyEvents:commit"],
+      "artifactAfterCancel": "retain-accepted-begin-live",
+      "previewAfterCancel": "cleared",
+      "freshGestureResult": "begin-live-commit"
+    }
+  ]
+}

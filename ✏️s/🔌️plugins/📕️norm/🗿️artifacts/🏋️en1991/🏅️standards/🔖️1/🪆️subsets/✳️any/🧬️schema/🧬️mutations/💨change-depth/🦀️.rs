@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeDepth {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-depth", "change-depth")
+        protocol::LocalizedLabel::native("Change building depth", "Gebäudetiefe ändern")
     }
 }
 //#endregion 🔖️Payload

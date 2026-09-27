@@ -1,11 +1,14 @@
-# Direct identities: change-header-fields, insert-palette-entry, remove-palette-entry, replace-palette-entry, replace-pixel-data
+# Direct identities: set-snapshot, change-header-fields, insert-palette-entry, remove-palette-entry, replace-palette-entry, replace-pixel-data
 dialect grammar
 grammar stdio.bmp.mutations
 start op
 
 comment none
 
-op = change-header-fields | insert-palette-entry | remove-palette-entry | replace-palette-entry | replace-pixel-data
+op = set-snapshot | change-header-fields | insert-palette-entry | remove-palette-entry | replace-palette-entry | replace-pixel-data
+
+hex = IDENT | TEXT
+set-snapshot = "set-snapshot" "snapshot" "=" hex
 
 text-value = IDENT | TEXT
 row-order-value = "bottom-up" | "top-down"

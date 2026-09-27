@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.stdio.snapshot-edit-event.v1",
+  "title": "Stdio Snapshot Edit Event",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "path",
+        "value"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setValue"
+        },
+        "path": {
+          "$ref": "#/$defs/pointer"
+        },
+        "value": true
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "path",
+        "value"
+      ],
+      "properties": {
+        "operation": {
+          "const": "insertValue"
+        },
+        "path": {
+          "$ref": "#/$defs/nonRootPointer"
+        },
+        "value": true
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "path"
+      ],
+      "properties": {
+        "operation": {
+          "const": "removeValue"
+        },
+        "path": {
+          "$ref": "#/$defs/nonRootPointer"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "from",
+        "path"
+      ],
+      "properties": {
+        "operation": {
+          "const": "moveValue"
+        },
+        "from": {
+          "$ref": "#/$defs/nonRootPointer"
+        },
+        "path": {
+          "$ref": "#/$defs/nonRootPointer"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "path",
+        "key"
+      ],
+      "properties": {
+        "operation": {
+          "const": "renameKey"
+        },
+        "path": {
+          "$ref": "#/$defs/nonRootPointer"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation",
+        "source"
+      ],
+      "properties": {
+        "operation": {
+          "const": "replaceSource"
+        },
+        "source": {
+          "type": "string",
+          "description": "Complete typed snapshot encoded as JSON. Native file encodings are not accepted on this operation; all represented fields must survive source round trips."
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "pointer": {
+      "type": "string",
+      "pattern": "^(|/.*)$"
+    },
+    "nonRootPointer": {
+      "type": "string",
+      "pattern": "^/.*$"
+    }
+  }
+}

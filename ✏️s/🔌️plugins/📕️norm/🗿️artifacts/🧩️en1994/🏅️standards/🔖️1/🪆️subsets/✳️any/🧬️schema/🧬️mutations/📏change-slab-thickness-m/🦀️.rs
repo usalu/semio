@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeSlabThickn
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-slab-thickness-m", "change-slab-thickness-m")
+        protocol::LocalizedLabel::native("Change slab thickness", "Deckendicke ändern")
     }
 }
 //#endregion 🔖️Payload

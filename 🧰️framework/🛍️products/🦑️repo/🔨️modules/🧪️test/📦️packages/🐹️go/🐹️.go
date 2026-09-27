@@ -171,9 +171,10 @@ type Context struct {
 	ArtifactDir string
 }
 
-// Artifact is the absolute path this handler writes one named result artifact to, creating parents.
+// Artifact is the absolute path this handler writes one named result artifact to — <ArtifactDir>/<scenario id>/<role>/<filename>,
+// so a scenario's artifacts never overwrite another's — creating parents.
 func (c *Context) Artifact(role string, filename string) (string, error) {
-	dir := filepath.Join(c.ArtifactDir, role)
+	dir := filepath.Join(c.ArtifactDir, c.Scenario.ID, role)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}

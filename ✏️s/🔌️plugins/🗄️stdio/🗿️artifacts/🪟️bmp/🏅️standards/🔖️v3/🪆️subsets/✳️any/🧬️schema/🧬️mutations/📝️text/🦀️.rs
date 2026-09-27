@@ -10,6 +10,7 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<BmpMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::text::CODEC,
     crate::schema::mutations::change_header_fields::text::CODEC,
     crate::schema::mutations::insert_palette_entry::text::CODEC,
     crate::schema::mutations::remove_palette_entry::text::CODEC,

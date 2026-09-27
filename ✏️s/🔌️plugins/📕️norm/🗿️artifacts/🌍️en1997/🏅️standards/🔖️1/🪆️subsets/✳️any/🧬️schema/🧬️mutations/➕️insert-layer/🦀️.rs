@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for InsertLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-layer", "insert-layer")
+        protocol::LocalizedLabel::native("Insert soil layer", "Bodenschicht einfügen")
     }
 }

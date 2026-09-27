@@ -1,0 +1,10 @@
+{
+  "schema": "text-editor@1",
+  "laneKey": "framework.scene.text.buffer",
+  "field": "buffer",
+  "cases": [
+    { "id": "empty", "text": "", "repeat": 1 },
+    { "id": "unicode", "text": "Grüße 🌍 日本語\n", "repeat": 1 },
+    { "id": "large-source", "text": "A complete document: Grüße 🌍 日本語\n", "repeat": 4096 }
+  ]
+}

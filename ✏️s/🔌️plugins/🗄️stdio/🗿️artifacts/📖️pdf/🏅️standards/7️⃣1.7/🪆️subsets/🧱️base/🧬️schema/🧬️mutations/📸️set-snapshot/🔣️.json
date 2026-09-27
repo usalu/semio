@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot",
+  "semanticKind": "set-snapshot",
+  "displayName": "Set Snapshot",
+  "emoji": "📸️",
+  "aggregateVariant": "SetSnapshot",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-snapshot",
+  "binaryTag": 60,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

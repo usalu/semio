@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeEffects {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change effects", "Ändern: effects")
+        protocol::LocalizedLabel::native("Change action effects", "Beanspruchungen ändern")
     }
 }
 //#endregion 🔖️Payload

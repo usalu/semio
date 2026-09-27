@@ -39,7 +39,7 @@
     "NativeCodecProviderSelectionCaseV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "pluginId", "packageId", "version", "cancelled", "nowMs", "deadlineMs", "accepted", "stage", "code"],
+      "required": ["name", "pluginId", "packageId", "version", "cancelled", "nowMs", "deadlineMs", "accepted", "stage", "code", "bindings"],
       "properties": {
         "name": {"type": "string", "minLength": 1, "maxLength": 80},
         "pluginId": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[a-z0-9-]+$"},
@@ -50,7 +50,8 @@
         "deadlineMs": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
         "accepted": {"type": "boolean"},
         "stage": {"enum": ["contract", "domain", "bounds"]},
-        "code": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$"}
+        "code": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$"},
+        "bindings": {"type": "integer", "minimum": 0, "maximum": 4096, "description": "How many native codec bindings an accepted preview answers (0 for a refused case and for an unlinked package)."}
       },
       "allOf": [
         {

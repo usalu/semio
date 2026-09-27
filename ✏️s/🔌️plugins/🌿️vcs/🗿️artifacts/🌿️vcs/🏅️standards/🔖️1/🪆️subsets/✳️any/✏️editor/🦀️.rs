@@ -369,7 +369,7 @@ impl VcsEditCommandWork {
                 }
                 self.complete = true;
                 let mutations = std::mem::take(&mut self.mutations);
-                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) }));
+                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, crate::editor::vcs::commands::edit::VCS_TEXT_TYPING_COALESCE_KEY) }));
             }
         }
         Ok(None)

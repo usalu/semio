@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamConstr
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-construction", "change-beam-construction")
+        protocol::LocalizedLabel::native("Change beam construction method", "Montagezustand des Trägers ändern")
     }
 }
 //#endregion 🔖️Payload

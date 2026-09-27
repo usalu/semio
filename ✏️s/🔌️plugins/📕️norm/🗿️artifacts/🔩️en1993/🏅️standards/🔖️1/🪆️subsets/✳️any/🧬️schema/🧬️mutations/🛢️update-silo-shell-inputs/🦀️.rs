@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateSiloShellI
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert silo shell {}", self.silo_shell.id),
-            &format!("Siloschale setzen {}", self.silo_shell.id),
+            &format!("Update silo shell {}", self.silo_shell.id),
+            &format!("Siloschale {} aktualisieren", self.silo_shell.id),
         )
     }
     fn target(&self) -> Vec<String> {

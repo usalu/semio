@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeSlabAction
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-slab-action-q-area-pa", "change-slab-action-q-area-pa")
+        protocol::LocalizedLabel::native("Change imposed area load on the slab", "Flächenlast auf der Verbunddecke ändern")
     }
 }
 //#endregion 🔖️Payload

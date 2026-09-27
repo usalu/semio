@@ -340,37 +340,45 @@ pub(crate) mod fixture {
         assert_eq!(opened, expected);
     }
 
-    /// 🪪️ A codec call constructs exactly one app, chosen on the declarations: every registered app's
-    /// recorded document schema is exactly the one its constructed app opens, each schema's owners are
-    /// exactly its own editor and viewer (two of the fixture's six apps), and the one constructed is the
-    /// editor; a schema nobody owns is refused without constructing anything.
+    /// 🪪️ A codec call constructs no app: every registered app records the document schema and the codec answers of
+    /// its own type, each schema's owners are exactly its own editor and viewer (two of the fixture's six apps), the
+    /// one answering is the editor, and a bundle whose every app factory refuses to run answers every codec call of
+    /// every owned schema; a schema nobody owns is refused.
     #[semio_framework_async_macros::async_test]
-    async fn codec_calls_construct_exactly_the_one_app_that_owns_their_schema() {
+    async fn codec_calls_construct_no_app() {
+        fn refuse_construction(_definition: &AppDefinition) -> FixtureApps {
+            panic!("a codec call constructed an app")
+        }
         let projected = project_artifact_declarations(&[build_declaration()]);
         let mut plugin = crate::app::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
-        for (app, factory) in projected.app_defs {
+        for (app, mut factory) in projected.app_defs {
+            assert_eq!(factory.document_schema, app.definition.io.artifact_schema, "{}", app.definition.id);
+            factory.create = refuse_construction;
             plugin = plugin.register_app_factory(app, factory);
         }
-        let mut owners: Vec<(String, &'static str)> = Vec::new();
-        for definition in &plugin.manifest.apps {
-            let app = plugin.create_app(&definition.id).expect("registered app");
-            let constructed = app.artifact_schema().await.to_string();
-            assert_eq!(plugin.app_document_schema(&definition.id), Some(constructed.as_str()), "{}", definition.id);
-            owners.push((definition.id.clone(), plugin.app_document_schema(&definition.id).expect("recorded schema")));
-            crate::plugin_runtime::close_artifact_codec_app(app).expect("close throwaway app");
-        }
+        let owners: Vec<(String, &'static str)> = plugin.manifest.apps.iter().map(|definition| (definition.id.clone(), plugin.app_document_schema(&definition.id).expect("recorded schema"))).collect();
         assert_eq!(owners.len(), 6);
-        for schema in ["semio.testkit.w1c-fixture.std1-any/v1", "semio.testkit.w1c-fixture.std1-strict/v1", "semio.testkit.w1c-fixture.std2-any/v1"] {
-            let candidates: Vec<&str> = crate::plugin_runtime::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
+        let schemas = ["semio.testkit.w1c-fixture.std1-any/v1", "semio.testkit.w1c-fixture.std1-strict/v1", "semio.testkit.w1c-fixture.std2-any/v1"];
+        for schema in schemas {
             let expected: Vec<&str> = owners.iter().filter(|(_, owned)| *owned == schema).map(|(id, _)| id.as_str()).collect();
+            assert_eq!(expected.len(), 2, "{schema}: its editor and its viewer");
+            let candidates: Vec<&str> = crate::plugin_runtime::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
             assert_eq!(candidates, expected, "{schema}");
-            assert_eq!(candidates.len(), 2, "{schema}: its editor and its viewer");
             let owner = crate::plugin_runtime::artifact_codec_owner(&plugin, schema).expect("one owner");
             assert_eq!(owner.role, AppRole::Editor, "{schema}: the editor is the creation authority");
-            assert!(expected.contains(&owner.id.as_str()));
         }
-        assert_eq!(crate::plugin_runtime::artifact_codec_candidates(&plugin, "semio.testkit.nobody/v1").count(), 0);
         assert!(crate::plugin_runtime::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
+        let runtime = crate::plugin_runtime::PluginRuntime::new();
+        crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
+        for schema in schemas {
+            let hash = crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, schema).await;
+            assert!(hash.as_ref().is_ok_and(|hash| *hash != [0; 32]) || format!("{hash:?}").contains("no structural record specification"), "{schema}: {hash:?}");
+            let document_id = format!("artifact-{}", "1".repeat(32));
+            let pair = crate::plugin_runtime::plugin_artifact_genesis(&runtime, schema, &document_id).await.expect("genesis without an app");
+            let mirror = crate::plugin_runtime::plugin_artifact_print_mirror(&runtime, schema, &pair.pack, &pair.spr).await.expect("print mirror without an app");
+            assert!(!pair.pack.is_empty() && !mirror.dsl.is_empty(), "{schema}");
+        }
+        assert!(crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
     }
 
     #[semio_framework_async_macros::async_test]

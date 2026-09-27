@@ -1,0 +1,3 @@
+# 🩹️ Bounded PNG pixel-range patch.
+scalar PatchPixelsValue
+input PatchPixelsMutation { index: Int! removeCount: Int! pixels: PatchPixelsValue! moveTo: Int }

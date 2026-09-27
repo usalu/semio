@@ -91,3 +91,5 @@ semio-framework-schema = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+# 🗝️ Test-only: the directory lanes' postgres/neo4j fixtures run on the ONE claimed shared server (`db_storage::claimed_backend`).
+db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }

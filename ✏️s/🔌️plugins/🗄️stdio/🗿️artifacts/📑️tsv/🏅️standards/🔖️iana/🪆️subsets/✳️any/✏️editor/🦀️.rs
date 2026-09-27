@@ -7,6 +7,7 @@ use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
 use crate::standards::iana::subsets::any::schema::mutations::set_cell;
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
@@ -27,20 +28,40 @@ pub const TSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TsvEditorCommand {
     SetCell { row: u32, column: u32, value: String },
+    EditSnapshot { event: SnapshotEditEvent },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
+    if !text.len().is_multiple_of(2) {
+        return Err("odd-length hex string".into());
+    }
+    (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect()
 }
 
 impl protocol::OpText for TsvEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            TsvEditorCommand::SetCell { row, column, value } => format!("set-cell row={row} column={column} value={}", value.replace('\\', "\\\\").replace(' ', "\\s")),
-            TsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", example_id.replace('\\', "\\\\").replace(' ', "\\s")),
+            TsvEditorCommand::SetCell { row, column, value } => format!("set-cell row={row} column={column} value={}", hex_encode(value.as_bytes())),
+            TsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
+            TsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            return Ok(TsvEditorCommand::SetActiveExample { example_id: rest.replace("\\s", " ").replace("\\\\", "\\") });
+            let value = String::from_utf8(hex_decode(rest).map_err(|error| store::TextError::new(format!("tsv editor command: invalid example hex {error}"), dsl::TextSpan::at(1, 1)))?)
+                .map_err(|error| store::TextError::new(format!("tsv editor command: invalid example utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(TsvEditorCommand::SetActiveExample { example_id: value });
+        }
+        if let Some(rest) = line.strip_prefix("snapshot-edit event=") {
+            let bytes = hex_decode(rest).map_err(|error| store::TextError::new(format!("tsv editor command: invalid snapshot edit hex {error}"), dsl::TextSpan::at(1, 1)))?;
+            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("tsv editor command: invalid snapshot edit {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(TsvEditorCommand::EditSnapshot { event });
         }
         let rest = line.strip_prefix("set-cell ").ok_or_else(|| store::TextError::new(format!("tsv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut row = None;
@@ -48,11 +69,13 @@ impl protocol::OpText for TsvEditorCommand {
         let mut value = String::new();
         for token in rest.split(' ') {
             let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("tsv editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
-            let decoded = raw.replace("\\s", " ").replace("\\\\", "\\");
             match key {
-                "row" => row = decoded.parse::<u32>().ok(),
-                "column" => column = decoded.parse::<u32>().ok(),
-                "value" => value = decoded,
+                "row" => row = raw.parse::<u32>().ok(),
+                "column" => column = raw.parse::<u32>().ok(),
+                "value" => {
+                    value = String::from_utf8(hex_decode(raw).map_err(|error| store::TextError::new(format!("tsv editor command: invalid value hex {error}"), dsl::TextSpan::at(1, 1)))?)
+                        .map_err(|error| store::TextError::new(format!("tsv editor command: invalid value utf8 {error}"), dsl::TextSpan::at(1, 1)))?
+                }
                 _ => {}
             }
         }
@@ -66,7 +89,7 @@ impl protocol::OpBinary for TsvEditorCommand {
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TableWindowKit`
     /// mints `set-cell`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
-    const TOOL_JOB_IDS: &'static [&'static str] = TSV_RETAINED_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = TSV_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
@@ -88,6 +111,16 @@ const TSV_KIT_ACTION_ID: &str = "set-cell";
 /// ids. Without the kit verb's row the reactor refused every `set-cell` with
 /// `interactive-job.missing-factory`.
 const TSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, TSV_KIT_ACTION_ID];
+const TSV_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    TSV_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const TSV_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.tsv.tool-command.v1";
 const TSV_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
@@ -120,6 +153,9 @@ fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<TsvEditorCommand, Fault> {
+    if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
+        return Ok(TsvEditorCommand::EditSnapshot { event });
+    }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         TSV_KIT_ACTION_ID => Ok(TsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
@@ -136,6 +172,7 @@ fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
 fn tsv_command_id(command: &TsvEditorCommand) -> &'static str {
     match command {
         TsvEditorCommand::SetCell { .. } => TSV_KIT_ACTION_ID,
+        TsvEditorCommand::EditSnapshot { event } => event.action_id(),
         TsvEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
@@ -158,6 +195,7 @@ fn tsv_emit(command: &TsvEditorCommand, snapshot: &TsvSnapshot) -> Result<Emit<T
             })
         }
         TsvEditorCommand::SetCell { row, column, value } => (row, column, value),
+        TsvEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-tsv-snapshot-edit-routed-to-native-reducer")),
     };
     if snapshot.records.get(*row as usize).is_none() {
         return Ok(Emit::default());
@@ -256,7 +294,7 @@ impl ArtifactEditor for TsvEditor {
     const DIALECT: Dialect = TSV_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TSV_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<TsvEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.stdio.tsv@iana/*#editor",
@@ -269,10 +307,14 @@ impl ArtifactEditor for TsvEditor {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(TsvRetainedCommandJobFactory::new(&controller))
+        registry.register(TsvRetainedCommandJobFactory::new(&controller))?;
+        semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&request.tool_id) {
+            return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request);
+        }
         if !TSV_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -396,14 +438,43 @@ impl ArtifactEditor for TsvEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        tsv_emit(command, doc.snapshot)
+        match command {
+            TsvEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
+            _ => tsv_emit(command, doc.snapshot),
+        }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.tsv@iana/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TsvEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent> {
+        match command {
+            TsvEditorCommand::EditSnapshot { event } => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| TsvMutation::SetSnapshot(
+            crate::standards::iana::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot },
+        ))
     }
 }
 //#endregion 🔖️Editor
@@ -411,21 +482,22 @@ impl ArtifactEditor for TsvEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_tsv_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(TSV_EDITOR_DIALECT)
+    let builder = Editor::builder(TSV_EDITOR_DIALECT)
         .document(["semio", "stdio", "tsv"])
         .artifact_kind(crate::artifact_kind())
         .icon_id("table-2")
         .mode_def(edit::definition())
         .default_mode_id(edit::TSV_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Table"))
         // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

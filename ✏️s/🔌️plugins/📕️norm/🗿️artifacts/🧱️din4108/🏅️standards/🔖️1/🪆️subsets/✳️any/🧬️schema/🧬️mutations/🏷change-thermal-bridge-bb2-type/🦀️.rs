@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeThermalB
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-thermal-bridge-bb2-type", "change-thermal-bridge-bb2-type")
+        protocol::LocalizedLabel::native("Change Supplement 2 thermal bridge category", "Wärmebrückenkategorie nach Beiblatt 2 ändern")
     }
 }

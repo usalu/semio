@@ -87,6 +87,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/reorder-runs/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

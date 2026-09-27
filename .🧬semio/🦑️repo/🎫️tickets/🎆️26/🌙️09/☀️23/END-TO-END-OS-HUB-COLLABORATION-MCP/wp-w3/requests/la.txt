@@ -1,0 +1,7 @@
+semio-framework-hash — LA (H10 Q2): SHA-256 compression on aarch64 `sha2` / x86-64 `sha` instructions (runtime-detected); wasm32 compiles the portable rounds only (digests identical). Every guest links it.
+root Cargo.toml — LA (W3 relay): `[profile.wasm-dev.package.semio-framework-hash] opt-level = 0` removed (undeclared in the WASI profile policy fixture); wasm-dev now inherits the dev O3 for the hash crate → every guest's wasm-dev bytes change.
+semio-framework-plugin — LA (H10 codec-app resolution): a codec call constructs exactly the ONE app that owns its schema (`AppFactory.document_schema`, `artifact_codec_owner`); guest code changes, no WIT/wire/descriptor change. Every guest links it.
+semio-framework-ui-contract — LA (R8 ui-retirement item-metered): `UiFixedList` retires its emptied backing as items (zero bytes), the document ladder drops its grant raise. Every UI guest links it.
+semio-framework-plugin-host — LA (H10 Q1, host-only, not a guest): owned interpreter speedup (fuel-identical); `owned_engine_identity()` changes → every hub re-verifies its guests once.
+nx.json / 📚️library/🟨️.mjs / 🕸️graph 📋️project.json — LA (R8 S12-7): Nx inputs narrowed (derive macro include_str!s root nx.json → every kernel dependent recompiles; content not parsed).
+semio-framework-hash — LA (06:1x, Q2 follow-up): HMAC-SHA256 + PBKDF2 moved into the hash crate (`HmacSha256`, `hmac_sha256`, `pbkdf2_sha256`, two compressions per iteration); the hub's copies deleted. wasm32-wasip2 `--lib` check Fresh/green 06:36 (build-landing). Every guest links the crate.

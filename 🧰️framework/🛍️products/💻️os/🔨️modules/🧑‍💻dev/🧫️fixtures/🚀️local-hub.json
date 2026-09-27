@@ -257,7 +257,7 @@
               "path": "packages/stdio/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -281,7 +281,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -326,7 +326,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -347,7 +347,7 @@
               "path": "packages/note/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -386,7 +386,7 @@
               "path": "packages/stdio/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -410,7 +410,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 17
+              "appChannelVersion": 18
             },
             "browserActor": {
               "kind": "closed-browser-actor"

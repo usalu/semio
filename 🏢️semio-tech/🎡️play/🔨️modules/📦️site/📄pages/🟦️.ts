@@ -1,14 +1,18 @@
-import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { cpSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 /** 📦 One CDN deployment of play. Each page stays under {@link PLAY_PAGE_BUDGET_BYTES}. */
 export const PLAY_PAGE_BUDGET_BYTES = 1_000_000_000;
 
 /** 🗺️ Satellite directories published on their own host so the app page stays small. */
+const routeDirectory = (route: string): string => route.startsWith("/") ? route.slice(1) : route;
+
 export const PLAY_PAGE_FAMILIES = [
   { id: "map", directories: ["osm", "vt", "dem"] },
   { id: "media", directories: ["mesh", "cad-assets", "infinite-assets", SEMIO_ASSET_DIRECTORY] },
+  { id: "modules", directories: [routeDirectory(MODULE_PLUGIN_ROUTE), routeDirectory(MODULE_EXTENSION_ROUTE)] },
 ] as const;
 
 export type PlayDirectoryEntry = { readonly name: string; readonly bytes: number };
@@ -88,12 +92,11 @@ export function publishPlayPages(siteDir: string, pagesDir: string, apex: string
       writeFileSync(join(destination, "_headers"), "/*\n  Access-Control-Allow-Origin: *\n");
     }
   }
+  for (const pageEntry of pages) rewritePublishedStyleUrls(join(pagesDir, pageEntry.name), origins);
+  const modulesPage = pages.find((entry) => entry.name === "modules");
   const playPage = pages.find((entry) => entry.name === "play");
-  if (playPage) {
-    const destination = join(pagesDir, playPage.name);
-    rewritePublishedStyleUrls(destination, origins);
-    installShardWorkerAssetFetch(destination, origins);
-  }
+  if (modulesPage) installShardWorkerAssetFetch(join(pagesDir, modulesPage.name), origins);
+  if (modulesPage && playPage) retainSameOriginShardWorker(join(pagesDir, modulesPage.name), join(pagesDir, playPage.name));
   rmSync(siteDir, { recursive: true, force: true });
   for (const pageEntry of pages) console.log(`Play page ${pageEntry.host}: ${pageEntry.bytes} bytes`);
   return pages;
@@ -141,6 +144,24 @@ function installShardWorkerAssetFetch(directory: string, origins: Readonly<Recor
     }
   };
   visit(directory);
+}
+
+
+
+/** 🧵 Browsers refuse a worker loaded from another host, so the play page keeps this one script. */
+function retainSameOriginShardWorker(modulesDir: string, playDir: string): void {
+  const visit = (current: string): void => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const path = join(current, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (entry.name.endsWith("shard-worker.js")) {
+        const destination = join(playDir, relative(modulesDir, path));
+        mkdirSync(dirname(destination), { recursive: true });
+        cpSync(path, destination);
+      }
+    }
+  };
+  visit(modulesDir);
 }
 
 if (import.meta.vitest) {

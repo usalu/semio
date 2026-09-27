@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing/layers.json",
+  "title": "Raster Layer Stack",
+  "description": "Centered display extents, linked or parent-relative masks, and degree rotations. Images are immutably borrowed during a job. Mask coverage preparation and compositing advance in bounded grants; only completed output is published. At most 1024 layers and 32 nested groups. Unique identifiers are required. Unique mask coverage is limited to 64 MiB. A blank layer contributes transparent bounds; an empty document produces one transparent pixel with empty=true.",
+  "type": "object",
+  "required": [
+    "layers",
+    "images"
+  ],
+  "properties": {
+    "layers": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/$defs/layer"
+      }
+    },
+    "images": {
+      "type": "object",
+      "maxProperties": 1024,
+      "additionalProperties": {
+        "$ref": "#/$defs/Image"
+      }
+    }
+  },
+  "$defs": {
+    "Image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "pixels"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "scaleX",
+        "scaleY",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "scaleX": {
+          "type": "number"
+        },
+        "scaleY": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    },
+    "mask": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "linked",
+        "invert",
+        "transform"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "linked": {
+          "type": "boolean"
+        },
+        "invert": {
+          "type": "boolean"
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "imageKey": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        }
+      }
+    },
+    "layer": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "visible",
+        "opacity",
+        "blendMode",
+        "transform"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "pixel",
+            "group",
+            "adjustment"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity"
+          ]
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "mask": {
+          "$ref": "#/$defs/mask"
+        },
+        "imageKey": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/layer"
+          }
+        },
+        "adjustmentKind": {
+          "const": "brightnessContrast"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "brightness": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "contrast": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "group"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "children"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "adjustment"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "adjustmentKind",
+              "params"
+            ],
+            "properties": {
+              "mask": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

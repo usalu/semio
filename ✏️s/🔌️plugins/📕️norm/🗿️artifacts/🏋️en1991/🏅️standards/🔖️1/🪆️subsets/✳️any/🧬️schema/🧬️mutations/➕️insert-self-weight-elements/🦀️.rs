@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertSelfWeight
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-self-weight-elements", "insert-self-weight-elements")
+        protocol::LocalizedLabel::native("Insert self-weight element", "Eigenlastbauteil einfügen")
     }
 }
 //#endregion 🔖️Payload

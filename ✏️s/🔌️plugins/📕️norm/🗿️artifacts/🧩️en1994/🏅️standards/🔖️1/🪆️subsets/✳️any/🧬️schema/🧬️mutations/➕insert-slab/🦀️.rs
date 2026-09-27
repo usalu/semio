@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for InsertSlab {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-slab", "insert-slab")
+        protocol::LocalizedLabel::native("Insert composite slab", "Verbunddecke einfügen")
     }
 }
 //#endregion 🔖️Payload

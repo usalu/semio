@@ -1269,12 +1269,20 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
     assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
-    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, true, 1, semio_framework_job::root_cancel_token());
+    assert_eq!(cursor.checkout_site(), "frame-deferred-shell-maintenance");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-pump-sync");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-action");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "one"));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-action");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "two"));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-tutorial-flush");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::FlushTutorial)));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-settle");
+    assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Settle)));
+    assert_eq!(cursor.checkout_site(), "frame-deferred-empty");
     assert!(cursor.take_next().is_none());
     assert!(cursor.terminal_is_empty());
 }
@@ -1290,11 +1298,15 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     for pair in rows.chunks(2) {
         let mut batch = interaction.input.reserve_actions(pair.len(), pair.len() * 128).unwrap();
         for row in pair {
-            batch.action("writer", row["action"].as_str().unwrap(), 128, |builder| {
-                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
-                    token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap(),
+            batch
+                .action("writer", row["action"].as_str().unwrap(), 128, |builder| {
+                    builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+                        token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
+                        member: row["member"].as_u64().unwrap() as u8,
+                        abort_correlation_on_error: row["abort"].as_bool().unwrap(),
+                    })
                 })
-            }).unwrap();
+                .unwrap();
         }
         batch.publish().unwrap();
         let mut actions = FrameActionOwners::default();
@@ -1307,9 +1319,9 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     let handback = groups.pop().unwrap();
     let mut batch = interaction.input.reserve_actions(2, 256).unwrap();
     for member in 0..2 {
-        batch.action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
-            token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0,
-        })).unwrap();
+        batch
+            .action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
+            .unwrap();
     }
     batch.publish().unwrap();
     let mut staged = FrameActionOwners::default();
@@ -1322,9 +1334,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         owner.pending_frame_deferred = Some(FrameDeferredCursor::new(resident, false, false, false, false, 141, semio_framework_job::root_cancel_token()));
         let mut queue = runtime.0.completions.lock().unwrap();
         assert!(queue.reserve_interaction());
-        queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred {
-            interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())),
-        }));
+        queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred { interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())) }));
     }
     assert!(!runtime.close_input_step());
     assert!(runtime.try_lock().unwrap().interaction_available());
@@ -1466,7 +1476,7 @@ fn frame_maintenance_authority_refuses_aba_and_releases_the_exact_generation() {
 fn frame_maintenance_refusal_cell_recovers_exact_identity_without_blocking() {
     let owner = Box::new(73u64);
     let identity = owner.as_ref() as *const u64;
-    let cell = FrameMaintenanceOwnerCell::new(owner);
+    let cell = FrameExecutionOwnerCell::new(owner);
     let Some(owner) = cell.try_take() else { panic!("exact owner admission") };
     assert_eq!(owner.as_ref() as *const u64, identity);
     assert!(cell.try_take().is_none());
@@ -1526,8 +1536,6 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         modifiers: PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
-        caret_blink_at_ms: 0.0,
-        caret_blink_visible: true,
         text_streams: std::array::from_fn(|_| None),
         text_fault: None,
         frame_fault: None,
@@ -1566,10 +1574,10 @@ fn an_incomplete_text_stream_waits_for_external_ingress_without_a_worker_self_wa
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
-    let registry = FrameMaintenanceExecutionRegistry::new();
+    let registry = FrameExecutionRegistry::new();
     let owner = frame_maintenance_test_owner(91, 1);
     let identity = owner.interaction.as_ref().map(|interaction| interaction.shell.plugin_filter.as_ptr());
-    let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+    let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
     assert!(registry.try_publish(91, cell.clone()).is_ok());
     assert!(!registry.abandon(92));
     assert!(registry.abandon(91));
@@ -1583,9 +1591,9 @@ fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery() {
-    let registry = FrameMaintenanceExecutionRegistry::new();
+    let registry = FrameExecutionRegistry::new();
     let owner = frame_maintenance_test_owner(93, 2);
-    let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+    let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
     assert!(registry.try_publish(93, cell.clone()).is_ok());
     let Some(running_cell) = registry.try_begin(93) else { panic!("running execution cell") };
     let Some(mut running_owner) = running_cell.try_take() else { panic!("running exact owner") };
@@ -1600,6 +1608,51 @@ fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery(
     let before = cursor.actions.len;
     assert!(!cursor.close_step());
     assert_eq!(before - cursor.actions.len, 1);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn dropped_ordinary_frame_deferred_jobs_recover_the_exact_pair_and_close_remaining_actions_one_per_step() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📮️wgpu-frame-deferred-ownership/🔣️.json")).expect("frame deferred ownership fixture");
+    for law in fixture["cases"].as_array().expect("ownership cases") {
+        let generation = if law["dropAt"] == "queued" { 101 } else { 102 };
+        let mut maintenance = frame_maintenance_test_owner(generation, 3);
+        let interaction = maintenance.interaction.take().expect("exact interaction owner");
+        let mut cursor = maintenance.cursor.take().expect("exact cursor owner");
+        cursor.shell_maintenance = false;
+        cursor.pump_sync = false;
+        cursor.flush_tutorial = false;
+        let current = cursor.take_next().expect("current deferred action");
+        let mut owner = FrameDeferredExecutionOwner::new(interaction, cursor, current);
+        let registry = FrameExecutionRegistry::new();
+        let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
+        assert!(registry.try_publish(generation, cell.clone()).is_ok());
+        if law["dropAt"] == "running" {
+            let running = registry.try_begin(generation).expect("running deferred owner");
+            owner = running.try_take().expect("running exact owner");
+            let Some(FrameDeferredWork::Action(action)) = owner.work.take() else { panic!("current action owner") };
+            action.cancel();
+            running.restore_taken(owner);
+        }
+        assert!(registry.abandon(generation));
+        let (_, recovered) = registry.try_take_abandoned().expect("abandoned deferred owner");
+        let mut recovered = recovered.try_take().expect("recovered exact owner");
+        recovered.cancel_current();
+        let (_, mut cursor) = recovered.take_pair().expect("recovered exact pair");
+        assert_eq!(cursor.actions.len, law["remainingActions"].as_u64().unwrap() as usize);
+        cursor.begin_close();
+        let mut close_steps = 0_u64;
+        loop {
+            close_steps += 1;
+            if cursor.close_step() {
+                break;
+            }
+        }
+        assert_eq!(close_steps, law["closeSteps"].as_u64().unwrap());
+        assert!(cursor.terminal_is_empty());
+        assert_eq!(law["currentReceiptSettlements"], 1);
+        assert_eq!((law["readyReservations"].as_u64(), law["inFlightReservations"].as_u64()), (Some(0), Some(0)));
+    }
 }
 
 #[test]
@@ -2149,7 +2202,10 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     let close_owner = OS_HOST_SOURCE.split("pub(crate) fn advance_component_surface_close(&mut self) -> bool {").nth(1).expect("the component-close owner");
     let admission = &close_owner[..close_owner.find("let Some(owner)").expect("the active exact close owner")];
     assert!(admission.contains("self.presenter.has_pending_presentation()"), "an already prepared packet remains a hard close-admission fence");
-    assert!(admission.contains("component_surface_close_pending() && self.frame_build.has_live_session()") && admission.contains("retire_for_component_surface_close_step"), "the frame that created the bridge is retired one bounded unit before external ownership detaches the surface");
+    assert!(
+        admission.contains("component_surface_close_pending() && self.frame_build.has_live_session()") && admission.contains("retire_for_component_surface_close_step"),
+        "the frame that created the bridge is retired one bounded unit before external ownership detaches the surface"
+    );
 
     let frame_job = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
     let transient = frame_job.split("pub(crate) fn retire_for_component_surface_close_step(&mut self) -> bool {").nth(1).expect("the reusable frame handoff");
@@ -2171,5 +2227,8 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
     assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
     assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
-    assert!(LIBRARY_SOURCE.contains("upload_progress,") && LIBRARY_SOURCE.contains("cursor.raster_keep_steps,") && LIBRARY_SOURCE.contains("cursor.input_progress,"), "upload, raster-ownership, and bounded input progress are independent signature terms");
+    assert!(
+        LIBRARY_SOURCE.contains("upload_progress,") && LIBRARY_SOURCE.contains("cursor.raster_keep_steps,") && LIBRARY_SOURCE.contains("cursor.input_progress,"),
+        "upload, raster-ownership, and bounded input progress are independent signature terms"
+    );
 }

@@ -31,6 +31,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeElemen
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change element U-value", "Bauteil-U-Wert ändern")
+        protocol::LocalizedLabel::native("Change U-value of the element", "U-Wert des Bauteils ändern")
     }
 }

@@ -176,6 +176,8 @@ pub mod standards {
                         pub mod replace_palette_entry;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixel-data/🦀️.rs"]
                         pub mod replace_pixel_data;
+                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                     }

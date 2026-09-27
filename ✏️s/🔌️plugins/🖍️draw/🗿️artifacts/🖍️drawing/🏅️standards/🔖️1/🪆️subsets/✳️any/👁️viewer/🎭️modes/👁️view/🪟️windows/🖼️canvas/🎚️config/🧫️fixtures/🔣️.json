@@ -1,0 +1,54 @@
+{
+  "base": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "framed": false
+  },
+  "steps": [
+    {
+      "window": "left",
+      "camera": {
+        "x": 18,
+        "y": -9,
+        "zoom": 2.5
+      }
+    },
+    {
+      "window": "right",
+      "camera": {
+        "x": -7,
+        "y": 31,
+        "zoom": 0.5
+      }
+    },
+    {
+      "window": "left",
+      "camera": {
+        "x": 100,
+        "y": 200,
+        "zoom": 3
+      }
+    }
+  ],
+  "expected": {
+    "left": {
+      "viewport": {
+        "x": 100,
+        "y": 200,
+        "zoom": 3
+      },
+      "framed": true
+    },
+    "right": {
+      "viewport": {
+        "x": -7,
+        "y": 31,
+        "zoom": 0.5
+      },
+      "framed": true
+    }
+  }
+}

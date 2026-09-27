@@ -34,3 +34,7 @@ pub use scenes::*;
 pub use canvas2d_snapshot::*;
 pub use surface::*;
 pub use world3d_snapshot::*;
+
+#[path = "../../📷️framing/🦀️.rs"]
+mod framing;
+pub use framing::{Canvas2dFraming, Canvas2dFrameCamera};

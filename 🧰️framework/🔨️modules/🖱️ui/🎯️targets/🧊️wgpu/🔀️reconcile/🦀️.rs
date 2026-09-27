@@ -29,11 +29,12 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::ui_control_to_node;
 use crate::wgpu::component::ui::{
     SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence,
-    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent,
+    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
+    UiTreeWindowRowExtent,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
-use ui_contract::{UI_DOCUMENT_NODES, UiDocumentNodePage, UiNodeId, UiNodeRecord};
+use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
 
 //#region 📄️DocumentPageReconcile
 impl UiDocumentTree {
@@ -536,8 +537,24 @@ fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &
                 node.canvas_2d = Some(scene);
             }
         }
-        ui_contract::SurfaceKind::TextEditor => node.text_editor = ui_scene::decode::<ui_scene::TextEditorScene>(props).ok(),
-        ui_contract::SurfaceKind::Table => node.table = ui_scene::decode::<ui_scene::TableScene>(props).ok(),
+        ui_contract::SurfaceKind::TextEditor => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::TextEditorScene>(props) {
+                let declared = scene.lanes.clone();
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| (key == ui_scene::TEXT_EDITOR_BUFFER_LANE_KEY).then_some("buffer"));
+                node.text_editor = Some(scene);
+            }
+        }
+        ui_contract::SurfaceKind::Table => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::TableScene>(props) {
+                let declared = scene.lanes.clone();
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| match key {
+                    ui_scene::TABLE_COLUMNS_LANE_KEY => Some("columns"),
+                    ui_scene::TABLE_ROWS_LANE_KEY => Some("rows"),
+                    _ => None,
+                });
+                node.table = Some(scene);
+            }
+        }
         ui_contract::SurfaceKind::Paint2d => {
             if let Ok(mut scene) = ui_scene::decode::<ui_scene::Paint2dScene>(props) {
                 let declared = std::mem::take(&mut scene.lanes);
@@ -623,7 +640,8 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
             drag_data: None,
             items: None,
             control: None,
-            inline_toolbar: None, detail: None,
+            inline_toolbar: None,
+            detail: None,
             dimmed: None,
             menu: menu_ref(record),
         };
@@ -677,7 +695,12 @@ fn tree_item_detail(document: &UiDocumentTree, props: &ui_contract::TreeItemProp
 /// 🎛️ Rehydrates the explicit inline Toolbar relation without reinterpreting it as another
 /// TreeItem. Its children stay ordinary Button nodes with their own ids and Activate bindings.
 fn tree_item_inline_toolbar(document: &UiDocumentTree, props: &ui_contract::TreeItemProps, controller: &str) -> Option<UiStackNode> {
-    let record = document.record(props.inline_toolbar?)?;
+    tree_toolbar(document, props.inline_toolbar?, controller)
+}
+
+/// 🎛️ Rehydrates a Tree row or section header's explicit Toolbar relation.
+fn tree_toolbar(document: &UiDocumentTree, toolbar: ui_contract::UiNodeId, controller: &str) -> Option<UiStackNode> {
+    let record = document.record(toolbar)?;
     let ui_contract::Component::Container(container) = &record.component else { return None };
     if container.role != ui_contract::ContainerRole::Toolbar {
         return None;
@@ -857,6 +880,8 @@ fn number_stepper_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         value: props.value,
         step: props.step,
         uniform: props.uniform,
+        min: props.min,
+        max: props.max,
         on_absolute: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
         on_delta: record_action_or_inert(record, ui_contract::Trigger::Delta, controller),
         presence: record_presence(record),
@@ -960,17 +985,25 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                 .filter_map(|child_id| document.record(*child_id))
                 .map(|child| match &child.component {
                     ui_contract::Component::TreeSection(section) => UiTreeSectionNode {
+                        header_toolbar: section.header_toolbar.and_then(|toolbar| tree_toolbar(document, toolbar, controller)),
                         window: tree_window(section.window.as_ref()),
                         id: child.key.as_str().to_string(),
                         label: optional_contract_label(section.label.as_ref()),
                         default_open: section.default_open,
                         presence: record_presence(child),
-                        items: child.children.iter().filter_map(|item_id| document.record(*item_id)).map(|item| tree_item(document, item, surface, controller, 1)).collect(),
+                        items: child.children.iter().filter(|item_id| section.header_toolbar != Some(**item_id)).filter_map(|item_id| document.record(*item_id)).map(|item| tree_item(document, item, surface, controller, 1)).collect(),
                     },
-                    _ => UiTreeSectionNode { window: None, id: child.key.as_str().to_string(), label: None, default_open: None, presence: record_presence(child), items: vec![tree_item(document, child, surface, controller, 1)] },
+                    _ => UiTreeSectionNode { header_toolbar: None, window: None, id: child.key.as_str().to_string(), label: None, default_open: None, presence: record_presence(child), items: vec![tree_item(document, child, surface, controller, 1)] },
                 })
                 .collect();
-            UiNode::Tree(UiTreeNode { presentation: props.presentation, sections, presence, drop_action: record_action(record, ui_contract::Trigger::Drop, controller), menu, interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()) })
+            UiNode::Tree(UiTreeNode {
+                presentation: props.presentation,
+                sections,
+                presence,
+                drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
+                menu,
+                interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()),
+            })
         }
         // 🌳️ A tree's section and item records mount as the keyed `Stack` ROWS this engine's
         // interactive sync resolves by id — the document-path twin of `children_of`'s `Tree` arm
@@ -1007,7 +1040,11 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             id: Some(record.key.as_str().to_string()),
             icon_id: props.row_actions.get(0).map_or(IconName::ChevronRight, |action| icon_name(&action.icon)),
             label: Label::data(props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>().join(" · ")),
-            action: record_action(record, ui_contract::Trigger::Activate, controller).or_else(|| props.row_actions.get(0).map(|action| row_action(action, controller).action)).unwrap_or_else(|| ActionDescriptor { controller_id: controller.to_string(), action: String::new(), args: None }),
+            action: record_action(record, ui_contract::Trigger::Activate, controller).or_else(|| props.row_actions.get(0).map(|action| row_action(action, controller).action)).unwrap_or_else(|| ActionDescriptor {
+                controller_id: controller.to_string(),
+                action: String::new(),
+                args: None,
+            }),
             style: None,
             presence,
             menu,
@@ -1101,7 +1138,11 @@ impl UiTree {
                 let children: Vec<UiNodeId> = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    if record_consumes_subtree(record) { Vec::new() } else { record.children.iter().rev().copied().collect() }
+                    if record_consumes_subtree(record) {
+                        Vec::new()
+                    } else {
+                        record.children.iter().rev().copied().collect()
+                    }
                 };
                 let index = cursor.plan.len();
                 cursor.plan.push(PlannedNode { id, parent, node: None });
@@ -1140,11 +1181,7 @@ impl UiTree {
                     Some((node, scene.host_id.clone(), retained.component_generation(), retained.key.clone(), scene.component_kind, scene.surface_id.clone()))
                 });
                 let presented_scene = match (&spec.0, presented_component.as_ref()) {
-                    (UiNode::ComponentScene(next), Some((_, host_id, generation, presented_key, kind, surface_id)))
-                        if presented_key == &key && *kind == next.component_kind && surface_id == &next.surface_id =>
-                    {
-                        Some((host_id.clone(), *generation))
-                    }
+                    (UiNode::ComponentScene(next), Some((_, host_id, generation, presented_key, kind, surface_id))) if presented_key == &key && *kind == next.component_kind && surface_id == &next.surface_id => Some((host_id.clone(), *generation)),
                     _ => None,
                 };
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
@@ -1209,17 +1246,7 @@ impl UiTree {
                     None => {
                         if presented_scene.is_none() {
                             if let Some((node, host_id, generation, key, kind, surface_id)) = presented_component {
-                                if !retire_scene(UiRetiredComponentScene {
-                                    document_id: planned.id,
-                                    host_id,
-                                    window_id: surface.to_owned(),
-                                    window_generation,
-                                    component_generation: generation,
-                                    node,
-                                    key,
-                                    kind,
-                                    surface_id,
-                                }) {
+                                if !retire_scene(UiRetiredComponentScene { document_id: planned.id, host_id, window_id: surface.to_owned(), window_generation, component_generation: generation, node, key, kind, surface_id }) {
                                     return UiDocumentReconcileStep::Pending;
                                 }
                             }
@@ -1436,6 +1463,11 @@ fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescript
 /// `items` (recursively expanded by `tree_item_row`) as retained children.
 #[cfg(any(test, feature = "testkit"))]
 fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNode {
+    let mut children = Vec::new();
+    if let Some(toolbar) = &section.header_toolbar {
+        children.push(UiNode::Stack(toolbar.clone()));
+    }
+    children.extend(section.items.iter().map(tree_item_row));
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
         gap: None,
@@ -1445,7 +1477,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         activate: None,
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
-        children: section.items.iter().map(tree_item_row).collect(),
+        children,
         menu: None,
     })
 }
@@ -1534,7 +1566,8 @@ fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     match (previous, next) {
         (UiNode::Stack(p), UiNode::Stack(n)) => p.direction != n.direction || p.gap != n.gap || p.padding != n.padding || p.children.len() != n.children.len(),
         (UiNode::Text(p), UiNode::Text(n)) => p.value != n.value,
-        (UiNode::Field(p), UiNode::Field(n)) => p.label != n.label || p.description != n.description,
+        (UiNode::Slider(p), UiNode::Slider(n)) => crate::wgpu::layout::slider_unit_label(p.value, p.unit.as_deref()) != crate::wgpu::layout::slider_unit_label(n.value, n.unit.as_deref()),
+        (UiNode::Field(p), UiNode::Field(n)) => p.label != n.label || p.description != n.description || p.error != n.error,
         (UiNode::Section(p), UiNode::Section(n)) => p.label != n.label || p.children.len() != n.children.len(),
         _ => false,
     }
@@ -1577,6 +1610,12 @@ impl UiTree {
             None => return,
         };
         if let Some(node) = self.node_mut(id) {
+            if let (Some(draft), UiNode::Slider(slider)) = (node.state.slider_draft_value, incoming) {
+                let epsilon = if slider.step > 0.0 { slider.step * 0.25 } else { 1e-9 };
+                if (draft - slider.value).abs() <= epsilon {
+                    node.state.slider_draft_value = None;
+                }
+            }
             node.spec = WidgetSpec(incoming.clone());
         }
         if needs_layout {

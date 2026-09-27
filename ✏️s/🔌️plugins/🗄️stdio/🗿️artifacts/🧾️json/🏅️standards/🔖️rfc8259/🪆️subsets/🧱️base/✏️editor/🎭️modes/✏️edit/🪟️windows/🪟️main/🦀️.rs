@@ -5,10 +5,10 @@
 //! the editor's own `handle` applies `JsonMutation::SetScalar` there, replacing whichever subtree
 //! previously lived at it.
 
-use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::schema::snapshot::{write_json_pretty, JsonMember, JsonValue};
 use crate::JsonSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -101,6 +101,20 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     TreeWindowKit::render_windowed(&TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] }, windows)
+}
+
+/// 📝️ Adds the natural RFC 8259 source draft to the structured tree for editor hosts.
+pub fn render_editor(document: &JsonSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let tree = render(document, windows)?;
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor(
+        "stdio-json-source",
+        write_json_pretty(&document.value),
+        "json",
+        "set-node",
+        JSON_ROOT_NODE_ID,
+        locale,
+        tree,
+    )
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

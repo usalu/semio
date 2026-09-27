@@ -1,0 +1,15 @@
+{
+ "schema": "semio.os-dev.hot-update-fixture/v1",
+ "reason": "A source edit reaches a live page as exactly one hot update per write, through the dev serve's replacement watcher only; a restart under a connected page completes, emits the server's close once, serves again and keeps delivering exactly one update per write.",
+ "boundMs": 5000,
+ "quietWindowMs": 750,
+ "writeStyles": ["in-place", "atomic-rename"],
+ "updatesPerWrite": 1,
+ "unwatchedUpdates": 0,
+ "restart": {
+  "boundMs": 2000,
+  "status": 200,
+  "closeEvents": 1,
+  "updatesPerWrite": 1
+ }
+}

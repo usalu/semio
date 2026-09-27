@@ -109,3 +109,31 @@ fn gradient_inspector_projects_type_coordinates_and_stops() {
     assert!(!json.contains("fill.add"));
     eprintln!("[DEBUG] gradient inspector projected localized coordinates, stops, and locked actions");
 }
+
+#[test]
+fn inspector_controls_bind_the_events_the_host_dispatches() {
+    fn check(node: &serde_json::Value, events: &serde_json::Value, count: &mut usize) {
+        if let Some(expected) = node["component"]["type"].as_str().and_then(|kind| events.get(kind)) {
+            let bindings = node["bindings"].as_array().unwrap();
+            assert!(bindings.iter().any(|binding| &binding["trigger"] == expected), "{} needs {}: {}", node["key"], expected, node);
+            assert!(node["accessibility"]["label"].as_str().is_some_and(|label| !label.is_empty()), "{} has no accessible name", node["key"]);
+            *count += 1;
+        }
+        for child in node["children"].as_array().unwrap() { check(child, events, count); }
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let mut layer = crate::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Cubic { ctrl1: [0.0,12.0],ctrl2: [12.0,12.0],to: [12.0,0.0] }]);
+    layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
+    let id = layer_base(&layer).id.clone();
+    let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let view = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset: 0, rows: 2 }], ..Default::default() };
+    for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
+        let tree = render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let projection = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
+        let json = serde_json::from_str(&projection).unwrap();
+        let mut count = 0;
+        check(&json,&fixture["controlEvents"],&mut count);
+        assert!(count >= 30,"missing inspector controls: {count}");
+    }
+    eprintln!("[DEBUG] inspector fields, gradient stops and path coordinates dispatch the bound host event in both locales");
+}

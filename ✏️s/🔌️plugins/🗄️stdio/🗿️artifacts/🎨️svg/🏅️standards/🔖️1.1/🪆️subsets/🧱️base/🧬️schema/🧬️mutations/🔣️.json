@@ -147,6 +147,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-view-box/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

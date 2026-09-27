@@ -99,6 +99,8 @@ fn control_node(case: &Value) -> UiNode {
             value: number(node, "value"),
             step: number(node, "step"),
             uniform: node["uniform"].as_bool().unwrap_or(true),
+            min: None,
+            max: None,
             on_absolute: on_change,
             on_delta: descriptor(&case["deltaBinding"]),
             presence,
@@ -406,6 +408,8 @@ fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
             value: 4.0,
             step: 1.0,
             uniform: true,
+            min: None,
+            max: None,
             on_absolute: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
             // 🩸️ Both descriptors are NON-empty here, so only the stamped binding list can decide —
             // which is precisely the case React's `NumberStepperView` gates on `record.bindings`.

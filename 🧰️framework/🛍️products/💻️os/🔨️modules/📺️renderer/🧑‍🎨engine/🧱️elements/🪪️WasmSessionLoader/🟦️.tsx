@@ -131,7 +131,9 @@ export type RasterWasmSession = {
   gpuReady(): boolean;
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
-  renderFrame(): void;
+  renderFrame(): boolean;
+  renderProgressJson(): string;
+  cancelRender(): void;
   setCamera(x: number, y: number, zoom: number): void;
   wheelScreen(sx: number, sy: number, deltaY: number): void;
   pointerDownScreen(sx: number, sy: number, button: number): void;

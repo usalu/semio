@@ -109,25 +109,174 @@
       "lanes": [
         "HostOnly"
       ]
+    },
+    {
+      "toolId": "patchParameter",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "addParameter",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "removeParameter",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "moveMediaNode",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "connectMediaPorts",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "disconnectMediaEdge",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "removeAppInstance",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "toolId": "copyAppInstance",
+      "lanes": [
+        "Config"
+      ]
+    },
+    {
+      "toolId": "duplicateAppInstance",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "toolId": "pasteAppInstance",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "toolId": "renameAppInstance",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "patchMediaNodes",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "patchAppInstances",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "bindParameterField",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "unbindParameterField",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "reorganizeWorkflow",
+      "lanes": [
+        "Artifact"
+      ]
+    },
+    {
+      "toolId": "workflowEngagementSubmit",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "toolId": "compiledDagEngagementSubmit",
+      "lanes": [
+        "HostOnly"
+      ]
+    },
+    {
+      "toolId": "nodeGraphEdit",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "toolId": "exportMedia",
+      "lanes": [
+        "HostOnly"
+      ]
+    },
+    {
+      "toolId": "importMedia",
+      "lanes": [
+        "Config"
+      ]
+    },
+    {
+      "toolId": "importMediaPayload",
+      "lanes": [
+        "Config"
+      ]
+    },
+    {
+      "toolId": "exportStudioPack",
+      "lanes": [
+        "HostOnly"
+      ]
+    },
+    {
+      "toolId": "exportStudioDsl",
+      "lanes": [
+        "HostOnly"
+      ]
     }
   ],
   "routes": [
     {
       "id": "patchParameter",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "parse and locate one parameter through an owned document cursor"
     },
     {
       "id": "addParameter",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a document mutation through an installed preparation factory"
     },
     {
       "id": "removeParameter",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a document mutation through an installed preparation factory"
     },
     {
@@ -138,26 +287,26 @@
     },
     {
       "id": "moveMediaNode",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a graph mutation through an installed preparation factory"
     },
     {
       "id": "connectMediaPorts",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "scan source and target ports through an owned graph cursor"
     },
     {
       "id": "disconnectMediaEdge",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a graph mutation through an installed preparation factory"
     },
     {
       "id": "removeAppInstance",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "resolve interaction selection and publish graph removal incrementally"
     },
     {
@@ -168,74 +317,74 @@
     },
     {
       "id": "copyAppInstance",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "locate and serialize selected graph state incrementally"
     },
     {
       "id": "duplicateAppInstance",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "locate and duplicate selected graph state incrementally"
     },
     {
       "id": "pasteAppInstance",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "decode and publish clipboard graph state incrementally"
     },
     {
       "id": "renameAppInstance",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "resolve selection and locate one graph node through a cursor"
     },
     {
       "id": "patchMediaNodes",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "parse values and publish one node patch per grant"
     },
     {
       "id": "patchAppInstances",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "parse values and publish one instance patch per grant"
     },
     {
       "id": "bindParameterField",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a document binding through an installed preparation factory"
     },
     {
       "id": "unbindParameterField",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "publish a document unbinding through an installed preparation factory"
     },
     {
       "id": "reorganizeWorkflow",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "layout graph nodes with a persistent cursor"
     },
     {
       "id": "workflowEngagementSubmit",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "resolve registry definitions and publish a document mutation"
     },
     {
       "id": "compiledDagEngagementSubmit",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "retain the mutation lane until a concrete implementation exists"
     },
     {
       "id": "nodeGraphEdit",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "decode and apply graph edit operations with a persistent cursor"
     },
     {
@@ -276,32 +425,32 @@
     },
     {
       "id": "exportMedia",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "export media through retained byte pages"
     },
     {
       "id": "importMedia",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "resolve format metadata without cloning process-global catalog payloads"
     },
     {
       "id": "importMediaPayload",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "decode and publish retained media payload pages"
     },
     {
       "id": "exportStudioPack",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "serialize studio pack through retained byte pages"
     },
     {
       "id": "exportStudioDsl",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
+      "execution": "bounded",
+      "status": "Migrated",
       "feature": "serialize studio DSL through retained byte pages"
     },
     {
@@ -360,9 +509,9 @@
     "runtimeDependency": false,
     "expected": {
       "routes": 40,
-      "bounded": 15,
-      "batch": 25,
-      "migrated": 15,
+      "bounded": 40,
+      "batch": 0,
+      "migrated": 40,
       "unique": true
     }
   }

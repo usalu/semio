@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.canvas2d;
+message Framing {
+  uint32 revision = 1;
+  repeated double bounds = 2;
+  double padding = 3;
+}

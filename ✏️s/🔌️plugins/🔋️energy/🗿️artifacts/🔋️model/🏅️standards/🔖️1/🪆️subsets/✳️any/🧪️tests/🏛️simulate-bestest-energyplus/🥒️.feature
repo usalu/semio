@@ -58,23 +58,23 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   Scenario Outline: Case <case> model states what ANSI/ASHRAE 140 §5.2 states
     Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
     When both implementations derive the case parameters the standard publishes from that model alone
-    Then the areas, air-to-air U-values, glazing, infiltration rate, internal gain and ground temperature agree
+    Then the areas, air-to-air U-values, glazing, infiltration rate and internal gain agree, and the floor is a raised floor over outdoor air
     Examples:
-      | case   |
-      | 600    |
-      | 610    |
-      | 620    |
-      | 630    |
-      | 640    |
-      | 650    |
-      | 900    |
-      | 910    |
-      | 920    |
-      | 930    |
-      | 940    |
-      | 950    |
-      | 600FF  |
-      | 900FF  |
+      | id    | case  |
+      | 600   | 600   |
+      | 610   | 610   |
+      | 620   | 620   |
+      | 630   | 630   |
+      | 640   | 640   |
+      | 650   | 650   |
+      | 900   | 900   |
+      | 910   | 910   |
+      | 920   | 920   |
+      | 930   | 930   |
+      | 940   | 940   |
+      | 950   | 950   |
+      | 600ff | 600FF |
+      | 900ff | 900FF |
 
   @id-annual-energy
   @level-long
@@ -86,15 +86,15 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the annual heating and cooling energies agree within the declared tolerance
     Examples:
-      | case  |
-      | 600   |
-      | 610   |
-      | 620   |
-      | 640   |
-      | 900   |
-      | 910   |
-      | 920   |
-      | 940   |
+      | id  | case |
+      | 600 | 600  |
+      | 610 | 610  |
+      | 620 | 620  |
+      | 640 | 640  |
+      | 900 | 900  |
+      | 910 | 910  |
+      | 920 | 920  |
+      | 940 | 940  |
 
   @id-peak-load
   @level-long
@@ -106,9 +106,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the peak heating and cooling demands agree within the declared tolerance
     Examples:
-      | case  |
-      | 600   |
-      | 900   |
+      | id  | case |
+      | 600 | 600  |
+      | 900 | 900  |
 
   @id-free-float
   @level-long
@@ -120,9 +120,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
     When both implementations simulate the unconditioned case model for a full year at an hourly zone timestep
     Then the annual minimum, maximum and mean zone air temperatures agree within the declared tolerance
     Examples:
-      | case   |
-      | 600FF  |
-      | 900FF  |
+      | id    | case  |
+      | 600ff | 600FF |
+      | 900ff | 900FF |
 
   @id-hourly-temperature
   @level-exhaustive
@@ -134,10 +134,10 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the root-mean-square difference across all 8760 hourly zone air temperatures is within the declared tolerance
     Examples:
-      | case   |
-      | 600    |
-      | 600FF  |
-      | 900FF  |
+      | id    | case  |
+      | 600   | 600   |
+      | 600ff | 600FF |
+      | 900ff | 900FF |
 
   @id-model-round-trip
   @level-quick

@@ -1140,6 +1140,8 @@ def _invert_delete_surface(before, payload):
     for window in before["model"]["fenestrations"]:
         if window["surface_id"] == entity_id:
             steps.append(("create-fenestration", {"id": window["id"], "name": window["name"], "surfaceId": window["surface_id"], "uValueWM2k": window["u_value_w_m2k"], "shgc": window["shgc"], "vlt": window["vlt"], "areaM2": window["area_m2"], "heightM": window["height_m"], "sillHeightM": window["sill_height_m"], "frameConductanceWK": window["frame_conductance_w_k"], "dividerConductanceWK": window["divider_conductance_w_k"], "overhangDepthM": window["overhang_depth_m"], "overhangOffsetM": window["overhang_offset_m"], "finDepthM": window["fin_depth_m"], "finOffsetM": window["fin_offset_m"], "glazingConstructionId": window["glazing_construction_id"]}))
+            if window["vertices_m"]:
+                steps.append(("replace-fenestration-vertices", {"id": window["id"], "newVerticesM": window["vertices_m"]}))
     for pair in before["model"]["adjacency_pairs"]:
         if entity_id in (pair["surface_a_id"], pair["surface_b_id"]):
             steps.append(("connect-surfaces", {"surfaceAId": pair["surface_a_id"], "surfaceBId": pair["surface_b_id"]}))
@@ -1370,7 +1372,7 @@ def create_fenestration(before, payload):
     if not (payload["sillHeightM"] == payload["sillHeightM"] and abs(payload["sillHeightM"]) != float("inf") and payload["sillHeightM"] >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     after = copy.deepcopy(before)
-    created = {"id": entity_id, "name": payload["name"], "surface_id": payload["surfaceId"], "u_value_w_m2k": payload["uValueWM2k"], "shgc": payload["shgc"], "vlt": payload["vlt"], "area_m2": payload["areaM2"], "height_m": payload["heightM"], "sill_height_m": payload["sillHeightM"], "frame_conductance_w_k": payload["frameConductanceWK"], "divider_conductance_w_k": payload["dividerConductanceWK"], "overhang_depth_m": payload["overhangDepthM"], "overhang_offset_m": payload["overhangOffsetM"], "fin_depth_m": payload["finDepthM"], "fin_offset_m": payload["finOffsetM"], "glazing_construction_id": payload["glazingConstructionId"]}
+    created = {"id": entity_id, "name": payload["name"], "surface_id": payload["surfaceId"], "u_value_w_m2k": payload["uValueWM2k"], "shgc": payload["shgc"], "vlt": payload["vlt"], "area_m2": payload["areaM2"], "height_m": payload["heightM"], "sill_height_m": payload["sillHeightM"], "frame_conductance_w_k": payload["frameConductanceWK"], "divider_conductance_w_k": payload["dividerConductanceWK"], "overhang_depth_m": payload["overhangDepthM"], "overhang_offset_m": payload["overhangOffsetM"], "fin_depth_m": payload["finDepthM"], "fin_offset_m": payload["finOffsetM"], "glazing_construction_id": payload["glazingConstructionId"], "vertices_m": []}
     rows = after["model"]["fenestrations"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
     rows.insert(position, created)
@@ -1394,7 +1396,7 @@ def delete_fenestration(before, payload):
 
 def _invert_delete_fenestration(before, payload):
     item = next(row for row in before["model"]["fenestrations"] if row["id"] == payload["id"])
-    return [("create-fenestration", {"id": item["id"], "name": item["name"], "surfaceId": item["surface_id"], "uValueWM2k": item["u_value_w_m2k"], "shgc": item["shgc"], "vlt": item["vlt"], "areaM2": item["area_m2"], "heightM": item["height_m"], "sillHeightM": item["sill_height_m"], "frameConductanceWK": item["frame_conductance_w_k"], "dividerConductanceWK": item["divider_conductance_w_k"], "overhangDepthM": item["overhang_depth_m"], "overhangOffsetM": item["overhang_offset_m"], "finDepthM": item["fin_depth_m"], "finOffsetM": item["fin_offset_m"], "glazingConstructionId": item["glazing_construction_id"]})]
+    return [("create-fenestration", {"id": item["id"], "name": item["name"], "surfaceId": item["surface_id"], "uValueWM2k": item["u_value_w_m2k"], "shgc": item["shgc"], "vlt": item["vlt"], "areaM2": item["area_m2"], "heightM": item["height_m"], "sillHeightM": item["sill_height_m"], "frameConductanceWK": item["frame_conductance_w_k"], "dividerConductanceWK": item["divider_conductance_w_k"], "overhangDepthM": item["overhang_depth_m"], "overhangOffsetM": item["overhang_offset_m"], "finDepthM": item["fin_depth_m"], "finOffsetM": item["fin_offset_m"], "glazingConstructionId": item["glazing_construction_id"]})] + ([("replace-fenestration-vertices", {"id": item["id"], "newVerticesM": item["vertices_m"]})] if item["vertices_m"] else [])
 
 
 def rename_fenestration(before, payload):
@@ -1904,7 +1906,7 @@ def create_material(before, payload):
     if payload["index"] > len(rows):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["materials"].insert(payload["index"], {"id": payload["id"], "name": payload["name"], "thickness_m": payload["thicknessM"], "conductivity_w_m_k": payload["conductivityWMK"], "density_kg_m3": payload["densityKgM3"], "specific_heat_j_kg_k": payload["specificHeatJKgK"], "thermal_absorptance": payload["thermalAbsorptance"], "solar_absorptance": payload["solarAbsorptance"], "visible_absorptance": payload["visibleAbsorptance"]})
+    after["model"]["materials"].insert(payload["index"], {"id": payload["id"], "name": payload["name"], "roughness": payload["roughness"], "thickness_m": payload["thicknessM"], "conductivity_w_m_k": payload["conductivityWMK"], "density_kg_m3": payload["densityKgM3"], "specific_heat_j_kg_k": payload["specificHeatJKgK"], "thermal_absorptance": payload["thermalAbsorptance"], "solar_absorptance": payload["solarAbsorptance"], "visible_absorptance": payload["visibleAbsorptance"]})
     return after, applied()
 
 
@@ -1930,7 +1932,7 @@ def _invert_delete_material(before, payload):
     rows = before["model"]["materials"]
     index = next(position for position, row in enumerate(rows) if row["id"] == payload["id"])
     item = rows[index]
-    return [("create-material", {"index": index, "id": item["id"], "name": item["name"], "thicknessM": item["thickness_m"], "conductivityWMK": item["conductivity_w_m_k"], "densityKgM3": item["density_kg_m3"], "specificHeatJKgK": item["specific_heat_j_kg_k"], "thermalAbsorptance": item["thermal_absorptance"], "solarAbsorptance": item["solar_absorptance"], "visibleAbsorptance": item["visible_absorptance"]})]
+    return [("create-material", {"index": index, "id": item["id"], "name": item["name"], "roughness": item["roughness"], "thicknessM": item["thickness_m"], "conductivityWMK": item["conductivity_w_m_k"], "densityKgM3": item["density_kg_m3"], "specificHeatJKgK": item["specific_heat_j_kg_k"], "thermalAbsorptance": item["thermal_absorptance"], "solarAbsorptance": item["solar_absorptance"], "visibleAbsorptance": item["visible_absorptance"]})]
 
 
 def rename_material(before, payload):

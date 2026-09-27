@@ -8,7 +8,8 @@
 pub use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::text::schema::mutations::{add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns};
+use crate::standards::v1::subsets::text::schema::mutations::{
+    set_snapshot::SetSnapshot,add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 
 //#region 📖️SemioGrammar
@@ -89,6 +90,7 @@ fn dec_run(s: &str) -> Result<SemioTextRun, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_text_mutation(m: &SemioTextMutation) -> String {
     match m {
+        SemioTextMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioTextMutation::InsertRun(p) => format!("insertRun:{},{}", p.index, enc_run(&p.run)),
         SemioTextMutation::RemoveRun(p) => format!("removeRun:{}", p.index),
         SemioTextMutation::EditRun(p) => format!("editRun:{},{}", p.index, enc_str(&p.new_content)),
@@ -101,6 +103,13 @@ fn print_text_mutation(m: &SemioTextMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioTextMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("text mutation: missing ':' in {line:?}"))?;
     match tag {
         "insertRun" => {

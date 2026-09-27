@@ -436,16 +436,7 @@ fn paired_pane_shell() -> ShellState {
         WindowEngagement {
             session_active: Some(true),
             options: None,
-            input: Some(ui_wgpu::wgpu::WindowEngagementInput {
-                id: Some("pane-engagement".into()),
-                value: Some(String::new()),
-                placeholder: None,
-                disabled: None,
-                on_change: None,
-                on_submit: None,
-                on_repeat_last: None,
-                on_abort: None,
-            }),
+            input: Some(ui_wgpu::wgpu::WindowEngagementInput { id: Some("pane-engagement".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
             control: None,
             controls: None,
             status: Some(vec![ui_wgpu::wgpu::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
@@ -586,7 +577,8 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
     assert_eq!(heading.value.as_str(), "Pick a face", "🎛️ a LIVE session promotes `engagement-step` into the heading React renders first");
     let Some(UiNode::Field(primary)) = stack.children.get(1) else { panic!("🎛️ a labelled primary control publishes as a semantic field") };
     assert_eq!(primary.label.as_str(), controls["unitLabelFormat"].as_str().expect("unit format").replace("{label}", "Height").replace("{unit}", "m"), "🎛️ a numeric control with a unit reads React's `Label (unit)`");
-    assert!(matches!(primary.child.as_ref(), UiNode::Slider(_)), "🎛️ the field's focusable child is the primary slider");
+    let UiNode::Slider(primary_slider) = primary.child.as_ref() else { panic!("🎛️ the field's focusable child is the primary slider") };
+    assert_eq!(primary_slider.unit.as_deref(), Some("m"), "🎛️ the primary slider retains the unit React paints in its external value sibling");
     let status_index = stack.children.iter().position(|child| matches!(child, UiNode::Text(text) if text.value.as_str() == "Shift to snap")).expect("the secondary status line");
     let options_index = stack.children.iter().position(|child| matches!(child, UiNode::Stack(group) if group.id.as_deref() == controls["optionsGroupId"].as_str())).unwrap_or(usize::MAX);
     let select_index = stack.children.iter().position(|child| matches!(child, UiNode::Select(_))).expect("the select control");

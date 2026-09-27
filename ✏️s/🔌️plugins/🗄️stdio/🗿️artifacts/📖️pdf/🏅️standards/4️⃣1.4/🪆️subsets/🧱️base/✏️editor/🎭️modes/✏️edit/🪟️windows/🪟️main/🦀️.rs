@@ -13,7 +13,7 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
 use crate::PdfSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
 use semio_framework_ui_contract::BuiltNode;
 
 //#region 🔖️Constants
@@ -43,6 +43,11 @@ fn page_summary(index: usize, page: &PdfPage) -> String {
 pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
+}
+
+pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
+    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
 }
 //#endregion 🔖️Render
 

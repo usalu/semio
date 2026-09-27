@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""V1 one-off: insert launch rows into .vscode/🧩️launch.seed.jsonc AND .vscode/launch.json identically.
+"""V1 one-off: insert curated launch rows into .vscode/🧩️launch.seed.jsonc (then re-render launch.json with the generator:
+`bun v1-launch-parity.ts --write`, R9 10:3x).
 
 Usage: python3 v1-launch-rows.py <spec.json> [--dry-run]
 spec = [{"after": "<existing row name>", "row": {<launch configuration>}}, ...]
@@ -10,7 +11,7 @@ import json
 import sys
 
 ROOT = "/Users/ueli/Documents/semio/.vscode/"
-FILES = [ROOT + "🧩️launch.seed.jsonc", ROOT + "launch.json"]
+FILES = [ROOT + "🧩️launch.seed.jsonc"]
 
 
 def render(row):

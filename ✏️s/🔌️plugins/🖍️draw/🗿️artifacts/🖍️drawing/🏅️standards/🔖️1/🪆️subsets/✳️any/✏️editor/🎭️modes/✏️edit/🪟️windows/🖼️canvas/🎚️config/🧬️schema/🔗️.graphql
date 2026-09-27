@@ -1,3 +1,4 @@
 type DrawingCanvasWindowConfig {
   viewport: Viewport2d!
+  framed: Boolean!
 }

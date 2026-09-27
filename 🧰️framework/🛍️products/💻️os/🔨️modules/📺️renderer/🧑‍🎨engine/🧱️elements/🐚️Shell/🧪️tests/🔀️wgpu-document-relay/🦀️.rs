@@ -128,10 +128,7 @@ fn an_execution_target_lease_binds_only_the_mounted_package() {
 /// reads them — the regression React's C1c fixed was a parser that took `space/document` as the space.
 #[test]
 fn a_remote_backbone_uri_names_host_space_and_document() {
-    assert_eq!(
-        parse_remote_backbone_uri("remote://127.0.0.1:7800/space-1/doc-a"),
-        Some(RemoteBackboneUri { host_port: "127.0.0.1:7800".into(), space_id: "space-1".into(), document_id: "doc-a".into() })
-    );
+    assert_eq!(parse_remote_backbone_uri("remote://127.0.0.1:7800/space-1/doc-a"), Some(RemoteBackboneUri { host_port: "127.0.0.1:7800".into(), space_id: "space-1".into(), document_id: "doc-a".into() }));
     assert_eq!(parse_remote_backbone_uri("remote://127.0.0.1:7800/space-1"), None, "no document part");
     assert_eq!(parse_remote_backbone_uri("remote:///space-1/doc-a"), None, "no host part");
     assert_eq!(parse_remote_backbone_uri("folder:///tmp/space"), None, "not a remote uri");

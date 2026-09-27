@@ -54,6 +54,7 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
         RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: ABC_ASSET_PNG.to_vec() } }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: "asset-1".into() }),
+        RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
         RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
     ]
 }
@@ -176,7 +177,7 @@ fn representative_raster_document() -> RasterSnapshot {
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
-                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None }),
+                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None, image_key:Some("asset-1".into()), transform:RasterTransform {x:-4.0,y:2.0,..RasterTransform::default()} }),
                 width: Some(256),
                 height: Some(256),
                 image_key: Some("asset-1".into()),

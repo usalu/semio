@@ -18,7 +18,7 @@ Feature: Every bundled generation3d example evaluates to the geometry its commit
   status by undirected-edge incidence, volume by the divergence theorem, edge-polyline length, and
   the axis-aligned bounding box.
 
-  THE COMMITTED STATEMENT. Each example gains one `🧪️tests/🧩️example/🔣️.json` expected-stats
+  THE COMMITTED STATEMENT. Each example gains one `🧫️fixtures/🧩️example/🔣️.json` expected-stats
   fixture, schema `s.procedural.generation3d.example-geometry/v1`, naming its op chain, the preview
   node and channel, the tessellation tolerance and every expected number with its own tolerance and
   a written provenance for the volume. Three lanes read that one file and nothing else of each

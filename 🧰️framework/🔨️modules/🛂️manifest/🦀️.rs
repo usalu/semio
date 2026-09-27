@@ -382,6 +382,11 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Object { fields })
     }
 
+    /// @emoji 🧬️ An unconstrained typed value argument.
+    pub fn any(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Any)
+    }
+
     /// @emoji 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
     /// (`patchLayer.value`, `setFixtureJson.json`), tagged `x-semio-format: json` so a client knows
     /// to send JSON text rather than a bare word.
@@ -402,6 +407,14 @@ impl ActionArgDef {
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
     pub fn required(mut self) -> Self {
         self.required = true;
+        self
+    }
+
+    /// 🔤️ Constrains text length; zero explicitly admits an empty required value.
+    pub fn min_length(mut self, minimum: u32) -> Self {
+        if let ArgSchema::String { min_len, .. } = &mut self.schema {
+            *min_len = Some(minimum);
+        }
         self
     }
 
@@ -3902,12 +3915,15 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
 /// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
 /// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
 /// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
+/// `Any` requires presence, allowing null and empty strings; a string with `min_len: Some(0)`
+/// explicitly permits an empty value, such as document text or a root JSON pointer.
 pub fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
     defs.iter()
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
-            None | Some(DslValue::Null) => true,
-            Some(DslValue::String(text)) => text.is_empty(),
+            None => true,
+            Some(DslValue::Null) => !matches!(def.schema, ArgSchema::Any),
+            Some(DslValue::String(text)) => text.is_empty() && !matches!(def.schema, ArgSchema::Any | ArgSchema::String { min_len: Some(0), .. }),
             Some(_) => false,
         })
         .map(|def| def.id.clone())

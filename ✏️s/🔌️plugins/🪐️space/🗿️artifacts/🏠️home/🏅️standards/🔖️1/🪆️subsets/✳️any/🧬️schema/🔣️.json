@@ -374,13 +374,15 @@
                           "const": "renameSpace"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "HostOnly"
+                          ]
                         },
                         "blocker": {
-                          "const": "catalog mutation and filesystem rename still execute in one direct handler"
+                          "const": ""
                         }
                       }
                     },

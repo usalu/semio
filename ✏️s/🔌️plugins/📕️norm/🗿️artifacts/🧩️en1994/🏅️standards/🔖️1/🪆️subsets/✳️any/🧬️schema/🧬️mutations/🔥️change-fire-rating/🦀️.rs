@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFireRating
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fire-rating", "change-fire-rating")
+        protocol::LocalizedLabel::native("Change fire resistance class", "Feuerwiderstandsklasse ändern")
     }
 }
 //#endregion 🔖️Payload

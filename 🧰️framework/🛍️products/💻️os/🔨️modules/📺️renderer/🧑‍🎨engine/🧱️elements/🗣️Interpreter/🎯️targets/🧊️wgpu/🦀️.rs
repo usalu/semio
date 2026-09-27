@@ -944,15 +944,60 @@ pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::c
     }
 }
 
+fn stamp_window_clock(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str) -> Option<ui_wgpu::wgpu::UiWindowClockStep> {
+    let seconds = semio_framework_job::default_now_us()? as f64 / 1_000_000.0;
+    engine.advance_window_clock(window_id, seconds)
+}
+
+fn apply_presented_scene_caret(window_id: &str, caret: ui_wgpu::wgpu::UiPresentedCaret) -> bool {
+    if caret.source != ui_wgpu::wgpu::UiCaretSource::Scene {
+        return false;
+    }
+    let scene = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_token(window_id) != Some(caret.surface) {
+            return None;
+        }
+        let node = engine.presented_node_at(window_id, caret.surface, caret.document_id)?;
+        let tree = engine.tree(window_id)?;
+        let UiNode::ComponentScene(scene) = &tree.node(node)?.spec.0 else { return None };
+        Some(scene.clone())
+    });
+    scene.as_ref().is_some_and(|scene| crate::engine_canvas::component_scene_set_caret_visible(scene, caret.visible))
+}
+
+fn apply_window_clock_caret(window_id: &str, step: Option<&ui_wgpu::wgpu::UiWindowClockStep>) {
+    if let Some(caret) = step.and_then(|step| step.caret) {
+        apply_presented_scene_caret(window_id, caret);
+    }
+}
+
+/// ⏲️ Advances one accepted surface and delivers its timer commands through the ordinary boundary.
+pub(crate) fn advance_retained_window_clock(window_id: &str, surface: ui_wgpu::wgpu::UiSurfaceToken, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<ui_wgpu::wgpu::UiWindowClockStep> {
+    let (step, commands) = UI_ENGINE.with(|cell| {
+        let mut engine = cell.borrow_mut();
+        if engine.surface_token(window_id) != Some(surface) {
+            return (None, Vec::new());
+        }
+        let step = stamp_window_clock(&mut engine, window_id);
+        (step, engine.drain_commands())
+    });
+    apply_ui_commands(&commands, None, input);
+    apply_window_clock_caret(window_id, step.as_ref());
+    step
+}
+
 pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     pump_clipboard_io_one();
-    let commands = UI_ENGINE.with(|cell| {
+    let (commands, clock) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
+        let clock = stamp_window_clock(&mut engine, window_id);
         let mut commands = engine.drain_commands();
         commands.extend(engine.dispatch_event(window_id, event));
-        commands
+        (commands, clock)
     });
+    apply_window_clock_caret(window_id, clock.as_ref());
     apply_ui_commands(&commands, None, input);
     commands
 }
@@ -967,12 +1012,14 @@ pub fn dispatch_presented_ui_pointer_event(window_id: &str, pointer_id: ui_rende
         FOCUSED_TABLE_STEPPER.with(|cell| *cell.borrow_mut() = None);
         FOCUSED_VFS_CONTROL.with(|cell| *cell.borrow_mut() = None);
     }
-    let commands = UI_ENGINE.with(|cell| {
+    let (commands, clock) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
+        let clock = stamp_window_clock(&mut engine, window_id);
         let mut commands = engine.drain_commands();
         commands.extend(engine.dispatch_pointer_event(window_id, pointer_id.0, event));
-        commands
+        (commands, clock)
     });
+    apply_window_clock_caret(window_id, clock.as_ref());
     apply_ui_commands(&commands, Some(pointer_id), input);
     commands
 }
@@ -990,22 +1037,70 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
     });
     if let Some(entry) = text_editor {
         match event {
-            ui_wgpu::wgpu::AccessibilityUiEvent::Focus | ui_wgpu::wgpu::AccessibilityUiEvent::Activate => focus_text_editor(window_id, window_generation, entry.scene_node, &entry.host_id),
+            ui_wgpu::wgpu::AccessibilityUiEvent::Focus | ui_wgpu::wgpu::AccessibilityUiEvent::Activate => {
+                let focus = UI_ENGINE.with(|cell| text_editor_focus_in(&cell.borrow(), window_id, window_generation, entry.scene_node, &entry.host_id))?;
+                install_text_editor_focus(focus.clone());
+                reset_text_editor_caret(&focus);
+            }
             ui_wgpu::wgpu::AccessibilityUiEvent::Blur => {
-                FOCUSED_TEXT_EDITOR.with(|cell| {
+                let focus = FOCUSED_TEXT_EDITOR.with(|cell| {
                     let mut focus = cell.borrow_mut();
                     if focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.window_generation == window_generation && focus.node == entry.scene_node && focus.host_id == entry.host_id) {
-                        *focus = None;
+                        return focus.take();
                     }
+                    None
                 });
+                if let Some(focus) = focus {
+                    clear_text_editor_caret(&focus);
+                }
             }
             ui_wgpu::wgpu::AccessibilityUiEvent::Value(value) => {
-                let focus = FocusedTextEditor { window_id: window_id.into(), window_generation, node: entry.scene_node, host_id: entry.host_id };
+                let focus = UI_ENGINE.with(|cell| text_editor_focus_in(&cell.borrow(), window_id, window_generation, entry.scene_node, &entry.host_id))?;
                 let outcome = with_live_text_editor(&focus, |scene| crate::engine_canvas::text_editor_replace_all_into(scene, &value, input));
                 match outcome {
-                    Some(Ok(_)) => {}
+                    Some(Ok(_)) => {
+                        reset_text_editor_caret(&focus);
+                    }
                     Some(Err(fault)) => input.record_action_fault(fault),
                     None => return None,
+                }
+            }
+        }
+        return Some(Vec::new());
+    }
+    let table_editable = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(window_id) != Some(window_generation) {
+            return None;
+        }
+        table_editable_text_accessibility_entries(engine.tree(window_id)?).into_iter().find(|entry| entry.cell.key == node_key && scene_virtual_accessibility_node_id(&entry.cell.key) == node_id)
+    });
+    if let Some(entry) = table_editable {
+        match event {
+            ui_wgpu::wgpu::AccessibilityUiEvent::Focus | ui_wgpu::wgpu::AccessibilityUiEvent::Activate => {
+                let result = UI_ENGINE.with(|cell| focus_table_editable_text(&cell.borrow(), window_id, window_generation, entry.scene_node, &entry.host_id, entry.cell.target.clone(), input));
+                if let Err(fault) = result {
+                    input.record_action_fault(fault);
+                }
+            }
+            ui_wgpu::wgpu::AccessibilityUiEvent::Blur => {
+                let outcome = UI_ENGINE.with(|cell| commit_focused_table_editable_text_with_engine(&cell.borrow(), input));
+                match outcome {
+                    Some(Ok(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing)) => {}
+                    Some(Err(fault)) => input.record_action_fault(fault),
+                    _ => clear_focused_table_editable_text(input),
+                }
+            }
+            ui_wgpu::wgpu::AccessibilityUiEvent::Value(value) => {
+                set_focused_table_editable_text_draft(window_id, entry.scene_node, &entry.host_id, &entry.cell.target.row_id, &entry.cell.target.column_id, &value);
+                let outcome = UI_ENGINE.with(|cell| {
+                    let engine = cell.borrow();
+                    let retained = engine.tree(window_id).and_then(|tree| tree.node(entry.scene_node))?;
+                    let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+                    crate::scenes::table_editable_text_commit_owned(scene, &entry.cell.target.row_id, &entry.cell.target.column_id, &entry.cell.target.value, value, input)
+                });
+                if let Some(Err(fault)) = outcome {
+                    input.record_action_fault(fault);
                 }
             }
         }
@@ -1016,7 +1111,7 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
         if engine.surface_generation(window_id) != Some(window_generation) {
             return None;
         }
-        table_stepper_accessibility_entries(engine.tree(window_id)?, engine.driver_drag()).into_iter().find(|entry| entry.cell.key == node_key && scene_virtual_accessibility_node_id(&entry.cell.key) == node_id)
+        table_stepper_accessibility_entries(engine.tree(window_id)?).into_iter().find(|entry| entry.cell.key == node_key && scene_virtual_accessibility_node_id(&entry.cell.key) == node_id)
     });
     if let Some(entry) = table_stepper {
         match event {
@@ -1069,13 +1164,7 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
             ui_wgpu::wgpu::AccessibilityUiEvent::Blur => {
                 FOCUSED_VFS_CONTROL.with(|cell| {
                     let mut focus = cell.borrow_mut();
-                    if focus.as_ref().is_some_and(|focus| {
-                        focus.window_id == window_id
-                            && focus.window_generation == window_generation
-                            && focus.node == entry.scene_node
-                            && focus.host_id == entry.host_id
-                            && focus.target == target
-                    }) {
+                    if focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.window_generation == window_generation && focus.node == entry.scene_node && focus.host_id == entry.host_id && focus.target == target) {
                         *focus = None;
                     }
                 });
@@ -1084,13 +1173,39 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
         }
         return Some(Vec::new());
     }
-    let commands = UI_ENGINE.with(|cell| {
+    let block_list_control = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(window_id) != Some(window_generation) {
+            return None;
+        }
+        block_list_accessibility_entries(engine.tree(window_id)?).into_iter().find(|entry| entry.control.key == node_key && scene_virtual_accessibility_node_id(&entry.control.key) == node_id)
+    });
+    if let Some(entry) = block_list_control {
+        if matches!(event, ui_wgpu::wgpu::AccessibilityUiEvent::Activate) {
+            let outcome = UI_ENGINE.with(|cell| {
+                let engine = cell.borrow();
+                let retained = engine.tree(window_id).and_then(|tree| tree.node(entry.scene_node))?;
+                let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+                (scene.host_id == entry.host_id && scene.component_kind == ui_wgpu::wgpu::SurfaceKind::BlockList).then_some(())?;
+                crate::scenes::block_list_accessibility_activate(scene, &entry.control.key, input)
+            });
+            match outcome {
+                Some(Ok(())) => {}
+                Some(Err(fault)) => input.record_action_fault(fault),
+                None => return None,
+            }
+        }
+        return Some(Vec::new());
+    }
+    let (commands, clock) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
+        let clock = stamp_window_clock(&mut engine, window_id);
         let dispatched = engine.dispatch_accessibility_event(window_id, window_generation, node_id, node_key, event)?;
         let mut commands = engine.drain_commands();
         commands.extend(dispatched);
-        Some(commands)
+        Some((commands, clock))
     })?;
+    apply_window_clock_caret(window_id, clock.as_ref());
     apply_ui_commands(&commands, None, input);
     Some(commands)
 }
@@ -1647,14 +1762,46 @@ struct FocusedTextEditor {
     window_generation: u64,
     node: NodeId,
     host_id: String,
+    surface: ui_wgpu::wgpu::UiSurfaceToken,
+    document_id: ui_contract::UiNodeId,
 }
 
 thread_local! {
     static FOCUSED_TEXT_EDITOR: std::cell::RefCell<Option<FocusedTextEditor>> = const { std::cell::RefCell::new(None) };
 }
 
-fn focus_text_editor(window_id: &str, window_generation: u64, node: NodeId, host_id: &str) {
-    FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = Some(FocusedTextEditor { window_id: window_id.to_string(), window_generation, node, host_id: host_id.to_string() }));
+fn text_editor_focus_in(engine: &ui_wgpu::wgpu::Ui, window_id: &str, window_generation: u64, node: NodeId, host_id: &str) -> Option<FocusedTextEditor> {
+    if engine.surface_generation(window_id) != Some(window_generation) {
+        return None;
+    }
+    let surface = engine.surface_token(window_id)?;
+    let document_id = engine.presented_document_id(window_id, node)?;
+    let scene = engine.tree(window_id)?.node(node).and_then(|node| match &node.spec.0 {
+        UiNode::ComponentScene(scene) => Some(scene),
+        _ => None,
+    })?;
+    (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.host_id == host_id).then(|| FocusedTextEditor { window_id: window_id.to_string(), window_generation, node, host_id: host_id.to_string(), surface, document_id })
+}
+
+fn install_text_editor_focus(focus: FocusedTextEditor) {
+    FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = Some(focus));
+}
+
+fn reset_text_editor_caret(focus: &FocusedTextEditor) -> bool {
+    let Some(seconds) = semio_framework_job::default_now_us().map(|now| now as f64 / 1_000_000.0) else { return false };
+    let caret = UI_ENGINE.with(|cell| {
+        let mut engine = cell.borrow_mut();
+        if engine.surface_generation(&focus.window_id) != Some(focus.window_generation) {
+            return None;
+        }
+        engine.arm_presented_scene_caret(&focus.window_id, focus.surface, focus.document_id, seconds)
+    });
+    caret.is_some_and(|caret| apply_presented_scene_caret(&focus.window_id, caret))
+}
+
+fn clear_text_editor_caret(focus: &FocusedTextEditor) -> bool {
+    let caret = UI_ENGINE.with(|cell| cell.borrow_mut().clear_presented_scene_caret(&focus.window_id, focus.surface, focus.document_id));
+    caret.is_some_and(|caret| apply_presented_scene_caret(&focus.window_id, caret))
 }
 
 fn focused_text_editor() -> Option<FocusedTextEditor> {
@@ -1662,16 +1809,29 @@ fn focused_text_editor() -> Option<FocusedTextEditor> {
 }
 
 fn focused_text_editor_matches(expected: &FocusedTextEditor) -> bool {
-    FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.window_id == expected.window_id && focus.window_generation == expected.window_generation && focus.node == expected.node && focus.host_id == expected.host_id))
+    FOCUSED_TEXT_EDITOR.with(|cell| {
+        cell.borrow().as_ref().is_some_and(|focus| {
+            focus.window_id == expected.window_id
+                && focus.window_generation == expected.window_generation
+                && focus.node == expected.node
+                && focus.host_id == expected.host_id
+                && focus.surface == expected.surface
+                && focus.document_id == expected.document_id
+        })
+    })
 }
 
 fn with_live_text_editor<T>(focus: &FocusedTextEditor, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
-        if engine.surface_generation(&focus.window_id) != Some(focus.window_generation) || ui_document_close_pending_for(&focus.window_id) {
+        if engine.surface_generation(&focus.window_id) != Some(focus.window_generation) || engine.surface_token(&focus.window_id) != Some(focus.surface) || ui_document_close_pending_for(&focus.window_id) {
             return None;
         }
-        let retained = engine.tree(&focus.window_id).and_then(|tree| tree.node(focus.node))?;
+        let tree = engine.tree(&focus.window_id)?;
+        if engine.presented_node_at(&focus.window_id, focus.surface, focus.document_id) != Some(focus.node) {
+            return None;
+        }
+        let retained = tree.node(focus.node)?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
         (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.host_id == focus.host_id && !crate::scenes::scene_host_retiring(&focus.host_id)).then(|| apply(scene))
     })
@@ -1744,8 +1904,12 @@ fn apply_focused_text_editor_clipboard_key(key: &ui_wgpu::wgpu::KeyAction, modif
 pub fn apply_focused_text_editor_text(text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     let Some(focus) = focused_text_editor() else { return false };
     let consumed = apply_text_editor_text_at(&focus, text, input);
+    if consumed {
+        reset_text_editor_caret(&focus);
+    }
     if !consumed && with_live_text_editor(&focus, |_| ()).is_none() {
         FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
+        clear_text_editor_caret(&focus);
     }
     consumed
 }
@@ -1755,15 +1919,116 @@ pub fn blur_focused_text_editor_for_pointer(target: Option<&ScenePointerTarget>,
     if !down || button != 0 {
         return false;
     }
-    FOCUSED_TEXT_EDITOR.with(|cell| {
+    let retired = FOCUSED_TEXT_EDITOR.with(|cell| {
         let mut focused = cell.borrow_mut();
-        let Some(focus) = focused.as_ref() else { return false };
-        if target.is_some_and(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && target.window_id == focus.window_id && target.window_generation == focus.window_generation && target.node == focus.node && target.host_id == focus.host_id) {
-            return false;
+        let Some(focus) = focused.as_ref() else { return None };
+        if target
+            .is_some_and(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && target.window_id == focus.window_id && target.window_generation == focus.window_generation && target.node == focus.node && target.host_id == focus.host_id)
+        {
+            return None;
         }
-        *focused = None;
-        true
+        focused.take()
+    });
+    let Some(retired) = retired else { return false };
+    clear_text_editor_caret(&retired);
+    true
+}
+
+#[derive(Clone)]
+struct FocusedNodeGraphCaret {
+    target: ScenePointerTarget,
+    surface: ui_wgpu::wgpu::UiSurfaceToken,
+}
+
+thread_local! {
+    static FOCUSED_NODE_GRAPH_CARET: std::cell::RefCell<Option<FocusedNodeGraphCaret>> = const { std::cell::RefCell::new(None) };
+}
+
+fn node_graph_caret_focus_in(engine: &ui_wgpu::wgpu::Ui, target: &ScenePointerTarget) -> Option<FocusedNodeGraphCaret> {
+    if target.kind != ui_wgpu::wgpu::SurfaceKind::NodeGraph || engine.surface_generation(&target.window_id) != Some(target.window_generation) {
+        return None;
+    }
+    let surface = engine.surface_token(&target.window_id)?;
+    if engine.presented_node_at(&target.window_id, surface, target.document_id) != Some(target.node) || !engine.presented_component_scene_matches(&target.component_witness()) {
+        return None;
+    }
+    Some(FocusedNodeGraphCaret { target: target.clone(), surface })
+}
+
+fn with_live_node_graph_caret<T>(focus: &FocusedNodeGraphCaret, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(&focus.target.window_id) != Some(focus.target.window_generation)
+            || engine.surface_token(&focus.target.window_id) != Some(focus.surface)
+            || engine.presented_node_at(&focus.target.window_id, focus.surface, focus.target.document_id) != Some(focus.target.node)
+            || !engine.presented_component_scene_matches(&focus.target.component_witness())
+        {
+            return None;
+        }
+        let retained = engine.tree(&focus.target.window_id)?.node(focus.target.node)?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+        Some(apply(scene))
     })
+}
+
+fn reset_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
+    let Some(seconds) = semio_framework_job::default_now_us().map(|now| now as f64 / 1_000_000.0) else { return false };
+    let caret = UI_ENGINE.with(|cell| cell.borrow_mut().arm_presented_scene_caret(&focus.target.window_id, focus.surface, focus.target.document_id, seconds));
+    caret.is_some_and(|caret| apply_presented_scene_caret(&focus.target.window_id, caret))
+}
+
+fn clear_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
+    let caret = UI_ENGINE.with(|cell| cell.borrow_mut().clear_presented_scene_caret(&focus.target.window_id, focus.surface, focus.target.document_id));
+    caret.is_some_and(|caret| apply_presented_scene_caret(&focus.target.window_id, caret))
+}
+
+/// 📝 Arms cadence only after the exact accepted NodeGraph enters note editing.
+pub fn refresh_node_graph_caret_after_pointer(target: &ScenePointerTarget) -> bool {
+    let focus = UI_ENGINE.with(|cell| node_graph_caret_focus_in(&cell.borrow(), target));
+    let editable = focus.as_ref().is_some_and(|focus| with_live_node_graph_caret(focus, crate::engine_canvas::component_scene_has_editable_caret).unwrap_or(false));
+    if editable {
+        let focus = focus.expect("editable NodeGraph focus");
+        FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = Some(focus.clone()));
+        return reset_node_graph_caret(&focus);
+    }
+    let retired = FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow_mut().take());
+    retired.as_ref().is_some_and(clear_node_graph_caret)
+}
+
+/// 🖱️ Transfers NodeGraph note focus only on a primary press outside the exact accepted scene.
+pub fn blur_focused_node_graph_caret_for_pointer(target: Option<&ScenePointerTarget>, down: bool, button: i16) -> bool {
+    if !down || button != 0 {
+        return false;
+    }
+    let retired = FOCUSED_NODE_GRAPH_CARET.with(|cell| {
+        let mut focused = cell.borrow_mut();
+        let Some(focus) = focused.as_ref() else { return None };
+        if target.is_some_and(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::NodeGraph && target.same_component_host(&focus.target)) {
+            return None;
+        }
+        focused.take()
+    });
+    retired.as_ref().is_some_and(clear_node_graph_caret)
+}
+
+/// ⌨️ Routes note editing to one exact accepted NodeGraph and resets its solid caret phase.
+pub fn apply_focused_node_graph_note_key(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> bool {
+    let Some(focus) = FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().clone()) else { return false };
+    let applied = with_live_node_graph_caret(&focus, |scene| crate::engine_canvas::component_scene_apply_note_edit_key(scene, action.clone(), modifiers)).unwrap_or(false);
+    if !applied {
+        if with_live_node_graph_caret(&focus, |_| ()).is_none() {
+            FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = None);
+            clear_node_graph_caret(&focus);
+        }
+        return false;
+    }
+    if with_live_node_graph_caret(&focus, crate::engine_canvas::component_scene_has_editable_caret).unwrap_or(false) {
+        reset_node_graph_caret(&focus);
+    } else {
+        FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = None);
+        clear_node_graph_caret(&focus);
+    }
+    true
 }
 
 /// 🍿️ The POPUPS see the key first: `Ctrl/Cmd+Space` opens completions, `F2` starts a rename,
@@ -1778,23 +2043,26 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
     if let Some(consumed) = apply_focused_text_editor_clipboard_key(key, modifiers, input) {
         return consumed;
     }
-    let focus = FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone())));
-    let Some((window_id, window_generation, node, host_id)) = focus else {
+    let Some(focus) = focused_text_editor() else {
         return false;
     };
     let outcome = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
-        if engine.surface_generation(&window_id) != Some(window_generation) {
+        if engine.surface_generation(&focus.window_id) != Some(focus.window_generation) || engine.surface_token(&focus.window_id) != Some(focus.surface) {
             return None;
         }
-        if ui_document_close_pending_for(&window_id) {
+        if ui_document_close_pending_for(&focus.window_id) {
             return None;
         }
-        let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
+        let tree = engine.tree(&focus.window_id)?;
+        if engine.presented_node_at(&focus.window_id, focus.surface, focus.document_id) != Some(focus.node) {
+            return None;
+        }
+        let retained = tree.node(focus.node)?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else {
             return None;
         };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.host_id != focus.host_id || crate::scenes::scene_host_retiring(&focus.host_id) {
             return None;
         }
         match crate::scenes::text_editor_popup_key(scene, key, modifiers, input) {
@@ -1805,18 +2073,173 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
         Some(crate::engine_canvas::text_editor_apply_key_into(scene, key, modifiers, input))
     });
     match outcome {
-        Some(Ok(consumed)) => consumed,
+        Some(Ok(consumed)) => {
+            if consumed {
+                reset_text_editor_caret(&focus);
+            }
+            consumed
+        }
         Some(Err(fault)) => {
             input.record_action_fault(fault);
             true
         }
         None => {
-            FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
+            let retired = FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow_mut().take());
+            if let Some(retired) = retired {
+                clear_text_editor_caret(&retired);
+            }
             false
         }
     }
 }
 //#endregion ✍️TextEditorFocus
+
+//#region ✏️TableEditableTextFocus
+struct FocusedTableEditableText {
+    window_id: String,
+    window_generation: u64,
+    node: NodeId,
+    host_id: String,
+    row_id: String,
+    column_id: String,
+    base: String,
+    draft: String,
+}
+
+thread_local! {
+    static FOCUSED_TABLE_EDITABLE_TEXT: std::cell::RefCell<Option<FocusedTableEditableText>> = const { std::cell::RefCell::new(None) };
+}
+
+fn focused_table_editable_text_address() -> Option<(String, u64, NodeId, String, String, String, String, String)> {
+    FOCUSED_TABLE_EDITABLE_TEXT
+        .with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone(), focus.row_id.clone(), focus.column_id.clone(), focus.base.clone(), focus.draft.clone())))
+}
+
+pub(crate) fn sync_focused_table_editable_text_draft(input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+    FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+        if let Some(focus) = cell.borrow_mut().as_mut() {
+            focus.draft = input.text_view().to_owned();
+        }
+    });
+}
+
+fn focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str) -> Option<String> {
+    FOCUSED_TABLE_EDITABLE_TEXT
+        .with(|cell| cell.borrow().as_ref().filter(|focus| focus.window_id == window_id && focus.node == node && focus.host_id == host_id && focus.row_id == row_id && focus.column_id == column_id).map(|focus| focus.draft.clone()))
+}
+
+fn set_focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str, draft: &str) {
+    FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+        if let Some(focus) = cell.borrow_mut().as_mut().filter(|focus| focus.window_id == window_id && focus.node == node && focus.host_id == host_id && focus.row_id == row_id && focus.column_id == column_id) {
+            focus.draft = draft.to_owned();
+        }
+    });
+}
+
+fn commit_focused_table_editable_text_with_engine(engine: &ui_wgpu::wgpu::Ui, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<crate::scenes::TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    let (window_id, window_generation, node, host_id, row_id, column_id, base, draft) = focused_table_editable_text_address()?;
+    if engine.surface_generation(&window_id) != Some(window_generation) || ui_document_close_pending_for(&window_id) {
+        return None;
+    }
+    let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
+    let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+    if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::Table || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        return None;
+    }
+    crate::scenes::table_editable_text_commit_owned(scene, &row_id, &column_id, &base, draft, input)
+}
+
+fn clear_focused_table_editable_text(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+    FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| *cell.borrow_mut() = None);
+    input.blur_input();
+}
+
+fn focus_table_editable_text(
+    engine: &ui_wgpu::wgpu::Ui,
+    window_id: &str,
+    window_generation: u64,
+    node: NodeId,
+    host_id: &str,
+    target: crate::scenes::TableEditableTextFocusTarget,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let same = focused_table_editable_text_address().is_some_and(|(focused_window, focused_generation, focused_node, focused_host, focused_row, focused_column, _, _)| {
+        focused_window == window_id && focused_generation == window_generation && focused_node == node && focused_host == host_id && focused_row == target.row_id && focused_column == target.column_id
+    });
+    if same {
+        return Ok(());
+    }
+    if let Some(outcome) = commit_focused_table_editable_text_with_engine(engine, input).transpose()? {
+        if matches!(outcome, crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing) {
+            return Ok(());
+        }
+    }
+    clear_focused_table_editable_text(input);
+    let control_id = target.control_id(host_id);
+    input.focus_input_owned(control_id, target.value.clone());
+    FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+        *cell.borrow_mut() =
+            Some(FocusedTableEditableText { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned(), row_id: target.row_id, column_id: target.column_id, base: target.value.clone(), draft: target.value });
+    });
+    Ok(())
+}
+
+/** 🖱️ Commits an editable cell when a primary press leaves its Table component. */
+pub fn blur_focused_table_editable_text_for_pointer(target: Option<&ScenePointerTarget>, down: bool, button: i16, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    if !down || button != 0 {
+        return false;
+    }
+    let Some((window_id, window_generation, node, host_id, _, _, _, _)) = focused_table_editable_text_address() else { return false };
+    if target.is_some_and(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::Table && target.window_id == window_id && target.window_generation == window_generation && target.node == node && target.host_id == host_id) {
+        return false;
+    }
+    let outcome = UI_ENGINE.with(|cell| commit_focused_table_editable_text_with_engine(&cell.borrow(), input));
+    match outcome {
+        Some(Ok(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing)) => true,
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            true
+        }
+        _ => {
+            clear_focused_table_editable_text(input);
+            true
+        }
+    }
+}
+
+/** ⌨️ Enter commits, Shift+Enter inserts a newline, and Escape discards the focused cell draft. */
+pub fn apply_focused_table_editable_text_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    if focused_table_editable_text_address().is_none() {
+        return false;
+    }
+    match key {
+        ui_wgpu::wgpu::KeyAction::Escape => {
+            input.cancel_retained_action();
+            clear_focused_table_editable_text(input);
+            true
+        }
+        ui_wgpu::wgpu::KeyAction::Enter if modifiers.shift => {
+            input.insert_char('\n');
+            true
+        }
+        ui_wgpu::wgpu::KeyAction::Enter => {
+            let outcome = UI_ENGINE.with(|cell| commit_focused_table_editable_text_with_engine(&cell.borrow(), input));
+            match outcome {
+                Some(Ok(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing)) => true,
+                Some(Err(fault)) => {
+                    input.record_action_fault(fault);
+                    true
+                }
+                _ => {
+                    clear_focused_table_editable_text(input);
+                    true
+                }
+            }
+        }
+        _ => false,
+    }
+}
+//#endregion ✏️TableEditableTextFocus
 
 //#region 📊️TableStepperFocus
 struct FocusedTableStepper {
@@ -1899,9 +2322,7 @@ fn focus_vfs_control(window_id: &str, window_generation: u64, node: NodeId, host
 }
 
 fn focused_vfs_control() -> Option<(String, u64, NodeId, String, crate::scenes::VfsAccessibilityFocusTarget)> {
-    FOCUSED_VFS_CONTROL.with(|cell| {
-        cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone(), focus.target.clone()))
-    })
+    FOCUSED_VFS_CONTROL.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone(), focus.target.clone())))
 }
 
 pub fn blur_focused_vfs_control_for_pointer(down: bool, button: i16) -> bool {
@@ -2406,6 +2827,9 @@ pub fn commit_focused_text_editor_stream(stream: u64, input: &mut ui_wgpu::wgpu:
         slots[slot].take()
     });
     let Some(mounted) = mounted else { return false };
+    if !focused_text_editor_matches(&mounted.focus) {
+        return false;
+    }
     let outcome = with_live_text_editor(&mounted.focus, |scene| crate::engine_canvas::text_editor_replace_selection_into(scene, &mounted.text, input));
     match outcome {
         Some(Ok(consumed)) => consumed,
@@ -2427,6 +2851,28 @@ pub fn abort_focused_text_editor_stream(stream: u64) -> bool {
 }
 
 fn close_window_focus_clipboard_one(window_id: &str, generation: u64) -> bool {
+    if let Some(focus) = FOCUSED_NODE_GRAPH_CARET.with(|cell| {
+        let mut focus = cell.borrow_mut();
+        if focus.as_ref().is_some_and(|focus| focus.target.window_id == window_id && focus.target.window_generation == generation) {
+            focus.take()
+        } else {
+            None
+        }
+    }) {
+        clear_node_graph_caret(&focus);
+        return true;
+    }
+    if FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+        let mut focus = cell.borrow_mut();
+        if focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.window_generation == generation) {
+            focus.take();
+            true
+        } else {
+            false
+        }
+    }) {
+        return true;
+    }
     if FOCUSED_TABLE_STEPPER.with(|cell| {
         let mut focus = cell.borrow_mut();
         if focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.window_generation == generation) {
@@ -2509,6 +2955,17 @@ fn close_window_focus_clipboard_one(window_id: &str, generation: u64) -> bool {
 }
 
 fn close_retiring_focus_clipboard_one() -> bool {
+    if FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+        let mut focus = cell.borrow_mut();
+        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+            focus.take();
+            true
+        } else {
+            false
+        }
+    }) {
+        return true;
+    }
     if FOCUSED_TABLE_STEPPER.with(|cell| {
         let mut focus = cell.borrow_mut();
         if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
@@ -2749,24 +3206,24 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
         return Ok(SceneIntentProgress::Complete);
     }
     if kind == ui_wgpu::wgpu::SurfaceKind::TextEditor {
-        return UI_ENGINE.with(|cell| {
+        let (result, focus) = UI_ENGINE.with(|cell| {
             let engine = cell.borrow();
             let Some(tree) = engine.tree(window_id) else {
-                return Ok(SceneIntentProgress::Complete);
+                return (Ok(SceneIntentProgress::Complete), None);
             };
             let Some(retained) = tree.node(node) else {
-                return Ok(SceneIntentProgress::Complete);
+                return (Ok(SceneIntentProgress::Complete), None);
             };
             let UiNode::ComponentScene(scene) = &retained.spec.0 else {
-                return Ok(SceneIntentProgress::Complete);
+                return (Ok(SceneIntentProgress::Complete), None);
             };
+            let focus = matches!(intent.event, SceneIntentEvent::PointerDown { .. }).then(|| text_editor_focus_in(&engine, window_id, intent.surface_generation, node, &scene.host_id)).flatten();
             let result = match intent.event {
                 SceneIntentEvent::PointerDown { x, y, button, .. } => {
-                    focus_text_editor(window_id, intent.surface_generation, node, &scene.host_id);
                     match crate::scenes::text_editor_popup_pointer(scene, rect, x, y, false, input) {
-                        Ok(true) => return Ok(SceneIntentProgress::Complete),
+                        Ok(true) => return (Ok(SceneIntentProgress::Complete), focus),
                         Ok(false) => {}
-                        Err(fault) => return Err(fault),
+                        Err(fault) => return (Err(fault), focus),
                     }
                     crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
                 }
@@ -2774,8 +3231,13 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { delta_y, .. } => Ok(crate::engine_canvas::text_editor_wheel_into(scene, delta_y)),
             };
-            result.map(|_| SceneIntentProgress::Complete)
+            (result.map(|_| SceneIntentProgress::Complete), focus)
         });
+        if let Some(focus) = focus {
+            install_text_editor_focus(focus.clone());
+            reset_text_editor_caret(&focus);
+        }
+        return result;
     }
     if kind == ui_wgpu::wgpu::SurfaceKind::Paint2d {
         return UI_ENGINE.with(|cell| {
@@ -2919,6 +3381,19 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
         match intent.event {
             SceneIntentEvent::PointerDown { x, y, button, modifiers } => {
                 if kind == ui_wgpu::wgpu::SurfaceKind::Table && button == 0 {
+                    if let Some(target) = crate::scenes::table_editable_text_focus_target(scene, rect, x, y, intent.driver_drag) {
+                        focus_table_editable_text(&engine, window_id, intent.surface_generation, node, &scene.host_id, target, input)?;
+                    } else {
+                        let same_table = focused_table_editable_text_address().is_some_and(|(focused_window, focused_generation, focused_node, focused_host, _, _, _, _)| {
+                            focused_window == window_id && focused_generation == intent.surface_generation && focused_node == node && focused_host == scene.host_id
+                        });
+                        if same_table {
+                            match commit_focused_table_editable_text_with_engine(&engine, input).transpose()? {
+                                Some(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing) => {}
+                                _ => clear_focused_table_editable_text(input),
+                            }
+                        }
+                    }
                     if let Some(target) = crate::scenes::table_stepper_focus_target(scene, rect, x, y, intent.driver_drag) {
                         focus_table_stepper(window_id, intent.surface_generation, node, &scene.host_id, target);
                     }
@@ -4211,35 +4686,32 @@ fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
     (1_u64 << 63) | (hash & !(1_u64 << 63))
 }
 
-fn collect_table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, origin: (f32, f32), depth: usize, driver_drag: ui_wgpu::wgpu::UiDriverDrag, entries: &mut Vec<TableStepperAccessibilityEntry>) {
+fn collect_table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableStepperAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
-    let (x, y, width, height) = tree.mounted_layout(node).unwrap_or((retained.layout.x, retained.layout.y, retained.layout.width, retained.layout.height));
-    let absolute = (origin.0 + x, origin.1 + y);
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() {
-            let rect = Rect::new(absolute.0, absolute.1, width, height);
-            entries.extend(crate::scenes::table_stepper_accessibility_cells(scene, rect, driver_drag).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
+            entries.extend(crate::scenes::accepted_table_stepper_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
         }
     }
     if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
-        collect_table_stepper_accessibility_entries(tree, child, absolute, depth.saturating_add(1), driver_drag, entries);
+        collect_table_stepper_accessibility_entries(tree, child, depth.saturating_add(1), entries);
     }
 }
 
-fn table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, driver_drag: ui_wgpu::wgpu::UiDriverDrag) -> Vec<TableStepperAccessibilityEntry> {
+fn table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableStepperAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
-        collect_table_stepper_accessibility_entries(tree, root, (0.0, 0.0), 0, driver_drag, &mut entries);
+        collect_table_stepper_accessibility_entries(tree, root, 0, &mut entries);
     }
     entries
 }
 
-fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree, driver_drag: ui_wgpu::wgpu::UiDriverDrag, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let focus = FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.node, focus.host_id.clone(), focus.row_id.clone(), focus.column_id.clone())));
-    for entry in table_stepper_accessibility_entries(tree, driver_drag) {
+    for entry in table_stepper_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;
         }
@@ -4256,6 +4728,7 @@ fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgp
             hidden: false,
             disabled: false,
             focusable: true,
+            tabbable: true,
             actionable: true,
             focused,
             checked: None,
@@ -4277,6 +4750,82 @@ fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgp
     }
 }
 
+struct TableEditableTextAccessibilityEntry {
+    scene_node: NodeId,
+    host_id: String,
+    depth: usize,
+    cell: crate::scenes::TableEditableTextAccessibilityCell,
+}
+
+fn collect_table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableEditableTextAccessibilityEntry>) {
+    let Some(retained) = tree.node(node) else { return };
+    if let UiNode::ComponentScene(scene) = &retained.spec.0 {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
+            entries.extend(crate::scenes::accepted_table_editable_text_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableEditableTextAccessibilityEntry {
+                scene_node: node,
+                host_id: scene.host_id.clone(),
+                depth: depth.saturating_add(1),
+                cell,
+            }));
+        }
+    }
+    if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+        return;
+    }
+    for child in tree.children(node) {
+        collect_table_editable_text_accessibility_entries(tree, child, depth.saturating_add(1), entries);
+    }
+}
+
+fn table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableEditableTextAccessibilityEntry> {
+    let mut entries = Vec::new();
+    if let Some(root) = tree.root {
+        collect_table_editable_text_accessibility_entries(tree, root, 0, &mut entries);
+    }
+    entries
+}
+
+fn append_table_editable_text_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+    let focus = focused_table_editable_text_address();
+    for entry in table_editable_text_accessibility_entries(tree) {
+        if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
+            break;
+        }
+        let focused = focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4 == entry.cell.target.row_id && focus.5 == entry.cell.target.column_id);
+        nodes.push(ui_contract::AccessibilityProjectionNode {
+            node_id: scene_virtual_accessibility_node_id(&entry.cell.key),
+            key: entry.cell.key,
+            role: "textbox".into(),
+            depth: entry.depth,
+            label: (!entry.cell.label.trim().is_empty()).then_some(entry.cell.label),
+            description: None,
+            live: ui_contract::liveness_name(ui_contract::Liveness::Off).into(),
+            shortcut: None,
+            hidden: false,
+            disabled: false,
+            focusable: true,
+            tabbable: true,
+            actionable: true,
+            focused,
+            checked: None,
+            pressed: None,
+            selected: None,
+            expanded: None,
+            editable: true,
+            multiline: true,
+            controls: None,
+            active_descendant: None,
+            level: None,
+            rect: Some([entry.cell.rect.x, entry.cell.rect.y, entry.cell.rect.w, entry.cell.rect.h]),
+            value_min: None,
+            value_max: None,
+            value_now: None,
+            value_text: Some(focused_table_editable_text_draft(window_id, entry.scene_node, &entry.host_id, &entry.cell.target.row_id, &entry.cell.target.column_id).unwrap_or(entry.cell.target.value)),
+            busy: false,
+        });
+    }
+}
+
 struct VfsAccessibilityEntry {
     scene_node: NodeId,
     host_id: String,
@@ -4288,12 +4837,7 @@ fn collect_vfs_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId,
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
         if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry {
-                scene_node: node,
-                host_id: scene.host_id.clone(),
-                depth: depth.saturating_add(1),
-                control,
-            }));
+            entries.extend(crate::scenes::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), control }));
         }
     }
     if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
@@ -4318,9 +4862,7 @@ fn append_vfs_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree,
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;
         }
-        let focused = focus.as_ref().is_some_and(|focus| {
-            focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4.row_id == entry.control.row_id && focus.4.kind == entry.control.kind
-        });
+        let focused = focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4.row_id == entry.control.row_id && focus.4.kind == entry.control.kind);
         nodes.push(ui_contract::AccessibilityProjectionNode {
             node_id: scene_virtual_accessibility_node_id(&entry.control.key),
             key: entry.control.key,
@@ -4333,12 +4875,87 @@ fn append_vfs_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree,
             hidden: false,
             disabled: false,
             focusable: true,
+            tabbable: true,
             actionable: true,
             focused,
             checked: None,
             pressed: None,
             selected: None,
             expanded: entry.control.expanded,
+            editable: false,
+            multiline: false,
+            controls: None,
+            active_descendant: None,
+            level: None,
+            rect: Some([entry.control.rect.x, entry.control.rect.y, entry.control.rect.w, entry.control.rect.h]),
+            value_min: None,
+            value_max: None,
+            value_now: None,
+            value_text: None,
+            busy: false,
+        });
+    }
+}
+
+struct BlockListAccessibilityEntry {
+    scene_node: NodeId,
+    host_id: String,
+    depth: usize,
+    control: crate::scenes::BlockListAccessibilityControl,
+}
+
+fn collect_block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<BlockListAccessibilityEntry>) {
+    let Some(retained) = tree.node(node) else { return };
+    if let UiNode::ComponentScene(scene) = &retained.spec.0 {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::BlockList && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
+            entries.extend(crate::scenes::accepted_block_list_accessibility_controls(&scene.host_id).into_iter().map(|control| BlockListAccessibilityEntry {
+                scene_node: node,
+                host_id: scene.host_id.clone(),
+                depth: depth.saturating_add(1),
+                control,
+            }));
+        }
+    }
+    if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+        return;
+    }
+    for child in tree.children(node) {
+        collect_block_list_accessibility_entries(tree, child, depth.saturating_add(1), entries);
+    }
+}
+
+fn block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<BlockListAccessibilityEntry> {
+    let mut entries = Vec::new();
+    if let Some(root) = tree.root {
+        collect_block_list_accessibility_entries(tree, root, 0, &mut entries);
+    }
+    entries
+}
+
+fn append_block_list_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+    for entry in block_list_accessibility_entries(tree) {
+        if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
+            break;
+        }
+        nodes.push(ui_contract::AccessibilityProjectionNode {
+            node_id: scene_virtual_accessibility_node_id(&entry.control.key),
+            key: entry.control.key,
+            role: "button".into(),
+            depth: entry.depth,
+            label: Some(entry.control.label),
+            description: None,
+            live: ui_contract::liveness_name(ui_contract::Liveness::Off).into(),
+            shortcut: None,
+            hidden: false,
+            disabled: false,
+            focusable: true,
+            tabbable: true,
+            actionable: true,
+            focused: false,
+            checked: None,
+            pressed: None,
+            selected: None,
+            expanded: None,
             editable: false,
             multiline: false,
             controls: None,
@@ -4420,6 +5037,7 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu:
             hidden: false,
             disabled: false,
             focusable: true,
+            tabbable: true,
             actionable: true,
             focused,
             checked: None,
@@ -4459,8 +5077,10 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
         .map(|window_id| {
             let mut nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
             if let Some(tree) = engine.tree(&window_id) {
-                append_table_stepper_accessibility_nodes(&window_id, tree, engine.driver_drag(), &mut nodes);
+                append_table_stepper_accessibility_nodes(&window_id, tree, &mut nodes);
+                append_table_editable_text_accessibility_nodes(&window_id, tree, &mut nodes);
                 append_vfs_accessibility_nodes(&window_id, tree, &mut nodes);
+                append_block_list_accessibility_nodes(tree, &mut nodes);
                 append_text_editor_accessibility_nodes(&window_id, tree, &mut nodes);
             }
             let window_generation = engine.surface_generation(&window_id).unwrap_or_default();
@@ -4871,6 +5491,18 @@ struct AccessibilityVisibleWindows {
 
 static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new();
 
+pub(crate) fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)> {
+    let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        visible.into_iter().filter_map(|id| engine.surface_token(&id).map(|surface| (id, surface))).collect()
+    })
+}
+
+pub(crate) fn presented_retained_clock_deadline(surfaces: &[(String, ui_wgpu::wgpu::UiSurfaceToken)]) -> Option<f64> {
+    UI_ENGINE.with(|cell| cell.borrow().surfaces_next_clock_deadline(surfaces))
+}
+
 pub fn begin_accessibility_visible_documents() {
     ACCESSIBILITY_VISIBLE_WINDOWS.borrow_mut().staging.clear();
 }
@@ -4912,9 +5544,11 @@ struct PresentedInkClipboardRebase {
 
 struct PresentedEditorRebase {
     text: Option<PresentedEditorNodeRebase>,
+    node_graph: Option<PresentedEditorNodeRebase>,
     text_streams: [Option<(u64, PresentedEditorNodeRebase)>; 32],
     #[cfg(not(target_arch = "wasm32"))]
     native_text: [Option<(u64, PresentedEditorNodeRebase)>; 32],
+    table_editable: Option<PresentedEditorNodeRebase>,
     table: Option<PresentedEditorNodeRebase>,
     vfs: Option<PresentedEditorNodeRebase>,
     ink: Option<PresentedEditorNodeRebase>,
@@ -4944,6 +5578,20 @@ fn prepare_presented_editor_node_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64
     })
 }
 
+fn prepare_presented_node_graph_caret_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64, focus: &FocusedNodeGraphCaret) -> Option<PresentedEditorNodeRebase> {
+    let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.target.window_id, focus.target.window_generation, focus.target.node, &focus.target.host_id, ui_wgpu::wgpu::SurfaceKind::NodeGraph)?;
+    if let Some(node) = rebase.candidate_node {
+        let survives = engine
+            .candidate_tree(&focus.target.window_id)
+            .and_then(|tree| tree.node(node))
+            .is_some_and(|retained| matches!(&retained.spec.0, UiNode::ComponentScene(scene) if scene.surface_id == focus.target.surface_id) && retained.key == focus.target.key && retained.component_generation() == focus.target.component_generation);
+        if !survives {
+            rebase.candidate_node = None;
+        }
+    }
+    Some(rebase)
+}
+
 fn prepare_presented_ink_clipboard_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64, address: &InkClipboardAddress) -> Option<PresentedInkClipboardRebase> {
     engine
         .candidate_is_sealed_for(&address.window_id, witness)
@@ -4953,6 +5601,7 @@ fn prepare_presented_ink_clipboard_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u
 fn prepare_presented_editor_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64) -> PresentedEditorRebase {
     let text =
         FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, ui_wgpu::wgpu::SurfaceKind::TextEditor)));
+    let node_graph = FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_node_graph_caret_rebase(engine, witness, focus)));
     let text_streams = TEXT_EDITOR_INPUT_STREAMS.with(|cell| {
         let streams = cell.borrow();
         std::array::from_fn(|index| {
@@ -4971,17 +5620,11 @@ fn prepare_presented_editor_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64) -> 
     });
     let table =
         FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, ui_wgpu::wgpu::SurfaceKind::Table)));
+    let table_editable =
+        FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, ui_wgpu::wgpu::SurfaceKind::Table)));
     let vfs = FOCUSED_VFS_CONTROL.with(|cell| {
         cell.borrow().as_ref().and_then(|focus| {
-            let mut rebase = prepare_presented_editor_node_rebase(
-                engine,
-                witness,
-                &focus.window_id,
-                focus.window_generation,
-                focus.node,
-                &focus.host_id,
-                ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem,
-            )?;
+            let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem)?;
             if rebase.candidate_node.is_some() && !crate::scenes::vfs_accessibility_control_survives_candidate(&focus.host_id, &focus.target, witness) {
                 rebase.candidate_node = None;
             }
@@ -5009,9 +5652,11 @@ fn prepare_presented_editor_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64) -> 
     });
     PresentedEditorRebase {
         text,
+        node_graph,
         text_streams,
         #[cfg(not(target_arch = "wasm32"))]
         native_text,
+        table_editable,
         table,
         vfs,
         ink,
@@ -5049,11 +5694,28 @@ fn commit_presented_editor_rebase(rebase: PresentedEditorRebase) {
             }
         });
     }
+    if let Some(rebase) = rebase.node_graph {
+        FOCUSED_NODE_GRAPH_CARET.with(|cell| {
+            let mut focus = cell.borrow_mut();
+            let matches = focus.as_ref().is_some_and(|focus| focus.target.window_id == rebase.window_id && focus.target.window_generation == rebase.window_generation && focus.target.node == rebase.old_node && focus.target.host_id == rebase.host_id);
+            if matches {
+                match rebase.candidate_node {
+                    Some(node) => focus.as_mut().expect("matched NodeGraph caret focus").target.node = node,
+                    None => *focus = None,
+                }
+            }
+        });
+    }
     TEXT_EDITOR_INPUT_STREAMS.with(|cell| {
         let mut streams = cell.borrow_mut();
         for (index, prepared) in rebase.text_streams.into_iter().enumerate() {
             let Some((id, prepared)) = prepared else { continue };
-            let Some(stream) = streams[index].as_mut().filter(|stream| stream.id == id && stream.focus.window_id == prepared.window_id && stream.focus.window_generation == prepared.window_generation && stream.focus.node == prepared.old_node && stream.focus.host_id == prepared.host_id) else { continue };
+            let Some(stream) = streams[index]
+                .as_mut()
+                .filter(|stream| stream.id == id && stream.focus.window_id == prepared.window_id && stream.focus.window_generation == prepared.window_generation && stream.focus.node == prepared.old_node && stream.focus.host_id == prepared.host_id)
+            else {
+                continue;
+            };
             match prepared.candidate_node {
                 Some(node) => stream.focus.node = node,
                 None => streams[index] = None,
@@ -5069,13 +5731,31 @@ fn commit_presented_editor_rebase(rebase: PresentedEditorRebase) {
             if slot.generation != generation {
                 continue;
             }
-            let Some(pending) = slot.mounted.as_mut().filter(|pending| pending.focus.window_id == prepared.window_id && pending.focus.window_generation == prepared.window_generation && pending.focus.node == prepared.old_node && pending.focus.host_id == prepared.host_id) else { continue };
+            let Some(pending) = slot
+                .mounted
+                .as_mut()
+                .filter(|pending| pending.focus.window_id == prepared.window_id && pending.focus.window_generation == prepared.window_generation && pending.focus.node == prepared.old_node && pending.focus.host_id == prepared.host_id)
+            else {
+                continue;
+            };
             match prepared.candidate_node {
                 Some(node) => pending.focus.node = node,
                 None => slot.mounted = None,
             }
         }
     });
+    if let Some(rebase) = rebase.table_editable {
+        FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
+            let mut focus = cell.borrow_mut();
+            let matches = focus.as_ref().is_some_and(|focus| focus.window_id == rebase.window_id && focus.window_generation == rebase.window_generation && focus.node == rebase.old_node && focus.host_id == rebase.host_id);
+            if matches {
+                match rebase.candidate_node {
+                    Some(node) => focus.as_mut().expect("matched editable Table focus").node = node,
+                    None => *focus = None,
+                }
+            }
+        });
+    }
     if let Some(rebase) = rebase.table {
         FOCUSED_TABLE_STEPPER.with(|cell| {
             let mut focus = cell.borrow_mut();
@@ -5194,16 +5874,8 @@ pub fn acknowledge_presented_input(witness: u64) -> bool {
         if acknowledged {
             commit_presented_editor_rebase(editor_rebase);
         }
-        let retired_canvas_hosts = if acknowledged {
-            visible
-                .iter()
-                .filter_map(|window_id| engine.retired_component_scene(window_id))
-                .filter(|retired| retired.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d)
-                .map(|retired| retired.host_id)
-                .collect()
-        } else {
-            Vec::new()
-        };
+        let retired_canvas_hosts =
+            if acknowledged { visible.iter().filter_map(|window_id| engine.retired_component_scene(window_id)).filter(|retired| retired.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d).map(|retired| retired.host_id).collect() } else { Vec::new() };
         (acknowledged, retired_canvas_hosts)
     });
     for host_id in retired_canvas_hosts {

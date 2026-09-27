@@ -2,12 +2,12 @@
 //! against SQLite, PostgreSQL and Neo4j: a second instance and a second process are refused while a
 //! writer holds the document, release and process exit admit the next writer, and a holder that lost
 //! ownership without knowing it is fenced by the storage before any WAL byte lands. The PostgreSQL
-//! and Neo4j lanes start a disposable Docker server each and cross-check the lock through that
-//! server's own client (`psql`, `cypher-shell`), so they are `#[ignore]`d outside
-//! `wal-writer-fence-live`.
+//! and Neo4j lanes run on the ONE shared development server claimed by `os-hub-ts backend run
+//! <postgres|neo4j> -- …` and cross-check the lock through that server's own client (`psql` on the run
+//! database, `cypher-shell`), so they are `#[ignore]`d outside `wal-writer-fence-live` under a claim.
 use crate::db_ids::{ArtifactId, DbError};
 #[cfg(any(feature = "postgres", feature = "neo4j"))]
-use crate::db_storage::docker_server::{docker, free_port, Container};
+use crate::db_storage::claimed_backend;
 use crate::db_storage::{db_io_copy_pages, db_io_test_pool, DbIoPages, WalStorage, WalWriterPermit};
 use std::process::Command;
 
@@ -28,9 +28,9 @@ async fn pages(bytes: &[u8]) -> DbIoPages {
 enum FenceTarget {
     Sqlite { path: String },
     #[cfg(feature = "postgres")]
-    Postgres { url: String, container: String },
+    Postgres { url: String },
     #[cfg(feature = "neo4j")]
-    Neo4j { uri: String, container: String },
+    Neo4j { uri: String, user: String, password: String },
 }
 
 enum FenceStorage {
@@ -129,9 +129,9 @@ impl FenceTarget {
         match self {
             Self::Sqlite { path } => format!("sqlite\n{path}"),
             #[cfg(feature = "postgres")]
-            Self::Postgres { url, container } => format!("postgres\n{url}\n{container}"),
+            Self::Postgres { url } => format!("postgres\n{url}"),
             #[cfg(feature = "neo4j")]
-            Self::Neo4j { uri, container } => format!("neo4j\n{uri}\n{container}"),
+            Self::Neo4j { uri, user, password } => format!("neo4j\n{uri}\n{user}\n{password}"),
         }
     }
 
@@ -140,9 +140,9 @@ impl FenceTarget {
         match parts[0] {
             "sqlite" => Self::Sqlite { path: parts[1].to_string() },
             #[cfg(feature = "postgres")]
-            "postgres" => Self::Postgres { url: parts[1].to_string(), container: parts[2].to_string() },
+            "postgres" => Self::Postgres { url: parts[1].to_string() },
             #[cfg(feature = "neo4j")]
-            "neo4j" => Self::Neo4j { uri: parts[1].to_string(), container: parts[2].to_string() },
+            "neo4j" => Self::Neo4j { uri: parts[1].to_string(), user: parts[2].to_string(), password: parts[3].to_string() },
             other => panic!("unknown fence target {other}"),
         }
     }
@@ -154,26 +154,26 @@ impl FenceTarget {
             #[cfg(feature = "postgres")]
             Self::Postgres { url, .. } => FenceStorage::Postgres(crate::db_storage_postgres::PostgresStorage::connect(pool, url).await.unwrap()),
             #[cfg(feature = "neo4j")]
-            Self::Neo4j { uri, .. } => FenceStorage::Neo4j(crate::db_storage_neo4j::Neo4jStorage::connect(pool, uri, "neo4j", "semio-test").await.unwrap()),
+            Self::Neo4j { uri, user, password } => FenceStorage::Neo4j(crate::db_storage_neo4j::Neo4jStorage::connect(pool, uri, user, password).await.unwrap()),
         }
     }
 
     /// 🔎️ How many live writer locks the server's own client sees — `None` where the lock is a
-    /// sidecar file lock with no server to ask.
+    /// sidecar file lock with no server to ask. On the shared postgres only the claimed run
+    /// database's sessions count.
     fn independent_holders(&self, document: &str) -> Option<u64> {
         match self {
             Self::Sqlite { .. } => None,
             #[cfg(feature = "postgres")]
-            Self::Postgres { container, .. } => {
-                let sql = "SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.granted AND a.application_name = 'semio-wal-writer'";
+            Self::Postgres { .. } => {
+                let sql = "SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.granted AND a.application_name = 'semio-wal-writer' AND a.datname = current_database()";
                 let _ = document;
-                Some(docker(&["exec", container, "psql", "-U", "postgres", "-tAc", sql]).parse().unwrap())
+                Some(claimed_backend::client(sql).parse().unwrap())
             }
             #[cfg(feature = "neo4j")]
-            Self::Neo4j { container, .. } => {
+            Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) WHERE w.holder IS NOT NULL AND w.expiresAtMs > timestamp() RETURN count(w) AS live");
-                let out = docker(&["exec", container, "cypher-shell", "-u", "neo4j", "-p", "semio-test", "--format", "plain", &cypher]);
-                Some(out.lines().last().unwrap().trim().parse().unwrap())
+                Some(claimed_backend::client(&cypher).lines().last().unwrap().trim().parse().unwrap())
             }
         }
     }
@@ -183,14 +183,14 @@ impl FenceTarget {
         match self {
             Self::Sqlite { .. } => panic!("a SQLite sidecar lock is only lost with its process"),
             #[cfg(feature = "postgres")]
-            Self::Postgres { container, .. } => {
-                let sql = "SELECT count(*) FROM (SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = 'semio-wal-writer') AS terminated";
-                assert_eq!(docker(&["exec", container, "psql", "-U", "postgres", "-tAc", sql]), "1");
+            Self::Postgres { .. } => {
+                let sql = "SELECT count(*) FROM (SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = 'semio-wal-writer' AND datname = current_database()) AS terminated";
+                assert_eq!(claimed_backend::client(sql), "1");
             }
             #[cfg(feature = "neo4j")]
-            Self::Neo4j { container, .. } => {
+            Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) SET w.expiresAtMs = 0 RETURN w.token AS token");
-                docker(&["exec", container, "cypher-shell", "-u", "neo4j", "-p", "semio-test", "--format", "plain", &cypher]);
+                claimed_backend::client(&cypher);
             }
         }
     }
@@ -198,10 +198,9 @@ impl FenceTarget {
     fn token(&self, document: &str) -> Option<u64> {
         match self {
             #[cfg(feature = "neo4j")]
-            Self::Neo4j { container, .. } => {
+            Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) RETURN w.token AS token");
-                let out = docker(&["exec", container, "cypher-shell", "-u", "neo4j", "-p", "semio-test", "--format", "plain", &cypher]);
-                Some(out.lines().last().unwrap().trim().parse().unwrap())
+                Some(claimed_backend::client(&cypher).lines().last().unwrap().trim().parse().unwrap())
             }
             _ => {
                 let _ = document;
@@ -355,42 +354,22 @@ async fn sqlite_wal_writer_fence_holds_every_shared_law() {
 
 #[cfg(feature = "postgres")]
 #[semio_framework_async_macros::async_test]
-#[ignore = "starts a Docker postgres:17-alpine; run through `wal-writer-fence-live`"]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- bun nx run @semio-tech/framework-os-kernel:wal-writer-fence-live postgres`"]
 async fn postgres_wal_writer_fence_holds_every_shared_law() {
     if fence_child().await {
         return;
     }
-    let port = free_port();
-    let name = format!("semio-db-fence-postgres-{}-{port}", std::process::id());
-    docker(&["run", "--detach", "--rm", "--name", &name, "--env", "POSTGRES_PASSWORD=postgres", "--publish", &format!("127.0.0.1:{port}:5432"), "postgres:17-alpine"]);
-    let container = Container { name: name.clone() };
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
-    while Command::new("docker").args(["exec", &name, "psql", "-U", "postgres", "-h", "127.0.0.1", "-tAc", "SELECT 1"]).output().map_or(true, |out| !out.status.success()) {
-        assert!(std::time::Instant::now() < deadline, "postgres fixture never answered");
-        std::thread::sleep(std::time::Duration::from_millis(250));
-    }
-    let url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
-    run_fence_laws(FenceTarget::Postgres { url, container: name }, "db_storage::writer::fence_conformance::postgres_wal_writer_fence_holds_every_shared_law").await;
-    drop(container);
+    let url = claimed_backend::env("OS_HUB_DATABASE_URL");
+    run_fence_laws(FenceTarget::Postgres { url }, "db_storage::writer::fence_conformance::postgres_wal_writer_fence_holds_every_shared_law").await;
 }
 
 #[cfg(feature = "neo4j")]
 #[semio_framework_async_macros::async_test]
-#[ignore = "starts a Docker neo4j:5-community; run through `wal-writer-fence-live`"]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- bun nx run @semio-tech/framework-os-kernel:wal-writer-fence-live neo4j`"]
 async fn neo4j_wal_writer_fence_holds_every_shared_law() {
     if fence_child().await {
         return;
     }
-    let port = free_port();
-    let name = format!("semio-db-fence-neo4j-{}-{port}", std::process::id());
-    docker(&["run", "--detach", "--rm", "--name", &name, "--env", "NEO4J_AUTH=neo4j/semio-test", "--publish", &format!("127.0.0.1:{port}:7687"), "neo4j:5-community"]);
-    let container = Container { name: name.clone() };
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(180);
-    while Command::new("docker").args(["exec", &name, "cypher-shell", "-u", "neo4j", "-p", "semio-test", "RETURN 1"]).output().map_or(true, |out| !out.status.success()) {
-        assert!(std::time::Instant::now() < deadline, "neo4j fixture never answered");
-        std::thread::sleep(std::time::Duration::from_millis(500));
-    }
-    let uri = format!("127.0.0.1:{port}");
-    run_fence_laws(FenceTarget::Neo4j { uri, container: name }, "db_storage::writer::fence_conformance::neo4j_wal_writer_fence_holds_every_shared_law").await;
-    drop(container);
+    let target = FenceTarget::Neo4j { uri: claimed_backend::env("OS_HUB_NEO4J_URI"), user: claimed_backend::env("OS_HUB_NEO4J_USER"), password: claimed_backend::env("OS_HUB_NEO4J_PASSWORD") };
+    run_fence_laws(target, "db_storage::writer::fence_conformance::neo4j_wal_writer_fence_holds_every_shared_law").await;
 }

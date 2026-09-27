@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeLayerPhiPr
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-phi-prime", "change-layer-phi-prime")
+        protocol::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
     }
 }

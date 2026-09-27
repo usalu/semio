@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+import "../../../📸️snapshot/🛰️.proto";
+message SetSnapshot { semio.s_stdio_gltf.snapshot.GltfSnapshot snapshot = 1; }

@@ -13,6 +13,7 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::binary::CODEC,
     crate::schema::mutations::change_header_fields::binary::CODEC,
     crate::schema::mutations::insert_palette_entry::binary::CODEC,
     crate::schema::mutations::remove_palette_entry::binary::CODEC,

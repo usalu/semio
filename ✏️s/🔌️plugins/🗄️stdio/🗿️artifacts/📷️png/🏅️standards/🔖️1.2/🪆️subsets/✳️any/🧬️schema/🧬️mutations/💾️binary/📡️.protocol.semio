@@ -11,6 +11,8 @@ framing record
 header fixed 2
 field format u8
 field tag u8
+record set-snapshot tag=17
+field payload bytes
 record change-header tag=2
 field payload bytes
 record replace-palette tag=3
@@ -40,4 +42,6 @@ field payload bytes
 record insert-unknown-chunk tag=15
 field payload bytes
 record remove-unknown-chunk tag=16
+field payload bytes
+record patch-pixels tag=18
 field payload bytes

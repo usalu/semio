@@ -205,7 +205,14 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
+    }
+
+    /// 📦️ The produced document as the `actual-gltf` artifact the `gltf-2-0-three-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-gltf", "actual.gltf")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf+json"))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
@@ -223,7 +230,7 @@ mod subject {
         let restored = apply_kind(&mutated, &inverse_kind, inverse_params)?;
         let bytes = serialize_gltf_document(&restored);
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
     //#endregion 🔖️Handlers
 }

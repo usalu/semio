@@ -9,10 +9,33 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, Layout, buildVirtualFileSystemSceneRows, TreeContext, TreeItem, UIDialog, UiDriverProvider, chromePanelSafeArea, childElementId, closestCenter, createTutorialClock, deriveTreeDragRoles, isElementId, singleTreeLeaf, treeDataActivation, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
+import {
+  COMPACT_UI_DRIVER,
+  DEFAULT_UI_DRIVER,
+  Layout,
+  buildVirtualFileSystemSceneRows,
+  TreeContext,
+  TreeItem,
+  UIDialog,
+  UiDriverProvider,
+  chromePanelSafeArea,
+  childElementId,
+  closestCenter,
+  createTutorialClock,
+  deriveTreeDragRoles,
+  isElementId,
+  singleTreeLeaf,
+  treeDataActivation,
+  detectShellLocale,
+  uiI18n,
+  type Anchor,
+  type SafeAreaYield,
+} from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
+import windowIconOverrideFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🔣️.json" with { type: "json" };
+import windowIconOverrideSchema from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🧬️schema/🔣️.json" with { type: "json" };
 import {
   dispatchInvokeExtensionEffect,
   RUNTIME_DIAGNOSTICS_KEY,
@@ -32,7 +55,30 @@ import {
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape, windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  DOWNLOAD_MEDIA_EXPORT_REVOKE_MS,
+  EMPTY_APP_LABELS_OVERLAY,
+  SET_ACTIVE_EXAMPLE_ACTION_ID,
+  appSwitchesExamples,
+  buildActiveExampleAction,
+  navbarExampleIdFromHistoryUpserts,
+  rememberedExampleIdFromDispatchV1,
+  interactionViewFromLeftoverOutput,
+  leftoverInteractionStateV1,
+  leftoverWorldGumballPoseV1,
+  historyPatchShouldApplyV1,
+  historyRefreshNeededV1,
+  undeclaredActionDiagnostic,
+  downloadMediaExport,
+  mediaExportEncodingText,
+  makeEffectDispatchOne,
+  renderStagedArgControl,
+  resolveDialogDefinition,
+  world3dMarqueeOverlayShape,
+  windowMeasuresChrome,
+  windowMeasureDomId,
+  qualifyWindowMeasureIds,
+} from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
 import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
@@ -61,6 +107,10 @@ import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui
 import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
 import tableStepperKeyboardFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
 import tableStepperKeyboardSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
+import sliderPresentationFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎚️slider-presentation/🔣️.json" with { type: "json" };
+import sliderPresentationSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/🎚️slider-presentation/🔣️.json" with { type: "json" };
+import graphTimelineAuthorsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/👥️graph-timeline-authors/🔣️.json" with { type: "json" };
+import graphTimelineAuthorsSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/👥️graph-timeline-authors/🔣️.json" with { type: "json" };
 import virtualFileSystemInteractionFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
 import virtualFileSystemInteractionSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
@@ -72,7 +122,17 @@ import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛�
 import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx";
+import {
+  ARTIFACT_CREATION_PROGRESS_CAPACITY,
+  ARTIFACT_CREATION_PROGRESS_TEXT_V1,
+  ArtifactCreationCatalogNotice,
+  ArtifactCreationProgressNotice,
+  artifactCreationProgressLocaleV1,
+  artifactCreationProgressRoleV1,
+  artifactCreationProgressTerminalV1,
+  reduceArtifactCreationProgressUiV1,
+  type ArtifactCreationProgressOwnerV1,
+} from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
@@ -114,14 +174,10 @@ import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-orac
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema).addSchema(directorySchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
 /** 🧬️ Compiles one named `$defs` export of a peer scope's `🧬️schema/` module. */
-const peerExport = (module: { $id: string }, exportId: string): ValidateFunction =>
-  semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(module)
-    .getSchema(`${module.$id}#/$defs/${exportId}`) as ValidateFunction;
-const rendererExport = (exportId: string): ValidateFunction =>
-  ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;
+const peerExport = (module: { $id: string }, exportId: string): ValidateFunction => semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(module).getSchema(`${module.$id}#/$defs/${exportId}`) as ValidateFunction;
+const rendererExport = (exportId: string): ValidateFunction => ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;
 /** 🧬️ Compiles one named export of the `os.directory` schema module. */
-const directoryExport = (exportId: string): ValidateFunction =>
-  ownedExports.getSchema(`${directorySchema.$id}#/$defs/${exportId}`) as ValidateFunction;
+const directoryExport = (exportId: string): ValidateFunction => ownedExports.getSchema(`${directorySchema.$id}#/$defs/${exportId}`) as ValidateFunction;
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
@@ -130,7 +186,16 @@ describe("catalog-resolved artifact creation kinds", () => {
     const ajv = semioSchemaAjvV1({ strict: true });
     expect(ajv.compile(choiceSchema)(choiceFixture)).toBe(true);
     for (const row of choiceFixture.cases) {
-      const def: ActionArgDef = { id: "kindChoice", label: "Kind", required: row.required, schema: { kind: "string", options: row.options.map(value => ({ value, label: value })), ...(row.format === "text" ? {} : { format: row.format === "artifactKind" ? { kind: "artifactKind", roles: ["editor"] } : { kind: "surfaceApp", roles: ["editor"], dialectArg: "dialect" } }) } };
+      const def: ActionArgDef = {
+        id: "kindChoice",
+        label: "Kind",
+        required: row.required,
+        schema: {
+          kind: "string",
+          options: row.options.map((value) => ({ value, label: value })),
+          ...(row.format === "text" ? {} : { format: row.format === "artifactKind" ? { kind: "artifactKind", roles: ["editor"] } : { kind: "surfaceApp", roles: ["editor"], dialectArg: "dialect" } }),
+        },
+      };
       const data = row.value === null || row.value === "" ? {} : { kindChoice: row.value };
       const property = row.options.length > 0 ? { enum: row.options } : row.format === "text" ? {} : false;
       const oracle = ajv.compile({ type: "object", required: row.required ? ["kindChoice"] : [], properties: { kindChoice: property } });
@@ -147,17 +212,19 @@ describe("catalog-resolved artifact creation kinds", () => {
     submitAction: "createArtifact",
     submitLabel: localized("Create", "Erstellen"),
   };
-  const manifests = [{
-    pluginId: "gis",
-    label: "GIS",
-    version: "1",
-    apps: [
-      { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("GIS Map", "GIS-Karte"), io: { documentSchema: "gis.map" } },
-      { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("GIS Viewer", "GIS-Betrachter"), io: { documentSchema: "gis.map" } },
-    ],
-    workflows: [],
-    examples: [],
-  }];
+  const manifests = [
+    {
+      pluginId: "gis",
+      label: "GIS",
+      version: "1",
+      apps: [
+        { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("GIS Map", "GIS-Karte"), io: { documentSchema: "gis.map" } },
+        { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("GIS Viewer", "GIS-Betrachter"), io: { documentSchema: "gis.map" } },
+      ],
+      workflows: [],
+      examples: [],
+    },
+  ];
 
   it("keeps unavailable catalog feedback inside the dialog and requires a fresh selection after catalog withdrawal", async () => {
     for (const locale of ["en", "de"] as const) {
@@ -170,7 +237,10 @@ describe("catalog-resolved artifact creation kinds", () => {
       const submitLabel = locale === "en" ? "Create" : "Erstellen";
       const props = (definition: typeof ready, phase: "ready" | "loading" | "unavailable"): OwnedShellDialogProps<ResolvedActionArgDef> => ({
         owner: { openingId: 1, dialogId: dialog.id, origin: dialogOriginFixture.owner, seedArgs: { kindChoice: "forged" } },
-        dialog: definition, isCurrent: () => true, close: () => true, dispatch: submit,
+        dialog: definition,
+        isCurrent: () => true,
+        close: () => true,
+        dispatch: submit,
         notice: createElement(ArtifactCreationCatalogNotice, { status: { phase }, locale }),
         renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field),
       });
@@ -201,18 +271,35 @@ describe("catalog-resolved artifact creation kinds", () => {
         fireEvent.click(view.getByRole("button", { name: submitLabel }));
         expect(submit).toHaveBeenCalledTimes(1);
         expect(JSON.parse(submit.mock.calls[0]![2].kindChoice).kindId).toBe("s.gis.gismap");
-      } finally { view.unmount(); }
+      } finally {
+        view.unmount();
+      }
     }
     console.log("[DEBUG] Shell catalog dialog: locales=2 withdrawn-catalog=6 stale-submits=0 fresh-selection=2");
   });
 
   it("retires only choices when their catalog generation changes, even if the same tuple returns", async () => {
     await uiI18n.changeLanguage("en");
-    const resolved = resolveDialogDefinition({ ...dialog, args: [...dialog.args,
-      { id: "name", label: localized("Name", "Name"), required: true, schema: { kind: "string", options: [] } },
-      { id: "color", label: localized("Color", "Farbe"), required: true, schema: { kind: "string", options: [{ value: "blue", label: localized("Blue", "Blau") }] } },
-    ] }, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
-    const props = { dialog: resolved, onSubmit: vi.fn(), onCancel: vi.fn(), renderField: (def: ResolvedActionArgDef, value: unknown, change: (value: unknown) => void, field: Parameters<OwnedShellDialogProps<ResolvedActionArgDef>["renderField"]>[3]) => renderStagedArgControl(def, value, change, false, field) };
+    const resolved = resolveDialogDefinition(
+      {
+        ...dialog,
+        args: [
+          ...dialog.args,
+          { id: "name", label: localized("Name", "Name"), required: true, schema: { kind: "string", options: [] } },
+          { id: "color", label: localized("Color", "Farbe"), required: true, schema: { kind: "string", options: [{ value: "blue", label: localized("Blue", "Blau") }] } },
+        ],
+      },
+      EMPTY_APP_LABELS_OVERLAY,
+      "native",
+      "en",
+      manifests,
+    );
+    const props = {
+      dialog: resolved,
+      onSubmit: vi.fn(),
+      onCancel: vi.fn(),
+      renderField: (def: ResolvedActionArgDef, value: unknown, change: (value: unknown) => void, field: Parameters<OwnedShellDialogProps<ResolvedActionArgDef>["renderField"]>[3]) => renderStagedArgControl(def, value, change, false, field),
+    };
     const view = render(createElement(UIDialog<ResolvedActionArgDef>, { ...props, choiceRevisions: { kindChoice: choiceFixture.generation.before } }));
     try {
       fireEvent.change(view.getByRole("textbox", { name: "Name" }), { target: { value: choiceFixture.generation.text } });
@@ -230,7 +317,9 @@ describe("catalog-resolved artifact creation kinds", () => {
       expect(props.onSubmit).toHaveBeenCalledTimes(1);
       expect(props.onSubmit.mock.calls[0]![0].name).toBe(choiceFixture.generation.text);
       expect(props.onSubmit.mock.calls[0]![0].color).toBe(choiceFixture.generation.staticChoice);
-    } finally { view.unmount(); }
+    } finally {
+      view.unmount();
+    }
     console.log("[DEBUG] Shell catalog dialog: generation-change=1 choices-retired=1 unrelated-text-retained=1");
   });
 
@@ -240,8 +329,17 @@ describe("catalog-resolved artifact creation kinds", () => {
     const submit = vi.fn();
     function Harness(): ReactElement {
       const [revision, setRevision] = useState(choiceFixture.generation.before);
-      return createElement("div", { onKeyDownCapture: () => flushSync(() => setRevision(choiceFixture.generation.after)) },
-        createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, choiceRevisions: { kindChoice: revision }, onSubmit: submit, onCancel: () => {}, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
+      return createElement(
+        "div",
+        { onKeyDownCapture: () => flushSync(() => setRevision(choiceFixture.generation.after)) },
+        createElement(UIDialog<ResolvedActionArgDef>, {
+          dialog: resolved,
+          choiceRevisions: { kindChoice: revision },
+          onSubmit: submit,
+          onCancel: () => {},
+          renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field),
+        }),
+      );
     }
     const view = render(createElement(Harness));
     try {
@@ -251,7 +349,9 @@ describe("catalog-resolved artifact creation kinds", () => {
       fireEvent.keyDown(view.getByRole("dialog"), { key: "Enter", ctrlKey: true });
       expect(submit).toHaveBeenCalledTimes(choiceFixture.generation.staleSubmits);
       expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(true);
-    } finally { view.unmount(); }
+    } finally {
+      view.unmount();
+    }
   });
 
   it("names the actual staged kind picker and retains the chosen catalog tuple inside its modal", async () => {
@@ -305,24 +405,37 @@ describe("Shell dialog origin", () => {
       let cursor = 0;
       const writes: string[] = [];
       let resolve!: () => void;
-      const gate = new Promise<void>(done => { resolve = done; });
-      const director = drive.enqueue(() => owner, async token => {
-        writes.push("M");
-        await gate;
-        if (owner && drive.accepts(token)) cursor = 100;
+      const gate = new Promise<void>((done) => {
+        resolve = done;
       });
+      const director = drive.enqueue(
+        () => owner,
+        async (token) => {
+          writes.push("M");
+          await gate;
+          if (owner && drive.accepts(token)) cursor = 100;
+        },
+      );
       await Promise.resolve();
       expect(writes).toEqual(["M"]);
       const reconcile = async (token: number) => {
         expect(cursor).toBe(100);
-        if (owner && drive.accepts(token)) { writes.push("inverse-M"); cursor = 0; }
+        if (owner && drive.accepts(token)) {
+          writes.push("inverse-M");
+          cursor = 0;
+        }
       };
       const stale = vi.fn(async () => {});
       const seek = drive.enqueue(() => owner, row.replace ? stale : reconcile);
       const latest = row.replace ? drive.enqueue(() => owner, reconcile) : Promise.resolve();
-      if (row.close) { owner = false; drive.retire(); }
+      if (row.close) {
+        owner = false;
+        drive.retire();
+      }
       let drained = false;
-      const drain = drive.drain().then(() => { drained = true; });
+      const drain = drive.drain().then(() => {
+        drained = true;
+      });
       await Promise.resolve();
       expect(drained).toBe(false);
       expect(writes).toEqual(["M"]);
@@ -343,13 +456,25 @@ describe("Shell dialog origin", () => {
     const drive = new TutorialDriveV1();
     let documentValue = 0;
     let resolve!: () => void;
-    const gate = new Promise<void>(done => { resolve = done; });
-    const restore = vi.fn(async () => { documentValue = 0; });
+    const gate = new Promise<void>((done) => {
+      resolve = done;
+    });
+    const restore = vi.fn(async () => {
+      documentValue = 0;
+    });
     const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => true, {
-      read: async () => ({ pack: new Uint8Array([0]), spr: new Uint8Array([0]) }), drain: () => drive.drain(), restore,
+      read: async () => ({ pack: new Uint8Array([0]), spr: new Uint8Array([0]) }),
+      drain: () => drive.drain(),
+      restore,
     });
     await run.start();
-    const write = drive.enqueue(() => run.ready, async () => { await gate; documentValue = 1; });
+    const write = drive.enqueue(
+      () => run.ready,
+      async () => {
+        await gate;
+        documentValue = 1;
+      },
+    );
     await Promise.resolve();
     drive.retire();
     const stopping = run.stop();
@@ -366,15 +491,32 @@ describe("Shell dialog origin", () => {
     let finishFirst!: () => void;
     let finishSecond!: () => void;
     let startSecond!: () => void;
-    const firstGate = new Promise<void>(resolve => { finishFirst = resolve; });
-    const secondGate = new Promise<void>(resolve => { finishSecond = resolve; });
-    const secondStarted = new Promise<void>(resolve => { startSecond = resolve; });
-    const first = drive.enqueue(() => true, () => firstGate);
+    const firstGate = new Promise<void>((resolve) => {
+      finishFirst = resolve;
+    });
+    const secondGate = new Promise<void>((resolve) => {
+      finishSecond = resolve;
+    });
+    const secondStarted = new Promise<void>((resolve) => {
+      startSecond = resolve;
+    });
+    const first = drive.enqueue(
+      () => true,
+      () => firstGate,
+    );
     await Promise.resolve();
     expect(() => drive.claim()).toThrow("Cannot replace an admitted tutorial document drive");
-    const second = drive.enqueue(() => true, async () => { startSecond(); await secondGate; });
+    const second = drive.enqueue(
+      () => true,
+      async () => {
+        startSecond();
+        await secondGate;
+      },
+    );
     let drained = false;
-    const drain = drive.drain().then(() => { drained = true; });
+    const drain = drive.drain().then(() => {
+      drained = true;
+    });
     finishFirst();
     await secondStarted;
     expect(drained).toBe(false);
@@ -387,11 +529,18 @@ describe("Shell dialog origin", () => {
   it("quarantines a failed physical drive until explicit retirement and never runs queued reconciliation", async () => {
     const drive = new TutorialDriveV1();
     let reject!: (error: Error) => void;
-    const gate = new Promise<void>((_resolve, fail) => { reject = fail; });
-    const first = drive.enqueue(() => true, () => gate).catch(error => error);
+    const gate = new Promise<void>((_resolve, fail) => {
+      reject = fail;
+    });
+    const first = drive
+      .enqueue(
+        () => true,
+        () => gate,
+      )
+      .catch((error) => error);
     await Promise.resolve();
     const reconcile = vi.fn(async () => {});
-    const second = drive.enqueue(() => true, reconcile).catch(error => error);
+    const second = drive.enqueue(() => true, reconcile).catch((error) => error);
     const failure = new Error("uncertain physical write");
     reject(failure);
     expect(await first).toBe(failure);
@@ -407,7 +556,10 @@ describe("Shell dialog origin", () => {
     expect(tutorialSeekFixture.cases.every((row) => rendererExport("PausedTutorialSeekTransitionV1")(row))).toBe(true);
     for (const row of tutorialSeekFixture.cases) {
       let frame: FrameRequestCallback | undefined;
-      vi.stubGlobal("requestAnimationFrame", (next: FrameRequestCallback) => { frame = next; return 1; });
+      vi.stubGlobal("requestAnimationFrame", (next: FrameRequestCallback) => {
+        frame = next;
+        return 1;
+      });
       vi.stubGlobal("cancelAnimationFrame", () => {});
       const clock = createTutorialClock(1000);
       try {
@@ -418,15 +570,25 @@ describe("Shell dialog origin", () => {
         let mutations = 0;
         let playhead = 0;
         let resolve!: () => void;
-        const delayed = new Promise<void>(done => { resolve = done; });
-        clock.subscribe(() => { if (clock.isPlaying() && playhead !== clock.getTimeMs()) mutations++; });
-        const seek = runPausedTutorialSeekV1(clock, drive, () => owner, () => wantsPlaying, async token => {
-          mutations++;
-          await delayed;
-          if (!owner || !drive.accepts(token)) return;
-          playhead = 200;
-          clock.seek(playhead);
+        const delayed = new Promise<void>((done) => {
+          resolve = done;
         });
+        clock.subscribe(() => {
+          if (clock.isPlaying() && playhead !== clock.getTimeMs()) mutations++;
+        });
+        const seek = runPausedTutorialSeekV1(
+          clock,
+          drive,
+          () => owner,
+          () => wantsPlaying,
+          async (token) => {
+            mutations++;
+            await delayed;
+            if (!owner || !drive.accepts(token)) return;
+            playhead = 200;
+            clock.seek(playhead);
+          },
+        );
         expect(clock.isPlaying()).toBe(false);
         await Promise.resolve();
         frame?.(100);
@@ -435,7 +597,10 @@ describe("Shell dialog origin", () => {
         expect(playhead).toBe(0);
         if (row.interrupt === "pause") wantsPlaying = false;
         if (row.interrupt === "play") wantsPlaying = true;
-        if (row.interrupt === "close") { owner = false; drive.retire(); }
+        if (row.interrupt === "close") {
+          owner = false;
+          drive.retire();
+        }
         resolve();
         await seek;
         const observed = { mutations, playhead, resumed: clock.isPlaying() };
@@ -456,13 +621,43 @@ describe("Shell dialog origin", () => {
     const drive = new TutorialDriveV1();
     const writes: number[] = [];
     let resolve!: () => void;
-    const gate = new Promise<void>(done => { resolve = done; });
+    const gate = new Promise<void>((done) => {
+      resolve = done;
+    });
     try {
       clock.play();
-      const first = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(200); await gate; clock.seek(200); });
+      const first = runPausedTutorialSeekV1(
+        clock,
+        drive,
+        () => true,
+        () => true,
+        async () => {
+          writes.push(200);
+          await gate;
+          clock.seek(200);
+        },
+      );
       await Promise.resolve();
-      const obsolete = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(300); clock.seek(300); });
-      const latest = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(500); clock.seek(500); });
+      const obsolete = runPausedTutorialSeekV1(
+        clock,
+        drive,
+        () => true,
+        () => true,
+        async () => {
+          writes.push(300);
+          clock.seek(300);
+        },
+      );
+      const latest = runPausedTutorialSeekV1(
+        clock,
+        drive,
+        () => true,
+        () => true,
+        async () => {
+          writes.push(500);
+          clock.seek(500);
+        },
+      );
       expect(clock.isPlaying()).toBe(false);
       resolve();
       await Promise.all([first, obsolete, latest]);
@@ -510,7 +705,10 @@ describe("Shell dialog origin", () => {
     for (const row of admittedInstanceFixture.cases) {
       let admitted = row.before;
       const target = { instanceId: 9 };
-      const create = vi.fn(async () => { admitted = row.after; return target; });
+      const create = vi.fn(async () => {
+        admitted = row.after;
+        return target;
+      });
       const retire = vi.fn(async () => {});
       const result = await createAdmittedShellInstanceV1(() => admitted, create, retire);
       expect(deepEqual(result, target), row.id).toBe(row.before && row.after);
@@ -531,7 +729,10 @@ describe("Shell dialog origin", () => {
     expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(program, []), source: shellDialogOriginV1(program, []) }, current), "the defect: a program presenting its own pass is never current").toBe(false);
     expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, { ...current, spawned: [] }), "a retired program's pass is dropped").toBe(false);
     expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(primary, []) }, { ...current, mounted: shellDialogOriginV1(primary, []) }), "the primary session's own lane").toBe(true);
-    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, { ...current, presentation: shellDialogOriginV1({ ...primary, instanceId: 2 }, []) }), "a replaced primary session drops every pass it presented").toBe(false);
+    expect(
+      shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, { ...current, presentation: shellDialogOriginV1({ ...primary, instanceId: 2 }, []) }),
+      "a replaced primary session drops every pass it presented",
+    ).toBe(false);
   });
 
   it("retires a spawned source independently of its still-visible primary presentation owner", async () => {
@@ -548,8 +749,17 @@ describe("Shell dialog origin", () => {
     const applyEffects = vi.fn(async () => {});
     let members = spawned;
     let complete!: (response: { requestedEffects: readonly unknown[] }) => void;
-    const plugin = { handle: { handleAction: () => new Promise((done) => { complete = done; }) } } as unknown as LoadedProgramState;
-    const session = { pluginId: source.pluginId, instanceId: source.sessionInstanceId, app: { id: source.appId, controllerId: source.controllerId, modes: [], windowKinds: [], commands: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
+    const plugin = {
+      handle: {
+        handleAction: () =>
+          new Promise((done) => {
+            complete = done;
+          }),
+      },
+    } as unknown as LoadedProgramState;
+    const session = { pluginId: source.pluginId, instanceId: source.sessionInstanceId, app: { id: source.appId, controllerId: source.controllerId, modes: [], windowKinds: [], commands: [] }, viewState: {} } as unknown as Parameters<
+      typeof makeEffectDispatchOne
+    >[1];
     const pending = makeEffectDispatchOne(plugin, session, applyEffects, () => shellEffectSourceIsCurrentV1(source, source, primary, members), resolvedViewStateFixture)("lateAction");
     members = [];
     complete({ requestedEffects: [{ navigate: { uri: "/wrong" } }, { setPanel: { panelJson: "{}" } }] });
@@ -566,7 +776,12 @@ describe("Shell dialog origin", () => {
       const restore = vi.fn(async () => {});
       let resolve!: (snapshot: { pack: Uint8Array; spr: Uint8Array }) => void;
       const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
-        read: () => new Promise<{ pack: Uint8Array; spr: Uint8Array }>((done) => { resolve = done; }), drain: async () => {}, restore,
+        read: () =>
+          new Promise<{ pack: Uint8Array; spr: Uint8Array }>((done) => {
+            resolve = done;
+          }),
+        drain: async () => {},
+        restore,
       });
       const started = run.start();
       let oracleCurrent = true;
@@ -611,11 +826,15 @@ describe("Shell dialog origin", () => {
     const props = (owner: typeof a): OwnedShellDialogProps => ({
       owner,
       dialog: {
-        id: "createArtifact", title: { native: { en: "Create Artifact", de: "Artefakt erstellen" } },
+        id: "createArtifact",
+        title: { native: { en: "Create Artifact", de: "Artefakt erstellen" } },
         args: [{ id: "name", label: { native: { en: "Name", de: "Name" } }, required: true, schema: { kind: "string", options: [] } }],
-        submitAction: "createArtifact", submitLabel: { native: { en: "Create", de: "Erstellen" } }, cancelAction: "cancelArtifact",
+        submitAction: "createArtifact",
+        submitLabel: { native: { en: "Create", de: "Erstellen" } },
+        cancelAction: "cancelArtifact",
       },
-      renderField: (_def, value, onChange, field) => createElement("input", { id: field.id, "aria-labelledby": field.labelledBy, required: field.required, value: String(value ?? ""), onChange: (event: { target: { value: string } }) => onChange(event.target.value) }),
+      renderField: (_def, value, onChange, field) =>
+        createElement("input", { id: field.id, "aria-labelledby": field.labelledBy, required: field.required, value: String(value ?? ""), onChange: (event: { target: { value: string } }) => onChange(event.target.value) }),
       isCurrent: (origin) => shellDialogOriginIsCurrentV1(origin, current),
       close: (openingId) => {
         if (live !== openingId) return false;
@@ -653,7 +872,12 @@ describe("Shell dialog origin", () => {
   it("drops delayed effect replies and scheduled invocations after the owning mount retires", async () => {
     let current = true;
     let resolve!: (value: { requestedEffects: readonly unknown[] }) => void;
-    const handleAction = vi.fn(() => new Promise<{ requestedEffects: readonly unknown[] }>((done) => { resolve = done; }));
+    const handleAction = vi.fn(
+      () =>
+        new Promise<{ requestedEffects: readonly unknown[] }>((done) => {
+          resolve = done;
+        }),
+    );
     const plugin = { handle: { handleAction } } as unknown as LoadedProgramState;
     const session = { pluginId: "space", instanceId: 7, app: { id: "space.editor", controllerId: "space.editor", windowKinds: [], commands: [], modes: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
     const applyEffects = vi.fn(async () => {});
@@ -758,14 +982,16 @@ describe("Space artifact creation host owner", () => {
       kindId: "2d.drawing",
       name: "Plan",
     });
-    expect(spaceArtifactCreationReadyOpening({
-      kind: "space-artifact-creation-status",
-      requestId,
-      spaceId: "space-a",
-      catalogGenerationId: drawingAuthority.catalogGenerationId,
-      phase: "ready",
-      ready: { artifactId: `artifact-${"6".repeat(32)}`, kindId: "2d.drawing", artifactSchema: "drawing.document", parentDialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } },
-    })).toEqual({ artifactRef: "s.draw.drawing@1/*", artifactId: `artifact-${"6".repeat(32)}`, spaceId: "space-a", schema: "drawing.document" });
+    expect(
+      spaceArtifactCreationReadyOpening({
+        kind: "space-artifact-creation-status",
+        requestId,
+        spaceId: "space-a",
+        catalogGenerationId: drawingAuthority.catalogGenerationId,
+        phase: "ready",
+        ready: { artifactId: `artifact-${"6".repeat(32)}`, kindId: "2d.drawing", artifactSchema: "drawing.document", parentDialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } },
+      }),
+    ).toEqual({ artifactRef: "s.draw.drawing@1/*", artifactId: `artifact-${"6".repeat(32)}`, spaceId: "space-a", schema: "drawing.document" });
   });
 
   it("admits only an exact captured and live catalog generation member", () => {
@@ -796,7 +1022,7 @@ describe("Space artifact creation host owner", () => {
     expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);
     const request = spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority);
     const captured = { ...owner, expectedCatalogGenerationId: catalogAuthority.catalogGenerationId };
-    const statuses = artifactCreationCatalogAuthorityFixture.statusCases.map(row => {
+    const statuses = artifactCreationCatalogAuthorityFixture.statusCases.map((row) => {
       const message = {
         kind: "space-artifact-creation-status" as const,
         requestId,
@@ -807,7 +1033,10 @@ describe("Space artifact creation host owner", () => {
       };
       return spaceArtifactCreationOwnerAcceptsStatus(captured, message as Extract<BackboneWorkerResponse, { kind: "space-artifact-creation-status" }>);
     });
-    expect({ requestGeneration: (request as unknown as Record<string, unknown>)?.expectedCatalogGenerationId, statuses }).toEqual({ requestGeneration: catalogAuthority.catalogGenerationId, statuses: artifactCreationCatalogAuthorityFixture.statusCases.map(row => row.admitted) });
+    expect({ requestGeneration: (request as unknown as Record<string, unknown>)?.expectedCatalogGenerationId, statuses }).toEqual({
+      requestGeneration: catalogAuthority.catalogGenerationId,
+      statuses: artifactCreationCatalogAuthorityFixture.statusCases.map((row) => row.admitted),
+    });
     console.log("[DEBUG] Shell creation request and ready statuses preserve the selected catalog generation");
   });
 
@@ -901,12 +1130,16 @@ describe("Space artifact creation host owner", () => {
           if (row.open === "failed") throw new Error("attach failed");
           return row.open === "committed" ? { committed: true as const, runtimeKey: row.id, clientInstanceId: "client" } : null;
         },
-        publish: () => { publishes += 1; },
+        publish: () => {
+          publishes += 1;
+        },
         release: async () => {
           releases += 1;
           if (row.release === "failed") throw new Error("release failed");
         },
-        failed: () => { failures += 1; },
+        failed: () => {
+          failures += 1;
+        },
       });
       expect(outcome, row.id).toBe(row.outcome);
       expect(releases, row.id).toBe(row.release === "unused" ? 0 : 1);
@@ -922,7 +1155,14 @@ describe("Space artifact creation host owner", () => {
     for (const row of artifactCreationReadyOpeningFixture.mountCases) {
       const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
       let outcome = "pending";
-      const settled = gate.ready.then(() => { outcome = "ready"; }, () => { outcome = "failed"; });
+      const settled = gate.ready.then(
+        () => {
+          outcome = "ready";
+        },
+        () => {
+          outcome = "failed";
+        },
+      );
       await Promise.resolve();
       expect(outcome, row.id).toBe("pending");
       expect(gate.current(), row.id).toBe(true);
@@ -946,21 +1186,41 @@ describe("Space artifact creation host owner", () => {
     const { createArtifactCreationCatalogMountV1 } = await import("../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts");
     for (const row of artifactCreationReadyOpeningFixture.mountCases) {
       const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
-      let commits = 0, closes = 0, detaches = 0, retires = 0;
+      let commits = 0,
+        closes = 0,
+        detaches = 0,
+        retires = 0;
       let failure: string | null = null;
       let attached!: () => void;
-      const attachment = new Promise<void>(resolve => { attached = resolve; });
+      const attachment = new Promise<void>((resolve) => {
+        attached = resolve;
+      });
       const documentReady = row.id === "rebootstrap-before-port-ready" ? new Promise<void>(() => {}) : Promise.resolve();
       const opening = runDocumentOpeningAttemptV1({
         deadlineMs: 1_000,
         current: gate.current,
         socket: async () => {},
-        attach: async () => { attached(); await gate.attach(documentReady); },
-        commit: () => { commits += 1; },
-        close: () => { closes += 1; gate.close(new Error("opening closed")); },
-        detach: async () => { detaches += 1; },
-        retire: () => { retires += 1; },
-      }).catch(error => { failure = error instanceof Error ? error.message : String(error); return false; });
+        attach: async () => {
+          attached();
+          await gate.attach(documentReady);
+        },
+        commit: () => {
+          commits += 1;
+        },
+        close: () => {
+          closes += 1;
+          gate.close(new Error("opening closed"));
+        },
+        detach: async () => {
+          detaches += 1;
+        },
+        retire: () => {
+          retires += 1;
+        },
+      }).catch((error) => {
+        failure = error instanceof Error ? error.message : String(error);
+        return false;
+      });
       await attachment;
       expect({ commits, closes, detaches, retires }, row.id).toEqual({ commits: 0, closes: 0, detaches: 0, retires: 0 });
       for (const action of row.actions) {
@@ -982,8 +1242,12 @@ describe("Space artifact creation host owner", () => {
     let state = reduceArtifactCreationProgressUiV1({}, { kind: "issued", owner: progressOwner, atMs: 0 });
     state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: sibling, atMs: 0 });
     const unchanged = state;
-    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
-    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
+    expect(
+      reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } }),
+    ).toBe(unchanged);
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(
+      unchanged,
+    );
     state = reduceArtifactCreationProgressUiV1(state, { kind: "cancel-requested", requestId, spaceId: "space-a" });
     expect(state[requestId]).toMatchObject({ phase: "accepted", cancelRequested: true });
     expect(state[sibling.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
@@ -1036,10 +1300,13 @@ describe("Space artifact creation host owner", () => {
     expect(validate(artifactCreationProgressFixture), JSON.stringify(validate.errors)).toBe(true);
     expect(deepEqual(artifactCreationProgressFixture.locales, ARTIFACT_CREATION_PROGRESS_TEXT_V1)).toBe(true);
     const oracle = createTranslationOracle();
-    await oracle.init({ fallbackLng: false, resources: {
-      en: { translation: artifactCreationProgressFixture.locales.en },
-      de: { translation: artifactCreationProgressFixture.locales.de },
-    } });
+    await oracle.init({
+      fallbackLng: false,
+      resources: {
+        en: { translation: artifactCreationProgressFixture.locales.en },
+        de: { translation: artifactCreationProgressFixture.locales.de },
+      },
+    });
     for (const row of artifactCreationProgressFixture.cases) {
       const phase = row.phase as keyof typeof ARTIFACT_CREATION_PROGRESS_TEXT_V1.en.phases;
       const locale = row.locale as "en" | "de";
@@ -1047,12 +1314,14 @@ describe("Space artifact creation host owner", () => {
       expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].opening.failed, row.id).toBe(oracle.t("opening.failed", { lng: locale }));
       expect(artifactCreationProgressRoleV1(phase, row.openingDisposition as "idle" | "opening" | "failed"), row.id).toBe(row.role);
       expect(artifactCreationProgressTerminalV1(phase), row.id).toBe(["ready", "indeterminate", "failed", "cancelled"].includes(phase));
-      const view = render(createElement(ArtifactCreationProgressNotice, {
-        state: { ...owner, issuedAtMs: Date.now(), phase, cancelRequested: row.cancelRequested, openingDisposition: row.openingDisposition as "idle" | "opening" | "failed" },
-        locale,
-        onCancel: () => {},
-        onOpen: () => {},
-      }));
+      const view = render(
+        createElement(ArtifactCreationProgressNotice, {
+          state: { ...owner, issuedAtMs: Date.now(), phase, cancelRequested: row.cancelRequested, openingDisposition: row.openingDisposition as "idle" | "opening" | "failed" },
+          locale,
+          onCancel: () => {},
+          onOpen: () => {},
+        }),
+      );
       const region = view.getByRole(row.role, { name: `${artifactCreationProgressFixture.locales[locale].heading}: Shared Map` });
       expect(computeAccessibleName(region), row.id).toBe(`${artifactCreationProgressFixture.locales[locale].heading}: Shared Map`);
       expect(region.getAttribute("aria-live"), row.id).toBe(row.live);
@@ -1068,10 +1337,13 @@ describe("Space artifact creation host owner", () => {
       const phase = row.phase as "loading" | "ready" | "unavailable";
       const textKey = row.effectivePhase as "loading" | "ready" | "unavailable";
       expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].catalog[textKey], row.id).toBe(oracle.t(`catalog.${textKey}`, { lng: locale }));
-      const view = render(createElement(ArtifactCreationCatalogNotice, {
-        status: { phase }, hasChoices: row.hasChoices,
-        locale,
-      }));
+      const view = render(
+        createElement(ArtifactCreationCatalogNotice, {
+          status: { phase },
+          hasChoices: row.hasChoices,
+          locale,
+        }),
+      );
       const region = view.getByRole(row.role, { name: artifactCreationProgressFixture.locales[locale].catalog[textKey] });
       expect(region.getAttribute("aria-live"), row.id).toBe(row.live);
       expect(region.getAttribute("aria-busy"), row.id).toBe(textKey === "loading" ? "true" : null);
@@ -1080,13 +1352,19 @@ describe("Space artifact creation host owner", () => {
     }
     for (const locale of artifactCreationProgressFixture.unsupportedLocales) {
       expect(artifactCreationProgressLocaleV1(locale), locale).toBeNull();
-      expect(renderToStaticMarkup(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} })), locale).toBe("");
+      expect(
+        renderToStaticMarkup(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} })),
+        locale,
+      ).toBe("");
     }
   });
 
   // 🐢️ ticket 26/09/23 S15: a creation the hub keeps working on says how long, in the person's language, and keeps its Cancel.
   it("tells how long the hub has been working on a running creation and keeps the Cancel, en and de", () => {
-    for (const [locale, elapsed] of [["en", "2 min 5 s"], ["de", "2 Min. 5 s"]] as const) {
+    for (const [locale, elapsed] of [
+      ["en", "2 min 5 s"],
+      ["de", "2 Min. 5 s"],
+    ] as const) {
       const view = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now() - 125_400, phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
       const region = view.getByRole("status");
       expect(region.querySelector("[data-semio-artifact-creation-elapsed]")?.textContent).toBe(artifactCreationProgressFixture.locales[locale].waiting.replace("{elapsed}", elapsed));
@@ -1095,7 +1373,9 @@ describe("Space artifact creation host owner", () => {
       const fresh = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
       expect(fresh.container.querySelector("[data-semio-artifact-creation-elapsed]"), "no waiting line before the threshold").toBeNull();
       fresh.unmount();
-      const done = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now() - 125_400, phase: "indeterminate", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
+      const done = render(
+        createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now() - 125_400, phase: "indeterminate", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }),
+      );
       expect(done.container.querySelector("[data-semio-artifact-creation-elapsed]"), "a concluded creation shows no waiting line").toBeNull();
       done.unmount();
     }
@@ -1116,12 +1396,14 @@ describe("Space artifact creation host owner", () => {
     for (const locale of ["en", "de"] as const) {
       const onCancel = vi.fn();
       const onOpen = vi.fn();
-      const view = render(createElement(ArtifactCreationProgressNotice, {
-        state: { ...owner, issuedAtMs: Date.now(), phase: "ready", cancelRequested: false, openingDisposition: "failed" },
-        locale,
-        onCancel,
-        onOpen,
-      }));
+      const view = render(
+        createElement(ArtifactCreationProgressNotice, {
+          state: { ...owner, issuedAtMs: Date.now(), phase: "ready", cancelRequested: false, openingDisposition: "failed" },
+          locale,
+          onCancel,
+          onOpen,
+        }),
+      );
       fireEvent.click(view.getByRole("button", { name: `${ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].opening.retry}: Shared Map` }));
       expect(onOpen).toHaveBeenCalledExactlyOnceWith(requestId);
       expect(onCancel).not.toHaveBeenCalled();
@@ -1153,7 +1435,17 @@ describe("mounted GIS map probe", () => {
         menu: null,
         children: [],
       };
-      expect(store.applyPatch({ surface: source.surface, baseRevision: 0, revision: 1, ops: [{ type: "upsert", ...node }, { type: "setRoot", id: 0 }] })).toEqual({ ok: true });
+      expect(
+        store.applyPatch({
+          surface: source.surface,
+          baseRevision: 0,
+          revision: 1,
+          ops: [
+            { type: "upsert", ...node },
+            { type: "setRoot", id: 0 },
+          ],
+        }),
+      ).toEqual({ ok: true });
       return store;
     };
     const retained = {
@@ -1269,9 +1561,10 @@ const extensionAnswerBytes = (answer: unknown): Uint8Array => new TextEncoder().
 describe("extension invocation completion ownership", () => {
   const fixture = extensionInvocationFixture;
   const entry = (handle: Record<string, unknown>) => ({ handle, manifest: {} }) as unknown as LoadedProgramState;
-  const completionHandle = (complete: (instanceId: number, req: bigint, outcome: unknown) => Promise<unknown>) => ({ captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete: (outcome: unknown) => complete(instanceId, req, outcome) }) });
-  const call = (requester: LoadedProgramState, extension?: LoadedProgramState) =>
-    runInvokeExtensionEffect(requester, extension, fixture.instanceId, fixture.extensionId, fixture.capability, JSON.stringify(fixture.request), BigInt(fixture.requestId));
+  const completionHandle = (complete: (instanceId: number, req: bigint, outcome: unknown) => Promise<unknown>) => ({
+    captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete: (outcome: unknown) => complete(instanceId, req, outcome) }),
+  });
+  const call = (requester: LoadedProgramState, extension?: LoadedProgramState) => runInvokeExtensionEffect(requester, extension, fixture.instanceId, fixture.extensionId, fixture.capability, JSON.stringify(fixture.request), BigInt(fixture.requestId));
 
   it("validates the language-neutral request and fault vectors with the schema oracle", () => {
     expect(rendererExport("ExtensionInvocationCompletionV1")(fixture.completion)).toBe(true);
@@ -1304,7 +1597,9 @@ describe("extension invocation completion ownership", () => {
     const { SemioFaultError } = await import("@semio-tech/framework");
     const { decodePackValue } = await import("@semio-tech/framework-os");
     const complete = vi.fn(async () => {});
-    const invoke = vi.fn(async () => { throw new SemioFaultError(fixture.fault as ConstructorParameters<typeof SemioFaultError>[0]); });
+    const invoke = vi.fn(async () => {
+      throw new SemioFaultError(fixture.fault as ConstructorParameters<typeof SemioFaultError>[0]);
+    });
     await call(entry(completionHandle(complete)), entry({ invoke }));
     expect(complete).toHaveBeenCalledOnce();
     const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { fault: Uint8Array }];
@@ -1314,7 +1609,9 @@ describe("extension invocation completion ownership", () => {
 
   it("propagates a failed completion without retrying it as a second fault completion", async () => {
     const failure = new Error("completion transport refused");
-    const complete = vi.fn(async () => { throw failure; });
+    const complete = vi.fn(async () => {
+      throw failure;
+    });
     const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     await expect(call(entry(completionHandle(complete)), entry({ invoke }))).rejects.toBe(failure);
     expect(invoke).toHaveBeenCalledOnce();
@@ -1322,7 +1619,14 @@ describe("extension invocation completion ownership", () => {
   });
 
   it("returns the requesting actor's completion publication to its host owner", async () => {
-    const response = { output: fixture.response, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch };
+    const response = {
+      output: fixture.response,
+      mutations: [],
+      inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
+      requestedEffects: [{ notify: { message: fixture.completion.notification } }],
+      uiScope: fixture.completion.uiScope,
+      historyPatch: fixture.completion.historyPatch,
+    };
     const complete = vi.fn(async () => response);
     expect(await call(entry(completionHandle(complete)), entry({ invoke: async () => extensionAnswerBytes(fixture.response) }))).toBe(response);
     expect(complete).toHaveBeenCalledOnce();
@@ -1356,11 +1660,12 @@ describe("extension invocation completion ownership", () => {
     const request = JSON.parse(row.requestJson) as Record<string, unknown>;
     const present = extensionInvocationWireFixture.requestFields.filter((field) => request[field] !== undefined);
     expect(present.length === extensionInvocationWireFixture.requestFields.length).toBe(row.outcome === "ok");
-    const answer = row.outcome === "ok"
-      ? Object.fromEntries((row.outputKeys ?? []).map((key) => [key, row.outputEmpty ? {} : { value: 1 }]))
-      : undefined;
+    const answer = row.outcome === "ok" ? Object.fromEntries((row.outputKeys ?? []).map((key) => [key, row.outputEmpty ? {} : { value: 1 }])) : undefined;
     const complete = vi.fn(async () => {});
-    const invoke = vi.fn(async () => { if (answer === undefined) throw new Error(row.fault); return extensionAnswerBytes(answer); });
+    const invoke = vi.fn(async () => {
+      if (answer === undefined) throw new Error(row.fault);
+      return extensionAnswerBytes(answer);
+    });
     await runInvokeExtensionEffect(entry(completionHandle(complete)), entry({ invoke }), fixture.instanceId, fixture.extensionId, extensionInvocationWireFixture.capability, row.requestJson, BigInt(fixture.requestId));
     // 🛑️ The shell hands every extension request an `AbortSignal` so a surface's declared cancel
     // can retire it from outside the per-actor queue (`📓️preview-eval-cancellation-2026-09-12.md`).
@@ -1399,7 +1704,12 @@ describe("extension invocation completion ownership", () => {
       const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
       const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
       const extension = { handle: { pluginId: fixture.extensionId, invoke }, manifest: { topicContributions: [{ topic: "flow.extension", payload: { extensionId: fixture.foreignAddress } }] } } as unknown as LoadedProgramState;
-      await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => {});
+      await dispatchInvokeExtensionEffect(
+        [requester, extension],
+        { pluginId: "requester", instanceId: fixture.instanceId },
+        { req: BigInt(fixture.requestId), extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) },
+        async () => {},
+      );
       return complete.mock.calls[0] as unknown as [number, bigint, { ok?: Uint8Array; fault?: Uint8Array }];
     };
     const [, , resolved] = await address(fixture.extensionId);
@@ -1411,7 +1721,14 @@ describe("extension invocation completion ownership", () => {
   });
 
   it("rejects a missing originating plugin rather than silently discarding its request", async () => {
-    await expect(dispatchInvokeExtensionEffect([], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => {})).rejects.toThrow("extension.requester-unavailable");
+    await expect(
+      dispatchInvokeExtensionEffect(
+        [],
+        { pluginId: "requester", instanceId: fixture.instanceId },
+        { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) },
+        async () => {},
+      ),
+    ).rejects.toThrow("extension.requester-unavailable");
   });
 
   it("propagates publication refusal after delivering only one completion", async () => {
@@ -1419,14 +1736,28 @@ describe("extension invocation completion ownership", () => {
     const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
     const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
     const extension = entry({ pluginId: fixture.extensionId, invoke: async () => extensionAnswerBytes(fixture.response) });
-    await expect(dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => { throw refusal; })).rejects.toBe(refusal);
+    await expect(
+      dispatchInvokeExtensionEffect(
+        [requester, extension],
+        { pluginId: "requester", instanceId: fixture.instanceId },
+        { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) },
+        async () => {
+          throw refusal;
+        },
+      ),
+    ).rejects.toBe(refusal);
     expect(complete).toHaveBeenCalledOnce();
   });
 
   it("decodes a real response without losing the owning method receiver", async () => {
     const { decodePackValue } = await import("@semio-tech/framework-os");
     const complete = vi.fn(async () => {});
-    const handle = { response: fixture.response, invoke: async function () { return extensionAnswerBytes(this.response); } };
+    const handle = {
+      response: fixture.response,
+      invoke: async function () {
+        return extensionAnswerBytes(this.response);
+      },
+    };
     await call(entry(completionHandle(complete)), entry(handle));
     const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok: Uint8Array }];
     expect([instance, req]).toEqual([fixture.instanceId, BigInt(fixture.requestId)]);
@@ -1435,12 +1766,18 @@ describe("extension invocation completion ownership", () => {
 
   it("captures the exact completion authority before executing extension evaluation", async () => {
     const events: string[] = [];
-    const complete = vi.fn(async () => { events.push("complete"); return { output: null }; });
+    const complete = vi.fn(async () => {
+      events.push("complete");
+      return { output: null };
+    });
     const capture = vi.fn((instanceId: number, req: bigint) => {
       events.push("capture");
       return { instanceId, req, assertActive: () => {}, complete };
     });
-    const invoke = vi.fn(async () => { events.push("invoke"); return extensionAnswerBytes(fixture.response); });
+    const invoke = vi.fn(async () => {
+      events.push("invoke");
+      return extensionAnswerBytes(fixture.response);
+    });
     await call(entry({ captureExtensionCompletion: capture }), entry({ invoke }));
     expect(events).toEqual(["capture", "invoke", "complete"]);
     expect(capture).toHaveBeenCalledExactlyOnceWith(fixture.instanceId, BigInt(fixture.requestId));
@@ -1451,7 +1788,16 @@ describe("extension invocation completion ownership", () => {
     const failure = new Error("actor-activation.revoked");
     const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
     const complete = vi.fn(async () => ({ output: null }));
-    await expect(call(entry({ captureExtensionCompletion: () => { throw failure; } }), entry({ invoke }))).rejects.toBe(failure);
+    await expect(
+      call(
+        entry({
+          captureExtensionCompletion: () => {
+            throw failure;
+          },
+        }),
+        entry({ invoke }),
+      ),
+    ).rejects.toBe(failure);
     expect(invoke).not.toHaveBeenCalled();
     expect(complete).not.toHaveBeenCalled();
   });
@@ -1459,12 +1805,15 @@ describe("extension invocation completion ownership", () => {
   it.each(fixture.completionFailures)("refuses $kind before extension execution", async ({ kind, code }) => {
     const complete = vi.fn(async () => ({ output: null }));
     const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
-    const capture = (instanceId: number, req: bigint) => kind === "missing-lease" ? null : {
-      instanceId: kind === "foreign-instance" ? instanceId + 1 : instanceId,
-      req: kind === "foreign-request" ? req + 1n : req,
-      assertActive: kind === "missing-guard" ? undefined : () => {},
-      complete: kind === "missing-complete" ? undefined : complete,
-    };
+    const capture = (instanceId: number, req: bigint) =>
+      kind === "missing-lease"
+        ? null
+        : {
+            instanceId: kind === "foreign-instance" ? instanceId + 1 : instanceId,
+            req: kind === "foreign-request" ? req + 1n : req,
+            assertActive: kind === "missing-guard" ? undefined : () => {},
+            complete: kind === "missing-complete" ? undefined : complete,
+          };
     await expect(call(entry({ captureExtensionCompletion: capture }), entry({ invoke }))).rejects.toThrow(code);
     expect(invoke).not.toHaveBeenCalled();
     expect(complete).not.toHaveBeenCalled();
@@ -1477,9 +1826,24 @@ describe("extension invocation completion ownership", () => {
     const complete = vi.fn(async () => ({ output: null }));
     const capture = (instanceId: number, req: bigint) => {
       const captured = generation;
-      return { instanceId, req, assertActive: () => { if (captured !== generation) throw new Error("actor-activation.revoked"); }, complete };
+      return {
+        instanceId,
+        req,
+        assertActive: () => {
+          if (captured !== generation) throw new Error("actor-activation.revoked");
+        },
+        complete,
+      };
     };
-    const pending = call(entry({ captureExtensionCompletion: capture }), entry({ invoke: async () => { entered.resolve(); return release.promise; } }));
+    const pending = call(
+      entry({ captureExtensionCompletion: capture }),
+      entry({
+        invoke: async () => {
+          entered.resolve();
+          return release.promise;
+        },
+      }),
+    );
     const observed = expect(pending).rejects.toThrow("actor-activation.revoked");
     await entered.promise;
     generation += 1;
@@ -1496,14 +1860,29 @@ describe("extension invocation completion ownership", () => {
     const complete = vi.fn(async () => ({ output: null }));
     const capture = vi.fn((instanceId: number, req: bigint) => {
       const captured = generation;
-      return { instanceId, req, assertActive: () => { if (captured !== generation) throw new Error("actor-activation.revoked"); }, complete };
+      return {
+        instanceId,
+        req,
+        assertActive: () => {
+          if (captured !== generation) throw new Error("actor-activation.revoked");
+        },
+        complete,
+      };
     });
     const requester = entry({ pluginId: "requester", captureExtensionCompletion: capture });
     const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));
-    const held = serializePerActor(`requester:${fixture.instanceId}`, async () => { entered.resolve(); await release.promise; });
+    const held = serializePerActor(`requester:${fixture.instanceId}`, async () => {
+      entered.resolve();
+      await release.promise;
+    });
     await entered.promise;
     const publish = vi.fn(async () => {});
-    const pending = dispatchInvokeExtensionEffect([requester, entry({ pluginId: fixture.extensionId, invoke })], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, publish);
+    const pending = dispatchInvokeExtensionEffect(
+      [requester, entry({ pluginId: fixture.extensionId, invoke })],
+      { pluginId: "requester", instanceId: fixture.instanceId },
+      { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) },
+      publish,
+    );
     const observed = expect(pending).rejects.toThrow("actor-activation.revoked");
     const capturedBeforeRelease = capture.mock.calls.length;
     generation += 1;
@@ -1522,7 +1901,9 @@ describe("extension invocation completion ownership", () => {
 //#region 📇️DescriptorAdmission
 describe("descriptor load admission", () => {
   it("validates the language-neutral response cases with the JSON schema oracle", () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(kernelFixtureSchema).compile({ $ref: `${kernelFixtureSchema.$id}#/$defs/DescriptorLoadFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
+      .addSchema(kernelFixtureSchema)
+      .compile({ $ref: `${kernelFixtureSchema.$id}#/$defs/DescriptorLoadFixture` });
     expect(validate(descriptorLoadFixture)).toBe(true);
     expect(validate({ ...descriptorLoadFixture, pluginId: "" })).toBe(false);
   });
@@ -1533,7 +1914,9 @@ describe("descriptor load admission", () => {
     const fetch = vi.fn(async () => new Response(vector.body, { status: vector.status, headers: { "content-type": vector.contentType } }));
     globalThis.fetch = stubFetch(fetch);
     try {
-      await expect(resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl), initialize)).rejects.toMatchObject({ fault: { code: vector.fault, scope: { pluginId: descriptorLoadFixture.pluginId } } });
+      await expect(resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl), initialize)).rejects.toMatchObject({
+        fault: { code: vector.fault, scope: { pluginId: descriptorLoadFixture.pluginId } },
+      });
       expect(fetch).toHaveBeenCalledExactlyOnceWith(descriptorLoadFixture.descriptorUrl, undefined);
       expect(initialize).not.toHaveBeenCalled();
     } finally {
@@ -1559,12 +1942,17 @@ describe("descriptor load admission", () => {
 //#region 🎞️TutorialDocumentTrack
 describe("tutorial document wire contract", () => {
   it("keeps native document-track names and bidirectional event order", () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/TutorialDocumentTrackFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
+      .addSchema(manifestFixtureSchema)
+      .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/TutorialDocumentTrackFixture` });
     expect(validate(tutorialDocumentFixture)).toBe(true);
     expect(validate({ ...tutorialDocumentFixture, artifact: [] })).toBe(false);
     const document = tutorialDocumentFixture.document.map(({ at, kind }) => ({ at, kind: { ...kind, kind: "load" as const } }));
     const definition: TutorialDefinition = {
-      id: "document-wire", title: "Document Wire", durationMs: 250, chapters: [],
+      id: "document-wire",
+      title: "Document Wire",
+      durationMs: 250,
+      chapters: [],
       base: { ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
       tracks: { narration: [], video: [], events: [], ui: [], document, camera: [], gestures: [] },
     };
@@ -1582,21 +1970,57 @@ describe("tutorial document wire contract", () => {
 //#region 🧩️AppOwnedSurfaceSession
 function boardTestSession(): flowSessionLoader.Board2dWasmSession {
   return {
-    attach_canvas: vi.fn(async () => {}), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
-    syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
-    pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), pointerCancelScreen: vi.fn(), wheelScreen: vi.fn(),
-    drainEventsJson: vi.fn(() => "[]"), cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
-    setSelectionIdsJsonSilent: vi.fn(), setFixtureDropPreviewJson: vi.fn(),
+    attach_canvas: vi.fn(async () => {}),
+    setSize: vi.fn(),
+    renderFrame: vi.fn(),
+    parseFixtureJson: () => true,
+    syncDescriptorJson: vi.fn(),
+    setKindCatalogsJson: vi.fn(),
+    setCamera: vi.fn(),
+    setSelectionIdsJson: vi.fn(),
+    setCanvasThemeJson: vi.fn(),
+    pointerDownScreen: vi.fn(),
+    pointerMoveScreen: vi.fn(),
+    pointerUpScreen: vi.fn(),
+    pointerCancelScreen: vi.fn(),
+    wheelScreen: vi.fn(),
+    drainEventsJson: vi.fn(() => "[]"),
+    cameraJson: () => '{"x":0,"y":0,"zoom":1}',
+    gpuReady: () => true,
+    free: vi.fn(),
+    setSelectionIdsJsonSilent: vi.fn(),
+    setFixtureDropPreviewJson: vi.fn(),
   };
 }
 
 function boardTestHost(factory: flowSessionLoader.ScopedBoardSessionFactory, surfaceId: string): ReactElement {
-  return createElement(flowSessionLoader.BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, {
-    node: { type: "componentScene", surfaceId, controllerId: boardSessionFixture.isolation.controllerId, componentKind: "board-2d", board2d: {
-      fixtureJson: '{"nodes":[],"edges":[]}', cameraJson: '{"x":0,"y":0,"zoom":1}', glyphCatalogsJson: "{}", selectionJson: "[]", interactive: true,
-      selectionMethod: "rectangle", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 0, brushWeightsJson: "{}", placementCompatibilityJson: "[]", lodMode: "automatic",
-    } }, onAction: vi.fn(),
-  }));
+  return createElement(
+    flowSessionLoader.BoardSessionFactoryContext.Provider,
+    { value: factory },
+    createElement(Board2dHost, {
+      node: {
+        type: "componentScene",
+        surfaceId,
+        controllerId: boardSessionFixture.isolation.controllerId,
+        componentKind: "board-2d",
+        board2d: {
+          fixtureJson: '{"nodes":[],"edges":[]}',
+          cameraJson: '{"x":0,"y":0,"zoom":1}',
+          glyphCatalogsJson: "{}",
+          selectionJson: "[]",
+          interactive: true,
+          selectionMethod: "rectangle",
+          gridSnapEnabled: false,
+          gridFactor: 1,
+          suggestionOffset: 0,
+          brushWeightsJson: "{}",
+          placementCompatibilityJson: "[]",
+          lodMode: "automatic",
+        },
+      },
+      onAction: vi.fn(),
+    }),
+  );
 }
 
 describe("app-owned surface session factories", () => {
@@ -1673,12 +2097,18 @@ describe("app-owned surface session factories", () => {
       beginPuzzle2dPeerGesture(scope, "board", "pane.a", successor);
       unregisterBoard2dPeer(scope, "board", "pane.a", oldPeer);
       endPuzzle2dPeerGesture(scope, "board", "pane.a", oldPeer);
-      await reactAct(async () => { pending.reject(new Error("old attachment")); await pending.promise.catch(() => {}); });
+      await reactAct(async () => {
+        pending.reject(new Error("old attachment"));
+        await pending.promise.catch(() => {});
+      });
       expect(scope.peers.get("board")!.get("pane.a")).toBe(successor);
       expect(scope.gestures.get("board")?.peer).toBe(successor);
       expect(oldSession.free).toHaveBeenCalledOnce();
       expect(newSession.free).not.toHaveBeenCalled();
-    } finally { next.unmount(); bounds.mockRestore(); }
+    } finally {
+      next.unmount();
+      bounds.mockRestore();
+    }
     expect(newSession.free).toHaveBeenCalledOnce();
     expect(scope.peers.size + scope.gestures.size).toBe(0);
   });
@@ -1687,27 +2117,76 @@ describe("app-owned surface session factories", () => {
     const constructed = Promise.withResolvers<flowSessionLoader.Board2dWasmSession>();
     const attached = Promise.withResolvers<void>();
     const session: flowSessionLoader.Board2dWasmSession = {
-      attach_canvas: vi.fn(() => attached.promise), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
-      syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
-      pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), pointerCancelScreen: vi.fn(), wheelScreen: vi.fn(),
-      drainEventsJson: () => "[]", cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
+      attach_canvas: vi.fn(() => attached.promise),
+      setSize: vi.fn(),
+      renderFrame: vi.fn(),
+      parseFixtureJson: () => true,
+      syncDescriptorJson: vi.fn(),
+      setKindCatalogsJson: vi.fn(),
+      setCamera: vi.fn(),
+      setSelectionIdsJson: vi.fn(),
+      setCanvasThemeJson: vi.fn(),
+      pointerDownScreen: vi.fn(),
+      pointerMoveScreen: vi.fn(),
+      pointerUpScreen: vi.fn(),
+      pointerCancelScreen: vi.fn(),
+      wheelScreen: vi.fn(),
+      drainEventsJson: () => "[]",
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      gpuReady: () => true,
+      free: vi.fn(),
     };
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const view = render(createElement(flowSessionLoader.BoardSessionFactoryContext.Provider, { value: { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, create: () => constructed.promise, scope: flowSessionLoader.createBoardPeerScope() } }, createElement(Board2dHost, {
-      node: { type: "componentScene", surfaceId: "board.lifecycle", controllerId: "board", componentKind: "board-2d", board2d: {
-        fixtureJson: '{"nodes":[],"edges":[]}', cameraJson: '{"x":0,"y":0,"zoom":1}', glyphCatalogsJson: "{}", selectionJson: "[]", interactive: false,
-        selectionMethod: "rectangle", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 0, brushWeightsJson: "{}", placementCompatibilityJson: "[]", lodMode: "automatic",
-      } }, onAction: noopAction,
-    })));
+    const view = render(
+      createElement(
+        flowSessionLoader.BoardSessionFactoryContext.Provider,
+        { value: { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, create: () => constructed.promise, scope: flowSessionLoader.createBoardPeerScope() } },
+        createElement(Board2dHost, {
+          node: {
+            type: "componentScene",
+            surfaceId: "board.lifecycle",
+            controllerId: "board",
+            componentKind: "board-2d",
+            board2d: {
+              fixtureJson: '{"nodes":[],"edges":[]}',
+              cameraJson: '{"x":0,"y":0,"zoom":1}',
+              glyphCatalogsJson: "{}",
+              selectionJson: "[]",
+              interactive: false,
+              selectionMethod: "rectangle",
+              gridSnapEnabled: false,
+              gridFactor: 1,
+              suggestionOffset: 0,
+              brushWeightsJson: "{}",
+              placementCompatibilityJson: "[]",
+              lodMode: "automatic",
+            },
+          },
+          onAction: noopAction,
+        }),
+      ),
+    );
     try {
       if (vector.phase !== "constructing") {
-        await reactAct(async () => { constructed.resolve(session); await constructed.promise; });
+        await reactAct(async () => {
+          constructed.resolve(session);
+          await constructed.promise;
+        });
         expect(session.attach_canvas).toHaveBeenCalledOnce();
       }
-      if (vector.phase === "ready") await reactAct(async () => { attached.resolve(); await attached.promise; });
+      if (vector.phase === "ready")
+        await reactAct(async () => {
+          attached.resolve();
+          await attached.promise;
+        });
       view.unmount();
       expect(session.free).toHaveBeenCalledTimes(vector.freeBeforeSettle);
-      await reactAct(async () => { constructed.resolve(session); attached.resolve(); await constructed.promise; await attached.promise; });
+      await reactAct(async () => {
+        constructed.resolve(session);
+        attached.resolve();
+        await constructed.promise;
+        await attached.promise;
+      });
       expect(session.attach_canvas).toHaveBeenCalledTimes(vector.attachCalls);
       expect(session.free).toHaveBeenCalledTimes(vector.freeAfterSettle);
     } finally {
@@ -1720,11 +2199,16 @@ describe("app-owned surface session factories", () => {
 
   it("joins exact plugin and app ownership while keeping instance scopes distinct", () => {
     const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
-      .addFormat("double", true).addFormat("int64", true).addFormat("uint32", true)
-      .addSchema(boardSessionSchema).compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
+      .addFormat("double", true)
+      .addFormat("int64", true)
+      .addFormat("uint32", true)
+      .addSchema(boardSessionSchema)
+      .compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
     expect(validate(boardSessionFixture)).toBe(true);
     expect(validate({ ...boardSessionFixture, globalFactory: true })).toBe(false);
-    const create = vi.fn(async (): Promise<flowSessionLoader.Board2dWasmSession> => { throw new Error("A lookup must not construct a session"); });
+    const create = vi.fn(async (): Promise<flowSessionLoader.Board2dWasmSession> => {
+      throw new Error("A lookup must not construct a session");
+    });
     const registrations = boardSessionFixture.appIds.map((appId) => ({ kind: "board-2d" as const, pluginId: boardSessionFixture.pluginId, appId, create }));
     for (const scope of boardSessionFixture.scopes) {
       const resolved = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, scope);
@@ -1781,6 +2265,7 @@ import {
   type Component,
   type NodeGraphScene,
   type UiNodeRecord,
+  type UiComponentSceneNode,
   type UiSnapshot,
   type ActionBinding,
   type UiIntent,
@@ -1802,11 +2287,53 @@ import {
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../🧑‍💻dev/🏷️brand/🟦️.ts";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
-import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
+import {
+  Footer,
+  navbarFillItem,
+  progressPanelTabSelection,
+  resolvePanelBranchBodyLeaf,
+  resolveTranslationLabel,
+  SelectionMarquee,
+  uiDataLabel,
+  formatKeybindingShortcut,
+  buildKeysByActionId,
+  type PanelTabNode,
+  type TreeDataSection,
+} from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import type { GumballPose } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dAutoFitKey, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import {
+  WorldOrbitProjectionSwitchPane,
+  world3dProjectionPaneElementId,
+  resolveClickInstanceIdFromProjected,
+  world3dInstancePickUsesInteractionDomain,
+  world3dMarqueePointerCaptureArmed,
+  world3dProjectedAabbContainsClick,
+  world3dFrameCameraFromBounds,
+  world3dFrameDistanceForRadius,
+  world3dBoundsRadius,
+  world3dAutoFitOwed,
+  world3dAutoFitKey,
+  world3dFrameCameraFromInstances,
+  world3dSuggestionsGestureArmed,
+  world3dRetainLocalVortexHover,
+  leftoverHoveredVortexFullIdV1,
+  leftoverOverlayCarryingSelectionV1,
+  leftoverSelectIdsMustNameHoverPickV1,
+  leftoverOverlayCarryingUtilityV1,
+  leftoverOverlayArmedBrushUtilityV1,
+  leftoverTreeItemSelectedV1,
+  leftoverWorldOverlayAppliesV1,
+  mergeWorldInteractionWithLeftoverV1,
+  mergeWorldSelectionWithLeftoverV1,
+  gumballPreviewWorldPoint,
+  world3dSuggestionsGestureConsumesContextMenu,
+  world3dSuggestionsRightDownRoutesOnWindowCapture,
+  worldVortexHitProxy,
+  worldInstanceMeshRaycast,
+  applyWorldInstanceMeshRaycast,
+} from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -2027,7 +2554,8 @@ import {
   resolveUtilityActivation,
   isWorldTransformGumballMode,
   worldGumballConfigForProjection,
-  gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1,
+  gumballTransformDeltaBetweenPoses,
+  world3dGumballSelectionArgsV1,
   world3dRelocateDragTargetV1,
   world3dRelocateDispatchArgsV1,
   world3dVolumeBrushOriginV1,
@@ -2121,7 +2649,24 @@ import {
   SyncAttachCard,
 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { suggestionMenuOwnsWindow } from "../../🧱️elements/🎣️suggestion-submenu/🟦️.ts";
-import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, chordUsesCanonicalKeyTokens, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, keyboardEventMatchesChord, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  windowActionPaneNode,
+  applyTutorialUiChangeToShell,
+  applyTutorialUiSnapshotToShell,
+  browserActorDispatchUiScopeV1,
+  browserActorWindowConfigDispatchUiScopeV1,
+  captureTutorialUiSnapshot,
+  chordUsesCanonicalKeyTokens,
+  clipboardWriteFragmentFromEffect,
+  createUiRefreshCoalescerV1,
+  hostEffectRefreshScopeV1,
+  keyboardEventMatchesChord,
+  mergeUiDirtyScopeV1,
+  pasteActionWithRetainedFragment,
+  pasteArgsFragment,
+  programArmedToolRevealV1,
+  typedOperationCompletionRefreshV1,
+} from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldSceneContentBounds, worldSceneContentBoundsKey } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -2515,7 +3060,12 @@ describe("in-flight skipping interval", () => {
     // what make this test see the real interval, not one synchronous burst.
     const drive = async (run: () => unknown) => {
       timers.length = 0;
-      const stop = createInFlightSkippingInterval(run, 10, (fn) => (timers.push(fn), 1), () => {});
+      const stop = createInFlightSkippingInterval(
+        run,
+        10,
+        (fn) => (timers.push(fn), 1),
+        () => {},
+      );
       for (let tick = 0; tick < 3; tick += 1) {
         timers[0]!();
         await Promise.resolve();
@@ -2639,7 +3189,10 @@ describe("ui refresh coalescing lane", () => {
     // was never true for a joiner, and one throw dropped the follow-up entirely.
     const { coalescer, taken, settle } = lane();
     const first = coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
-    expect(taken.map((request) => request.scope), "the starter's own request is what the first pass runs").toEqual([partial(["world"])]);
+    expect(
+      taken.map((request) => request.scope),
+      "the starter's own request is what the first pass runs",
+    ).toEqual([partial(["world"])]);
     let firstSettled = false;
     void first.then(() => {
       firstSettled = true;
@@ -2807,7 +3360,16 @@ describe("shell store reducer", () => {
     session: null,
     restoreDialog: () => null,
     appLabelsOverlay: {
-      windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {},
+      windowKindLabels: {},
+      panelTabLabels: {},
+      modeLabels: {},
+      actionLabels: {},
+      utilityLabels: {},
+      exampleLabels: {},
+      actionArgLabels: {},
+      dialogLabels: {},
+      introductionLabels: {},
+      groupLabels: {},
     },
     terminology: "native",
     locale: "en",
@@ -2819,11 +3381,13 @@ describe("shell store reducer", () => {
     for (const row of bootCanvasFixture) {
       const status = resolvePluginCanvasStatus(row.session, row.error, row.plugin as PluginPanelStatus, row.supervisor as PluginSupervisorState | undefined);
       expect(status === "loading", row.name).toBe(row.loading);
-      const html = renderToStaticMarkup(createElement(Layout, {
-        canvasStatus: status,
-        canvasSkeleton: createElement("p", { role: "status" }, "Loading"),
-        canvas: createElement("p", { role: "alert" }, row.error ?? "Ready"),
-      }));
+      const html = renderToStaticMarkup(
+        createElement(Layout, {
+          canvasStatus: status,
+          canvasSkeleton: createElement("p", { role: "status" }, "Loading"),
+          canvas: createElement("p", { role: "alert" }, row.error ?? "Ready"),
+        }),
+      );
       expect(html.includes('role="status"'), row.name).toBe(row.loading);
       expect(html.includes('role="alert"'), row.name).toBe(!row.loading);
     }
@@ -2938,16 +3502,26 @@ describe("shell store reducer", () => {
     expect(opened.layout.panels["top-left"].visible).toBe(state.layout.panels["top-left"].visible);
   });
 
-  it("rewrites window icons via SET_WINDOW_ICON for extras and base kinds", () => {
-    const state = shellReducer(baseState(), {
+  it("applies the neutral per-instance icon sequence through Reacts SET_WINDOW_ICON reducer", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(windowIconOverrideSchema);
+    expect(validate(windowIconOverrideFixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...windowIconOverrideFixture, extra: true })).toBe(false);
+    let state = shellReducer(baseState(), {
       type: "SET_EXTRA_WINDOW_INSTANCES",
-      value: [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" }],
+      value: windowIconOverrideFixture.windowIds.slice(1).map((id) => ({ id, windowKindId: windowIconOverrideFixture.windowKindId, title: id })),
     });
-    const renamedExtra = shellReducer(state, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main-top", iconId: "projection-orthographic" });
-    expect(renamedExtra.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
-    const renamedBase = shellReducer(renamedExtra, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main", iconId: "projection-three-point" });
-    expect(renamedBase.layout.windowIconsById["puzzle3d-main"]).toBe("projection-three-point");
-    expect(renamedBase.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
+    const resolvedIcon = (windowId: string, projectionIconId?: string) => state.layout.windowIconsById[windowId] ?? projectionIconId ?? windowIconOverrideFixture.kindIconId;
+    for (const [index, command] of windowIconOverrideFixture.commands.entries()) {
+      if (index === windowIconOverrideFixture.commands.length - 1) {
+        expect(resolvedIcon(windowIconOverrideFixture.projectionFallback.windowId, windowIconOverrideFixture.projectionFallback.expectedIconId)).toBe(windowIconOverrideFixture.projectionFallback.expectedIconId);
+      }
+      state = shellReducer(state, { type: "SET_WINDOW_ICON", windowId: command.windowId, iconId: command.iconId as never });
+      expect(resolvedIcon(command.windowId, command.windowId === windowIconOverrideFixture.projectionFallback.windowId ? windowIconOverrideFixture.projectionFallback.expectedIconId : undefined)).toBe(command.expectedIconId);
+    }
+    expect(state.layout.windowIconsById.main).toBe("diamond");
+    expect(state.layout.windowIconsById["main-2"]).toBe("circle");
+    expect(resolvedIcon(windowIconOverrideFixture.projectionFallback.windowId, windowIconOverrideFixture.projectionFallback.expectedIconId)).toBe("star");
+    expect(resolvedIcon(windowIconOverrideFixture.kindFallback.windowId)).toBe(windowIconOverrideFixture.kindFallback.expectedIconId);
   });
 
   it("rewrites window titles via SET_WINDOW_TITLE for extras and base kinds", () => {
@@ -3147,21 +3721,27 @@ describe("shell store reducer", () => {
     ajv.addSchema(interactionSchema).addSchema(rendererSchema);
     const validate = ajv.getSchema(`${rendererSchema.$id}#/$defs/TutorialInteractionCaptureV1`)!;
     expect(validate(tutorialInteractionFixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({
-      ...tutorialInteractionFixture,
-      observed: {
-        ...tutorialInteractionFixture.observed,
-        selection: { mesh: { ...tutorialInteractionFixture.observed.selection.mesh, ids: [7] } },
-      },
-    })).toBe(false);
+    expect(
+      validate({
+        ...tutorialInteractionFixture,
+        observed: {
+          ...tutorialInteractionFixture.observed,
+          selection: { mesh: { ...tutorialInteractionFixture.observed.selection.mesh, ids: [7] } },
+        },
+      }),
+    ).toBe(false);
   });
 
   it("decodes the bounded actor interaction capture and rejects noncanonical authority or state", () => {
     const bytes = new TextEncoder().encode(JSON.stringify(tutorialInteractionFixture.capture));
     expect(decodeLocalInteractionCaptureJson(bytes)).toEqual(tutorialInteractionFixture.capture);
     expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, extra: true })))).toThrow("local-interaction.capture");
-    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, identity: { ...tutorialInteractionFixture.capture.identity, generation: "01" } })))).toThrow("local-interaction.identity.generation");
-    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, state: { ...tutorialInteractionFixture.capture.state, selection: { mesh: { granularity: "face", ids: ["same", "same"] } } } })))).toThrow("local-interaction.state.selection.mesh.ids");
+    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, identity: { ...tutorialInteractionFixture.capture.identity, generation: "01" } })))).toThrow(
+      "local-interaction.identity.generation",
+    );
+    expect(() =>
+      decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, state: { ...tutorialInteractionFixture.capture.state, selection: { mesh: { granularity: "face", ids: ["same", "same"] } } } }))),
+    ).toThrow("local-interaction.state.selection.mesh.ids");
     expect(() => decodeLocalInteractionCaptureJson(new Uint8Array(LOCAL_INTERACTION_CAPTURE_MAX_BYTES + 1))).toThrow("local-interaction.capture-length");
   });
 
@@ -3199,9 +3779,7 @@ describe("shell store reducer", () => {
       },
       bridge,
     );
-    expect(state.interaction).toEqual(
-      applyPatch(structuredClone(tutorialInteractionFixture.playbackBefore), [{ op: "replace", path: "/selection", value: structuredClone(tutorialInteractionFixture.snapshotSelection) }], true, false).newDocument,
-    );
+    expect(state.interaction).toEqual(applyPatch(structuredClone(tutorialInteractionFixture.playbackBefore), [{ op: "replace", path: "/selection", value: structuredClone(tutorialInteractionFixture.snapshotSelection) }], true, false).newDocument);
 
     state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
     applyTutorialUiChangeToShell(dispatch, fixtureSelectionChange({ ...tutorialInteractionFixture.delta, domainId: "mesh" }), bridge);
@@ -3221,7 +3799,19 @@ describe("shell store reducer", () => {
     expect(tutorialInteractionSelectionActions("controller", fixtureInteractionState(tutorialInteractionFixture.observed).selection)).toEqual([
       { controllerId: "controller", action: "clearSelection" },
       { controllerId: "controller", action: "setSelectionMode", args: { domainId: "mesh", mode: "multiple" } },
-      { controllerId: "controller", action: "interactionSelect", args: { domainId: "mesh", merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "face", id: "face,west" }, { granularity: "face", id: "face-east" }]) } },
+      {
+        controllerId: "controller",
+        action: "interactionSelect",
+        args: {
+          domainId: "mesh",
+          merge: "replace",
+          method: "pick",
+          targets: JSON.stringify([
+            { granularity: "face", id: "face,west" },
+            { granularity: "face", id: "face-east" },
+          ]),
+        },
+      },
       { controllerId: "controller", action: "interactionSelect", args: { domainId: "mesh", merge: "additive", method: "pick", targets: JSON.stringify([{ granularity: "face", id: "face,west" }]) } },
       { controllerId: "controller", action: "interactionSelect", args: { domainId: "special.domain", merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "node", id: "owned" }]) } },
     ]);
@@ -3481,7 +4071,14 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   ];
 
   it("panelViewContext unbinds a panel from every window-scoped field", () => {
-    const projected = panelViewContext({ activeModeId: "generate", windowId: "generation3d-generations", activeWindowKindId: "generation3d-generations", activeUtilityId: "move", focusedWindowId: "generation3d-generations", windowInstances: generateRoster });
+    const projected = panelViewContext({
+      activeModeId: "generate",
+      windowId: "generation3d-generations",
+      activeWindowKindId: "generation3d-generations",
+      activeUtilityId: "move",
+      focusedWindowId: "generation3d-generations",
+      windowInstances: generateRoster,
+    });
     expect(projected.windowId).toBeUndefined();
     expect(projected.activeWindowKindId).toBeUndefined();
     expect(projected.activeUtilityId).toBeUndefined();
@@ -3648,7 +4245,7 @@ describe("framework plugin runtime", () => {
   it("adaptPluginHandle's own refreshUi is an honest empty result — window-body refresh now lives in loadPluginModule's ActivationRegistry/ShardClient turn loop, which a bare no-command handle has no access to", async () => {
     const { encodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
-      manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
+      manifest: { pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
       createApp: async () => 7,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
@@ -3721,9 +4318,7 @@ describe("framework plugin runtime", () => {
         {
           tag: "upsert",
           val: {
-            node: Array.from(
-              encodePackValue({ id: 0, key: "leaf-0", component: leaf(0, "a").component, layout: leaf(0, "a").layout, style: {}, activity: "idle", accessibility: {} }),
-            ),
+            node: Array.from(encodePackValue({ id: 0, key: "leaf-0", component: leaf(0, "a").component, layout: leaf(0, "a").layout, style: {}, activity: "idle", accessibility: {} })),
           },
         },
         { tag: "set-root", val: 0n },
@@ -3741,9 +4336,7 @@ describe("framework plugin runtime", () => {
         {
           tag: "upsert",
           val: {
-            node: Array.from(
-              encodePackValue({ id: packUInt(1n), key: "leaf-1", component: leaf(1, "a").component, layout: leaf(1, "a").layout, style: {}, activity: "idle", accessibility: {}, children: [packUInt(3n)] }),
-            ),
+            node: Array.from(encodePackValue({ id: packUInt(1n), key: "leaf-1", component: leaf(1, "a").component, layout: leaf(1, "a").layout, style: {}, activity: "idle", accessibility: {}, children: [packUInt(3n)] })),
           },
         },
         { tag: "upsert", val: { node: Array.from(encodePackValue({ id: packUInt(3n), key: "leaf-3", component: leaf(3, "b").component, layout: leaf(3, "b").layout, style: {}, activity: "idle", accessibility: {} })) } },
@@ -3762,7 +4355,15 @@ describe("framework plugin runtime", () => {
     });
 
     it("applies incremental semantic field updates with a matching base revision", () => {
-      const first = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const first = applyUiPatchToRetained(null, {
+        surface: "s",
+        revision: 1,
+        baseRevision: 0,
+        ops: [
+          { type: "upsert", ...leaf(0, "a") },
+          { type: "setRoot", id: 0 },
+        ],
+      });
       const result = applyUiPatchToRetained(first.surface, { surface: "s", revision: 2, baseRevision: 1, ops: [{ type: "setComponent", id: 0, component: { type: "text", value: "b", emphasize: null, dataAttributes: null } }] });
       expect(result.desynced).toBe(false);
       expect(result.surface?.revision).toBe(2);
@@ -3770,14 +4371,30 @@ describe("framework plugin runtime", () => {
     });
 
     it("keeps the previous body when a semantic patch has a stale base revision", () => {
-      const { surface: previous } = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const { surface: previous } = applyUiPatchToRetained(null, {
+        surface: "s",
+        revision: 1,
+        baseRevision: 0,
+        ops: [
+          { type: "upsert", ...leaf(0, "a") },
+          { type: "setRoot", id: 0 },
+        ],
+      });
       const result = applyUiPatchToRetained(previous, { surface: "s", revision: 2, baseRevision: 0, ops: [{ type: "setComponent", id: 0, component: { type: "text", value: "b", emphasize: null, dataAttributes: null } }] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
     });
 
     it("keeps the previous body when a patch violates the retained document graph", () => {
-      const { surface: previous } = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const { surface: previous } = applyUiPatchToRetained(null, {
+        surface: "s",
+        revision: 1,
+        baseRevision: 0,
+        ops: [
+          { type: "upsert", ...leaf(0, "a") },
+          { type: "setRoot", id: 0 },
+        ],
+      });
       const result = applyUiPatchToRetained(previous, { surface: "s", revision: 2, baseRevision: 1, ops: [{ type: "setChildren", id: 0, children: [99] }] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
@@ -3894,17 +4511,42 @@ describe("framework plugin runtime", () => {
     const ran: string[] = [];
     let releaseHeld!: () => void;
     let markHeldStarted!: () => void;
-    const heldStarted = new Promise<void>((resolve) => { markHeldStarted = resolve; });
-    const heldGate = new Promise<void>((resolve) => { releaseHeld = resolve; });
+    const heldStarted = new Promise<void>((resolve) => {
+      markHeldStarted = resolve;
+    });
+    const heldGate = new Promise<void>((resolve) => {
+      releaseHeld = resolve;
+    });
     const held = serializeCommandIngressForActor("actor-causal-order", async () => {
       ran.push("held");
       markHeldStarted();
       await heldGate;
     });
     await heldStarted;
-    const callA = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("A"); }, "Interactive", 5);
-    const callB = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("B"); }, "Interactive", 7);
-    const callC = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("C"); }, "Interactive", 6);
+    const callA = serializeCommandIngressForActor(
+      "actor-causal-order",
+      async () => {
+        ran.push("A");
+      },
+      "Interactive",
+      5,
+    );
+    const callB = serializeCommandIngressForActor(
+      "actor-causal-order",
+      async () => {
+        ran.push("B");
+      },
+      "Interactive",
+      7,
+    );
+    const callC = serializeCommandIngressForActor(
+      "actor-causal-order",
+      async () => {
+        ran.push("C");
+      },
+      "Interactive",
+      6,
+    );
     await Promise.resolve();
     expect(ran).toEqual(["held"]);
     releaseHeld();
@@ -3916,17 +4558,27 @@ describe("framework plugin runtime", () => {
     const ran: string[] = [];
     let releaseHeld!: () => void;
     let markHeldStarted!: () => void;
-    const heldStarted = new Promise<void>((resolve) => { markHeldStarted = resolve; });
-    const heldGate = new Promise<void>((resolve) => { releaseHeld = resolve; });
+    const heldStarted = new Promise<void>((resolve) => {
+      markHeldStarted = resolve;
+    });
+    const heldGate = new Promise<void>((resolve) => {
+      releaseHeld = resolve;
+    });
     const held = serializeCommandIngressForActor("actor-fifo-order", async () => {
       ran.push("held");
       markHeldStarted();
       await heldGate;
     });
     await heldStarted;
-    const first = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("first"); });
-    const second = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("second"); });
-    const third = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("third"); });
+    const first = serializeCommandIngressForActor("actor-fifo-order", async () => {
+      ran.push("first");
+    });
+    const second = serializeCommandIngressForActor("actor-fifo-order", async () => {
+      ran.push("second");
+    });
+    const third = serializeCommandIngressForActor("actor-fifo-order", async () => {
+      ran.push("third");
+    });
     await Promise.resolve();
     expect(ran).toEqual(["held"]);
     releaseHeld();
@@ -3944,7 +4596,7 @@ describe("framework plugin runtime", () => {
   it("adaptPluginHandle.handleAction round-trips an action's output/uiScope/historyPatch from AppFrame::Invocation; requestedEffects is honestly empty for a bare command-only handle", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
-      manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
+      manifest: { pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
       createApp: async () => 3,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
@@ -3983,7 +4635,7 @@ describe("framework plugin runtime", () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os");
     const sentCommands: unknown[] = [];
     const fakeHandle = {
-      manifest: async () => encodePackValue({ pluginId: "mock-merge", label: "Mock Merge", version: "0", apps: [], programs: [], examples: [] }),
+      manifest: { pluginId: "mock-merge", label: "Mock Merge", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
       createApp: async () => 9,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
@@ -4036,7 +4688,7 @@ describe("framework plugin runtime", () => {
       timestamp: { actor: 7, physical_ms: 1000, logical: 1 },
     };
     const fakeHandle = {
-      manifest: async () => encodePackValue({ pluginId: "mock-remote-merge", label: "Mock Remote Merge", version: "0", apps: [], programs: [], examples: [] }),
+      manifest: { pluginId: "mock-remote-merge", label: "Mock Remote Merge", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
       createApp: async () => 11,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
@@ -4083,7 +4735,9 @@ describe("framework plugin runtime", () => {
 
 describe("framework renderer types", () => {
   it("matches native action-semantics defaults without claiming migrated interactivity", () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ActionSemanticsFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
+      .addSchema(manifestFixtureSchema)
+      .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ActionSemanticsFixture` });
     expect(validate(actionSemanticsFixture), JSON.stringify(validate.errors)).toBe(true);
     const actual = (["mutation", "view", "interaction", "history", "clipboard", "shell"] as const).map((kind) => ({ kind, semantics: actionSemanticsForKind(kind) }));
     expect(actual).toEqual(actionSemanticsFixture);
@@ -4210,6 +4864,42 @@ describe("owned declarative controls", () => {
     fireEvent.click(beta);
     expect(onAction).toHaveBeenCalledWith({ controllerId: "test", action: "mode", args: { retained: true, value: "beta" } });
   });
+
+  it("keeps a declarative slider's numeric readout, external unit sibling, and spoken value distinct", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(sliderPresentationSchema);
+    expect(validate(sliderPresentationFixture), JSON.stringify(validate.errors)).toBe(true);
+    const law = sliderPresentationFixture.unit;
+    for (const placement of law.placements) {
+      const control = renderUiControl(
+        {
+          type: "slider",
+          id: `distance.${placement.id}`,
+          value: law.value,
+          min: 0,
+          max: 10,
+          step: 0.1,
+          unit: law.unit,
+          onChange: { controllerId: "test", action: "distance" },
+        },
+        () => {},
+        `panel.${placement.id}`,
+      );
+      const view = render(createElement("div", placement.kind === "treeControl" ? { role: "treeitem", dir: placement.inline } : { dir: placement.inline }, control));
+      const thumb = view.getByRole("slider");
+      const slider = view.container.querySelector<HTMLElement>('[data-slot="slider"]')!;
+      const wrapper = slider.closest<HTMLElement>(".gap-single")!;
+      const external = wrapper.lastElementChild as HTMLElement;
+      expect(wrapper.className).toContain("gap-single");
+      expect(wrapper.children).toHaveLength(2);
+      expect(wrapper.firstElementChild?.contains(slider)).toBe(true);
+      expect(thumb.getAttribute("aria-valuetext")).toBe(law.accessibleValueText);
+      expect(view.container.querySelector('[data-slot="slider-value"]')?.textContent).toBe(law.internalReadout);
+      expect(external.textContent).toBe(law.externalReadout);
+      expect(external.className).toContain("text-muted-foreground");
+      expect(external.className).toContain("shrink-0");
+      view.unmount();
+    }
+  });
 });
 
 describe("framework external slots", () => {
@@ -4223,7 +4913,7 @@ describe("framework external slots", () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
     const { encodePackValue } = await import("@semio-tech/framework-os");
     const handle = {
-      manifest: async () => encodePackValue({ pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] }),
+      manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
       createApp: async () => 7,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
@@ -4311,7 +5001,7 @@ describe("declarative forms parity", () => {
   });
 
   it("renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons", () => {
-    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 3, step: 1, uniform: true } });
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 3, step: 1, uniform: true, min: null, max: null } });
     expect(markup).toContain('data-slot="stepper-group"');
     expect(markup).toContain('data-slot="stepper-minus"');
     expect(markup).toContain('data-slot="stepper-plus"');
@@ -4319,7 +5009,7 @@ describe("declarative forms parity", () => {
   });
 
   it("shows the mixed-values placeholder on a non-uniform numberStepper", () => {
-    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 0, step: 1, uniform: false } });
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 0, step: 1, uniform: false, min: null, max: null } });
     expect(markup).toContain('data-mixed="true"');
   });
 
@@ -4333,12 +5023,12 @@ describe("declarative forms parity", () => {
         {
           key: "puzzle3d-play-inspector.object.origin.x",
           component: { type: "container", role: "field", label: "X", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
-          children: [{ key: "puzzle3d-play-inspector.object.origin.x.stepper", component: { type: "numberStepper", value: 1, step: 0.1, uniform: true } }],
+          children: [{ key: "puzzle3d-play-inspector.object.origin.x.stepper", component: { type: "numberStepper", value: 1, step: 0.1, uniform: true, min: null, max: null } }],
         },
         {
           key: "puzzle3d-play-inspector.object.origin.y",
           component: { type: "container", role: "field", label: "Y", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
-          children: [{ key: "puzzle3d-play-inspector.object.origin.y.stepper", component: { type: "numberStepper", value: 2, step: 0.1, uniform: true } }],
+          children: [{ key: "puzzle3d-play-inspector.object.origin.y.stepper", component: { type: "numberStepper", value: 2, step: 0.1, uniform: true, min: null, max: null } }],
         },
       ],
     });
@@ -4416,10 +5106,15 @@ describe("declarative forms parity", () => {
     // 🧬️ One owner for this fixture: `framework.ui.contract`'s `ContractFixture` export (ticket
     // 26/09/08 `📋️cross-partition-requests.md` row 145). `framework.ui` no longer restates it as
     // `PresenceOverlayFixture`; this consumer compiles the owning scope's export by its `$id`.
-    const validate = semioSchemaAjvV1({ strict: true }).addSchema(uiContractSchema).compile({ $ref: `${uiContractSchema.$id}#/$defs/ContractFixture` });
+    const validate = semioSchemaAjvV1({ strict: true })
+      .addSchema(uiContractSchema)
+      .compile({ $ref: `${uiContractSchema.$id}#/$defs/ContractFixture` });
     expect(validate(presenceOverlayFixture)).toBe(true);
     expect(validate({ cases: presenceOverlayFixture.cases.map((row) => ({ ...row, update: { ...row.update, selectionJson: "{}" } })) })).toBe(false);
-    for (const update of [{ ...presenceOverlayFixture.cases[0]!.update, ttlMs: -1 }, { ...presenceOverlayFixture.cases[0]!.update, own: { selected: "true" } }]) {
+    for (const update of [
+      { ...presenceOverlayFixture.cases[0]!.update, ttlMs: -1 },
+      { ...presenceOverlayFixture.cases[0]!.update, own: { selected: "true" } },
+    ]) {
       expect(validate({ cases: presenceOverlayFixture.cases.map((row, index) => (index === 0 ? { ...row, update } : row)) })).toBe(false);
     }
     const store = new UiDocumentStore("document");
@@ -4499,25 +5194,60 @@ describe("framework renderer hosts", () => {
     const pointerCancelScreen = vi.fn();
     const onAction = vi.fn();
     const session = {
-      attachCanvas, setSize: () => {}, renderFrame: vi.fn(), syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setCanvasThemeJson: () => {},
-      pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, wheelScreen: () => {}, labelOverlayPaintStateJson: () => '{"labels":[]}',
-      sliderOverlayStateJson: () => "{}", selectionUnionBoundsScreenJson: () => "{}", selectionPreviewPointsJson: () => "[]", selectionPreviewCrossing: () => false,
-      selectionPreviewMethod: () => "rectangle", selectedNodeIdsJson: () => "[]", hoveredNodeId: () => null, hoveredChannelJson: () => "{}",
-      viewport: () => ({ x: 0, y: 0, zoom: 1 }), pickTargetsAtScreenJson: () => "[]", setHover: () => {}, setHoverChannel: () => {}, alignSelection: () => {},
-      hostSnapshotJson: () => "{}", takePendingOpenInstanceId: () => null, free: vi.fn(),
+      attachCanvas,
+      setCaretVisible: vi.fn(),
+      setSize: () => {},
+      renderFrame: vi.fn(),
+      syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
+      setCanvasThemeJson: () => {},
+      pointerDownScreen,
+      pointerMoveScreen: () => {},
+      pointerUpScreen,
+      pointerCancelScreen,
+      wheelScreen: () => {},
+      labelOverlayPaintStateJson: () => '{"labels":[]}',
+      sliderOverlayStateJson: () => "{}",
+      selectionUnionBoundsScreenJson: () => "{}",
+      selectionPreviewPointsJson: () => "[]",
+      selectionPreviewCrossing: () => false,
+      selectionPreviewMethod: () => "rectangle",
+      selectedNodeIdsJson: () => "[]",
+      hoveredNodeId: () => null,
+      hoveredChannelJson: () => "{}",
+      viewport: () => ({ x: 0, y: 0, zoom: 1 }),
+      pickTargetsAtScreenJson: () => "[]",
+      setHover: () => {},
+      setHoverChannel: () => {},
+      alignSelection: () => {},
+      hostSnapshotJson: () => "{}",
+      takePendingOpenInstanceId: () => null,
+      free: vi.fn(),
     } as unknown as Awaited<ReturnType<typeof flowSessionLoader.createGraphSession>>;
     const factory = vi.spyOn(flowSessionLoader, "createGraphSession").mockResolvedValue(session);
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
     const canvasContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
-    const view = render(createElement(NodeGraphHost, {
-      node: { type: "componentScene", surfaceId: "graph.cancel", controllerId: "graph", componentKind: "node-graph", nodeGraph: {
-        nodes: [{ id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 160, height: 80, inputs: [], outputs: [] }], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, editable: true,
-        // 🎯️ Hover and selection are published to an interaction DOMAIN: `nodeGraphHoverActionArgs`
-        // (`🧱️elements/🕸️NodeGraph/🟦️.ts?:252`) returns `undefined` without one, so a scene that
-        // declares none can never publish the retired hover this law measures.
-        interactionDomain: { id: "graph.cancel", nodeTargetPrefix: "node:", edgeTargetPrefix: "edge:", handleTargetPrefix: "handle:" },
-      } }, onAction,
-    }));
+    const view = render(
+      createElement(NodeGraphHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "graph.cancel",
+          controllerId: "graph",
+          componentKind: "node-graph",
+          nodeGraph: {
+            nodes: [{ id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 160, height: 80, inputs: [], outputs: [] }],
+            edges: [],
+            viewport: { x: 0, y: 0, zoom: 1 },
+            editable: true,
+            // 🎯️ Hover and selection are published to an interaction DOMAIN: `nodeGraphHoverActionArgs`
+            // (`🧱️elements/🕸️NodeGraph/🟦️.ts?:252`) returns `undefined` without one, so a scene that
+            // declares none can never publish the retired hover this law measures.
+            interactionDomain: { id: "graph.cancel", nodeTargetPrefix: "node:", edgeTargetPrefix: "edge:", handleTargetPrefix: "handle:" },
+          },
+        },
+        onAction,
+      }),
+    );
     try {
       await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
       const surface = view.container.querySelector('.semio-node-graph-host [class*="z-30"]') as HTMLElement;
@@ -4663,12 +5393,7 @@ describe("framework renderer hosts", () => {
   // and a member must select an `element`, never the scene default `node`. Rows without a declared
   // granularity keep the scene's default; the load glyph redirects onto its load through both fields.
   it("resolves world3d instance interaction targets per record, falling back to the scene granularity", () => {
-    const instances = [
-      { id: "n1" },
-      { id: "e1", interactionGranularityId: "element" },
-      { id: "l2:head", interactionId: "l2", interactionGranularityId: "load" },
-      { id: "l2:shaft", interactionId: "l2", interactionGranularityId: "load" },
-    ];
+    const instances = [{ id: "n1" }, { id: "e1", interactionGranularityId: "element" }, { id: "l2:head", interactionId: "l2", interactionGranularityId: "load" }, { id: "l2:shaft", interactionId: "l2", interactionGranularityId: "load" }];
     expect(world3dInstanceInteractionTarget(instances, "n1", "node")).toEqual({ granularity: "node", id: "n1" });
     expect(world3dInstanceInteractionTarget(instances, "e1", "node")).toEqual({ granularity: "element", id: "e1" });
     expect(world3dInstanceInteractionTarget(instances, "l2:shaft", "node")).toEqual({ granularity: "load", id: "l2" });
@@ -4680,7 +5405,10 @@ describe("framework renderer hosts", () => {
     ]);
     expect(world3dSelectionTargetsActionArgs("fem3d", world3dInstanceInteractionTargets(instances, ["e1", "n1"], "node"), "replace", "rectangle")).toEqual({
       domainId: "fem3d",
-      targets: JSON.stringify([{ granularity: "element", id: "e1" }, { granularity: "node", id: "n1" }]),
+      targets: JSON.stringify([
+        { granularity: "element", id: "e1" },
+        { granularity: "node", id: "n1" },
+      ]),
       merge: "replace",
       method: "rectangle",
     });
@@ -4718,12 +5446,7 @@ describe("framework renderer hosts", () => {
   // instance per geometry item of a channel and every one of them resolves to that channel's port,
   // which is the id its interaction topology actually declares.
   it("collapses world instance ids onto the interaction targets they stand for", () => {
-    const instances = [
-      { id: "profile@wire#0", interactionId: "profile@wire" },
-      { id: "profile@wire#1", interactionId: "profile@wire" },
-      { id: "extrude@solid#0", interactionId: "extrude@solid" },
-      { id: "plain-instance" },
-    ];
+    const instances = [{ id: "profile@wire#0", interactionId: "profile@wire" }, { id: "profile@wire#1", interactionId: "profile@wire" }, { id: "extrude@solid#0", interactionId: "extrude@solid" }, { id: "plain-instance" }];
     expect(interactionTargetsForInstances(instances, ["profile@wire#0", "profile@wire#1", "extrude@solid#0"])).toEqual(["profile@wire", "extrude@solid"]);
     expect(interactionTargetsForInstances(instances, ["plain-instance"])).toEqual(["plain-instance"]);
     expect(interactionTargetsForInstances(instances, ["unknown-id"])).toEqual(["unknown-id"]);
@@ -4772,7 +5495,10 @@ describe("framework renderer hosts", () => {
     const props = (item: typeof first) => ({
       scopeId: item.scopeId,
       stateJson: JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [item.row] }),
-      logicalW: 800, logicalH: 600, editable: true, onSliderChange: () => {},
+      logicalW: 800,
+      logicalH: 600,
+      editable: true,
+      onSliderChange: () => {},
     });
     const view = render(createElement("div", {}, createElement(GraphSliderOverlays, props(first)), createElement(GraphSliderOverlays, props(second))));
     const english = view.getByRole("slider", { name: first.row.label });
@@ -4859,7 +5585,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("dispatches graph parameter keyboard and drag events as bounded nodeGraphEdit operations with explicit commits", async () => {
-    const task = <T,>(value: T) => ({ result: Promise.resolve(value), subscribe: () => () => {}, cancel: vi.fn() });
+    const task = <T>(value: T) => ({ result: Promise.resolve(value), subscribe: () => () => {}, cancel: vi.fn() });
     const scheduler = { invalidate: vi.fn(), paintNow: vi.fn(), beginContinuous: vi.fn(), endContinuous: vi.fn(), dispose: vi.fn() };
     const schedulerSpy = vi.spyOn(infiniteCanvasRenderer, "createDemandFrameScheduler").mockReturnValue(scheduler);
     const contextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
@@ -4869,32 +5595,49 @@ describe("framework renderer hosts", () => {
     class TestPointerEvent extends MouseEvent {
       readonly pointerId: number;
       readonly pointerType: string;
-      constructor(type: string, init: PointerEventInit = {}) { super(type, init); this.pointerId = init.pointerId ?? 1; this.pointerType = init.pointerType ?? "mouse"; }
+      constructor(type: string, init: PointerEventInit = {}) {
+        super(type, init);
+        this.pointerId = init.pointerId ?? 1;
+        this.pointerType = init.pointerType ?? "mouse";
+      }
     }
     globalThis.PointerEvent = TestPointerEvent as unknown as typeof PointerEvent;
     try {
       for (const item of graphParameterFixture.cases) {
         const row = { widgetId: item.widgetId, label: item.label, ...item.before, x: 0, y: 0, w: 100, h: 16 };
         const methods: Record<string, ReturnType<typeof vi.fn>> = {
-          documentJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
+          documentJson: vi.fn(() => {
+            throw new Error("slider must not serialize the fixture");
+          }),
           sliderOverlayStateJson: vi.fn(() => task(JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [row] }))),
           labelOverlayPaintStateJson: vi.fn(() => task("{}")),
-          setSliderValue: vi.fn((_id: string, value: number) => { row.value = value; return task(undefined); }),
-          selectedWidgetIds: vi.fn(() => task("[]")), previewOffWidgetIds: vi.fn(() => task("[]")),
-          selectionPreviewPointsJson: vi.fn(() => task("[]")), selectionPreviewCrossing: vi.fn(() => task(false)),
+          setSliderValue: vi.fn((_id: string, value: number) => {
+            row.value = value;
+            return task(undefined);
+          }),
+          selectedWidgetIds: vi.fn(() => task("[]")),
+          previewOffWidgetIds: vi.fn(() => task("[]")),
+          selectionPreviewPointsJson: vi.fn(() => task("[]")),
+          selectionPreviewCrossing: vi.fn(() => task(false)),
         };
         const session = new Proxy(methods, {
           get(target, key: string) {
             if (key === "then") return undefined;
-            return target[key] ??= vi.fn(() => task(undefined));
+            return (target[key] ??= vi.fn(() => task(undefined)));
           },
         }) as unknown as flowSessionLoader.FlowWasmSession;
         createSpy.mockResolvedValueOnce(session);
         const onAction = vi.fn();
-        const view = render(createElement(FlowGraphCanvasHost, {
-          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
-          controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, keyboardPort: { current: null }, onAction,
-        }));
+        const view = render(
+          createElement(FlowGraphCanvasHost, {
+            scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
+            controllerId: item.controllerId,
+            surfaceId: item.surfaceId,
+            editable: true,
+            keyboardPort: { current: null },
+            onAction,
+          }),
+        );
         await waitFor(() => expect(view.getByRole("slider", { name: item.label })).toBeTruthy());
         const slider = view.getByRole("slider", { name: item.label });
         const root = slider.closest('[data-slot="slider"]') as HTMLElement;
@@ -4907,12 +5650,23 @@ describe("framework renderer hosts", () => {
         slider.focus();
         fireEvent.keyDown(slider, { key: "ArrowRight" });
         fireEvent.keyUp(slider, { key: "ArrowRight" });
-        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3, gesture: `${item.surfaceId}:${item.widgetId}`, commit: true }] } }));
+        await waitFor(() =>
+          expect(onAction).toHaveBeenLastCalledWith({
+            controllerId: item.controllerId,
+            action: graphParameterFixture.action,
+            args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3, gesture: `${item.surfaceId}:${item.widgetId}`, commit: true }] },
+          }),
+        );
         expect(document.activeElement).toBe(slider);
         expect(computeAccessibleName(slider)).toBe(item.label);
         expect(root.id).toBe(stableId);
         let staleOverlay: ((value: string) => void) | undefined;
-        methods.sliderOverlayStateJson!.mockImplementationOnce(() => ({ ...task(""), result: new Promise<string>((resolve) => { staleOverlay = resolve; }) }));
+        methods.sliderOverlayStateJson!.mockImplementationOnce(() => ({
+          ...task(""),
+          result: new Promise<string>((resolve) => {
+            staleOverlay = resolve;
+          }),
+        }));
         fireEvent.pointerDown(root, { pointerId: 1, pointerType: "mouse", button: 0, buttons: 1, clientX: 40, clientY: 8 });
         fireEvent.pointerMove(root, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 80, clientY: 8 });
         await waitFor(() => {
@@ -4921,24 +5675,41 @@ describe("framework renderer hosts", () => {
           expect(event.args.operations[0].gesture).toMatch(new RegExp(`^${item.surfaceId}:${item.widgetId}:\\d+$`));
         });
         await waitFor(() => expect(slider.getAttribute("aria-valuenow")).toBe("8"));
-        await reactAct(async () => { staleOverlay?.(JSON.stringify({ sliders: [{ ...row, value: 4 }] })); });
+        await reactAct(async () => {
+          staleOverlay?.(JSON.stringify({ sliders: [{ ...row, value: 4 }] }));
+        });
         expect(slider.getAttribute("aria-valuenow")).toBe("8");
         const count = onAction.mock.calls.length;
         const gesture = onAction.mock.calls.at(-1)?.[0].args.operations[0].gesture;
         fireEvent.pointerUp(root, { pointerId: 1, button: 0, clientX: 80, clientY: 8 });
         await waitFor(() => expect(onAction).toHaveBeenCalledTimes(count + 1));
-        expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, gesture, commit: true }] } });
+        expect(onAction).toHaveBeenLastCalledWith({
+          controllerId: item.controllerId,
+          action: graphParameterFixture.action,
+          args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, gesture, commit: true }] },
+        });
         fireEvent.pointerCancel(root, { pointerId: 1 });
         expect(onAction).toHaveBeenCalledTimes(count + 1);
         expect(methods.documentJson).not.toHaveBeenCalled();
-        expect(onAction.mock.calls.every(([event]) => event.action === graphParameterFixture.action && Object.keys(event.args).sort().join() === "operations,surfaceId" && event.args.operations.every((operation: Record<string, unknown>) => Object.keys(operation).sort().join() === "commit,gesture,operation,value,widgetId"))).toBe(true);
+        expect(
+          onAction.mock.calls.every(
+            ([event]) =>
+              event.action === graphParameterFixture.action &&
+              Object.keys(event.args).sort().join() === "operations,surfaceId" &&
+              event.args.operations.every((operation: Record<string, unknown>) => Object.keys(operation).sort().join() === "commit,gesture,operation,value,widgetId"),
+          ),
+        ).toBe(true);
         view.unmount();
       }
       expect(timerSpy.mock.calls.some(([, delay]) => delay === 80)).toBe(false);
       expect(scheduler.beginContinuous).toHaveBeenCalledWith("gesture");
       expect(scheduler.endContinuous).toHaveBeenCalledWith("gesture");
     } finally {
-      cleanup(); createSpy.mockRestore(); schedulerSpy.mockRestore(); contextSpy.mockRestore(); timerSpy.mockRestore();
+      cleanup();
+      createSpy.mockRestore();
+      schedulerSpy.mockRestore();
+      contextSpy.mockRestore();
+      timerSpy.mockRestore();
       globalThis.PointerEvent = originalPointer;
     }
   });
@@ -4957,15 +5728,16 @@ describe("framework renderer hosts", () => {
       viewport: { x: 0, y: 0, zoom: 1 },
       hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", revision, widgets: [] }),
     });
-    const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
-      key: id,
-      scene: scene(revision),
-      controllerId: `flow.${id}`,
-      surfaceId: `flow.${id}`,
-      editable: true,
-      keyboardPort: { current: null },
-      onAction: vi.fn(),
-    });
+    const host = (id: "A" | "B", revision: number) =>
+      createElement(FlowGraphCanvasHost, {
+        key: id,
+        scene: scene(revision),
+        controllerId: `flow.${id}`,
+        surfaceId: `flow.${id}`,
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: vi.fn(),
+      });
     const pair = (revision: number) => createElement("div", {}, host("A", revision), host("B", revision));
     const single = (revision: number) => createElement("div", {}, host("B", revision));
     const view = render(pair(0));
@@ -5006,14 +5778,15 @@ describe("framework renderer hosts", () => {
       viewport: { x: 0, y: 0, zoom: 1 },
       hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", revision, widgets: [] }),
     });
-    const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
-      scene: scene(revision),
-      controllerId: `flow.late.${id}`,
-      surfaceId: `flow.late.${id}`,
-      editable: true,
-      keyboardPort: { current: null },
-      onAction: vi.fn(),
-    });
+    const host = (id: "A" | "B", revision: number) =>
+      createElement(FlowGraphCanvasHost, {
+        scene: scene(revision),
+        controllerId: `flow.late.${id}`,
+        surfaceId: `flow.late.${id}`,
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: vi.fn(),
+      });
     const first = render(host("A", 0));
     let sibling: ReturnType<typeof render> | undefined;
     try {
@@ -5281,8 +6054,18 @@ describe("framework renderer hosts", () => {
   });
 
   it("reads the LAST hover row of a batch — a string id hovers, an empty/absent id clears, no row leaves it alone", () => {
-    expect(latestBoard2dHoverId([{ name: "hover", payload: { id: "alpha" } }, { name: "hover", payload: { id: "beta" } }])).toBe("beta");
-    expect(latestBoard2dHoverId([{ name: "hover", payload: { id: "alpha" } }, { name: "hover", payload: { id: null } }])).toBeNull();
+    expect(
+      latestBoard2dHoverId([
+        { name: "hover", payload: { id: "alpha" } },
+        { name: "hover", payload: { id: "beta" } },
+      ]),
+    ).toBe("beta");
+    expect(
+      latestBoard2dHoverId([
+        { name: "hover", payload: { id: "alpha" } },
+        { name: "hover", payload: { id: null } },
+      ]),
+    ).toBeNull();
     expect(latestBoard2dHoverId([{ name: "camera", payload: {} }])).toBeUndefined();
   });
 
@@ -5295,10 +6078,19 @@ describe("framework renderer hosts", () => {
   });
 
   it("parses the handle-suggestions popup, scopes it to its own window, and renders hover-preview rows distinct from the commit", () => {
-    const encoded = JSON.stringify({ open: true, x: 12, y: 34, windowId: "w1", handleId: "n1:h0", hoveredIndex: 1, pending: false, candidates: [
-      { index: 0, nodeLabel: "beam", handleLabel: "handle 0" },
-      { index: 1, nodeLabel: "slab", handleLabel: "handle 1", icon: "square" },
-    ] });
+    const encoded = JSON.stringify({
+      open: true,
+      x: 12,
+      y: 34,
+      windowId: "w1",
+      handleId: "n1:h0",
+      hoveredIndex: 1,
+      pending: false,
+      candidates: [
+        { index: 0, nodeLabel: "beam", handleLabel: "handle 0" },
+        { index: 1, nodeLabel: "slab", handleLabel: "handle 1", icon: "square" },
+      ],
+    });
     const menu = parseBoard2dSuggestionMenu(encoded)!;
     expect(menu).toMatchObject({ open: true, x: 12, y: 34, windowId: "w1", handleId: "n1:h0", hoveredIndex: 1 });
     expect(board2dSuggestionMenuOwnsWindow(menu, "w1")).toBe(true);
@@ -5392,7 +6184,15 @@ describe("framework renderer hosts", () => {
   it("board 2d gumball: transformPreview frames mirror into sibling panes exactly like a drag's final moves", () => {
     const mutations = collectPuzzle2dLiveMirrorMutations([
       { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 3, y: 4 }] } },
-      { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 0, y: 5 }, { id: "beta", x: -5, y: 0 }] } },
+      {
+        name: "transformPreview",
+        payload: {
+          moves: [
+            { id: "alpha", x: 0, y: 5 },
+            { id: "beta", x: -5, y: 0 },
+          ],
+        },
+      },
     ]);
     expect(mutations.positions).toEqual([
       { id: "alpha", x: 0, y: 5 },
@@ -5646,7 +6446,13 @@ describe("framework renderer hosts", () => {
 
     // 🗂️ Only group rows are resolved: an ordinary label-less row (a bare separator) keeps none, and an
     // unknown category resolves to nothing rather than inventing chrome vocabulary.
-    const untouched = mapContextMenuSpecs([{ id: "sep", separator: true }, { id: "menu.group.not-a-category", children: [{ id: "x", label: "X" }] }], () => {});
+    const untouched = mapContextMenuSpecs(
+      [
+        { id: "sep", separator: true },
+        { id: "menu.group.not-a-category", children: [{ id: "x", label: "X" }] },
+      ],
+      () => {},
+    );
     expect(untouched[0]?.label).toBeUndefined();
     expect(untouched[1]?.label).toBeUndefined();
   });
@@ -5736,8 +6542,26 @@ describe("framework renderer hosts", () => {
   });
 
   it("a host click pick hits the nearest projected instance AABB and misses empty space", () => {
-    const table = { id: "table", corners: [[400, 300], [600, 300], [400, 380], [600, 380]] as const, depth: 10 };
-    const far = { id: "far", corners: [[400, 300], [600, 300], [400, 380], [600, 380]] as const, depth: 40 };
+    const table = {
+      id: "table",
+      corners: [
+        [400, 300],
+        [600, 300],
+        [400, 380],
+        [600, 380],
+      ] as const,
+      depth: 10,
+    };
+    const far = {
+      id: "far",
+      corners: [
+        [400, 300],
+        [600, 300],
+        [400, 380],
+        [600, 380],
+      ] as const,
+      depth: 40,
+    };
     expect(world3dProjectedAabbContainsClick({ x: 500, y: 340 }, table.corners)).toBe(true);
     expect(world3dProjectedAabbContainsClick({ x: 10, y: 10 }, table.corners)).toBe(false);
     expect(resolveClickInstanceIdFromProjected({ x: 500, y: 340 }, [table, far])).toBe("table");
@@ -5907,11 +6731,9 @@ describe("framework renderer hosts", () => {
   });
 
   it("mergeWorldSelectionWithLeftoverV1 keeps guest transformMode when leftover still stamps move-era gumball pose", () => {
-    const merged = mergeWorldSelectionWithLeftoverV1(
-      { ids: ["object-a"], transformMode: "transform", gumballActive: true, gumballTarget: [1, 2, 3] },
-      { ids: ["object-a"], hoveredId: null, gumballActive: true, gumballAnchorId: "object-a" },
-      [{ id: "object-a", position: [1, 2, 3] }],
-    );
+    const merged = mergeWorldSelectionWithLeftoverV1({ ids: ["object-a"], transformMode: "transform", gumballActive: true, gumballTarget: [1, 2, 3] }, { ids: ["object-a"], hoveredId: null, gumballActive: true, gumballAnchorId: "object-a" }, [
+      { id: "object-a", position: [1, 2, 3] },
+    ]);
     expect(merged.transformMode).toBe("transform");
   });
 
@@ -6110,7 +6932,10 @@ describe("framework renderer hosts", () => {
   it("world3dFramingInstances keeps fill provisional placements out of projection framing bounds", () => {
     const committed = worldSceneContentBounds([{ position: [0, 0, 0] }]);
     const withProvisional = worldSceneContentBounds(
-      world3dFramingInstances([{ id: "a", position: [0, 0, 0] }, { id: "b", position: [40, -12, 3], provisional: true }]),
+      world3dFramingInstances([
+        { id: "a", position: [0, 0, 0] },
+        { id: "b", position: [40, -12, 3], provisional: true },
+      ]),
     );
     expect(worldSceneContentBoundsKey(withProvisional)).toBe(worldSceneContentBoundsKey(committed));
   });
@@ -6171,7 +6996,10 @@ describe("framework renderer hosts", () => {
   it("world3dAutoFitKey tracks document revision and published bounds, not scene mesh roster churn", () => {
     expect(world3dAutoFitKey(7, "seed", null)).toBe("7:seed");
     expect(world3dAutoFitKey(7, "seed", null)).toBe(world3dAutoFitKey(7, "seed", null));
-    const bounds: [readonly number[], readonly number[]] = [[0, 0, 0], [2, 2, 3]];
+    const bounds: [readonly number[], readonly number[]] = [
+      [0, 0, 0],
+      [2, 2, 3],
+    ];
     expect(world3dAutoFitKey(7, "seed", bounds)).toBe("7:seed:0,0,0:2,2,3");
     expect(world3dAutoFitOwed(world3dAutoFitKey(7, "seed", null), world3dAutoFitKey(7, "seed", null), false)).toBe(false);
   });
@@ -6520,18 +7348,52 @@ describe("framework renderer hosts", () => {
     const pointerCancelScreen = vi.fn();
     const onAction = vi.fn();
     const session = {
-      attachCanvas, setSize: () => {}, renderFrame: vi.fn(), syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => "hello",
-      caret: () => 2, anchor: () => 1, pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, wheelScrollScreen: () => {},
-      insertText: () => {}, backspace: () => {}, deleteForward: () => {}, selectAll: () => {}, replaceSelection: () => {}, selectionText: () => "e",
-      hoverTokenRangeJson: () => "null", setHoverRange: () => {}, cameraJson: () => "{}", setCanvasThemeJson: () => {}, moveLeft: () => {}, moveRight: () => {},
-      moveUp: () => {}, moveDown: () => {}, moveLineStart: () => {}, moveLineEnd: () => {}, tabInsertText: () => "  ", setSelectionRange: () => {},
-      selectSpanAt: () => {}, selectSpanAtScreen: () => {}, pickTargetsAtScreenJson: () => "[]", free: vi.fn(),
+      attachCanvas,
+      setCaretVisible: vi.fn(),
+      setSize: () => {},
+      renderFrame: vi.fn(),
+      syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
+      setText: () => {},
+      text: () => "hello",
+      caret: () => 2,
+      anchor: () => 1,
+      pointerDownScreen,
+      pointerMoveScreen: () => {},
+      pointerUpScreen,
+      pointerCancelScreen,
+      wheelScrollScreen: () => {},
+      insertText: () => {},
+      backspace: () => {},
+      deleteForward: () => {},
+      selectAll: () => {},
+      replaceSelection: () => {},
+      selectionText: () => "e",
+      hoverTokenRangeJson: () => "null",
+      setHoverRange: () => {},
+      cameraJson: () => "{}",
+      setCanvasThemeJson: () => {},
+      moveLeft: () => {},
+      moveRight: () => {},
+      moveUp: () => {},
+      moveDown: () => {},
+      moveLineStart: () => {},
+      moveLineEnd: () => {},
+      tabInsertText: () => "  ",
+      setSelectionRange: () => {},
+      selectSpanAt: () => {},
+      selectSpanAtScreen: () => {},
+      pickTargetsAtScreenJson: () => "[]",
+      free: vi.fn(),
     } as unknown as flowSessionLoader.EditorWasmSession;
     const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const view = render(createElement(TextEditorHost, {
-      node: { type: "componentScene", surfaceId: "writer.cancel", controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: "hello", language: "jack" } }, onAction,
-    }));
+    const view = render(
+      createElement(TextEditorHost, {
+        node: { type: "componentScene", surfaceId: "writer.cancel", controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: "hello", language: "jack" } },
+        onAction,
+      }),
+    );
     try {
       await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
       const surfaces = view.container.querySelectorAll(".semio-text-editor-host div.absolute.inset-0");
@@ -6557,17 +7419,29 @@ describe("framework renderer hosts", () => {
 
   it("retires only the closed React text editor and remounts a fresh sibling generation", async () => {
     const law = textInputFixture.hostLifecycle;
-    const sessions = [law.text, law.text, law.expect.successorText].map(text => ({
-      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {},
-      setText: () => {}, text: () => text, caret: () => text.length, anchor: () => text.length, setCanvasThemeJson: () => {}, free: vi.fn(),
+    const sessions = [law.text, law.text, law.expect.successorText].map((text) => ({
+      attachCanvas: vi.fn(async () => {}),
+      setCaretVisible: vi.fn(),
+      setSize: () => {},
+      renderFrame: () => {},
+      syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
+      setText: () => {},
+      text: () => text,
+      caret: () => text.length,
+      anchor: () => text.length,
+      setCanvasThemeJson: () => {},
+      free: vi.fn(),
     }));
     let index = 0;
     const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockImplementation(async () => sessions[index++] as unknown as flowSessionLoader.EditorWasmSession);
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const editor = (window: string, buffer: string) => createElement(TextEditorHost, {
-      key: window,
-      node: { type: "componentScene", surfaceId: law.surfaceId, controllerId: window, componentKind: "text-editor", textEditor: { buffer, language: "jack" } }, onAction: noopAction,
-    });
+    const editor = (window: string, buffer: string) =>
+      createElement(TextEditorHost, {
+        key: window,
+        node: { type: "componentScene", surfaceId: law.surfaceId, controllerId: window, componentKind: "text-editor", textEditor: { buffer, language: "jack" } },
+        onAction: noopAction,
+      });
     const view = render(createElement("div", null, editor(law.closingWindow, law.text), editor(law.siblingWindow, law.text)));
     try {
       await waitFor(() => expect(sessions[1].attachCanvas).toHaveBeenCalledOnce());
@@ -6579,7 +7453,7 @@ describe("framework renderer hosts", () => {
       expect(sessions[1].attachCanvas).toHaveBeenCalledOnce();
       view.rerender(createElement("div", null, editor(law.closingWindow, law.expect.successorText), editor(law.siblingWindow, law.text)));
       await waitFor(() => expect(sessions[2].attachCanvas).toHaveBeenCalledOnce());
-      expect(Array.from(view.container.querySelectorAll("textarea"), area => area.value)).toEqual([law.expect.successorText, law.expect.siblingText]);
+      expect(Array.from(view.container.querySelectorAll("textarea"), (area) => area.value)).toEqual([law.expect.successorText, law.expect.siblingText]);
       expect(sessions[1].attachCanvas).toHaveBeenCalledOnce();
       expect(factory).toHaveBeenCalledTimes(3);
     } finally {
@@ -6594,136 +7468,216 @@ describe("framework renderer hosts", () => {
     expect(validate(editorDeliveryFixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  for (const law of editorDeliveryFixture.cases) it(`settles actual React editor delivery: ${law.id}`, async () => {
-    const { decodePackValue } = await import("@semio-tech/framework-os");
-    let text = law.initial;
-    let caret = text.length;
-    const session = {
-      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, setText: () => {},
-      syncFromScenePack: (pack: Uint8Array) => {
-        const scene = decodePackValue(pack) as { buffer?: string; selectionJson?: string };
-        if (scene.buffer !== undefined) text = scene.buffer;
-        if (scene.selectionJson !== undefined) caret = JSON.parse(scene.selectionJson).end;
-      },
-      text: () => text, caret: () => caret, anchor: () => caret, setCanvasThemeJson: () => {}, free: () => {},
-      insertText: (value: string) => { text = text.slice(0, caret) + value + text.slice(caret); caret += value.length; },
-    };
-    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session as unknown as flowSessionLoader.EditorWasmSession);
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const completions: Array<(outcome: unknown) => void> = [];
-    const dispatched: string[] = [];
-    const onAction = vi.fn((action: { action: string; args?: Record<string, unknown> }) => {
-      dispatched.push(action.action === "textEdit" ? `textEdit:${action.args?.text}` : `textSelect:${action.args?.start}:${action.args?.end}`);
-      return action.action === "textEdit" ? new Promise(resolve => completions.push(resolve)) : Promise.resolve(undefined);
-    });
-    const view = render(createElement(TextEditorHost, {
-      node: { type: "componentScene", surfaceId: "writer.delivery", controllerId: "writer", componentKind: "text-editor", textEditor: {
-        buffer: law.initial, selectionJson: JSON.stringify({ start: caret, end: caret }),
-      } }, onAction,
-    }));
-    try {
-      await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
-      await reactAct(async () => { await Promise.resolve(); });
-      const area = view.container.querySelector("textarea")!;
-      for (const key of law.typed) fireEvent.keyDown(area, { key });
-      expect(dispatched).toEqual(law.expected[0]);
-      await reactAct(async () => { completions.shift()!(law.outcome === "accepted" ? undefined : { kind: "refused", reason: law.outcome }); });
-      await waitFor(() => expect(dispatched).toEqual(law.expected[1]));
-      if (completions.length) await reactAct(async () => { completions.shift()!(undefined); });
-      await waitFor(() => expect(dispatched).toEqual(law.expected[2]));
-      expect(area.getAttribute("aria-readonly")).toBe(String(law.readOnly));
-      expect(text).toBe(law.outcome === "accepted" ? law.initial + law.typed.join("") : law.initial);
-    } finally {
-      view.unmount();
-      factory.mockRestore();
-      bounds.mockRestore();
-    }
-  });
-
-  for (const law of textInputFixture.rendererKeys) it(`routes the actual React text editor key: ${law.id}`, async () => {
-    const attachCanvas = vi.fn(async () => {});
-    let text = law.text;
-    let selection = law.selection;
-    const operations = Object.fromEntries(["moveLeft", "moveRight", "moveUp", "moveDown", "moveLineStart", "moveLineEnd", "insertText"].map(name => [name, vi.fn(() => {
-      text = law.expect.text;
-      selection = law.expect.selection;
-    })]));
-    const session = {
-      attachCanvas, setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => text,
-      caret: () => selection[1], anchor: () => selection[0], setCanvasThemeJson: () => {}, free: () => {},
-      tabInsertText: () => " ".repeat(law.tabSize ?? 2), ...operations,
-    } as unknown as flowSessionLoader.EditorWasmSession;
-    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const onAction = vi.fn(async () => undefined);
-    const view = render(createElement(TextEditorHost, {
-      node: { type: "componentScene", surfaceId: "writer.keys", controllerId: "writer", componentKind: "text-editor", textEditor: {
-        buffer: law.text, language: "jack", selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }),
-        newlineGatesJson: law.newlineGates === undefined ? undefined : JSON.stringify(law.newlineGates),
-      } }, onAction,
-    }));
-    try {
-      await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
-      await reactAct(async () => { await Promise.resolve(); });
-      const area = view.container.querySelector("textarea")!;
-      fireEvent.keyDown(area, { key: law.key, shiftKey: law.shift ?? false, altKey: law.alt ?? false });
-      if (law.operation !== null) {
-        expect(operations[law.operation]).toHaveBeenCalledWith(law.argument);
-        await waitFor(() => expect(onAction).toHaveBeenCalledWith({ controllerId: "writer", action: "textSelect", args: { surfaceId: "writer.keys", start: law.expect.selection[0], end: law.expect.selection[1] } }));
-        const actions = onAction.mock.calls.map(([action]) => action);
-        expect(actions.map(action => action.action)).toEqual(law.operation === "insertText" ? ["textEdit", "textSelect"] : ["textSelect"]);
-        if (law.operation === "insertText") expect(actions[0].args).toEqual({ surfaceId: "writer.keys", text: law.expect.text });
-      } else {
-        for (const operation of Object.values(operations)) expect(operation).not.toHaveBeenCalled();
-        expect(onAction).not.toHaveBeenCalled();
+  for (const law of editorDeliveryFixture.cases)
+    it(`settles actual React editor delivery: ${law.id}`, async () => {
+      const { decodePackValue } = await import("@semio-tech/framework-os");
+      let text = law.initial;
+      let caret = text.length;
+      const session = {
+        attachCanvas: vi.fn(async () => {}),
+        setCaretVisible: vi.fn(),
+        setSize: () => {},
+        renderFrame: () => {},
+        syncFromSceneJson: () => {},
+        setText: () => {},
+        syncFromScenePack: (pack: Uint8Array) => {
+          const scene = decodePackValue(pack) as { buffer?: string; selectionJson?: string };
+          if (scene.buffer !== undefined) text = scene.buffer;
+          if (scene.selectionJson !== undefined) caret = JSON.parse(scene.selectionJson).end;
+        },
+        text: () => text,
+        caret: () => caret,
+        anchor: () => caret,
+        setCanvasThemeJson: () => {},
+        free: () => {},
+        insertText: (value: string) => {
+          text = text.slice(0, caret) + value + text.slice(caret);
+          caret += value.length;
+        },
+      };
+      const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session as unknown as flowSessionLoader.EditorWasmSession);
+      const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+      const completions: Array<(outcome: unknown) => void> = [];
+      const dispatched: string[] = [];
+      const onAction = vi.fn((action: ActionDescriptor) => {
+        const args = action.args as { readonly text?: string; readonly start?: number; readonly end?: number } | undefined;
+        dispatched.push(action.action === "textEdit" ? `textEdit:${args?.text}` : `textSelect:${args?.start}:${args?.end}`);
+        return action.action === "textEdit" ? new Promise((resolve) => completions.push(resolve)) : Promise.resolve(undefined);
+      });
+      const view = render(
+        createElement(TextEditorHost, {
+          node: {
+            type: "componentScene",
+            surfaceId: "writer.delivery",
+            controllerId: "writer",
+            componentKind: "text-editor",
+            textEditor: {
+              buffer: law.initial,
+              selectionJson: JSON.stringify({ start: caret, end: caret }),
+            },
+          },
+          onAction,
+        }),
+      );
+      try {
+        await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
+        await reactAct(async () => {
+          await Promise.resolve();
+        });
+        const area = view.container.querySelector("textarea")!;
+        for (const key of law.typed) fireEvent.keyDown(area, { key });
+        expect(dispatched).toEqual(law.expected[0]);
+        await reactAct(async () => {
+          completions.shift()!(law.outcome === "accepted" ? undefined : { kind: "refused", reason: law.outcome });
+        });
+        await waitFor(() => expect(dispatched).toEqual(law.expected[1]));
+        if (completions.length)
+          await reactAct(async () => {
+            completions.shift()!(undefined);
+          });
+        await waitFor(() => expect(dispatched).toEqual(law.expected[2]));
+        expect(area.getAttribute("aria-readonly")).toBe(String(law.readOnly));
+        expect(text).toBe(law.outcome === "accepted" ? law.initial + law.typed.join("") : law.initial);
+      } finally {
+        view.unmount();
+        factory.mockRestore();
+        bounds.mockRestore();
       }
-    } finally {
-      view.unmount();
-      factory.mockRestore();
-      bounds.mockRestore();
-    }
-  });
-
-  for (const stepKind of ["paste", "compose"] as const) it(`routes the actual React text editor ${stepKind} event through the shared text-input fixture`, async () => {
-    const law = textInputFixture.sequences.find(sequence => sequence.steps.some(step => step[stepKind] !== undefined))!;
-    const committed = law.steps.find(step => step[stepKind] !== undefined)![stepKind]!;
-    let text = law.text;
-    let selection = law.selection;
-    const commit = vi.fn(() => {
-      text = law.expect.text;
-      selection = law.expect.selection;
     });
-    const session = {
-      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => text,
-      caret: () => selection[1], anchor: () => selection[0], setCanvasThemeJson: () => {}, free: () => {}, replaceSelection: commit, insertText: commit,
-    } as unknown as flowSessionLoader.EditorWasmSession;
-    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const onAction = vi.fn(async () => undefined);
-    const view = render(createElement(TextEditorHost, {
-      node: { type: "componentScene", surfaceId: `writer.${stepKind}`, controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: law.text, selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }) } }, onAction,
-    }));
-    try {
-      await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
-      const area = view.container.querySelector("textarea")!;
-      expect(area.getAttribute("aria-label")).toBe("Editor");
-      expect(area.getAttribute("aria-readonly")).toBe("false");
-      const event = new Event(stepKind === "paste" ? "paste" : "compositionend", { bubbles: true, cancelable: true });
-      if (stepKind === "paste") Object.defineProperty(event, "clipboardData", { value: { getData: (type: string) => type === "text/plain" ? committed : "" } });
-      else Object.defineProperty(event, "data", { value: committed });
-      await reactAct(async () => { area.dispatchEvent(event); });
-      await waitFor(() => expect(onAction).toHaveBeenCalledTimes(2));
-      expect(commit).toHaveBeenCalledWith(committed);
-      expect(onAction.mock.calls.map(([action]) => action)).toEqual([
-        { controllerId: "writer", action: "textEdit", args: { surfaceId: `writer.${stepKind}`, text: law.expect.text } },
-        { controllerId: "writer", action: "textSelect", args: { surfaceId: `writer.${stepKind}`, start: law.expect.selection[0], end: law.expect.selection[1] } },
-      ]);
-    } finally {
-      view.unmount();
-      factory.mockRestore();
-      bounds.mockRestore();
-    }
-  });
+
+  for (const law of textInputFixture.rendererKeys)
+    it(`routes the actual React text editor key: ${law.id}`, async () => {
+      const attachCanvas = vi.fn(async () => {});
+      let text = law.text;
+      let selection = law.selection;
+      const operations = Object.fromEntries(
+        ["moveLeft", "moveRight", "moveUp", "moveDown", "moveLineStart", "moveLineEnd", "insertText"].map((name) => [
+          name,
+          vi.fn(() => {
+            text = law.expect.text;
+            selection = law.expect.selection;
+          }),
+        ]),
+      );
+      const session = {
+        attachCanvas,
+        setCaretVisible: vi.fn(),
+        setSize: () => {},
+        renderFrame: () => {},
+        syncFromSceneJson: () => {},
+        syncFromScenePack: () => {},
+        setText: () => {},
+        text: () => text,
+        caret: () => selection[1],
+        anchor: () => selection[0],
+        setCanvasThemeJson: () => {},
+        free: () => {},
+        tabInsertText: () => " ".repeat(law.tabSize ?? 2),
+        ...operations,
+      } as unknown as flowSessionLoader.EditorWasmSession;
+      const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
+      const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+      const onAction = vi.fn(async (_action: ActionDescriptor) => undefined);
+      const view = render(
+        createElement(TextEditorHost, {
+          node: {
+            type: "componentScene",
+            surfaceId: "writer.keys",
+            controllerId: "writer",
+            componentKind: "text-editor",
+            textEditor: {
+              buffer: law.text,
+              language: "jack",
+              selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }),
+              newlineGatesJson: law.newlineGates === undefined ? undefined : JSON.stringify(law.newlineGates),
+            },
+          },
+          onAction,
+        }),
+      );
+      try {
+        await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
+        await reactAct(async () => {
+          await Promise.resolve();
+        });
+        const area = view.container.querySelector("textarea")!;
+        fireEvent.keyDown(area, { key: law.key, shiftKey: law.shift ?? false, altKey: law.alt ?? false });
+        if (law.operation !== null) {
+          expect(operations[law.operation]).toHaveBeenCalledWith(law.argument);
+          await waitFor(() => expect(onAction).toHaveBeenCalledWith({ controllerId: "writer", action: "textSelect", args: { surfaceId: "writer.keys", start: law.expect.selection[0], end: law.expect.selection[1] } }));
+          const actions = onAction.mock.calls.map(([action]) => action);
+          expect(actions.map((action) => action.action)).toEqual(law.operation === "insertText" ? ["textEdit", "textSelect"] : ["textSelect"]);
+          if (law.operation === "insertText") expect(actions[0]?.args).toEqual({ surfaceId: "writer.keys", text: law.expect.text });
+        } else {
+          for (const operation of Object.values(operations)) expect(operation).not.toHaveBeenCalled();
+          expect(onAction).not.toHaveBeenCalled();
+        }
+      } finally {
+        view.unmount();
+        factory.mockRestore();
+        bounds.mockRestore();
+      }
+    });
+
+  for (const stepKind of ["paste", "compose"] as const)
+    it(`routes the actual React text editor ${stepKind} event through the shared text-input fixture`, async () => {
+      const stepText = (step: (typeof textInputFixture.sequences)[number]["steps"][number]): string | undefined => (stepKind === "paste" ? ("paste" in step ? step.paste : undefined) : "compose" in step ? step.compose : undefined);
+      const law = textInputFixture.sequences.find((sequence) => sequence.steps.some((step) => stepText(step) !== undefined))!;
+      const committed = law.steps.map(stepText).find((text) => text !== undefined)!;
+      let text = law.text;
+      let selection = law.selection;
+      const commit = vi.fn(() => {
+        text = law.expect.text;
+        selection = law.expect.selection;
+      });
+      const session = {
+        attachCanvas: vi.fn(async () => {}),
+        setCaretVisible: vi.fn(),
+        setSize: () => {},
+        renderFrame: () => {},
+        syncFromSceneJson: () => {},
+        syncFromScenePack: () => {},
+        setText: () => {},
+        text: () => text,
+        caret: () => selection[1],
+        anchor: () => selection[0],
+        setCanvasThemeJson: () => {},
+        free: () => {},
+        replaceSelection: commit,
+        insertText: commit,
+      } as unknown as flowSessionLoader.EditorWasmSession;
+      const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
+      const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+      const onAction = vi.fn(async (_action: ActionDescriptor) => undefined);
+      const view = render(
+        createElement(TextEditorHost, {
+          node: { type: "componentScene", surfaceId: `writer.${stepKind}`, controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: law.text, selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }) } },
+          onAction,
+        }),
+      );
+      try {
+        await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
+        const area = view.container.querySelector("textarea")!;
+        expect(area.getAttribute("aria-label")).toBe("Editor");
+        expect(area.getAttribute("aria-readonly")).toBe("false");
+        const event = new Event(stepKind === "paste" ? "paste" : "compositionend", { bubbles: true, cancelable: true });
+        if (stepKind === "paste") Object.defineProperty(event, "clipboardData", { value: { getData: (type: string) => (type === "text/plain" ? committed : "") } });
+        else Object.defineProperty(event, "data", { value: committed });
+        await reactAct(async () => {
+          area.dispatchEvent(event);
+        });
+        await waitFor(() => expect(onAction).toHaveBeenCalledTimes(2));
+        expect(commit).toHaveBeenCalledWith(committed);
+        expect(onAction.mock.calls.map(([action]) => action)).toEqual([
+          { controllerId: "writer", action: "textEdit", args: { surfaceId: `writer.${stepKind}`, text: law.expect.text } },
+          { controllerId: "writer", action: "textSelect", args: { surfaceId: `writer.${stepKind}`, start: law.expect.selection[0], end: law.expect.selection[1] } },
+        ]);
+      } finally {
+        view.unmount();
+        factory.mockRestore();
+        bounds.mockRestore();
+      }
+    });
 
   it("renders text editor host with hover/newline/rename scene fields", () => {
     const markup = renderToStaticMarkup(
@@ -6868,7 +7822,8 @@ describe("framework renderer hosts", () => {
       ]),
     },
   });
-  const renderStepperTable = (value: number, onAction: (action: unknown) => void) => render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: stepperTableNode(value) as never, onAction: onAction as never })));
+  const renderStepperTable = (value: number, onAction: (action: unknown) => void) =>
+    render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: stepperTableNode(value) as never, onAction: onAction as never })));
 
   it("renders a stepper cell as a spinbutton with decrement, live value and increment controls", () => {
     const { container } = renderStepperTable(1, vi.fn());
@@ -6981,6 +7936,62 @@ describe("framework renderer hosts", () => {
     }
   });
 
+  it("renders every GraphTimeline author in authored order with stable overlapping avatars", () => {
+    const validate = new Ajv2020({ strict: true }).compile(graphTimelineAuthorsSchema);
+    expect(validate(graphTimelineAuthorsFixture), JSON.stringify(validate.errors)).toBe(true);
+    const column = {
+      checkpointId: graphTimelineAuthorsFixture.checkpointId,
+      timestamp: "1",
+      labels: ["main"],
+      authors: graphTimelineAuthorsFixture.authors,
+      description: "authored checkpoint",
+      lane: 0,
+      alternativeIds: [],
+    };
+    const mounted = render(
+      createElement(GraphTimelineHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "vcs.play.history.authors",
+          controllerId: "vcs-play",
+          componentKind: "graph-timeline",
+          graphTimeline: { columnsJson: JSON.stringify([column]) },
+        },
+        onAction: noopAction,
+      }),
+    );
+    const avatars = [...mounted.container.querySelectorAll<HTMLElement>('[data-slot="avatar"]')];
+    expect(avatars.map((avatar) => avatar.id)).toEqual(graphTimelineAuthorsFixture.authors.map((author) => author.id));
+    expect(avatars[0]?.parentElement?.classList.contains("-space-x-2")).toBe(true);
+    expect(graphTimelineAuthorsFixture.avatarSize - graphTimelineAuthorsFixture.overlap).toBe(graphTimelineAuthorsFixture.advance);
+    const image = avatars[0]?.querySelector<HTMLImageElement>('[data-slot="avatar-image"]');
+    const fallback = avatars[0]?.querySelector<HTMLElement>('[data-slot="avatar-fallback"]');
+    expect(image?.getAttribute("alt")).toBe("Ada Lovelace");
+    expect(image?.getAttribute("src")).toBe(graphTimelineAuthorsFixture.authors[0]?.avatar);
+    expect(image?.hidden).toBe(true);
+    expect(fallback?.hidden).toBe(false);
+    reactAct(() => image!.dispatchEvent(new Event("load")));
+    expect(image?.hidden).toBe(false);
+    expect(fallback?.hidden).toBe(true);
+    expect(avatars[1]?.querySelector('[data-slot="avatar-image"]')).toBeNull();
+    expect(avatars[1]?.querySelector('[data-slot="avatar-fallback"]')?.getAttribute("aria-label")).toBe("Grace Hopper");
+    mounted.rerender(
+      createElement(GraphTimelineHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "vcs.play.history.authors",
+          controllerId: "vcs-play",
+          componentKind: "graph-timeline",
+          graphTimeline: { columnsJson: JSON.stringify([{ ...column, authors: [{ ...column.authors[0], avatar: graphTimelineAuthorsFixture.replacementAvatar }, column.authors[1]] }]) },
+        },
+        onAction: noopAction,
+      }),
+    );
+    const replacedImage = mounted.container.querySelector<HTMLImageElement>('#ada [data-slot="avatar-image"]');
+    expect(replacedImage?.getAttribute("src")).toBe(graphTimelineAuthorsFixture.replacementAvatar);
+    expect(replacedImage?.hidden).toBe(true);
+  });
+
   it("renders vcs history host with an ancestor graph fork", () => {
     const columns = [
       {
@@ -7035,22 +8046,36 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("feature-b");
   });
 
-  it("syncs raster canvas theme when the wasm session attaches", async () => {
+  it.each(["complete", "cancel"])("raster compositor %s settles frame demand and keeps canvas theme", async (mode) => {
+    await uiI18n.changeLanguage("en");
+    const fixture=(await import("../../🧱️elements/🖌️Paint2dHost/🧫️fixtures/🔁️session/🔣️.json")).default;
+    const uploadRasterImageKey=vi.fn(),syncDocumentJson=vi.fn(),attachCanvas=vi.fn(async()=>{}),setCamera=vi.fn();
+    const canvasContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    let frames = 0,
+      cancelled = false;
+    const pending = () => !cancelled && (mode === "cancel" || frames < 12);
+    const renderFrame = vi.fn(() => {
+      frames++;
+      return pending();
+    });
+    const cancelRender = vi.fn(() => {
+      cancelled = true;
+    });
     const setCanvasThemeJson = vi.fn();
     const session: flowSessionLoader.RasterWasmSession = {
       gpuReady: () => true,
-      attachCanvas: async () => {},
+      attachCanvas,
       setSize: () => {},
-      renderFrame: () => {},
-      setCamera: () => {},
+      renderFrame,
+      setCamera,
       wheelScreen: () => {},
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
       pointerUpScreen: () => {},
       pointerCancelScreen: () => {},
-      syncDocumentJson: () => {},
+      syncDocumentJson,
       uploadLayerImage: () => {},
-      uploadRasterImageKey: () => {},
+      uploadRasterImageKey,
       setActiveUtility: () => {},
       setBrushSize: () => {},
       setBrushOpacity: () => {},
@@ -7063,37 +8088,45 @@ describe("framework renderer hosts", () => {
       navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}',
       navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}',
       free: vi.fn(),
+      renderProgressJson: () => JSON.stringify({ pending: pending(), completed: Math.min(frames, 12), total: 12, error: null }),
+      cancelRender,
     };
     const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
     const originalObserver = globalThis.ResizeObserver;
-    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
-    const view = render(
-      createElement(Paint2dHost, {
-        node: {
-          type: "componentScene",
-          surfaceId: "raster.play.viewport",
-          controllerId: "raster-play",
-          componentKind: "paint-2d",
-          paint2d: {
-            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
-            assetsJson: "{}",
-            cameraJson: '{"x":0,"y":0,"zoom":1}',
-            selectionJson: "[]",
-            activeUtility: "selectMarquee",
-            brushSize: 24,
-            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
-            viewMode: "composite",
-          },
-        },
-        onAction: noopAction,
-      }),
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
     );
+    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,viewMode:"composite"}};
+    const view=render(createElement(Paint2dHost,{node,onAction:noopAction}));
     try {
       await waitFor(() => expect(setCanvasThemeJson).toHaveBeenCalled());
       expect(setCanvasThemeJson.mock.calls.length).toBeGreaterThanOrEqual(2);
+      await waitFor(()=>expect(uploadRasterImageKey).toHaveBeenCalledTimes(fixture.uploads));
+      expect(syncDocumentJson).toHaveBeenCalledWith(JSON.stringify(fixture.document));
+      expect(uploadRasterImageKey.mock.calls[0]).toEqual(["source",new Uint8Array(Buffer.from(fixture.assets.source.data,"base64"))]);
+      expect(setCamera).toHaveBeenCalledWith(fixture.camera.x,fixture.camera.y,fixture.camera.zoom);
+      if (mode === "cancel") {
+        await waitFor(() => expect(view.getByRole("button", { name: "Cancel rendering" })).toBeTruthy());
+        fireEvent.click(view.getByRole("button", { name: "Cancel rendering" }));
+        expect(cancelRender).toHaveBeenCalled();
+      } else await waitFor(() => expect(frames).toBeGreaterThanOrEqual(12));
+      await waitFor(() => expect(view.container.querySelector('progress[aria-label="Rendering image"]')).toBeNull());
+      view.rerender(createElement(Paint2dHost,{node:{...node,paint2d:{...node.paint2d!,cameraJson:JSON.stringify(fixture.updatedCamera),selectionJson:'["paint"]'}},onAction:noopAction}));
+      await waitFor(()=>expect(setCamera).toHaveBeenCalledWith(fixture.updatedCamera.x,fixture.updatedCamera.y,fixture.updatedCamera.zoom));
+      expect(attachCanvas).toHaveBeenCalledTimes(fixture.attachments);
+      expect(uploadRasterImageKey).toHaveBeenCalledTimes(fixture.uploads);
+      const settled = renderFrame.mock.calls.length;
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      expect(renderFrame.mock.calls.length).toBe(settled);
     } finally {
       view.unmount();
       factory.mockRestore();
+      canvasContext.mockRestore();
       vi.stubGlobal("ResizeObserver", originalObserver);
     }
     expect(session.free).toHaveBeenCalledOnce();
@@ -7106,22 +8139,68 @@ describe("framework renderer hosts", () => {
     const pointerCancelScreen = vi.fn();
     const onAction = vi.fn();
     const session: flowSessionLoader.RasterWasmSession = {
-      gpuReady: () => true, attachCanvas, setSize: () => {}, renderFrame: vi.fn(), setCamera: () => {}, wheelScreen: () => {},
-      pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
-      setActiveUtility: () => {}, setBrushSize: () => {}, setBrushOpacity: () => {}, syncInteraction: () => {}, setCanvasThemeJson: () => {},
-      cameraJson: () => '{"x":0,"y":0,"zoom":1}', setViewMode: () => {}, pickTargetsAtScreenJson: () => "[]", marqueeHitsJson: () => "[]",
-      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}', navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}', free: vi.fn(),
+      gpuReady: () => true,
+      attachCanvas,
+      setSize: () => {},
+      renderFrame: vi.fn(() => false),
+      setCamera: () => {},
+      wheelScreen: () => {},
+      pointerDownScreen,
+      pointerMoveScreen: () => {},
+      pointerUpScreen,
+      pointerCancelScreen,
+      syncDocumentJson: () => {},
+      uploadLayerImage: () => {},
+      uploadRasterImageKey: () => {},
+      setActiveUtility: () => {},
+      setBrushSize: () => {},
+      setBrushOpacity: () => {},
+      syncInteraction: () => {},
+      setCanvasThemeJson: () => {},
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      setViewMode: () => {},
+      pickTargetsAtScreenJson: () => "[]",
+      marqueeHitsJson: () => "[]",
+      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}',
+      free: vi.fn(),
+      renderProgressJson: () => JSON.stringify({ pending: false, completed: 0, total: 0, error: null }),
+      cancelRender: () => {},
     };
     const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
     const originalObserver = globalThis.ResizeObserver;
-    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const view = render(createElement(Paint2dHost, {
-      node: { type: "componentScene", surfaceId: "raster.cancel", controllerId: "raster", componentKind: "paint-2d", paint2d: {
-        documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
-        selectionJson: "[]", activeUtility: "paintBrush", brushSize: 24, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1, viewMode: "composite",
-      } }, onAction,
-    }));
+    const view = render(
+      createElement(Paint2dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "raster.cancel",
+          controllerId: "raster",
+          componentKind: "paint-2d",
+          paint2d: {
+            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
+            assetsJson: "{}",
+            cameraJson: '{"x":0,"y":0,"zoom":1}',
+            selectionJson: "[]",
+            activeUtility: "paintBrush",
+            brushSize: 24,
+            brushOpacity: 1,
+            brushColor: "#2878dc",
+            brushHardness: 1,
+            viewMode: "composite",
+          },
+        },
+        onAction,
+      }),
+    );
     try {
       const surface = view.container.querySelector('.semio-paint-2d-canvas-surface [class*="z-30"]') as HTMLElement;
       Object.defineProperty(surface, "hasPointerCapture", { configurable: true, value: () => false });
@@ -7146,22 +8225,67 @@ describe("framework renderer hosts", () => {
   it("synchronizes raster selection and hover through the current native interaction API", async () => {
     const syncInteraction = vi.fn();
     const session: flowSessionLoader.RasterWasmSession = {
-      gpuReady: () => true, attachCanvas: async () => {}, setSize: () => {}, renderFrame: () => {}, setCamera: () => {}, wheelScreen: () => {},
-      pointerDownScreen: () => {}, pointerMoveScreen: () => {}, pointerUpScreen: () => {}, pointerCancelScreen: () => {}, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
-      setActiveUtility: () => {}, setBrushSize: () => {}, setBrushOpacity: () => {}, syncInteraction, setCanvasThemeJson: () => {},
-      cameraJson: () => '{"x":0,"y":0,"zoom":1}', setViewMode: () => {}, pickTargetsAtScreenJson: () => "[]", marqueeHitsJson: () => "[]",
-      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}', navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}', free: vi.fn(),
+      gpuReady: () => true,
+      attachCanvas: async () => {},
+      setSize: () => {},
+      renderFrame: () => false,
+      setCamera: () => {},
+      wheelScreen: () => {},
+      pointerDownScreen: () => {},
+      pointerMoveScreen: () => {},
+      pointerUpScreen: () => {},
+      pointerCancelScreen: () => {},
+      syncDocumentJson: () => {},
+      uploadLayerImage: () => {},
+      uploadRasterImageKey: () => {},
+      setActiveUtility: () => {},
+      setBrushSize: () => {},
+      setBrushOpacity: () => {},
+      syncInteraction,
+      setCanvasThemeJson: () => {},
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      setViewMode: () => {},
+      pickTargetsAtScreenJson: () => "[]",
+      marqueeHitsJson: () => "[]",
+      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}',
+      free: vi.fn(),
+      renderProgressJson: () => JSON.stringify({ pending: false, completed: 0, total: 0, error: null }),
+      cancelRender: () => {},
     };
     const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
     const originalObserver = globalThis.ResizeObserver;
-    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
-    const content = (vector: typeof presenceOverlayFixture.cases[number]) => createElement(Paint2dHost, {
-      node: { type: "componentScene", surfaceId: "raster.play.viewport", controllerId: "raster-play", componentKind: "paint-2d", paint2d: {
-        documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
-        selectionJson: JSON.stringify(vector.expected.selected ? [vector.update.nodeKey] : []), hoveredId: vector.expected.hovered ? vector.update.nodeKey : undefined,
-        activeUtility: "selectMarquee", brushSize: 24, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1, viewMode: "composite",
-      } }, onAction: noopAction,
-    });
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const content = (vector: (typeof presenceOverlayFixture.cases)[number]) =>
+      createElement(Paint2dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "raster.play.viewport",
+          controllerId: "raster-play",
+          componentKind: "paint-2d",
+          paint2d: {
+            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
+            assetsJson: "{}",
+            cameraJson: '{"x":0,"y":0,"zoom":1}',
+            selectionJson: JSON.stringify(vector.expected.selected ? [vector.update.nodeKey] : []),
+            hoveredId: vector.expected.hovered ? vector.update.nodeKey : undefined,
+            activeUtility: "selectMarquee",
+            brushSize: 24,
+            brushOpacity: 1,
+            brushColor: "#2878dc",
+            brushHardness: 1,
+            viewMode: "composite",
+          },
+        },
+        onAction: noopAction,
+      });
     const view = render(content(presenceOverlayFixture.cases[0]!));
     try {
       for (const vector of presenceOverlayFixture.cases) {
@@ -7191,7 +8315,9 @@ describe("framework renderer hosts", () => {
             selectionJson: "[]",
             activeUtility: "selectMarquee",
             brushSize: 24,
-            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
+            brushOpacity: 1,
+            brushColor: "#2878dc",
+            brushHardness: 1,
             viewMode: "composite",
           },
         },
@@ -7218,7 +8344,9 @@ describe("framework renderer hosts", () => {
             selectionJson: "[]",
             activeUtility: "selectMarquee",
             brushSize: 24,
-            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
+            brushOpacity: 1,
+            brushColor: "#2878dc",
+            brushHardness: 1,
             viewMode: "navigator",
             compositeViewportJson: '{"width":640,"height":480}',
           },
@@ -7250,8 +8378,14 @@ describe("framework renderer hosts", () => {
     expect(validate(virtualFileSystemInteractionFixture), JSON.stringify(validate.errors)).toBe(true);
     for (const vector of virtualFileSystemInteractionFixture.visibility) {
       const rows = buildVirtualFileSystemSceneRows(virtualFileSystemInteractionFixture.rows, new Set(vector.expandedRowIds));
-      expect(rows.map((row) => row.id), vector.id).toEqual(vector.visibleRowIds);
-      expect(rows.map((row) => row.level), vector.id).toEqual(vector.levels);
+      expect(
+        rows.map((row) => row.id),
+        vector.id,
+      ).toEqual(vector.visibleRowIds);
+      expect(
+        rows.map((row) => row.level),
+        vector.id,
+      ).toEqual(vector.levels);
     }
     for (const vector of virtualFileSystemInteractionFixture.navigation) {
       const row = virtualFileSystemInteractionFixture.rows.find((candidate) => candidate.id === vector.rowId)!;
@@ -7260,30 +8394,32 @@ describe("framework renderer hosts", () => {
   });
 
   it("mounts localized raw virtual file system controls, owns expansion, and dispatches navigateUri only on double-click", async () => {
-    const previousLocale = uiI18n.resolvedLanguage || uiI18n.language;
+    const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
     await uiI18n.changeLanguage("en");
     const onAction = vi.fn();
-    const view = render(createElement(VirtualFileSystemHost, {
-      node: {
-        type: "componentScene",
-        surfaceId: "vfs.interaction",
-        controllerId: "vfs-controller",
-        componentKind: "virtual-file-system",
-        virtualFileSystem: {
-          schemaJson: JSON.stringify({
-            fileNodeKinds: {
-              root: { id: "root", name: "Root", descriptors: [] },
-              branch: { id: "branch", name: "Branch", descriptors: [] },
-              leaf: { id: "leaf", name: "Leaf", descriptors: [] },
-            },
-            descriptorKinds: {},
-            descriptorColumnIds: [],
-          }),
-          rowsJson: JSON.stringify(virtualFileSystemInteractionFixture.rows),
+    const view = render(
+      createElement(VirtualFileSystemHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "vfs.interaction",
+          controllerId: "vfs-controller",
+          componentKind: "virtual-file-system",
+          virtualFileSystem: {
+            schemaJson: JSON.stringify({
+              fileNodeKinds: {
+                root: { id: "root", name: "Root", descriptors: [] },
+                branch: { id: "branch", name: "Branch", descriptors: [] },
+                leaf: { id: "leaf", name: "Leaf", descriptors: [] },
+              },
+              descriptorKinds: {},
+              descriptorColumnIds: [],
+            }),
+            rowsJson: JSON.stringify(virtualFileSystemInteractionFixture.rows),
+          },
         },
-      },
-      onAction,
-    }));
+        onAction,
+      }),
+    );
     try {
       const folder = view.container.querySelector('tr[data-row-id="folder"]') as HTMLElement;
       expect(folder).toBeTruthy();
@@ -8248,8 +9384,8 @@ describe("s workflow flow routing", () => {
   // dropped were one and the same blank rectangle.
   it("renders a panel body that has not arrived yet as a loading surface, never as a silently empty panel", () => {
     const rendered = render(panelTreePanelHost(uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction, "framework.panel.inspection")));
-    expect(rendered.container.querySelector("[data-ui-status=\"loading\"]")).toBeTruthy();
-    expect(rendered.container.querySelector("[aria-busy=\"true\"]")).toBeTruthy();
+    expect(rendered.container.querySelector('[data-ui-status="loading"]')).toBeTruthy();
+    expect(rendered.container.querySelector('[aria-busy="true"]')).toBeTruthy();
   });
 
   // 🈳️ The blank-panel state: a tree body that IS settled (`activity: "idle"`) and resolves to zero
@@ -8260,7 +9396,7 @@ describe("s workflow flow routing", () => {
   it("renders an idle tree body with no sections as an explicit empty state, distinct from loading", () => {
     const idleEmpty = { ...pendingPanelUiNode(), activity: "idle" as const };
     const empty = render(panelTreePanelHost(uiNodeToTreePanelConfig(idleEmpty, noopAction, "framework.panel.inspection")));
-    expect(empty.container.querySelector("[data-ui-status=\"loading\"]")).toBeNull();
+    expect(empty.container.querySelector('[data-ui-status="loading"]')).toBeNull();
     expect(empty.container.textContent?.replace(/\u2026/g, "").trim()).not.toBe("");
     expect(empty.container.textContent).toContain(resolveTranslationLabel(uiI18n.t("ui.common.noData")));
   });
@@ -8275,13 +9411,7 @@ describe("s workflow flow routing", () => {
       { kind: { kind: "app" as const, id: "framework.panel.inspection" }, bodyKey: "puzzle.3d.play.inspector" },
     ];
     const windows = [{ id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" }];
-    const named = buildUiRefreshRequest(
-      { kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: ["puzzle.3d.play.inspector", "puzzle.3d.play.artifact"], measures: true },
-      windows,
-      leaves,
-      {},
-      new Map(),
-    );
+    const named = buildUiRefreshRequest({ kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: ["puzzle.3d.play.inspector", "puzzle.3d.play.artifact"], measures: true }, windows, leaves, {}, new Map());
     expect(named?.panels?.map((panel) => panel.key)).toEqual(["framework.panel.artifact", "framework.panel.inspection"]);
     const omitted = buildUiRefreshRequest({ kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: [] }, windows, leaves, {}, new Map());
     expect(omitted?.panels).toEqual([]);
@@ -8295,8 +9425,27 @@ describe("s workflow flow routing", () => {
         children: [
           {
             key: "catalogue.section",
-            component: { type: "treeSection", label: "Catalogue", defaultOpen: true, window: null },
-            children: [{ key: "s-play-catalogue.document.draw", component: { type: "treeItem", label: "Draw", description: null, icon: null, defaultOpen: null, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' }, dimmed: null, window: null, granularity: null, rowActions: [] } }],
+            component: { type: "treeSection", label: "Catalogue", defaultOpen: true, headerToolbar: null, window: null },
+            children: [
+              {
+                key: "s-play-catalogue.document.draw",
+                component: {
+                  type: "treeItem",
+                  label: "Draw",
+                  description: null,
+                  icon: null,
+                  defaultOpen: null,
+                  draggable: true,
+                  dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' },
+                  dimmed: null,
+                  window: null,
+                  granularity: null,
+                  inlineToolbar: null,
+                  detail: null,
+                  rowActions: [],
+                },
+              },
+            ],
           },
         ],
       }),
@@ -8322,13 +9471,32 @@ describe("s workflow flow routing", () => {
         children: [
           {
             key: "puzzle3d-play-kinds.objects",
-            component: { type: "treeSection", label: "Objects", defaultOpen: true, window: null },
+            component: { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: null },
             children: [
               {
                 key: "Hexagonal Cut Concrete Forest Left",
-                component: { type: "treeItem", label: "Hexagonal Cut Concrete Forest Left", description: "Hexagonal Cut Concrete Forest Left", icon: "box", defaultOpen: false, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' }, dimmed: null, window: null, granularity: null, rowActions: [] },
+                component: {
+                  type: "treeItem",
+                  label: "Hexagonal Cut Concrete Forest Left",
+                  description: "Hexagonal Cut Concrete Forest Left",
+                  icon: "box",
+                  defaultOpen: false,
+                  draggable: true,
+                  dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' },
+                  dimmed: null,
+                  window: null,
+                  granularity: null,
+                  inlineToolbar: null,
+                  detail: null,
+                  rowActions: [],
+                },
                 bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "addObjectKind", version: 1 }, args: { objectKind: "Hexagonal Cut Concrete Forest Left" }, capability: null }],
-                children: [{ key: "puzzle3d-kind-vortex.0.b-l", component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } }],
+                children: [
+                  {
+                    key: "puzzle3d-kind-vortex.0.b-l",
+                    component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [] },
+                  },
+                ],
               },
             ],
           },
@@ -8355,7 +9523,17 @@ describe("s workflow flow routing", () => {
   });
 
   it("bridges semantic intent scope, version, args, and input into the plugin action channel", () => {
-    const intent = { surface: "panel:settings", revision: 1, node: 7, nodeKey: "spacing", trigger: "change", action: { scope: "puzzle3d-play", name: "setSpacing", version: 1 }, args: { axis: "x", value: 1 }, input: { value: 2 }, seq: 1n } as UiIntent;
+    const intent = {
+      surface: "panel:settings",
+      revision: 1,
+      node: 7,
+      nodeKey: "spacing",
+      trigger: "change",
+      action: { scope: "puzzle3d-play", name: "setSpacing", version: 1 },
+      args: { axis: "x", value: 1 },
+      input: { value: 2 },
+      seq: 1n,
+    } as UiIntent;
     expect(uiIntentToActionDescriptor(intent)).toEqual({ controllerId: "puzzle3d-play", action: "setSpacing", args: { axis: "x", value: 2 } });
   });
 
@@ -8363,7 +9541,15 @@ describe("s workflow flow routing", () => {
     // 🪜️ A `NumberStepper`'s `onChange` reports the number itself, and the node's authored args carry the
     // window the panel is tuning. The scalar must arrive UNDER `value` — every guest command reads named
     // arguments — and must not evict `windowId` on the way (ticket 26/09/02/PUZZLE-3D-END-TO-END B47 §2).
-    const base = { surface: "panel:puzzle3d-play-settings", revision: 1, node: 7, nodeKey: "puzzle3d-play-settings.grid-spacing", action: { scope: "puzzle3d-play", name: "setGridSpacing", version: 1 }, args: { windowId: "puzzle3d-main-top" }, seq: 1n };
+    const base = {
+      surface: "panel:puzzle3d-play-settings",
+      revision: 1,
+      node: 7,
+      nodeKey: "puzzle3d-play-settings.grid-spacing",
+      action: { scope: "puzzle3d-play", name: "setGridSpacing", version: 1 },
+      args: { windowId: "puzzle3d-main-top" },
+      seq: 1n,
+    };
     expect(uiIntentToActionDescriptor({ ...base, trigger: "change", input: 10.5 } as UiIntent)).toEqual({
       controllerId: "puzzle3d-play",
       action: "setGridSpacing",
@@ -8399,7 +9585,7 @@ describe("s workflow flow routing", () => {
       children: [
         {
           key: "puzzle3d-play-document.objects",
-          component: { type: "treeSection", label: "Objects", defaultOpen: true, window: null },
+          component: { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: null },
           children: [
             {
               key: "seed-left-001",
@@ -8414,6 +9600,8 @@ describe("s workflow flow routing", () => {
                 dimmed: null,
                 window: null,
                 granularity: null,
+                inlineToolbar: null,
+                detail: null,
                 rowActions: [{ icon: "eye", label: "Hide", action: { trigger: "activate", action: { scope: "puzzle3d-play", name: "setSelectionFlag", version: 1 }, args: flagArgs, capability: null }, placement: "row" }],
               },
               bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "interactionSelect", version: 1 }, args: { domainId: "puzzle3d" }, capability: null }],
@@ -8519,7 +9707,15 @@ describe("s workflow flow routing", () => {
     expect(mintDirectoryCommandRequestId()).not.toBe(first);
 
     const slots = new Map<string, DirectoryCommandResultSlotV1>();
-    const receipt = { schema: "semio.directory.command-receipt.v1", requestId: first, commandSha256: "a".repeat(64), outcome: "accepted", events: [], result: { kind: "invite", inviteToken: "invite.v1.one-shot" }, receiptSha256: "b".repeat(64) } as unknown as DirectoryCommandReceiptV1;
+    const receipt = {
+      schema: "semio.directory.command-receipt.v1",
+      requestId: first,
+      commandSha256: "a".repeat(64),
+      outcome: "accepted",
+      events: [],
+      result: { kind: "invite", inviteToken: "invite.v1.one-shot" },
+      receiptSha256: "b".repeat(64),
+    } as unknown as DirectoryCommandReceiptV1;
     retainDirectoryCommandResult(slots, first, { kind: "receipt", receipt });
     expect(slots.get(first)).toEqual({ kind: "receipt", receipt });
     retainDirectoryCommandResult(slots, first, { kind: "failed", code: "forbidden" });
@@ -8881,7 +10077,23 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
       semantics: actionSemanticsForKind("mutation"),
       kind: "mutation",
       inPalette: true,
-      args: index === 31 ? [{ id: "kind", label: "Kind", schema: { kind: "string", options: [{ value: "inputSlider", label: "inputSlider" }, { value: "note", label: "note" }] }, required: true }] : [],
+      args:
+        index === 31
+          ? [
+              {
+                id: "kind",
+                label: "Kind",
+                schema: {
+                  kind: "string",
+                  options: [
+                    { value: "inputSlider", label: "inputSlider" },
+                    { value: "note", label: "note" },
+                  ],
+                },
+                required: true,
+              },
+            ]
+          : [],
     }));
     const { container } = render(createElement(Harness, { actions: rows, onExecute: vi.fn() }));
     const pane = container.querySelector('[data-slot="window-action-pane"]');
@@ -8899,7 +10111,16 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it("renders only palette-eligible rows, and no rail at all when every declared action is dispatch plumbing", () => {
-    const action = (id: string, inPalette: boolean, category?: string): ActionDefinition => ({ id, label: id, iconId: "box", semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette, ...(category === undefined ? {} : { category }), args: [] });
+    const action = (id: string, inPalette: boolean, category?: string): ActionDefinition => ({
+      id,
+      label: id,
+      iconId: "box",
+      semantics: actionSemanticsForKind("shell"),
+      kind: "shell",
+      inPalette,
+      ...(category === undefined ? {} : { category }),
+      args: [],
+    });
     expect(paneRowIds([action("worldPointerDown", false), action("exportFixture", true, "file"), action("interactionSelect", false)])).toEqual(["action.category.file", "action.exportFixture"]);
     cleanup();
     expect(paneRowIds([action("worldPointerDown", false), action("noteShellCommand", false)])).toEqual([]);
@@ -8907,7 +10128,15 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 });
 
 describe("palette redirect and keybinding rule (P3/P4)", () => {
-  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [{ id: "depth", label: "Depth", schema: { kind: "number", integer: false }, required: true }] };
+  const argAction: ActionDefinition = {
+    id: "extrude",
+    label: "Extrude",
+    iconId: "box",
+    semantics: actionSemanticsForKind("mutation"),
+    kind: "mutation",
+    inPalette: true,
+    args: [{ id: "depth", label: "Depth", schema: { kind: "number", integer: false }, required: true }],
+  };
   const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
 
   it("only actions with a user-facing arg redirect to a staged form (P3 decision)", () => {
@@ -8926,9 +10155,7 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
     }
     for (const row of chordKeyTokensFixture.canonical as { chord: string; eventKey: string }[]) {
       expect(chordUsesCanonicalKeyTokens(row.chord)).toBe(true);
-      expect(
-        keyboardEventMatchesChord({ key: row.eventKey, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }, row.chord),
-      ).toBe(true);
+      expect(keyboardEventMatchesChord({ key: row.eventKey, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }, row.chord)).toBe(true);
     }
   });
 
@@ -9107,7 +10334,9 @@ describe("registry-derived utilities and activation (P5)", () => {
     // nothing, and a green `gumball-scene-delta` that measured the fabrication rather than the drag.
     expect(zeroDelta).not.toMatch(/dispatch\(\s*["']translateSelection["']/);
     expect(zeroDelta).not.toMatch(/synthesized/);
-    expect(gumballTransformDeltaBetweenPoses("transform", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { mode: "mesh", ids: ["obj-1"] }, "moveY")).toBeNull();
+    expect(
+      gumballTransformDeltaBetweenPoses("transform", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { mode: "mesh", ids: ["obj-1"] }, "moveY"),
+    ).toBeNull();
   });
 
   it("gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview", () => {
@@ -9183,7 +10412,7 @@ describe("registry-derived utilities and activation (P5)", () => {
       expect(source.includes(retired), `[DEBUG] ${retired} is the retired brush ghost path`).toBe(false);
     }
     expect(source).toContain("<WorldToolRunTrace lane={scene.toolRunTrace}");
-    expect(source).toContain('if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;');
+    expect(source).toContain("if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;");
     expect(source).toContain('if (fullId) dispatch("acceptSuggestion", { fullId });');
   });
 
@@ -9242,8 +10471,10 @@ describe("registry-derived utilities and activation (P5)", () => {
       children: [
         {
           key: "framework.history.commands",
-          component: { type: "treeSection", label: null, defaultOpen: true, window: null },
-          children: [{ key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } }],
+          component: { type: "treeSection", label: null, defaultOpen: true, headerToolbar: null, window: null },
+          children: [
+            { key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [] } },
+          ],
         },
       ],
     });
@@ -9549,7 +10780,13 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const opened = progressPanelTabSelection([{ kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: tabs }], [], ["framework.category.tool"], {});
     expect(opened.fold).toBe(false);
     expect(opened.path).toEqual(["framework.category.tool"]);
-    expect(toolCategoryOpenPath(opened.path, opened.memory, tabs.map((tab) => tab.id))).toEqual(["framework.category.tool", "tool.fill"]);
+    expect(
+      toolCategoryOpenPath(
+        opened.path,
+        opened.memory,
+        tabs.map((tab) => tab.id),
+      ),
+    ).toEqual(["framework.category.tool", "tool.fill"]);
   });
 
   it("a Tool category branch still exposes the remembered Fill leaf trees as the panel body", () => {
@@ -9663,7 +10900,12 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   // `onValueChange` — `navbar example from history {"navbarExample":"concrete-forest","remembered":""}`.
   // Every dispatch of the verb now teaches the memory, so a row redone from anywhere relabels.
   it("offers examples only to an app that declares setActiveExample on some window kind", () => {
-    expect(appSwitchesExamples("s.cad.cad@1/*#editor", [{ id: "cad-play-shape", actions: [{ id: "select" }] }, { id: "cad-play-energy", actions: [{ id: SET_ACTIVE_EXAMPLE_ACTION_ID }] }])).toBe(true);
+    expect(
+      appSwitchesExamples("s.cad.cad@1/*#editor", [
+        { id: "cad-play-shape", actions: [{ id: "select" }] },
+        { id: "cad-play-energy", actions: [{ id: SET_ACTIVE_EXAMPLE_ACTION_ID }] },
+      ]),
+    ).toBe(true);
     expect(appSwitchesExamples("s.vcs.vcs@1/*#editor", [{ id: "vcs-editor", actions: [{ id: "commit" }] }, { id: "vcs-history" }])).toBe(false);
     expect(appSwitchesExamples("s.note.note@1/*#editor", [])).toBe(false);
   });
@@ -9963,7 +11205,17 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const previewWindow = "generation3d-play-window-preview#1";
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
     const picked = interactionViewFromLeftoverOutput({
-      interactionView: { selectedIds: ["shell@solid"], hoverTarget: null, locked: {}, gumball: { active: false, anchorId: null }, selection: { graph: { granularity: "object", ids: ["shell@solid"] } }, hover: {}, activeMode: {}, activeGranularity: {}, windowId: previewWindow },
+      interactionView: {
+        selectedIds: ["shell@solid"],
+        hoverTarget: null,
+        locked: {},
+        gumball: { active: false, anchorId: null },
+        selection: { graph: { granularity: "object", ids: ["shell@solid"] } },
+        hover: {},
+        activeMode: {},
+        activeGranularity: {},
+        windowId: previewWindow,
+      },
     });
     expect(picked?.selectedIds).toEqual(["shell@solid"]);
     world.publishLeftoverWorldSelectionV1(leftoverOverlayCarryingSelectionV1({ ids: picked!.selectedIds, hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, null, false), { kind: "window", windowId: previewWindow });
@@ -10120,12 +11372,20 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   // `manifest::examples_for_dialect` answers the SAME rows in
   // `🛂️manifest/🧪️tests/🔬️example-picker/🦀️.rs` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   it("resolves the example picker by dialect, so an editor and its viewer offer exactly the same examples", () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
+      .addSchema(manifestFixtureSchema)
+      .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
     expect(validate(examplePickerFixture), JSON.stringify(validate.errors)).toBe(true);
     for (const useCase of examplePickerFixture.cases) {
       expect(surfaceAppId(useCase.app.dialect, useCase.app.role as AppRole), useCase.name).toBe(useCase.app.id);
-      expect(examplesForDialect(examplePickerFixture.examples, useCase.app.dialect).map((example) => example.id), useCase.name).toEqual(useCase.expected);
-      expect(examplesForApp(examplePickerFixture.examples, useCase.app).map((example) => example.id), useCase.name).toEqual(useCase.expected);
+      expect(
+        examplesForDialect(examplePickerFixture.examples, useCase.app.dialect).map((example) => example.id),
+        useCase.name,
+      ).toEqual(useCase.expected);
+      expect(
+        examplesForApp(examplePickerFixture.examples, useCase.app).map((example) => example.id),
+        useCase.name,
+      ).toEqual(useCase.expected);
     }
     const editor = examplePickerFixture.cases.find((useCase) => useCase.name === "editor-of-the-dialect-offers-every-example-of-it")!;
     const viewer = examplePickerFixture.cases.find((useCase) => useCase.name === "viewer-of-the-same-dialect-offers-exactly-the-same-picker")!;
@@ -10386,7 +11646,17 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 });
 
 describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
-  const definition = (id: string, label: string, category: string, args: ResolvedActionArgDef[] = []): ResolvedCommand["definition"] => ({ id, label, category, args, iconId: "wrench", semantics: actionSemanticsForKind("shell"), kind: "shell", keybindings: [], inPalette: true });
+  const definition = (id: string, label: string, category: string, args: ResolvedActionArgDef[] = []): ResolvedCommand["definition"] => ({
+    id,
+    label,
+    category,
+    args,
+    iconId: "wrench",
+    semantics: actionSemanticsForKind("shell"),
+    kind: "shell",
+    keybindings: [],
+    inPalette: true,
+  });
   const zeroArgCommand: ResolvedCommand = { definition: definition("os.resetDock", "Reset Dock", "layout"), address: { owner: "os", commandId: "os.resetDock" } };
   const argCommand: ResolvedCommand = {
     definition: definition("os.setThemeId", "Set Theme", "appearance", [{ id: "themeId", label: "Theme", schema: { kind: "string", options: [] }, required: true }]),
@@ -10524,7 +11794,19 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     const host = createVirtualContinuationHost();
     const armed: number[] = [];
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
-    scheduleDispatchAction("tick", undefined, 0, dispatchOne, createContinuationScheduler({ ...host.ports, setTimer: (run, delayMs) => { armed.push(delayMs); return host.ports.setTimer(run, delayMs); } }));
+    scheduleDispatchAction(
+      "tick",
+      undefined,
+      0,
+      dispatchOne,
+      createContinuationScheduler({
+        ...host.ports,
+        setTimer: (run, delayMs) => {
+          armed.push(delayMs);
+          return host.ports.setTimer(run, delayMs);
+        },
+      }),
+    );
     expect(dispatchOne).not.toHaveBeenCalled();
     host.drain();
     expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("tick", undefined);
@@ -10816,12 +12098,7 @@ describe("integrateAppSettingsPanelTabsIntoFrameworkBranch", () => {
     if (integrated.kind !== "branch") throw new Error("integrated settings must be a branch");
     expect(integrated.id).toBe("framework.settings");
     expect(integrated.children[0]?.id).toBe("puzzle3d.panel.settings");
-    expect(integrated.children.map((child) => child.id)).toEqual([
-      "puzzle3d.panel.settings",
-      "framework.settings.general",
-      "framework.settings.theme",
-      "framework.settings.keybindings",
-    ]);
+    expect(integrated.children.map((child) => child.id)).toEqual(["puzzle3d.panel.settings", "framework.settings.general", "framework.settings.theme", "framework.settings.keybindings"]);
   });
 });
 
@@ -11039,7 +12316,8 @@ describe("per-window element ids", () => {
   it("qualifies every projection switch row id by its owning pane", () => {
     const templates = createWorldProjectionTemplates({ controllerId: "projection-switch" });
     const rows = (paneId: string): string[] => {
-      const walk = (items: readonly { readonly id: string; readonly items?: readonly unknown[] }[]): string[] => items.flatMap((item) => [item.id, ...walk((item.items ?? []) as readonly { readonly id: string; readonly items?: readonly unknown[] }[])]);
+      const walk = (items: readonly { readonly id: string; readonly items?: readonly unknown[] }[]): string[] =>
+        items.flatMap((item) => [item.id, ...walk((item.items ?? []) as readonly { readonly id: string; readonly items?: readonly unknown[] }[])]);
       return walk(worldProjectionSwitchTreeItems(paneId, templates, () => undefined) as readonly { readonly id: string; readonly items?: readonly unknown[] }[]);
     };
     const top = rows(world3dProjectionPaneElementId("puzzle3d-main-top"));
@@ -11314,7 +12592,20 @@ describe("noteShellCommand", () => {
   /** 🐚️ Every chrome id the React shell notes is shell-owned, so none of them may ever reach the
    * guest through `Effect::ReplayShellCommand` — a plugin action id (the `View`-kind rows) must. */
   it("isShellOwnedCommandId separates chrome the shell replays itself from plugin actions the guest replays", () => {
-    for (const commandId of ["shell.windowActivate", "shell.windowResize", "shell.windowMove", "shell.windowClose", "shell.windowSplit", "shell.windowOpenInNewWindow", "shell.panelToggle", "shell.panelTab", "shell.dockMove", "os.setThemeId", "os.resetDock", "os.resizeWindow"]) {
+    for (const commandId of [
+      "shell.windowActivate",
+      "shell.windowResize",
+      "shell.windowMove",
+      "shell.windowClose",
+      "shell.windowSplit",
+      "shell.windowOpenInNewWindow",
+      "shell.panelToggle",
+      "shell.panelTab",
+      "shell.dockMove",
+      "os.setThemeId",
+      "os.resetDock",
+      "os.resizeWindow",
+    ]) {
       expect(isShellOwnedCommandId(commandId)).toBe(true);
     }
     for (const actionId of ["setActiveExample", "patchNodes", "change-seed", "addNode"]) {
@@ -11352,10 +12643,13 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
     expect(validate(labelResolutionFixture), JSON.stringify(validate.errors)).toBe(true);
     const matrix = labelResolutionFixture.matrix;
     const oracle = createTranslationOracle();
-    await oracle.init({ fallbackLng: false, resources: {
-      en: { native: { label: matrix.native.en }, reuse: { label: matrix.reuse.en } },
-      de: { native: { label: matrix.native.de }, reuse: { label: matrix.reuse.de } },
-    } });
+    await oracle.init({
+      fallbackLng: false,
+      resources: {
+        en: { native: { label: matrix.native.en }, reuse: { label: matrix.reuse.en } },
+        de: { native: { label: matrix.native.de }, reuse: { label: matrix.reuse.de } },
+      },
+    });
     for (const row of labelResolutionFixture.cases) {
       expect(resolveManifestLabel(row.data ?? matrix, row.terminology, row.locale), row.id).toBe(row.expected);
       const expected = row.data ?? oracle.getResource(row.locale, row.terminology, "label") ?? "";
@@ -11610,10 +12904,7 @@ describe("puzzle3d brush mesh paged upload", () => {
   it("collapses a queued run whose geometry a sibling id already put into the guest", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const queue = [
-      ...puzzle3dBrushMeshPages("/test/queue-a.glb", "world-3d", example.positions, example.indices),
-      ...puzzle3dBrushMeshPages("/test/queue-b.glb", "world-3d", example.positions, example.indices),
-    ];
+    const queue = [...puzzle3dBrushMeshPages("/test/queue-a.glb", "world-3d", example.positions, example.indices), ...puzzle3dBrushMeshPages("/test/queue-b.glb", "world-3d", example.positions, example.indices)];
     const first = puzzle3dBrushMeshQueueStep(queue, () => false);
     expect(first.kind).toBe("page");
     const resident = puzzle3dBrushMeshQueueStep(queue, (page) => page.digest === digest);
@@ -11661,7 +12952,14 @@ describe("puzzle3d brush mesh paged upload", () => {
     const example = brushMeshUploadFixture.example;
     const queue = [...puzzle3dBrushMeshPages("/test/unmounted.glb", "world-3d", example.positions, example.indices)];
     let dispatched = 0;
-    await drainPuzzle3dBrushMeshQueue(queue, { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: () => {} }, async () => { dispatched += 1; }, () => false);
+    await drainPuzzle3dBrushMeshQueue(
+      queue,
+      { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: () => {} },
+      async () => {
+        dispatched += 1;
+      },
+      () => false,
+    );
     expect(dispatched).toBe(0);
     expect(queue.length).toBeGreaterThan(0);
   });
@@ -11722,10 +13020,16 @@ describe("node-graph surface sizing", () => {
     // The wasm surface never settles here either, so nothing but the container observer can size these.
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
     vi.stubGlobal("devicePixelRatio", 2);
-    const view = render(createElement(FlowGraphCanvasHost, {
-      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
-    }));
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
     try {
       const canvases = [...view.container.querySelectorAll("canvas")];
       expect(canvases.length).toBe(2);
@@ -11761,12 +13065,28 @@ describe("node-graph surface sizing", () => {
 function hexagonalMushroomColumnScene(): NodeGraphScene {
   const port = (id: string) => [{ id, label: id }];
   const nodes = ["sides", "radius", "height", "profile", "extrusion-axis", "extrude", "column-preview"].map((id, index) => ({
-    id, label: id, x: index * 180, y: (index % 2) * 120, width: 140, height: 64, inputs: port("in"), outputs: port("out"),
+    id,
+    label: id,
+    x: index * 180,
+    y: (index % 2) * 120,
+    width: 140,
+    height: 64,
+    inputs: port("in"),
+    outputs: port("out"),
   }));
-  const edges = [["sides", "profile"], ["radius", "profile"], ["height", "extrusion-axis"], ["profile", "extrude"], ["extrusion-axis", "extrude"], ["extrude", "column-preview"]]
-    .map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
+  const edges = [
+    ["sides", "profile"],
+    ["radius", "profile"],
+    ["height", "extrusion-axis"],
+    ["profile", "extrude"],
+    ["extrusion-axis", "extrude"],
+    ["extrude", "column-preview"],
+  ].map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
   return {
-    nodes, edges, viewport: { x: 0, y: 0, zoom: 1.78 }, editable: true,
+    nodes,
+    edges,
+    viewport: { x: 0, y: 0, zoom: 1.78 },
+    editable: true,
     hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
   };
 }
@@ -11774,7 +13094,11 @@ function hexagonalMushroomColumnScene(): NodeGraphScene {
 /** 🖌️ Recording stand-in for a 2D context — jsdom implements none, so this is the only way to witness
  * that a paint actually reached a canvas rather than merely being scheduled. */
 function recordingCanvasContext(operations: string[]): CanvasRenderingContext2D {
-  const record = (name: string) => (...args: unknown[]) => { operations.push(`${name}(${args.join(",")})`); };
+  const record =
+    (name: string) =>
+    (...args: unknown[]) => {
+      operations.push(`${name}(${args.join(",")})`);
+    };
   return new Proxy({} as CanvasRenderingContext2D, {
     get: (_target, key) => (typeof key === "string" ? record(key) : undefined),
     set: () => true,
@@ -11798,10 +13122,16 @@ describe("node-graph surface attachment in a hidden tab", () => {
     const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
     vi.stubGlobal("devicePixelRatio", 1);
-    const view = render(createElement(FlowGraphCanvasHost, {
-      scene: hexagonalMushroomColumnScene(),
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
-    }));
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: hexagonalMushroomColumnScene(),
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
     try {
       expect(globalThis.navigator.gpu).toBeUndefined();
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.renderFrame));
@@ -11813,7 +13143,9 @@ describe("node-graph surface attachment in a hidden tab", () => {
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.labelOverlayPaintStateJson));
       const canvases = [...view.container.querySelectorAll("canvas")];
       expect(canvases.length).toBe(2);
-      await waitFor(() => { for (const canvas of canvases) expect((painted.get(canvas) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true); });
+      await waitFor(() => {
+        for (const canvas of canvases) expect((painted.get(canvas) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true);
+      });
       // 📏️ A frame that carries no size of its own must not collapse the store the host measured.
       for (const canvas of canvases) expect([canvas.width, canvas.height]).toEqual([966, 836]);
       expect(painted.get(canvases[0]!)).toContain("clearRect(0,0,966,836)");
@@ -11856,14 +13188,28 @@ describe("node-graph surface attachment in a hidden tab", () => {
     // the WebGPU presenter can be poisoned — a host that never had a device is a host with no 2D
     // canvas either, and replacing its element would remount forever.
     let boundToTheGpuPresenter = 0;
-    const runtime = await createFlowBrowserRuntime({ source: bridge.exports, bindings: { flowAttachSurfaceCanvas: async () => { boundToTheGpuPresenter += 1; return boundToTheGpuPresenter === 1; } } });
+    const runtime = await createFlowBrowserRuntime({
+      source: bridge.exports,
+      bindings: {
+        flowAttachSurfaceCanvas: async () => {
+          boundToTheGpuPresenter += 1;
+          return boundToTheGpuPresenter === 1;
+        },
+      },
+    });
     vi.stubGlobal("navigator", { ...globalThis.navigator, gpu: { requestAdapter: async () => ({}) } });
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
     vi.stubGlobal("devicePixelRatio", 1);
-    const view = render(createElement(FlowGraphCanvasHost, {
-      scene: hexagonalMushroomColumnScene(),
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
-    }));
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: hexagonalMushroomColumnScene(),
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
     try {
       const first = view.container.querySelectorAll("canvas")[0]!;
       poisoned.add(first);
@@ -11916,20 +13262,32 @@ describe("node-graph surface attachment in a hidden tab", () => {
     });
     vi.stubGlobal("devicePixelRatio", 1);
     const sceneFor = (statusJson: string) => ({ ...hexagonalMushroomColumnScene(), statusJson });
-    const view = render(createElement(FlowGraphCanvasHost, {
-      scene: sceneFor(retention.refreshes[0]!.statusJson),
-      controllerId: "29", surfaceId: retention.surface, editable: true, keyboardPort: { current: null }, onAction: noopAction,
-    }));
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: sceneFor(retention.refreshes[0]!.statusJson),
+        controllerId: "29",
+        surfaceId: retention.surface,
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
     try {
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.attachSurface));
       for (let index = 1; index < retention.refreshes.length; index += 1) {
         const refresh = retention.refreshes[index]!;
         // 🪪️ `controllerId` is the DFS-minted record id, and it MOVES with the body (29 → 33 on the
         // measured refresh). A host that re-attached on it would fail here and nowhere else.
-        view.rerender(createElement(FlowGraphCanvasHost, {
-          scene: sceneFor(refresh.statusJson),
-          controllerId: String(29 + index * 2), surfaceId: retention.surface, editable: true, keyboardPort: { current: null }, onAction: noopAction,
-        }));
+        view.rerender(
+          createElement(FlowGraphCanvasHost, {
+            scene: sceneFor(refresh.statusJson),
+            controllerId: String(29 + index * 2),
+            surfaceId: retention.surface,
+            editable: true,
+            keyboardPort: { current: null },
+            onAction: noopAction,
+          }),
+        );
         await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson));
       }
       const attaches = bridge.operations.filter((operation: number) => operation === flowAbi.operations.attachSurface).length;
@@ -11938,7 +13296,9 @@ describe("node-graph surface attachment in a hidden tab", () => {
       expect(view.container.querySelectorAll("canvas").length, "the two canvases the host owns, never a second pair").toBe(2);
       for (const release of released) expect(release).not.toHaveBeenCalled();
       view.unmount();
-      await waitFor(() => { for (const release of released) expect(release).toHaveBeenCalledTimes(1); });
+      await waitFor(() => {
+        for (const release of released) expect(release).toHaveBeenCalledTimes(1);
+      });
       console.info("[DEBUG] retained React graph host preserved one session across refreshes and released it once on window unmount");
     } finally {
       view.unmount();
@@ -11965,7 +13325,9 @@ describe("built-node store reloads", () => {
     const textOf = () => (store.getNodeSnapshot(store.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
     expect(textOf()).toBe("first");
     let notifications = 0;
-    const unsubscribe = store.subscribeNode(rootId ?? 0)(() => { notifications += 1; });
+    const unsubscribe = store.subscribeNode(rootId ?? 0)(() => {
+      notifications += 1;
+    });
     try {
       expect(cache.storeFor("window:procedural-main", first)).toBe(store);
       expect(cache.pendingReloadKeys()).toEqual([]);
@@ -12010,7 +13372,9 @@ describe("built-node store reloads", () => {
 
   it("never updates a subscribed UiNodeView while another component renders", () => {
     const messages: string[] = [];
-    const consoleError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => { messages.push(args.map(String).join(" ")); });
+    const consoleError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      messages.push(args.map(String).join(" "));
+    });
     const renderPhaseUpdates = () => messages.filter((message) => message.includes("while rendering a different component"));
     const cache = createBuiltNodeStoreCacheV1();
     const deferred = ({ node }: { readonly node: BuiltNode }) => {
@@ -12043,7 +13407,6 @@ describe("built-node store reloads", () => {
 });
 //#endregion 🥽️BuiltNodeStoreReload
 
-
 test("world3d rectangle marquee draws a rectangle and pick draws nothing", () => {
   expect(world3dMarqueeOverlayShape("rectangle")).toBe("rect");
   expect(world3dMarqueeOverlayShape("lasso")).toBe("polygon");
@@ -12064,7 +13427,12 @@ test("InterpretedUiNode hands every surface host the shell's plugin context-menu
 test("openSurfaceContextMenu keeps an empty plugin answer off the shell fallback", async () => {
   const shell = [{ id: "setActiveExample", label: "Set Active Example" }];
   const guest = async () => [];
-  const mapped = await openSurfaceContextMenu(guest, { menu: { id: "world3d", args: null }, point: { x: 0, y: 0 } } as never, (specs) => [...specs] as never, () => shell as never);
+  const mapped = await openSurfaceContextMenu(
+    guest,
+    { menu: { id: "world3d", args: null }, point: { x: 0, y: 0 } } as never,
+    (specs) => [...specs] as never,
+    () => shell as never,
+  );
   expect(mapped.items).toEqual([]);
 });
 
@@ -12165,8 +13533,7 @@ describe("contributions push declaration", () => {
 type DescriptorWindowKind = { readonly id: string; readonly actions?: readonly { readonly id: string }[] };
 type DescriptorApp = { readonly id: string; readonly actions?: readonly { readonly id: string }[]; readonly windowKinds?: readonly DescriptorWindowKind[] };
 
-const windowKindsDeclaring = (app: DescriptorApp, actionId: string): readonly string[] =>
-  (app.windowKinds ?? []).filter((kind) => (kind.actions ?? []).some((action) => action.id === actionId)).map((kind) => kind.id);
+const windowKindsDeclaring = (app: DescriptorApp, actionId: string): readonly string[] => (app.windowKinds ?? []).filter((kind) => (kind.actions ?? []).some((action) => action.id === actionId)).map((kind) => kind.id);
 
 describe("window-kind action scoping", () => {
   /** ⚖️ LAW: a window-scoped action is declared on the window kinds that dispatch it and on NO other.
@@ -12203,7 +13570,12 @@ describe("window-kind action scoping", () => {
     for (const [appId, actionId, owners] of expectations) {
       const app = apps.get(appId);
       expect(`${appId}:declared`).toBe(app ? `${appId}:declared` : `${appId}:missing`);
-      expect(`${appId}:${actionId}:${windowKindsDeclaring(app as DescriptorApp, actionId).slice().sort().join(",")}`).toBe(`${appId}:${actionId}:${owners.slice().sort().join(",")}`);
+      expect(
+        `${appId}:${actionId}:${windowKindsDeclaring(app as DescriptorApp, actionId)
+          .slice()
+          .sort()
+          .join(",")}`,
+      ).toBe(`${appId}:${actionId}:${owners.slice().sort().join(",")}`);
     }
   });
 
@@ -12220,12 +13592,24 @@ describe("window-kind action scoping", () => {
     ] as const) {
       const app = apps.get(appId) as DescriptorApp;
       expect(app, appId).toBeDefined();
-      expect(app.actions?.filter(action => action.id === actionId), `${appId}:${actionId} app owner`).toHaveLength(1);
+      expect(
+        app.actions?.filter((action) => action.id === actionId),
+        `${appId}:${actionId} app owner`,
+      ).toHaveLength(1);
       expect(windowKindsDeclaring(app, actionId), `${appId}:${actionId} explicit window owners`).toEqual([]);
       expect(app.windowKinds?.length).toBeGreaterThan(0);
-      for (const windowKindId of [null, ...(app.windowKinds ?? []).map(kind => kind.id)]) {
+      for (const windowKindId of [null, ...(app.windowKinds ?? []).map((kind) => kind.id)]) {
         expect(undeclaredActionDiagnostic(appId, actionId, app.windowKinds ?? [], windowKindId, app.actions), `${appId}:${actionId}:${windowKindId}`).toBeNull();
-        if (actionId !== "undo") expect(undeclaredActionDiagnostic(appId, actionId, app.windowKinds ?? [], windowKindId, app.actions?.filter(action => action.id !== actionId))).not.toBeNull();
+        if (actionId !== "undo")
+          expect(
+            undeclaredActionDiagnostic(
+              appId,
+              actionId,
+              app.windowKinds ?? [],
+              windowKindId,
+              app.actions?.filter((action) => action.id !== actionId),
+            ),
+          ).not.toBeNull();
       }
     }
   });
@@ -12360,7 +13744,10 @@ describe("example switch — the completion's scope is what re-takes the flow wi
         { key: "procedural-preview", hash: "preview-hash" },
       ],
     });
-    const merged = mergeRecordPreservingIdentity(previousBodies, generation3dWindows.map((instance) => [instance.id, cache.get(`window:${instance.id}`)?.value ?? previousBodies[instance.id]] as const));
+    const merged = mergeRecordPreservingIdentity(
+      previousBodies,
+      generation3dWindows.map((instance) => [instance.id, cache.get(`window:${instance.id}`)?.value ?? previousBodies[instance.id]] as const),
+    );
     expect(merged["procedural-main"]).toEqual({ type: "nodeGraph", value: "box-shell-preview" });
     expect(merged["procedural-preview"]).toBe(previousBodies["procedural-preview"]);
     console.log("[DEBUG] example switch host caching: flow-body-replaced=1 preview-body-identity-kept=1");
@@ -12568,8 +13955,18 @@ describe("node-graph opening camera (renderer twin)", () => {
  * what it computed. The Rust half drives a real `FlowHost`
  * (`🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `a_fitted_flow_surface_publishes_the_camera_it_computed`);
  * this half drives the renderer's own fit rule over the same rows. */
-function portSidesSurfaceRows(): { name: string; viewport: { width: number; height: number }; camera: { x: number; y: number; zoom: number }; content: { minX: number; minY: number; maxX: number; maxY: number }; expect: { coverageAfterFit: number } }[] {
-  return (cameraFitFixture as unknown as { surfaceRows: { name: string; viewport: { width: number; height: number }; camera: { x: number; y: number; zoom: number }; content: { minX: number; minY: number; maxX: number; maxY: number }; expect: { coverageAfterFit: number } }[] }).surfaceRows;
+function portSidesSurfaceRows(): {
+  name: string;
+  viewport: { width: number; height: number };
+  camera: { x: number; y: number; zoom: number };
+  content: { minX: number; minY: number; maxX: number; maxY: number };
+  expect: { coverageAfterFit: number };
+}[] {
+  return (
+    cameraFitFixture as unknown as {
+      surfaceRows: { name: string; viewport: { width: number; height: number }; camera: { x: number; y: number; zoom: number }; content: { minX: number; minY: number; maxX: number; maxY: number }; expect: { coverageAfterFit: number } }[];
+    }
+  ).surfaceRows;
 }
 
 //#region 🔌️PortSideTwin
@@ -12744,9 +14141,7 @@ describe("🛑️ world3d cancel contract", () => {
       const { controlHeightPx, surfaceControlMinimum } = surfaceControlsFixture;
       const fits = (bounds: readonly number[]) => bounds[2] >= surfaceControlMinimum.widthControlHeights * controlHeightPx && bounds[3] >= surfaceControlMinimum.heightControlHeights * controlHeightPx;
       const ids = [
-        ...row.worlds
-          .filter((world: { bounds: number[]; statusJson: string | null }) => fits(world.bounds) && world3dComputeStatusV1(world.statusJson).cancellable)
-          .map((world: { surfaceId: string }) => `shell.world3d.cancel::${world.surfaceId}`),
+        ...row.worlds.filter((world: { bounds: number[]; statusJson: string | null }) => fits(world.bounds) && world3dComputeStatusV1(world.statusJson).cancellable).map((world: { surfaceId: string }) => `shell.world3d.cancel::${world.surfaceId}`),
       ];
       expect(ids, row.id).toEqual(row.expected);
     }
@@ -12940,7 +14335,10 @@ describe("⏳️ world3d compute status pane", () => {
       if (lane === "evaluation") expect(nonIdle, `${lane}: non-idle frames`).toBeGreaterThanOrEqual(timeline.minimumNonIdleFrames);
       console.log("[DEBUG] world3d status timeline %s: %s non-idle frame(s), ratio monotone up to %s, settled at the end", lane, nonIdle, previousRatio);
     }
-    expect(timeline.cancelled.some((frame) => frame.expected.phase === "cancelled"), "the cancelled lane settles on `cancelled`, not on `idle`").toBe(true);
+    expect(
+      timeline.cancelled.some((frame) => frame.expected.phase === "cancelled"),
+      "the cancelled lane settles on `cancelled`, not on `idle`",
+    ).toBe(true);
   });
 });
 //#endregion ⏳️ComputeStatusPaneTwin
@@ -12957,7 +14355,11 @@ describe("node-graph port types", () => {
   type Row = { readonly source: string; readonly target: string; readonly compatible: boolean; readonly examples?: readonly string[] };
   const fixture = portTypesFixture as unknown as { readonly channels: readonly Channel[]; readonly rows: readonly Row[] };
   const declared = new Map(fixture.channels.map((channel) => [channel.ref, channel.valueTypes] as const));
-  const typesOf = (reference: string) => declared.get(reference) ?? (() => { throw new Error(`fixture declares no channel ${reference}`); })();
+  const typesOf = (reference: string) =>
+    declared.get(reference) ??
+    (() => {
+      throw new Error(`fixture declares no channel ${reference}`);
+    })();
 
   it("accepts or refuses every fixture pair exactly as the fixture says", () => {
     expect(fixture.rows.length).toBeGreaterThanOrEqual(30);
@@ -13038,8 +14440,12 @@ describe("🎫️ the shell says what it holds", () => {
     const { nodeGraphSurfaceSelectionDomV1 } = await import("../../🧱️elements/🕸️NodeGraph/🟦️.tsx");
     expect(nodeGraphSurfaceSelectionDomV1(undefined)).toEqual({ selectedIds: [], highlightedIds: [], hoverTarget: null, editable: true });
     const picked = nodeGraphSurfaceSelectionDomV1({
-      nodes: [], edges: [], editable: true,
-      selection: ["height"], highlighted: ["height@number"], hover: { nodeId: "profile", portId: "radius" },
+      nodes: [],
+      edges: [],
+      editable: true,
+      selection: ["height"],
+      highlighted: ["height@number"],
+      hover: { nodeId: "profile", portId: "radius" },
     });
     expect(picked.selectedIds, "the node the Artifact panel's outline row picked").toEqual(["height"]);
     expect(picked.highlightedIds).toEqual(["height@number"]);
@@ -13076,10 +14482,7 @@ describe("🎫️ the shell says what it holds", () => {
     expect(auf_deutsch.labels, "no English leaks into a German projection").toEqual(["Widget hinzufügen", "Widget verschieben", "Auswahl löschen"]);
     expect(auf_deutsch.actionIds, "ids are locale-invariant").toEqual(midway.actionIds);
 
-    const bounded = shellHistoryCursorDomV1(
-      { cursor: 40, canUndo: true, canRedo: false, entries: Object.fromEntries(Array.from({ length: 40 }, (_, index) => entry(index + 1, `Step ${index + 1}`, `Schritt ${index + 1}`))) },
-      english,
-    );
+    const bounded = shellHistoryCursorDomV1({ cursor: 40, canUndo: true, canRedo: false, entries: Object.fromEntries(Array.from({ length: 40 }, (_, index) => entry(index + 1, `Step ${index + 1}`, `Schritt ${index + 1}`))) }, english);
     expect((bounded.labels as readonly string[]).length, "a DOM attribute carries a bounded tail, never the whole log").toBe(SHELL_HISTORY_DOM_LABELS);
     expect((bounded.labels as readonly string[])[SHELL_HISTORY_DOM_LABELS - 1]).toBe("Step 40");
     expect(bounded.redoLabel, "nothing above the cursor to redo").toBeNull();
@@ -13108,7 +14511,10 @@ describe("🎫️ the shell says what it holds", () => {
     /** 📐️ The measured 6018 geometry (`🐍️remaining-reds-recon.mjs` → `🗑️generated/react-reds/recon/recon.json`):
      * a 300 px dock body, a 238 px tab strip, a 64 px `Collapse` control and a 92 px navbar trailing-end
      * reserve — 394 px of content for 300 px of body. */
-    const body = 300, strip = 238, controls = 64, reserve = 92;
+    const body = 300,
+      strip = 238,
+      controls = 64,
+      reserve = 92;
     const style = chromeHostedPanelCapRowStyle("top-right", reserve);
     expect(style.paddingInlineStart, "the navbar's trailing end is still cleared").toBe(`${reserve + uiSpacingPx(1)}px`);
     expect(style.width, "the cap row sizes to its content").toBe("max-content");
@@ -13129,8 +14535,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("the shared World3d lighting fixture builds React's actual light and standard-material values", async () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
-      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dLightingFixture`);
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema).getSchema(`${uiRenderSchema.$id}#/$defs/World3dLightingFixture`);
     expect(validate?.(world3dLightingFixture), JSON.stringify(validate?.errors)).toBe(true);
 
     const { sunPositionFromAzimuthElevation } = await import("@semio-tech/ui-react");
@@ -13151,16 +14556,25 @@ describe("🎫️ the shell says what it holds", () => {
     expect(ambient.color.getHexString()).toBe(environment.ambient.color.slice(1));
     expect(sun.intensity).toBe(environment.sun.intensity);
     expect(sun.color.getHexString()).toBe(environment.sun.color.slice(1));
-    expect(sun.position.clone().normalize().toArray()).toEqual([
-      Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.cos(THREE.MathUtils.degToRad(environment.sun.azimuth)),
-      Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.sin(THREE.MathUtils.degToRad(environment.sun.azimuth)),
-      Math.sin(THREE.MathUtils.degToRad(environment.sun.elevation)),
-    ].map((value) => expect.closeTo(value, 12)));
+    expect(sun.position.clone().normalize().toArray()).toEqual(
+      [
+        Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.cos(THREE.MathUtils.degToRad(environment.sun.azimuth)),
+        Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.sin(THREE.MathUtils.degToRad(environment.sun.azimuth)),
+        Math.sin(THREE.MathUtils.degToRad(environment.sun.elevation)),
+      ].map((value) => expect.closeTo(value, 12)),
+    );
     expect(material.metalness).toBe(environment.material.metalness);
     expect(material.roughness).toBe(environment.material.roughness);
     expect(material.emissive.getHexString()).toBe(environment.material.emissive.slice(1));
     expect(material.emissiveIntensity).toBe(environment.material.emissiveIntensity);
-    expect(material.emissive.clone().multiplyScalar(material.emissiveIntensity).toArray().some((channel) => channel > 0), "the oracle's neutral emissive contributes radiance").toBe(true);
+    expect(
+      material.emissive
+        .clone()
+        .multiplyScalar(material.emissiveIntensity)
+        .toArray()
+        .some((channel) => channel > 0),
+      "the oracle's neutral emissive contributes radiance",
+    ).toBe(true);
   });
 
   it("the shared Tree drag fixture matches React's handle and surface drivers", () => {
@@ -13204,8 +14618,7 @@ describe("🎫️ the shell says what it holds", () => {
 
   it("the shared scene-list transfer fixture matches React data transfer and dnd-kit geometry", async () => {
     const fixture = sceneListTransferFixture;
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
-      .getSchema(`${uiRenderSchema.$id}#/$defs/SceneListTransferFixture`);
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema).getSchema(`${uiRenderSchema.$id}#/$defs/SceneListTransferFixture`);
     expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
     await uiI18n.changeLanguage("en");
 
@@ -13289,9 +14702,7 @@ describe("🎫️ the shell says what it holds", () => {
       const actions = vi.fn();
       const view = render(createElement(UiDriverProvider, { driver }, createElement(BlockListHost, { node: blockNode as never, onAction: actions })));
       try {
-        const expectedHandleCount = driverCase.drag === "handle"
-          ? fixture.blockList.steps.length + fixture.blockList.steps.reduce((count, step) => count + step.blocks.length, 0) + fixture.blockList.palette.length
-          : 0;
+        const expectedHandleCount = driverCase.drag === "handle" ? fixture.blockList.steps.length + fixture.blockList.steps.reduce((count, step) => count + step.blocks.length, 0) + fixture.blockList.palette.length : 0;
         expect(view.container.querySelectorAll('[data-slot="drag-handle"]')).toHaveLength(expectedHandleCount);
         const paletteRow = view.container.querySelector(".semio-palette > div") as HTMLDivElement;
         expect(paletteRow.draggable).toBe(driverCase.drag === "surface");
@@ -13306,15 +14717,28 @@ describe("🎫️ the shell says what it holds", () => {
       const droppableContainers = ids.map((id) => ({ id, disabled: false, data: { current: {} }, node: { current: null }, rect: { current: null } }));
       return closestCenter({ collisionRect: rect(targetIndex * 40), droppableRects, droppableContainers } as never)[0]?.id;
     };
-    expect(collisionWinner(fixture.blockList.steps.map((step) => step.id), 1)).toBe("publish");
-    expect(collisionWinner(fixture.blockList.steps[0]!.blocks.map((block) => block.id), 1)).toBe("clean");
+    expect(
+      collisionWinner(
+        fixture.blockList.steps.map((step) => step.id),
+        1,
+      ),
+    ).toBe("publish");
+    expect(
+      collisionWinner(
+        fixture.blockList.steps[0]!.blocks.map((block) => block.id),
+        1,
+      ),
+    ).toBe("clean");
     expect(fixture.journeys.find((journey) => journey.id === "step-prepare-after-publish")?.expectedAction).toEqual({ controllerId: "controller.block-list", action: "moveStep", args: { stepId: "prepare", index: 1 } });
-    expect(fixture.journeys.find((journey) => journey.id === "block-load-after-clean")?.expectedAction).toEqual({ controllerId: "controller.block-list", action: "moveBlock", args: { blockId: "load", fromStepId: "prepare", toStepId: "prepare", index: 1 } });
+    expect(fixture.journeys.find((journey) => journey.id === "block-load-after-clean")?.expectedAction).toEqual({
+      controllerId: "controller.block-list",
+      action: "moveBlock",
+      args: { blockId: "load", fromStepId: "prepare", toStepId: "prepare", index: 1 },
+    });
   });
 
   it("the shared shadow fixture matches Three's directional camera and IconRender caster contract", async () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
-      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowFixture`);
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema).getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowFixture`);
     expect(validate?.(world3dShadowFixture), JSON.stringify(validate?.errors)).toBe(true);
 
     const { sunPositionFromAzimuthElevation } = await import("@semio-tech/ui-react");
@@ -13340,8 +14764,7 @@ describe("🎫️ the shell says what it holds", () => {
 
   it("the neutral exact-shadow corpus matches React roles and current Three PCF", () => {
     const fixture = world3dShadowParityFixture;
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
-      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowParityFixture`);
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema).getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowParityFixture`);
     expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
     const worldSun = new THREE.DirectionalLight();
     expect(worldSun.shadow.mapSize.toArray()).toEqual([fixture.profiles.world.mapSize, fixture.profiles.world.mapSize]);
@@ -13421,7 +14844,6 @@ describe("🎫️ the shell says what it holds", () => {
 });
 //#endregion 🎫️RemainingReds
 
-
 it("the neutral gizmo head corpus matches Three sprite scale and circle bounds", () => {
   const camera = new THREE.PerspectiveCamera();
   camera.position.fromArray(gizmoTipBoundsFixture.camera.position);
@@ -13429,10 +14851,17 @@ it("the neutral gizmo head corpus matches Three sprite scale and circle bounds",
   camera.lookAt(new THREE.Vector3().fromArray(gizmoTipBoundsFixture.camera.target));
   camera.updateMatrixWorld(true);
   const viewRotation = new THREE.Matrix4().extractRotation(camera.matrixWorldInverse);
-  const axes = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  const axes = [
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 1, 0],
+    [0, -1, 0],
+    [0, 0, 1],
+    [0, 0, -1],
+  ];
   for (const [index, axis] of axes.entries()) {
     const point = new THREE.Vector3().fromArray(axis).applyMatrix4(viewRotation);
-    expect([point.x * gizmoTipBoundsFixture.groupScale, -point.y * gizmoTipBoundsFixture.groupScale, point.z]).toEqual(gizmoTipBoundsFixture.axisOffsets[index].map(value => expect.closeTo(value, 6)));
+    expect([point.x * gizmoTipBoundsFixture.groupScale, -point.y * gizmoTipBoundsFixture.groupScale, point.z]).toEqual(gizmoTipBoundsFixture.axisOffsets[index].map((value) => expect.closeTo(value, 6)));
   }
   for (const row of gizmoTipBoundsFixture.cases) {
     const sprite = new THREE.Sprite();
@@ -13441,7 +14870,7 @@ it("the neutral gizmo head corpus matches Three sprite scale and circle bounds",
     sprite.scale.setScalar((row.prominent ? 1 : 0.65) * gizmoTipBoundsFixture.axisHeadScale * (row.hovered ? 1.1 : 1));
     group.add(sprite);
     group.updateMatrixWorld(true);
-    const radius = sprite.getWorldScale(new THREE.Vector3()).x * (row.prominent ? 16 : 12) / gizmoTipBoundsFixture.textureSize;
+    const radius = (sprite.getWorldScale(new THREE.Vector3()).x * (row.prominent ? 16 : 12)) / gizmoTipBoundsFixture.textureSize;
     expect(radius).toBeCloseTo(row.radius, 8);
     const geometry = new THREE.CircleGeometry(radius, 64);
     geometry.computeBoundingBox();
@@ -13454,19 +14883,21 @@ it("the neutral gizmo head corpus matches Three sprite scale and circle bounds",
   }
 });
 
-
 describe("shared VFS descriptor presentation", () => {
-  for (const law of vfsDescriptorFixture.cases) it(`renders the actual React VFS descriptor ${law.id}`, () => {
-    const kind = vfsDescriptorFixture.kinds[law.kind as keyof typeof vfsDescriptorFixture.kinds] as DescriptorKind;
-    const value = law.value === null ? undefined : law.value as FileNodeDescriptorValue;
-    const view = render(createElement("div", null, renderVirtualFileSystemDescriptorCell(kind, value, "en-US")));
-    try {
-      expect(view.container.textContent).toBe(law.expect.text);
-      if (value?.presentation === "avatar" && kind.presentation === "avatar") {
-        expect(view.container.querySelector('[data-slot="avatar-fallback"]')?.getAttribute("aria-label")).toBe(law.expect.name);
-        expect(view.container.querySelector('[data-slot="avatar"]')?.classList.contains("rounded-full")).toBe(true);
-        if (value.icon) expect(view.container.querySelector("img")?.getAttribute("src")).toBe(law.expect.icon);
+  for (const law of vfsDescriptorFixture.cases)
+    it(`renders the actual React VFS descriptor ${law.id}`, () => {
+      const kind = vfsDescriptorFixture.kinds[law.kind as keyof typeof vfsDescriptorFixture.kinds] as DescriptorKind;
+      const value = law.value === null ? undefined : (law.value as FileNodeDescriptorValue);
+      const view = render(createElement("div", null, renderVirtualFileSystemDescriptorCell(kind, value, "en-US")));
+      try {
+        expect(view.container.textContent).toBe(law.expect.text);
+        if (value?.presentation === "avatar" && kind.presentation === "avatar") {
+          expect(view.container.querySelector('[data-slot="avatar-fallback"]')?.getAttribute("aria-label")).toBe(law.expect.name);
+          expect(view.container.querySelector('[data-slot="avatar"]')?.classList.contains("rounded-full")).toBe(true);
+          if (value.icon) expect(view.container.querySelector("img")?.getAttribute("src")).toBe(law.expect.icon);
+        }
+      } finally {
+        view.unmount();
       }
-    } finally { view.unmount(); }
-  });
+    });
 });

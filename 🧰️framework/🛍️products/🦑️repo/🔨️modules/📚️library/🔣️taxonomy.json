@@ -27082,6 +27082,7 @@
             "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
             "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
             "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
@@ -27213,6 +27214,7 @@
         "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
         "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
         "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
@@ -29218,6 +29220,9 @@
         "✂️unbind": "unbind-morph-target-attribute",
         "🚚️move": "move-morph-target-attribute",
         "🔀️reorder": "reorder-morph-target-attributes"
+      },
+      "📸️snapshot": {
+        "📸️set": "set-snapshot"
       }
     }
   },

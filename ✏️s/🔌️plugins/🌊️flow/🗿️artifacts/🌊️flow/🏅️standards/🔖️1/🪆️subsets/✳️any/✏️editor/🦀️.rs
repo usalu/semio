@@ -40,7 +40,7 @@ use crate::schema::mutations::replace_widget::ReplaceWidget;
 use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_flow_flow::{flow_host_snapshot_operations, CameraJson, Widget};
+use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
 use semio_framework_plugin::app::{ChildEmit, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -50,7 +50,8 @@ use semio_framework_plugin::{
     TopologyNode, WindowMeasure,
 };
 use serde_json::json;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
+use semio_framework::kernel::UiDirtyScope;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, set_snapshot, SemioFlowMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, PortRef, SemioFlowSnapshot};
 #[cfg(test)]
 use serde_json::Value;
@@ -697,6 +698,18 @@ where
 }
 //#endregion 📬️StorePreparation
 
+/// 🧮️ The composed content child this document names, read in place for a bounded scan — `None` unless it is
+/// composed as `s.stdio.semio@v1/flow`. Every retained scan reads it, never the parent's working-scene owner
+/// (see [`crate::flow_composed_snapshot`]).
+fn flow_content_child<'a>(snapshot: &FlowSnapshot, children: &'a semio_framework_plugin::ChildContentView) -> Option<store::SnapshotReadRef<'a, SemioFlowSnapshot>> {
+    let child_id = &snapshot.content.child_id;
+    let dialect = children.dialect("content", child_id)?;
+    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
+        return None;
+    }
+    children.typed_read::<SemioFlowSnapshot>("content", child_id).ok()
+}
+
 //#region 🧵️DirectStoreLaneRoutes
 const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
     "removeWidget",
@@ -892,19 +905,19 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 Some(payload.ids.len().saturating_mul(FLOW_STORE_MAX_SCENE_ITEMS.max(1)).max(1))
             }
             FlowCommand::SetPreviewOff(_) => None,
-            FlowCommand::RemoveWidget(_) => snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.widgets.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.widgets.len().max(1)),
-            FlowCommand::Disconnect(_) => snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.synapses.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.synapses.len().max(1)),
+            FlowCommand::RemoveWidget(_) => flow_content_child(snapshot, &context?.children).filter(|child| child.nodes.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|child| child.nodes.len().max(1)),
+            FlowCommand::Disconnect(_) => flow_content_child(snapshot, &context?.children).filter(|child| child.edges.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|child| child.edges.len().max(1)),
             FlowCommand::DeleteSelection(_) => match interaction.selection.get(FLOW_INTERACTION_GRAPH) {
                 Some(selection) if selection.ids.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && selection.ids.iter().map(String::len).fold(0, usize::saturating_add) <= FLOW_STORE_MAX_TEXT_BYTES => {
-                    snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.widgets.len() <= FLOW_STORE_MAX_SCENE_ITEMS && scene.synapses.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| {
+                    flow_content_child(snapshot, &context?.children).filter(|child| child.nodes.len() <= FLOW_STORE_MAX_SCENE_ITEMS && child.edges.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|child| {
                         selection
                             .ids
                             .iter()
                             .fold(0usize, |extent, target| {
                                 extent.saturating_add(if target.starts_with(FLOW_GRAPH_EDGE_TARGET_PREFIX) {
-                                    scene.synapses.len().max(1)
+                                    child.edges.len().max(1)
                                 } else if target.starts_with(FLOW_GRAPH_NODE_TARGET_PREFIX) {
-                                    scene.widgets.len().max(1)
+                                    child.nodes.len().max(1)
                                 } else {
                                     1
                                 })
@@ -918,15 +931,11 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             FlowCommand::PatchFlowWidgets(payload)
                 if payload.widget_ids.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && payload.widget_ids.iter().map(String::len).fold(payload.field.len().saturating_add(payload.value.len()), usize::saturating_add) <= FLOW_STORE_MAX_TEXT_BYTES =>
             {
-                snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.widgets.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.widgets.len().saturating_mul(payload.widget_ids.len().max(1)).max(1))
+                flow_content_child(snapshot, &context?.children).filter(|child| child.nodes.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|child| child.nodes.len().saturating_mul(payload.widget_ids.len().max(1)).max(1))
             }
             FlowCommand::PatchFlowWidgets(_) => None,
             FlowCommand::DuplicateWidget(payload) if !payload.widget_id.is_empty() && payload.widget_id.len() <= 256 => {
-                let context = context?;
-                let child_id = &snapshot.content.child_id;
-                let dialect = context.children.dialect("content", child_id)?;
-                if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" { return None; }
-                let child = context.children.typed_read::<SemioFlowSnapshot>("content", child_id).ok()?;
+                let child = flow_content_child(snapshot, &context?.children)?;
                 (child.nodes.len() <= FLOW_STORE_MAX_SCENE_ITEMS && child.edges.len() <= FLOW_STORE_MAX_SCENE_ITEMS)
                     .then_some(child.nodes.len().saturating_add(1).saturating_mul(child.nodes.len().saturating_add(child.edges.len()).saturating_add(2)).max(1))
             }
@@ -947,16 +956,12 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if payload.widget_id.is_empty() || payload.widget_id.len() > 256 {
                 return Err(Fault::from("flow-duplicate-widget-id-capacity"));
             }
-            let window = context.window_transient.as_ref().ok_or_else(|| Fault::from("flow-duplicate-window-transient-required"))?;
-            if view.window_id.as_deref() != Some(window.window_id()) {
+            let window = context.window_transient.as_ref();
+            if window.is_some_and(|window| view.window_id.as_deref() != Some(window.window_id())) {
                 return Err(Fault::from("flow-duplicate-window-transient-stale"));
             }
             let child_id = &snapshot.content.child_id;
-            let dialect = context.children.dialect("content", child_id).ok_or_else(|| Fault::from("flow-duplicate-child-dialect-required"))?;
-            if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
-                return Err(Fault::from("flow-duplicate-child-dialect-mismatch"));
-            }
-            let child = context.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
+            let child = flow_content_child(snapshot, &context.children).ok_or_else(|| Fault::from("flow-duplicate-content-child-required"))?;
             if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-duplicate-child-capacity"));
             }
@@ -972,12 +977,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     return Ok(ArtifactCommandWorkStep::Progress { stage: "flow-duplicate-source", preview: br#"{"en":"Finding source widget","de":"Quell-Widget wird gesucht"}"# });
                 }
                 self.completed = true;
-                let mut transient = main::transient::from_snapshot(Some(window));
-                transient.duplicate_widget_progress_json.clear();
-                return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-                    emit: Emit::default(),
-                    ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![main::transient::addressed(view, transient)?] },
-                });
+                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("duplicateWidget found no widget \"{}\"", payload.widget_id)));
             }
             let source_index = self.duplicate_source.ok_or_else(|| Fault::from("flow-duplicate-source-owner"))?;
             let source = child.nodes.get(source_index).filter(|node| node.id == payload.widget_id).ok_or_else(|| Fault::from("flow-duplicate-source-stale"))?;
@@ -1019,9 +1019,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 coalesce_key: Some(format!("duplicateWidget:{}", payload.widget_id)),
                 ..Default::default()
             };
+            self.completed = true;
+            let Some(window) = window else { return Ok(ArtifactCommandWorkStep::Complete(emit)) };
             let mut transient = main::transient::from_snapshot(Some(window));
             transient.duplicate_widget_progress_json.clear();
-            self.completed = true;
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit,
                 ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![main::transient::addressed(view, transient)?] },
@@ -1031,7 +1032,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let (nodes, _) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
             let mut next = config.clone();
             let session = FlowEvalSession::new();
-            let camera = focus_selection_camera(snapshot, &config, &session, &nodes);
+            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+            let camera = focus_selection_camera(&composed, &config, &session, &nodes);
             session.retire_cold();
             if let Some(camera) = camera {
                 next.camera = camera;
@@ -1052,21 +1054,22 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 return Err(Fault::from("flow-generation-window-transient-stale"));
             }
             let current = main::transient::from_snapshot(Some(window));
-            let mutation = generation_window_transient(command, snapshot, &config, &current, view)?;
+            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+            let mutation = generation_window_transient(command, &composed, &config, &current, view)?;
             self.completed = true;
             let emit = Emit { coalesce_key: matches!(command, FlowCommand::UpdateGenerationValues(_)).then(|| "generation-values".to_string()), ..Default::default() };
             let ephemeral = semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: mutation.into_iter().collect() };
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral });
         }
         if matches!(command, FlowCommand::RemoveWidget(_) | FlowCommand::Disconnect(_)) {
-            let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
-            if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+            let child = flow_content_child(snapshot, &context.children).ok_or_else(|| Fault::from("flow-retained-content-child-required"))?;
+            if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
             self.artifact_mutations.get_or_insert_with(Vec::new);
             let (length, matched) = match command {
-                FlowCommand::RemoveWidget(payload) => (scene.widgets.len(), scene.widgets.get(self.cursor).is_some_and(|widget| flow_widget_id(widget) == payload.widget_id)),
-                FlowCommand::Disconnect(payload) => (scene.synapses.len(), scene.synapses.get(self.cursor).is_some_and(|synapse| synapse.id == payload.synapse_id)),
+                FlowCommand::RemoveWidget(payload) => (child.nodes.len(), child.nodes.get(self.cursor).is_some_and(|node| node.id == payload.widget_id)),
+                FlowCommand::Disconnect(payload) => (child.edges.len(), child.edges.get(self.cursor).is_some_and(|edge| edge.id == payload.synapse_id)),
                 _ => unreachable!(),
             };
             if self.cursor < length {
@@ -1098,28 +1101,29 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     _ => Fault::from("flow-retained-direct-route-mismatch"),
                 });
             }
-            return Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(mutations)));
+            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+            return flow_content_edit(&composed, &mutations).map(ArtifactCommandWorkStep::Complete);
         }
         if matches!(command, FlowCommand::DeleteSelection(_)) {
             let selected = interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice());
             if selected.len() > FLOW_STORE_MAX_MUTATION_ITEMS || selected.iter().map(String::len).sum::<usize>() > FLOW_STORE_MAX_TEXT_BYTES {
                 return Err(Fault::from("flow-retained-delete-selection-capacity"));
             }
-            let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
-            if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+            let child = flow_content_child(snapshot, &context.children).ok_or_else(|| Fault::from("flow-retained-content-child-required"))?;
+            if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
             self.edge_mutations.get_or_insert_with(Vec::new);
             self.node_mutations.get_or_insert_with(Vec::new);
             if let Some(target) = selected.get(self.cursor) {
                 if let Some(id) = target.strip_prefix(FLOW_GRAPH_EDGE_TARGET_PREFIX) {
-                    if let Some(synapse) = scene.synapses.get(self.scan_cursor) {
+                    if let Some(edge) = child.edges.get(self.scan_cursor) {
                         self.scan_cursor += 1;
-                        let matched = synapse.id == id;
+                        let matched = edge.id == id;
                         if matched {
                             self.edge_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(FlowMutation::DisconnectWidgets(DisconnectWidgets { id: id.to_string() }));
                         }
-                        if matched || self.scan_cursor == scene.synapses.len() {
+                        if matched || self.scan_cursor == child.edges.len() {
                             self.cursor += 1;
                             self.scan_cursor = 0;
                         }
@@ -1128,13 +1132,13 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                         self.scan_cursor = 0;
                     }
                 } else if let Some(id) = target.strip_prefix(FLOW_GRAPH_NODE_TARGET_PREFIX) {
-                    if let Some(widget) = scene.widgets.get(self.scan_cursor) {
+                    if let Some(node) = child.nodes.get(self.scan_cursor) {
                         self.scan_cursor += 1;
-                        let matched = flow_widget_id(widget) == id;
+                        let matched = node.id == id;
                         if matched {
                             self.node_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(FlowMutation::DeleteWidget(DeleteWidget { id: id.to_string() }));
                         }
-                        if matched || self.scan_cursor == scene.widgets.len() {
+                        if matched || self.scan_cursor == child.nodes.len() {
                             self.cursor += 1;
                             self.scan_cursor = 0;
                         }
@@ -1158,7 +1162,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if artifact_mutations.is_empty() {
                 return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
             }
-            return Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(artifact_mutations)));
+            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+            return flow_content_edit(&composed, &artifact_mutations).map(ArtifactCommandWorkStep::Complete);
         }
         if let FlowCommand::SetPreviewOff(payload) = command {
             if self.preview_off.is_none() {
@@ -1212,16 +1217,17 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if payload.widget_ids.len() > FLOW_STORE_MAX_MUTATION_ITEMS || input_bytes > FLOW_STORE_MAX_TEXT_BYTES {
                 return Err(Fault::from("flow-retained-patch-widgets-capacity"));
             }
-            let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
-            if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+            let child = flow_content_child(snapshot, &context.children).ok_or_else(|| Fault::from("flow-retained-content-child-required"))?;
+            if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
             self.artifact_mutations.get_or_insert_with(Vec::new);
-            if let Some(widget) = scene.widgets.get(self.cursor) {
+            if let Some(node) = child.nodes.get(self.cursor) {
                 if let Some(id) = payload.widget_ids.get(self.scan_cursor) {
                     self.scan_cursor += 1;
-                    let matched = id == flow_widget_id(widget);
+                    let matched = *id == node.id;
                     if matched {
+                        let widget = crate::widget_from_node(node);
                         let mut replacement = widget.clone();
                         match (payload.field.as_str(), &mut replacement) {
                             ("value", Widget::InputSlider { value, .. }) => {
@@ -1232,8 +1238,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                             ("text", Widget::InputNote { text, .. }) => *text = payload.value.clone(),
                             _ => {}
                         }
-                        if replacement != *widget {
-                            self.artifact_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?.push(FlowMutation::ReplaceWidget(ReplaceWidget { id: flow_widget_id(widget).to_string(), widget: replacement }));
+                        if replacement != widget {
+                            self.artifact_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?.push(FlowMutation::ReplaceWidget(ReplaceWidget { id: node.id.clone(), widget: replacement }));
                         }
                     }
                     if matched || self.scan_cursor == payload.widget_ids.len() {
@@ -1256,7 +1262,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if mutations.is_empty() {
                 return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.patch-widgets-unchanged"), format!("patchFlowWidgets changed no widget among [{}] with {} = {:?}", payload.widget_ids.join(widget_ids_separator), payload.field, payload.value)));
             }
-            return Ok(ArtifactCommandWorkStep::Complete(Emit::amend(mutations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator)))));
+            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+            let mut emit = flow_content_edit(&composed, &mutations)?;
+            emit.coalesce_key = Some(format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator)));
+            return Ok(ArtifactCommandWorkStep::Complete(emit));
         }
         self.completed = true;
         flow_direct_store_emit(command, &config, view).map(ArtifactCommandWorkStep::Complete)
@@ -1394,10 +1403,10 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
@@ -1442,13 +1451,7 @@ impl FlowChildGroupWork {
         if !matches!(command, FlowCommand::AddWidget(_) | FlowCommand::MoveMediaNode(_) | FlowCommand::NodeGraphEdit(_) | FlowCommand::SpotlightCommit(_)) {
             return None;
         }
-        let context = context?;
-        let child_id = &snapshot.content.child_id;
-        let dialect = context.children.dialect("content", child_id)?;
-        if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
-            return None;
-        }
-        context.children.typed_read::<SemioFlowSnapshot>("content", child_id).ok()
+        flow_content_child(snapshot, &context?.children)
     }
 
     fn payload_admitted(command: &FlowCommand) -> bool {
@@ -1704,8 +1707,8 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN)),
-                    FlowCommand::FlowEvalTick(command) => Ok(flow_eval_tick::tick_result(&payload.snapshot, &payload.config, session, &command.window_id, &command.window_kind_id)),
+                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| evaluate::evaluate_result(&composed, &payload.config, session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN)),
+                    FlowCommand::FlowEvalTick(command) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| flow_eval_tick::tick_result(&composed, &payload.config, session, &command.window_id, &command.window_kind_id)),
                     FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
@@ -1836,7 +1839,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 
 //#region 🧵️GraphOperationRetainedRoute
 /// 🕸️ The whole-graph routes: each runs one `FlowHost` operation (or the rename's pure snapshot
-/// rewrite) against the live scene and publishes ONE batched artifact-lane edit. Retained rather
+/// rewrite) against the composed scene and publishes ONE snapshot group on its content child. Retained rather
 /// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
 /// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -1893,25 +1896,19 @@ impl FlowGraphOperationWork {
         self.cursor < self.replay_target
     }
 
-    fn apply(&self, command: &FlowCommand, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, _interaction: &protocol::InteractionState) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    fn apply(&self, command: &FlowCommand, composed: &FlowSnapshot, config: &FlowMainWindowConfig, _interaction: &protocol::InteractionState) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-graph-instance-owner"))?;
         let resolved = self.resolved;
         instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| match command {
-                FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => {
-                    let operations = connect_media_ports::connect_operations(payload, snapshot, config, session);
-                    if operations.is_empty() {
-                        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.connect-incompatible"), format!("connectMediaPorts cannot connect {}@{} to {}@{}", payload.source_node_id, payload.source_port_id, payload.target_node_id, payload.target_port_id)));
-                    }
-                    Ok(Emit::mutations(operations))
-                }
+                FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => connect_media_ports::connect_edit(payload, composed, config, session),
                 FlowCommand::ConnectMediaPorts(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("connectMediaPorts found no widget \"{}\"", if resolved[0] { &payload.target_node_id } else { &payload.source_node_id }))),
-                FlowCommand::Reorganize(_) => Ok(Emit::mutations(reorganize::reorganize_operations(snapshot, config, session))),
-                FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] && !payload.value.trim().is_empty() => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
+                FlowCommand::Reorganize(_) => reorganize::reorganize_edit(composed, config, session),
+                FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] && !payload.value.trim().is_empty() => rename_flow_widget::rename_edit(payload, composed),
                 FlowCommand::RenameFlowWidget(payload) if !resolved[0] => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("renameFlowWidget found no widget \"{}\"", payload.old_id))),
                 FlowCommand::RenameFlowWidget(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.widget-id-unavailable"), format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim()))),
-                FlowCommand::RunExtensionAction(payload) => run_extension_action::extension_action_result(payload, snapshot, config, session),
-                FlowCommand::SetActiveExample(payload) => Ok(Emit::mutations(set_active_example::set_active_example_operations(payload, snapshot)?)),
+                FlowCommand::RunExtensionAction(payload) => run_extension_action::extension_action_result(payload, composed, config, session),
+                FlowCommand::SetActiveExample(payload) => set_active_example::set_active_example_edit(payload, composed),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
         })
@@ -1928,16 +1925,16 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         command: &FlowCommand,
         snapshot: &FlowSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
         if self.closing || self.completed || command.command_id() != self.tool_id || !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&self.tool_id) || !flow_graph_operation_payload_admitted(command) {
             return None;
         }
-        let scene = snapshot.content.local_owner::<FlowWorkingScene>()?;
-        if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+        let child = flow_content_child(snapshot, &context?.children)?;
+        if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
             return None;
         }
-        FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(scene.widgets.len().saturating_add(1))
+        FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(child.nodes.len().saturating_add(1))
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
@@ -1950,14 +1947,13 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
         let context = context.ok_or_else(|| Fault::from("flow-retained-graph-context-required"))?;
         let config = main::config::from_snapshot(context.window_config.as_ref());
-        let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
-        if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+        let child = flow_content_child(snapshot, &context.children).ok_or_else(|| Fault::from("flow-retained-content-child-required"))?;
+        if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
             return Err(Fault::from("flow-retained-scene-capacity"));
         }
-        if let Some(widget) = scene.widgets.get(self.cursor) {
-            let id = flow_widget_id(widget);
+        if let Some(node) = child.nodes.get(self.cursor) {
             for (slot, reference) in flow_graph_operation_references(command).into_iter().enumerate() {
-                if reference.is_some_and(|reference| reference == id) {
+                if reference.is_some_and(|reference| reference == node.id) {
                     self.resolved[slot] = true;
                 }
             }
@@ -1969,7 +1965,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             });
         }
         self.completed = true;
-        self.apply(command, snapshot, &config, interaction).map(ArtifactCommandWorkStep::Complete)
+        let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
+        self.apply(command, &composed, &config, interaction).map(ArtifactCommandWorkStep::Complete)
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
@@ -2071,11 +2068,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowGraphOperationJ
     const TOOL_IDS: &'static [&'static str] = FLOW_GRAPH_OPERATION_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameFlowWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "runExtensionAction", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameFlowWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "runExtensionAction", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
     ];
 }
 
@@ -2417,7 +2414,8 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
-    /// child that every `Child`-lane verb reads — see [`crate::flow_genesis_content_pack`].
+    /// child that every verb edits and every window reads — see [`crate::flow_genesis_content_pack`] and
+    /// [`crate::flow_composed_snapshot`].
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
         crate::flow_genesis_content_pack(snapshot, slot, child_id)
     }
@@ -2560,11 +2558,15 @@ impl ArtifactEditor for FlowPlayApp {
     /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
-        let live = doc.snapshot.to_host_snapshot();
+        let mut domains = std::collections::BTreeMap::new();
+        let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else {
+            domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered: Vec::new() });
+            return InteractionTopology { domains };
+        };
+        let live = composed.to_host_snapshot();
         let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
         live.retire_cold();
-        let mut domains = std::collections::BTreeMap::new();
         domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
     }
@@ -2587,19 +2589,21 @@ impl ArtifactEditor for FlowPlayApp {
             return Vec::new();
         }
         let config = main::config::current(cfg);
+        let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else { return Vec::new() };
         owner
             .with_mut::<FlowInstanceOperationOwner, _>(|instance| {
                 instance.with_session(|session| {
                     let live: Vec<&str> = windows.iter().map(|(id, _)| id.as_str()).collect();
                     session.retain_window_tick_latches(&live);
-                    windows.iter().flat_map(|(window_id, window_kind_id)| evaluate::evaluate_result(doc.snapshot, &config, session, window_id, window_kind_id).effects).collect::<Vec<Effect>>()
+                    windows.iter().flat_map(|(window_id, window_kind_id)| evaluate::evaluate_result(&composed, &config, session, window_id, window_kind_id).effects).collect::<Vec<Effect>>()
                 })
             })
             .unwrap_or_default()
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let snapshot = doc.snapshot;
+        let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?;
+        let snapshot = &composed;
         let config = main::config::current(cfg);
         let transient = main::transient::FlowWindowTransient::default();
         let labels = flow_play_labels(view_state);
@@ -2633,20 +2637,21 @@ impl ArtifactEditor for FlowPlayApp {
         let config = main::config::current(cfg);
         let transient = main::transient::current(transient);
         let (graph_selection, _) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
+        let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?;
         owner
             .with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match body_key {
-                    FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, &config, session, &graph_selection).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, &config, session).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_MAIN => main::render(&composed, &config, session, &graph_selection).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_COMPILED => compiled::render(&composed, &config, session).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATIONS => {
                         generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
                             .map(semio_framework_plugin::built_to_component_tree)
                     }
-                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(&composed, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(doc.snapshot, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(&composed, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => {
-                        catalogue_panel::render(doc.snapshot, &config, session, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
+                        catalogue_panel::render(&composed, &config, session, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
                     }
                     FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -2668,7 +2673,8 @@ impl ArtifactEditor for FlowPlayApp {
     fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = main::config::current(cfg);
         let is_de = view_state.locale == semio_framework_plugin::Locale::De;
-        flow_context_menu_items(registry, doc.snapshot, &config, flow_play_labels(view_state), is_de, request.surface.as_ref())
+        let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else { return Vec::new() };
+        flow_context_menu_items(registry, &composed, &config, flow_play_labels(view_state), is_de, request.surface.as_ref())
     }
 }
 //#endregion 🔖️FlowPlayApp
@@ -2727,52 +2733,34 @@ pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&se
     result
 }
 
-/// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
-/// returns an empty vec when `mutate` reports "nothing changed".
-pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
-    fallible_host_operations(snapshot, config, session, |host| Ok(mutate(host))).unwrap_or_default()
+/// 📮️ Publishes an edited scene where it lives: ONE `SetSnapshot` group on the `content` child `composed` names, and
+/// nothing when the scene did not change. The parent coordinate never moves, so the next verb, every window and a
+/// reload read the store this edit landed in (see [`crate::flow_composed_snapshot`]).
+pub fn flow_scene_publication(composed: &FlowSnapshot, widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> Emit<FlowMutation, NoConfigMutation> {
+    let next = crate::flow_content_snapshot_from_working(widgets, synapses, layout);
+    if composed.content.local_owner::<FlowWorkingScene>().is_some_and(|scene| crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout) == next) {
+        return Emit::default();
+    }
+    Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", &composed.content.child_id, &[SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next))])], ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
-/// ✏️ Runs one atomic host mutation batch while retaining the host's exact semantic refusal.
-pub fn fallible_host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> Result<bool, Fault>) -> Result<Vec<FlowMutation>, Fault> {
-    let mut host = host_from_snapshot(snapshot, config, session);
-    let changed = match mutate(&mut host) {
-        Ok(changed) => changed,
-        Err(error) => {
-            host.retire_cold();
-            return Err(error);
-        }
-    };
-    if !changed {
-        host.retire_cold();
-        return Ok(Vec::new());
+/// ✏️ Folds this subset's semantic edits over the composed scene and publishes the result on its content child.
+pub fn flow_content_edit(composed: &FlowSnapshot, operations: &[FlowMutation]) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    let mut next = composed.clone();
+    for operation in operations {
+        crate::schema::mutations::apply_flow_mutation(&mut next, operation).map_err(|error| Fault::from(format!("flow edit refused: {error:?}")))?;
     }
-    let live = snapshot.to_host_snapshot();
-    let operations = flow_host_snapshot_operations(&live, &host.host_snapshot).unwrap_or_default();
-    let removed_widgets: Vec<String> = operations
-        .iter()
-        .filter_map(|operation| match operation {
-            semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(payload) => Some(payload.id.clone()),
-            _ => None,
-        })
-        .collect();
-    let cascaded_synapses: Vec<String> = live
-        .synapses
-        .iter()
-        .filter(|synapse| removed_widgets.iter().any(|id| id == &synapse.from || id == &synapse.to))
-        .map(|synapse| synapse.id.clone())
-        .collect();
-    let operations = operations
-        .into_iter()
-        .filter(|operation| match operation {
-            semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(payload) => !cascaded_synapses.iter().any(|id| id == &payload.id),
-            _ => true,
-        })
-        .filter_map(crate::schema::mutations::from_framework_mutation)
-        .collect();
-    live.retire_cold();
+    let scene = next.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-edit-scene-owner-missing"))?;
+    Ok(flow_scene_publication(composed, &scene.widgets, &scene.synapses, &scene.layout))
+}
+
+/// ✏️ Runs one atomic `FlowHost` edit over the composed scene and publishes its result on the content child — an
+/// empty emit when `mutate` reports nothing changed, the host's exact refusal otherwise.
+pub fn host_scene_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> Result<bool, Fault>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    let mut host = host_from_snapshot(composed, config, session);
+    let emit = mutate(&mut host).map(|changed| if changed { flow_scene_publication(composed, &host.host_snapshot.widgets, &host.host_snapshot.synapses, &host.host_snapshot.layout) } else { Emit::default() });
     host.retire_cold();
-    Ok(operations)
+    emit
 }
 //#endregion 🔖️Host
 

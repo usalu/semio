@@ -289,6 +289,9 @@ fn the_receipt_fold_agrees_with_the_directory_read_model_on_the_golden_log() {
     for space in mine {
         let row = rows.iter().find(|row| row.id == space.view.id).expect("listed");
         let role = space.members.iter().find(|member| member.user_id == user_id).map(|member| member.role);
-        assert_eq!((row.name.as_str(), row.kind, row.visibility, row.member_count, row.document_count, row.role, row.updated_at_ms), (space.view.name.as_str(), space.view.kind, space.view.visibility, space.view.member_count, space.view.document_count, role, space.view.updated_at_ms));
+        assert_eq!(
+            (row.name.as_str(), row.kind, row.visibility, row.member_count, row.document_count, row.role, row.updated_at_ms),
+            (space.view.name.as_str(), space.view.kind, space.view.visibility, space.view.member_count, space.view.document_count, role, space.view.updated_at_ms)
+        );
     }
 }

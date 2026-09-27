@@ -16,6 +16,7 @@ use crate::editor::pdf17ua::modes::edit::windows::main;
 use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextString};
 use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
+use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
     StandardId, SubsetId,
@@ -92,6 +93,7 @@ impl protocol::OpBinary for Pdf17UaEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17UaEditorCommand, []);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -110,10 +112,31 @@ impl ArtifactEditor for Pdf17UaEditor {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = Pdf17UaEditorCommand;
+    type Command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<Pdf17UaEditorCommand>;
 
     const DIALECT: Dialect = PDF17UA_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
+        owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+        controller: "s.stdio.pdf@1.7/ua#editor",
+        artifact_schema: "stdio.pdf",
+        preparation: "stdio-pdf-1-7-ua-snapshot-edit"
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-page")
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
+            "set-page" => Ok(Pdf17UaEditorCommand::SetPage {
+                index: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["index", "page", "row"], 0) as usize,
+                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text", "value"], ""),
+            }),
+            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
+        })
+    }
 
     fn initial_snapshot() -> PdfSnapshot {
         PdfSnapshot::default()
@@ -133,20 +156,45 @@ impl ArtifactEditor for Pdf17UaEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
-            Pdf17UaEditorCommand::SetPage { index, text } => {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { index, text }) => {
                 if doc.snapshot.pages.get(*index).is_none() {
                     return Ok(Emit::default());
                 }
                 Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent(AppendPageContent { index: *index, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text(text.clone()) }] })], description: Some(format!("Set page {index}")), ..Default::default() })
             }
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.pdf@1.7/ua#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17UaEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
+        match command {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -160,8 +208,9 @@ pub fn create_pdf17_ua_editor() -> semio_framework_plugin::AppDefinition {
     let builder = builder.mode_def(edit::definition());
     let builder = builder.default_mode_id(edit::PDF17UA_EDIT_MODE_ID);
     let builder = builder.window_kind_def(main::definition());
-    let builder = builder.default_layout(edit::layout());
-    builder.build_definition()
+    let builder = builder.window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition());
+    let builder = builder.default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Document"));
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

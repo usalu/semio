@@ -136,10 +136,10 @@ public sealed class Context
     public string WorkDir => Plan.WorkDir;
     public string ArtifactDir => string.IsNullOrEmpty(Plan.ArtifactDir) ? System.IO.Path.Combine(Plan.WorkDir, "📦️artifacts") : Plan.ArtifactDir!;
 
-    /// <summary>📦️ Absolute path to write one named result artifact to, creating parent directories.</summary>
+    /// <summary>📦️ Absolute path to write one named result artifact to — <c>&lt;ArtifactDir&gt;/&lt;scenario id&gt;/&lt;role&gt;/&lt;filename&gt;</c>, so a scenario's artifacts never overwrite another's — creating parent directories.</summary>
     public string Artifact(string role, string filename)
     {
-        var directory = System.IO.Path.Combine(ArtifactDir, role);
+        var directory = System.IO.Path.Combine(ArtifactDir, Scenario.Id, role);
         Directory.CreateDirectory(directory);
         return System.IO.Path.Combine(directory, filename);
     }

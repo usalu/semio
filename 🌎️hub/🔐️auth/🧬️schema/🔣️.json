@@ -929,7 +929,9 @@
         "artifact.create",
         "blob.read",
         "blob.write",
-        "agent.delegate"
+        "agent.delegate",
+        "preference.record",
+        "preference.read"
       ]
     },
     "HubAccessGrantV1": {

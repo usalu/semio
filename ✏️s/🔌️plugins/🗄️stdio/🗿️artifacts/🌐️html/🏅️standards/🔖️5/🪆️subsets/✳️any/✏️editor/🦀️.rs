@@ -8,6 +8,7 @@ use crate::editor::html::modes::edit::windows::main;
 use crate::standards::v5::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, HtmlMutation};
 use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
@@ -20,6 +21,7 @@ use store::EngineHandles;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum HtmlEditCommand {
     ReplaceText { text: String },
+    EditSnapshot { event: SnapshotEditEvent },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
@@ -29,7 +31,7 @@ impl protocol::OpBinary for HtmlEditCommand {
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
     /// mints `replace-text`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
-    const TOOL_JOB_IDS: &'static [&'static str] = HTML_RETAINED_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = HTML_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(pack::to_json_string(self).into_bytes())
@@ -43,7 +45,7 @@ impl protocol::OpBinary for HtmlEditCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const HTML_KIT_ACTION_ID: &str = "replace-text";
+const HTML_KIT_ACTION_ID: &str = "textEdit";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `replace-text`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -51,10 +53,20 @@ const HTML_KIT_ACTION_ID: &str = "replace-text";
 /// ids. Without the kit verb's row the reactor refused every `replace-text` with
 /// `interactive-job.missing-factory`.
 const HTML_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, HTML_KIT_ACTION_ID];
+const HTML_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    HTML_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const HTML_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.html.tool-command.v1";
 /// 📏️ `replace-text` carries the whole buffer, so the wire bound is the largest document this route
 /// admits — kept under the guest's 64 KiB contiguous-request ceiling.
-const HTML_RETAINED_RAW_BYTES: usize = 32_768;
+const HTML_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
 /// `Effect::LoadDocument`, so its only lane is `HostOnly`. `replace-text` publishes the artifact
 /// mutation it reduces into, so its only lane is `Artifact`.
@@ -65,7 +77,7 @@ const HTML_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(HTML_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500)
+    ToolExecutionContract::bounded_first_step(HTML_RETAINED_RAW_BYTES, 4_096, 1, HTML_RETAINED_RAW_BYTES, 7_500)
 }
 
 /// 📚️ The document a named example loads. The subset publishes exactly one (crate::examples::demo, `ID = "demo"`),
@@ -85,6 +97,9 @@ fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<HtmlEditCommand, Fault> {
+    if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
+        return Ok(HtmlEditCommand::EditSnapshot { event });
+    }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(HtmlEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         HTML_KIT_ACTION_ID => Ok(HtmlEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], "") }),
@@ -101,6 +116,7 @@ fn html_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Resul
 fn html_command_id(command: &HtmlEditCommand) -> &'static str {
     match command {
         HtmlEditCommand::ReplaceText { .. } => HTML_KIT_ACTION_ID,
+        HtmlEditCommand::EditSnapshot { event } => event.action_id(),
         HtmlEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
@@ -119,6 +135,7 @@ fn html_emit(command: &HtmlEditCommand, _snapshot: &HtmlSnapshot) -> Result<Emit
             Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot(SetSnapshot { snapshot })])),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.invalid-text"), error.to_string())),
         },
+        HtmlEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-html-snapshot-edit-routed-to-native-reducer")),
         HtmlEditCommand::SetActiveExample { example_id } => Ok(Emit {
             effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&html_example_snapshot(example_id), STDIO_HTML_DOCUMENT_SCHEMA)],
             description: Some(format!("Load example {example_id}")),
@@ -218,7 +235,7 @@ impl ArtifactEditor for HtmlEditor {
     const DIALECT: Dialect = HTML_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_HTML_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<HtmlEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.stdio.html@5/*#editor",
@@ -226,15 +243,19 @@ impl ArtifactEditor for HtmlEditor {
         factory: "HtmlRetainedCommandJobFactory",
         factory_type: HtmlRetainedCommandJobFactory,
         contract: html_retained_contract(),
-        tools: ["setActiveExample", "replace-text"]
+        tools: ["setActiveExample", "textEdit"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(HtmlRetainedCommandJobFactory::new(&controller))
+        registry.register(HtmlRetainedCommandJobFactory::new(&controller))?;
+        semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&request.tool_id) {
+            return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request);
+        }
         if !HTML_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -357,14 +378,41 @@ impl ArtifactEditor for HtmlEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        html_emit(command, doc.snapshot)
+        match command {
+            HtmlEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
+            _ => html_emit(command, doc.snapshot),
+        }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.html@5/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for HtmlEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent> {
+        match command {
+            HtmlEditCommand::EditSnapshot { event } => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| HtmlMutation::SetSnapshot(SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -372,21 +420,22 @@ impl ArtifactEditor for HtmlEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(HTML_DIALECT)
+    let builder = Editor::builder(HTML_DIALECT)
         .document(["semio", "html"])
         .artifact_kind(crate::artifact_kind())
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "HTML"))
         // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

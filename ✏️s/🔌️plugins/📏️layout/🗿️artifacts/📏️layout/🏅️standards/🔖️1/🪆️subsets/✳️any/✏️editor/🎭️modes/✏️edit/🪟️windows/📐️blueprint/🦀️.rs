@@ -48,7 +48,7 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &Lay
     semio_framework_plugin::scene_surface(
         LAYOUT_PLAY_SURFACE_BLUEPRINT,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(doc, config, transient, interaction, true), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(doc, config, transient, interaction, true), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

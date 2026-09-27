@@ -100,7 +100,7 @@ describe("goal gate runs", () => {
           browsers -= check.browsers;
           return run.exits[check.id] ?? 0;
         };
-        const summary = await runGoalGate(repoRoot, { ...run.options, hubBinary: null, users: [], planPath, outDir: join(dir, "out"), only: [], includeOptional: false, maxBrowsers: 1, maxParallel: 4, signal: new AbortController().signal, execute });
+        const summary = await runGoalGate(repoRoot, { localServe: null, ...run.options, hubBinary: null, hubAdminCapability: null, users: [], planPath, outDir: join(dir, "out"), only: [], includeOptional: false, maxBrowsers: 1, maxParallel: 4, signal: new AbortController().signal, execute });
         expect(summary.verdict).toBe(run.expected.verdict);
         expect(Object.fromEntries(summary.steps.flatMap((step) => step.checks.map((check) => [check.check, check.status])))).toEqual(run.expected.statuses);
         expect([...executed].sort()).toEqual([...run.expected.executed].sort());

@@ -117,7 +117,7 @@ pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg:
     if payload.window_id.is_empty() {
         return Err(Fault::from("flow-eval-tick-window-required"));
     }
-    Ok(tick_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.window_id, &payload.window_kind_id))
+    Ok(tick_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.window_id, &payload.window_kind_id))
 }
 
 //#region 🧪️Tests

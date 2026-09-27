@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePlatedInpu
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert plated panel {}", self.plated_panel.id),
-            &format!("Beulblech setzen {}", self.plated_panel.id),
+            &format!("Update plated panel {}", self.plated_panel.id),
+            &format!("Beulfeld {} aktualisieren", self.plated_panel.id),
         )
     }
     fn target(&self) -> Vec<String> {

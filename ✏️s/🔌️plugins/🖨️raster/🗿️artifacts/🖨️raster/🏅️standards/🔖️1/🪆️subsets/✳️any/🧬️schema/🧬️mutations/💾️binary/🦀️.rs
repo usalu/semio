@@ -171,7 +171,7 @@ enum RasterRetirementOwner {
 }
 
 struct RasterLayerFields {
-    strings: [Option<String>; 4],
+    strings: [Option<String>; 5],
     children: Option<Vec<RasterLayerNode>>,
     values: Option<RasterOwnedMap<dsl::DslValue>>,
     string_cursor: usize,
@@ -338,9 +338,9 @@ impl RasterOwnedRetirement {
 
     fn layer_fields(layer: RasterLayerNode) -> RasterLayerFields {
         let (strings, children, values) = match layer {
-            RasterLayerNode::Pixel { id, name, blend_mode, image_key, .. } => ([Some(id), Some(name), Some(blend_mode), image_key], None, None),
-            RasterLayerNode::Group { id, name, blend_mode, children, .. } => ([Some(id), Some(name), Some(blend_mode), None], Some(children), None),
-            RasterLayerNode::Adjustment { id, name, blend_mode, adjustment_kind, params, .. } => ([Some(id), Some(name), Some(blend_mode), Some(adjustment_kind)], None, Some(params)),
+            RasterLayerNode::Pixel { id, name, blend_mode, image_key, mask, .. } => ([Some(id), Some(name), Some(blend_mode), image_key, mask.and_then(|m|m.image_key)], None, None),
+            RasterLayerNode::Group { id, name, blend_mode, children, mask, .. } => ([Some(id), Some(name), Some(blend_mode), None, mask.and_then(|m|m.image_key)], Some(children), None),
+            RasterLayerNode::Adjustment { id, name, blend_mode, adjustment_kind, params, .. } => ([Some(id), Some(name), Some(blend_mode), Some(adjustment_kind), None], None, Some(params)),
         };
         RasterLayerFields { strings, children, values, string_cursor: 0 }
     }
@@ -360,6 +360,7 @@ impl RasterOwnedRetirement {
             ChangeLayerAdjustmentKind(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_adjustment_kind), third: None },
             AddLayerAsset(payload) => RasterMutationFields::Asset { id: payload.asset_id, asset: Some(payload.asset) },
             RemoveLayerAsset(payload) => RasterMutationFields::String(payload.asset_id),
+            ChangeLayerMask(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected.and_then(|mask| mask.image_key), third: payload.mask.and_then(|mask| mask.image_key) },
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
         }
     }
@@ -1533,6 +1534,13 @@ impl RasterLayerBoundsAuthority {
                 }
                 self.frames[self.depth].phase = 8;
             }
+            8 => {
+                if !raster_reserve_unit(cx) {return Ok(false);}
+                if let RasterLayerNode::Pixel {mask:Some(mask),..}|RasterLayerNode::Group {mask:Some(mask),..}=layer {
+                    if let Some(key)=&mask.image_key {totals.string(key)?;}
+                }
+                self.frames[self.depth].phase=9;
+            }
             _ => {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
@@ -1780,7 +1788,7 @@ struct RasterLayerCloneAuthority {
 
 impl RasterLayerCloneAuthority {
     fn mask(source: &Option<crate::RasterLayerMask>) -> Option<crate::RasterLayerMask> {
-        source.as_ref().map(|value| crate::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height })
+        source.as_ref().map(|value| crate::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height, image_key:None, transform:value.transform.clone() })
     }
 
     fn skeleton(source: &RasterLayerNode) -> RasterLayerNode {
@@ -2001,6 +2009,17 @@ impl RasterLayerCloneAuthority {
                     }
                 }
                 self.frames[self.depth].phase = 6;
+            }
+            6 => {
+                if !raster_reserve_unit(cx) {return Ok(false);}
+                let pair=match (source,target) {
+                    (RasterLayerNode::Pixel {mask:source,..},RasterLayerNode::Pixel {mask:target,..})|(RasterLayerNode::Group {mask:source,..},RasterLayerNode::Group {mask:target,..})=>source.as_ref().zip(target.as_mut()),
+                    _=>None,
+                };
+                if let Some((source,target))=pair {
+                    if let Some(key)=&source.image_key {target.image_key=Some(raster_clone_owned_string(key)?);digest.observe(key.as_bytes());}
+                }
+                self.frames[self.depth].phase=7;
             }
             _ => {
                 if !raster_reserve_unit(cx) {
@@ -2459,6 +2478,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::AddLayerAsset(_) => 11,
             RasterMutation::RemoveLayerAsset(_) => 12,
             RasterMutation::ChangeLayerPixels(_) => 13,
+            RasterMutation::ChangeLayerMask(_) => 14,
         }
     }
 
@@ -2636,6 +2656,38 @@ impl RasterMutationDigestAuthority {
                     }
                     self.phase = 4;
                     Ok(false)
+                }
+                _ => Ok(self.finish(digest, cx)),
+            },
+            RasterMutation::ChangeLayerMask(value) => match self.phase {
+                1 => string_phase!(&value.layer_id, 2),
+                2 | 4 => {
+                    let mask = if self.phase == 2 { &value.expected } else { &value.mask };
+                    let mut fields = [0_u8; 55];
+                    if let Some(mask) = mask {
+                        fields[0] = 1;
+                        fields[1] = u8::from(mask.enabled);
+                        fields[2] = u8::from(mask.linked);
+                        fields[3] = u8::from(mask.invert);
+                        fields[4] = u8::from(mask.width.is_some());
+                        fields[5] = u8::from(mask.height.is_some());
+                        fields[6] = u8::from(mask.image_key.is_some());
+                        fields[7..11].copy_from_slice(&mask.width.unwrap_or(0).to_be_bytes());
+                        fields[11..15].copy_from_slice(&mask.height.unwrap_or(0).to_be_bytes());
+                        let t = &mask.transform;
+                        for (index, number) in [t.x, t.y, t.scale_x, t.scale_y, t.rotation].iter().enumerate() {
+                            fields[15 + index * 8..23 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
+                        }
+                    }
+                    scalar_phase!(&fields, self.phase + 1)
+                }
+                3 | 5 => {
+                    let mask = if self.phase == 3 { &value.expected } else { &value.mask };
+                    if let Some(key) = mask.as_ref().and_then(|mask| mask.image_key.as_ref()) {
+                        string_phase!(key, self.phase + 1)
+                    } else {
+                        scalar_phase!(&[], self.phase + 1)
+                    }
                 }
                 _ => Ok(self.finish(digest, cx)),
             },
@@ -2911,6 +2963,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::MoveLayer(value) => Some(&value.layer_id),
             RasterMutation::ResizeLayer(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerPixels(value) => Some(&value.layer_id),
+            RasterMutation::ChangeLayerMask(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
@@ -3158,6 +3211,21 @@ impl RasterMutationCandidateAuthority {
                         };
                         *width = Some(value.new_width);
                         *height = Some(value.new_height);
+                    }
+                    RasterMutation::ChangeLayerMask(value) => {
+                        if !raster_reserve_unit(cx) { return Ok(false); }
+                        crate::mutations::change_layer_mask::validate(value, snapshot)?;
+                        let replacement = value.mask.as_ref().map(|mask| {
+                            Ok::<_, &'static str>(crate::RasterLayerMask {
+                                enabled: mask.enabled, linked: mask.linked, invert: mask.invert,
+                                width: mask.width, height: mask.height, transform: mask.transform.clone(),
+                                image_key: mask.image_key.as_ref().map(raster_clone_owned_string).transpose()?,
+                            })
+                        }).transpose()?;
+                        let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-mask-target"); };
+                        if let Some(previous) = std::mem::replace(mask, replacement).and_then(|mask| mask.image_key) {
+                            *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::String(previous))));
+                        }
                     }
                     RasterMutation::ChangeLayerPixels(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }

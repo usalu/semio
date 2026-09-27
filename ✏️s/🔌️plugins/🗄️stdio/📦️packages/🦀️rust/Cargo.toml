@@ -14,15 +14,9 @@ package = "semio:stdio"
 [package.metadata.semio]
 role = "plugin"
 
-# 🎮️ The stdio playgrounds: ONE row per app of the shipped document fleet, the way `block` ships
-# block2d/3d/5d from one crate. Every row pins its own `app`, because a playground row that pins none
-# boots `apps[0]` and reaches only that dialect's editor⇄viewer pair — `semio-tech play`'s coverage
-# laws ("reaches every editor app a plugin descriptor declares" / "reaches every viewer app through
-# its pane's editor⇄viewer switch") are satisfied exactly when every shipped app owns a row.
-# `variant = "stdio"` stays the markdown row: it is the one app of the fleet that publishes an example
-# and the lane `semio-tech play` activates the whole component from. Ports: the 6110/6210 pair markdown
-# already held, plus one contiguous 6211–6218 / 6311–6318 block — every port below 6211 is claimed by
-# another variant's react or wgpu launcher, and the catalog gate forbids sharing one.
+# 🎮️ Each editor subset owns a playground; its viewer is reached by the editor/viewer switch.
+# Markdown retains 6110/6210 and the original document launchers retain 6211–6218/6311–6318.
+# The remaining artifact subsets use 6400–6478 for React and 6500–6578 for WGPU.
 [[package.metadata.semio.playground]]
 variant = "stdio"
 app = "s.stdio.md@commonmark/*#editor"
@@ -77,6 +71,401 @@ app = "s.stdio.html@5/*#editor"
 aliases = ["stdio html"]
 ports = { react = 6218, wgpu = 6318 }
 
+[[package.metadata.semio.playground]]
+variant = "stdio-avi"
+app = "s.stdio.avi@1.0/*#editor"
+ports = { react = 6400, wgpu = 6500 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-bcf"
+app = "s.stdio.bcf@2.1/*#editor"
+ports = { react = 6401, wgpu = 6501 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-binary"
+app = "s.stdio.binary@raw/*#editor"
+ports = { react = 6402, wgpu = 6502 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-bmp"
+app = "s.stdio.bmp@v3/*#editor"
+ports = { react = 6403, wgpu = 6503 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-deflate"
+app = "s.stdio.deflate@rfc1950/*#editor"
+ports = { react = 6404, wgpu = 6504 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-docx"
+app = "s.stdio.docx@ecma-376/*#editor"
+ports = { react = 6405, wgpu = 6505 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-docx-strict"
+app = "s.stdio.docx@ecma-376/strict#editor"
+ports = { react = 6406, wgpu = 6506 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-docx-transitional"
+app = "s.stdio.docx@ecma-376/transitional#editor"
+ports = { react = 6407, wgpu = 6507 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dwg-ac1018"
+app = "s.stdio.dwg@ac1018/*#editor"
+ports = { react = 6408, wgpu = 6508 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dwg-ac1024"
+app = "s.stdio.dwg@ac1024/*#editor"
+ports = { react = 6409, wgpu = 6509 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dxf"
+app = "s.stdio.dxf@r12/*#editor"
+ports = { react = 6410, wgpu = 6510 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-epw"
+app = "s.stdio.epw@energyplus/*#editor"
+ports = { react = 6411, wgpu = 6511 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-gif87a"
+app = "s.stdio.gif@87a/*#editor"
+ports = { react = 6412, wgpu = 6512 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-gif89a"
+app = "s.stdio.gif@89a/*#editor"
+ports = { react = 6413, wgpu = 6513 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-gltf"
+app = "s.stdio.gltf@2.0/*#editor"
+ports = { react = 6414, wgpu = 6514 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc2x3"
+app = "s.stdio.ifc@2x3/*#editor"
+ports = { react = 6415, wgpu = 6515 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc2x3-cobie"
+app = "s.stdio.ifc@2x3/cobie#editor"
+ports = { react = 6416, wgpu = 6516 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc2x3-cv20"
+app = "s.stdio.ifc@2x3/cv20#editor"
+ports = { react = 6417, wgpu = 6517 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc2x3-sav"
+app = "s.stdio.ifc@2x3/sav#editor"
+ports = { react = 6418, wgpu = 6518 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc4"
+app = "s.stdio.ifc@4/*#editor"
+ports = { react = 6419, wgpu = 6519 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-jpg"
+app = "s.stdio.jpg@jfif-1.01/*#editor"
+ports = { react = 6420, wgpu = 6520 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-jpg-baseline"
+app = "s.stdio.jpg@jfif-1.01/baseline#editor"
+ports = { react = 6421, wgpu = 6521 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-las"
+app = "s.stdio.las@1.0/*#editor"
+ports = { react = 6422, wgpu = 6522 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-mp3"
+app = "s.stdio.mp3@mpeg1-layer3/*#editor"
+ports = { react = 6423, wgpu = 6523 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-mp4"
+app = "s.stdio.mp4@isobmff/*#editor"
+ports = { react = 6424, wgpu = 6524 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-obj"
+app = "s.stdio.obj@3.0/*#editor"
+ports = { react = 6425, wgpu = 6525 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf14"
+app = "s.stdio.pdf@1.4/*#editor"
+ports = { react = 6426, wgpu = 6526 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf14-a"
+app = "s.stdio.pdf@1.4/a#editor"
+ports = { react = 6427, wgpu = 6527 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf14-x"
+app = "s.stdio.pdf@1.4/x#editor"
+ports = { react = 6428, wgpu = 6528 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17"
+app = "s.stdio.pdf@1.7/*#editor"
+ports = { react = 6429, wgpu = 6529 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-a"
+app = "s.stdio.pdf@1.7/a#editor"
+ports = { react = 6430, wgpu = 6530 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-e"
+app = "s.stdio.pdf@1.7/e#editor"
+ports = { react = 6431, wgpu = 6531 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-h"
+app = "s.stdio.pdf@1.7/h#editor"
+ports = { react = 6432, wgpu = 6532 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-ua"
+app = "s.stdio.pdf@1.7/ua#editor"
+ports = { react = 6433, wgpu = 6533 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-vt"
+app = "s.stdio.pdf@1.7/vt#editor"
+ports = { react = 6434, wgpu = 6534 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pdf17-x"
+app = "s.stdio.pdf@1.7/x#editor"
+ports = { react = 6435, wgpu = 6535 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ply"
+app = "s.stdio.ply@1.0/*#editor"
+ports = { react = 6436, wgpu = 6536 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-png"
+app = "s.stdio.png@1.2/*#editor"
+ports = { react = 6437, wgpu = 6537 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pptx"
+app = "s.stdio.pptx@ecma-376/*#editor"
+ports = { react = 6438, wgpu = 6538 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pptx-strict"
+app = "s.stdio.pptx@ecma-376/strict#editor"
+ports = { react = 6439, wgpu = 6539 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-pptx-transitional"
+app = "s.stdio.pptx@ecma-376/transitional#editor"
+ports = { react = 6440, wgpu = 6540 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio"
+app = "s.stdio.semio@v1/*#editor"
+ports = { react = 6441, wgpu = 6541 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-animation"
+app = "s.stdio.semio@v1/animation#editor"
+ports = { react = 6442, wgpu = 6542 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-audio"
+app = "s.stdio.semio@v1/audio#editor"
+ports = { react = 6443, wgpu = 6543 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-brep"
+app = "s.stdio.semio@v1/brep#editor"
+ports = { react = 6444, wgpu = 6544 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-cad"
+app = "s.stdio.semio@v1/cad#editor"
+ports = { react = 6445, wgpu = 6545 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-document"
+app = "s.stdio.semio@v1/document#editor"
+ports = { react = 6446, wgpu = 6546 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-drawing"
+app = "s.stdio.semio@v1/drawing#editor"
+ports = { react = 6447, wgpu = 6547 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-flow"
+app = "s.stdio.semio@v1/flow#editor"
+ports = { react = 6448, wgpu = 6548 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-graph"
+app = "s.stdio.semio@v1/graph#editor"
+ports = { react = 6449, wgpu = 6549 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-image"
+app = "s.stdio.semio@v1/image#editor"
+ports = { react = 6450, wgpu = 6550 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-kit"
+app = "s.stdio.semio@v1/kit#editor"
+ports = { react = 6451, wgpu = 6551 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-mesh"
+app = "s.stdio.semio@v1/mesh#editor"
+ports = { react = 6452, wgpu = 6552 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-model"
+app = "s.stdio.semio@v1/model#editor"
+ports = { react = 6453, wgpu = 6553 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-object"
+app = "s.stdio.semio@v1/object#editor"
+ports = { react = 6454, wgpu = 6554 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-presentation"
+app = "s.stdio.semio@v1/presentation#editor"
+ports = { react = 6455, wgpu = 6555 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-table"
+app = "s.stdio.semio@v1/table#editor"
+ports = { react = 6456, wgpu = 6556 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-text"
+app = "s.stdio.semio@v1/text#editor"
+ports = { react = 6457, wgpu = 6557 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-value"
+app = "s.stdio.semio@v1/value#editor"
+ports = { react = 6458, wgpu = 6558 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-video"
+app = "s.stdio.semio@v1/video#editor"
+ports = { react = 6459, wgpu = 6559 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step"
+app = "s.stdio.step@ap214/*#editor"
+ports = { react = 6460, wgpu = 6560 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc1"
+app = "s.stdio.step@ap214/cc1#editor"
+ports = { react = 6461, wgpu = 6561 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc2"
+app = "s.stdio.step@ap214/cc2#editor"
+ports = { react = 6462, wgpu = 6562 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc3"
+app = "s.stdio.step@ap214/cc3#editor"
+ports = { react = 6463, wgpu = 6563 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc4"
+app = "s.stdio.step@ap214/cc4#editor"
+ports = { react = 6464, wgpu = 6564 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc5"
+app = "s.stdio.step@ap214/cc5#editor"
+ports = { react = 6465, wgpu = 6565 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc6"
+app = "s.stdio.step@ap214/cc6#editor"
+ports = { react = 6466, wgpu = 6566 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-stl"
+app = "s.stdio.stl@ascii/*#editor"
+ports = { react = 6467, wgpu = 6567 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-svg"
+app = "s.stdio.svg@1.1/*#editor"
+ports = { react = 6468, wgpu = 6568 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-svg-basic"
+app = "s.stdio.svg@1.1/basic#editor"
+ports = { react = 6469, wgpu = 6569 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-svg-tiny"
+app = "s.stdio.svg@1.1/tiny#editor"
+ports = { react = 6470, wgpu = 6570 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-tiff"
+app = "s.stdio.tiff@6.0/*#editor"
+ports = { react = 6471, wgpu = 6571 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-tiff-baseline"
+app = "s.stdio.tiff@6.0/baseline#editor"
+ports = { react = 6472, wgpu = 6572 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-wav"
+app = "s.stdio.wav@riff-pcm/*#editor"
+ports = { react = 6473, wgpu = 6573 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-xlsx"
+app = "s.stdio.xlsx@ecma-376/*#editor"
+ports = { react = 6474, wgpu = 6574 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-xlsx-strict"
+app = "s.stdio.xlsx@ecma-376/strict#editor"
+ports = { react = 6475, wgpu = 6575 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-xlsx-transitional"
+app = "s.stdio.xlsx@ecma-376/transitional#editor"
+ports = { react = 6476, wgpu = 6576 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-zip"
+app = "s.stdio.zip@2.0/*#editor"
+ports = { react = 6477, wgpu = 6577 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-zip-iso21320"
+app = "s.stdio.zip@2.0/iso21320#editor"
+ports = { react = 6478, wgpu = 6578 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"
@@ -84,12 +473,8 @@ path = "../../🦀️.rs"
 [features]
 default = ["plugin-root"]
 plugin-root = ["component-app-assembly", "semio-framework-plugin/component-guest"]
-# 🧩️ What the SHIPPED wasm component assembles: all 36 artifact kinds and codecs, plus the nine
-# text/data document app subsets. Inside its own component every registered app is live code, so the
-# full fleet blows `wasm-component-ld`'s 1 000 000-function ceiling — see `full-app-catalog`.
-component-app-assembly = ["full-artifact-catalog", "semio-s-artifact-stdio-csv/component-app-assembly", "semio-s-artifact-stdio-tsv/component-app-assembly", "semio-s-artifact-stdio-txt/component-app-assembly", "semio-s-artifact-stdio-json/component-app-assembly", "semio-s-artifact-stdio-xml/component-app-assembly", "semio-s-artifact-stdio-md/component-app-assembly", "semio-s-artifact-stdio-html/component-app-assembly"]
-# 🗃️ Every editor/viewer subset stdio owns (88 apps). Library-only: it cannot be linked into a component.
-full-app-catalog = ["component-app-assembly", "semio-s-artifact-stdio-binary/component-app-assembly", "semio-s-artifact-stdio-txt/component-app-assembly", "semio-s-artifact-stdio-json/component-app-assembly", "semio-s-artifact-stdio-xml/component-app-assembly", "semio-s-artifact-stdio-csv/component-app-assembly", "semio-s-artifact-stdio-md/component-app-assembly", "semio-s-artifact-stdio-deflate/component-app-assembly", "semio-s-artifact-stdio-zip/component-app-assembly", "semio-s-artifact-stdio-step/component-app-assembly", "semio-s-artifact-stdio-ifc/component-app-assembly", "semio-s-artifact-stdio-las/component-app-assembly", "semio-s-artifact-stdio-gltf/component-app-assembly", "semio-s-artifact-stdio-obj/component-app-assembly", "semio-s-artifact-stdio-ply/component-app-assembly", "semio-s-artifact-stdio-dxf/component-app-assembly", "semio-s-artifact-stdio-stl/component-app-assembly", "semio-s-artifact-stdio-svg/component-app-assembly", "semio-s-artifact-stdio-bmp/component-app-assembly", "semio-s-artifact-stdio-dwg/component-app-assembly", "semio-s-artifact-stdio-png/component-app-assembly", "semio-s-artifact-stdio-pdf/component-app-assembly", "semio-s-artifact-stdio-jpg/component-app-assembly", "semio-s-artifact-stdio-gif/component-app-assembly", "semio-s-artifact-stdio-tiff/component-app-assembly", "semio-s-artifact-stdio-docx/component-app-assembly", "semio-s-artifact-stdio-pptx/component-app-assembly", "semio-s-artifact-stdio-xlsx/component-app-assembly", "semio-s-artifact-stdio-bcf/component-app-assembly", "semio-s-artifact-stdio-semio/component-app-assembly", "semio-s-artifact-stdio-mp4/component-app-assembly", "semio-s-artifact-stdio-avi/component-app-assembly", "semio-s-artifact-stdio-mp3/component-app-assembly", "semio-s-artifact-stdio-wav/component-app-assembly", "semio-s-artifact-stdio-epw/component-app-assembly", "semio-s-artifact-stdio-tsv/component-app-assembly", "semio-s-artifact-stdio-html/component-app-assembly"]
+# 🧩️ One complete editor/viewer fleet for all 36 artifact families and 88 subsets.
+component-app-assembly = ["full-artifact-catalog", "semio-s-artifact-stdio-binary/component-app-assembly", "semio-s-artifact-stdio-txt/component-app-assembly", "semio-s-artifact-stdio-json/component-app-assembly", "semio-s-artifact-stdio-xml/component-app-assembly", "semio-s-artifact-stdio-csv/component-app-assembly", "semio-s-artifact-stdio-md/component-app-assembly", "semio-s-artifact-stdio-deflate/component-app-assembly", "semio-s-artifact-stdio-zip/component-app-assembly", "semio-s-artifact-stdio-step/component-app-assembly", "semio-s-artifact-stdio-ifc/component-app-assembly", "semio-s-artifact-stdio-las/component-app-assembly", "semio-s-artifact-stdio-gltf/component-app-assembly", "semio-s-artifact-stdio-obj/component-app-assembly", "semio-s-artifact-stdio-ply/component-app-assembly", "semio-s-artifact-stdio-dxf/component-app-assembly", "semio-s-artifact-stdio-stl/component-app-assembly", "semio-s-artifact-stdio-svg/component-app-assembly", "semio-s-artifact-stdio-bmp/component-app-assembly", "semio-s-artifact-stdio-dwg/component-app-assembly", "semio-s-artifact-stdio-png/component-app-assembly", "semio-s-artifact-stdio-pdf/component-app-assembly", "semio-s-artifact-stdio-jpg/component-app-assembly", "semio-s-artifact-stdio-gif/component-app-assembly", "semio-s-artifact-stdio-tiff/component-app-assembly", "semio-s-artifact-stdio-docx/component-app-assembly", "semio-s-artifact-stdio-pptx/component-app-assembly", "semio-s-artifact-stdio-xlsx/component-app-assembly", "semio-s-artifact-stdio-bcf/component-app-assembly", "semio-s-artifact-stdio-semio/component-app-assembly", "semio-s-artifact-stdio-mp4/component-app-assembly", "semio-s-artifact-stdio-avi/component-app-assembly", "semio-s-artifact-stdio-mp3/component-app-assembly", "semio-s-artifact-stdio-wav/component-app-assembly", "semio-s-artifact-stdio-epw/component-app-assembly", "semio-s-artifact-stdio-tsv/component-app-assembly", "semio-s-artifact-stdio-html/component-app-assembly"]
 full-artifact-catalog = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-step", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-stl", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-tiff", "dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xlsx", "dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-artifact-stdio-mp4", "dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav", "dep:semio-s-artifact-stdio-epw", "dep:semio-s-artifact-stdio-tsv", "dep:semio-s-artifact-stdio-html", "semio-s-artifact-stdio-semio/conversion-animation", "semio-s-artifact-stdio-semio/conversion-audio", "semio-s-artifact-stdio-semio/conversion-brep", "semio-s-artifact-stdio-semio/conversion-cad", "semio-s-artifact-stdio-semio/conversion-document", "semio-s-artifact-stdio-semio/conversion-drawing", "semio-s-artifact-stdio-semio/conversion-flow", "semio-s-artifact-stdio-semio/conversion-image", "semio-s-artifact-stdio-semio/conversion-mesh", "semio-s-artifact-stdio-semio/conversion-model", "semio-s-artifact-stdio-semio/conversion-presentation", "semio-s-artifact-stdio-semio/conversion-value", "semio-s-artifact-stdio-semio/conversion-video"]
 home-io = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-xlsx"]
 
@@ -141,6 +526,14 @@ semio-s-artifact-stdio-html = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+
 [[test]]
 name = "native_openable_provider"
 path = "../../🧪️tests/📇️native-openable-provider/🦀️.rs"
+
+[[test]]
+name = "editor_catalog"
+path = "../../🧪️tests/✏️editor-catalog/🦀️.rs"
+required-features = ["component-app-assembly"]

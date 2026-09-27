@@ -120,3 +120,35 @@ directory list / event pages fast). Boot 11 min at load 80.
     event-page unit): the old "same-authority after=0 is stale" assertion became after=3 → `frontier-race` + an origin-replay rebuild
     case. Checks: space-home native `--lib --tests` rc=0 (124 warnings) and wasm32-wasip2 `--lib` rc=0 (before the kernel variant);
     kernel + MCP + hub + wgpu `--lib --tests` on build-fleet-b running.
+- 20:1x–20:3x (before the cut) **peer cursors, measured** (`probe-c11-cursor.mjs`, 8021, writer + draw): writer — B paints A's cursor
+  but it never moves (`cursorX [5,5,5]`): `TextEditorHost` publishes `pointer = [caret, 0, 0]` on a fake canvas `{0,0,1}` / size
+  `[1,1]`, so the "cursor" is the caret index mapped to a pixel, not the pointer; the harness' STEP 14 writer "PASS" in `c11collab-1`
+  was a false pass (moved to `(0,0)` = the marker vanished) → harness fixed (a move only counts while the marker is painted).
+  draw — B paints nothing: draw renders through `Canvas2dHost`, which published no presence view and mounted no overlay. Also:
+  every peer cursor rides the 5 s interval heartbeat only (`subscribeLocalPresenceWindowViewsV1` had no subscriber).
+- 21:3x–04:5x usage cut + overnight process loss (rule 28): hub 8021 hold/hub and serves 6525/6526 died; `c11-collab-1`'s serves
+  6521/6522 had been stopped by the harness.
+- 04:58 **resume + reconcile**: every in-flight edit present (worker, os test, Home guest, kernel schema Rust/TS/JSON, re-export,
+  MCP remote, directory client, wgpu shell, hub bootstrap + bin-unit laws, fixture, TS law + registration, collab harness);
+  the 8 temporary `[DEBUG] c11` worker lines REMOVED (0 left).
+- 05:1x–06:0x **checks** (rules 26–29): os tsc 0 errors in my files (64 peer errors); TS laws `DirectoryAccessChanged` +
+  `DirectoryEventPageBootstrapV1` + directory-page correlation **7/7**; worker suite **127/128** — the red one is LD's hand-written
+  old-wire hex batch (`preserves a server Commands batch with a maximum-u64 HLC…`), told LD; my actor-window re-projection
+  assertions pass. wasm32-wasip2 `cargo check -p semio-framework-os-kernel -p semio-s-artifact-space-home --features
+  …/component-app-assembly --lib` **rc=0** (05:37, build-fleet-b, mutex; run 1 at 05:34 hit a peer's half-landed
+  `AppFactory.codec` field in semio-framework-plugin, fixed by its owner 05:34:59). Native `--lib --bins --tests` of kernel,
+  os-mcp, hub, renderer-wgpu: run 3 stopped after 15 min with no rustc child (convoy, rule 25); run 4 started 05:58 (load 117).
+  W3 request `wp-w3/requests/c11.txt` (kernel, space-home).
+- 05:4x–06:0x **live peer cursors (TS host only, no rebuild impact):**
+  - `ShellHost` beats a document's presence as soon as a local window view changes (pointer, camera, caret), spaced by
+    `PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS` = 100 (`presenceLiveViewBeatDelayMsV1`), instead of waiting for the 5 s beat. Pinned in the
+    shared fixture `📡️replication/🧫️fixtures/💓️presence-liveness-v1` (`liveViewBeatIntervalMs` + law `a-moving-pointer-beats-live`,
+    5 vectors); law `👥️scoped-presence` **10/10**.
+  - `Canvas2dHost` (draw and every canvas-2d kind) publishes its camera + the pointer in WORLD coordinates (throttled 50 ms,
+    cleared on leave/unmount) and mounts `CanvasPresenceOverlayV1` with its live camera + observed size. Law: fixture
+    `📐️Canvas2dHost/🧫️fixtures/👕️peer-presence` (5 cameras incl. pan/zoom in/out, world = (client − size/2)/zoom + camera) →
+    mounted suite `👕️peer-presence` **2/2** (published pointer = fixture world; a peer at that world point paints under the author's
+    screen point for the same camera and at `canvasPointToScreen` for another camera). Registered in the react test config.
+  - Noted for H11: every presence beat that changes a peer's bytes republishes the space's directory `presence` projection to
+    every member socket, although that projection (actor, user, surface, color) is unchanged by a pointer move — with live beats
+    that is up to 10 redundant directory frames/s per moving human (each costs two authority reads per member socket).

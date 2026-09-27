@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/path-edit.json",
+  "title": "Typed Value Path Edit",
+  "description": "🧭️ A typed edit at decoded RFC 6901 path segments, without serializing unrelated fields.",
+  "definitions": {
+    "edit": {
+      "oneOf": [
+        { "type": "object", "required": ["operation", "value"], "properties": { "operation": { "const": "set" }, "value": {} }, "additionalProperties": false },
+        { "type": "object", "required": ["operation", "value"], "properties": { "operation": { "const": "insert" }, "value": {} }, "additionalProperties": false },
+        { "type": "object", "required": ["operation"], "properties": { "operation": { "const": "remove" } }, "additionalProperties": false }
+      ]
+    }
+  },
+  "type": "object",
+  "required": ["path", "edit"],
+  "properties": {
+    "path": { "type": "array", "items": { "type": "string" }, "maxItems": 128 },
+    "edit": { "$ref": "#/definitions/edit" }
+  },
+  "additionalProperties": false
+}

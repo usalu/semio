@@ -1,0 +1,35 @@
+{
+  "document": {
+    "schema": "raster.document",
+    "id": "session",
+    "layers": [
+      {
+        "kind": "pixel",
+        "id": "paint",
+        "name": "Paint",
+        "width": 1,
+        "height": 1,
+        "imageKey": "source",
+        "transform": {}
+      }
+    ]
+  },
+  "assets": {
+    "source": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADUlEQVR4nGMQ0bD5DwACRAF4aig0hQAAAABJRU5ErkJggg=="
+    }
+  },
+  "camera": {
+    "x": 7,
+    "y": 3,
+    "zoom": 2
+  },
+  "updatedCamera": {
+    "x": -12,
+    "y": 8,
+    "zoom": 3
+  },
+  "uploads": 1,
+  "attachments": 1
+}

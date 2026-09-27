@@ -1,0 +1,157 @@
+{
+  "schema": "semio.os.text-peer-carets-fixture.v1",
+  "note": "A text window's peers publish their caret in the editor's WORLD coordinates on `space: text`; the viewer projects each through its own editor camera (here: screen = world - [0, cameraY]) and paints one caret per other actor on this window.",
+  "windowId": "writer-main",
+  "myActor": "hub.v1.me",
+  "cameraY": 40,
+  "lineHeightPx": 16,
+  "roster": [
+    {
+      "actor": "hub.v1.me",
+      "label": "Me",
+      "color": 1,
+      "connectedAtMs": 1,
+      "views": [
+        {
+          "windowId": "writer-main",
+          "space": "text",
+          "kind": {
+            "kind": "canvas",
+            "x": 0,
+            "y": 120,
+            "zoom": 1
+          },
+          "size": [
+            640,
+            480
+          ],
+          "pointer": [
+            10,
+            50,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "actor": "hub.v1.ada",
+      "label": "Ada",
+      "color": 2,
+      "connectedAtMs": 2,
+      "views": [
+        {
+          "windowId": "writer-main",
+          "space": "text",
+          "kind": {
+            "kind": "canvas",
+            "x": 0,
+            "y": 120,
+            "zoom": 1
+          },
+          "size": [
+            640,
+            480
+          ],
+          "pointer": [
+            84,
+            96,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "actor": "hub.v1.bo",
+      "label": "Bo",
+      "color": 5,
+      "connectedAtMs": 3,
+      "views": [
+        {
+          "windowId": "writer-main",
+          "space": "text",
+          "kind": {
+            "kind": "canvas",
+            "x": 0,
+            "y": 120,
+            "zoom": 1
+          },
+          "size": [
+            640,
+            480
+          ],
+          "pointer": [
+            12.5,
+            44,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "actor": "hub.v1.cy",
+      "label": "Cy",
+      "color": 3,
+      "connectedAtMs": 4,
+      "views": [
+        {
+          "windowId": "other-window",
+          "space": "text",
+          "kind": {
+            "kind": "canvas",
+            "x": 0,
+            "y": 120,
+            "zoom": 1
+          },
+          "size": [
+            640,
+            480
+          ],
+          "pointer": [
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "windowId": "writer-main",
+          "space": "canvas",
+          "kind": {
+            "kind": "canvas",
+            "x": 0,
+            "y": 120,
+            "zoom": 1
+          },
+          "size": [
+            640,
+            480
+          ],
+          "pointer": [
+            1,
+            1,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": [
+    {
+      "actor": "hub.v1.ada",
+      "x": 84,
+      "y": 56,
+      "label": {
+        "en": "Ada's caret",
+        "de": "Caret von Ada"
+      }
+    },
+    {
+      "actor": "hub.v1.bo",
+      "x": 12.5,
+      "y": 4,
+      "label": {
+        "en": "Bo's caret",
+        "de": "Caret von Bo"
+      }
+    }
+  ]
+}

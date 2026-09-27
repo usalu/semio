@@ -1,0 +1,7 @@
+# R9 guest-linked crates whose code changed (session 13) — crate + reason
+semio-framework-plugin  R9 item 4: weak-linkage bundle-installer shim + dead `no_mangle` install exports removed from plugin_exports!/extension_exports! and the runtime (implicit second init path); guest panic report installed by the macro-generated runtime ensure; `#![feature(linkage)]` gate gone from the crate root. Every plugin/extension component's exports change.
+semio-framework-os-kernel  R9 item 3: directory client `sign_out` sends the `POST /auth/sessions/me/sign-out` command; `HttpMethod::Delete` removed from native/ureq/browser transports (hub no longer answers DELETE). Every guest links the kernel.
+semio-framework  R9 item 4: doc comment only in `🚪️io/🦀️.rs` (also compiled into the kernel).
+semio-framework-ui-contract  R9 item 7 (with a peer's module rename to 🕰️host-temporal-format): inline test moved to `🧪️tests/🕰️host-temporal-format/🦀️.rs` — cfg(test) only, no guest code change.
+semio-s-plugin-demonstrator  R9 item 4: comment only (names the `plugin_exports!` entry points).
+semio-framework-os-renderer-wgpu (browser wasm32-unknown-unknown, not a wasip2 guest)  R9 item 3: directory door has no DELETE verb; HubSignIn `HUB_SESSION_SIGN_OUT_PATH_V1` — renderer wasm-release must be rebuilt from this tree.

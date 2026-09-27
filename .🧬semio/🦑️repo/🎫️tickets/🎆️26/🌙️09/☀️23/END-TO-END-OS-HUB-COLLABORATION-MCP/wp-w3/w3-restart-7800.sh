@@ -23,7 +23,7 @@ diff -r "$SRC/trusted-catalog/generations/$GEN" "$ROOT/trusted-catalog/generatio
 DATA=$(cd "$ROOT" && pwd -P)
 BINDIR="$H/s13-w3-bin/$NAME"
 mkdir -p "$BINDIR"; rm -f "$BINDIR/os-hub"
-cp "$STAGED/os-hub" "$BINDIR/os-hub"; cp -p "$STAGED/os-hub.sources.json" "$BINDIR/os-hub.sources.json"
+cp "$STAGED/os-hub" "$BINDIR/os-hub"; codesign -s - -f "$BINDIR/os-hub"; cp -p "$STAGED/os-hub.sources.json" "$BINDIR/os-hub.sources.json"
 BIN="$BINDIR/os-hub"
 echo "binary-sha256 $(shasum -a 256 "$BIN" | cut -c1-64) generation $GEN data $DATA"
 for u in "user1@semio.dev|User One|gm1-local-dev-pass-1" "user2@semio.dev|User Two|gm1-local-dev-pass-2"; do
@@ -31,8 +31,11 @@ for u in "user1@semio.dev|User One|gm1-local-dev-pass-1" "user2@semio.dev|User T
   printf '%s' "$P" | OS_HUB_DATA="$DATA" "$BIN" credential set --email "$E" --display-name "$N"
 done
 OLDHUB=$(sed -n 's/^hub=//p' "$OLDSTATE/pids.txt" 2>/dev/null || true)
-if [ "$OLD" != "-" ]; then touch "$OLDSTATE/stop"; for i in $(seq 1 20); do ps -p "$OLD" >/dev/null || break; sleep 1; done; ps -p "$OLD" >/dev/null && kill "$OLD"; fi
-if [ -n "$OLDHUB" ]; then for i in $(seq 1 30); do ps -p "$OLDHUB" >/dev/null || break; sleep 1; done; ps -p "$OLDHUB" >/dev/null && kill "$OLDHUB"; for i in $(seq 1 10); do ps -p "$OLDHUB" >/dev/null || break; sleep 1; done; ps -p "$OLDHUB" >/dev/null && { echo "old hub $OLDHUB still alive"; exit 1; }; fi
+alive() { ps -o command= -p "$1" 2>/dev/null | /usr/bin/grep -q "$2"; }
+if [ "$OLD" != "-" ] && ! alive "$OLD" 'hub-hold\.ts 7800 '; then OLD=-; fi
+if [ -n "$OLDHUB" ] && ! alive "$OLDHUB" 'os-hub'; then OLDHUB=; fi
+if [ "$OLD" != "-" ]; then touch "$OLDSTATE/stop"; for i in $(seq 1 20); do alive "$OLD" 'hub-hold\.ts 7800 ' || break; sleep 1; done; alive "$OLD" 'hub-hold\.ts 7800 ' && kill "$OLD"; fi
+if [ -n "$OLDHUB" ]; then for i in $(seq 1 30); do alive "$OLDHUB" 'os-hub' || break; sleep 1; done; alive "$OLDHUB" 'os-hub' && kill "$OLDHUB"; for i in $(seq 1 10); do alive "$OLDHUB" 'os-hub' || break; sleep 1; done; alive "$OLDHUB" 'os-hub' && { echo "old hub $OLDHUB still alive"; exit 1; }; fi
 lsof -nP -iTCP:7800 -sTCP:LISTEN && { echo "port 7800 still bound"; exit 1; }
 [ -d "$STATE" ] && mv "$STATE" "$STATE-$(date +%H%M%S)"
 mkdir -p "$STATE"

@@ -25,9 +25,12 @@ use super::scale_object;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
 pub enum SemioObjectMutation {
+    SetSnapshot(SetSnapshot),
     MoveObject(move_object::MoveObject),
     RotateObject(rotate_object::RotateObject),
     ScaleObject(scale_object::ScaleObject),
@@ -44,7 +47,7 @@ pub enum SemioObjectMutation {
 /// and `📦️mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
 /// and_the_catalog` below is what keeps this list honest against the enum, since the framework
 /// never parses Rust.
-pub const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
+pub const KINDS: &[&str] = &["set-snapshot", "move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

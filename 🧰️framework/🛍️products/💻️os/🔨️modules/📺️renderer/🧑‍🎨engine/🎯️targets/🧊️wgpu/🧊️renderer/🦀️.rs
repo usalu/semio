@@ -206,7 +206,8 @@ use infinite_world::world::{
     begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
     seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
     take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId,
-    WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES,
+    WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
@@ -8485,7 +8486,11 @@ pub(crate) mod kernel_runtime {
                 return Err(message);
             }
             if turn_results.is_empty() {
-                return if replay_capture_started || reserved_step_published { Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None)) } else { Err("kernel: shard produced no outcome for this turn".to_string()) };
+                return if replay_capture_started || reserved_step_published {
+                    Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None))
+                } else {
+                    Err("kernel: shard produced no outcome for this turn".to_string())
+                };
             }
             let mut settled: Option<ExchangeOutcome> = None;
             let mut owed = Vec::new();
@@ -8496,7 +8501,9 @@ pub(crate) mod kernel_runtime {
                     && matches!(result.command_ingress, semio_framework::kernel::CommandIngressStatus::Idle)
                     && matches!(result.cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Idle);
                 let outcome = self.apply_turn_result(actor, instance, result).await?;
-                owed.extend(outcome.typed_results.iter().map(|page| Event::Message { source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: TypedOperationResultPage::encode_ack(page.token) }));
+                owed.extend(
+                    outcome.typed_results.iter().map(|page| Event::Message { source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: TypedOperationResultPage::encode_ack(page.token) }),
+                );
                 match settled.as_mut() {
                     Some(earlier) => earlier.absorb(outcome)?,
                     None => settled = Some(outcome),
@@ -8687,7 +8694,19 @@ pub(crate) mod kernel_runtime {
 
     impl Default for KernelRequestQueue {
         fn default() -> Self {
-            Self { state: Mutex::new(KernelRequestQueueState { slots: semio_framework_async::boxed_fixed_slots(|| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_wakers: Vec::with_capacity(KERNEL_REQUEST_QUEUE_CAPACITY) }) }
+            Self {
+                state: Mutex::new(KernelRequestQueueState {
+                    slots: semio_framework_async::boxed_fixed_slots(|| None),
+                    read: 0,
+                    write: 0,
+                    len: 0,
+                    command_pages: 0,
+                    command_bytes: 0,
+                    closing: false,
+                    consumer_waker: None,
+                    producer_wakers: Vec::with_capacity(KERNEL_REQUEST_QUEUE_CAPACITY),
+                }),
+            }
         }
     }
 
@@ -8881,11 +8900,9 @@ pub(crate) mod kernel_runtime {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
                 }
-                KernelRequest::AdvanceRetained { .. }
-                | KernelRequest::MountProductReplay { .. }
-                | KernelRequest::RetireProductReplay { .. }
-                | KernelRequest::RetireProductReplayRefusal { .. }
-                | KernelRequest::AdvanceProductReplay { .. } => (true, 1, 0, 0),
+                KernelRequest::AdvanceRetained { .. } | KernelRequest::MountProductReplay { .. } | KernelRequest::RetireProductReplay { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::AdvanceProductReplay { .. } => {
+                    (true, 1, 0, 0)
+                }
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
@@ -10470,6 +10487,35 @@ enum FrameActionBatchStage {
 }
 
 impl FrameActionOwners {
+    fn try_push_queued(&mut self, action: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), ui_wgpu::wgpu::QueuedActionDescriptor> {
+        if self.batch.is_some() || self.len == self.slots.len() {
+            return Err(action);
+        }
+        let Some(index) = self.head.checked_add(self.len).map(|index| index % self.slots.len()) else { return Err(action) };
+        let Some(next_len) = self.len.checked_add(1) else { return Err(action) };
+        if self.slots[index].is_some() {
+            return Err(action);
+        }
+        self.slots[index] = Some(FrameActionEnvelope::from(action));
+        self.len = next_len;
+        Ok(())
+    }
+
+    fn try_push_queued_pair(&mut self, first: ui_wgpu::wgpu::QueuedActionDescriptor, second: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), (ui_wgpu::wgpu::QueuedActionDescriptor, ui_wgpu::wgpu::QueuedActionDescriptor)> {
+        if self.batch.is_some() || self.len.checked_add(2).is_none_or(|len| len > self.slots.len()) {
+            return Err((first, second));
+        }
+        let first_index = (self.head + self.len) % self.slots.len();
+        let second_index = (first_index + 1) % self.slots.len();
+        if self.slots[first_index].is_some() || self.slots[second_index].is_some() {
+            return Err((first, second));
+        }
+        self.slots[first_index] = Some(FrameActionEnvelope::from(first));
+        self.slots[second_index] = Some(FrameActionEnvelope::from(second));
+        self.len += 2;
+        Ok(())
+    }
+
     fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor> {
         if self.batch.is_some() || self.len == self.slots.len() {
             return Err(action);
@@ -10721,6 +10767,22 @@ impl FrameDeferredCursor {
         Self { actions, pump_sync, flush_tutorial, shell_maintenance, settle, phase: 0, generation, cancel, closing: false }
     }
 
+    fn checkout_site(&self) -> &'static str {
+        if self.phase == 0 && self.shell_maintenance {
+            "frame-deferred-shell-maintenance"
+        } else if self.phase <= 1 && self.pump_sync {
+            "frame-deferred-pump-sync"
+        } else if !self.actions.is_empty() {
+            "frame-deferred-action"
+        } else if self.phase <= 2 && self.flush_tutorial {
+            "frame-deferred-tutorial-flush"
+        } else if self.phase <= 3 && self.settle {
+            "frame-deferred-settle"
+        } else {
+            "frame-deferred-empty"
+        }
+    }
+
     fn take_next(&mut self) -> Option<FrameDeferredWork> {
         if self.phase == 0 {
             self.phase = 1;
@@ -10819,19 +10881,52 @@ impl FrameMaintenanceOwner {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameMaintenanceOwnerCell<T> {
+struct FrameDeferredExecutionOwner {
+    interaction: Option<AppInteractionState>,
+    cursor: Option<FrameDeferredCursor>,
+    work: Option<FrameDeferredWork>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameDeferredExecutionOwner {
+    fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor, work: FrameDeferredWork) -> Self {
+        Self { interaction: Some(interaction), cursor: Some(cursor), work: Some(work) }
+    }
+
+    fn generation(&self) -> Option<u64> {
+        self.cursor.as_ref().map(|cursor| cursor.generation)
+    }
+
+    fn cancel_current(&mut self) {
+        if let Some(FrameDeferredWork::Action(action)) = self.work.take() {
+            action.cancel();
+        } else {
+            self.work = None;
+        }
+    }
+
+    fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
+        if self.work.is_some() || self.interaction.is_none() || self.cursor.is_none() {
+            return None;
+        }
+        Some((self.interaction.take()?, self.cursor.take()?))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameExecutionOwnerCell<T> {
     state: std::sync::atomic::AtomicU8,
     owner: std::cell::UnsafeCell<Option<T>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe impl<T: Send> Send for FrameMaintenanceOwnerCell<T> {}
+unsafe impl<T: Send> Send for FrameExecutionOwnerCell<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe impl<T: Send> Sync for FrameMaintenanceOwnerCell<T> {}
+unsafe impl<T: Send> Sync for FrameExecutionOwnerCell<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<T> FrameMaintenanceOwnerCell<T> {
+impl<T> FrameExecutionOwnerCell<T> {
     fn new(owner: T) -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), owner: std::cell::UnsafeCell::new(Some(owner)) }
     }
@@ -10864,7 +10959,7 @@ impl<T> FrameMaintenanceOwnerCell<T> {
 
 #[cfg(not(target_arch = "wasm32"))]
 struct FrameMaintenanceRefusal {
-    owner: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>,
+    owner: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
     reservation_live: bool,
 }
 
@@ -10876,20 +10971,20 @@ impl FrameMaintenanceRefusal {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameMaintenanceExecutionRegistry {
+struct FrameExecutionRegistry<T> {
     state: std::sync::atomic::AtomicU8,
     generation: AtomicU64,
-    owner: std::cell::UnsafeCell<Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>>>,
+    owner: std::cell::UnsafeCell<Option<Arc<FrameExecutionOwnerCell<T>>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe impl Send for FrameMaintenanceExecutionRegistry {}
+unsafe impl<T: Send> Send for FrameExecutionRegistry<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe impl Sync for FrameMaintenanceExecutionRegistry {}
+unsafe impl<T: Send> Sync for FrameExecutionRegistry<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FrameMaintenanceExecutionRegistry {
+impl<T> FrameExecutionRegistry<T> {
     const WRITING: u8 = 1;
     const QUEUED: u8 = 2;
     const RUNNING: u8 = 3;
@@ -10900,7 +10995,7 @@ impl FrameMaintenanceExecutionRegistry {
         Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
     }
 
-    fn try_publish(&self, generation: u64, owner: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Result<(), Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
+    fn try_publish(&self, generation: u64, owner: Arc<FrameExecutionOwnerCell<T>>) -> Result<(), Arc<FrameExecutionOwnerCell<T>>> {
         if self.state.compare_exchange(0, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(owner);
         }
@@ -10912,7 +11007,7 @@ impl FrameMaintenanceExecutionRegistry {
         Ok(())
     }
 
-    fn try_begin(&self, generation: u64) -> Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
+    fn try_begin(&self, generation: u64) -> Option<Arc<FrameExecutionOwnerCell<T>>> {
         if self.generation.load(Ordering::Acquire) != generation {
             return None;
         }
@@ -10942,7 +11037,7 @@ impl FrameMaintenanceExecutionRegistry {
         true
     }
 
-    fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>> {
+    fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameExecutionOwnerCell<T>>) -> Arc<FrameExecutionOwnerCell<T>> {
         if self.generation.load(Ordering::Acquire) != generation {
             return fallback;
         }
@@ -10958,7 +11053,7 @@ impl FrameMaintenanceExecutionRegistry {
         }
     }
 
-    fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>)> {
+    fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameExecutionOwnerCell<T>>)> {
         self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).ok()?;
         let generation = self.generation.load(Ordering::Acquire);
         let owner = unsafe { (&mut *self.owner.get()).take() }?;
@@ -11145,6 +11240,18 @@ impl RuntimeApply {
 
     fn start_frame_deferred(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
         #[cfg(not(target_arch = "wasm32"))]
+        if cursor.is_none() && !runtime.interaction_available() {
+            if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
+                if let Some(mut owner) = mailbox.try_take_abandoned_frame_deferred() {
+                    owner.cancel_current();
+                    let Some((interaction, returned_cursor)) = owner.take_pair() else { return false };
+                    runtime.return_interaction(interaction);
+                    *cursor = Some(returned_cursor);
+                    return false;
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
         if runtime.pending_frame_maintenance_refusal.is_none() {
             if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
                 runtime.pending_frame_maintenance_refusal = mailbox.try_take_abandoned_frame_maintenance();
@@ -11169,7 +11276,7 @@ impl RuntimeApply {
             };
             let Some((interaction, mut returned_cursor)) = owner.take_pair() else {
                 if let Err(owner) = refusal.owner.try_restore(owner) {
-                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                    refusal.owner = Arc::new(FrameExecutionOwnerCell::new(owner));
                 }
                 runtime.pending_frame_maintenance_refusal = Some(refusal);
                 return false;
@@ -11192,7 +11299,8 @@ impl RuntimeApply {
             return true;
         }
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return false };
-        let Some(mut interaction) = runtime.check_out_interaction("frame-deferred") else { return false };
+        let checkout_site = cursor_value.checkout_site();
+        let Some(mut interaction) = runtime.check_out_interaction(checkout_site) else { return false };
         if !mailbox.reserve_interaction_future() {
             interaction.frame_fault = Some("frame deferred completion credits exhausted".to_string());
             runtime.return_interaction(interaction);
@@ -11234,6 +11342,21 @@ impl RuntimeApply {
                 return true;
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            match mailbox.try_spawn_frame_deferred_reserved(FrameDeferredExecutionOwner::new(interaction, cursor_value, work)) {
+                Ok(()) => return true,
+                Err(mut owner) => {
+                    let _ = mailbox.0.completions.lock().expect("runtime completion mailbox lock").cancel_interaction_reservation();
+                    owner.cancel_current();
+                    let Some((interaction, cursor_value)) = owner.take_pair() else { return false };
+                    runtime.return_interaction(interaction);
+                    *cursor = Some(cursor_value);
+                    return false;
+                }
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
         mailbox.spawn_frame_deferred_reserved(async move {
             match work {
                 FrameDeferredWork::ShellMaintenance => {}
@@ -11270,7 +11393,10 @@ impl RuntimeApply {
             }
             (interaction, cursor_value)
         });
-        true
+        #[cfg(target_arch = "wasm32")]
+        return true;
+        #[allow(unreachable_code)]
+        false
     }
 
     fn apply_step(&mut self, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
@@ -11919,11 +12045,15 @@ struct RuntimeMailboxInner {
     next_revision: AtomicU64,
     applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
     frame_inputs: Mutex<frame_job::FrameBuildInputs>,
+    retained_control_deadline_us: AtomicU64,
+    shell_clock_deadline_us: AtomicU64,
     frame_fault: Mutex<Option<String>>,
     #[cfg(not(target_arch = "wasm32"))]
     frame_maintenance: FrameMaintenanceAuthority,
     #[cfg(not(target_arch = "wasm32"))]
-    frame_maintenance_executions: Arc<FrameMaintenanceExecutionRegistry>,
+    frame_maintenance_executions: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    frame_deferred_executions: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
     world3d_close_cursor: Mutex<usize>,
     world3d_close_sequence: Mutex<u64>,
     world3d_asset_cursor: Mutex<usize>,
@@ -11985,7 +12115,7 @@ pub(crate) struct RuntimeMailbox(Arc<RuntimeMailboxInner>);
 #[cfg(not(target_arch = "wasm32"))]
 struct FrameMaintenanceExecutionEnvelope {
     mailbox: RuntimeMailbox,
-    registry: Arc<FrameMaintenanceExecutionRegistry>,
+    registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
     generation: u64,
     revision: u64,
     armed: bool,
@@ -11993,7 +12123,7 @@ struct FrameMaintenanceExecutionEnvelope {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceExecutionEnvelope {
-    fn new(mailbox: RuntimeMailbox, registry: Arc<FrameMaintenanceExecutionRegistry>, generation: u64, revision: u64) -> Self {
+    fn new(mailbox: RuntimeMailbox, registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>, generation: u64, revision: u64) -> Self {
         Self { mailbox, registry, generation, revision, armed: true }
     }
 
@@ -12017,8 +12147,8 @@ impl Drop for FrameMaintenanceExecutionEnvelope {
 #[cfg(not(target_arch = "wasm32"))]
 struct FrameMaintenanceExecutionGuard {
     mailbox: RuntimeMailbox,
-    registry: Arc<FrameMaintenanceExecutionRegistry>,
-    owner_cell: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>,
+    registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
+    owner_cell: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
     owner: Option<FrameMaintenanceOwner>,
     generation: u64,
     revision: u64,
@@ -12060,11 +12190,89 @@ impl Drop for FrameMaintenanceExecutionGuard {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameDeferredExecutionEnvelope {
+    mailbox: RuntimeMailbox,
+    registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
+    generation: u64,
+    revision: u64,
+    armed: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameDeferredExecutionEnvelope {
+    fn new(mailbox: RuntimeMailbox, registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>, generation: u64, revision: u64) -> Self {
+        Self { mailbox, registry, generation, revision, armed: true }
+    }
+
+    fn begin(mut self) -> Option<FrameDeferredExecutionGuard> {
+        let owner_cell = self.registry.try_begin(self.generation)?;
+        let owner = owner_cell.try_take()?;
+        self.armed = false;
+        Some(FrameDeferredExecutionGuard { mailbox: self.mailbox.clone(), registry: self.registry.clone(), owner_cell, owner: Some(owner), generation: self.generation, revision: self.revision, completed: false })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for FrameDeferredExecutionEnvelope {
+    fn drop(&mut self) {
+        if self.armed && self.registry.abandon(self.generation) {
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameDeferredExecutionGuard {
+    mailbox: RuntimeMailbox,
+    registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
+    owner_cell: Arc<FrameExecutionOwnerCell<FrameDeferredExecutionOwner>>,
+    owner: Option<FrameDeferredExecutionOwner>,
+    generation: u64,
+    revision: u64,
+    completed: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameDeferredExecutionGuard {
+    fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
+        self.owner.as_mut()
+    }
+
+    fn finish(mut self) -> bool {
+        let Some(owner) = self.owner.as_mut() else { return false };
+        let Some((interaction, cursor)) = owner.take_pair() else { return false };
+        if !self.registry.complete(self.generation) {
+            owner.interaction = Some(interaction);
+            owner.cursor = Some(cursor);
+            return false;
+        }
+        self.completed = true;
+        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
+        true
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for FrameDeferredExecutionGuard {
+    fn drop(&mut self) {
+        if self.completed {
+            return;
+        }
+        if let Some(owner) = self.owner.take() {
+            self.owner_cell.restore_taken(owner);
+        }
+        if self.registry.abandon(self.generation) {
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PresenterInteractionStep {
     Ready,
     Restored,
-    Waiting,
+    Waiting { site: &'static str, request: &'static str },
     RuntimeLock,
     Abandoned,
 }
@@ -12095,11 +12303,15 @@ impl RuntimeMailbox {
             next_revision: AtomicU64::new(1),
             applied_revisions: Mutex::new(std::collections::HashMap::new()),
             frame_inputs: Mutex::new(frame_job::FrameBuildInputs::default()),
+            retained_control_deadline_us: AtomicU64::new(u64::MAX),
+            shell_clock_deadline_us: AtomicU64::new(u64::MAX),
             frame_fault: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
             frame_maintenance: FrameMaintenanceAuthority::new(),
             #[cfg(not(target_arch = "wasm32"))]
-            frame_maintenance_executions: Arc::new(FrameMaintenanceExecutionRegistry::new()),
+            frame_maintenance_executions: Arc::new(FrameExecutionRegistry::new()),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_deferred_executions: Arc::new(FrameExecutionRegistry::new()),
             world3d_close_cursor: Mutex::new(0),
             world3d_close_sequence: Mutex::new(0),
             world3d_asset_cursor: Mutex::new(0),
@@ -12298,6 +12510,16 @@ impl RuntimeMailbox {
             }
             return false;
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        if !runtime.interaction_available() && runtime.pending_frame_deferred.is_none() {
+            if let Some(mut owner) = self.try_take_abandoned_frame_deferred() {
+                owner.cancel_current();
+                let Some((interaction, cursor)) = owner.take_pair() else { return false };
+                runtime.return_interaction(interaction);
+                runtime.pending_frame_deferred = Some(cursor);
+                return false;
+            }
+        }
         if let Some(cursor) = runtime.pending_frame_deferred.as_mut() {
             cursor.begin_close();
             if cursor.close_step() {
@@ -12309,9 +12531,13 @@ impl RuntimeMailbox {
             return false;
         }
         let Some(interaction) = runtime.interaction.as_mut() else { return true };
-        interaction.input.close_step_with_receipt(|receipt| {
-            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
-        }).is_ok_and(|complete| complete) && interaction.input.terminal_is_empty()
+        interaction
+            .input
+            .close_step_with_receipt(|receipt| {
+                engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            })
+            .is_ok_and(|complete| complete)
+            && interaction.input.terminal_is_empty()
     }
 
     pub(crate) fn take_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
@@ -13352,6 +13578,25 @@ impl RuntimeMailbox {
         inputs
     }
 
+    pub(crate) fn publish_retained_control_deadline(&self, deadline: Option<f64>) {
+        let due_us = deadline.filter(|seconds| seconds.is_finite() && *seconds >= 0.0).map_or(u64::MAX, |seconds| (seconds * 1_000_000.0).ceil() as u64);
+        self.0.retained_control_deadline_us.store(due_us, Ordering::Release);
+    }
+
+    pub(crate) fn publish_shell_clock_deadline(&self, deadline: Option<f64>) {
+        let due_us = deadline.filter(|seconds| seconds.is_finite() && *seconds >= 0.0).map_or(u64::MAX, |seconds| (seconds * 1_000_000.0).ceil() as u64);
+        self.0.shell_clock_deadline_us.store(due_us, Ordering::Release);
+    }
+
+    fn control_deadline_us(&self) -> Option<u64> {
+        let due_us = self.0.retained_control_deadline_us.load(Ordering::Acquire).min(self.0.shell_clock_deadline_us.load(Ordering::Acquire));
+        (due_us != u64::MAX).then_some(due_us)
+    }
+
+    pub(crate) fn retained_control_deadline(&self, host_seconds: f64) -> Option<ui_render::Deadline> {
+        crate::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
+    }
+
     fn update_frame_inputs(&self, runtime: &AppRuntime) {
         if !runtime.interaction_available() {
             return;
@@ -13385,6 +13630,12 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
+    fn try_take_abandoned_frame_deferred(&self) -> Option<FrameDeferredExecutionOwner> {
+        let (_, owner) = self.0.frame_deferred_executions.try_take_abandoned()?;
+        owner.try_take()
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
     where
         F: Future<Output = AppInteractionState> + Send + 'static,
@@ -13411,24 +13662,81 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn spawn_frame_deferred_reserved<F>(&self, future: F)
-    where
-        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + Send + 'static,
-    {
+    fn try_spawn_frame_deferred_reserved(&self, owner: FrameDeferredExecutionOwner) -> Result<(), FrameDeferredExecutionOwner> {
+        let Some(generation) = owner.generation() else { return Err(owner) };
+        let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
+        let registry = self.0.frame_deferred_executions.clone();
+        if registry.try_publish(generation, cell.clone()).is_err() {
+            return Err(cell.try_take().expect("rejected frame deferred owner remains available"));
+        }
         let mailbox = self.clone();
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
+        let execution = FrameDeferredExecutionEnvelope::new(mailbox.clone(), registry, generation, revision);
         spawn_app_task(async move {
-            let (interaction, cursor) = future.await;
-            mailbox.0.finish(returned_completion(revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
+            let Some(mut execution) = execution.begin() else {
+                mailbox.record_frame_fault("frame deferred exact owner was unavailable");
+                return;
+            };
+            let Some(work) = execution.owner_mut().and_then(|owner| owner.work.take()) else {
+                mailbox.record_frame_fault("frame deferred exact work owner was unavailable");
+                return;
+            };
+            match work {
+                FrameDeferredWork::ShellMaintenance => {}
+                FrameDeferredWork::PumpSync => {
+                    let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
+                    interaction.shell.pump_sync_events().await;
+                }
+                FrameDeferredWork::Action(action) => {
+                    if action.cancelled {
+                        action.cancel();
+                    } else {
+                        let receipt = action.receipt;
+                        let mut receipt_owner = FrameActionReceiptOwner { receipt };
+                        let result = {
+                            let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
+                            interaction.shell.dispatch_gesture_action(action.descriptor).await
+                        };
+                        match result {
+                            Ok(()) => receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Accepted),
+                            Err(error) => {
+                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Refused(&error));
+                                let Some(owner) = execution.owner_mut() else { return };
+                                if let Some(receipt) = receipt {
+                                    if receipt.abort_correlation_on_error {
+                                        owner.cursor.as_mut().map(|cursor| cursor.actions.cancel_correlation(receipt.token));
+                                    }
+                                }
+                                if let Some(interaction) = owner.interaction.as_mut() {
+                                    log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
+                                    interaction.shell.note_dispatch_fault(&error);
+                                }
+                            }
+                        }
+                    }
+                }
+                FrameDeferredWork::FlushTutorial => {
+                    let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
+                    interaction.shell.tutorial_flush_pending_document_ops().await;
+                }
+                FrameDeferredWork::Settle => {
+                    let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
+                    interaction.shell.settle_pump_step().await;
+                }
+            }
+            if !execution.finish() {
+                mailbox.record_frame_fault("frame deferred execution handback faulted");
+            }
         });
+        Ok(())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn try_spawn_frame_maintenance_reserved(&self, owner: FrameMaintenanceOwner) -> Result<(), FrameMaintenanceRefusal> {
         let Some(generation) = owner.generation() else {
-            return Err(FrameMaintenanceRefusal { owner: Arc::new(FrameMaintenanceOwnerCell::new(owner)), reservation_live: true });
+            return Err(FrameMaintenanceRefusal { owner: Arc::new(FrameExecutionOwnerCell::new(owner)), reservation_live: true });
         };
-        let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+        let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
         if !self.0.frame_maintenance.try_reserve(generation) {
             return Err(FrameMaintenanceRefusal { owner: cell, reservation_live: true });
         }
@@ -13564,7 +13872,9 @@ impl RuntimeMailbox {
             (queue.first_interaction_restoration(), queue.interaction_owner_outstanding())
         };
         if let Some(index) = index {
-            let Some(mut completion) = self.0.completions.lock().expect("runtime completion mailbox lock").take_at(index) else { return PresenterInteractionStep::Waiting };
+            let Some(mut completion) = self.0.completions.lock().expect("runtime completion mailbox lock").take_at(index) else {
+                return PresenterInteractionStep::Waiting { site: runtime.checkout.site().unwrap_or("unknown"), request: shell::host_io_request_trace_label() };
+            };
             let complete = completion.apply.restore_interaction_only(&mut runtime);
             completion.restores_interaction = false;
             if !complete {
@@ -13588,7 +13898,7 @@ impl RuntimeMailbox {
             };
             let Some((interaction, cursor)) = owner.take_pair() else {
                 if let Err(owner) = refusal.owner.try_restore(owner) {
-                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                    refusal.owner = Arc::new(FrameExecutionOwnerCell::new(owner));
                 }
                 runtime.pending_frame_maintenance_refusal = Some(refusal);
                 return PresenterInteractionStep::RuntimeLock;
@@ -13597,7 +13907,7 @@ impl RuntimeMailbox {
                 owner.interaction = Some(interaction);
                 owner.cursor = Some(cursor);
                 if let Err(owner) = refusal.owner.try_restore(owner) {
-                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                    refusal.owner = Arc::new(FrameExecutionOwnerCell::new(owner));
                 }
                 runtime.pending_frame_maintenance_refusal = Some(refusal);
                 return PresenterInteractionStep::RuntimeLock;
@@ -13606,8 +13916,18 @@ impl RuntimeMailbox {
             runtime.pending_frame_deferred = Some(cursor);
             return PresenterInteractionStep::Restored;
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        if runtime.pending_frame_deferred.is_none() {
+            if let Some(mut owner) = self.try_take_abandoned_frame_deferred() {
+                owner.cancel_current();
+                let Some((interaction, cursor)) = owner.take_pair() else { return PresenterInteractionStep::RuntimeLock };
+                runtime.return_interaction(interaction);
+                runtime.pending_frame_deferred = Some(cursor);
+                return PresenterInteractionStep::Restored;
+            }
+        }
         if owner_outstanding {
-            PresenterInteractionStep::Waiting
+            PresenterInteractionStep::Waiting { site: runtime.checkout.site().unwrap_or("unknown"), request: shell::host_io_request_trace_label() }
         } else {
             PresenterInteractionStep::Abandoned
         }
@@ -13746,8 +14066,6 @@ pub(crate) struct AppInteractionState {
     modifiers: PointerModifiers,
     space_pressed: bool,
     wheel_zoom_deadline_ms: f64,
-    caret_blink_at_ms: f64,
-    caret_blink_visible: bool,
     text_streams: [Option<AppTextStream>; TEXT_STREAM_CAPACITY],
     text_fault: Option<String>,
     frame_fault: Option<String>,
@@ -13930,6 +14248,8 @@ struct AppFrameAfterChrome {
 
 struct FrameBuildCursor {
     phase: FrameBuildPhase,
+    retained_clock_index: usize,
+    retained_clock_deadline: Option<f64>,
     presentation_witness: RuntimePresentationWitness,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
     fullscreen: Option<bool>,
@@ -13970,7 +14290,7 @@ enum FrameBuildPhase {
     Hover,
     InputFrame,
     WheelDeadline,
-    Caret,
+    RetainedClock,
     TakeDraw,
     RetireDraw,
     TakeOverlay,
@@ -13994,6 +14314,8 @@ impl FrameBuildCursor {
     fn new(presentation_witness: RuntimePresentationWitness) -> Self {
         Self {
             phase: FrameBuildPhase::Deferred,
+            retained_clock_index: 0,
+            retained_clock_deadline: None,
             presentation_witness,
             input_candidate: None,
             fullscreen: None,
@@ -14515,6 +14837,44 @@ impl FrameTransaction {
                         return AppFrameTransactionStep::Pending;
                     }
                     Ok(FrameInputActionStep::Empty) => {
+                        match app.input.drive_retained_action_step() {
+                            Ok(Some(action)) => {
+                                if app.frame_actions.try_push_queued(action).is_err() {
+                                    runtime.record_frame_fault("retained input action credits exceeded");
+                                    self.phase = AppFrameTransactionPhase::Terminal;
+                                    return AppFrameTransactionStep::Fault;
+                                }
+                                return AppFrameTransactionStep::Pending;
+                            }
+                            Ok(None) if app.input.retained_action_pending() => return AppFrameTransactionStep::Pending,
+                            Ok(None) => {}
+                            Err(_) => {
+                                runtime.record_frame_fault("retained input action transport failed");
+                                self.phase = AppFrameTransactionPhase::Terminal;
+                                return AppFrameTransactionStep::Fault;
+                            }
+                        }
+                        match engine_canvas::drive_text_editor_retained_action_step() {
+                            Ok(engine_canvas::TextEditorRetainedActionStep::Pending) => return AppFrameTransactionStep::Pending,
+                            Ok(engine_canvas::TextEditorRetainedActionStep::Ready(actions)) => {
+                                let admitted = match actions.second {
+                                    Some(second) => app.frame_actions.try_push_queued_pair(actions.first, second).is_ok(),
+                                    None => app.frame_actions.try_push_queued(actions.first).is_ok(),
+                                };
+                                if !admitted {
+                                    runtime.record_frame_fault("retained text editor action credits exceeded");
+                                    self.phase = AppFrameTransactionPhase::Terminal;
+                                    return AppFrameTransactionStep::Fault;
+                                }
+                                return AppFrameTransactionStep::Pending;
+                            }
+                            Ok(engine_canvas::TextEditorRetainedActionStep::Idle) => {}
+                            Err(_) => {
+                                runtime.record_frame_fault("retained text editor action transport failed");
+                                self.phase = AppFrameTransactionPhase::Terminal;
+                                return AppFrameTransactionStep::Fault;
+                            }
+                        }
                         match engine_canvas::drive_text_editor_outbox_step(&mut app.input) {
                             Ok(true) => return AppFrameTransactionStep::Pending,
                             Ok(false) => {}
@@ -15300,7 +15660,10 @@ enum AppPresentInputWait {
     #[default]
     None,
     RuntimeLock,
-    InteractionCheckout,
+    InteractionCheckout {
+        site: &'static str,
+        request: &'static str,
+    },
     SceneIntent,
 }
 
@@ -15383,6 +15746,7 @@ impl AppPresentPhase {
 }
 
 struct AppPresentCursor {
+    has_animated_primitives: bool,
     frame: AppFramePresentation,
     phase: AppPresentPhase,
     engine: usize,
@@ -15394,6 +15758,8 @@ struct AppPresentCursor {
     input_wait: AppPresentInputWait,
     input_progress: u64,
     gpu_cursor: Option<ui_wgpu::wgpu::PreparedGpuPresentCursor>,
+    retained_control_deadline: Option<f64>,
+    shell_clock_deadline: Option<f64>,
 }
 
 struct AppPresentedRetirement {
@@ -15421,7 +15787,15 @@ pub(crate) enum AppPresentStep {
     Pending,
     AwaitingRuntime,
     RetryRuntime,
-    Complete { generation: semio_framework_trace::Generation, cursor: SemioCursor, fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
+    Complete {
+        generation: semio_framework_trace::Generation,
+        cursor: SemioCursor,
+        fullscreen: Option<bool>,
+        cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+        retained_control_deadline: Option<f64>,
+        shell_clock_deadline: Option<f64>,
+        has_animated_primitives: bool,
+    },
 }
 
 impl AppFramePresentation {
@@ -15697,16 +16071,7 @@ impl AppPresenter {
     fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor, upload_progress: (u32, u32, usize)) -> Option<String> {
         note_present_stall_signature(
             watch,
-            (
-                cursor.phase,
-                cursor.engine,
-                cursor.upload,
-                cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress),
-                upload_progress,
-                cursor.raster_keep_steps,
-                cursor.input_wait,
-                cursor.input_progress,
-            ),
+            (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps, cursor.input_wait, cursor.input_progress),
         )
     }
 
@@ -15838,6 +16203,7 @@ impl AppPresenter {
         let frame = produce()?;
         let cursor = frame.cursor;
         self.pending = Some(AppPresentCursor {
+            has_animated_primitives: false,
             frame,
             phase: AppPresentPhase::BeginGpu,
             engine: 0,
@@ -15849,6 +16215,8 @@ impl AppPresenter {
             input_wait: AppPresentInputWait::None,
             input_progress: 0,
             gpu_cursor: None,
+            retained_control_deadline: None,
+            shell_clock_deadline: None,
         });
         Some(cursor)
     }
@@ -16122,8 +16490,8 @@ impl AppPresenter {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                             return Ok(AppPresentStep::Pending);
                         }
-                        PresenterInteractionStep::Waiting => {
-                            cursor.input_wait = AppPresentInputWait::InteractionCheckout;
+                        PresenterInteractionStep::Waiting { site, request } => {
+                            cursor.input_wait = AppPresentInputWait::InteractionCheckout { site, request };
                             return Ok(AppPresentStep::AwaitingRuntime);
                         }
                         PresenterInteractionStep::RuntimeLock => {
@@ -16261,8 +16629,8 @@ impl AppPresenter {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                             return Ok(AppPresentStep::Pending);
                         }
-                        PresenterInteractionStep::Waiting => {
-                            cursor.input_wait = AppPresentInputWait::InteractionCheckout;
+                        PresenterInteractionStep::Waiting { site, request } => {
+                            cursor.input_wait = AppPresentInputWait::InteractionCheckout { site, request };
                             return Ok(AppPresentStep::AwaitingRuntime);
                         }
                         PresenterInteractionStep::RuntimeLock => {
@@ -16306,6 +16674,11 @@ impl AppPresenter {
                 if !shell.acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
+                cursor.has_animated_primitives = packet.has_animated_primitives();
+                cursor.retained_control_deadline = shell.presented_retained_clock_deadline();
+                if let Some(now_us) = semio_framework_job::default_now_us() {
+                    cursor.shell_clock_deadline = shell.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms());
+                }
                 cursor.frame.input_candidate = None;
                 let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };
                 let mut replacement = match self.gate.acknowledge_presented(witness) {
@@ -16341,6 +16714,9 @@ impl AppPresenter {
                 let accepted_cursor = completed.frame.cursor;
                 let accepted_generation = completed.frame.generation;
                 let cursor_wake = completed.frame.cursor_wake.take();
+                let retained_control_deadline = completed.retained_control_deadline;
+                let shell_clock_deadline = completed.shell_clock_deadline;
+                let has_animated_primitives = completed.has_animated_primitives;
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
                     completed.frame.cursor_wake = cursor_wake;
@@ -16348,7 +16724,7 @@ impl AppPresenter {
                     return Err("completed presentation retirement capacity exhausted".to_string());
                 }
                 retirement.completed_frame = Some(completed.frame);
-                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, fullscreen, cursor_wake })
+                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives })
             }
         }
     }
@@ -16696,15 +17072,21 @@ impl AppRuntime {
                     self.wheel_zoom_deadline_ms = 0.0;
                     engine_canvas::node_graph_clear_wheel_zoom_active();
                 }
-                cursor.phase = FrameBuildPhase::Caret;
+                cursor.phase = FrameBuildPhase::RetainedClock;
             }
-            FrameBuildPhase::Caret => {
-                if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
-                    self.caret_blink_at_ms = app_now_ms();
-                    self.caret_blink_visible = !self.caret_blink_visible;
-                    engine_canvas::node_graph_sync_caret_blink(self.caret_blink_visible);
+            FrameBuildPhase::RetainedClock => {
+                if let Some((window_id, surface)) = self.shell.retained_clock_surface(cursor.retained_clock_index).map(|(id, surface)| (id.to_owned(), surface)) {
+                    cursor.retained_clock_index += 1;
+                    if let Some(step) = crate::interpreter::advance_retained_window_clock(&window_id, surface, &mut self.input) {
+                        if let Some(deadline) = step.next_deadline {
+                            cursor.retained_clock_deadline = Some(cursor.retained_clock_deadline.map_or(deadline, |current| current.min(deadline)));
+                        }
+                    }
+                } else {
+                    let Some(runtime) = handle.upgrade().map(RuntimeMailbox) else { return FrameBuildBoundaryStep::Fault("control clock lost its runtime owner") };
+                    runtime.publish_retained_control_deadline(cursor.retained_clock_deadline);
+                    cursor.phase = FrameBuildPhase::TakeDraw;
                 }
-                cursor.phase = FrameBuildPhase::TakeDraw;
             }
             FrameBuildPhase::TakeDraw => {
                 cursor.previous_draw = Some(std::mem::take(&mut self.draw));
@@ -16768,7 +17150,12 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::Tutorial;
             }
             FrameBuildPhase::Tutorial => {
-                self.shell.tutorial_tick(app_now_ms());
+                let wall_now_ms = app_now_ms();
+                self.shell.tutorial_tick(wall_now_ms);
+                if let Some(runtime) = handle.upgrade().map(RuntimeMailbox) {
+                    let deadline = semio_framework_job::default_now_us().and_then(|now| self.shell.next_chrome_deadline(now as f64 / 1_000_000.0, wall_now_ms));
+                    runtime.publish_shell_clock_deadline(deadline);
+                }
                 cursor.phase = FrameBuildPhase::EngineResources;
             }
             FrameBuildPhase::EngineResources => {
@@ -17003,7 +17390,7 @@ impl AppRuntime {
             }
             FrameFinishPhase::Draw => {
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame draw transfer lost resource input") };
-                input.time_seconds = (app_now_ms() / 1000.0) as f32;
+                input.time_seconds = crate::deadlines::ui_animation_seconds(semio_framework_job::default_now_us());
                 cursor.phase = FrameFinishPhase::Overlay;
             }
             FrameFinishPhase::Overlay => {
@@ -17121,7 +17508,7 @@ impl AppInteractionState {
     }
 
     fn has_pending_text_work(&self) -> bool {
-        self.input.text_buffer.runnable_work_pending() || self.text_cancel_pending || engine_canvas::has_pending_text_editor_outbox()
+        self.input.text_buffer.runnable_work_pending() || self.input.retained_action_pending() || self.text_cancel_pending || engine_canvas::has_pending_text_editor_outbox()
     }
 
     fn drive_text_operation(&mut self) {
@@ -17134,6 +17521,7 @@ impl AppInteractionState {
         if let Err(fault) = self.input.drive_text_step() {
             self.text_fault = Some(format!("text edit step failed: {fault:?}"));
         }
+        interpreter::sync_focused_table_editable_text_draft(&self.input);
     }
 
     /// 📐️ The content root is LOGICAL (CSS) pixels, exactly like every chrome constant
@@ -17170,6 +17558,9 @@ impl AppInteractionState {
         if interpreter::apply_focused_vfs_control_key(&action, &mut self.input) {
             return;
         }
+        if interpreter::apply_focused_table_editable_text_key(&action, &modifiers, &mut self.input) {
+            return;
+        }
         if interpreter::apply_focused_table_stepper_key(&action, &mut self.input) {
             return;
         }
@@ -17192,7 +17583,7 @@ impl AppInteractionState {
             self.space_pressed = *pressed;
             return;
         }
-        if engine_canvas::node_graph_apply_note_edit_key(action.clone(), &modifiers) {
+        if interpreter::apply_focused_node_graph_note_key(&action, &modifiers) {
             return;
         }
         // ✍️ A focused text editor owns the keyboard before the shell's chord table does — the same
@@ -17324,7 +17715,9 @@ impl AppInteractionState {
             interpreter::blur_focused_ink_editor_at(x, y, &mut self.input);
         }
         let target = if down { self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
+        interpreter::blur_focused_table_editable_text_for_pointer(target.as_ref(), down, button, &mut self.input);
         interpreter::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
+        interpreter::blur_focused_node_graph_caret_for_pointer(target.as_ref(), down, button);
         interpreter::blur_focused_table_stepper_for_pointer(down, button);
         interpreter::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
@@ -17363,13 +17756,17 @@ impl AppInteractionState {
             SurfaceKind::World3d => {
                 self.shell.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits))
             }
-            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if down {
-                    engine_canvas::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
-                } else {
-                    engine_canvas::node_graph_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
-                }
-            }),
+            SurfaceKind::NodeGraph => {
+                let outcome = self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                    if down {
+                        engine_canvas::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
+                    } else {
+                        engine_canvas::node_graph_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+                    }
+                });
+                interpreter::refresh_node_graph_caret_after_pointer(&target);
+                outcome
+            }
             SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if down {
                     scenes::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
@@ -17638,8 +18035,6 @@ async fn boot_runtime(
             modifiers: PointerModifiers::default(),
             space_pressed: false,
             wheel_zoom_deadline_ms: 0.0,
-            caret_blink_at_ms: 0.0,
-            caret_blink_visible: true,
             text_streams: std::array::from_fn(|_| None),
             text_fault: None,
             frame_fault: None,

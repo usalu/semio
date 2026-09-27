@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSections {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-sections", "change-sections")
+        protocol::LocalizedLabel::native("Change cross-sections", "Querschnitte ändern")
     }
 }

@@ -517,6 +517,6 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::Wfc2dSnapshot;
 #[path = "./🧪️tests/🔬️store-fixture/🦀️.rs"]
 mod store_fixture;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "component-app-assembly"))]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;

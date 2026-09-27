@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMemberDeta
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-member-detailing-compatible", "change-member-detailing-compatible")
+        protocol::LocalizedLabel::native("Change member detailing conformity", "Konformität der konstruktiven Durchbildung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-detailing-compatible".into()]

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveRoofs {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-roofs", "remove-roofs")
+        protocol::LocalizedLabel::native("Remove roof", "Dach entfernen")
     }
 }
 //#endregion 🔖️Payload

@@ -6,7 +6,7 @@
 //! (a documented limitation, not a silent drop; a future header-focused window could add them).
 
 use crate::EpwSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -68,9 +68,10 @@ pub fn definition() -> WindowKindDefinition {
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
+    let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect::<Vec<_>>();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
+    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.epw@energyplus/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

@@ -548,8 +548,7 @@ fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
         let mut shell = ShellState::new(Vec::new(), String::new());
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
         shell.chrome_present.maintenance.load_requested = false;
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": value }) }))
-            .expect("locale-bearing host mutation");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": value }) })).expect("locale-bearing host mutation");
         assert!(matches!(shell.owed_refresh_scope, semio_framework::kernel::UiDirtyScope::Full), "{action} must rebuild guest bodies and Window Measures from the new ViewModel axes");
         assert!(shell.settle_pump_pending(), "{action} arms the bounded settle owner for the full guest refresh");
         assert!(!shell.chrome_present.maintenance.pending(), "{action} must not schedule a duplicate shell-only locale publication lane");

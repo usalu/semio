@@ -1,4 +1,5 @@
 /** 🧬️ Transparent TiffMutation union. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { ChangeByteOrderMutation } from './🧭️change-byte-order/🟦️.ts';
 import type { InsertIfdMutation } from './📥️insert-ifd/🟦️.ts';
 import type { RemoveIfdMutation } from './📤️remove-ifd/🟦️.ts';
@@ -11,4 +12,5 @@ export type TiffMutation =
   | { readonly mutation: 'remove-ifd'; readonly payload: RemoveIfdMutation }
   | { readonly mutation: 'replace-tag'; readonly payload: ReplaceTagMutation }
   | { readonly mutation: 'remove-tag'; readonly payload: RemoveTagMutation }
-  | { readonly mutation: 'replace-pixels'; readonly payload: ReplacePixelsMutation };
+  | { readonly mutation: 'replace-pixels'; readonly payload: ReplacePixelsMutation }
+  | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot };

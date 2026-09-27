@@ -1,3 +1,5 @@
+import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️document/🟦️.ts";
+import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-example/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/component.tsx
 /** @emoji 🏗️ `ShellHost` — the `FrameworkOsShell` orchestrator: boots/hot-swaps plugin wasm modules,
@@ -177,7 +179,7 @@ import {
   decodePackWire,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
   DEV_STREAM_ROUTES,
-  STREAM_MUX_PATH,
+  STREAM_MUX_ANNOUNCEMENT,
   DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
   encodeDocumentArchiveBytes,
@@ -216,7 +218,7 @@ import {
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope, decodePresenceInteraction } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
-import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
+import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
@@ -470,6 +472,7 @@ import {
   NOTE_WORLD_NAVIGATION_ACTION_ID,
   PANEL_TAB_BAR_HOSTS,
   PRESENCE_HEARTBEAT_INTERVAL_MS,
+  presenceLiveViewBeatDelayMsV1,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   actionCategoryId,
   actionRequiresStagedForm,
@@ -685,7 +688,7 @@ import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { StreamMuxChannelV1, pageStreamMuxChannelV1, streamMuxWatchV1 } from "../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, streamMuxWatchV1, type StreamMuxEndpointV1 } from "../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { liveInstanceWindowFaultV1, type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { createShellRouteLedgerV1 } from "./🧭️route-ledger/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
@@ -882,6 +885,14 @@ const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
   error: "border-destructive bg-destructive text-destructive-foreground",
   fatal: "border-destructive bg-destructive text-destructive-foreground font-semibold",
 };
+
+/** @emoji ⏰️ Browser timer duration shared with the native Shell chrome deadline contract. */
+export const SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS = 4000;
+
+/** @emoji ⏰️ Arms the actual ShellHost notice dismissal timer. */
+export function scheduleShellTransientNoticeDismissV1(dismiss: () => void): ReturnType<typeof setTimeout> {
+  return setTimeout(dismiss, SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS);
+}
 
 /** ⚖️ `Fault.code` for a rejected local dispatch (contract freeze §C8/§C9) — never invented locally,
  * mirrors the Rust guest's `Fault("mutation.rejected")`. */
@@ -1298,6 +1309,19 @@ export interface FrameworkOsShellProps {
    * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
    * single-shell-per-page behavior unchanged). */
   readonly suppressAutoIntroduction?: boolean;
+}
+
+/** @emoji 📶️ The page's stream channel when the serve that hosts this page announces one (`STREAM_MUX_ANNOUNCEMENT`, defined by
+ * the dev serve's backbone plugin), else the silent endpoint: a production bundle or a test harness has no channel to dial, and
+ * dialing one anyway made every jsdom law that mounts the shell log a refused WebSocket. */
+function announcedPageStreams(): StreamMuxChannelV1 | StreamMuxEndpointV1 {
+  let path: unknown;
+  try {
+    path = (import.meta as unknown as { readonly env?: Readonly<Record<string, unknown>> }).env?.[STREAM_MUX_ANNOUNCEMENT];
+  } catch {
+    path = undefined;
+  }
+  return typeof path === "string" && path.startsWith("/") ? pageStreamMuxChannelV1(path) : SILENT_STREAM_MUX_ENDPOINT_V1;
 }
 
 //#region 🔖️Identity
@@ -2425,7 +2449,6 @@ function FrameworkOsShellInner({
   const spawnedRefreshSlotsRef = useRef(new Map<string, SpawnedRefreshSlotV1>());
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
-  const noExampleResetInstanceIdRef = useRef<number | null>(null);
   const extraWindowCounterRef = useRef(0);
   // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
   // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
@@ -2836,6 +2859,8 @@ function FrameworkOsShellInner({
   type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean; readonly expectedCatalogGenerationId?: string };
   type PreparedArtifactOpeningTarget = OpenDocumentSessionTarget & Readonly<{ dialect: ArtifactDialect; role: AppRole }>;
   type OpenDocumentSession = {
+    readonly openingReference: DocumentOpeningReference;
+    readonly persistenceBindings: readonly PersistenceBinding[];
     session: ActiveSession;
     plugin: PluginWasmHandle;
     documentId: string;
@@ -3267,7 +3292,7 @@ function FrameworkOsShellInner({
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
     const worker = new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
-    const streams = pageStreamMuxChannelV1(STREAM_MUX_PATH);
+    const streams = announcedPageStreams();
     if (streams instanceof StreamMuxChannelV1) {
       const streamPipe = new MessageChannel();
       backboneWorkerStreamsDetachRef.current = streams.attachPort(streamPipe.port1);
@@ -4132,8 +4157,8 @@ function FrameworkOsShellInner({
     const local = import.meta.env.PROD
       ? [createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry)]
       : [
-          createDevPluginSource(registry, streamMuxWatchV1(pageStreamMuxChannelV1(STREAM_MUX_PATH), DEV_STREAM_ROUTES.pluginModules)),
-          createExtensionSource(PLUGIN_CATALOG, streamMuxWatchV1(pageStreamMuxChannelV1(STREAM_MUX_PATH), DEV_STREAM_ROUTES.extensionModules)),
+          createDevPluginSource(registry, streamMuxWatchV1(announcedPageStreams(), DEV_STREAM_ROUTES.pluginModules)),
+          createExtensionSource(PLUGIN_CATALOG, streamMuxWatchV1(announcedPageStreams(), DEV_STREAM_ROUTES.extensionModules)),
         ];
     return multiplexPluginSources(...local, ...(hubPluginSource ? [hubPluginSource] : []));
   }, [extensionRegistry, registry, hubPluginSource]);
@@ -5757,22 +5782,22 @@ function FrameworkOsShellInner({
         );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         // 🩹️ `resolveExternalSlots`/`ensureContributorInstance`'s `PluginWasmHandle` (kernel/component.ts,
-        // `manifest: () => Promise<Uint8Array>`/`enqueue`/`outcomes`/`dispose` — an actor/turn handle) is
+        // `manifest`/`enqueue`/`outcomes`/`dispose` — an actor/turn handle) is
         // a genuinely DIFFERENT abstraction from this file's own `PluginWasmHandle` (`PluginRuntime`'s,
         // `manifest: PluginManifest`) — PluginRuntime's own import already renames kernel's to
         // `KernelPluginWasmHandle` to keep the two apart. Read both call sites (`ensureContributorInstance`
         // only calls `.createApp`; `resolveExternalSlots` only checks the handle's truthiness — the
         // external-slot render path itself is an explicit, documented stub, "the dedicated follow-up work
         // package", always returning "Extension unavailable") before building a REAL adapter rather than
-        // casting past the mismatch: `createApp`/`destroyApp` forward to this file's real handle;
-        // `manifest`/`enqueue`/`outcomes`/`dispose` are genuinely never invoked by either function today,
-        // so they're honest no-op/empty implementations, not a fabricated claim about behavior.
+        // casting past the mismatch: `createApp`/`destroyApp` forward to this file's real handle and
+        // `manifest` is its admitted manifest; `enqueue`/`outcomes`/`dispose` are genuinely never invoked by
+        // either function today, so they're honest no-op/empty implementations, not a fabricated claim.
         const slotContext = {
           plugins: new Map(
             loadedPlugins.map((entry) => [
               entry.handle.pluginId,
               {
-                manifest: async () => new Uint8Array(),
+                manifest: entry.handle.manifest as unknown as import("@semio-tech/framework").PluginManifest,
                 createApp: entry.handle.createApp,
                 destroyApp: entry.handle.destroyApp,
                 takeSegmentedDownloadChunk: entry.handle.takeSegmentedDownloadChunk,
@@ -6317,7 +6342,8 @@ function FrameworkOsShellInner({
   // (`🗑️generated/journey-3/console.txt`). `seal` runs before the close ladder because the ladder's own
   // first step already revokes the actor.
   const switchToPluginApp = useCallback(
-    async (pluginId: string, appId: string, viewState?: ViewModel): Promise<ActiveSession | null> => {
+    async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession): Promise<ActiveSession | null> => {
+      const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
       setSurfaceSwitchBusy(true);
       try {
         const outcome = await sessionSwitchGateRef.current.run(
@@ -6337,13 +6363,41 @@ function FrameworkOsShellInner({
             createInstance: async (targetPluginId, app) => {
               const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
               if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
-              return handle.createApp(app.id);
+              if (documentSource === undefined) return handle.createApp(app.id);
+              const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
+              if (targetPluginId !== documentSource.pluginId || !current() || !app.dialect) throw new Error("surface-document.predecessor-stale");
+              const readArchive = handle.readAppDocumentArchive;
+              const loadArchive = handle.loadAppDocumentArchive;
+              if (!readArchive || !loadArchive) throw new Error("surface-document.archive-port-unavailable");
+              const owners = [...openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === handle && entry.session.instanceId === documentSource.instanceId);
+              if (owners.length > 1) throw new Error("surface-document.owner-ambiguous");
+              const owner = owners[0];
+              const surfaceId = canonicalSurfaceId(app.dialect,app.role);
+              let receipt: DocumentOpeningReceiptV1 | null = null;
+              return prepareDocumentSurfaceV1({
+                current,
+                capture: () => readArchive(documentSource.instanceId),
+                create: () => handle.createApp(app.id),
+                restore: (instanceId,archive) => loadArchive(instanceId,archive),
+                attach: async instanceId => {
+                  if (owner === undefined) return;
+                  const nextSession: ActiveSession = { pluginId: targetPluginId,instanceId,app,viewState: viewState ?? defaultViewState(app),documentInitialized: true };
+                  const bindings = owner.persistenceBindings.map(binding => binding.kind === "hub" ? { ...binding,requestedSurfaceId: surfaceId } : binding);
+                  receipt = await openDocumentRef.current(owner.openingReference,bindings,{ plugin: handle,session: nextSession });
+                  if (receipt === null) throw new Error("surface-document.attachment-refused");
+                },
+                release: async instanceId => {
+                  if (receipt !== null) closeDocumentRef.current(receipt.runtimeKey,receipt.clientInstanceId);
+                  await documentAttachmentLanesRef.current.get(handle)?.get(instanceId)?.drain();
+                  await handle.destroyApp(instanceId);
+                },
+              });
             },
             retire: retireSessionInstance,
             // 🪶️ The empty studio panel belongs to `hostMode` only: a non-host playground's boot session
             // carries no `panelJson` at all, so a role switch must not invent one either.
-            defaultViewState: (app) => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) }),
-            publish: (next) => dispatch({ type: "SET_SESSION", value: next }),
+            defaultViewState,
+            publish: (next) => dispatch({ type: "SET_SESSION", value: { ...next,documentInitialized: documentSource !== undefined } }),
             seedLayout: (app) => {
               const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
               extraWindowInstancesRef.current = seeded.extraInstances;
@@ -6369,7 +6423,7 @@ function FrameworkOsShellInner({
           showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
           return null;
         }
-        return outcome.session;
+        return outcome.session === null || documentSource === undefined ? outcome.session : { ...outcome.session,documentInitialized: true };
       } finally {
         setSurfaceSwitchBusy(false);
       }
@@ -7220,7 +7274,7 @@ function FrameworkOsShellInner({
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
       const persistToFolder = resolvedBindings.some((binding) => binding.kind === "folder");
-      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), archivePersistence: async () => {}, creationMount, ready, resolveReady, rejectReady };
+      const entry: OpenDocumentSession = { openingReference: { ...ref }, persistenceBindings: [...resolvedBindings], session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), archivePersistence: async () => {}, creationMount, ready, resolveReady, rejectReady };
       entry.archivePersistence = latestWins(async () => {
         if (!persistToFolder || openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
         if (!plugin.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
@@ -8715,7 +8769,10 @@ function FrameworkOsShellInner({
       }
       return trigger();
     };
+    let lastBeatAtMs = 0;
+    let liveViewBeat: ReturnType<typeof setTimeout> | null = null;
     const beat = () => {
+      lastBeatAtMs = Date.now();
       // 🧹️ Drops triggers for documents closed since the last tick — bounded growth instead of one
       // entry per document ever opened this session.
       for (const runtimeKey of presenceBeatTriggersRef.current.keys()) {
@@ -8725,9 +8782,20 @@ function FrameworkOsShellInner({
         void beatOneDocument(runtimeKey).catch((error) => console.error("[os-shell] presence heartbeat failed for document", runtimeKey, error));
       }
     };
+    // 🖱️ A local window view (pointer, camera, caret) that changed beats at once, spaced by the live bound, so a peer's
+    // cursor follows the pointer instead of the next interval beat (`💓️presence-liveness-v1`, `a-moving-pointer-beats-live`).
+    const unsubscribeLiveViews = subscribeLocalPresenceWindowViewsV1(() => {
+      if (liveViewBeat !== null) return;
+      liveViewBeat = setTimeout(() => {
+        liveViewBeat = null;
+        beat();
+      }, presenceLiveViewBeatDelayMsV1(lastBeatAtMs, Date.now()));
+    });
     beat();
     const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
     return () => {
+      unsubscribeLiveViews();
+      if (liveViewBeat !== null) clearTimeout(liveViewBeat);
       window.clearInterval(timer);
       presenceBeatTriggersRef.current.clear();
     };
@@ -8886,7 +8954,7 @@ function FrameworkOsShellInner({
       const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.manifest.apps ?? [];
       const target = roleSwitchTargetV1(apps, current.app.dialect, current.app.role, role);
       if (!target) return;
-      await switchToPluginApp(current.pluginId, target.id);
+      await switchToPluginApp(current.pluginId, target.id,undefined,current);
     },
     [switchToPluginApp],
   );
@@ -9393,7 +9461,7 @@ function FrameworkOsShellInner({
       transientNoticeIdRef.current += 1;
       const id = transientNoticeIdRef.current;
       dispatch({ type: "SET_TRANSIENT_NOTICE", value: { id, message, kind, code } });
-      transientNoticeTimerRef.current = setTimeout(() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null }), 4000);
+      transientNoticeTimerRef.current = scheduleShellTransientNoticeDismissV1(() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null }));
     },
     [dispatch],
   );
@@ -10758,7 +10826,7 @@ function FrameworkOsShellInner({
       if (!session || !focusedApp || !focusedProgram) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
       if (!plugin) return;
-      void onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
+      return onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
     },
     [loadedPlugins, onAction, session, focusedApp, focusedProgram],
   );
@@ -11764,24 +11832,15 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
   }, [exampleOptions, session?.app.id, session?.pluginId]);
 
-  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
-  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
-  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
-  // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
-  useEffect(() => {
-    if (exampleOptions.length === 0 || !session) return;
-    if (hostMode) {
-      noExampleResetInstanceIdRef.current = session.instanceId;
-      return;
-    }
-    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
-    noExampleResetInstanceIdRef.current = session.instanceId;
-    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
-    if (exampleId !== activeExampleId) {
-      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-    }
-    dispatchActiveExample(exampleId);
-  }, [activeExampleId, defaults.exampleId, dispatchActiveExample, exampleOptions, session, hostMode]);
+  const initialExampleReady = useInitialExampleReadiness(session ? `${session.pluginId}:${session.instanceId}` : null,!hostMode && !session?.documentInitialized,useCallback(() => {
+    if (!session || !focusedPluginManifest || !focusedApp || !focusedProgram) return;
+    if (exampleOptions.length === 0) return Promise.resolve();
+    const exampleId = resolveBootExampleId(activeExampleId,exampleOptions,defaults.exampleId);
+    if (exampleId !== activeExampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID",value: exampleId });
+    return dispatchActiveExample(exampleId);
+  },[session,focusedPluginManifest,focusedApp,focusedProgram,exampleOptions,activeExampleId,defaults.exampleId,dispatchActiveExample]),useCallback(async () => {
+    if (session) await refreshUi(session,{ kind: "full" });
+  },[session,refreshUi]));
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
@@ -12295,7 +12354,7 @@ function FrameworkOsShellInner({
           {uiDataLabel(error)}
         </p>
       );
-    if (!session) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
+    if (!session || !initialExampleReady) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) }];
     const studioHomeBar =
       hostMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
@@ -12455,7 +12514,7 @@ function FrameworkOsShellInner({
         </div>
       </div>
     );
-  }, [activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -12542,7 +12601,7 @@ function FrameworkOsShellInner({
         delete shellRoot.dataset.shellReady;
         delete shellRoot.dataset.shellNotFound;
       }
-    } else if (session) {
+    } else if (session && initialExampleReady) {
       root.dataset.semioOsReady = beaconId;
       delete root.dataset.semioOsError;
       delete root.dataset.semioOsNotFound;
@@ -12562,7 +12621,7 @@ function FrameworkOsShellInner({
         delete shellRoot.dataset.shellNotFound;
       }
     };
-  }, [session, error, pluginFilter, shellRoute.kind, hostMode, scope.rootRef]);
+  }, [session, initialExampleReady, error, pluginFilter, shellRoute.kind, hostMode, scope.rootRef]);
   // #endregion 🔖️ReadinessBeacon
 
   // #region 🔖️CatalogSmokeProbe
@@ -12742,7 +12801,7 @@ function FrameworkOsShellInner({
         <div
           className="flex h-screen min-h-0 w-screen flex-col bg-transparent"
           data-level="base"
-          data-semio-os-ready={session && !error ? "" : undefined}
+          data-semio-os-ready={session && initialExampleReady && !error ? "" : undefined}
           /* 🪪️ The identity an AGENT names this document by, published into the DOM so "the browser
              shows the artifact the agent edited" is an assertion rather than a skip. It is the one
              the shell's own artifact route hands back on every `historySnapshot`

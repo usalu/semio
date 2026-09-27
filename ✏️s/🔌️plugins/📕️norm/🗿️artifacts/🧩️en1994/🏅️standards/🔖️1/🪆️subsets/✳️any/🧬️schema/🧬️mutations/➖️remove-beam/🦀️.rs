@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveBeam {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-beam", "remove-beam")
+        protocol::LocalizedLabel::native("Remove composite beam", "Verbundträger entfernen")
     }
 }
 //#endregion 🔖️Payload

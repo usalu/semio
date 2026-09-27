@@ -1,3 +1,3 @@
 module Stdio_png_mutation;
-# Direct tags: change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16
+# Direct tags: change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16, set-snapshot=17, patch-pixels=18
 public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };

@@ -1,0 +1,108 @@
+{
+  "document": {
+    "schema": "raster.document",
+    "id": "mask-panel",
+    "layers": [
+      {
+        "id": "group",
+        "name": "Group",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "kind": "group",
+        "mask": {
+          "enabled": true,
+          "linked": true,
+          "invert": false,
+          "width": null,
+          "height": null,
+          "imageKey": null,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
+          }
+        },
+        "children": [
+          {
+            "id": "child",
+            "name": "Child",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            },
+            "kind": "pixel",
+            "width": 2,
+            "height": 2,
+            "imageKey": null,
+            "mask": {
+              "enabled": false,
+              "linked": true,
+              "invert": false,
+              "width": null,
+              "height": null,
+              "imageKey": null,
+              "transform": {
+                "x": 0,
+                "y": 0,
+                "scaleX": 1,
+                "scaleY": 1,
+                "rotation": 0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "plain",
+        "name": "Plain",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "kind": "pixel",
+        "width": 2,
+        "height": 2,
+        "imageKey": null,
+        "mask": null
+      }
+    ]
+  },
+  "expected": [
+    {
+      "id": "group",
+      "name": "Group",
+      "enabled": true,
+      "invert": false
+    },
+    {
+      "id": "child",
+      "name": "Child",
+      "enabled": false,
+      "invert": false
+    }
+  ],
+  "trigger": "change",
+  "action": "patchLayers"
+}

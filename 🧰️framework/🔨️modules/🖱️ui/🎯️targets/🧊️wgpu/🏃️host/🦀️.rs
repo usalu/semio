@@ -146,17 +146,17 @@ impl ClipboardIoJob {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn decode_clipboard_content(page: &[u8]) -> Option<ClipboardContent> {
-        let (&kind, bytes) = page.split_first()?;
-        match kind {
-            1 => String::from_utf8(bytes.to_vec()).ok().map(ClipboardContent::Text),
-            2 if bytes.len() >= 8 => {
-                let width = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
-                let height = u32::from_le_bytes(bytes[4..8].try_into().ok()?);
-                let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
-                (bytes.len() == expected + 8).then(|| ClipboardContent::ImageRgba8 { width, height, bytes: bytes[8..].to_vec() })
-            }
-            _ => None,
+    let (&kind, bytes) = page.split_first()?;
+    match kind {
+        1 => String::from_utf8(bytes.to_vec()).ok().map(ClipboardContent::Text),
+        2 if bytes.len() >= 8 => {
+            let width = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
+            let height = u32::from_le_bytes(bytes[4..8].try_into().ok()?);
+            let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
+            (bytes.len() == expected + 8).then(|| ClipboardContent::ImageRgba8 { width, height, bytes: bytes[8..].to_vec() })
         }
+        _ => None,
+    }
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

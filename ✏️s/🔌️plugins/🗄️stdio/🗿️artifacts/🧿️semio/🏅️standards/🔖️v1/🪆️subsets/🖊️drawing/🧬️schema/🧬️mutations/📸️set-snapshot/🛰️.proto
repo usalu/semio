@@ -1,0 +1,5 @@
+syntax = "proto3";
+package (`DrawLayer`/`DrawNode`/`PathSegment`/
+import "📸️set-snapshot/🛰️.proto";
+import "../../📸️snapshot/🛰️.proto";
+message SetSnapshot { semio.s_stdio_semio_drawing.snapshot.SemioDrawingSnapshot snapshot = 1; }

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeSeismics {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change seismics", "Ändern: seismics")
+        protocol::LocalizedLabel::native("Change seismic actions", "Erdbebeneinwirkungen ändern")
     }
 }
 //#endregion 🔖️Payload

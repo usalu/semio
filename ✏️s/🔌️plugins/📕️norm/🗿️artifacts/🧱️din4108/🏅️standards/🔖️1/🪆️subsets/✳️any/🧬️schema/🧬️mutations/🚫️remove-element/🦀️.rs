@@ -23,6 +23,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveElement 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-element", "remove-element")
+        protocol::LocalizedLabel::native("Remove envelope element", "Hüllbauteil entfernen")
     }
 }

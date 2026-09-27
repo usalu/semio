@@ -1,0 +1,103 @@
+{
+  "schema": "semio.framework.text-editor.explicit-draft.v1",
+  "cases": [
+    {
+      "id": "source",
+      "initial": "{\"title\":\"Alpha\"}",
+      "draft": "{\"title\":\"Beta\"}",
+      "settings": {
+        "readOnly": false,
+        "editAction": "replaceSnapshotSource",
+        "editArgument": "value",
+        "commit": "explicit",
+        "applyLabel": "Apply",
+        "discardLabel": "Discard",
+        "conflictLabel": "The document changed."
+        ,"applyingLabel": "Preparing draft"
+        ,"cancelLabel": "Cancel"
+        ,"failedLabel": "The draft could not be applied"
+      },
+      "expected": {
+        "action": "replaceSnapshotSource",
+        "args": {
+          "value": "{\"title\":\"Beta\"}"
+        }
+      }
+    },
+    {
+      "id": "long-scalar",
+      "initial": "Alpha",
+      "draft": "Beta",
+      "settings": {
+        "readOnly": false,
+        "editAction": "setSnapshotValue",
+        "editArgument": "value",
+        "editArguments": {
+          "path": "/description"
+        },
+        "commit": "explicit",
+        "applyLabel": "Anwenden",
+        "discardLabel": "Verwerfen",
+        "conflictLabel": "Das Dokument wurde geändert."
+        ,"applyingLabel": "Entwurf wird vorbereitet"
+        ,"cancelLabel": "Abbrechen"
+        ,"failedLabel": "Entwurf konnte nicht angewendet werden"
+      },
+      "expected": {
+        "action": "setSnapshotValue",
+        "args": {
+          "path": "/description",
+          "value": "Beta"
+        }
+      }
+    }
+  ],
+  "rejectedSettings": [
+    {
+      "id": "implicit",
+      "settings": {
+        "editAction": "replaceSnapshotSource",
+        "editArgument": "value",
+        "commit": "change",
+        "applyLabel": "Apply",
+        "discardLabel": "Discard"
+      }
+    },
+    {
+      "id": "missing-action",
+      "settings": {
+        "editArgument": "value",
+        "commit": "explicit",
+        "applyLabel": "Apply",
+        "discardLabel": "Discard"
+      }
+    },
+    {
+      "id": "array-arguments",
+      "settings": {
+        "editAction": "setSnapshotValue",
+        "editArgument": "value",
+        "editArguments": [],
+        "commit": "explicit",
+        "applyLabel": "Apply",
+        "discardLabel": "Discard"
+      }
+    }
+  ],
+  "preservation": {
+    "initial": "valid",
+    "draft": "invalid local draft",
+    "unrelatedScene": "valid",
+    "afterRefusal": "invalid local draft",
+    "afterUnrelatedScene": "invalid local draft",
+    "afterDiscard": "valid",
+    "collaboratorScene": "changed by collaborator",
+    "afterConflict": "invalid local draft"
+  },
+  "conflictResolution": {
+    "initial": "A",
+    "localDraft": "D",
+    "collaboratorScene": "B",
+    "matchingDraft": "B"
+  }
+}

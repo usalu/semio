@@ -15,9 +15,7 @@ fn family_any_dir() -> PathBuf {
 }
 
 fn ticket_generated() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/🗑️generated/din16798",
-    )
+    std::env::temp_dir().join("semio-norm-din16798-oracle")
 }
 
 #[test]

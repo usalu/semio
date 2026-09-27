@@ -11,36 +11,32 @@
 //! top-level engine mods `widgets` itself also depends on.
 //! Not to be confused with the `Steps` element (a progress-indicator, unrelated concept).
 
-use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::input_element::render_input;
-use crate::wgpu::widgets::{draw_text, register_input_meta, StepperMeta, WidgetContext};
+use crate::wgpu::paint::{push_stepper_chrome, push_stepper_icon};
+use crate::wgpu::tree::NodeFlags;
+use crate::wgpu::widgets::{register_input_meta, StepperMeta, WidgetContext};
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
-pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    let seg = bounds.w / 3.0;
-    let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
-    let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
-    let plus = Rect::new(bounds.x + seg * 2.0, bounds.y, seg, bounds.h);
-    let hair = ctx.theme.stroke_hairline;
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.input_bg);
-    ctx.draw.push_solid([bounds.x + seg, bounds.y, hair, bounds.h], ctx.theme.border_normal);
-    ctx.draw.push_solid([bounds.x + seg * 2.0, bounds.y, hair, bounds.h], ctx.theme.border_normal);
-    let minus_hovered = ctx.input.hovered_id.as_deref() == Some(&format!("{id}.minus"));
-    let plus_hovered = ctx.input.hovered_id.as_deref() == Some(&format!("{id}.plus"));
-    if minus_hovered {
-        ctx.draw.push_solid([minus.x, minus.y, minus.w, minus.h], ctx.theme.button_hover);
+pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let segments @ [minus, center, plus] = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ctx.theme.stroke_hairline);
+    ctx.draw.push_scissor(bounds);
+    let flags = if ctx.input.focused_id.as_deref() == Some(&format!("{id}.input")) { NodeFlags::FOCUSED } else { NodeFlags::empty() };
+    push_stepper_chrome(ctx.draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, ctx.theme);
+    for (segment, suffix) in [(minus, "minus"), (plus, "plus")] {
+        if ctx.input.hovered_id.as_deref() == Some(&format!("{id}.{suffix}")) {
+            ctx.draw.push_solid([segment.x, segment.y, segment.w, segment.h], ctx.theme.button_hover);
+        }
     }
-    if plus_hovered {
-        ctx.draw.push_solid([plus.x, plus.y, plus.w, plus.h], ctx.theme.button_hover);
-    }
-    draw_text(ctx, "−", minus.x + seg * 0.5 - 4.0, minus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
-    let text = format!("{value:.3}");
+    push_stepper_icon(ctx.draw, ctx.icons, "minus", minus, ui_contract::FlowInline::Ltr, ctx.theme);
+    let text = if uniform { ui_contract::format_ui_number(value) } else { String::new() };
+    let placeholder = (!uniform).then_some(crate::wgpu::component::ui::UI_INSPECTOR_MIXED_PLACEHOLDER);
     let input_id = format!("{id}.input");
     register_input_meta(ctx, &input_id, "number", &text, None, (None, None, Some(step), None), on_absolute.clone());
-    render_input(&input_id, &text, None, center, ctx);
-    draw_text(ctx, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
+    render_input(&input_id, &text, placeholder, center, true, ctx);
+    push_stepper_icon(ctx.draw, ctx.icons, "plus", plus, ui_contract::FlowInline::Ltr, ctx.theme);
+    ctx.draw.pop_scissor();
     if let (Some(maps), Some(on_absolute), Some(on_delta)) = (ctx.interaction_maps.as_deref_mut(), on_absolute, on_delta) {
         maps.stepper_metas.insert(id.to_string(), StepperMeta { on_absolute, on_delta, step, value });
     }

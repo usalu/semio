@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection_domains, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::{flow_graph_selection_domains, host_scene_edit, sync_host_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -28,14 +28,15 @@ pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>,
 /// `apply` directly instead (mirrors `space`'s `delete_selection::apply`).
 pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let (nodes, edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
-    let operations = host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| {
+    let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
+    let emit = host_scene_edit(&composed, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| {
         sync_host_selection_domains(host, &nodes, &edges, &[]);
-        if !host.has_selection() {
-            return false;
-        }
-        host.delete_selection().is_ok()
-    });
-    Ok(Emit::mutations(operations))
+        Ok(host.has_selection() && host.delete_selection().is_ok())
+    })?;
+    if emit.child_emits.is_empty() {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
+    }
+    Ok(emit)
 }
 
 //#region 🧪️Tests

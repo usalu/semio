@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeMixedTerra
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-mixed-terrain-distance", "change-mixed-terrain-distance")
+        protocol::LocalizedLabel::native("Change distance to the terrain category change", "Abstand zum Geländekategoriewechsel ändern")
     }
 }
 //#endregion 🔖️Payload

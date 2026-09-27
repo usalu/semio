@@ -85,6 +85,15 @@
       },
       "outputs": []
     },
+    "guest-framework-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts guest-framework-check"
+      },
+      "outputs": []
+    },
     "verify-staged": {
       "executor": "nx:run-commands",
       "cache": false,

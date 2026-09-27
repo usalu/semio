@@ -853,6 +853,65 @@ fn identical_local_command_ids_have_collision_free_owner_keys() {
 }
 
 #[test]
+fn command_panel_fixture_maps_every_owner_to_actionable_tree_rows() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️command-panel/🔣️.json")).expect("command panel fixture");
+    let shell = test_shell_state();
+    let mut actual = Vec::new();
+    for command in fixture["commands"].as_array().expect("fixture commands").iter().filter(|command| command["args"].as_array().is_some_and(Vec::is_empty)) {
+        let address = &command["address"];
+        let owner = match &address["owner"] {
+            Value::String(owner) if owner == "os" => CommandOwnerAddress::Os,
+            Value::Object(owner) if owner.contains_key("plugin") => CommandOwnerAddress::Plugin { plugin_id: owner["plugin"]["pluginId"].as_str().expect("plugin id").into() },
+            Value::Object(owner) if owner.contains_key("app") => CommandOwnerAddress::App { plugin_id: owner["app"]["pluginId"].as_str().expect("plugin id").into(), app_id: owner["app"]["appId"].as_str().expect("app id").into() },
+            Value::Object(owner) if owner.contains_key("mode") => CommandOwnerAddress::Mode {
+                plugin_id: owner["mode"]["pluginId"].as_str().expect("plugin id").into(),
+                app_id: owner["mode"]["appId"].as_str().expect("app id").into(),
+                mode_id: owner["mode"]["modeId"].as_str().expect("mode id").into(),
+            },
+            other => panic!("unknown fixture owner {other:?}"),
+        };
+        let command_id = address["commandId"].as_str().expect("command id");
+        let definition = CommandDefinition::bounded_catalog(command_id, LocalizedLabel::data(command["labels"]["en"].as_str().expect("English label")), command["category"].as_str().expect("category"), ActionKind::Shell);
+        let row = shell.build_command_panel_row(&ResolvedCommand::new(definition, owner));
+        assert_eq!(row.id, format!("command.{}", command["key"].as_str().expect("stable key").replace(':', ".")));
+        let action = row.action.expect("zero-argument row action");
+        assert_eq!(action.action, "executeResolvedCommand");
+        actual.push(action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()).expect("opaque stable key").to_string());
+    }
+    let expected: Vec<&str> = fixture["zeroArgumentKeys"].as_array().expect("zero argument keys").iter().map(|key| key.as_str().expect("stable key")).collect();
+    assert_eq!(actual.iter().map(String::as_str).collect::<Vec<_>>(), expected);
+}
+
+#[test]
+fn resolved_zero_argument_command_executes_once_and_a_stale_key_is_rejected() {
+    let mut shell = test_shell_state();
+    shell.layout_override = Some(shell.dock.to_window_layout());
+    let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: crate::action_args_json!({ "value": value }) };
+    semio_framework_async::block_on(shell.dispatch_action(execute("stale:os.resetDock"))).expect("stale key is a no-op");
+    assert!(shell.layout_override.is_some());
+    semio_framework_async::block_on(shell.dispatch_action(execute("os:os.resetDock"))).expect("live reset executes");
+    assert!(shell.layout_override.is_none());
+}
+
+#[test]
+fn argument_command_ingress_toggles_only_a_live_owner_qualified_form() {
+    let mut shell = test_shell_state();
+    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("argument command");
+    let key = command_address_stable_key(&entry.address);
+    let row = shell.build_command_panel_row(&entry);
+    let action = row.action.expect("argument row action");
+    assert_eq!(action.action, "setCommandExpanded");
+    assert_eq!(action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()), Some(key.as_str()));
+    semio_framework_async::block_on(shell.dispatch_action(action.clone())).expect("first toggle opens");
+    assert_eq!(shell.expanded_command_id.as_deref(), Some(key.as_str()));
+    semio_framework_async::block_on(shell.dispatch_action(action)).expect("second toggle closes");
+    assert_eq!(shell.expanded_command_id, None);
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: crate::action_args_json!({ "value": "mode:retired:stale" }) }))
+        .expect("stale toggle is a no-op");
+    assert_eq!(shell.expanded_command_id, None);
+}
+
+#[test]
 fn command_categories_orders_by_first_appearance_and_dedupes() {
     let resolved = vec![
         ResolvedCommand::new(CommandDefinition::bounded_catalog("a", LocalizedLabel::data("A"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
@@ -930,13 +989,14 @@ fn apply_os_command_set_theme_id_updates_active_theme() {
 fn build_command_panel_ui_groups_rows_under_category_headers() {
     let mut shell = test_shell_state();
     shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
-    let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
-        panic!("expected a stack root");
+    let UiNode::Tree(panel) = shell.build_command_panel_ui() else {
+        panic!("expected a Tree root");
     };
     // 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
     // appearance contains setAppearance/setThemeId, layout contains setDriver/resetDock, and
     // language contains setLocale/setTerminology, and general contains the route-owned Hub opener.
-    assert_eq!(panel.children.len(), 5);
+    assert_eq!(panel.sections.len(), 5);
+    assert!(panel.sections.iter().flat_map(|section| &section.items).all(|row| row.action.is_some()), "every command is an actionable Tree row");
 }
 
 // 🔎️ The three laws below used to be asserted against this target's own hand-rolled

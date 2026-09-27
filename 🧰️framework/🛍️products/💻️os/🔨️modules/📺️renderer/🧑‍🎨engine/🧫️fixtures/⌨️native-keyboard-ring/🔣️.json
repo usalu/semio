@@ -1,0 +1,17 @@
+{
+  "schema": "semio.renderer.native-keyboard-ring-fixture/v1",
+  "$comment": "⌨️ The native wgpu shell's keyboard ring: Tab / Shift+Tab walk the chrome's focusable, enabled, visible controls in the order the chrome publishes them (the order the browser mirror's DOM gives the same controls), wrap around, and Enter / Space press the focused control through the accessibility activation path (the search toggle opens the palette and moves focus into its query field, as React does). Ticket 26/09/23 slice WG10.",
+  "controls": [
+    { "controlId": "ui.search.toggle", "kind": "button", "rect": [10, 4, 24, 24] },
+    { "controlId": "ui.find.toggle", "kind": "button", "rect": [40, 4, 24, 24] },
+    { "controlId": "ui.settings.toggle", "kind": "toggle", "rect": [70, 4, 24, 24] }
+  ],
+  "steps": [
+    { "key": "tab", "focus": "ui.search.toggle" },
+    { "key": "tab", "focus": "ui.find.toggle" },
+    { "key": "shift+tab", "focus": "ui.search.toggle" },
+    { "key": "shift+tab", "focus": "ui.settings.toggle" },
+    { "key": "tab", "focus": "ui.search.toggle" },
+    { "key": "enter", "focus": "ui.search.input", "searchOpen": true }
+  ]
+}

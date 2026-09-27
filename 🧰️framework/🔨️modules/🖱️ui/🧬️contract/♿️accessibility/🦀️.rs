@@ -174,6 +174,8 @@ pub struct AccessibilityProjectionNode {
     #[serde(default, skip_serializing_if = "is_default")]
     pub focusable: bool,
     #[serde(default, skip_serializing_if = "is_default")]
+    pub tabbable: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
     pub actionable: bool,
     #[serde(default, skip_serializing_if = "is_default")]
     pub focused: bool,
@@ -228,7 +230,7 @@ pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
         crate::Component::Input(props) => AccessibilityValue { min: props.min, max: props.max, now: props.value.as_str().parse().ok(), text: Some(props.value.as_str().to_string()), busy: false },
         crate::Component::Select(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Slider(props) => AccessibilityValue { min: Some(props.min), max: Some(props.max), now: Some(props.value), text: props.unit.as_ref().map(|unit| format!("{} {}", props.value, unit.as_str())), busy: false },
-        crate::Component::NumberStepper(props) => AccessibilityValue { now: Some(props.value), text: Some(props.value.to_string()), ..AccessibilityValue::default() },
+        crate::Component::NumberStepper(props) => AccessibilityValue { min: props.min, max: props.max, now: props.uniform.then_some(props.value), text: props.uniform.then(|| crate::format_ui_number(props.value)), busy: false },
         crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false },
         crate::Component::IconSelect(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Progress(props) => match props.total {
@@ -243,8 +245,10 @@ pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
 /// `depth`, and afterwards stamps whatever live state only it knows (`focused`, `rect`).
 pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize) -> AccessibilityProjectionNode {
     let activatable = record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate);
+    let focusable = accessibility_is_focusable(&record.component, activatable);
     let value = accessibility_value(&record.component);
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
+        crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group) => props.label.as_ref(),
         crate::Component::Button(props) => Some(&props.label),
         crate::Component::TreeItem(props) => Some(&props.label),
         crate::Component::Table(props) => Some(&props.label),
@@ -261,7 +265,8 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         shortcut: record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str().to_string()),
         hidden: record.accessibility.hidden,
         disabled: record.disabled,
-        focusable: accessibility_is_focusable(&record.component, activatable),
+        focusable,
+        tabbable: focusable,
         actionable: activatable || !record.bindings.is_empty(),
         focused: false,
         checked: match &record.component {

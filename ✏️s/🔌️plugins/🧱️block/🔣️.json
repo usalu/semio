@@ -722,6 +722,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of the 2D block's node kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Knotenart des 2D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                },
+                "reuse": {
+                  "en": "Sets one field of the 2D block's node kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Knotenart des 2D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                }
               }
             }
           },
@@ -766,6 +776,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new handle kind (a named, coloured connector type with a default wire kind) to the 2D block.",
+                  "de": "Fügt dem 2D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Leitungsart)."
+                },
+                "reuse": {
+                  "en": "Adds a new handle kind (a named, coloured connector type with a default wire kind) to the 2D block.",
+                  "de": "Fügt dem 2D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Leitungsart)."
+                }
               }
             }
           },
@@ -810,6 +830,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one handle kind by id from the 2D block.",
+                  "de": "Entfernt eine Griffart anhand ihrer Id aus dem 2D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one handle kind by id from the 2D block.",
+                  "de": "Entfernt eine Griffart anhand ihrer Id aus dem 2D-Block."
+                }
               }
             }
           },
@@ -854,6 +884,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new handle of the first handle kind to the 2D block at a default angle and radius; without any handle kind nothing happens.",
+                  "de": "Fügt dem 2D-Block einen neuen Griff der ersten Griffart mit Standardwinkel und -radius hinzu; ohne Griffart geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a new handle of the first handle kind to the 2D block at a default angle and radius; without any handle kind nothing happens.",
+                  "de": "Fügt dem 2D-Block einen neuen Griff der ersten Griffart mit Standardwinkel und -radius hinzu; ohne Griffart geschieht nichts."
+                }
               }
             }
           },
@@ -898,6 +938,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one handle by id from the 2D block.",
+                  "de": "Entfernt einen Griff anhand seiner Id aus dem 2D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one handle by id from the 2D block.",
+                  "de": "Entfernt einen Griff anhand seiner Id aus dem 2D-Block."
+                }
               }
             }
           },
@@ -942,6 +992,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a two-way compatibility rule saying which handle kinds (source and target) may connect to each other.",
+                  "de": "Fügt eine beidseitige Kompatibilitätsregel hinzu, welche Griffarten (Quelle und Ziel) miteinander verbunden werden dürfen."
+                },
+                "reuse": {
+                  "en": "Adds a two-way compatibility rule saying which handle kinds (source and target) may connect to each other.",
+                  "de": "Fügt eine beidseitige Kompatibilitätsregel hinzu, welche Griffarten (Quelle und Ziel) miteinander verbunden werden dürfen."
+                }
               }
             }
           },
@@ -986,6 +1046,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one compatibility rule by id, so its two handle kinds may no longer connect.",
+                  "de": "Entfernt eine Kompatibilitätsregel anhand ihrer Id, sodass ihre zwei Griffarten nicht mehr verbunden werden dürfen."
+                },
+                "reuse": {
+                  "en": "Removes one compatibility rule by id, so its two handle kinds may no longer connect.",
+                  "de": "Entfernt eine Kompatibilitätsregel anhand ihrer Id, sodass ihre zwei Griffarten nicht mehr verbunden werden dürfen."
+                }
               }
             }
           },
@@ -1030,6 +1100,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads one of the plugin's bundled 2D block examples into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 2D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Loads one of the plugin's bundled 2D block examples into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 2D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -1055,7 +1135,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -1074,6 +1154,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 2D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 2D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 2D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 2D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                }
               }
             }
           },
@@ -1805,6 +1895,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -1910,6 +2010,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2003,6 +2113,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3097,6 +3217,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3202,6 +3332,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3295,6 +3435,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4129,6 +4279,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of the 3D block's object kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Objektart des 3D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                },
+                "reuse": {
+                  "en": "Sets one field of the 3D block's object kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Objektart des 3D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                }
               }
             }
           },
@@ -4173,6 +4333,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new, empty representation (a named mesh view of the object with tags and level of detail) to the 3D block.",
+                  "de": "Fügt dem 3D-Block eine neue, leere Darstellung hinzu (eine benannte Netzansicht des Objekts mit Tags und Detailstufe)."
+                },
+                "reuse": {
+                  "en": "Adds a new, empty representation (a named mesh view of the object with tags and level of detail) to the 3D block.",
+                  "de": "Fügt dem 3D-Block eine neue, leere Darstellung hinzu (eine benannte Netzansicht des Objekts mit Tags und Detailstufe)."
+                }
               }
             }
           },
@@ -4217,6 +4387,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one representation by id from the 3D block.",
+                  "de": "Entfernt eine Darstellung anhand ihrer Id aus dem 3D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one representation by id from the 3D block.",
+                  "de": "Entfernt eine Darstellung anhand ihrer Id aus dem 3D-Block."
+                }
               }
             }
           },
@@ -4261,6 +4441,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new vortex kind (a named, coloured connection-point type with a default cable kind) to the 3D block.",
+                  "de": "Fügt dem 3D-Block eine neue Wirbelart hinzu (einen benannten, farbigen Anschlusspunkttyp mit Standard-Kabelart)."
+                },
+                "reuse": {
+                  "en": "Adds a new vortex kind (a named, coloured connection-point type with a default cable kind) to the 3D block.",
+                  "de": "Fügt dem 3D-Block eine neue Wirbelart hinzu (einen benannten, farbigen Anschlusspunkttyp mit Standard-Kabelart)."
+                }
               }
             }
           },
@@ -4305,6 +4495,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one vortex kind by id from the 3D block.",
+                  "de": "Entfernt eine Wirbelart anhand ihrer Id aus dem 3D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one vortex kind by id from the 3D block.",
+                  "de": "Entfernt eine Wirbelart anhand ihrer Id aus dem 3D-Block."
+                }
               }
             }
           },
@@ -4349,6 +4549,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new vortex (connection point) of the first vortex kind at the origin, facing up; without any vortex kind nothing happens.",
+                  "de": "Fügt einen neuen Wirbel (Anschlusspunkt) der ersten Wirbelart im Ursprung, nach oben gerichtet, hinzu; ohne Wirbelart geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a new vortex (connection point) of the first vortex kind at the origin, facing up; without any vortex kind nothing happens.",
+                  "de": "Fügt einen neuen Wirbel (Anschlusspunkt) der ersten Wirbelart im Ursprung, nach oben gerichtet, hinzu; ohne Wirbelart geschieht nichts."
+                }
               }
             }
           },
@@ -4393,6 +4603,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one vortex (connection point) by id from the 3D block.",
+                  "de": "Entfernt einen Wirbel (Anschlusspunkt) anhand seiner Id aus dem 3D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one vortex (connection point) by id from the 3D block.",
+                  "de": "Entfernt einen Wirbel (Anschlusspunkt) anhand seiner Id aus dem 3D-Block."
+                }
               }
             }
           },
@@ -4437,6 +4657,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads one of the plugin's bundled 3D block examples (such as the Nakagin capsule or a hexagonal cut-concrete forest piece), replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 3D-Block-Beispiele (etwa die Nakagin-Kapsel oder ein sechseckiges Betonwald-Teil) und ersetzt Abweichendes, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Loads one of the plugin's bundled 3D block examples (such as the Nakagin capsule or a hexagonal cut-concrete forest piece), replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 3D-Block-Beispiele (etwa die Nakagin-Kapsel oder ein sechseckiges Betonwald-Teil) und ersetzt Abweichendes, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -4462,7 +4692,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -4481,6 +4711,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 3D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 3D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 3D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 3D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                }
               }
             }
           },
@@ -4526,6 +4766,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses which representation of the 3D block the editor shows and edits, or none; the document is not changed.",
+                  "de": "Wählt, welche Darstellung des 3D-Blocks der Editor zeigt und bearbeitet, oder keine; das Dokument ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Chooses which representation of the 3D block the editor shows and edits, or none; the document is not changed.",
+                  "de": "Wählt, welche Darstellung des 3D-Blocks der Editor zeigt und bearbeitet, oder keine; das Dokument ändert sich nicht."
+                }
               }
             }
           },
@@ -4571,6 +4821,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets which representations one 3D window shows, by window id; only that window's view changes.",
+                  "de": "Legt fest, welche Darstellungen ein 3D-Fenster zeigt, anhand der Fenster-Id; nur die Ansicht dieses Fensters ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets which representations one 3D window shows, by window id; only that window's view changes.",
+                  "de": "Legt fest, welche Darstellungen ein 3D-Fenster zeigt, anhand der Fenster-Id; nur die Ansicht dieses Fensters ändert sich."
+                }
               }
             }
           },
@@ -4616,6 +4876,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Shows or hides one representation in one 3D window; only that window's view changes.",
+                  "de": "Blendet eine Darstellung in einem 3D-Fenster ein oder aus; nur die Ansicht dieses Fensters ändert sich."
+                },
+                "reuse": {
+                  "en": "Shows or hides one representation in one 3D window; only that window's view changes.",
+                  "de": "Blendet eine Darstellung in einem 3D-Fenster ein oder aus; nur die Ansicht dieses Fensters ändert sich."
+                }
               }
             }
           },
@@ -4661,6 +4931,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how one 3D window arranges the representations it shows, in a row or stacked; only the view changes.",
+                  "de": "Legt fest, wie ein 3D-Fenster seine Darstellungen anordnet, in einer Reihe oder gestapelt; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how one 3D window arranges the representations it shows, in a row or stacked; only the view changes.",
+                  "de": "Legt fest, wie ein 3D-Fenster seine Darstellungen anordnet, in einer Reihe oder gestapelt; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4706,6 +4986,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the spacing between representations laid out side by side in one 3D window; only the view changes.",
+                  "de": "Legt den Abstand zwischen nebeneinander angeordneten Darstellungen in einem 3D-Fenster fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the spacing between representations laid out side by side in one 3D window; only the view changes.",
+                  "de": "Legt den Abstand zwischen nebeneinander angeordneten Darstellungen in einem 3D-Fenster fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4751,6 +5041,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses the vortex kind the placement brush puts onto surfaces; only the editor's brush setting changes.",
+                  "de": "Wählt die Wirbelart, die der Platzierungspinsel auf Flächen setzt; nur die Pinseleinstellung des Editors ändert sich."
+                },
+                "reuse": {
+                  "en": "Chooses the vortex kind the placement brush puts onto surfaces; only the editor's brush setting changes.",
+                  "de": "Wählt die Wirbelart, die der Platzierungspinsel auf Flächen setzt; nur die Pinseleinstellung des Editors ändert sich."
+                }
               }
             }
           },
@@ -4796,6 +5096,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the radius of the vortex placement brush; only the editor's brush setting changes.",
+                  "de": "Legt den Radius des Wirbel-Platzierungspinsels fest; nur die Pinseleinstellung des Editors ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the radius of the vortex placement brush; only the editor's brush setting changes.",
+                  "de": "Legt den Radius des Wirbel-Platzierungspinsels fest; nur die Pinseleinstellung des Editors ändert sich."
+                }
               }
             }
           },
@@ -4841,6 +5151,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether the placement brush flips the direction of vortices it places; only the brush setting changes.",
+                  "de": "Legt fest, ob der Platzierungspinsel die Richtung gesetzter Wirbel umkehrt; nur die Pinseleinstellung ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets whether the placement brush flips the direction of vortices it places; only the brush setting changes.",
+                  "de": "Legt fest, ob der Platzierungspinsel die Richtung gesetzter Wirbel umkehrt; nur die Pinseleinstellung ändert sich."
+                }
               }
             }
           },
@@ -4905,7 +5225,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4932,7 +5252,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -4950,7 +5271,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -4976,7 +5297,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -5020,6 +5342,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one representation by id: its name, mesh URL, level of detail or description.",
+                  "de": "Setzt ein Feld einer Darstellung anhand ihrer Id: Name, Netz-URL, Detailstufe oder Beschreibung."
+                },
+                "reuse": {
+                  "en": "Sets one field of one representation by id: its name, mesh URL, level of detail or description.",
+                  "de": "Setzt ein Feld einer Darstellung anhand ihrer Id: Name, Netz-URL, Detailstufe oder Beschreibung."
+                }
               }
             }
           },
@@ -5038,7 +5370,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -5065,7 +5397,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -5876,6 +6209,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5981,6 +6324,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -6074,6 +6427,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7199,6 +7562,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -7304,6 +7677,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -7397,6 +7780,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -8849,6 +9242,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of the 5D block's part kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Teilart des 5D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                },
+                "reuse": {
+                  "en": "Sets one field of the 5D block's part kind: its name, label, variant, description or icon.",
+                  "de": "Setzt ein Feld der Teilart des 5D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."
+                }
               }
             }
           },
@@ -8893,6 +9296,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new grip kind (a named, coloured connector type with a default rope kind) to the 5D block.",
+                  "de": "Fügt dem 5D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Seilart)."
+                },
+                "reuse": {
+                  "en": "Adds a new grip kind (a named, coloured connector type with a default rope kind) to the 5D block.",
+                  "de": "Fügt dem 5D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Seilart)."
+                }
               }
             }
           },
@@ -8937,6 +9350,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one grip kind by id from the 5D block.",
+                  "de": "Entfernt eine Griffart anhand ihrer Id aus dem 5D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one grip kind by id from the 5D block.",
+                  "de": "Entfernt eine Griffart anhand ihrer Id aus dem 5D-Block."
+                }
               }
             }
           },
@@ -8981,6 +9404,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new grip of the first grip kind with default 2D and 3D placement; without any grip kind nothing happens.",
+                  "de": "Fügt einen neuen Griff der ersten Griffart mit Standard-2D- und -3D-Platzierung hinzu; ohne Griffart geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Adds a new grip of the first grip kind with default 2D and 3D placement; without any grip kind nothing happens.",
+                  "de": "Fügt einen neuen Griff der ersten Griffart mit Standard-2D- und -3D-Platzierung hinzu; ohne Griffart geschieht nichts."
+                }
               }
             }
           },
@@ -9025,6 +9458,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one grip by id from the 5D block.",
+                  "de": "Entfernt einen Griff anhand seiner Id aus dem 5D-Block."
+                },
+                "reuse": {
+                  "en": "Removes one grip by id from the 5D block.",
+                  "de": "Entfernt einen Griff anhand seiner Id aus dem 5D-Block."
+                }
               }
             }
           },
@@ -9069,6 +9512,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads one of the plugin's bundled 5D block examples into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 5D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Loads one of the plugin's bundled 5D block examples into the document, replacing what differs, by example id.",
+                  "de": "Lädt eines der mitgelieferten 5D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -9094,7 +9547,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -9113,6 +9566,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 5D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 5D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 5D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.",
+                  "de": "Ersetzt das gesamte 5D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."
+                }
               }
             }
           },
@@ -9844,6 +10307,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -9949,6 +10422,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -10042,6 +10525,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -11147,6 +11640,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -11252,6 +11755,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -11345,6 +11858,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -11621,7 +12144,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -11857,8 +12380,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4146fa0afe2bba7b10a6be96812109a2b58818b02810e4101f0e76fbdcd944fa",
-    "coreWasmSha256": "48c72afaa09a593d8dd786a593475af263845d51df01161ccb8edd396006c7fb",
-    "descriptorSha256": "cb44901e48c9f43c2e60225e44673b2d0446a47d6f75bf1ab55de7314231ee97"
+    "wasmSha256": "00eaf916ec742616a496b40e067c4ddfc02342f7f15ad11b93ac7cca1964c56d",
+    "coreWasmSha256": "fda2226cf1f138a4fba9c4e5b2f32a3d721ab05396da237e8a3df79ca45cbdac",
+    "descriptorSha256": "dfbdefb20b9261be77280bba624f881ba4e3b4db611682ab64ccf0797a3ec527"
   }
 }

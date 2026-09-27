@@ -183,7 +183,7 @@ pub struct DockDragState {
 impl DockState {
     pub fn from_app(app: &AppDefinition, active_window_id: Option<&str>) -> Self {
         let root = app.default_layout.as_ref().map(|layout| dock_from_window_layout(&layout.root)).unwrap_or_else(|| even_layout(&app.window_kinds.iter().map(|k| k.id.clone()).collect::<Vec<_>>()));
-        let active = active_window_id.map(str::to_string).or_else(|| first_window_id(&root));
+        let active = active_window_id.and_then(|id| find_stack_path(&root, id, &mut vec![]).map(|_| id.to_string())).or_else(|| first_window_id(&root));
         let active_stack = active.as_ref().and_then(|id| find_stack_path(&root, id, &mut vec![]));
         Self { root, active_window_id: active, maximized_stack: None, active_stack, split_resize_origin: vec![], mobile: false }
     }
@@ -200,6 +200,51 @@ impl DockState {
         let mut ids = Vec::new();
         walk(&self.root, &mut ids);
         ids
+    }
+
+    /// 🧹️ Reconciles declared base windows and known extra instances before they enter the live dock.
+    pub fn reconcile_app_windows(&mut self, app: &AppDefinition) {
+        fn walk(node: &mut DockNode, declared: &std::collections::HashSet<&str>, instances: &HashMap<String, String>) {
+            match node {
+                DockNode::Stack { windows, active } => {
+                    windows.retain_mut(|tab| {
+                        if declared.contains(tab.window_kind_id.as_str()) {
+                            return true;
+                        }
+                        let Some(kind) = instances.get(&tab.window_id) else {
+                            return false;
+                        };
+                        tab.window_kind_id = kind.clone();
+                        tab.template_id = None;
+                        true
+                    });
+                    if !windows.iter().any(|tab| &tab.window_id == active) {
+                        *active = windows.first().map(|tab| tab.window_id.clone()).unwrap_or_default();
+                    }
+                }
+                DockNode::Row(children) | DockNode::Column(children) => {
+                    for (child, _) in children {
+                        walk(child, declared, instances);
+                    }
+                }
+            }
+        }
+        let declared: std::collections::HashSet<&str> = app.window_kinds.iter().map(|kind| kind.id.as_str()).collect();
+        let mut instances: HashMap<String, String> = app.window_kinds.iter().map(|kind| (kind.id.clone(), kind.id.clone())).collect();
+        for (id, kind) in self.window_instances() {
+            if declared.contains(kind.as_str()) {
+                instances.entry(id).or_insert(kind);
+            }
+        }
+        let maximized = self.maximized_stack.as_ref().and_then(|path| node_at(&self.root, path)).and_then(|node| match node {
+            DockNode::Stack { active, .. } => Some(active.clone()),
+            _ => None,
+        });
+        walk(&mut self.root, &declared, &instances);
+        self.root = collapse_layout_node(&self.root, 1.0).map(|(node, _)| node).unwrap_or_else(empty_stack);
+        self.active_window_id = self.active_window_id.take().filter(|id| find_stack_path(&self.root, id, &mut vec![]).is_some()).or_else(|| first_window_id(&self.root));
+        self.active_stack = self.active_window_id.as_deref().and_then(|id| find_stack_path(&self.root, id, &mut vec![]));
+        self.maximized_stack = maximized.and_then(|id| find_stack_path(&self.root, &id, &mut vec![]));
     }
 
     /// 🔲️ Whether maximize/restore is offered at all — React's

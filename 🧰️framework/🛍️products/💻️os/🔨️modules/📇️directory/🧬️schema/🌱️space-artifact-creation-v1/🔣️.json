@@ -651,6 +651,151 @@
         }
       },
       "accepted": false
+    },
+    {
+      "id": "accepted-queued",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "accepted",
+        "progress": {
+          "stage": "queued",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-compiling-guest",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "compiling-guest",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-genesis",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 25000000,
+          "totalUnits": 4000000000
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-publishing",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "publishing",
+          "completedUnits": 3,
+          "totalUnits": 7
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "failed-leaks-progress",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "failed",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 1,
+          "totalUnits": 2
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "cancelled-leaks-progress",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "cancelled",
+        "progress": {
+          "stage": "queued",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-unknown-stage",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "thinking",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-zero-total",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 0,
+          "totalUnits": 0
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-completed-exceeds-total",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "publishing",
+          "completedUnits": 8,
+          "totalUnits": 7
+        }
+      },
+      "accepted": false,
+      "schemaValid": true
     }
   ],
   "catalogs": [

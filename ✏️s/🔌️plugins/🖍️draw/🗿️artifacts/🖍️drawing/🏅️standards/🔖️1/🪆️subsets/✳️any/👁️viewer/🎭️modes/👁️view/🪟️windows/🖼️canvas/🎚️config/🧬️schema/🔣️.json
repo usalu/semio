@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/drawing/drawing/viewer-canvas-window-config/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "viewport",
+    "framed"
+  ],
+  "properties": {
+    "viewport": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d"
+    },
+    "framed": {
+      "type": "boolean"
+    }
+  }
+}

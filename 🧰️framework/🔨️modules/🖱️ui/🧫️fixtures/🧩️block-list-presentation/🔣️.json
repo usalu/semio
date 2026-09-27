@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "locales": [
+    { "locale": "en", "steps": "Steps", "addStep": "Add Step", "delete": "Delete" },
+    { "locale": "de", "steps": "Schritte", "addStep": "Schritt hinzufügen", "delete": "Löschen" }
+  ],
+  "steps": [],
+  "palette": [
+    { "blockKind": "filter", "label": "Filter", "iconId": "funnel" }
+  ],
+  "absentVisualText": ["No steps", "Palette"],
+  "actions": [
+    { "control": "addStep", "action": "addStep", "args": {}, "role": "button" },
+    { "control": "palette.filter", "action": "addBlock", "args": { "kind": "filter" }, "role": "button" }
+  ]
+}

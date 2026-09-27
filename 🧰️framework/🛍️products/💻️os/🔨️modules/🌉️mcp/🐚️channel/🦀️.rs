@@ -175,7 +175,7 @@ pub fn decode_app_frame(value: &serde_json::Value) -> Result<AppFrame, String> {
         "emit" => {
             let ops = value.get("ops").ok_or_else(|| "emit payload has no `ops`".to_string())?;
             let warnings = value.get("warnings").and_then(serde_json::Value::as_array).map(|entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect()).unwrap_or_default();
-            Ok(AppFrame::Emit { ops: PreparedOps { document: decode_lane(ops.get("document"))?, config: decode_lane(ops.get("config"))?, draft: decode_lane(ops.get("draft"))? }, warnings })
+            Ok(AppFrame::Emit { ops: PreparedOps { document: decode_lane(ops.get("document"))?, config: decode_lane(ops.get("config"))?, draft: decode_lane(ops.get("draft"))?, children: Vec::new() }, warnings })
         }
         "transactionPrepared" => Ok(AppFrame::TransactionPrepared { txn_id: field_str(value, "txnId")? }),
         "transactionCommitted" => Ok(AppFrame::TransactionCommitted { txn_id: field_str(value, "txnId")?, edit_id: field_str(value, "editId")?, relay: None }),

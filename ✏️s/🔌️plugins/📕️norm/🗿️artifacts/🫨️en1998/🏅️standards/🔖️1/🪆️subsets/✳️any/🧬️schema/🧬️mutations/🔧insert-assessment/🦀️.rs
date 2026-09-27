@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertAssessment
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-assessment", "insert-assessment")
+        protocol::LocalizedLabel::native("Insert assessed element", "Bewertetes Bauteil einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-assessment".into()]

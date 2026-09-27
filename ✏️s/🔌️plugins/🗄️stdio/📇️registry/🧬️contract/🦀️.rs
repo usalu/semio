@@ -11,6 +11,9 @@ use semio_framework_plugin::{
 use semio_framework_value_derive as value_derive;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "✏️editing/🦀️.rs"]
+pub mod editing;
+
 /// 🧩 One schema definition paired with its optional executable declaration.
 pub enum ArtifactAssembly {
     Definition(ArtifactDefinition),

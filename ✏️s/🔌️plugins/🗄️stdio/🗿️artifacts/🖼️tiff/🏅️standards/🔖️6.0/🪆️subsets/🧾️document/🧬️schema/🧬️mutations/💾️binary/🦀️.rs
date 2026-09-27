@@ -13,6 +13,7 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<TiffMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::binary::CODEC,
     crate::schema::mutations::change_byte_order::binary::CODEC,
     crate::schema::mutations::insert_ifd::binary::CODEC,
     crate::schema::mutations::remove_ifd::binary::CODEC,

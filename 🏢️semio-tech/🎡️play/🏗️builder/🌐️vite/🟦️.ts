@@ -3,9 +3,9 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -66,6 +66,7 @@ export default defineConfig(({ command }) => {
       watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"] },
     },
     plugins: [
+      semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
       playgroundFlowWasmDevStubPlugin(repoRoot),
@@ -73,7 +74,7 @@ export default defineConfig(({ command }) => {
       semioBlobVitePlugin(),
       development && playUnionReceiptVitePlugin({ workspace: repoRoot }),
       development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories) }),
-      command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
+      command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer }),
       ...semioAssetsVitePlugin(repoRoot),
       ...(command === "build" ? [browserArtifactVitePlugin(playRuntimeAssetSources(repoRoot, "release"))] : staticDirMountVitePlugins(repoRoot, playDevStaticDirMounts(repoRoot, extensionDir))),
       ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, playGisMapTileServeMode(command === "build" ? "build" : "serve")),

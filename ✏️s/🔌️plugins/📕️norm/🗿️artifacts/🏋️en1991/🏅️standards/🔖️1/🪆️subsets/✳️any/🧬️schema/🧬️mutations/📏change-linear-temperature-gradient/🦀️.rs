@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeLinearTemp
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-linear-temperature-gradient", "change-linear-temperature-gradient")
+        protocol::LocalizedLabel::native("Change linear temperature difference", "Linearen Temperaturunterschied ändern")
     }
 }
 //#endregion 🔖️Payload

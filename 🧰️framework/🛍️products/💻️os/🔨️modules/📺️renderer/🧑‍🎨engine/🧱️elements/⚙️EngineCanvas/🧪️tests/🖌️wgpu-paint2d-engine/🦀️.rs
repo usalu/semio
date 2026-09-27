@@ -279,6 +279,100 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
 }
 
 #[test]
+fn text_editor_explicit_draft_preserves_local_text_until_apply_or_discard() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📝️explicit-draft/🔣️.json"))).expect("neutral explicit draft fixture");
+    let law = &fixture["cases"][1];
+    let id = "text-editor-explicit-draft";
+    drop_engine_surface(id);
+    let mut scene = text_editor_scene(id, law["initial"].as_str().unwrap());
+    scene.text_editor.as_mut().unwrap().settings_json = Some(law["settings"].to_string());
+    let bounds = Rect::new(0.0, 0.0, 480.0, 320.0);
+    assert!(sync_engine_scene(&scene, "explicit-draft-law", bounds, &Theme::default()));
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &PointerModifiers::default(), &mut input), Ok(true));
+    assert!(drain(&mut input).is_empty(), "typing stays local until Apply");
+    assert!(text_editor_explicit_draft_is_dirty(&scene));
+    assert!(text_editor_move_explicit_draft_history(&scene, false));
+    assert_eq!(text_editor_accessibility_value(&scene).as_deref(), Some("Alpha"));
+    assert!(text_editor_move_explicit_draft_history(&scene, true));
+    assert_eq!(text_editor_accessibility_value(&scene).as_deref(), Some("Alpha!"));
+
+    let mut unrelated = scene.clone();
+    unrelated.text_editor.as_mut().unwrap().diagnostics_json = Some("[]".into());
+    assert!(sync_engine_scene(&unrelated, "explicit-draft-law", bounds, &Theme::default()));
+    assert_eq!(text_editor_accessibility_value(&unrelated).as_deref(), Some("Alpha!"), "unrelated scene refresh preserves the draft");
+
+    assert_eq!(text_editor_apply_explicit_draft_into(&unrelated, &mut input), Ok(true));
+    assert!(drain(&mut input).is_empty(), "Apply uses the retained lane for every draft size");
+    let action = loop {
+        match drive_text_editor_retained_action_step().expect("retained draft page") {
+            TextEditorRetainedActionStep::Pending => {}
+            TextEditorRetainedActionStep::Ready(actions) => break actions.first,
+            TextEditorRetainedActionStep::Idle => panic!("publication disappeared"),
+        }
+    };
+    assert_eq!(action.descriptor.action, law["expected"]["action"].as_str().unwrap());
+    assert_eq!(serde_json::to_value(action.descriptor.args.as_ref().unwrap()).unwrap(), json!({ "path": "/description", "value": "Alpha!" }));
+    settle_text_editor_action_receipt(action.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+    assert!(text_editor_explicit_draft_is_dirty(&unrelated), "dispatch completion does not discard an unvalidated draft");
+
+    let mut conflicted = unrelated.clone();
+    conflicted.text_editor.as_mut().unwrap().buffer = fixture["preservation"]["collaboratorScene"].as_str().unwrap().into();
+    assert!(sync_engine_scene(&conflicted, "explicit-draft-law", bounds, &Theme::default()));
+    assert!(text_editor_explicit_draft_has_conflict(&conflicted));
+    assert_eq!(text_editor_accessibility_value(&conflicted).as_deref(), Some("Alpha!"), "a collaborator refresh preserves the local draft");
+    assert_eq!(text_editor_apply_explicit_draft_into(&conflicted, &mut input), Ok(true));
+    assert!(drain(&mut input).is_empty(), "a conflicted draft cannot overwrite collaborator data");
+
+    assert!(text_editor_discard_explicit_draft(&conflicted));
+    assert_eq!(text_editor_accessibility_value(&conflicted).as_deref(), fixture["preservation"]["collaboratorScene"].as_str());
+    assert!(!text_editor_explicit_draft_is_dirty(&conflicted));
+    assert!(!text_editor_explicit_draft_has_conflict(&conflicted));
+    drop_engine_surface(id);
+}
+
+#[test]
+fn text_editor_large_explicit_draft_pages_cancel_and_refusal_without_losing_text() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📝️explicit-draft/🔣️.json"))).expect("neutral explicit draft fixture");
+    let id = "text-editor-large-explicit-draft";
+    drop_engine_surface(id);
+    let initial = "a".repeat(65_535);
+    let mut scene = text_editor_scene(id, &initial);
+    scene.text_editor.as_mut().unwrap().settings_json = Some(fixture["cases"][0]["settings"].to_string());
+    assert!(sync_engine_scene(&scene, "large-explicit-draft-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("🚀".into()), &PointerModifiers::default(), &mut input), Ok(true));
+    let expected = format!("{initial}🚀");
+    assert_eq!(text_editor_accessibility_value(&scene).as_deref(), Some(expected.as_str()));
+    assert_eq!(text_editor_apply_explicit_draft_into(&scene, &mut input), Ok(true));
+    assert!(drain(&mut input).is_empty(), "large draft never enters the inline bounded string queue");
+    assert!(matches!(drive_text_editor_retained_action_step(), Ok(TextEditorRetainedActionStep::Pending)));
+    assert!(text_editor_cancel_explicit_publication(&scene));
+    assert_eq!(text_editor_accessibility_value(&scene).as_deref(), Some(expected.as_str()), "cancellation keeps the local draft");
+
+    assert_eq!(text_editor_apply_explicit_draft_into(&scene, &mut input), Ok(true));
+    let ready = loop {
+        match drive_text_editor_retained_action_step().expect("retained source page") {
+            TextEditorRetainedActionStep::Pending => {}
+            TextEditorRetainedActionStep::Ready(actions) => break actions.first,
+            TextEditorRetainedActionStep::Idle => panic!("publication disappeared"),
+        }
+    };
+    assert_eq!(ready.descriptor.args.as_ref().and_then(|args| args.get("value")).and_then(semio_framework::DslValue::as_str), Some(expected.as_str()));
+    let oracle = serde_json::to_value(ready.descriptor.args.as_ref().unwrap()).unwrap();
+    assert_eq!(oracle["value"].as_str(), Some(expected.as_str()), "serde_json independently observes the same atomic value");
+    settle_text_editor_action_receipt(ready.receipt.unwrap(), TextEditorActionOutcome::Refused("invalid-source"));
+    let status = text_editor_explicit_draft_status(&scene);
+    assert_eq!(status.error.as_deref(), Some("invalid-source"));
+    assert!(!status.pending);
+    assert_eq!(text_editor_accessibility_value(&scene).as_deref(), Some(expected.as_str()), "a refused action keeps the draft available for correction");
+    drop_engine_surface(id);
+}
+
+#[test]
 fn text_editor_refuses_the_keys_the_shell_owns() {
     let _serialized = engine_surface_law_guard();
     let surface_id = "text-editor-chords";
@@ -311,9 +405,14 @@ fn text_editor_renderer_keys_match_the_actual_react_fixture() {
         editor.newline_gates_json = law.get("newlineGates").map(Value::to_string);
         assert!(sync_engine_scene(&scene, "text-key-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
         let key = match law["key"].as_str().unwrap() {
-            "ArrowLeft" => KeyAction::ArrowLeft, "ArrowDown" => KeyAction::ArrowDown,
-            "Home" => KeyAction::Home, "End" => KeyAction::End, "Tab" => KeyAction::Tab,
-            "Enter" => KeyAction::Enter, " " => KeyAction::Space(true), key => KeyAction::Char(key.into()),
+            "ArrowLeft" => KeyAction::ArrowLeft,
+            "ArrowDown" => KeyAction::ArrowDown,
+            "Home" => KeyAction::Home,
+            "End" => KeyAction::End,
+            "Tab" => KeyAction::Tab,
+            "Enter" => KeyAction::Enter,
+            " " => KeyAction::Space(true),
+            key => KeyAction::Char(key.into()),
         };
         let modifiers = PointerModifiers { shift: law["shift"].as_bool().unwrap_or(false), alt: law["alt"].as_bool().unwrap_or(false), ..Default::default() };
         let mut input = InputState::<ActionDescriptor>::default();
@@ -325,7 +424,11 @@ fn text_editor_renderer_keys_match_the_actual_react_fixture() {
             assert_eq!(json!([host.anchor(), host.caret()]), law["expect"]["selection"], "{id}");
         });
         let actions = if law["operation"].is_null() { drain(&mut input) } else { drain_editor_actions_accepted(&mut input) };
-        let expected = match law["operation"].as_str() { Some("insertText") => vec!["textEdit", "textSelect"], Some(_) => vec!["textSelect"], None => vec![] };
+        let expected = match law["operation"].as_str() {
+            Some("insertText") => vec!["textEdit", "textSelect"],
+            Some(_) => vec!["textSelect"],
+            None => vec![],
+        };
         assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), expected, "{id}");
         if let Some(select) = actions.last() {
             assert_eq!(serde_json::to_value(select.args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "start": law["expect"]["selection"][0], "end": law["expect"]["selection"][1] }), "{id}");
@@ -367,6 +470,37 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
 }
 
 #[test]
+fn text_editor_outbox_pages_a_large_document_into_one_ordered_edit_and_selection_pair() {
+    let _serialized = engine_surface_law_guard();
+    let id = "text-editor-large-outbox";
+    drop_engine_surface(id);
+    let scene = text_editor_scene(id, "seed");
+    assert!(sync_engine_scene(&scene, "editor-large-outbox-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+    let expected = format!("{}🚀", "a".repeat(65_535));
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_replace_all_into(&scene, &expected, &mut input), Ok(true));
+    assert_eq!(drive_text_editor_outbox_step(&mut input), Ok(true));
+    assert!(drain(&mut input).is_empty(), "a large document never enters the bounded string ring");
+    let actions = loop {
+        match drive_text_editor_retained_action_step().expect("retained text page") {
+            TextEditorRetainedActionStep::Pending => {}
+            TextEditorRetainedActionStep::Ready(actions) => break actions,
+            TextEditorRetainedActionStep::Idle => panic!("publication disappeared"),
+        }
+    };
+    assert_eq!(actions.first.descriptor.action, "textEdit");
+    assert_eq!(actions.first.descriptor.args.as_ref().and_then(|args| args.get("text")).and_then(semio_framework::DslValue::as_str), Some(expected.as_str()));
+    assert_eq!(serde_json::to_value(actions.first.descriptor.args.as_ref().unwrap()).unwrap()["text"], expected);
+    let selection = actions.second.expect("ordered selection");
+    assert_eq!(selection.descriptor.action, "textSelect");
+    assert_eq!(serde_json::to_value(selection.descriptor.args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "start": expected.len(), "end": expected.len() }));
+    settle_text_editor_action_receipt(actions.first.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+    settle_text_editor_action_receipt(selection.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+    assert!(!has_pending_text_editor_outbox());
+    drop_engine_surface(id);
+}
+
+#[test]
 fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_laws() {
     let _serialized = engine_surface_law_guard();
     let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📮️delivery/🔣️.json"))).expect("neutral delivery fixture");
@@ -387,10 +521,7 @@ fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_law
         }
         let first_receipt = first_edit.receipt.unwrap();
         let accepted = law["outcome"] == "accepted";
-        settle_text_editor_action_receipt(
-            first_receipt,
-            if accepted { TextEditorActionOutcome::Accepted } else { TextEditorActionOutcome::Refused(law["outcome"].as_str().unwrap()) },
-        );
+        settle_text_editor_action_receipt(first_receipt, if accepted { TextEditorActionOutcome::Accepted } else { TextEditorActionOutcome::Refused(law["outcome"].as_str().unwrap()) });
         let first_selection = input.take_action_step().unwrap().unwrap().into_envelope().unwrap();
         if accepted {
             let args = serde_json::to_value(first_selection.descriptor.args.as_ref().unwrap()).unwrap();
@@ -431,7 +562,8 @@ fn text_editor_scene_echoes_never_overwrite_newer_unsent_local_text() {
     assert!(text_editor_apply_key_into(&scene, &KeyAction::Char("b".into()), &PointerModifiers::default(), &mut input).unwrap());
     assert!(drive_text_editor_outbox_step(&mut input).unwrap());
     assert!(text_editor_apply_key_into(&scene, &KeyAction::Char("c".into()), &PointerModifiers::default(), &mut input).unwrap());
-    assert!(!sync_text_editor_scene(&scene, bounds, &Theme::default()), "an identical stale scene costs no sync and cannot revert local text");
+    let _ = sync_text_editor_scene(&scene, bounds, &Theme::default());
+    assert_eq!(ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned()), "abc", "an identical stale scene cannot revert local text");
     scene.text_editor.as_mut().unwrap().buffer = "ab".into();
     assert!(sync_text_editor_scene(&scene, bounds, &Theme::default()));
     let text = ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned());
@@ -508,13 +640,26 @@ fn text_editor_production_key_route_replays_chromiums_neutral_typing_sequences()
         let mut input = InputState::<ActionDescriptor>::default();
         for step in law["steps"].as_array().unwrap() {
             let keys = if let Some(text) = step["type"].as_str() {
-                text.chars().map(|ch| match ch { '\n' => KeyAction::Enter, ' ' => KeyAction::Space(true), ch => KeyAction::Char(ch.to_string()) }).collect::<Vec<_>>()
+                text.chars()
+                    .map(|ch| match ch {
+                        '\n' => KeyAction::Enter,
+                        ' ' => KeyAction::Space(true),
+                        ch => KeyAction::Char(ch.to_string()),
+                    })
+                    .collect::<Vec<_>>()
             } else if let Some(text) = step["paste"].as_str().or_else(|| step["compose"].as_str()) {
                 vec![KeyAction::Char(text.into())]
             } else {
                 vec![match step["key"].as_str().unwrap() {
-                    "ArrowLeft" => KeyAction::ArrowLeft, "ArrowRight" => KeyAction::ArrowRight, "ArrowUp" => KeyAction::ArrowUp, "ArrowDown" => KeyAction::ArrowDown,
-                    "Home" => KeyAction::Home, "End" => KeyAction::End, "Backspace" => KeyAction::Backspace, "Delete" => KeyAction::Delete, key => panic!("unexpected key {key}"),
+                    "ArrowLeft" => KeyAction::ArrowLeft,
+                    "ArrowRight" => KeyAction::ArrowRight,
+                    "ArrowUp" => KeyAction::ArrowUp,
+                    "ArrowDown" => KeyAction::ArrowDown,
+                    "Home" => KeyAction::Home,
+                    "End" => KeyAction::End,
+                    "Backspace" => KeyAction::Backspace,
+                    "Delete" => KeyAction::Delete,
+                    key => panic!("unexpected key {key}"),
                 }]
             };
             for key in keys {

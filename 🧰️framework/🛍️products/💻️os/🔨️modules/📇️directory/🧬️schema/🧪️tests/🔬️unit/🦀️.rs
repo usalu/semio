@@ -434,3 +434,28 @@ async fn document_open_plan_v1_matches_language_neutral_fixture() {
     unsafe_revalidation.revalidation.directory_revision = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
     assert_eq!(unsafe_revalidation.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
 }
+
+#[test]
+fn user_preference_record_v1_matches_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️user-preference-record/🔣️.json")).expect("user preference record fixture");
+    let rows = fixture["rows"].as_array().expect("rows");
+    assert!(rows.len() >= 15);
+    for row in rows {
+        let schema = row["schema"].as_str().expect("schema");
+        let mutation = row["mutation"].as_str().expect("mutation");
+        assert_eq!(valid_user_preference_record_v1(schema, mutation), row["valid"].as_bool().expect("valid"), "{}", row["id"]);
+    }
+    let event = |user_id: &str, space_id: Option<&str>, owner: Option<&str>| DirectoryEvent {
+        seq: 1,
+        id: "e1".into(),
+        hlc: Hlc { physical_ms: 1, logical: 0 },
+        actor: DirectoryActor { kind: DirectoryActorKind::User, id: user_id.into() },
+        space_id: space_id.map(Into::into),
+        user_id: owner.map(Into::into),
+        body: DirectoryEventBody::UserPreferenceRecorded { user_id: user_id.into(), schema: "os.config.ui-preferences.v1".into(), mutation: "{}".into() },
+        recorded_at_ms: 1,
+    };
+    assert!(validate_directory_event_page_event(&event("u1", None, Some("u1"))).is_ok());
+    assert!(validate_directory_event_page_event(&event("u1", None, Some("u2"))).is_err(), "the event's owner is the preference's user");
+    assert!(validate_directory_event_page_event(&event("u1", Some("s1"), Some("u1"))).is_err(), "a preference belongs to no space");
+}

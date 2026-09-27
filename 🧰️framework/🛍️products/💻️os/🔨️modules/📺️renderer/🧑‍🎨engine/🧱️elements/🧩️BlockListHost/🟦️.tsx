@@ -64,6 +64,7 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
 //#region Block
 function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const surfaceDrag = useUiDriverDragSurface();
+  const deleteLabel = useLabel("ui.common.delete");
   return (
     <SortableRow id={block.id}>
       {({ attributes, listeners }) => (
@@ -73,7 +74,7 @@ function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: 
             <div className="truncate text-xs font-medium">{block.label}</div>
             <div className="truncate text-xs text-muted-foreground">{block.kind}</div>
           </div>
-          <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
+          <Button aria-label={deleteLabel} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
         </div>
       )}
     </SortableRow>
@@ -84,6 +85,7 @@ function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: 
 //#region Step
 function StepCard({ step, palette, controllerId, onAction }: { readonly step: StepRecord; readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const surfaceDrag = useUiDriverDragSurface();
+  const deleteLabel = useLabel("ui.common.delete");
   const blockIds = useMemo(() => step.blocks.map((block) => block.id), [step.blocks]);
 
   function handleBlockDragEnd(event: DragEndEvent) {
@@ -114,7 +116,7 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
           <div className="flex items-center gap-2">
             {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
             <div className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</div>
-            <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
+            <Button aria-label={deleteLabel} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
           </div>
           {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
           <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
@@ -145,11 +147,23 @@ function PaletteEntryRow({ entry, controllerId, onAction }: { readonly entry: Pa
         event.dataTransfer.effectAllowed = "copy";
       }}
       className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", surfaceDrag && "cursor-grab active:cursor-grabbing")}
-      onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
     >
       {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
-      <Icon icon={entry.iconId} size="small" />
-      {entry.label}
+      <button
+        type="button"
+        className="flex min-w-0 flex-1 items-center gap-1 text-left"
+        data-block-kind={entry.blockKind}
+        aria-label={entry.label}
+        onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind });
+        }}
+      >
+        <Icon icon={entry.iconId} size="small" />
+        {entry.label}
+      </button>
     </div>
   );
 }

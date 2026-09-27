@@ -1,5 +1,10 @@
 pub(crate) mod context {
     use super::super::*;
+
+    /// 🧮️ Weighs what this test binary allocates, per thread (`semio_framework_trace::HeapWitness`), so a cost law
+    /// reads its own work and nothing a concurrent law allocates.
+    #[global_allocator]
+    static PUZZLE2D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
     use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub type Puzzle2dApp = VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>;
@@ -1616,3 +1621,25 @@ async fn shipped_node_kinds_are_the_two_examples_own_catalog_rows() {
     assert_eq!(authored, derived, "PUZZLE2D_SHIPPED_NODE_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
 }
 //#endregion 🔖️Pz2ShippedKindCatalog
+
+//#region 🔖️InitialSnapshotCost
+/// 🚀️ LAW (ticket 26/09/23, H12): the initial snapshot costs its document — the empty fixture — and nothing else.
+/// Every construction of this app pays for it — each mount, and every `codec` call a hub makes to create or
+/// validate a document, where the interpreter multiplies it — so it must never parse an example (the example
+/// load forces its own `LazyLock` when it is switched to). Weighed by this thread's heap peak (`HeapWitness`),
+/// independent of other laws' allocations: within 4 KiB of converting the empty fixture itself. The examples are
+/// process-wide `LazyLock`s, so the law detects an example parse where it runs as its own process (nextest).
+#[test]
+fn the_initial_snapshot_costs_only_its_document() {
+    let peak_of = |work: &dyn Fn()| {
+        let before = semio_framework_trace::retained_heap_bytes_on_this_thread();
+        semio_framework_trace::reset_heap_peak_on_this_thread();
+        work();
+        semio_framework_trace::peak_heap_bytes_on_this_thread() - before
+    };
+    let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))));
+    let snapshot = peak_of(&|| drop(<Puzzle2dPlayApp as ArtifactEditor>::initial_snapshot()));
+    assert!(document > 0, "the witness weighs the document conversion: {document}");
+    assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
+}
+//#endregion 🔖️InitialSnapshotCost

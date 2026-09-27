@@ -7,7 +7,8 @@
     "settingsTabStrip",
     "transportCredits",
     "chromePressedSemantics",
-    "textEditor"
+    "textEditor",
+    "passiveChrome"
   ],
   "properties": {
     "schema": {
@@ -44,9 +45,13 @@
             "controlId",
             "firstRect",
             "sameChromeRect",
+            "focusOnlyKeepsGeneration",
             "changedChromeRect"
           ],
           "properties": {
+            "focusOnlyKeepsGeneration": {
+              "const": true
+            },
             "controlId": {
               "type": "string",
               "minLength": 1
@@ -262,14 +267,75 @@
         "readOnly"
       ],
       "properties": {
-        "role": { "const": "textbox" },
-        "label": { "type": "string", "minLength": 1 },
-        "value": { "type": "string" },
-        "multiline": { "const": true },
-        "editable": { "const": true },
-        "readOnly": { "const": false }
+        "role": {
+          "const": "textbox"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string"
+        },
+        "multiline": {
+          "const": true
+        },
+        "editable": {
+          "const": true
+        },
+        "readOnly": {
+          "const": false
+        }
       },
       "additionalProperties": false
+    },
+    "passiveChrome": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "id",
+          "element",
+          "label",
+          "action",
+          "announced"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "PanelResize",
+              "ScrollRegion",
+              "DockSplit",
+              "DockJoinCorner",
+              "Generic"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "element": {
+            "enum": [
+              "div",
+              "button"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "action": {
+            "type": "boolean"
+          },
+          "announced": {
+            "type": "boolean"
+          }
+        }
+      }
     }
   },
   "$defs": {

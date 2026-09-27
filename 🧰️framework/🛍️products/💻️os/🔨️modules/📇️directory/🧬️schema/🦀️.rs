@@ -223,6 +223,11 @@ pub enum DirectoryEventBody {
     ArtifactCheckpointPublished { checkpoint: PublishedArtifactCheckpoint },
     #[value(rename = "artifact.retention-advanced")]
     ArtifactRetentionAdvanced { retention: ArtifactRetention },
+    /// 🎚️ One preference change of ONE user (`schema` names the vocabulary, `mutation` is its JSON object text — the hub
+    /// never reads it). Only that user sees it, and only on the preference lane (`DIRECTORY_PREFERENCE_PAGE_PATH_V1`): the
+    /// default page and every guest fold never carry it (ticket 26/09/23 U5).
+    #[value(rename = "user.preference-recorded")]
+    UserPreferenceRecorded { user_id: String, schema: String, mutation: String },
 }
 
 /// 📜️ One persisted, backend-assigned directory event. `seq` is dense and 1-based; `space_id`/
@@ -249,6 +254,28 @@ pub const DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS: usize = 128;
 pub const DIRECTORY_EVENT_PAGE_MAX_BYTES: usize = 64 * 1024;
 /// ⚡️ Maximum canonical bytes of one persisted event.
 pub const DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES: usize = 48 * 1024;
+
+/// 🎚️ The preference lane's page route: the principal's own `user.preference-recorded` events on the page machinery of
+/// `/directory/event-page/v1`, nothing else.
+pub const DIRECTORY_PREFERENCE_PAGE_PATH_V1: &str = "/directory/preference-page/v1";
+pub const USER_PREFERENCE_SCHEMA_ID_MAX_BYTES: usize = 128;
+pub const USER_PREFERENCE_MUTATION_MAX_BYTES: usize = 4096;
+
+/// 🛡️ A preference vocabulary id (1..=128 bytes of `[a-z0-9.-]`, alphanumeric at both ends) and one JSON object text of
+/// at most 4096 bytes — the TypeScript twin's `validUserPreferenceRecordV1`, both pinned by
+/// `🧫️fixtures/🎚️user-preference-record/🔣️.json`.
+pub fn valid_user_preference_record_v1(schema: &str, mutation: &str) -> bool {
+    let edge = |byte: Option<&u8>| byte.is_some_and(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit());
+    let schema_ok = !schema.is_empty()
+        && schema.len() <= USER_PREFERENCE_SCHEMA_ID_MAX_BYTES
+        && schema.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'.' || byte == b'-')
+        && edge(schema.as_bytes().first())
+        && edge(schema.as_bytes().last());
+    schema_ok
+        && mutation.len() >= 2
+        && mutation.len() <= USER_PREFERENCE_MUTATION_MAX_BYTES
+        && matches!(crate::os_pack::json::from_json_str::<crate::DslValue>(mutation), Ok(crate::DslValue::Object(_)))
+}
 
 #[derive(Clone, Debug, PartialEq, ToValue)]
 #[value(rename_all = "camelCase")]
@@ -298,6 +325,11 @@ pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(),
     let encoded = crate::os_pack::json::to_json_string(event);
     if let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } = &event.body {
         if !entry.validate() || descriptor_digest_v1.0 == [0; 32] || event.space_id.as_deref() != Some(scope.space_id.as_str()) || event.user_id.as_ref().is_none_or(|author| author.is_empty() || author.len() > 256) {
+            return Err(DirectoryEventPageErrorV1::Invalid);
+        }
+    }
+    if let DirectoryEventBody::UserPreferenceRecorded { user_id, schema, mutation } = &event.body {
+        if user_id.is_empty() || event.space_id.is_some() || event.user_id.as_deref() != Some(user_id.as_str()) || !valid_user_preference_record_v1(schema, mutation) {
             return Err(DirectoryEventPageErrorV1::Invalid);
         }
     }
@@ -388,6 +420,7 @@ pub enum DirectoryCommand {
     CreateInvite { space_id: String, role: DirectorySpaceRole, ttl_secs: u64 },
     RevokeInvite { space_id: String, invite_id: String },
     AnnounceDocument { descriptor: Box<DocumentDescriptor> },
+    RecordUserPreference { schema: String, mutation: String },
 }
 //#endregion 🔖️Command
 

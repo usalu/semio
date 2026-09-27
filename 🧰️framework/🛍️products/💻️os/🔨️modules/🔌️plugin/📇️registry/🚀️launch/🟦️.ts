@@ -17,10 +17,10 @@
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGISTRY
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
-import { normalizeDevLaunchConfigurationNames, playgroundLaunchNamePrefix } from "./🏷️name-prefix/🟦️.ts";
+import { normalizeDevLaunchConfigurationNames, playgroundLaunchNamePrefix, taxonomyFolderSlug } from "./🏷️name-prefix/🟦️.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
@@ -78,20 +78,19 @@ export function playgroundDevEnv(playground: PlaygroundEntry, renderer: "react" 
 /** @emoji ✂️ Splits the seed file into the output skeleton (verbatim `configurations` text with
  * `"@generated:<variant>:<renderer>"` placeholders) and the parsed `devLaunchers` table. Both live in
  * one JSONC document; `DEV_LAUNCHERS_MARKER` is the exact, generator-authored boundary between them. */
-function readSeed(repoRoot: string, readText?: (path: string) => string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>> } {
+function readSeed(repoRoot: string, readText?: (path: string) => string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>>; readonly projectLaunchers?: ProjectLauncherPolicy } {
   const seedPath = join(repoRoot, SEED_REL_PATH);
   const raw = readText ? readText(SEED_REL_PATH) : readFileSync(seedPath, "utf8");
+  let document: { readonly devLaunchers?: Record<string, DevLauncherEntry>; readonly projectLaunchers?: ProjectLauncherPolicy };
   try {
-    Bun.JSONC.parse(raw);
+    document = Bun.JSONC.parse(raw) as typeof document;
   } catch {
     throw new Error(`🚀️launch/🟦️.ts: seed file ${seedPath} is not valid JSONC`);
   }
   const markerIndex = raw.indexOf(DEV_LAUNCHERS_MARKER);
-  if (markerIndex === -1) throw new Error(`🚀️launch/🟦️.ts: seed file ${seedPath} is missing the devLaunchers marker`);
+  if (markerIndex === -1 || !document.devLaunchers) throw new Error(`🚀️launch/🟦️.ts: seed file ${seedPath} is missing the devLaunchers marker`);
   const skeleton = `${raw.slice(0, markerIndex)}}\n`;
-  const devLaunchersJsonText = raw.slice(markerIndex + DEV_LAUNCHERS_MARKER.length, raw.length - "\n}\n".length);
-  const devLaunchers = JSON.parse(devLaunchersJsonText) as Record<string, DevLauncherEntry>;
-  return { skeleton, devLaunchers };
+  return { skeleton, devLaunchers: document.devLaunchers, ...(document.projectLaunchers ? { projectLaunchers: document.projectLaunchers } : {}) };
 }
 //#endregion
 
@@ -183,6 +182,149 @@ function defaultDevLauncher(playground: PlaygroundEntry, order: number, repoRoot
 }
 //#endregion
 
+//#region 🔖️ProjectTargets
+/** 📋️ One project's declared nx targets (the keys of its `📋️project.json` `targets`). A declared target is an executable
+ * command a dev runs, so each one gets a launch row; targets the nx plugins only infer (`describe`, `component-*`,
+ * `materialize-*`, inferred test levels, `nx-release-publish`) are pipeline steps reached through declared targets and
+ * aggregates, never registered on their own. */
+export type DeclaredProjectTargets = { readonly project: string; readonly path: string; readonly targets: readonly string[] };
+
+/** 🧭️ One verb class of the seed's `projectLaunchers.classes`: name emoji, VS Code group, first order, and the target-name
+ * tokens that select it (a target name's first token, left to right, that some class lists decides). */
+type ProjectLauncherClass = { readonly id: string; readonly emoji: string; readonly group: string; readonly orderBase: number; readonly tokens: readonly string[] };
+
+/** 📐️ Seed-owned rules (`projectLaunchers` in `🧩️launch.seed.jsonc`) that turn declared targets into launch rows: a target
+ * name declared by at least `familyMinimumProjects` projects is one family row with a project picker input; every other
+ * declared target not already run by a curated seed row gets its own row named `<class emoji><target><project label>`. */
+type ProjectLauncherPolicy = {
+  readonly familyMinimumProjects: number;
+  readonly familyEmoji: string;
+  readonly classes: readonly ProjectLauncherClass[];
+  readonly fallbackClass: string;
+  readonly languageSegments: Readonly<Record<string, string>>;
+  readonly transparentSegments: readonly string[];
+  readonly skipDirectories: readonly string[];
+};
+
+const PROJECT_MANIFEST = "📋️project.json";
+
+/** 🗂️ The read-only tree the project walk reads — structurally the registry's `RegistryCatalogInputView`, so a generator
+ * preview sees the projected (post-operation) manifests, and the live filesystem otherwise. */
+export type ProjectTargetTreeView = {
+  entries(path: string): readonly { readonly name: string; readonly nodeKind: "file" | "directory" | "symlink" }[];
+  readText(path: string): string;
+};
+
+function filesystemTreeView(repoRoot: string): ProjectTargetTreeView {
+  return {
+    entries: (path) => readdirSync(join(repoRoot, path), { withFileTypes: true }).map((entry) => ({ name: entry.name, nodeKind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : "file" })),
+    readText: (path) => readFileSync(join(repoRoot, path), "utf8"),
+  };
+}
+
+/** 🔎️ Reads every declared project target (skipping the seed's `skipDirectories`, hidden directories and symlinks), sorted
+ * by project name so the rendered rows are byte-stable. */
+export function declaredProjectTargets(repoRoot: string, view: ProjectTargetTreeView = filesystemTreeView(repoRoot)): DeclaredProjectTargets[] {
+  const policy = readSeed(repoRoot, (path) => view.readText(path)).projectLaunchers;
+  if (!policy) throw new Error("🚀️launch/🟦️.ts: seed has no projectLaunchers policy");
+  const skip = new Set(policy.skipDirectories);
+  const found: DeclaredProjectTargets[] = [];
+  const walk = (relative: string): void => {
+    const entries = view.entries(relative);
+    if (entries.some((entry) => entry.nodeKind === "file" && entry.name === PROJECT_MANIFEST)) {
+      const manifest = relative ? `${relative}/${PROJECT_MANIFEST}` : PROJECT_MANIFEST;
+      let parsed: { readonly name?: string; readonly targets?: Readonly<Record<string, unknown>> };
+      try {
+        parsed = JSON.parse(view.readText(manifest)) as typeof parsed;
+      } catch {
+        throw new Error(`🚀️launch/🟦️.ts: ${manifest} is not valid JSON`);
+      }
+      if (parsed.name) found.push({ project: parsed.name, path: relative, targets: Object.keys(parsed.targets ?? {}).sort() });
+    }
+    for (const entry of entries) if (entry.nodeKind === "directory" && !entry.name.startsWith(".") && !skip.has(entry.name)) walk(relative ? `${relative}/${entry.name}` : entry.name);
+  };
+  walk("");
+  return found.sort((left, right) => left.project.localeCompare(right.project));
+}
+
+/** 🏷️ The shortest trailing run of a project's path segments (language folders shortened to their emoji, transparent
+ * containers dropped) that no other project shares — `🌎️hub🦀️`, `💻️os🦀️`, `🪐️space🟦️`; the root project has none. */
+function projectLaunchLabels(projects: readonly DeclaredProjectTargets[], policy: ProjectLauncherPolicy): Map<string, string> {
+  const segments = new Map(projects.map((project) => [project.project, project.path === "" ? [] : project.path.split("/").filter((segment) => !policy.transparentSegments.includes(segment)).map((segment) => policy.languageSegments[segment] ?? segment)]));
+  const labels = new Map<string, string>();
+  for (const [project, own] of segments) {
+    let label = own.join("");
+    for (let length = 1; length <= own.length; length++) {
+      const suffix = own.slice(-length).join("");
+      if ([...segments].every(([other, theirs]) => other === project || theirs.slice(-length).join("") !== suffix)) {
+        label = suffix;
+        break;
+      }
+    }
+    labels.set(project, label);
+  }
+  return labels;
+}
+
+/** 🧭️ The verb class of one target name: its first token (emoji stripped, split on `-`) that a class lists, else the fallback. */
+function projectLauncherClass(target: string, policy: ProjectLauncherPolicy): ProjectLauncherClass {
+  for (const token of taxonomyFolderSlug(target).split("-")) {
+    const found = policy.classes.find((entry) => entry.tokens.includes(token));
+    if (found) return found;
+  }
+  const fallback = policy.classes.find((entry) => entry.id === policy.fallbackClass);
+  if (!fallback) throw new Error(`🚀️launch/🟦️.ts: projectLaunchers.fallbackClass ${JSON.stringify(policy.fallbackClass)} names no class`);
+  return fallback;
+}
+
+/** 🧱️ Renders the family rows (with their picker inputs) and one row per uncovered declared target. A target is covered when a
+ * row already in `launchText` runs `nx run <project>:<target>` — the curated seed rows keep their names and places. */
+function renderProjectTargetLaunchers(launchText: string, projects: readonly DeclaredProjectTargets[], policy: ProjectLauncherPolicy): { readonly rows: readonly object[]; readonly inputs: readonly object[] } {
+  const existing = Bun.JSONC.parse(launchText) as { readonly configurations: readonly unknown[] };
+  const covered = new Set<string>();
+  const names = new Set<string>();
+  for (const row of existing.configurations) {
+    if (typeof row !== "object" || row === null) continue;
+    const { name, command } = row as { readonly name?: string; readonly command?: string };
+    if (name) names.add(name);
+    for (const match of String(command ?? "").matchAll(/nx run ([^\s:$]+):(\S+)/gu)) covered.add(`${match[1]}:${match[2]}`);
+  }
+  const declaring = new Map<string, string[]>();
+  for (const project of projects) for (const target of project.targets) declaring.set(target, [...(declaring.get(target) ?? []), project.project]);
+  const families = [...declaring].filter(([, owners]) => owners.length >= policy.familyMinimumProjects).sort(([left], [right]) => left.localeCompare(right));
+  const familyTargets = new Set(families.map(([target]) => target));
+  const labels = projectLaunchLabels(projects, policy);
+  const claim = (name: string): string => {
+    if (names.has(name)) throw new Error(`🚀️launch/🟦️.ts: generated launch name ${JSON.stringify(name)} collides with an existing row`);
+    names.add(name);
+    return name;
+  };
+  const counters = new Map<string, number>();
+  const order = (entry: ProjectLauncherClass, offset: number): number => {
+    const index = counters.get(entry.id) ?? 0;
+    counters.set(entry.id, index + 1);
+    return Math.round((entry.orderBase + offset + index / 10000) * 10000) / 10000;
+  };
+  const inputs: object[] = [];
+  const rows: object[] = [];
+  for (const [target, owners] of families) {
+    const entry = projectLauncherClass(target, policy);
+    const id = `projectTarget.${taxonomyFolderSlug(target)}`;
+    inputs.push({ id, type: "pickString", description: `Project whose ${target} target runs`, options: [...owners].sort() });
+    rows.push({ name: claim(`${entry.emoji}${target}${policy.familyEmoji}`), type: "node-terminal", request: "launch", command: `bun nx run \${input:${id}}:${target}`, cwd: "${workspaceFolder}", presentation: { group: entry.group, order: order(entry, -1) } });
+  }
+  counters.clear();
+  const pending = projects
+    .flatMap((project) => project.targets.filter((target) => !familyTargets.has(target) && !covered.has(`${project.project}:${target}`)).map((target) => ({ project: project.project, target, label: labels.get(project.project) ?? "" })))
+    .sort((left, right) => left.label.localeCompare(right.label) || left.target.localeCompare(right.target));
+  for (const { project, target, label } of pending) {
+    const entry = projectLauncherClass(target, policy);
+    rows.push({ name: claim(`${entry.emoji}${target}${label}`), type: "node-terminal", request: "launch", command: `bun nx run ${project}:${target}`, cwd: "${workspaceFolder}", presentation: { group: entry.group, order: order(entry, 0) } });
+  }
+  return { rows, inputs };
+}
+//#endregion
+
 //#region 🔖️Generate
 /** @emoji 🔒️ Every variant must own its launch name: the synthesis pass below adds a launcher only
  * when the skeleton does not already carry that name, so two variants resolving to the same
@@ -200,8 +342,8 @@ function assertDistinctLaunchNamePrefixes(playgrounds: readonly PlaygroundEntry[
 
 /** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
-export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], _components: readonly { project: string; pluginId: string }[], readText?: (path: string) => string): string {
-  const { skeleton, devLaunchers } = readSeed(repoRoot, readText);
+export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], projectTargets: readonly DeclaredProjectTargets[], readText?: (path: string) => string): string {
+  const { skeleton, devLaunchers, projectLaunchers } = readSeed(repoRoot, readText);
   const byVariant = new Map(playgrounds.map((entry) => [entry.variant, entry]));
   assertDistinctLaunchNamePrefixes(playgrounds, repoRoot);
   let out = skeleton;
@@ -246,6 +388,16 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     out = out.replace(marker, `\n    ,\n${synthesized.map((entry) => reindent(JSON.stringify(entry, null, 2), 4)).join(",\n")}\n  ],\n  "compounds":`);
   }
   out = refreshDevLaunchNames(out, playgrounds, repoRoot);
+  if (projectTargets.length > 0) {
+    if (!projectLaunchers) throw new Error("🚀️launch/🟦️.ts: seed has no projectLaunchers policy for the declared project targets");
+    const { rows, inputs } = renderProjectTargetLaunchers(out, projectTargets, projectLaunchers);
+    const rowsMarker = '\n  ],\n  "compounds":';
+    const inputsEnd = out.lastIndexOf("\n  ]}\n");
+    if (!out.includes(rowsMarker) || inputsEnd === -1 || !out.includes('"inputs": [')) throw new Error("🚀️launch/🟦️.ts: generated skeleton lacks the configurations/compounds or inputs boundary");
+    const indented = (entries: readonly object[]): string => entries.map((entry) => `    ${reindent(JSON.stringify(entry, null, 2), 4)}`).join(",\n");
+    if (inputs.length > 0) out = `${out.slice(0, inputsEnd)},\n${indented(inputs)}${out.slice(inputsEnd)}`;
+    if (rows.length > 0) out = out.replace(rowsMarker, `,\n${indented(rows)}${rowsMarker}`);
+  }
   try {
     Bun.JSONC.parse(out);
   } catch {

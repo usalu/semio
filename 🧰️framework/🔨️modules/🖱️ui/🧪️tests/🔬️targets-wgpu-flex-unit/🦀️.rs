@@ -365,32 +365,34 @@ fn a_legacy_declarative_stack_still_grows_every_child_equally() {
 }
 
 #[test]
-fn a_field_reserves_its_label_band_and_its_child_fills_the_remainder() {
+fn a_field_reserves_its_label_band_and_its_control_keeps_its_own_height() {
     let theme = crate::wgpu::theme::Theme::default();
-    let top = theme.font_size_small + theme.gap_standard;
+    let metrics = field_chrome_metrics(Some(crate::wgpu::text::line_height(FIELD_DETAIL_FONT_SIZE)), 0.0, Some(crate::wgpu::text::line_height(FIELD_DETAIL_FONT_SIZE)), theme.gap_standard);
     let mut fixture = Fixture::new();
-    let parent = fixture.push(LayoutNodeKind::Field { top }, None, None);
-    let child = fixture.push(LayoutNodeKind::Leaf, Some(parent), None);
+    let parent = fixture.push(LayoutNodeKind::Field { top: metrics.top, bottom: metrics.bottom }, None, None);
+    let child = fixture.push(LayoutNodeKind::Control { height: theme.control_height, label_padding: None }, Some(parent), None);
     fixture.solve(200.0, 100.0);
     let rect = fixture.rect(child);
-    assert!(close(rect.y, top), "child starts below the label band, got {}", rect.y);
-    assert!(close(rect.height, 100.0 - top), "child fills the label-adjusted remainder, got {}", rect.height);
+    assert!(close(rect.y, metrics.top), "child starts below the label and description bands, got {}", rect.y);
+    assert!(close(rect.height, theme.control_height), "child keeps its own control line, got {}", rect.height);
     assert!(close(rect.width, 200.0));
 }
 
 #[test]
 fn a_section_stacks_children_below_its_header_at_their_own_height() {
     let theme = crate::wgpu::theme::Theme::default();
+    let chrome = section_chrome_metrics(Some(SECTION_TITLE_LINE_HEIGHT * 2.0), 24.0 + theme.gap_standard);
     let mut fixture = Fixture::new();
-    let parent = fixture.push(LayoutNodeKind::Section { gap: theme.gap_standard }, None, None);
+    let parent = fixture.push(LayoutNodeKind::Section { gap: theme.gap_standard, top: chrome.top, bottom: chrome.bottom }, None, None);
     let first = fixture.push(LayoutNodeKind::Control { height: 12.0, label_padding: None }, Some(parent), None);
     let second = fixture.push(LayoutNodeKind::Control { height: 12.0, label_padding: None }, Some(parent), None);
     fixture.solve(200.0, 200.0);
     let first_rect = fixture.rect(first);
     let second_rect = fixture.rect(second);
-    assert!(close(first_rect.y, SECTION_HEADER_HEIGHT), "got {}", first_rect.y);
+    assert!(close(first_rect.y, chrome.top), "a wrapped title and its body margin precede the first child, got {}", first_rect.y);
     assert!(close(first_rect.height, 12.0), "a section's children keep their intrinsic height, never grow");
     assert!(close(second_rect.y, first_rect.y + first_rect.height + theme.gap_standard), "second sits one gap below, got {}", second_rect.y);
+    assert!(close(chrome.total, chrome.top + 24.0 + theme.gap_standard + chrome.bottom));
 }
 
 #[test]
@@ -415,6 +417,23 @@ fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() 
     assert!(close(fixture.rect(section).height, intrinsic), "the intrinsic section band was squeezed to {:?}", fixture.rect(section));
     assert!(close(fixture.rect(rows[0]).height, row) && close(fixture.rect(rows[1]).height, row));
     assert!(close(fixture.rect(rows[1]).y - fixture.rect(rows[0]).y, row), "successive Actions rows keep React's 24px pitch");
+}
+
+#[test]
+fn a_closed_tree_section_keeps_its_header_toolbar_live_and_collapses_only_its_rows() {
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let header = metrics.row_height;
+    let toolbar_layout = LayoutSpec::Stack(StackLayout { axis: Axis::Horizontal, ..StackLayout::default() });
+    let mut fixture = Fixture::new();
+    let tree = fixture.push(LayoutNodeKind::Tree { height: header, reversed: false }, None, None);
+    let section = fixture.push(LayoutNodeKind::TreeSection { header, height: header, expanded: false, reversed: false }, Some(tree), None);
+    let toolbar = fixture.push(LayoutNodeKind::TreeHeaderToolbar { header, reversed: false }, Some(section), Some(&toolbar_layout));
+    let execute = fixture.push(LayoutNodeKind::Control { height: metrics.control_height, label_padding: Some(metrics.gap) }, Some(toolbar), None);
+    let row = fixture.push(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed: false }, Some(section), None);
+    fixture.solve(320.0, header);
+    assert!(close(fixture.rect(toolbar).height, header));
+    assert!(fixture.rect(execute).width > 0.0 && fixture.rect(execute).height > 0.0, "the real header Button remains measurable and hittable");
+    assert!(close(fixture.rect(row).height, 0.0), "closed form rows stay collapsed");
 }
 
 //#endregion 🧱️LegacyDialect

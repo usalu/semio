@@ -61,7 +61,7 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
+    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES;
@@ -83,6 +83,7 @@ const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
     ArtifactToolPublicationContract { tool_id: "promoteToHubSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "persistLocally", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "deleteSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "renameSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "shareSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "manageSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -101,6 +102,7 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => (0, HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CreateSpace(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::DeleteSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::RenameSpace(payload) => (payload.space_id.len().saturating_add(payload.name.len()), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ShareSpace(payload) => (payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ManageSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CopyInviteLink(payload) => (payload.space_id.len().saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
@@ -108,10 +110,7 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::PersistLocally(payload) => (payload.space_id.len().saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CreateStudio(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ApplyDirectoryEventPage(payload) => (payload.page_json.len(), HOME_RETAINED_RAW_BYTES),
-        HomeCommand::BindSpaceFile(_)
-        | HomeCommand::ImportSpace(_)
-        | HomeCommand::DeleteVirtualFileSystemNode(_)
-        | HomeCommand::RenameSpace(_) => return None,
+        HomeCommand::BindSpaceFile(_) | HomeCommand::ImportSpace(_) | HomeCommand::DeleteVirtualFileSystemNode(_) => return None,
     };
     (admitted <= ceiling).then_some(HOME_RETAINED_WORK_ITEMS)
 }
@@ -223,7 +222,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),
-        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
+        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -524,7 +523,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("createSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
         .action_destructive("deleteSpace")
-        .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("renameSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)

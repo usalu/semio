@@ -9,8 +9,8 @@
 
 use super::*;
 use semio_framework::UtilityDefinition;
-use ui_wgpu::wgpu::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 use ui_wgpu::wgpu::InputState;
+use ui_wgpu::wgpu::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 fn pane_fixture() -> Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
@@ -498,7 +498,8 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
     let shared: Vec<WindowPaneChip> = fixture["paneFolds"]["sharedFold"].as_array().expect("fixture shared fold").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
     let independent: Vec<WindowPaneChip> = fixture["paneFolds"]["independentFolds"].as_array().expect("fixture independent folds").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
     assert!(fixture["paneFolds"]["surfacesMovedByAnyChip"].as_array().expect("fixture surface moves").is_empty(), "🎛️ the fixture states that no chip moves a surface");
-    let folds = |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.window_search_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
+    let folds =
+        |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.window_search_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
     let press = |shell: &mut ShellState, chip: WindowPaneChip, window_id: &str| {
         let control_id = chip.control_id(
             window_id,

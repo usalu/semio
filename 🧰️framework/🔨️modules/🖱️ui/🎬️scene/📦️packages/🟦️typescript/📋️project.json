@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/ui-scene-js",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

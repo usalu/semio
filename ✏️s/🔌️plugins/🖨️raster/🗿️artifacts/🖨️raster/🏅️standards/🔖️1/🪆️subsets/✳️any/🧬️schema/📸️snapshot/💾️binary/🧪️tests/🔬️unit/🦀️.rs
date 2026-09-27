@@ -5,6 +5,21 @@ use crate::RasterOwnedMap;
 use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
+async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mask:RasterLayerMask=dsl::json::from_json_str(&case["mask"].to_string()).unwrap();
+        let actual:serde_json::Value=serde_json::from_str(&dsl::json::to_json_string(&mask)).unwrap();
+        assert_eq!(actual["imageKey"],case["mask"]["imageKey"]);
+        for field in ["x","y","scaleX","scaleY","rotation"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
+        let mut document=crate::standards::v1::subsets::any::schema::empty_raster_document();
+        if let RasterLayerNode::Pixel {mask:target,..}=&mut document.layers[0] {*target=Some(mask);}
+        store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document,crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
@@ -50,7 +65,7 @@ async fn pack_round_trips_representative_document() {
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
-                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None }),
+                mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(64), height: None, image_key:Some("asset-1".into()), transform:RasterTransform {x:-4.0,y:2.0,..RasterTransform::default()} }),
                 width: Some(256),
                 height: Some(256),
                 image_key: Some("asset-1".into()),

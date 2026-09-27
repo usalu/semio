@@ -8,7 +8,6 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
@@ -148,11 +147,11 @@ function componentPackageId(cargoManifestPath: string): string {
   return packageId;
 }
 
-function publishCatalogCommitMarker(rowRoot: string, marker: unknown): void {
+function publishCatalogCommitMarker(rowRoot: string, marker: unknown, markerFilename: string): void {
   const bytes = Buffer.from(`${JSON.stringify(marker)}\n`);
   if (bytes.byteLength > IO_CHUNK_BYTES) throw new Error("stdio catalog commit marker exceeds 64 KiB");
-  const temporary = join(rowRoot, `.${CATALOG_COMMIT_MARKER_FILENAME}.${process.pid}.new`);
-  const destination = join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME);
+  const temporary = join(rowRoot, `.${markerFilename}.${process.pid}.new`);
+  const destination = join(rowRoot, markerFilename);
   try {
     writeSyncedNew(temporary, bytes);
     renameSync(temporary, destination);
@@ -833,12 +832,72 @@ class HomeIoSurfaceScript extends BundleScript {
   }
 }
 
+/** 🧪️ Checks the neutral editor acceptance fixture with an independent JSON Schema validator. */
+async function testEditorCatalogContract(packageRoot: string): Promise<void> {
+  const root = resolve(packageRoot, "../..");
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[] };
+  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/✏️editor-catalog/🔣️.json"), "utf8"));
+  const { default: Ajv } = await import("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`editor catalogue fixture: ${JSON.stringify(validate.errors)}`);
+  if (new Set(fixture.actions.map((action) => action.id)).size !== fixture.actions.length) throw new Error("editor catalogue repeats an edit action");
+  const rust = readFileSync(join(root, "🧪️tests/✏️editor-catalog/🦀️.rs"), "utf8");
+  const roots = [...rust.matchAll(/^    \([a-z0-9_]+, semio_s_artifact_stdio_/gm)].length;
+  if (roots !== fixture.editorCount) throw new Error(`editor catalogue expects ${fixture.editorCount} editors; native acceptance covers ${roots}`);
+  const manifest = Bun.TOML.parse(readFileSync(join(packageRoot, "Cargo.toml"), "utf8")) as { features: Record<string, string[]>; package: { metadata: { semio: { playground: { app: string }[] } } } };
+  const selected = new Set<string>();
+  const pending = ["default"];
+  while (pending.length) {
+    const feature = pending.pop()!;
+    if (selected.has(feature)) continue;
+    selected.add(feature);
+    pending.push(...(manifest.features[feature] ?? []));
+  }
+  const editorFormats = [...selected].filter((feature) => feature.startsWith("semio-s-artifact-stdio-") && feature.endsWith("/component-app-assembly"));
+  if (editorFormats.length !== fixture.formatCount) throw new Error(`shipped component exposes editors for ${editorFormats.length}/${fixture.formatCount} formats`);
+  if (fixture.editorApps.length !== fixture.editorCount) throw new Error("editor fixture count differs from its app identities");
+  if (!isDeepStrictEqual(manifest.package.metadata.semio.playground.map((row) => row.app).sort(), [...fixture.editorApps].sort())) throw new Error("each editor needs its own launchable playground");
+  console.log(`[DEBUG] editor catalogue fixture validated: ${roots} editors, ${fixture.actions.length} edit operations`);
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCatalogRootContractTests(this.root);
     const { rest } = resolveTestLevel(segments);
+    await testEditorCatalogContract(this.root);
+    if (rest[0] === "editor-catalog-contract") return;
+    await runCatalogRootContractTests(this.root);
     if (rest[0] === "catalog-root-contract") return;
     await runCargoTestBudgeted([PACKAGE_NAME], this.repoRoot, rest);
+  }
+}
+
+/** 🧩️ Verifies the complete editor component against the native WebAssembly parser. */
+class EditorComponentCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const outputRoot = segments[0] ?? join(cargoTargetDirectory(this.repoRoot), "stdio-editor-component");
+    if (segments.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts one absolute output directory");
+    mkdirSync(outputRoot, { recursive: true });
+    const started = Date.now();
+    let interrupted = false;
+    const interrupt = (): void => { interrupted = true; };
+    process.on("SIGINT", interrupt);
+    process.on("SIGTERM", interrupt);
+    const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
+    const env = devToolingEnv();
+    try {
+      await runControlled("cargo", ["rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
+      const raw = join(cargoTargetDirectory(this.repoRoot), "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
+      const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
+      if (!jco) throw new Error("missing workspace component tooling");
+      console.log("[DEBUG] complete editor component linked; validating the extracted module");
+      await runControlled("node", [jco, "transpile", raw, "-o", outputRoot, "--name", "semio_s_plugin_stdio", "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
+      const core = readFileSync(join(outputRoot, "semio_s_plugin_stdio.core.wasm"));
+      const structure = assertComponentizableCore(core);
+      console.log(`[DEBUG] complete editor component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
+    } finally {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+    }
   }
 }
 
@@ -901,6 +960,7 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
 /** 🌳 Builds and verifies the one strict stdio row from an empty caller-owned root. */
 class CatalogRootScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts");
     const option = (name: string): string | undefined => {
       const index = segments.indexOf(name);
       return index < 0 ? undefined : segments[index + 1];
@@ -977,7 +1037,7 @@ class CatalogRootScript extends BundleScript {
       if (source.entry.packageName !== PACKAGE_NAME || source.entry.wasmOut !== WASM_OUT) throw new Error("stdio source identity is not bijective with Cargo component identity");
       await runControlled("bun", ["nx", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
       if (source.descriptor.packageId !== packageId) throw new Error("stdio descriptor packageId does not match the Cargo component contract");
-      publishCatalogCommitMarker(rowRoot, createFreshCatalogCommitMarker(source, buildRoot, { cancelled: control.cancelled }));
+      publishCatalogCommitMarker(rowRoot, createFreshCatalogCommitMarker(source, buildRoot, { cancelled: control.cancelled }), CATALOG_COMMIT_MARKER_FILENAME);
       const strictReceipt = createFreshCatalogBuildVerifier(this.repoRoot, buildRoot).verify(source.entry, { cancelled: control.cancelled });
       const strictHashes = { pluginId: strictReceipt.pluginId, rawSha256: strictReceipt.rawSha256, coreSha256: strictReceipt.coreSha256, descriptorSha256: strictReceipt.descriptorSha256 };
       if (!isDeepStrictEqual(strictHashes, { pluginId: PLUGIN_ID, ...oracle })) throw new Error("strict verifier and independent oracle receipts disagree");
@@ -1008,6 +1068,6 @@ class NativeCodecProjectionScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
+const router = new ScriptRouter(import.meta.dir).register("editor-component-check", EditorComponentCheckScript).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

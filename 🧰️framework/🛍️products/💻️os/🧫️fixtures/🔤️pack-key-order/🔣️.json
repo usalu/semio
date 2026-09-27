@@ -1,0 +1,155 @@
+{
+ "schema": "semio.os.pack-key-order-fixture/v1",
+ "description": "String pairs whose UTF-8 byte order the pack key comparator must reproduce exactly (sign of the comparison). Lone surrogates encode as U+FFFD, as every UTF-8 encoder writes them.",
+ "pairs": [
+  {
+   "left": "",
+   "right": ""
+  },
+  {
+   "left": "",
+   "right": "a"
+  },
+  {
+   "left": "a",
+   "right": "b"
+  },
+  {
+   "left": "b",
+   "right": "a"
+  },
+  {
+   "left": "ab",
+   "right": "a"
+  },
+  {
+   "left": "a",
+   "right": "ab"
+  },
+  {
+   "left": "pluginId",
+   "right": "plugin"
+  },
+  {
+   "left": "apps",
+   "right": "appId"
+  },
+  {
+   "left": "Z",
+   "right": "a"
+  },
+  {
+   "left": "\u00e9",
+   "right": "z"
+  },
+  {
+   "left": "\u00e4",
+   "right": "\u00df"
+  },
+  {
+   "left": "\u00ff",
+   "right": "\u0100"
+  },
+  {
+   "left": "\u07ff",
+   "right": "\u0800"
+  },
+  {
+   "left": "\uffff",
+   "right": "\ud800\udc00"
+  },
+  {
+   "left": "\ue000",
+   "right": "\ud83d\ude00"
+  },
+  {
+   "left": "\uffef",
+   "right": "\ud83d\udca9"
+  },
+  {
+   "left": "\ud83d\ude00",
+   "right": "\ud83d\ude01"
+  },
+  {
+   "left": "\ud83d\ude00a",
+   "right": "\ud83d\ude00b"
+  },
+  {
+   "left": "a\ud83d\ude00",
+   "right": "a\ue000"
+  },
+  {
+   "left": "x\ud800\udc00",
+   "right": "x\uffff"
+  },
+  {
+   "left": "\ud83d\udd0c\ufe0fplugin",
+   "right": "\ud83e\udde9\ufe0fextension"
+  },
+  {
+   "left": "\ud83d\ude00",
+   "right": "\ud83d\ude00\ufe0f"
+  },
+  {
+   "left": "key",
+   "right": "key\u0000"
+  },
+  {
+   "left": "\u0000",
+   "right": "\u0001"
+  },
+  {
+   "left": "\ud800",
+   "right": "\ud800\udc00"
+  },
+  {
+   "left": "\ud800a",
+   "right": "\ud800b"
+  },
+  {
+   "left": "\ud800",
+   "right": "\ufffd"
+  },
+  {
+   "left": "\ud800x",
+   "right": "\ufffdy"
+  },
+  {
+   "left": "\udc00",
+   "right": "\ud800"
+  },
+  {
+   "left": "a\udfff",
+   "right": "a\ue000"
+  }
+ ],
+ "fuzz": {
+  "seed": 20260927,
+  "pairs": 20000,
+  "maxLength": 6,
+  "alphabet": [
+   "a",
+   "b",
+   "z",
+   "\u0000",
+   "\u007f",
+   "\u0080",
+   "\u00e9",
+   "\u07ff",
+   "\u0800",
+   "\u4e2d",
+   "\ud7ff",
+   "\ue000",
+   "\uffef",
+   "\ufffd",
+   "\uffff",
+   "\ud800\udc00",
+   "\ud83d\ude00",
+   "\udbff\udfff",
+   "\ud800",
+   "\udbff",
+   "\udc00",
+   "\udfff"
+  ]
+ }
+}

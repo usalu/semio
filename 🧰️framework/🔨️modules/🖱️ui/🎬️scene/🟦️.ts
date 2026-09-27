@@ -13,6 +13,7 @@ export type Canvas2dScene = {
   readonly cameraY: number;
   readonly zoom: number;
   readonly layersJson: string;
+  readonly framing?: import("./📷️framing/🟦️.ts").Canvas2dFraming | null;
   /** ⏯️ The base64url `ToolRunTraceDelta` paged to this window — see {@link World3dScene.toolRunTrace}. */
   readonly toolRunTrace?: string | null;
   /** 🚚️ The spine's lane manifest — see {@link CANVAS2D_SCENE_LANES}. */
@@ -813,6 +814,7 @@ export type PresencePeer = {
 /** 📝️ A text-editor surface scene payload — mirrors the wasm `componentScene` node's `textEditor` field. */
 export type TextEditorScene = {
   readonly buffer: string;
+  readonly lanes?: readonly SceneLaneRef[];
   readonly language?: string;
   readonly selectionJson?: string;
   readonly tokensJson?: string;
@@ -829,6 +831,16 @@ export type TextEditorScene = {
   readonly newlineGatesJson?: string;
   readonly renameJson?: string;
 };
+
+/** 🚚️ The complete editable buffer travels outside the bounded scene header. */
+export const TEXT_EDITOR_SCENE_LANES: readonly SceneLane<TextEditorScene>[] = [
+  { lane: "buffer", field: "buffer", bodyKey: "framework.scene.text.buffer", optional: false },
+];
+
+/** 🚚️ Restores a text editor's complete source from its paged buffer carrier. */
+export function textEditorSceneFromLanes(spine: TextEditorScene, laneTexts: ReadonlyMap<string, string>): TextEditorScene {
+  return sceneFromLanes(spine, laneTexts, TEXT_EDITOR_SCENE_LANES);
+}
 
 export const nodeGraphActions = {
   select: "interactionSelect",
@@ -942,6 +954,7 @@ export const textEditorActions = {
 
 /** 📋️ A table surface scene payload — mirrors the wasm `componentScene` node's `table` field. */
 export type TableScene = {
+  readonly lanes?: readonly SceneLaneRef[];
   readonly columnsJson: string;
   readonly rowsJson: string;
   readonly selectionJson?: string;
@@ -951,6 +964,16 @@ export type TableScene = {
   readonly domainId?: string;
   readonly domainGranularityId?: string;
 };
+
+export const TABLE_SCENE_LANES: readonly SceneLane<TableScene>[] = [
+  { lane: "columns", field: "columnsJson", bodyKey: "framework.scene.table.columns", optional: false },
+  { lane: "rows", field: "rowsJson", bodyKey: "framework.scene.table.rows", optional: false },
+];
+
+/** 📊️ Restores every table row and column from its paged scene carriers. */
+export function tableSceneFromLanes(spine: TableScene, laneTexts: ReadonlyMap<string, string>): TableScene {
+  return sceneFromLanes(spine, laneTexts, TABLE_SCENE_LANES);
+}
 
 /** 🖌️ A 2D paint surface scene payload — mirrors the wasm `componentScene` node's `paint2d` field. */
 export type Paint2dScene = {
@@ -1190,3 +1213,5 @@ export type ComponentSceneHostProps = {
 };
 //#endregion ComponentSceneProtocol
 // #endregion 🎬️Scene
+
+export { fitCanvasFrame, type Canvas2dFraming, type Canvas2dFrameCamera } from "./📷️framing/🟦️.ts";

@@ -4,7 +4,7 @@
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
-use crate::wgpu::flex::{FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint};
+use crate::wgpu::flex::{field_chrome_metrics, section_chrome_metrics, FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint, FIELD_DETAIL_FONT_SIZE, SECTION_TITLE_FONT_SIZE};
 use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_section_header_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::text::{is_wrap_space, may_break_between};
 use crate::wgpu::theme::Theme;
@@ -113,6 +113,19 @@ pub(crate) fn retained_tree_row_metrics(tree: &UiTree, id: NodeId, metrics: &Tre
     scoped
 }
 
+pub(crate) fn retained_section_title_height(tree: &UiTree, id: NodeId) -> f32 {
+    let Some(node) = tree.node(id) else { return 0.0 };
+    let UiNode::Section(section) = &node.spec.0 else { return 0.0 };
+    if section.label.is_none() {
+        return 0.0;
+    }
+    node.first_child
+        .and_then(|child| tree.accepted_layout(child))
+        .map(|child| (child.y - crate::wgpu::flex::SECTION_TITLE_BODY_GAP).max(crate::wgpu::flex::SECTION_TITLE_LINE_HEIGHT))
+        .or_else(|| tree.accepted_layout(id).map(|owner| (owner.height - crate::wgpu::flex::SECTION_TITLE_BODY_GAP - crate::wgpu::flex::SECTION_TRAILING_MARGIN).max(crate::wgpu::flex::SECTION_TITLE_LINE_HEIGHT)))
+        .unwrap_or(crate::wgpu::flex::SECTION_TITLE_LINE_HEIGHT)
+}
+
 /// 🌳️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
 /// parent is the tree itself and its key names one of that tree's sections, an item row when its
 /// parent is already a row and its key names one of that tree's items. Anything else is an ordinary
@@ -128,17 +141,26 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
     match parent_kind {
         LayoutNodeKind::Tree { reversed, .. } => {
             let section = owner.sections.iter().find(|section| &section.id == key)?;
-            let expanded = tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true));
+            let expanded = tree.disclosure_open(id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section));
             let header = tree_section_header_height(section, &metrics);
             let height = live_tree_section_height(tree, id, section, &metrics);
             Some(LayoutNodeKind::TreeSection { header, height, expanded, reversed })
         }
         parent_kind => {
+            if let LayoutNodeKind::TreeSection { header, reversed, .. } = parent_kind {
+                let parent = tree.node(id)?.parent?;
+                if is_tree_section_header_toolbar(tree, id, parent) {
+                    return Some(LayoutNodeKind::TreeHeaderToolbar { header, reversed });
+                }
+            }
             let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
             let reversed = match parent_kind {
                 LayoutNodeKind::TreeSection { reversed, .. } | LayoutNodeKind::TreeRow { reversed, .. } => reversed,
                 _ => false,
             };
+            if matches!(parent_kind, LayoutNodeKind::TreeSection { expanded: false, .. }) {
+                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
+            }
             if matches!(parent_kind, LayoutNodeKind::TreeRow { expanded: false, .. }) {
                 return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
             }
@@ -174,6 +196,17 @@ fn tree_item_detail_node(tree: &UiTree, item: NodeId) -> Option<NodeId> {
     tree.document_node(props.detail?)
 }
 
+fn tree_section_header_toolbar_node(tree: &UiTree, section: NodeId) -> Option<NodeId> {
+    let document = tree.document()?;
+    let record = document.record(tree.document_id(section)?)?;
+    let ui_contract::Component::TreeSection(props) = &record.component else { return None };
+    tree.document_node(props.header_toolbar?)
+}
+
+fn is_tree_section_header_toolbar(tree: &UiTree, child: NodeId, parent: NodeId) -> bool {
+    tree_section_header_toolbar_node(tree, parent) == Some(child)
+}
+
 fn is_tree_item_detail(tree: &UiTree, child: NodeId, parent: NodeId) -> bool {
     tree_item_detail_node(tree, parent) == Some(child)
 }
@@ -183,7 +216,7 @@ pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crat
         return 0.0;
     }
     let header = tree_section_header_height(section, metrics);
-    if !tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true)) {
+    if !tree.disclosure_open(id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section)) {
         return header;
     }
     header + section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id).map(|item_id| live_tree_item_height(tree, item_id, item, metrics, 0))).sum::<f32>()
@@ -215,6 +248,30 @@ struct LayoutInputNode {
     intrinsic: IntrinsicSize,
     glyph_start: usize,
     glyph_end: usize,
+    chrome: ChromeTextRanges,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct GlyphRange {
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum ChromeTextRanges {
+    #[default]
+    None,
+    Section {
+        title: Option<GlyphRange>,
+    },
+    Field {
+        label: GlyphRange,
+        description: Option<GlyphRange>,
+        error: Option<GlyphRange>,
+    },
+    SliderUnit {
+        label: GlyphRange,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -331,13 +388,35 @@ fn measure_text(
     constraint: MeasureConstraint,
 ) -> (f32, f32) {
     let Some(node) = nodes.get(index) else { return (0.0, 0.0) };
-    let (start, end) = (node.glyph_start, node.glyph_end);
+    measure_glyph_range(glyphs, previews, GlyphRange { start: node.glyph_start, end: node.glyph_end }, DEFAULT_TEXT_SIZE_PX, constraint, false)
+}
+
+fn measure_glyph_range(
+    glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>,
+    previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>,
+    range: GlyphRange,
+    size: f32,
+    constraint: MeasureConstraint,
+    clipped: bool,
+) -> (f32, f32) {
+    let (start, end) = (range.start, range.end);
     if end <= start {
         return (0.0, 0.0);
     }
-    let line = crate::wgpu::text::line_height(DEFAULT_TEXT_SIZE_PX);
-    let advance = |cursor: usize| previews.get(cursor).map_or(0.0, |preview| preview.advance);
+    let line = crate::wgpu::text::line_height(size);
+    let scale = size / DEFAULT_TEXT_SIZE_PX;
+    let advance = |cursor: usize| previews.get(cursor).map_or(0.0, |preview| preview.advance * scale);
     let scalar = |cursor: usize| glyphs.get(cursor).map_or(' ', |glyph| glyph.scalar);
+    if clipped {
+        let width: f32 = (start..end).map(advance).sum();
+        return (
+            match constraint {
+                MeasureConstraint::Definite(available) => width.min(available.max(0.0)),
+                MeasureConstraint::MinContent | MeasureConstraint::MaxContent => width,
+            },
+            line,
+        );
+    }
     match constraint {
         MeasureConstraint::MaxContent => ((start..end).map(advance).sum(), line),
         MeasureConstraint::MinContent => {
@@ -391,6 +470,24 @@ fn measure_text(
     }
 }
 
+fn composite_chrome(node: &LayoutInputNode, glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>, previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>, width: f32, gap: f32) -> Option<(f32, f32)> {
+    let width = width.max(1.0);
+    match node.chrome {
+        ChromeTextRanges::None => None,
+        ChromeTextRanges::Section { title } => {
+            let title_height = title.map(|range| measure_glyph_range(glyphs, previews, range, SECTION_TITLE_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(crate::wgpu::flex::SECTION_TITLE_LINE_HEIGHT));
+            let metrics = section_chrome_metrics(title_height, 0.0);
+            Some((metrics.top, metrics.bottom))
+        }
+        ChromeTextRanges::Field { description, error, .. } => {
+            let detail_height = |range: GlyphRange| measure_glyph_range(glyphs, previews, range, FIELD_DETAIL_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(crate::wgpu::text::line_height(FIELD_DETAIL_FONT_SIZE));
+            let metrics = field_chrome_metrics(description.map(detail_height), 0.0, error.map(detail_height), gap);
+            Some((metrics.top, metrics.bottom))
+        }
+        ChromeTextRanges::SliderUnit { .. } => None,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct MountedLayoutResult {
     pub id: NodeId,
@@ -398,6 +495,7 @@ pub(crate) struct MountedLayoutResult {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub inline_suffix_width: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -448,6 +546,7 @@ pub(crate) struct MountedLayoutJob {
     rejected_result: Option<MountedLayoutResult>,
     text_node: Option<usize>,
     text_byte: usize,
+    text_part: u8,
     text_glyph_start: usize,
     run_cursor: usize,
     glyph_cursor: usize,
@@ -477,16 +576,7 @@ pub(crate) struct MountedLayoutIdentity {
 }
 
 impl MountedLayoutJob {
-    pub(crate) fn try_new(
-        tree: &UiTree,
-        root: NodeId,
-        identity: MountedLayoutIdentity,
-        theme: Theme,
-        width: f32,
-        height: f32,
-        block_reversed: bool,
-        inline: ui_contract::FlowInline,
-    ) -> Result<Self, MountedLayoutFault> {
+    pub(crate) fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32, block_reversed: bool, inline: ui_contract::FlowInline) -> Result<Self, MountedLayoutFault> {
         let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision } = identity;
         let root_node = tree.node(root).ok_or(MountedLayoutFault::Stale)?;
         if !root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) && !root_node.flags.contains(NodeFlags::SUBTREE_DIRTY) {
@@ -524,6 +614,7 @@ impl MountedLayoutJob {
             rejected_result: None,
             text_node: None,
             text_byte: 0,
+            text_part: 0,
             text_glyph_start: 0,
             run_cursor: 0,
             glyph_cursor: 0,
@@ -608,37 +699,40 @@ impl MountedLayoutJob {
             if tree_detail {
                 LayoutNodeKind::TreeDetail { height: TREE_DETAIL_HEIGHT }
             } else {
-            match &node.spec.0 {
-                UiNode::Text(_) => LayoutNodeKind::Text,
-                UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), reversed: root_reversed },
-                UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
-                    horizontal: stack.direction == "horizontal",
-                    gap: gap_for_token(&self.theme, stack.gap.as_deref()),
-                    padding: padding_for_token(&self.theme, stack.padding.as_deref()),
-                }),
-                UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
-                UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
-                UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
-                UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control {
-                    height: if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height },
-                    label_padding: None,
-                },
-                UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
-                UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
-                UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
-                // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
-                // from arena children — a progress node has none — so it solved to height ZERO and
-                // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
-                // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
-                // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-                // `📓️w14b-generation3d-labels-preview-layout.md`).
-                UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
-                _ => LayoutNodeKind::Leaf,
-            }
+                match &node.spec.0 {
+                    UiNode::Text(_) => LayoutNodeKind::Text,
+                    UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), reversed: root_reversed },
+                    UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
+                        horizontal: stack.direction == "horizontal",
+                        gap: gap_for_token(&self.theme, stack.gap.as_deref()),
+                        padding: padding_for_token(&self.theme, stack.padding.as_deref()),
+                    }),
+                    UiNode::Field(_) => LayoutNodeKind::Field { top: 0.0, bottom: 0.0 },
+                    UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard, top: 0.0, bottom: 0.0 },
+                    UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
+                    UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control { height: if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height }, label_padding: None },
+                    UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
+                    UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
+                    UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
+                    // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
+                    // from arena children — a progress node has none — so it solved to height ZERO and
+                    // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
+                    // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
+                    // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+                    // `📓️w14b-generation3d-labels-preview-layout.md`).
+                    UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
+                    _ => LayoutNodeKind::Leaf,
+                }
             }
         };
         let index = self.nodes.len();
-        let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0 };
+        let chrome = match &node.spec.0 {
+            UiNode::Section(section) => ChromeTextRanges::Section { title: section.label.as_ref().map(|_| GlyphRange::default()) },
+            UiNode::Field(field) => ChromeTextRanges::Field { label: GlyphRange::default(), description: field.description.as_ref().map(|_| GlyphRange::default()), error: field.error.as_ref().map(|_| GlyphRange::default()) },
+            UiNode::Slider(slider) if slider.unit.as_deref().is_some_and(|unit| !unit.is_empty()) => ChromeTextRanges::SliderUnit { label: GlyphRange::default() },
+            _ => ChromeTextRanges::None,
+        };
+        let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0, chrome };
         if let Err(owner) = self.nodes.try_push(input) {
             self.rejected_node = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
@@ -667,16 +761,20 @@ impl MountedLayoutJob {
                 owner.last_child = Some(index);
             }
         }
-        let expanded = matches!(kind, LayoutNodeKind::TreeRow { .. }) || tree.disclosure_open(id).unwrap_or(true) && !matches!(kind, LayoutNodeKind::TreeSection { expanded: false, .. });
+        let expanded = matches!(kind, LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TreeSection { .. }) || tree.disclosure_open(id).unwrap_or(true);
         if let Err(owner) = self.walk.try_push(WalkFrame { next_child: expanded.then_some(node.first_child).flatten(), node: index }) {
             self.rejected_walk = Some(owner);
             self.fault = Some(MountedLayoutFault::DepthCredits);
             return (0, 0);
         }
-        if popup_overlay_row || matches!(kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
+        if popup_overlay_row || !matches!(chrome, ChromeTextRanges::None) || matches!(kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
             self.text_node = Some(index);
             self.text_byte = 0;
+            self.text_part = 0;
             self.text_glyph_start = self.glyphs.len();
+            if let Some(node) = self.nodes.get_mut(index) {
+                node.glyph_start = self.glyphs.len();
+            }
             self.admission = AdmissionPhase::Text;
         } else {
             self.admission = AdmissionPhase::Unwind;
@@ -689,20 +787,34 @@ impl MountedLayoutJob {
             self.admission = AdmissionPhase::Unwind;
             return (0, 0);
         };
-        let Some(input) = self.nodes.get(index) else {
+        let Some(input) = self.nodes.get(index).copied() else {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let value = match tree.node(input.id).map(|node| &node.spec.0) {
-            Some(UiNode::Text(text)) => text.value.as_str(),
-            Some(UiNode::Button(button)) => button.label.as_str(),
+        let Some(spec) = tree.node(input.id).map(|node| &node.spec.0) else {
+            self.fault = Some(MountedLayoutFault::Stale);
+            return (0, 0);
+        };
+        let slider_unit_label = match spec {
+            UiNode::Slider(slider) => crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref()),
+            _ => None,
+        };
+        let part = match (spec, self.text_part) {
+            (UiNode::Text(text), 0) => Some(Some(text.value.as_str())),
+            (UiNode::Button(button), 0) => Some(Some(button.label.as_str())),
+            (UiNode::Section(section), 0) => Some(section.label.as_ref().map(|label| label.as_str())),
+            (UiNode::Field(field), 0) => Some(Some(field.label.as_str())),
+            (UiNode::Field(field), 1) => Some(field.description.as_deref()),
+            (UiNode::Field(field), 2) => Some(field.error.as_deref()),
+            (UiNode::Slider(_), 0) => Some(slider_unit_label.as_deref()),
+            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) => None,
             _ => {
                 self.fault = Some(MountedLayoutFault::Stale);
                 return (0, 0);
             }
         };
-        let Some(scalar) = value.get(self.text_byte..).and_then(|tail| tail.chars().next()) else {
-            let run = RetainedTextRun { node: index, glyph_start: self.text_glyph_start, glyph_end: self.glyphs.len() };
+        let Some(value) = part else {
+            let run = RetainedTextRun { node: index, glyph_start: input.glyph_start, glyph_end: self.glyphs.len() };
             if let Err(owner) = self.runs.try_push(run) {
                 self.rejected_run = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
@@ -714,7 +826,22 @@ impl MountedLayoutJob {
             }
             self.text_node = None;
             self.text_byte = 0;
+            self.text_part = 0;
             self.admission = AdmissionPhase::Unwind;
+            return (0, 0);
+        };
+        let Some(value) = value else {
+            self.record_chrome_range(index, self.text_part, None);
+            self.text_part += 1;
+            self.text_byte = 0;
+            self.text_glyph_start = self.glyphs.len();
+            return (0, 0);
+        };
+        let Some(scalar) = value.get(self.text_byte..).and_then(|tail| tail.chars().next()) else {
+            self.record_chrome_range(index, self.text_part, Some(GlyphRange { start: self.text_glyph_start, end: self.glyphs.len() }));
+            self.text_part += 1;
+            self.text_byte = 0;
+            self.text_glyph_start = self.glyphs.len();
             return (0, 0);
         };
         self.text_byte += scalar.len_utf8();
@@ -724,6 +851,22 @@ impl MountedLayoutJob {
             return (0, 0);
         }
         (0, 1)
+    }
+
+    fn record_chrome_range(&mut self, index: usize, part: u8, range: Option<GlyphRange>) {
+        let Some(node) = self.nodes.get_mut(index) else {
+            self.fault = Some(MountedLayoutFault::Stale);
+            return;
+        };
+        match (&mut node.chrome, part) {
+            (ChromeTextRanges::Section { title }, 0) => *title = range,
+            (ChromeTextRanges::Field { label, .. }, 0) => *label = range.unwrap_or_default(),
+            (ChromeTextRanges::Field { description, .. }, 1) => *description = range,
+            (ChromeTextRanges::Field { error, .. }, 2) => *error = range,
+            (ChromeTextRanges::SliderUnit { label }, 0) => *label = range.unwrap_or_default(),
+            (ChromeTextRanges::None, _) => {}
+            _ => self.fault = Some(MountedLayoutFault::Stale),
+        }
     }
 
     fn unwind_one(&mut self, tree: &UiTree) -> (usize, usize) {
@@ -847,6 +990,13 @@ impl MountedLayoutJob {
         };
         self.measure_cursor = index;
         self.gather_children(index);
+        let chrome = self.nodes.get(index).and_then(|node| composite_chrome(node, &self.glyphs, &self.glyph_previews, self.width, self.theme.gap_standard));
+        if let Some((top, bottom)) = chrome {
+            if !self.flex.set_composite_chrome(index, top, bottom) {
+                self.fault = Some(MountedLayoutFault::Solver);
+                return (0, 0);
+            }
+        }
         let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
         let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
@@ -872,6 +1022,14 @@ impl MountedLayoutJob {
         if self.child_scratch.is_empty() {
             return (1, 0);
         }
+        let width = self.flex.rect(index).map_or(self.width, |rect| rect.width);
+        let chrome = self.nodes.get(index).and_then(|node| composite_chrome(node, &self.glyphs, &self.glyph_previews, width, self.theme.gap_standard));
+        if let Some((top, bottom)) = chrome {
+            if !self.flex.set_composite_chrome(index, top, bottom) {
+                self.fault = Some(MountedLayoutFault::Solver);
+                return (0, 0);
+            }
+        }
         let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
         let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
@@ -895,7 +1053,9 @@ impl MountedLayoutJob {
         };
         let index = self.collect_cursor;
         self.collect_cursor += 1;
-        if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. } | LayoutNodeKind::OverlayRow { .. }) {
+        if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. } | LayoutNodeKind::OverlayRow { .. } | LayoutNodeKind::Field { .. } | LayoutNodeKind::Section { .. })
+            || matches!(input.chrome, ChromeTextRanges::SliderUnit { .. })
+        {
             if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
                 self.rejected_line = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
@@ -903,7 +1063,8 @@ impl MountedLayoutJob {
             }
             self.line_cursor += 1;
         }
-        if let Err(owner) = self.results.try_push(MountedLayoutResult { id: input.id, x: rect.x, y: rect.y, width: rect.width, height: rect.height }) {
+        let inline_suffix_width = if matches!(input.chrome, ChromeTextRanges::SliderUnit { .. }) { input.intrinsic.width } else { 0.0 };
+        if let Err(owner) = self.results.try_push(MountedLayoutResult { id: input.id, x: rect.x, y: rect.y, width: rect.width, height: rect.height, inline_suffix_width }) {
             self.rejected_result = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
@@ -971,7 +1132,7 @@ impl MountedLayoutJob {
             }
             return LayoutJobStep::Complete;
         };
-        if !tree.write_inactive_layout(result.id, generation, AcceptedLayout { x: result.x, y: result.y, width: result.width, height: result.height }) {
+        if !tree.write_inactive_layout(result.id, generation, AcceptedLayout { x: result.x, y: result.y, width: result.width, height: result.height, inline_suffix_width: result.inline_suffix_width }) {
             self.fault = Some(MountedLayoutFault::Stale);
             return LayoutJobStep::Fault(MountedLayoutFault::Stale.label());
         }
@@ -1072,6 +1233,7 @@ pub(crate) fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, wid
             node.layout.y = result.y;
             node.layout.width = result.width;
             node.layout.height = result.height;
+            node.layout.inline_suffix_width = result.inline_suffix_width;
         }
     }
     let published = job.identity();

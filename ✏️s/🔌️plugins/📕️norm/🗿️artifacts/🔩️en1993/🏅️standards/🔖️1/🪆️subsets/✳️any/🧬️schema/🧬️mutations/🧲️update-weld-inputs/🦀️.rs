@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateWeldInputs
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert member action {}", self.member_action.id),
-            &format!("Bauteilbeanspruchung setzen {}", self.member_action.id),
+            &format!("Update member action {}", self.member_action.id),
+            &format!("Bauteilbeanspruchung {} aktualisieren", self.member_action.id),
         )
     }
     fn target(&self) -> Vec<String> {

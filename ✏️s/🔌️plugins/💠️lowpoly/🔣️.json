@@ -384,6 +384,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new primitive mesh object of the given kind (a box, sphere, cylinder, cone or plane) to the scene and makes it the active object.",
+                      "de": "Fügt der Szene ein neues Grundkörper-Netzobjekt der angegebenen Art (Quader, Kugel, Zylinder, Kegel oder Ebene) hinzu und macht es zum aktiven Objekt."
+                    },
+                    "reuse": {
+                      "en": "Adds a new primitive mesh object of the given kind (a box, sphere, cylinder, cone or plane) to the scene and makes it the active object.",
+                      "de": "Fügt der Szene ein neues Grundkörper-Netzobjekt der angegebenen Art (Quader, Kugel, Zylinder, Kegel oder Ebene) hinzu und macht es zum aktiven Objekt."
+                    }
                   }
                 }
               },
@@ -428,6 +438,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets one scalar field of one object by id, its name or whether it is shaded smooth, from a JSON value.",
+                      "de": "Setzt ein skalares Feld eines Objekts anhand seiner Id, Name oder ob es glatt schattiert wird, aus einem JSON-Wert."
+                    },
+                    "reuse": {
+                      "en": "Sets one scalar field of one object by id, its name or whether it is shaded smooth, from a JSON value.",
+                      "de": "Setzt ein skalares Feld eines Objekts anhand seiner Id, Name oder ob es glatt schattiert wird, aus einem JSON-Wert."
+                    }
                   }
                 }
               },
@@ -497,6 +517,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Extrudes the selected faces of the active object outwards by the given distance, creating new side faces.",
+                      "de": "Extrudiert die ausgewählten Flächen des aktiven Objekts um den angegebenen Abstand nach außen und erzeugt neue Seitenflächen."
+                    },
+                    "reuse": {
+                      "en": "Extrudes the selected faces of the active object outwards by the given distance, creating new side faces.",
+                      "de": "Extrudiert die ausgewählten Flächen des aktiven Objekts um den angegebenen Abstand nach außen und erzeugt neue Seitenflächen."
+                    }
                   }
                 }
               },
@@ -561,6 +591,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Insets the selected faces of the active object by the given amount, creating a smaller face inside each with a ring of faces around it.",
+                      "de": "Zieht die ausgewählten Flächen des aktiven Objekts um den angegebenen Betrag ein und erzeugt in jeder eine kleinere Fläche mit einem Flächenring darum."
+                    },
+                    "reuse": {
+                      "en": "Insets the selected faces of the active object by the given amount, creating a smaller face inside each with a ring of faces around it.",
+                      "de": "Zieht die ausgewählten Flächen des aktiven Objekts um den angegebenen Betrag ein und erzeugt in jeder eine kleinere Fläche mit einem Flächenring darum."
+                    }
                   }
                 }
               },
@@ -644,6 +684,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Bevels the selected edges of the active object by the given amount with the given number of segments.",
+                      "de": "Fast die ausgewählten Kanten des aktiven Objekts um den angegebenen Betrag mit der angegebenen Segmentanzahl."
+                    },
+                    "reuse": {
+                      "en": "Bevels the selected edges of the active object by the given amount with the given number of segments.",
+                      "de": "Fast die ausgewählten Kanten des aktiven Objekts um den angegebenen Betrag mit der angegebenen Segmentanzahl."
+                    }
                   }
                 }
               },
@@ -708,6 +758,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Cuts the given number of edge loops across the selected faces of the active object.",
+                      "de": "Schneidet die angegebene Anzahl von Kantenschleifen quer durch die ausgewählten Flächen des aktiven Objekts."
+                    },
+                    "reuse": {
+                      "en": "Cuts the given number of edge loops across the selected faces of the active object.",
+                      "de": "Schneidet die angegebene Anzahl von Kantenschleifen quer durch die ausgewählten Flächen des aktiven Objekts."
+                    }
                   }
                 }
               },
@@ -752,6 +812,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Subdivides the selected faces of the active object into smaller faces.",
+                      "de": "Unterteilt die ausgewählten Flächen des aktiven Objekts in kleinere Flächen."
+                    },
+                    "reuse": {
+                      "en": "Subdivides the selected faces of the active object into smaller faces.",
+                      "de": "Unterteilt die ausgewählten Flächen des aktiven Objekts in kleinere Flächen."
+                    }
                   }
                 }
               },
@@ -796,6 +866,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Splits the selected faces of the active object into triangles.",
+                      "de": "Zerlegt die ausgewählten Flächen des aktiven Objekts in Dreiecke."
+                    },
+                    "reuse": {
+                      "en": "Splits the selected faces of the active object into triangles.",
+                      "de": "Zerlegt die ausgewählten Flächen des aktiven Objekts in Dreiecke."
+                    }
                   }
                 }
               },
@@ -900,6 +980,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Mirrors the active object's selected geometry across the given axis (x, y or z).",
+                      "de": "Spiegelt die ausgewählte Geometrie des aktiven Objekts an der angegebenen Achse (x, y oder z)."
+                    },
+                    "reuse": {
+                      "en": "Mirrors the active object's selected geometry across the given axis (x, y or z).",
+                      "de": "Spiegelt die ausgewählte Geometrie des aktiven Objekts an der angegebenen Achse (x, y oder z)."
+                    }
                   }
                 }
               },
@@ -969,6 +1059,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Reduces the face count of the active object's selection to the given ratio, simplifying its shape.",
+                      "de": "Reduziert die Flächenzahl der Auswahl des aktiven Objekts auf das angegebene Verhältnis und vereinfacht damit ihre Form."
+                    },
+                    "reuse": {
+                      "en": "Reduces the face count of the active object's selection to the given ratio, simplifying its shape.",
+                      "de": "Reduziert die Flächenzahl der Auswahl des aktiven Objekts auf das angegebene Verhältnis und vereinfacht damit ihre Form."
+                    }
                   }
                 }
               },
@@ -1013,6 +1113,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Flips the normals of the selected faces of the active object so they face the other way.",
+                      "de": "Kehrt die Normalen der ausgewählten Flächen des aktiven Objekts um, sodass sie in die andere Richtung zeigen."
+                    },
+                    "reuse": {
+                      "en": "Flips the normals of the selected faces of the active object so they face the other way.",
+                      "de": "Kehrt die Normalen der ausgewählten Flächen des aktiven Objekts um, sodass sie in die andere Richtung zeigen."
+                    }
                   }
                 }
               },
@@ -1057,6 +1167,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Merges the selected vertices of the active object into one.",
+                      "de": "Verschmilzt die ausgewählten Punkte des aktiven Objekts zu einem."
+                    },
+                    "reuse": {
+                      "en": "Merges the selected vertices of the active object into one.",
+                      "de": "Verschmilzt die ausgewählten Punkte des aktiven Objekts zu einem."
+                    }
                   }
                 }
               },
@@ -1101,6 +1221,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Dissolves the selected elements of the active object, removing them while keeping the surrounding surface closed.",
+                      "de": "Löst die ausgewählten Elemente des aktiven Objekts auf, entfernt sie also und hält die umgebende Fläche geschlossen."
+                    },
+                    "reuse": {
+                      "en": "Dissolves the selected elements of the active object, removing them while keeping the surrounding surface closed.",
+                      "de": "Löst die ausgewählten Elemente des aktiven Objekts auf, entfernt sie also und hält die umgebende Fläche geschlossen."
+                    }
                   }
                 }
               },
@@ -1145,6 +1275,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Snaps the selected vertices of the active object to a grid with the snap tool's spacing.",
+                      "de": "Rastet die ausgewählten Punkte des aktiven Objekts an einem Raster mit dem Abstand des Einrast-Werkzeugs ein."
+                    },
+                    "reuse": {
+                      "en": "Snaps the selected vertices of the active object to a grid with the snap tool's spacing.",
+                      "de": "Rastet die ausgewählten Punkte des aktiven Objekts an einem Raster mit dem Abstand des Einrast-Werkzeugs ein."
+                    }
                   }
                 }
               },
@@ -1189,6 +1329,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Switches the active object between smooth and flat shading.",
+                      "de": "Schaltet das aktive Objekt zwischen glatter und flacher Schattierung um."
+                    },
+                    "reuse": {
+                      "en": "Switches the active object between smooth and flat shading.",
+                      "de": "Schaltet das aktive Objekt zwischen glatter und flacher Schattierung um."
+                    }
                   }
                 }
               },
@@ -1233,6 +1383,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Computes a new UV unwrap of the active object along its marked seams, replacing its previous texture coordinates.",
+                      "de": "Berechnet eine neue UV-Abwicklung des aktiven Objekts entlang seiner markierten Nähte und ersetzt die bisherigen Texturkoordinaten."
+                    },
+                    "reuse": {
+                      "en": "Computes a new UV unwrap of the active object along its marked seams, replacing its previous texture coordinates.",
+                      "de": "Berechnet eine neue UV-Abwicklung des aktiven Objekts entlang seiner markierten Nähte und ersetzt die bisherigen Texturkoordinaten."
+                    }
                   }
                 }
               },
@@ -1296,6 +1456,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Marks (or with seam false unmarks) the given or selected edges of the active object as UV seams for the next unwrap.",
+                      "de": "Markiert die angegebenen oder ausgewählten Kanten des aktiven Objekts als UV-Nähte für die nächste Abwicklung (mit seam false wird die Markierung entfernt)."
+                    },
+                    "reuse": {
+                      "en": "Marks (or with seam false unmarks) the given or selected edges of the active object as UV seams for the next unwrap.",
+                      "de": "Markiert die angegebenen oder ausgewählten Kanten des aktiven Objekts als UV-Nähte für die nächste Abwicklung (mit seam false wird die Markierung entfernt)."
+                    }
                   }
                 }
               },
@@ -1340,6 +1510,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Removes every UV seam mark from the active object.",
+                      "de": "Entfernt alle UV-Nahtmarkierungen vom aktiven Objekt."
+                    },
+                    "reuse": {
+                      "en": "Removes every UV seam mark from the active object.",
+                      "de": "Entfernt alle UV-Nahtmarkierungen vom aktiven Objekt."
+                    }
                   }
                 }
               },
@@ -1442,6 +1622,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Moves the selected (or the given) elements of the active object by dx, dy and dz as one undoable edit; during a gumball drag the move is collected and written at Transform End.",
+                      "de": "Verschiebt die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um dx, dy und dz als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Verschiebung gesammelt und bei Transformation beenden geschrieben."
+                    },
+                    "reuse": {
+                      "en": "Moves the selected (or the given) elements of the active object by dx, dy and dz as one undoable edit; during a gumball drag the move is collected and written at Transform End.",
+                      "de": "Verschiebt die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um dx, dy und dz als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Verschiebung gesammelt und bei Transformation beenden geschrieben."
+                    }
                   }
                 }
               },
@@ -1563,6 +1753,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Rotates the selected (or the given) elements of the active object by an angle around the axis ax, ay, az as one undoable edit; during a gumball drag the rotation is collected and written at Transform End.",
+                      "de": "Dreht die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um einen Winkel um die Achse ax, ay, az als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Drehung gesammelt und bei Transformation beenden geschrieben."
+                    },
+                    "reuse": {
+                      "en": "Rotates the selected (or the given) elements of the active object by an angle around the axis ax, ay, az as one undoable edit; during a gumball drag the rotation is collected and written at Transform End.",
+                      "de": "Dreht die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um einen Winkel um die Achse ax, ay, az als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Drehung gesammelt und bei Transformation beenden geschrieben."
+                    }
                   }
                 }
               },
@@ -1665,6 +1865,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Scales the selected (or the given) elements of the active object by sx, sy and sz as one undoable edit; during a gumball drag the scale is collected and written at Transform End.",
+                      "de": "Skaliert die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um sx, sy und sz als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Skalierung gesammelt und bei Transformation beenden geschrieben."
+                    },
+                    "reuse": {
+                      "en": "Scales the selected (or the given) elements of the active object by sx, sy and sz as one undoable edit; during a gumball drag the scale is collected and written at Transform End.",
+                      "de": "Skaliert die ausgewählten (oder die angegebenen) Elemente des aktiven Objekts um sx, sy und sz als eine rückgängig machbare Änderung; während eines Gumball-Ziehens wird die Skalierung gesammelt und bei Transformation beenden geschrieben."
+                    }
                   }
                 }
               },
@@ -1683,7 +1893,7 @@
                 "kind": "view",
                 "iconId": "move",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -1710,7 +1920,18 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Opens a gumball drag on the current selection, so the move, rotate and scale deltas that follow are collected instead of written one by one.",
+                      "de": "Öffnet ein Gumball-Ziehen auf der aktuellen Auswahl, sodass die folgenden Verschiebe-, Dreh- und Skalierschritte gesammelt statt einzeln geschrieben werden."
+                    },
+                    "reuse": {
+                      "en": "Opens a gumball drag on the current selection, so the move, rotate and scale deltas that follow are collected instead of written one by one.",
+                      "de": "Öffnet ein Gumball-Ziehen auf der aktuellen Auswahl, sodass die folgenden Verschiebe-, Dreh- und Skalierschritte gesammelt statt einzeln geschrieben werden."
+                    }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -1728,7 +1949,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -1754,7 +1975,18 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the gumball drag and writes the whole collected move, rotation and scale as one undoable edit.",
+                      "de": "Schließt das Gumball-Ziehen und schreibt die gesamte gesammelte Verschiebung, Drehung und Skalierung als eine rückgängig machbare Änderung."
+                    },
+                    "reuse": {
+                      "en": "Closes the gumball drag and writes the whole collected move, rotation and scale as one undoable edit.",
+                      "de": "Schließt das Gumball-Ziehen und schreibt die gesamte gesammelte Verschiebung, Drehung und Skalierung als eine rückgängig machbare Änderung."
+                    }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -1798,6 +2030,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new, named paint layer to the given or active object's texture.",
+                      "de": "Fügt der Textur des angegebenen oder aktiven Objekts eine neue, benannte Malebene hinzu."
+                    },
+                    "reuse": {
+                      "en": "Adds a new, named paint layer to the given or active object's texture.",
+                      "de": "Fügt der Textur des angegebenen oder aktiven Objekts eine neue, benannte Malebene hinzu."
+                    }
                   }
                 }
               },
@@ -1816,7 +2058,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -1842,7 +2084,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -1886,6 +2129,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Flood-fills the region of the active paint layer around the texture point u, v (the layer's centre when none is given) with the brush colour.",
+                      "de": "Füllt den Bereich der aktiven Malebene um den Texturpunkt u, v (ohne Angabe die Ebenenmitte) mit der Pinselfarbe."
+                    },
+                    "reuse": {
+                      "en": "Flood-fills the region of the active paint layer around the texture point u, v (the layer's centre when none is given) with the brush colour.",
+                      "de": "Füllt den Bereich der aktiven Malebene um den Texturpunkt u, v (ohne Angabe die Ebenenmitte) mit der Pinselfarbe."
+                    }
                   }
                 }
               },
@@ -1930,6 +2183,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Bucket-fills the connected area of the active paint layer at u, v (its centre when omitted) with the brush colour, exactly as Paint Fill does.",
+                      "de": "Füllt die zusammenhängende Fläche der aktiven Malebene bei u, v (ohne Angabe ihre Mitte) mit der Pinselfarbe, genau wie Füllen malen."
+                    },
+                    "reuse": {
+                      "en": "Bucket-fills the connected area of the active paint layer at u, v (its centre when omitted) with the brush colour, exactly as Paint Fill does.",
+                      "de": "Füllt die zusammenhängende Fläche der aktiven Malebene bei u, v (ohne Angabe ihre Mitte) mit der Pinselfarbe, genau wie Füllen malen."
+                    }
                   }
                 }
               },
@@ -2031,6 +2294,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Writes the scene's meshes in the chosen format to a downloaded file on the user's machine.",
+                      "de": "Schreibt die Netze der Szene im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                    },
+                    "reuse": {
+                      "en": "Writes the scene's meshes in the chosen format to a downloaded file on the user's machine.",
+                      "de": "Schreibt die Netze der Szene im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                    }
                   }
                 }
               },
@@ -2072,6 +2345,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Opens the host's file picker for a mesh file; the chosen file then replaces the whole document.",
+                      "de": "Öffnet die Dateiauswahl des Hosts für eine Netzdatei; die gewählte Datei ersetzt dann das gesamte Dokument."
+                    },
+                    "reuse": {
+                      "en": "Opens the host's file picker for a mesh file; the chosen file then replaces the whole document.",
+                      "de": "Öffnet die Dateiauswahl des Hosts für eine Netzdatei; die gewählte Datei ersetzt dann das gesamte Dokument."
+                    }
                   }
                 }
               },
@@ -2097,7 +2380,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -2116,6 +2399,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Replaces the whole document with the meshes read from an imported mesh file; the previous scene is discarded.",
+                      "de": "Ersetzt das gesamte Dokument durch die Netze aus einer importierten Netzdatei; die bisherige Szene wird verworfen."
+                    },
+                    "reuse": {
+                      "en": "Replaces the whole document with the meshes read from an imported mesh file; the previous scene is discarded.",
+                      "de": "Ersetzt das gesamte Dokument durch die Netze aus einer importierten Netzdatei; die bisherige Szene wird verworfen."
+                    }
                   }
                 }
               },
@@ -2160,6 +2453,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Deletes what the mesh selection holds: whole objects when objects are selected, otherwise the selected faces of the active object.",
+                      "de": "Löscht, was die Netzauswahl enthält: ganze Objekte, wenn Objekte ausgewählt sind, sonst die ausgewählten Flächen des aktiven Objekts."
+                    },
+                    "reuse": {
+                      "en": "Deletes what the mesh selection holds: whole objects when objects are selected, otherwise the selected faces of the active object.",
+                      "de": "Löscht, was die Netzauswahl enthält: ganze Objekte, wenn Objekte ausgewählt sind, sonst die ausgewählten Flächen des aktiven Objekts."
+                    }
                   }
                 }
               },
@@ -2204,6 +2507,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Copies the given or active object and adds the copy to the scene.",
+                      "de": "Kopiert das angegebene oder aktive Objekt und fügt die Kopie der Szene hinzu."
+                    },
+                    "reuse": {
+                      "en": "Copies the given or active object and adds the copy to the scene.",
+                      "de": "Kopiert das angegebene oder aktive Objekt und fügt die Kopie der Szene hinzu."
+                    }
                   }
                 }
               },
@@ -3051,6 +3364,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new, named paint layer to the given or active object's texture.",
+                      "de": "Fügt der Textur des angegebenen oder aktiven Objekts eine neue, benannte Malebene hinzu."
+                    },
+                    "reuse": {
+                      "en": "Adds a new, named paint layer to the given or active object's texture.",
+                      "de": "Fügt der Textur des angegebenen oder aktiven Objekts eine neue, benannte Malebene hinzu."
+                    }
                   }
                 }
               },
@@ -3069,7 +3392,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -3095,7 +3418,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -3139,6 +3463,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Flood-fills the region of the active paint layer around the texture point u, v (the layer's centre when none is given) with the brush colour.",
+                      "de": "Füllt den Bereich der aktiven Malebene um den Texturpunkt u, v (ohne Angabe die Ebenenmitte) mit der Pinselfarbe."
+                    },
+                    "reuse": {
+                      "en": "Flood-fills the region of the active paint layer around the texture point u, v (the layer's centre when none is given) with the brush colour.",
+                      "de": "Füllt den Bereich der aktiven Malebene um den Texturpunkt u, v (ohne Angabe die Ebenenmitte) mit der Pinselfarbe."
+                    }
                   }
                 }
               },
@@ -3183,6 +3517,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Bucket-fills the connected area of the active paint layer at u, v (its centre when omitted) with the brush colour, exactly as Paint Fill does.",
+                      "de": "Füllt die zusammenhängende Fläche der aktiven Malebene bei u, v (ohne Angabe ihre Mitte) mit der Pinselfarbe, genau wie Füllen malen."
+                    },
+                    "reuse": {
+                      "en": "Bucket-fills the connected area of the active paint layer at u, v (its centre when omitted) with the brush colour, exactly as Paint Fill does.",
+                      "de": "Füllt die zusammenhängende Fläche der aktiven Malebene bei u, v (ohne Angabe ihre Mitte) mit der Pinselfarbe, genau wie Füllen malen."
+                    }
                   }
                 }
               },
@@ -3819,7 +4163,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -3838,6 +4182,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole lowpoly document with one parsed from the given snapshot JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Lowpoly-Dokument durch eines aus dem angegebenen Snapshot-JSON; ungültiges JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole lowpoly document with one parsed from the given snapshot JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Lowpoly-Dokument durch eines aus dem angegebenen Snapshot-JSON; ungültiges JSON ändert nichts."
+                }
               }
             }
           },
@@ -3882,6 +4236,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads a test fixture given as JSON as the whole lowpoly document, replacing the current scene; invalid JSON changes nothing.",
+                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Lowpoly-Dokument und ersetzt die aktuelle Szene; ungültiges JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Loads a test fixture given as JSON as the whole lowpoly document, replacing the current scene; invalid JSON changes nothing.",
+                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Lowpoly-Dokument und ersetzt die aktuelle Szene; ungültiges JSON ändert nichts."
+                }
               }
             }
           },
@@ -3972,6 +4336,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Makes the object with the given id the active one that mesh edits apply to; only the editor's view state changes.",
+                  "de": "Macht das Objekt mit der angegebenen Id zum aktiven, auf das Netzänderungen wirken; nur der Ansichtszustand des Editors ändert sich."
+                },
+                "reuse": {
+                  "en": "Makes the object with the given id the active one that mesh edits apply to; only the editor's view state changes.",
+                  "de": "Macht das Objekt mit der angegebenen Id zum aktiven, auf das Netzänderungen wirken; nur der Ansichtszustand des Editors ändert sich."
+                }
               }
             }
           },
@@ -4017,6 +4391,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Makes the given paint layer the one painting writes to; only the editor's view state changes.",
+                  "de": "Macht die angegebene Malebene zu der, auf die gemalt wird; nur der Ansichtszustand des Editors ändert sich."
+                },
+                "reuse": {
+                  "en": "Makes the given paint layer the one painting writes to; only the editor's view state changes.",
+                  "de": "Macht die angegebene Malebene zu der, auf die gemalt wird; nur der Ansichtszustand des Editors ändert sich."
+                }
               }
             }
           },
@@ -4062,6 +4446,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one parameter of the armed tool (such as extrude distance or brush size) from a JSON value; only the tool setting changes.",
+                  "de": "Setzt einen Parameter des gewählten Werkzeugs (etwa Extrusionsabstand oder Pinselgröße) aus einem JSON-Wert; nur die Werkzeugeinstellung ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets one parameter of the armed tool (such as extrude distance or brush size) from a JSON value; only the tool setting changes.",
+                  "de": "Setzt einen Parameter des gewählten Werkzeugs (etwa Extrusionsabstand oder Pinselgröße) aus einem JSON-Wert; nur die Werkzeugeinstellung ändert sich."
+                }
               }
             }
           },
@@ -4153,6 +4547,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Shows or hides the mesh edges in the model window; only the view changes.",
+                  "de": "Blendet die Netzkanten im Modellfenster ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Shows or hides the mesh edges in the model window; only the view changes.",
+                  "de": "Blendet die Netzkanten im Modellfenster ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4198,6 +4602,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the model window's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht des Modellfensters ein oder aus; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Switches the model window's sun light on or off; only the view changes.",
+                  "de": "Schaltet das Sonnenlicht des Modellfensters ein oder aus; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4243,6 +4657,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the compass direction the model window's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne des Modellfensters scheint; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the compass direction the model window's sun shines from; only the view changes.",
+                  "de": "Legt die Himmelsrichtung fest, aus der die Sonne des Modellfensters scheint; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4288,6 +4712,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how high the model window's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne des Modellfensters über dem Horizont steht; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets how high the model window's sun stands above the horizon; only the view changes.",
+                  "de": "Legt fest, wie hoch die Sonne des Modellfensters über dem Horizont steht; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4333,6 +4767,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the brightness of the model window's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne des Modellfensters fest; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets the brightness of the model window's sun; only the view changes.",
+                  "de": "Legt die Helligkeit der Sonne des Modellfensters fest; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -4351,7 +4795,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4378,7 +4822,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -4396,7 +4841,7 @@
             "kind": "view",
             "iconId": "paintbrush",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4423,7 +4868,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -4441,7 +4887,7 @@
             "kind": "view",
             "iconId": "paintbrush",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4468,7 +4914,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -4486,7 +4933,7 @@
             "kind": "view",
             "iconId": "paintbrush",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4513,7 +4960,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -4623,7 +5071,7 @@
             "kind": "view",
             "iconId": "paintbrush",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -4650,7 +5098,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -5461,6 +5910,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5566,6 +6025,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5659,6 +6128,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7017,6 +7496,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -7122,6 +7611,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -7215,6 +7714,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7381,7 +7890,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -7660,8 +8169,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "424f5dc2f7f73b8077d7695eb39bb601e6b4a437ea35b59dd05217768715abcd",
-    "coreWasmSha256": "4093801027685b4d3f38fd6a19ec04239c375cd7ea15381d6ce68d8dc5aa137e",
-    "descriptorSha256": "d091ad9e2e0d1bdb68fcab6042e0ccf809707c880003e8207d2dca81cb8c26b4"
+    "wasmSha256": "b0b66f3e00bbcf537ff258398008897a325c2321c300cd0ef955807ec46d294d",
+    "coreWasmSha256": "71ffda7dfdb2a5dec63c13527dfb2533e9fb7b837ac5425d0bc54b108771f30e",
+    "descriptorSha256": "89bc62800abfcc575e1135e5c7ae876a06895889d857511087166df3019ab6a8"
   }
 }

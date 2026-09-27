@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ValidateFunction } from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runProbe, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../🧪️tests/🧬️schema-oracle/🟦️.ts";
@@ -685,16 +685,40 @@ class WalWriterAuthorityCheckScript extends BundleScript {
   }
 }
 
-/** 🐳️ The cross-process WAL writer fence laws against live servers: every lane of
- * `db_storage::writer::fence_conformance` (SQLite, plus PostgreSQL and Neo4j, each on its own
- * disposable `docker run --rm` container cross-checked through `psql` / `cypher-shell`). A running
- * Docker daemon is the only prerequisite, which is why the server lanes are `#[ignore]`d elsewhere. */
+/** 🤺️ The cross-process WAL writer fence laws of `db_storage::writer::fence_conformance`, one lane per backend:
+ * `sqlite` on a scratch file; `postgres` and `neo4j` on the ONE shared development server claimed by
+ * `os-hub-ts backend run <postgres|neo4j> -- …` (its `OS_HUB_*` environment selects the server, `SEMIO_BACKEND_CLIENT` is the
+ * server's own client the laws cross-check the lock through), so a server lane runs only under that claim.
+ * `wal-writer-fence-live [sqlite|postgres|neo4j]…`: without a lane, `sqlite` plus every claimed lane whose environment
+ * is present. */
+const WAL_WRITER_FENCE_LANES: Readonly<Record<string, Readonly<{ law: string; claimed?: string }>>> = {
+  sqlite: { law: "db_storage::writer::fence_conformance::sqlite_wal_writer_fence_holds_every_shared_law" },
+  postgres: { law: "db_storage::writer::fence_conformance::postgres_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_DATABASE_URL" },
+  neo4j: { law: "db_storage::writer::fence_conformance::neo4j_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_NEO4J_URI" },
+};
+
 class WalWriterFenceLiveScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("wal-writer-fence-live takes no arguments");
-    const probe = runProbe("docker", ["info", "--format", "{{.ServerVersion}}"], { cwd: this.repoRoot });
-    if (probe.status !== 0) throw new Error("wal-writer-fence-live needs a running Docker daemon; every server lane starts its own postgres:17-alpine / neo4j:5-community container");
-    await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres,neo4j", "--lib", "db_storage::writer::fence_conformance", "--", "--include-ignored", "--test-threads=1"], this.root);
+    const lanes = segments.length ? segments : Object.keys(WAL_WRITER_FENCE_LANES).filter((name) => !WAL_WRITER_FENCE_LANES[name]!.claimed || process.env[WAL_WRITER_FENCE_LANES[name]!.claimed!]);
+    const unknown = lanes.filter((name) => !(name in WAL_WRITER_FENCE_LANES));
+    if (unknown.length) throw new Error(`wal-writer-fence-live accepts ${Object.keys(WAL_WRITER_FENCE_LANES).join(" | ")}, got ${unknown.join(",")}`);
+    const unclaimed = lanes.filter((name) => WAL_WRITER_FENCE_LANES[name]!.claimed && !process.env[WAL_WRITER_FENCE_LANES[name]!.claimed!]);
+    if (unclaimed.length) throw new Error(`wal-writer-fence-live ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
+    for (const lane of lanes) {
+      console.log(`wal-writer-fence-live ${lane}: ${WAL_WRITER_FENCE_LANES[lane]!.law}`);
+      await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres,neo4j", "--lib", "--", "--exact", WAL_WRITER_FENCE_LANES[lane]!.law, "--include-ignored", "--test-threads=1"], this.root);
+    }
+  }
+}
+
+/** 🐘️ `postgres-round-trips-live` — the PostgreSQL storage laws of `db_storage_postgres::round_trips` on the ONE shared
+ * development server claimed by `os-hub-ts backend run postgres -- …` (a list is one statement, concurrent writers wait for
+ * the backend's operation slot, concurrent openers of a fresh database all find its schema). */
+class PostgresRoundTripsLiveScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("postgres-round-trips-live takes no arguments");
+    if (!process.env.OS_HUB_DATABASE_URL) throw new Error("postgres-round-trips-live needs the claimed shared server: run it under `os-hub-ts backend run postgres -- …`");
+    await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres", "--lib", "--", "db_storage_postgres::round_trips::", "--include-ignored"], this.root);
   }
 }
 
@@ -2254,6 +2278,7 @@ router.register("wal-capacity-check", WalCapacityCheckScript);
 router.register("wal-committed-transactions-check", WalCommittedTransactionsCheckScript);
 router.register("wal-writer-authority-check", WalWriterAuthorityCheckScript);
 router.register("wal-writer-fence-live", WalWriterFenceLiveScript);
+router.register("postgres-round-trips-live", PostgresRoundTripsLiveScript);
 router.register("database-history-completion-check", DatabaseHistoryCompletionCheckScript);
 router.register("database-catalog-read-ownership-check", DatabaseCatalogReadOwnershipCheckScript);
 router.register("database-capability-completion-check", DatabaseCapabilityCompletionCheckScript);

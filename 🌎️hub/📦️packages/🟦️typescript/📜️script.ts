@@ -8,7 +8,7 @@
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runVitest, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const HUB_RUST_DIR = "🌎️hub/📦️packages/🦀️rust";
 
@@ -80,6 +80,10 @@ function backendProgress(progress: HubBackendProgress): void {
   console.error(`[os-hub-ts] backend ${progress.name} ${progress.phase} ${progress.elapsedSeconds} s`);
 }
 
+/** 🔎️ The environment key `backend run` hands its command the claimed server's own client in (a JSON argv; append one
+ * SQL statement or Cypher query), read by the db crate's live laws (`db_storage::claimed_backend`). */
+export const HUB_BACKEND_CLIENT_ENV = "SEMIO_BACKEND_CLIENT";
+
 /** 🐳️ `backend <up|down|status> <postgres|neo4j|all>` — the PERSISTENT development backend servers: `up` starts the
  * named server(s) from their `🌎️hub/compose.yaml` service (idempotent: a ready server is reused) and prints the hub
  * environment that selects it; `down` removes container and volume; `status` prints one line per backend. The same
@@ -87,8 +91,10 @@ function backendProgress(progress: HubBackendProgress): void {
  * Ctrl-C during `up` removes the half-started container.
  * `backend run <postgres|neo4j> -- <command…>` runs one command under a claim on the shared server (its own run
  * database on postgres, the exclusive lease over a reset graph on neo4j) with the hub environment that selects it
- * (`OS_HUB_DATABASE_URL`, `OS_HUB_NEO4J_URI`/`_USER`/`_PASSWORD`, …), forwards Ctrl-C to it, releases the claim when it
- * ends and exits with its status — how the db engine's live laws reach the one shared server. */
+ * (`OS_HUB_DATABASE_URL`, `OS_HUB_NEO4J_URI`/`_USER`/`_PASSWORD`, …) plus the claim's own server client as a JSON argv in
+ * {@link HUB_BACKEND_CLIENT_ENV} (the laws' independent oracle: `psql` scoped to the run database, `cypher-shell`), forwards
+ * Ctrl-C to it, releases the claim when it ends and exits with its status — how the db engine's live laws reach the one
+ * shared server. */
 class BackendScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "run") return this.runClaimed(segments.slice(1));
@@ -139,7 +145,7 @@ class BackendScript extends BundleScript {
       console.log(`[os-hub-ts] backend run ${name}=${claim.server.host}:${claim.server.port} (${claim.server.identity.container}): ${command.join(" ")}`);
       const { spawn } = await import("node:child_process");
       const status = await new Promise<number>((resolveExit, rejectExit) => {
-        const child = spawn(command[0]!, command.slice(1), { cwd: this.repoRoot, env: { ...process.env, ...claim.env }, stdio: "inherit", shell: false });
+        const child = spawn(command[0]!, command.slice(1), { cwd: this.repoRoot, env: { ...process.env, ...claim.env, [HUB_BACKEND_CLIENT_ENV]: JSON.stringify(claim.client) }, stdio: "inherit", shell: false });
         const forward = (): void => void child.kill("SIGINT");
         cancel.signal.addEventListener("abort", forward, { once: true });
         child.once("error", rejectExit);
@@ -188,6 +194,12 @@ function interruptSignal(): { signal: AbortSignal; done: () => void } {
   return { signal: controller.signal, done };
 }
 
+/** 🚧️ Errors that mean the drill's precondition is absent (no hub listening, nothing published to seed from, no binary)
+ * rather than that the hub misbehaved: recorded as `blocked`, never as `fail`. */
+function missingHubPrecondition(error: unknown): boolean {
+  return /no process listens|ECONNREFUSED|Unable to connect|ConnectionRefused|no published trusted catalog|does not exist|Missing Nx-staged/iu.test(String(error instanceof Error ? error.message : error));
+}
+
 /** 💾️ `backup-restore-drill [--catalog-root <data root>] [--kind <kindId|schema prefix>] [--edits <n>] [--rounds <n>]
  * [--keep]` — the backup/restore drill on a fresh root seeded with a copy of a published trusted catalog (default: the
  * development hub's `.🧬semio/🌐hub/hub-dev`), the hub being `OS_HUB_BINARY` or the Nx-staged `build-dev` executable. */
@@ -196,7 +208,7 @@ class BackupRestoreDrillScript extends BundleScript {
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runBackupRestoreDrill } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
-    try {
+    await withAcceptanceRecord(this.repoRoot, "hub-backup-restore", async () => {
       const rounds = await runBackupRestoreDrill({
         repoRoot: this.repoRoot,
         binaryPath: process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR)),
@@ -204,7 +216,6 @@ class BackupRestoreDrillScript extends BundleScript {
         kind: flagValue(segments, "--kind") ?? "note",
         edits: Number(flagValue(segments, "--edits") ?? 20),
         rounds: Number(flagValue(segments, "--rounds") ?? 1),
-        readyTimeoutMs: Number(flagValue(segments, "--ready-timeout-ms") ?? 1_800_000),
         keepRoots: segments.includes("--keep"),
         signal: interrupt.signal,
         onProgress: (line) => console.log(`[backup-drill] ${line}`),
@@ -226,9 +237,8 @@ class BackupRestoreDrillScript extends BundleScript {
         }),
       );
       if (passed !== rounds.length || rounds.length === 0) process.exitCode = 1;
-    } finally {
-      interrupt.done();
-    }
+    }, missingHubPrecondition);
+    interrupt.done();
   }
 }
 
@@ -245,7 +255,7 @@ class ResidencyWatchScript extends BundleScript {
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runResidencyWatch } = await import("../../🧪️tests/🧠️residency/🟦️.ts");
-    try {
+    await withAcceptanceRecord(this.repoRoot, "hub-residency", async () => {
       const budget = flagValue(segments, "--budget-mib");
       const report = await runResidencyWatch({
         hub: hub.replace(/\/$/u, ""),
@@ -279,9 +289,8 @@ class ResidencyWatchScript extends BundleScript {
         }),
       );
       if (status !== "pass") process.exitCode = 1;
-    } finally {
-      interrupt.done();
-    }
+    }, missingHubPrecondition);
+    interrupt.done();
   }
 }
 
@@ -348,23 +357,25 @@ class HubFreshnessScript extends BundleScript {
     if (!hub) throw new Error("usage: hub-freshness --hub <url> [--binary <path>]");
     const startedAt = new Date();
     const { checkHubBuildFreshness } = await import("../../🧪️tests/🏷️build-freshness/🟦️.ts");
-    const report = await checkHubBuildFreshness(hub.replace(/\/$/u, ""), flagValue(segments, "--binary") ?? null);
-    console.log(`[hub-freshness] ${JSON.stringify({ ...report, changed: report.changed.slice(0, 20) })}`);
-    publishAcceptanceCheckResult(
-      this.repoRoot,
-      acceptanceCheckResult({
-        check: "hub-build-freshness",
-        status: report.verdict === "fresh" ? "pass" : report.verdict === "stale" ? "fail" : "blocked",
-        startedAt,
-        measured: { verdict: report.verdict, runId: report.runId ?? "", sources: report.sources, changed: report.changed.length, executable: report.executable ?? "", builtAtMs: report.builtAtMs ?? -1 },
-        summary: {
-          en: `${report.verdict}: ${report.reason.en}`,
-          de: `${report.verdict === "fresh" ? "aktuell" : report.verdict === "stale" ? "veraltet" : "nicht prüfbar"}: ${report.reason.de}`,
-        },
-        evidence: report.record ? [report.record] : [],
-      }),
-    );
-    if (report.verdict !== "fresh") process.exitCode = 1;
+    await withAcceptanceRecord(this.repoRoot, "hub-build-freshness", async () => {
+      const report = await checkHubBuildFreshness(hub.replace(/\/$/u, ""), flagValue(segments, "--binary") ?? null);
+      console.log(`[hub-freshness] ${JSON.stringify({ ...report, changed: report.changed.slice(0, 20) })}`);
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-build-freshness",
+          status: report.verdict === "fresh" ? "pass" : report.verdict === "stale" ? "fail" : "blocked",
+          startedAt,
+          measured: { verdict: report.verdict, runId: report.runId ?? "", sources: report.sources, changed: report.changed.length, executable: report.executable ?? "", builtAtMs: report.builtAtMs ?? -1 },
+          summary: {
+            en: `${report.verdict}: ${report.reason.en}`,
+            de: `${report.verdict === "fresh" ? "aktuell" : report.verdict === "stale" ? "veraltet" : "nicht prüfbar"}: ${report.reason.de}`,
+          },
+          evidence: report.record ? [report.record] : [],
+        }),
+      );
+      if (report.verdict !== "fresh") process.exitCode = 1;
+    }, missingHubPrecondition);
   }
 }
 

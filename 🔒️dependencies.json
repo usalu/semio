@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-18T16:24:59.098Z",
-  "commit": "958c5ba76a855403c5f05a9da9020d47c5b08395",
+  "generatedAt": "2026-09-27T08:37:36.961Z",
+  "commit": "40a2736e661a3ceeb6e0a999e91b9d1e51991ad2",
   "entries": [
     {
       "ecosystem": "js",
       "name": "@bytecodealliance/jco",
-      "version": "^1.7.0",
+      "version": "^1.34.0",
       "kinds": [
         "repository-tooling"
       ],
@@ -80,20 +80,14 @@
       "name": "@modelcontextprotocol/sdk",
       "version": "^1.30.0",
       "kinds": [
-        "production-runtime"
+        "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🔮️oracles/🔣️.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true,
+      "productionReachable": false,
       "oracleIds": [
         "modelcontextprotocol-sdk"
-      ],
-      "capabilities": [
-        "mcp-capability-listing",
-        "mcp-initialize-handshake",
-        "mcp-tool-call-roundtrip"
       ]
     },
     {
@@ -104,7 +98,6 @@
         "production-runtime"
       ],
       "users": [
-        "temp/merge/print/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
@@ -190,43 +183,6 @@
     },
     {
       "ecosystem": "js",
-      "name": "@semio-tech/print-viz-kernel",
-      "version": "workspace",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "print-viz-kernel-twin"
-      ],
-      "capabilities": [
-        "viz-kernel-twin-parity",
-        "viz-plot-grammar"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "@semio-tech/repo-library",
-      "version": "*",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "semio-library-uloc"
-      ],
-      "capabilities": [
-        "repo.metrics.loc-aggregation"
-      ]
-    },
-    {
-      "ecosystem": "js",
       "name": "@storybook/addon-docs",
       "version": "^10.4.0",
       "kinds": [
@@ -295,7 +251,6 @@
         "repository-tooling"
       ],
       "users": [
-        "temp/merge/mit-bestand/präsentation/33.projektetage/package.json",
         "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
         "♻️mit-bestand/🧺️demonstrator/package.json",
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
@@ -322,6 +277,42 @@
     },
     {
       "ecosystem": "js",
+      "name": "@types/bun",
+      "version": "^1.4.2",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "@types/markdown-it",
+      "version": "^14.2.0",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "@types/micromatch",
+      "version": "^4.0.10",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
       "name": "@types/node",
       "version": "^22.19.6",
       "kinds": [
@@ -335,6 +326,30 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "@types/picomatch",
+      "version": "^4.0.3",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "@types/pngjs",
+      "version": "^6.0.5",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -430,7 +445,6 @@
         "repository-tooling"
       ],
       "users": [
-        "temp/merge/mit-bestand/präsentation/33.projektetage/package.json",
         "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
         "♻️mit-bestand/🧺️demonstrator/package.json",
         "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
@@ -495,25 +509,6 @@
     },
     {
       "ecosystem": "js",
-      "name": "@xmldom/xmldom",
-      "version": "0.9.10",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "jszip-xmldom-docx-carrier"
-      ],
-      "capabilities": [
-        "document.carrier.docx",
-        "semio-v1-document-mutate"
-      ]
-    },
-    {
-      "ecosystem": "js",
       "name": "@xyflow/react",
       "version": "^12.10.0",
       "kinds": [
@@ -529,8 +524,7 @@
       "name": "ajv",
       "version": "8.20.0",
       "kinds": [
-        "production-runtime",
-        "repository-tooling"
+        "test-oracle"
       ],
       "users": [
         "package.json",
@@ -541,15 +535,9 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🔮️oracles/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/🔮️oracles/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🔮️oracles/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/🔮️oracles/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/🔮️oracles/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/🔮️oracles/🔣️.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true,
+      "productionReachable": false,
       "oracleIds": [
         "ajv",
         "ajv-contributor-document",
@@ -558,21 +546,6 @@
         "ajv-repo-events",
         "ajv-ticket-schema",
         "ajv-todo-line-vectors"
-      ],
-      "capabilities": [
-        "repo-event-kind-catalog",
-        "repo-event-payload-encoding",
-        "repo.contributors.identity",
-        "repo.goals.document-codec",
-        "repo.model.json-encoding",
-        "repo.tickets.document-codec",
-        "repo.todos.line-grammar",
-        "viz-catalog-coverage",
-        "viz-catalog-schema",
-        "viz-catalog-validity",
-        "viz-probe-schema",
-        "viz-schema-conformance",
-        "viz-taxonomy-schema"
       ]
     },
     {
@@ -611,22 +584,8 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "brepjs-occt",
         "brepjs-occt"
-      ],
-      "capabilities": [
-        "brep.boolean.cut",
-        "brep.boolean.fuse",
-        "brep.boolean.intersect",
-        "brep.measure.area",
-        "brep.measure.bounds",
-        "brep.measure.volume",
-        "brep.step.export",
-        "brep.step.import",
-        "brep.tessellate",
-        "brep.topology.count",
-        "brep.validity",
-        "semio-v1-brep-mutate",
-        "step-ap214-cc6-mutate"
       ]
     },
     {
@@ -634,30 +593,12 @@
       "name": "brepjs-opencascade",
       "version": "^0.15.6",
       "kinds": [
-        "test-oracle"
+        "repository-tooling"
       ],
       "users": [
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "brepjs-occt"
-      ],
-      "capabilities": [
-        "brep.boolean.cut",
-        "brep.boolean.fuse",
-        "brep.boolean.intersect",
-        "brep.measure.area",
-        "brep.measure.bounds",
-        "brep.measure.volume",
-        "brep.step.export",
-        "brep.step.import",
-        "brep.tessellate",
-        "brep.topology.count",
-        "brep.validity",
-        "semio-v1-brep-mutate",
-        "step-ap214-cc6-mutate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
@@ -686,9 +627,6 @@
       "productionReachable": false,
       "oracleIds": [
         "cva"
-      ],
-      "capabilities": [
-        "style-variant-compilation"
       ]
     },
     {
@@ -704,9 +642,6 @@
       "productionReachable": false,
       "oracleIds": [
         "clsx"
-      ],
-      "capabilities": [
-        "class-name-flattening"
       ]
     },
     {
@@ -723,31 +658,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-array"
-      ],
-      "capabilities": [
-        "network-graph-algorithms",
-        "network-placement-layouts",
-        "network-placement-layouts-twin",
-        "viz-array-extent",
-        "viz-array-ticks",
-        "viz-charts-distribution",
-        "viz-charts-statistical",
-        "viz-domain-families",
-        "viz-transform-bin",
-        "viz-transform-bin-twin",
-        "viz-transform-filter",
-        "viz-transform-fold",
-        "viz-transform-group",
-        "viz-transform-join",
-        "viz-transform-kde",
-        "viz-transform-normalize",
-        "viz-transform-pivot",
-        "viz-transform-quantile",
-        "viz-transform-rollup",
-        "viz-transform-sort",
-        "viz-transform-statistics",
-        "viz-transform-statistics-twin",
-        "viz-transform-window"
       ]
     },
     {
@@ -764,13 +674,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-chord"
-      ],
-      "capabilities": [
-        "network-chord-layout",
-        "network-chord-layout-twin",
-        "viz-layout-chord",
-        "viz-network-chord",
-        "viz-shape-link-twin"
       ]
     },
     {
@@ -786,14 +689,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-color"
-      ],
-      "capabilities": [
-        "viz-colour-parse",
-        "viz-colour-space",
-        "viz-scale-color-twin",
-        "viz-theme-grayscale-safe",
-        "viz-theme-palette",
-        "viz-theme-palettes"
       ]
     },
     {
@@ -810,12 +705,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-contour"
-      ],
-      "capabilities": [
-        "viz-layout-contour",
-        "viz-layout-contour-twin",
-        "viz-layout-density",
-        "viz-scientific-field"
       ]
     },
     {
@@ -832,14 +721,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-delaunay"
-      ],
-      "capabilities": [
-        "viz-spatial-delaunay",
-        "viz-spatial-delaunay-twin",
-        "viz-spatial-hull",
-        "viz-spatial-hull-twin",
-        "viz-spatial-layout",
-        "viz-spatial-voronoi"
       ]
     },
     {
@@ -855,10 +736,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-dsv"
-      ],
-      "capabilities": [
-        "viz-data-csv",
-        "viz-data-table"
       ]
     },
     {
@@ -876,12 +753,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-force"
-      ],
-      "capabilities": [
-        "network-force-layout",
-        "network-force-layout-twin",
-        "viz-layout-force",
-        "viz-network-layout"
       ]
     },
     {
@@ -898,12 +769,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-format"
-      ],
-      "capabilities": [
-        "viz-annotation-label",
-        "viz-format-number",
-        "viz-format-number-twin",
-        "viz-guide-tick-format"
       ]
     },
     {
@@ -920,16 +785,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-geo"
-      ],
-      "capabilities": [
-        "geo-projection",
-        "geo-projection-twin",
-        "viz-coordinate-geographic",
-        "viz-geo-choropleth",
-        "viz-geo-measure",
-        "viz-geo-path",
-        "viz-geo-path-twin",
-        "viz-geo-projection"
       ]
     },
     {
@@ -946,11 +801,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-hexbin"
-      ],
-      "capabilities": [
-        "viz-layout-hexbin",
-        "viz-spatial-hexbin",
-        "viz-spatial-hexbin-twin"
       ]
     },
     {
@@ -967,28 +817,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-hierarchy"
-      ],
-      "capabilities": [
-        "viz-hierarchy-aggregates",
-        "viz-hierarchy-aggregates-twin",
-        "viz-hierarchy-cluster-twin",
-        "viz-hierarchy-layout",
-        "viz-hierarchy-pack",
-        "viz-hierarchy-pack-twin",
-        "viz-hierarchy-partition",
-        "viz-hierarchy-partition-twin",
-        "viz-hierarchy-stratify",
-        "viz-hierarchy-sunburst-twin",
-        "viz-hierarchy-tree",
-        "viz-hierarchy-tree-twin",
-        "viz-hierarchy-treemap",
-        "viz-hierarchy-treemap-twin",
-        "viz-layout-cluster",
-        "viz-layout-dendrogram",
-        "viz-layout-pack",
-        "viz-layout-partition",
-        "viz-layout-tree",
-        "viz-layout-treemap"
       ]
     },
     {
@@ -1005,15 +833,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-interpolate"
-      ],
-      "capabilities": [
-        "viz-interpolate-array",
-        "viz-interpolate-colour",
-        "viz-interpolate-kinds",
-        "viz-interpolate-number",
-        "viz-scale-color-twin",
-        "viz-scale-interpolator",
-        "viz-theme-palettes"
       ]
     },
     {
@@ -1030,11 +849,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-path"
-      ],
-      "capabilities": [
-        "viz-mark-emission",
-        "viz-path-arc-to",
-        "viz-path-serialization"
       ]
     },
     {
@@ -1050,9 +864,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-quadtree"
-      ],
-      "capabilities": [
-        "viz-spatial-quadtree"
       ]
     },
     {
@@ -1068,12 +879,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-regression"
-      ],
-      "capabilities": [
-        "viz-charts-scatter",
-        "viz-statistical-regression",
-        "viz-transform-regression",
-        "viz-transform-statistics-twin"
       ]
     },
     {
@@ -1090,12 +895,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-sankey"
-      ],
-      "capabilities": [
-        "flow-sankey-layout",
-        "flow-sankey-layout-twin",
-        "viz-flow-layout",
-        "viz-layout-sankey"
       ]
     },
     {
@@ -1112,45 +911,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-scale"
-      ],
-      "capabilities": [
-        "viz-annotation",
-        "viz-charts-bar",
-        "viz-charts-financial",
-        "viz-charts-polar",
-        "viz-charts-statistical",
-        "viz-guide-axis",
-        "viz-guide-grid",
-        "viz-guide-legend",
-        "viz-matrix-heatmap",
-        "viz-plot-encoding",
-        "viz-plot-grammar",
-        "viz-probe-round-trip",
-        "viz-scale-band",
-        "viz-scale-color",
-        "viz-scale-color-twin",
-        "viz-scale-continuous",
-        "viz-scale-continuous-twin",
-        "viz-scale-discrete",
-        "viz-scale-discrete-twin",
-        "viz-scale-diverging",
-        "viz-scale-identity",
-        "viz-scale-linear",
-        "viz-scale-log",
-        "viz-scale-nice",
-        "viz-scale-ordinal",
-        "viz-scale-point",
-        "viz-scale-pow",
-        "viz-scale-quantile",
-        "viz-scale-quantize",
-        "viz-scale-sequential",
-        "viz-scale-sqrt",
-        "viz-scale-symlog",
-        "viz-scale-temporal",
-        "viz-scale-temporal-twin",
-        "viz-scale-threshold",
-        "viz-scale-ticks",
-        "viz-theme-palettes"
       ]
     },
     {
@@ -1166,12 +926,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-scale-chromatic"
-      ],
-      "capabilities": [
-        "viz-scheme-categorical",
-        "viz-scheme-diverging",
-        "viz-scheme-sequential",
-        "viz-theme-scheme"
       ]
     },
     {
@@ -1188,32 +942,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-shape"
-      ],
-      "capabilities": [
-        "viz-charts-dashboard",
-        "viz-charts-line",
-        "viz-charts-polar",
-        "viz-composition-layer",
-        "viz-coordinate-polar",
-        "viz-layout-stack",
-        "viz-mark-path",
-        "viz-mark-primitive",
-        "viz-shape-arc",
-        "viz-shape-arc-twin",
-        "viz-shape-area",
-        "viz-shape-curve",
-        "viz-shape-curves",
-        "viz-shape-curves-twin",
-        "viz-shape-line",
-        "viz-shape-link",
-        "viz-shape-link-twin",
-        "viz-shape-pie",
-        "viz-shape-pie-layout",
-        "viz-shape-ribbon",
-        "viz-shape-symbol",
-        "viz-shape-symbol-twin",
-        "viz-transform-stack",
-        "viz-transform-stack-twin"
       ]
     },
     {
@@ -1230,12 +958,6 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-time"
-      ],
-      "capabilities": [
-        "viz-scale-temporal-twin",
-        "viz-temporal-axis",
-        "viz-time-interval",
-        "viz-time-ticks"
       ]
     },
     {
@@ -1252,34 +974,21 @@
       "productionReachable": false,
       "oracleIds": [
         "d3-time-format"
-      ],
-      "capabilities": [
-        "viz-format-time",
-        "viz-format-time-twin",
-        "viz-guide-time-axis"
       ]
     },
     {
       "ecosystem": "js",
       "name": "dagre",
-      "version": "^0.8.5",
+      "version": "0.8.5",
       "kinds": [
-        "production-runtime",
-        "repository-tooling"
+        "test-oracle"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true,
+      "productionReachable": false,
       "oracleIds": [
         "dagre"
-      ],
-      "capabilities": [
-        "network-layered-layout",
-        "network-layered-layout-twin",
-        "viz-diagram-layout",
-        "viz-layout-dag"
       ]
     },
     {
@@ -1350,35 +1059,11 @@
         "test-oracle"
       ],
       "users": [
-        "package.json",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "puzzle-2d-fast-json-patch-diff"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "fast-xml-parser",
-      "version": "5.11.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "jszip-fast-xml-parser-bcf-2-1-mutate",
-        "jszip-fast-xml-parser-docx-ecma-376-mutate"
-      ],
-      "capabilities": [
-        "bcf-2-1-mutate-second-implementation",
-        "docx-ecma-376-mutate-second-implementation"
       ]
     },
     {
@@ -1394,29 +1079,6 @@
       "productionReachable": false,
       "oracleIds": [
         "fft-js"
-      ],
-      "capabilities": [
-        "viz-scientific-signal"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "git",
-      "version": "*",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "git-cli",
-        "git-numstat-cli"
-      ],
-      "capabilities": [
-        "repo.metrics.numstat-parsing",
-        "repo.providers.git-version-control"
       ]
     },
     {
@@ -1432,9 +1094,6 @@
       "productionReachable": false,
       "oracleIds": [
         "gl-matrix"
-      ],
-      "capabilities": [
-        "viz-scientific-3d"
       ]
     },
     {
@@ -1445,38 +1104,26 @@
         "test-oracle"
       ],
       "users": [
-        "package.json",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "puzzle-2d-graphology-graph"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
       ]
     },
     {
       "ecosystem": "js",
       "name": "graphql",
-      "version": "16.14.0",
+      "version": "^17.0.2",
       "kinds": [
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔮️oracles/🔣️.json"
+        "package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "graphql-js"
-      ],
-      "capabilities": [
-        "graphql-document-parsing",
-        "graphql-query-execution",
-        "graphql-schema-definition-language",
-        "graphql-syntax-errors",
-        "graphql-variable-coercion"
       ]
     },
     {
@@ -1490,43 +1137,6 @@
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
-    },
-    {
-      "ecosystem": "js",
-      "name": "ignore",
-      "version": "7.0.5",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🔮️oracles/🔣️.json"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "gitignore-js"
-      ],
-      "capabilities": [
-        "repo-workspace-ignore-match"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "Intl.Segmenter",
-      "version": "ecma-402",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "intl-segmenter"
-      ],
-      "capabilities": [
-        "repo-identity-leading-grapheme"
-      ]
     },
     {
       "ecosystem": "js",
@@ -1549,18 +1159,14 @@
         "test-oracle"
       ],
       "users": [
-        "package.json",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "energyplus-25-2-0-direct-epjson",
+        "iso16757-1-python-compliance",
         "puzzle-2d-jsonschema-js-payloads",
         "puzzle-2d-jsonschema-payloads"
-      ],
-      "capabilities": [
-        "energy-model-1-io",
-        "puzzle-2d-1-mutate"
       ]
     },
     {
@@ -1576,38 +1182,6 @@
       "productionReachable": false,
       "oracleIds": [
         "jstat"
-      ],
-      "capabilities": [
-        "viz-scientific-distributions"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "jszip",
-      "version": "3.10.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "jszip-bcf-2-1-mutate-reader",
-        "jszip-docx-ecma-376-mutate-reader",
-        "jszip-fast-xml-parser-bcf-2-1-mutate",
-        "jszip-fast-xml-parser-docx-ecma-376-mutate",
-        "jszip-xmldom-docx-carrier"
-      ],
-      "capabilities": [
-        "bcf-2-1-mutate",
-        "bcf-2-1-mutate-second-implementation",
-        "bcf-2-1-snapshot-mutate",
-        "bcf-2-1-viewpoint-mutate",
-        "document.carrier.docx",
-        "docx-ecma-376-mutate",
-        "docx-ecma-376-mutate-second-implementation",
-        "semio-v1-document-mutate"
       ]
     },
     {
@@ -1651,45 +1225,23 @@
         "manifold-fem3d-mesh-measure",
         "manifold-mesh-measure",
         "manifold3d-three"
-      ],
-      "capabilities": [
-        "fem2d-1-mutate",
-        "fem3d-1-mutate",
-        "mesh.carrier.gltf",
-        "mesh.carrier.obj",
-        "mesh.carrier.ply",
-        "mesh.carrier.stl",
-        "mesh.generate.boolean",
-        "mesh.generate.primitive",
-        "mesh.measure.area",
-        "mesh.measure.volume",
-        "mesh.topology.components",
-        "mesh.topology.genus",
-        "mesh.validity",
-        "semio-v1-mesh-mutate"
       ]
     },
     {
       "ecosystem": "js",
       "name": "markdown-it",
-      "version": "14.3.0",
+      "version": "^15.0.2",
       "kinds": [
         "test-oracle"
       ],
       "users": [
+        "package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "markdown-it"
-      ],
-      "capabilities": [
-        "viz-taxonomy-coverage",
-        "viz-taxonomy-leaf-parse",
-        "viz-taxonomy-parse",
-        "viz-taxonomy-section-parse",
-        "viz-taxonomy-structure"
       ]
     },
     {
@@ -1705,47 +1257,21 @@
       "productionReachable": false,
       "oracleIds": [
         "mathjs"
-      ],
-      "capabilities": [
-        "viz-scientific-function-sampling"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "mdast-util-to-markdown",
-      "version": "2.1.2",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "mdast-to-markdown-md-carrier"
-      ],
-      "capabilities": [
-        "document.carrier.md",
-        "semio-v1-document-mutate"
       ]
     },
     {
       "ecosystem": "js",
       "name": "micromatch",
-      "version": "4.0.8",
+      "version": "^4.0.8",
       "kinds": [
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🔮️oracles/🔣️.json"
+        "package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "micromatch"
-      ],
-      "capabilities": [
-        "repo-workspace-glob-match"
       ]
     },
     {
@@ -1775,47 +1301,6 @@
     },
     {
       "ecosystem": "js",
-      "name": "node:crypto",
-      "version": "builtin",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "node-crypto-repo-coordinator",
-        "node-crypto-repo-events",
-        "node-crypto-sha256"
-      ],
-      "capabilities": [
-        "mcp-event-log-chain",
-        "repo-coordinator-event-checksum",
-        "repo-event-export-content-hash",
-        "repo-event-store-append"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "node:zlib+node:crypto",
-      "version": "runtime",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "node-zlib-crypto"
-      ],
-      "capabilities": [
-        "repo-statutes-breach-cache"
-      ]
-    },
-    {
-      "ecosystem": "js",
       "name": "nx",
       "version": "23.2.0",
       "kinds": [
@@ -1831,12 +1316,11 @@
     {
       "ecosystem": "js",
       "name": "pdfjs-dist",
-      "version": "^6.1.200",
+      "version": "^5.4.296",
       "kinds": [
         "production-runtime"
       ],
       "users": [
-        "temp/merge/print/package.json",
         "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
@@ -1870,6 +1354,18 @@
     },
     {
       "ecosystem": "js",
+      "name": "picomatch",
+      "version": "^4.0.7",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
       "name": "playwright",
       "version": "^1.57.0",
       "kinds": [
@@ -1878,6 +1374,18 @@
       "users": [
         "package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "pngjs",
+      "version": "^7.0.0",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -1964,72 +1472,48 @@
       "name": "rehype-stringify",
       "version": "10.0.1",
       "kinds": [
-        "test-oracle"
+        "repository-tooling"
       ],
       "users": [
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "remark"
-      ],
-      "capabilities": [
-        "presentation-markdown-html"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
       "name": "remark-gfm",
       "version": "4.0.1",
       "kinds": [
-        "test-oracle"
+        "repository-tooling"
       ],
       "users": [
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "remark"
-      ],
-      "capabilities": [
-        "presentation-markdown-html"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
       "name": "remark-parse",
       "version": "11.0.0",
       "kinds": [
-        "test-oracle"
+        "repository-tooling"
       ],
       "users": [
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "remark"
-      ],
-      "capabilities": [
-        "presentation-markdown-html"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
       "name": "remark-rehype",
       "version": "11.1.2",
       "kinds": [
-        "test-oracle"
+        "repository-tooling"
       ],
       "users": [
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "remark"
-      ],
-      "capabilities": [
-        "presentation-markdown-html"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
@@ -2046,60 +1530,6 @@
     },
     {
       "ecosystem": "js",
-      "name": "semio-repo-search-reference",
-      "version": "0.1.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "semio-search-reference-ts"
-      ],
-      "capabilities": [
-        "repo-search-rank"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "semio-repo-test-runner-second-parser",
-      "version": "0.1.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/🧪️tests/📊️result-parsing/🟦️.ts"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "repo-test-runner-second-parser"
-      ],
-      "capabilities": [
-        "repo.test-runner.result-parsing"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "semio-s-plugin-stdio-test-oracle",
-      "version": "*",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🔺️mutate-semio-mesh"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "semio-mesh-typescript-three-independent"
-      ],
-      "capabilities": [
-        "semio-v1-mesh-mutate"
-      ]
-    },
-    {
-      "ecosystem": "js",
       "name": "semver",
       "version": "7.8.5",
       "kinds": [
@@ -2111,9 +1541,6 @@
       "productionReachable": false,
       "oracleIds": [
         "semver"
-      ],
-      "capabilities": [
-        "version-requirement-satisfaction"
       ]
     },
     {
@@ -2124,7 +1551,6 @@
         "production-runtime"
       ],
       "users": [
-        "temp/merge/print/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
@@ -2154,9 +1580,6 @@
       "productionReachable": false,
       "oracleIds": [
         "suncalc"
-      ],
-      "capabilities": [
-        "diagram-solar-position"
       ]
     },
     {
@@ -2189,28 +1612,11 @@
       ],
       "productionReachable": true,
       "oracleIds": [
-        "manifold3d-three",
         "three-carrier-reader",
         "three-fem2d-mesh-reader",
         "three-fem3d-mesh-reader",
         "three-gltf-2-0-mutate-reader",
         "three-obj-3-0-document-reader"
-      ],
-      "capabilities": [
-        "fem2d-1-mutate",
-        "fem3d-1-mutate",
-        "gltf-2-0-mutate",
-        "mesh.carrier.gltf",
-        "mesh.carrier.obj",
-        "mesh.carrier.ply",
-        "mesh.carrier.stl",
-        "mesh.generate.boolean",
-        "mesh.generate.primitive",
-        "mesh.material.pbr",
-        "mesh.texture",
-        "obj-3-0-material-mutate",
-        "obj-3-0-mutate-document",
-        "semio-v1-mesh-mutate"
       ]
     },
     {
@@ -2225,18 +1631,7 @@
         "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true,
-      "oracleIds": [
-        "manifold-mesh-measure"
-      ],
-      "capabilities": [
-        "mesh.measure.area",
-        "mesh.measure.volume",
-        "mesh.topology.components",
-        "mesh.topology.genus",
-        "mesh.validity",
-        "semio-v1-mesh-mutate"
-      ]
+      "productionReachable": true
     },
     {
       "ecosystem": "js",
@@ -2248,7 +1643,6 @@
       ],
       "users": [
         "package.json",
-        "temp/merge/mit-bestand/präsentation/33.projektetage/package.json",
         "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
         "♻️mit-bestand/🧺️demonstrator/package.json",
         "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
@@ -2313,15 +1707,11 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/🔮️oracles/🔣️.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true,
       "oracleIds": [
         "typescript-compiler"
-      ],
-      "capabilities": [
-        "repo-definition-parsing"
       ]
     },
     {
@@ -2349,9 +1739,6 @@
       "productionReachable": false,
       "oracleIds": [
         "remark"
-      ],
-      "capabilities": [
-        "presentation-markdown-html"
       ]
     },
     {
@@ -2362,7 +1749,6 @@
         "repository-tooling"
       ],
       "users": [
-        "temp/merge/mit-bestand/präsentation/33.projektetage/package.json",
         "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
         "♻️mit-bestand/🧺️demonstrator/package.json",
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
@@ -2385,7 +1771,6 @@
       ],
       "users": [
         "package.json",
-        "temp/merge/mit-bestand/präsentation/33.projektetage/package.json",
         "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/package.json",
@@ -2435,122 +1820,6 @@
       "productionReachable": true
     },
     {
-      "ecosystem": "js",
-      "name": "yaml",
-      "version": "2.8.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/🔮️oracles/🔣️.json"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "yaml-js"
-      ],
-      "capabilities": [
-        "repo-yaml-decode"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "yauzl",
-      "version": "3.4.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "yauzl-zip-2-0-base-mutate-reader",
-        "yauzl-zip-2-0-iso21320-mutate-reader"
-      ],
-      "capabilities": [
-        "zip-2-0-iso21320-mutate",
-        "zip-2-0-mutate"
-      ]
-    },
-    {
-      "ecosystem": "js",
-      "name": "yazl",
-      "version": "2.5.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "yazl-zip-2-0-base-mutate-writer",
-        "yazl-zip-2-0-iso21320-mutate-writer"
-      ],
-      "capabilities": [
-        "zip-2-0-mutate"
-      ]
-    },
-    {
-      "ecosystem": "native",
-      "name": "giflib",
-      "version": "6.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "giflib-gif-screen-cli"
-      ],
-      "capabilities": [
-        "gif-87a-mutate-screen",
-        "gif-89a-mutate-screen"
-      ]
-    },
-    {
-      "ecosystem": "native",
-      "name": "libjpeg-turbo",
-      "version": "3.2.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "libjpeg-jpg-jfif-1-01-baseline-marker-cli",
-        "libjpeg-jpg-jfif-1-01-marker-cli"
-      ],
-      "capabilities": [
-        "jpg-jfif-1-01-baseline-mutate",
-        "jpg-jfif-1-01-mutate-libjpeg"
-      ]
-    },
-    {
-      "ecosystem": "native",
-      "name": "libredwg",
-      "version": "0.13.3",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "libredwg-dwg-preamble-cli"
-      ],
-      "capabilities": [
-        "dwg-ac1018-mutate",
-        "dwg-ac1024-mutate"
-      ]
-    },
-    {
       "ecosystem": "python",
       "name": "anastruct",
       "version": ">=1.6.1",
@@ -2563,10 +1832,6 @@
       "productionReachable": false,
       "oracleIds": [
         "anastruct-fem2d-solver"
-      ],
-      "capabilities": [
-        "fem2d-1-analysis",
-        "fem2d-1-mutate"
       ]
     },
     {
@@ -2586,37 +1851,24 @@
       "name": "deepdiff",
       "version": ">=9.1.0",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
-        "pyproject.toml",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "pyproject.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "puzzle-2d-jsonpatch-diff"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "python",
       "name": "honeybee-energy",
       "version": "==1.123.32",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "energyplus-25-2-0-via-honeybee-openstudio"
-      ],
-      "capabilities": [
-        "energy-model-1-simulate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "python",
@@ -2631,9 +1883,6 @@
       "productionReachable": false,
       "oracleIds": [
         "energyplus-25-2-0-via-honeybee-openstudio"
-      ],
-      "capabilities": [
-        "energy-model-1-simulate"
       ]
     },
     {
@@ -2649,9 +1898,6 @@
       "productionReachable": false,
       "oracleIds": [
         "html5lib-html-5-mutate-reader"
-      ],
-      "capabilities": [
-        "html-5-mutate"
       ]
     },
     {
@@ -2662,8 +1908,7 @@
         "test-oracle"
       ],
       "users": [
-        "pyproject.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json"
+        "pyproject.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2672,13 +1917,6 @@
         "ifcopenshell-ifc-2x3-cv20-mutate-reader",
         "ifcopenshell-ifc-2x3-sav-mutate-reader",
         "ifcopenshell-ifc-4-any-differential"
-      ],
-      "capabilities": [
-        "ifc-2x3-base-mutate",
-        "ifc-2x3-cobie-mutate",
-        "ifc-2x3-cv20-mutate",
-        "ifc-2x3-sav-mutate",
-        "ifc-4-any-mutate"
       ]
     },
     {
@@ -2701,15 +1939,11 @@
         "test-oracle"
       ],
       "users": [
-        "pyproject.toml",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "pyproject.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
         "puzzle-2d-jsonpatch-diff"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
       ]
     },
     {
@@ -2721,19 +1955,14 @@
       ],
       "users": [
         "pyproject.toml",
-        "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml",
-        "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
         "energyplus-25-2-0-direct-epjson",
+        "iso16757-1-python-compliance",
         "puzzle-2d-jsonschema-js-payloads",
         "puzzle-2d-jsonschema-payloads"
-      ],
-      "capabilities": [
-        "energy-model-1-io",
-        "puzzle-2d-1-mutate"
       ]
     },
     {
@@ -2753,18 +1982,12 @@
       "name": "ladybug-core",
       "version": "==0.44.59",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "energyplus-25-2-0-via-honeybee-openstudio"
-      ],
-      "capabilities": [
-        "energy-model-1-simulate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "python",
@@ -2781,11 +2004,6 @@
         "lxml-svg-1-1-basic-mutate-reader",
         "lxml-svg-1-1-tiny-mutate-reader",
         "lxml-xml-1-0-valid-mutate-reader"
-      ],
-      "capabilities": [
-        "svg-1-1-basic-mutate",
-        "svg-1-1-tiny-mutate",
-        "xml-1-0-valid-mutate"
       ]
     },
     {
@@ -2813,9 +2031,6 @@
       "productionReachable": false,
       "oracleIds": [
         "mercantile"
-      ],
-      "capabilities": [
-        "web-mercator-tile-selection"
       ]
     },
     {
@@ -2826,15 +2041,11 @@
         "test-oracle"
       ],
       "users": [
-        "pyproject.toml",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "pyproject.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
         "puzzle-2d-networkx-graph"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
       ]
     },
     {
@@ -2854,18 +2065,12 @@
       "name": "numpy",
       "version": ">=2.5.0",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "pyproject.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "example-geometry-scipy"
-      ],
-      "capabilities": [
-        "procedural-3d-1-example-geometry"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "python",
@@ -2882,11 +2087,6 @@
         "openpyxl-xlsx-ecma-376-mutate-reader",
         "openpyxl-xlsx-ecma-376-strict-mutate-reader",
         "openpyxl-xlsx-ecma-376-transitional-mutate-reader"
-      ],
-      "capabilities": [
-        "xlsx-ecma-376-mutate",
-        "xlsx-ecma-376-strict-mutate",
-        "xlsx-ecma-376-transitional-mutate"
       ]
     },
     {
@@ -2894,18 +2094,12 @@
       "name": "openstudio",
       "version": "==3.11.0",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "energyplus-25-2-0-via-honeybee-openstudio"
-      ],
-      "capabilities": [
-        "energy-model-1-simulate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "python",
@@ -2921,48 +2115,6 @@
     },
     {
       "ecosystem": "python",
-      "name": "pillow",
-      "version": "12.2.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "lowpoly-io-png-pillow"
-      ],
-      "capabilities": [
-        "lowpoly-1-io"
-      ]
-    },
-    {
-      "ecosystem": "python",
-      "name": "Pillow",
-      "version": "11.3.0",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "pillow-bmp-v3-header-reader",
-        "pillow-jpg-jfif-1-01-baseline-fixture-generator",
-        "pillow-jpg-jfif-1-01-marker-reader",
-        "pillow-png-1-2-chunk-reader"
-      ],
-      "capabilities": [
-        "bmp-3-mutate-header",
-        "jpg-jfif-1-01-baseline-fixture-generate",
-        "jpg-jfif-1-01-mutate-marker",
-        "png-1-2-mutate-chunk"
-      ]
-    },
-    {
-      "ecosystem": "python",
       "name": "PyNiteFEA",
       "version": ">=1.1.6",
       "kinds": [
@@ -2974,33 +2126,6 @@
       "productionReachable": false,
       "oracleIds": [
         "pynite-fem3d-solver"
-      ],
-      "capabilities": [
-        "fem3d-1-mutate"
-      ]
-    },
-    {
-      "ecosystem": "python",
-      "name": "pypdf",
-      "version": "6.14.2",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "pypdf-pdf-1-4-text",
-        "pypdf-pdf-1-7-encryption-reader"
-      ],
-      "capabilities": [
-        "pdf-1-4-text-extraction",
-        "pdf-1-7-a-mutate-encryption",
-        "pdf-1-7-e-mutate-encryption",
-        "pdf-1-7-vt-mutate-encryption",
-        "pdf-1-7-x-mutate-encryption"
       ]
     },
     {
@@ -3053,10 +2178,6 @@
       "oracleIds": [
         "python-docx-docx-ecma-376-strict-mutate-reader",
         "python-docx-docx-ecma-376-transitional-mutate-reader"
-      ],
-      "capabilities": [
-        "docx-ecma-376-strict-mutate",
-        "docx-ecma-376-transitional-mutate"
       ]
     },
     {
@@ -3074,11 +2195,6 @@
         "python-pptx-pptx-ecma-376-mutate-reader",
         "python-pptx-pptx-ecma-376-strict-mutate-reader",
         "python-pptx-pptx-ecma-376-transitional-mutate-reader"
-      ],
-      "capabilities": [
-        "pptx-ecma-376-mutate",
-        "pptx-ecma-376-strict-mutate",
-        "pptx-ecma-376-transitional-mutate"
       ]
     },
     {
@@ -3106,9 +2222,6 @@
       "productionReachable": false,
       "oracleIds": [
         "skfem-fem3d-solid"
-      ],
-      "capabilities": [
-        "fem3d-1-mutate"
       ]
     },
     {
@@ -3138,11 +2251,6 @@
         "example-geometry-scipy",
         "scipy-fem2d-eigen-reference",
         "scipy-fem3d-eigen"
-      ],
-      "capabilities": [
-        "fem2d-1-analysis",
-        "fem3d-1-mutate",
-        "procedural-3d-1-example-geometry"
       ]
     },
     {
@@ -3165,34 +2273,11 @@
         "test-oracle"
       ],
       "users": [
-        "pyproject.toml",
-        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        "pyproject.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
         "puzzle-2d-shapely-geometry"
-      ],
-      "capabilities": [
-        "puzzle-2d-1-mutate"
-      ]
-    },
-    {
-      "ecosystem": "python",
-      "name": "simplejson",
-      "version": "4.1.1",
-      "kinds": [
-        "test-oracle"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles",
-        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json"
-      ],
-      "productionReachable": false,
-      "oracleIds": [
-        "simplejson-json-rfc8259-i-json-mutate"
-      ],
-      "capabilities": [
-        "json-rfc8259-i-json-mutate"
       ]
     },
     {
@@ -3215,17 +2300,55 @@
         "steputils-step-ap214-cc4-mutate-reader",
         "steputils-step-ap214-cc5-mutate-reader",
         "steputils-step-ap214-cc6-mutate-reader"
-      ],
-      "capabilities": [
-        "ifc-4-any-mutate",
-        "step-ap214-base-mutate",
-        "step-ap214-cc1-mutate",
-        "step-ap214-cc2-mutate",
-        "step-ap214-cc3-mutate",
-        "step-ap214-cc4-mutate",
-        "step-ap214-cc5-mutate",
-        "step-ap214-cc6-mutate"
       ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "acadrust",
+      "version": "0.5.5",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "rust",
+      "name": "accesskit",
+      "version": "0.25.1",
+      "kinds": [
+        "production-runtime"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "accesskit_consumer",
+      "version": "0.39.1",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "rust",
+      "name": "accesskit_winit",
+      "version": "0.34.1",
+      "kinds": [
+        "production-runtime"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": true
     },
     {
       "ecosystem": "rust",
@@ -3314,19 +2437,16 @@
     {
       "ecosystem": "rust",
       "name": "bstr",
-      "version": "1.13.1",
+      "version": "1.13",
       "kinds": [
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
         "bstr-txt-utf-8-mutate-reader"
-      ],
-      "capabilities": [
-        "txt-utf-8-mutate"
       ]
     },
     {
@@ -3360,10 +2480,6 @@
       "oracleIds": [
         "architect-program-xlsx-calamine",
         "xlsx-ecma-376-mutate"
-      ],
-      "capabilities": [
-        "program-1-xlsx-export",
-        "xlsx-ecma-376-mutate"
       ]
     },
     {
@@ -3379,9 +2495,6 @@
       "productionReachable": false,
       "oracleIds": [
         "comrak-md-commonmark-mutate"
-      ],
-      "capabilities": [
-        "md-commonmark-mutate"
       ]
     },
     {
@@ -3393,7 +2506,12 @@
       ],
       "users": [
         "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📊️csv/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
@@ -3403,15 +2521,6 @@
         "csv-rfc4180-equation-1-mutate",
         "csv-rfc4180-mutate",
         "csv-rfc4180-reader",
-        "tsv-iana-mutate"
-      ],
-      "capabilities": [
-        "csv-rfc4180-mutate",
-        "epw-energyplus-mutate",
-        "equation-1-mutate",
-        "equation.carrier.csv",
-        "sequence-1-mutate",
-        "tabular-csv",
         "tsv-iana-mutate"
       ]
     },
@@ -3436,22 +2545,6 @@
         "dxf-crate-r12-mutate",
         "dxf-crate-r12-mutate-reader",
         "ixmilia-dxf-drawing-reader"
-      ],
-      "capabilities": [
-        "cad.carrier.dxf",
-        "drawing.carrier.dxf",
-        "drawing.entities",
-        "drawing.layers",
-        "dxf-r12-blocks-mutate",
-        "dxf-r12-entities-mutate",
-        "dxf-r12-mutate",
-        "dxf-r12-mutate-second-implementation",
-        "dxf-r12-tables-mutate",
-        "note-1-mutate",
-        "note.block.ink.geometry",
-        "note.carrier.dxf",
-        "semio-v1-cad-mutate",
-        "semio-v1-drawing-mutate"
       ]
     },
     {
@@ -3481,10 +2574,6 @@
       "oracleIds": [
         "flate2",
         "flate2-deflate-rfc1950-mutate"
-      ],
-      "capabilities": [
-        "deflate-rfc1950-mutate",
-        "zlib-compression"
       ]
     },
     {
@@ -3531,6 +2620,19 @@
     },
     {
       "ecosystem": "rust",
+      "name": "geojson",
+      "version": "1.0.0",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "rust",
       "name": "getrandom",
       "version": "0.3.4",
       "kinds": [
@@ -3563,23 +2665,12 @@
         "gif-89a-any-mutate",
         "gif-89a-any-mutate-reader",
         "gif-89a-extension-reader"
-      ],
-      "capabilities": [
-        "gif-87a-mutate",
-        "gif-87a-mutate-second-implementation",
-        "gif-89a-application-mutate",
-        "gif-89a-comment-mutate",
-        "gif-89a-graphic-control-mutate",
-        "gif-89a-mutate",
-        "gif-89a-mutate-extension",
-        "gif-89a-mutate-second-implementation",
-        "gif-raster"
       ]
     },
     {
       "ecosystem": "rust",
       "name": "gltf",
-      "version": "1.4",
+      "version": "1.4.1",
       "kinds": [
         "test-oracle"
       ],
@@ -3592,28 +2683,19 @@
       "productionReachable": false,
       "oracleIds": [
         "gltf-rs-2-0-mutate-reader"
-      ],
-      "capabilities": [
-        "gltf-2-0-mutate-resource"
       ]
     },
     {
       "ecosystem": "rust",
-      "name": "hound",
-      "version": "3.5.1",
+      "name": "hayro",
+      "version": "0.4.0",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "hound-wav-riff-pcm-mutate-reader"
-      ],
-      "capabilities": [
-        "wav-riff-pcm-mutate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "rust",
@@ -3628,9 +2710,6 @@
       "productionReachable": false,
       "oracleIds": [
         "html5ever-html-5-mutate"
-      ],
-      "capabilities": [
-        "html-5-mutate"
       ]
     },
     {
@@ -3646,9 +2725,6 @@
       "productionReachable": false,
       "oracleIds": [
         "id3-mpeg1-layer3-mutate"
-      ],
-      "capabilities": [
-        "mp3-mpeg1-layer3-mutate"
       ]
     },
     {
@@ -3664,6 +2740,7 @@
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
@@ -3678,16 +2755,6 @@
         "image-jpeg-jfif-1-01-mutate-reader",
         "image-tiff",
         "image-tiff-6-0-mutate"
-      ],
-      "capabilities": [
-        "bmp-3-mutate",
-        "bmp-3-mutate-second-implementation",
-        "bmp-raster",
-        "jpg-jfif-1-01-mutate",
-        "jpg-jfif-1-01-mutate-second-implementation",
-        "jpg-raster",
-        "tiff-6-0-mutate-second-implementation",
-        "tiff-raster"
       ]
     },
     {
@@ -3746,21 +2813,19 @@
         "json-rust-semio-drawing-carrier-reader",
         "json-rust-semio-envelope-carrier-reader",
         "json-rust-semio-mesh-carrier-reader"
-      ],
-      "capabilities": [
-        "drawing-1-mutate-carrier",
-        "equation-1-mutate-carrier",
-        "fem2d-1-mutate-carrier",
-        "fem3d-1-mutate-carrier",
-        "gltf-2-0-mutate-second-implementation",
-        "json-rfc8259-mutate",
-        "semio-v1-base-mutate",
-        "semio-v1-brep-mutate",
-        "semio-v1-cad-mutate",
-        "semio-v1-document-mutate-carrier",
-        "semio-v1-drawing-mutate",
-        "semio-v1-mesh-mutate"
       ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "json-patch",
+      "version": "4.1.0",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
     },
     {
       "ecosystem": "rust",
@@ -3790,11 +2855,6 @@
       "productionReachable": false,
       "oracleIds": [
         "las-1-0-any-mutate"
-      ],
-      "capabilities": [
-        "las-1-0-any-mutate",
-        "las-1-0-points-mutate",
-        "las-1-0-vlr-mutate"
       ]
     },
     {
@@ -3857,37 +2917,6 @@
         "lopdf-pdf-1-7-vt-mutate-reader",
         "lopdf-pdf-1-7-x-mutate",
         "lopdf-pdf-1-7-x-mutate-reader"
-      ],
-      "capabilities": [
-        "drawing.carrier.pdf",
-        "drawing.text",
-        "note-1-mutate",
-        "note.block.text.content",
-        "note.carrier.pdf",
-        "note.document.title",
-        "pdf-1-4-a-mutate",
-        "pdf-1-4-a-mutate-second-implementation",
-        "pdf-1-4-base-mutate-reader",
-        "pdf-1-4-mutate",
-        "pdf-1-4-x-mutate",
-        "pdf-1-4-x-mutate-second-implementation",
-        "pdf-1-7-a-mutate",
-        "pdf-1-7-a-mutate-second-implementation",
-        "pdf-1-7-e-mutate",
-        "pdf-1-7-e-mutate-second-implementation",
-        "pdf-1-7-h-mutate",
-        "pdf-1-7-h-mutate-second-implementation",
-        "pdf-1-7-mutate",
-        "pdf-1-7-mutate-second-implementation",
-        "pdf-1-7-ua-mutate",
-        "pdf-1-7-ua-mutate-second-implementation",
-        "pdf-1-7-vt-mutate",
-        "pdf-1-7-vt-mutate-second-implementation",
-        "pdf-1-7-x-mutate",
-        "pdf-1-7-x-mutate-second-implementation",
-        "pdf-edit",
-        "pdf-parse",
-        "semio-v1-drawing-mutate"
       ]
     },
     {
@@ -3895,29 +2924,23 @@
       "name": "markup5ever_rcdom",
       "version": "0.39",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "html5ever-html-5-mutate"
-      ],
-      "capabilities": [
-        "html-5-mutate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "rust",
       "name": "miniz_oxide",
-      "version": "0.8",
+      "version": "0.8.9",
       "kinds": [
         "test-runner"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
     },
@@ -3934,10 +2957,19 @@
       "productionReachable": false,
       "oracleIds": [
         "mp4-isobmff-mutate"
-      ],
-      "capabilities": [
-        "mp4-isobmff-mutate"
       ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "naga",
+      "version": "29.0.4",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
     },
     {
       "ecosystem": "rust",
@@ -3965,9 +2997,6 @@
       "productionReachable": false,
       "oracleIds": [
         "num-rational-brep-exact-predicates"
-      ],
-      "capabilities": [
-        "brep.predicate.exact-sign"
       ]
     },
     {
@@ -4012,10 +3041,6 @@
       "oracleIds": [
         "example-geometry-parry3d",
         "io-round-trip-parry3d"
-      ],
-      "capabilities": [
-        "procedural-3d-1-example-geometry",
-        "procedural-3d-1-io"
       ]
     },
     {
@@ -4031,9 +3056,6 @@
       "productionReachable": false,
       "oracleIds": [
         "pdf-writer"
-      ],
-      "capabilities": [
-        "pdf-create"
       ]
     },
     {
@@ -4061,9 +3083,6 @@
       "productionReachable": false,
       "oracleIds": [
         "ply-rs-ply-1-0-mutate"
-      ],
-      "capabilities": [
-        "ply-1-0-mutate"
       ]
     },
     {
@@ -4087,11 +3106,6 @@
         "png",
         "png-png-1-2-mutate",
         "png-png-1-2-mutate-reader"
-      ],
-      "capabilities": [
-        "png-1-2-mutate",
-        "png-1-2-mutate-second-implementation",
-        "png-raster"
       ]
     },
     {
@@ -4132,7 +3146,6 @@
       "oracleIds": [
         "docx-ecma-376-strict-mutate",
         "docx-ecma-376-transitional-mutate",
-        "pptx-ecma-376-mutate",
         "pptx-ecma-376-strict-mutate",
         "pptx-ecma-376-transitional-mutate",
         "quick-xml-1-0-mutate",
@@ -4146,40 +3159,7 @@
         "quick-xml-svg-1-1-tiny-mutate",
         "quick-xml-xml-1-0-valid-mutate",
         "xlsx-ecma-376-strict-mutate",
-        "xlsx-ecma-376-transitional-mutate",
-        "zip-quick-xml-bcf-2-1-mutate",
-        "zip-quick-xml-docx-ecma-376-mutate"
-      ],
-      "capabilities": [
-        "bcf-2-1-mutate-second-implementation",
-        "docx-ecma-376-mutate-second-implementation",
-        "docx-ecma-376-strict-mutate",
-        "docx-ecma-376-transitional-mutate",
-        "drawing-1-mutate",
-        "drawing.carrier.svg",
-        "drawing.hierarchy",
-        "drawing.paint",
-        "drawing.transform",
-        "note-1-mutate",
-        "note.block.image.payload",
-        "note.block.ink.stroke-width",
-        "note.block.text.content",
-        "note.block.transform",
-        "note.block.visibility",
-        "note.carrier.svg",
-        "pptx-ecma-376-mutate",
-        "pptx-ecma-376-strict-mutate",
-        "pptx-ecma-376-transitional-mutate",
-        "semio-v1-drawing-mutate",
-        "svg-1-1-basic-mutate",
-        "svg-1-1-mutate",
-        "svg-1-1-mutate-second-implementation",
-        "svg-1-1-tiny-mutate",
-        "xlsx-ecma-376-strict-mutate",
-        "xlsx-ecma-376-transitional-mutate",
-        "xml-1-0-mutate",
-        "xml-1-0-mutate-second-implementation",
-        "xml-1-0-valid-mutate"
+        "xlsx-ecma-376-transitional-mutate"
       ]
     },
     {
@@ -4220,9 +3200,11 @@
       "name": "resvg",
       "version": "0.45.1",
       "kinds": [
-        "production-runtime"
+        "production-runtime",
+        "test-runner"
       ],
       "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -4256,13 +3238,6 @@
         "riff-avi-1-0-mutate",
         "riff-avi-1-0-mutate-reader",
         "riff-wav-riff-pcm-mutate-chunk-reader"
-      ],
-      "capabilities": [
-        "avi-1-0-idx1-mutate",
-        "avi-1-0-movi-mutate",
-        "avi-1-0-mutate",
-        "avi-1-0-mutate-second-implementation",
-        "wav-riff-pcm-mutate"
       ]
     },
     {
@@ -4308,18 +3283,12 @@
       "name": "rust_xlsxwriter",
       "version": "0.96",
       "kinds": [
-        "test-oracle"
+        "test-runner"
       ],
       "users": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": false,
-      "oracleIds": [
-        "xlsx-ecma-376-mutate"
-      ],
-      "capabilities": [
-        "xlsx-ecma-376-mutate"
-      ]
+      "productionReachable": false
     },
     {
       "ecosystem": "rust",
@@ -4347,23 +3316,6 @@
         "ruststep-step-ap214-cc4-mutate",
         "ruststep-step-ap214-cc5-mutate",
         "ruststep-step-ap214-cc6-mutate"
-      ],
-      "capabilities": [
-        "brep.step.import",
-        "cad.carrier.step",
-        "ifc-2x3-base-mutate",
-        "ifc-2x3-cobie-mutate",
-        "ifc-2x3-cv20-mutate",
-        "ifc-2x3-sav-mutate",
-        "ifc-4-any-mutate",
-        "semio-v1-cad-mutate",
-        "step-ap214-base-mutate",
-        "step-ap214-cc1-mutate",
-        "step-ap214-cc2-mutate",
-        "step-ap214-cc3-mutate",
-        "step-ap214-cc4-mutate",
-        "step-ap214-cc5-mutate",
-        "step-ap214-cc6-mutate"
       ]
     },
     {
@@ -4719,6 +3671,7 @@
         "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
@@ -4750,6 +3703,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml",
@@ -4782,16 +3736,20 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": true
+      "productionReachable": true,
+      "oracleIds": [
+        "serde-json-sequence-carrier-reader"
+      ]
     },
     {
       "ecosystem": "rust",
       "name": "sha2",
-      "version": "0.10",
+      "version": "0.10.9",
       "kinds": [
         "test-runner"
       ],
       "users": [
+        "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
@@ -4846,10 +3804,6 @@
       "oracleIds": [
         "stl-io",
         "stl-io-ascii-mutate"
-      ],
-      "capabilities": [
-        "stl-ascii-mutate",
-        "stl-mesh"
       ]
     },
     {
@@ -4871,7 +3825,6 @@
       "version": "2.0",
       "kinds": [
         "production-build",
-        "production-runtime",
         "test-runner"
       ],
       "users": [
@@ -4883,7 +3836,7 @@
         "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🔮️oracles/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -4903,11 +3856,12 @@
     {
       "ecosystem": "rust",
       "name": "tiff",
-      "version": "0.11.3",
+      "version": "0.11",
       "kinds": [
         "test-oracle"
       ],
       "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -4916,11 +3870,6 @@
         "image-tiff-6-0-mutate-reader",
         "tiff-6-0-byte-order-reader",
         "tiff-tiff-6-0-baseline-mutate-reader"
-      ],
-      "capabilities": [
-        "tiff-6-0-baseline-mutate",
-        "tiff-6-0-mutate",
-        "tiff-6-0-mutate-byte-order"
       ]
     },
     {
@@ -4928,9 +3877,11 @@
       "name": "tiny-skia",
       "version": "0.11.4",
       "kinds": [
-        "production-runtime"
+        "production-runtime",
+        "test-runner"
       ],
       "users": [
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -4953,11 +3904,6 @@
         "tobj",
         "tobj-obj-3-0-mutate",
         "tobj-obj-3-0-mutate-reader"
-      ],
-      "capabilities": [
-        "obj-3-0-mutate",
-        "obj-3-0-mutate-second-implementation",
-        "obj-mesh"
       ]
     },
     {
@@ -4975,6 +3921,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -5204,7 +4151,8 @@
       "name": "wit-bindgen",
       "version": "=0.57.1",
       "kinds": [
-        "production-runtime"
+        "production-runtime",
+        "test-runner"
       ],
       "users": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml",
@@ -5223,9 +4171,12 @@
         "test-runner"
       ],
       "users": [
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -5238,41 +4189,7 @@
         "zip-2-0-mutate",
         "zip-quick-xml-bcf-2-1-mutate",
         "zip-quick-xml-docx-ecma-376-mutate"
-      ],
-      "capabilities": [
-        "bcf-2-1-mutate-second-implementation",
-        "docx-ecma-376-mutate-second-implementation",
-        "pptx-ecma-376-mutate",
-        "program-1-mutate",
-        "zip-2-0-iso21320-mutate",
-        "zip-2-0-mutate",
-        "zip-archive"
       ]
-    },
-    {
-      "ecosystem": "rust",
-      "name": "acadrust",
-      "version": "0.5.5",
-      "kinds": [
-        "test-runner"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml"
-      ],
-      "productionReachable": false
-    },
-    {
-      "ecosystem": "rust",
-      "name": "geojson",
-      "version": "1.0.0",
-      "kinds": [
-        "test-runner"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/Cargo.toml"
-      ],
-      "productionReachable": false
     }
   ]
 }

@@ -4,12 +4,12 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { readRebuildChain, REBUILD_STAGES, selectRebuildSteps } from "../../🔁️rebuild/🟦️.ts";
+import { guestFrameworkCheckArgs, readGuestFrameworkChecks, readRebuildChain, REBUILD_STAGES, selectRebuildSteps } from "../../🔁️rebuild/🟦️.ts";
 
 describe("rebuild-all chain", () => {
   it("declares input gates, descriptors, registry, guests and catalog in dependency order", () => {
     const chain = readRebuildChain();
-    expect(chain.map((step) => step.id)).toEqual(["provenance", "mutation-authority", "components", "generate", "check", "activate-s", "verify-s", "flow-core-bindings", "preflight-catalog", "publish-catalog"]);
+    expect(chain.map((step) => step.id)).toEqual(["provenance", "mutation-authority", "guest-framework", "components", "generate", "check", "activate-s", "verify-s", "flow-core-bindings", "preflight-catalog", "publish-catalog"]);
     expect([...new Set(chain.map((step) => step.stage))]).toEqual([...REBUILD_STAGES]);
     expect(chain.find((step) => step.id === "components")?.command.slice(0, 5)).toEqual(["nx", "run-many", "-t", "describe", "materialize-dev"]);
     expect(chain.findIndex((step) => step.id === "preflight-catalog")).toBe(chain.findIndex((step) => step.id === "publish-catalog") - 1);
@@ -20,12 +20,31 @@ describe("rebuild-all chain", () => {
   it("selects the contiguous range --from/--to name and refuses unknown or inverted bounds", () => {
     const chain = readRebuildChain();
     expect(selectRebuildSteps(chain, []).map((step) => step.id)).toEqual(chain.map((step) => step.id));
-    expect(selectRebuildSteps(chain, ["--to", "verify-s"]).map((step) => step.id)).toEqual(["provenance", "mutation-authority", "components", "generate", "check", "activate-s", "verify-s"]);
+    expect(selectRebuildSteps(chain, ["--to", "verify-s"]).map((step) => step.id)).toEqual(["provenance", "mutation-authority", "guest-framework", "components", "generate", "check", "activate-s", "verify-s"]);
     expect(selectRebuildSteps(chain, ["--from", "generate", "--to", "check"]).map((step) => step.id)).toEqual(["generate", "check"]);
     expect(() => selectRebuildSteps(chain, ["--from", "check", "--to", "generate"])).toThrow(/after --to/);
     expect(() => selectRebuildSteps(chain, ["--to", "nowhere"])).toThrow(/names no step/);
     expect(() => selectRebuildSteps(chain, ["--to", "check", "--to", "generate"])).toThrow(/usage/);
     expect(() => selectRebuildSteps(chain, ["--from"])).toThrow(/usage/);
+  });
+
+  it("checks the guest-linked framework crates for both wasm targets before any component builds", () => {
+    const chain = readRebuildChain();
+    expect(chain.findIndex((step) => step.id === "guest-framework")).toBeLessThan(chain.findIndex((step) => step.id === "components"));
+    const checks = readGuestFrameworkChecks();
+    expect([...new Set(checks.map((check) => check.target))].sort()).toEqual(["wasm32-unknown-unknown", "wasm32-wasip2"]);
+    expect(guestFrameworkCheckArgs(checks[0]!).slice(0, 4)).toEqual(["check", "--lib", "--target", "wasm32-wasip2"]);
+    expect(checks.flatMap((check) => check.packages)).toContain("semio-framework-os-kernel");
+    expect(checks.at(-1)).toEqual({ target: "wasm32-wasip2", packages: ["semio-s-plugin-stdio"], features: [] });
+    const root = mkdtempSync(join(tmpdir(), "rebuild-guest-checks-"));
+    const write = (checks: unknown): string => {
+      const path = join(root, `${Math.random()}.json`);
+      writeFileSync(path, JSON.stringify({ schema: "semio.plugin-registry.rebuild-chain/v1", steps: [], guestFrameworkChecks: checks }));
+      return path;
+    };
+    expect(() => readGuestFrameworkChecks(write([]))).toThrow(/no guestFrameworkChecks/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "x86_64-apple-darwin", packages: ["semio-framework"], features: [] }]))).toThrow(/known target/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", packages: ["semio-framework"], features: ["other-crate/sync"] }]))).toThrow(/crate-qualified/);
   });
 
   it("refuses a chain whose stages run backwards or repeat a step", () => {

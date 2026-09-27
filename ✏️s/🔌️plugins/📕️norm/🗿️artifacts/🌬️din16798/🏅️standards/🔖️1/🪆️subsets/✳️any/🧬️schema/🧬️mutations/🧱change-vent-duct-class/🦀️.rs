@@ -11,6 +11,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeVentDu
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-duct-class", kind: "change-vent-duct-class", record: "ChangeVentDuctClass" };
     fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("change-vent-duct-class", "change-vent-duct-class") }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change duct airtightness class", "Luftdichtheitsklasse der Luftleitungen ändern")
+    }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
 }

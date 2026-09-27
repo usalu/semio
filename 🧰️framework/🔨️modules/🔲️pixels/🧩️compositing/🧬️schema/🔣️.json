@@ -1,0 +1,340 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing.json",
+  "title": "Pixel Compositing",
+  "description": "Straight RGBA8 sRGB, bottom-to-top isolated groups. Matrix [a,b,c,d,e,f] maps local pixel edges to parent coordinates. Masks multiply alpha after layer/group evaluation; adjustments preserve backdrop alpha. Output is unpublished until completion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "origin",
+    "images",
+    "layers"
+  ],
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "origin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "images": {
+      "type": "object",
+      "maxProperties": 1024,
+      "additionalProperties": {
+        "$ref": "#/$defs/Image"
+      }
+    },
+    "layers": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/$defs/Layer"
+      }
+    }
+  },
+  "$defs": {
+    "Image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "pixels"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "Mask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "coverage",
+        "transform",
+        "invert"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "coverage": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "transform": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "invert": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Layer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "opacity",
+            "blend",
+            "visible",
+            "transform",
+            "mask",
+            "kind",
+            "image"
+          ],
+          "properties": {
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blend": {
+              "enum": [
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten",
+                "colorDodge",
+                "colorBurn",
+                "hardLight",
+                "softLight",
+                "difference",
+                "exclusion",
+                "hue",
+                "saturation",
+                "color",
+                "luminosity"
+              ]
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "transform": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "mask": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/Mask"
+                }
+              ]
+            },
+            "kind": {
+              "const": "pixels"
+            },
+            "image": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "opacity",
+            "blend",
+            "visible",
+            "transform",
+            "mask",
+            "kind",
+            "children"
+          ],
+          "properties": {
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blend": {
+              "enum": [
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten",
+                "colorDodge",
+                "colorBurn",
+                "hardLight",
+                "softLight",
+                "difference",
+                "exclusion",
+                "hue",
+                "saturation",
+                "color",
+                "luminosity"
+              ]
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "transform": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "mask": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/Mask"
+                }
+              ]
+            },
+            "kind": {
+              "const": "group"
+            },
+            "children": {
+              "type": "array",
+              "maxItems": 1024,
+              "items": {
+                "$ref": "#/$defs/Layer"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "opacity",
+            "blend",
+            "visible",
+            "transform",
+            "mask",
+            "kind",
+            "brightness",
+            "contrast"
+          ],
+          "properties": {
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blend": {
+              "enum": [
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten",
+                "colorDodge",
+                "colorBurn",
+                "hardLight",
+                "softLight",
+                "difference",
+                "exclusion",
+                "hue",
+                "saturation",
+                "color",
+                "luminosity"
+              ]
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "transform": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "mask": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/Mask"
+                }
+              ]
+            },
+            "kind": {
+              "const": "adjustment"
+            },
+            "brightness": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "contrast": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

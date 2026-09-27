@@ -1,0 +1,6 @@
+"📷️ A revision-addressed request with [minX, minY, maxX, maxY] world bounds and screen-pixel padding."
+type Canvas2dFraming {
+  revision: Float!
+  bounds: [Float!]!
+  padding: Float!
+}

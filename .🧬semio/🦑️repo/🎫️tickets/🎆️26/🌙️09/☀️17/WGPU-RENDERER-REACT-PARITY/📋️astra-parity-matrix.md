@@ -2,7 +2,17 @@
 
 The React renderer is the behavioral and visual reference. A previous source patch or an old green test report does not establish current parity. Each row needs current implementation evidence and the relevant automated/runtime check. Shared schema contradictions must be resolved consistently in both implementations, rather than adding a wgpu compatibility layer.
 
-## Active Checkpoint 17 Gate
+## Active Checkpoint 32 Gate
+
+The goal remains incomplete. Current source work covers retained Stepper/Slider/Field geometry and timing, Commands, exact window-layout identity/maximize reset and incoming roster repair, GraphTimeline multi-author avatars, and accepted-frame clock ownership. The complete WGPU TypeScript suite passed 431 tests in 42 files before the latest isolated animation additions; their actual Chromium oracle separately passed two tests. Focused actual React oracles pass Settings, Commands, maximize/ingress, GraphTimeline authors and browser timer contracts. UI2 reached 88 passing and three failing assertions in its 91-test selection. The three corrections are in source; full UI3 and renderer NativeShell3 remain running. No new full native pass is claimed.
+
+WASM11 failed after its first Cargo renderer pass succeeded: the Trunk pass compiled UI while the caret packet was being edited and reported seven errors without spans. A coherent source checkpoint and a new successful renderer build are still required. The live WGPU tab serves the earlier build and cannot establish acceptance of current source.
+
+The immediate gate is a fresh renderer artifact followed by physical focus/unfocus/close and Window Options/Settings/Commands behavior with console receipts. Generic retained tooltips and Shell hover/notice clocks are in source; exact presented caret clocks and tutorial self-scheduling are being integrated. UI and Shell clock publications have separate owners so a discarded frame cannot erase another timer. GPU uniforms now preserve animation phase at long uptime; accepted-animation wake scheduling remains under audit. Current details are in `📓️astra-retained-control-clock30.md`, `📓️astra-animation-and-discard32.md`, `📓️astra-live-window-options31.md`, and `📓️terra-consolidated-current-parity-audit.md`.
+
+Older census and browser receipts below remain historical checkpoints, not proof that current source is feature-complete or visually identical. The 15 registered surface families still require current app-backed physical acceptance.
+
+## Historical Checkpoint 17 Gate
 
 UI65 passes all 651 tests with zero skips, including physical nested Up/Down disclosure open/re-close after the root scheduling repair reproduced by UI62–63. Native62 executes 1,244 renderer tests: 1,242 pass, two locale-fixture laws fail, zero skip. Native63 then passes both locale laws after the fixture initializes a real app session and its production dock roster; the other 1,242 tests are outside that focused filter. Ink local editing and scoped interactions pass Native62, and a separate UI-scene law passes both serde and DSL strict-envelope checks. Full React census6 passes all 1,905 tests across 95 files. It includes the corrected app-level action ownership law and the unchanged brush-hover assertions moved to the suite that already imports World3dHost. A fresh complete native census is still due after final Draw integration; no earlier green baseline is presented as the current full result.
 

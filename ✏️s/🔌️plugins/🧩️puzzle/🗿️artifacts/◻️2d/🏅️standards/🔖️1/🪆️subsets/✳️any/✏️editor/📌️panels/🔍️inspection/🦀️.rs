@@ -76,7 +76,7 @@ fn stepper_row(fields: &mut UiFixedList<BuiltNode>, row_id: &str, label: &str, e
     }
     let (action, args) = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("patchInspectorNodes", Some(UiValue::Map(args.finish())))?;
     let id = format!("{ROOT}.{row_id}");
-    let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true })).map_err(|_| error("puzzle2d inspector number stepper admission failed"))?;
+    let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true, min: None, max: None })).map_err(|_| error("puzzle2d inspector number stepper admission failed"))?;
     control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| error("puzzle2d inspector number stepper binding admission failed"))?;
     let node = ui::field(ui_label(label)?)
         .try_id(&id)

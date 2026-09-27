@@ -14,10 +14,12 @@ use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::widgets::{draw_text, measure_text_width, WidgetContext};
 
-pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, centered: bool, ctx: &mut WidgetContext<'_, E>) {
     let focused = ctx.input.focused_id.as_deref() == Some(id);
     let border = if focused { ctx.theme.border_emphasized } else { ctx.theme.border_normal };
-    push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg);
+    if !centered {
+        push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg);
+    }
     let (display, muted) = if focused {
         (ctx.input.text_view().to_string(), false)
     } else if value.is_empty() {
@@ -25,10 +27,11 @@ pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<
     } else {
         (value.to_string(), false)
     };
-    draw_text(ctx, &display, bounds.x + 8.0, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, if muted { ctx.theme.text_muted } else { ctx.theme.text });
+    let text_x = bounds.x + if centered { (bounds.w - measure_text_width(ctx, &display, ctx.theme.font_size_body)).max(0.0) * 0.5 } else { 8.0 };
+    draw_text(ctx, &display, text_x, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, if muted { ctx.theme.text_muted } else { ctx.theme.text });
     if focused {
         let cursor = ctx.input.text_view_cursor();
-        let cursor_x = bounds.x + 8.0 + measure_text_width(ctx, &display[..cursor], ctx.theme.font_size_body);
+        let cursor_x = text_x + measure_text_width(ctx, &display[..cursor], ctx.theme.font_size_body);
         ctx.draw.push_solid([cursor_x, bounds.y + 6.0, 1.0, bounds.h - 12.0], ctx.theme.text);
     }
     ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(id.to_string()), kind: HitKind::Input, drag_axis: None, drag_data: None });

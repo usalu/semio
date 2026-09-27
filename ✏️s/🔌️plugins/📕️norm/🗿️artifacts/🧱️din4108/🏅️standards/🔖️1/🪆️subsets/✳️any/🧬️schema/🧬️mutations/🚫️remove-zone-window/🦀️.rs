@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveZoneWind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-zone-window", "remove-zone-window")
+        protocol::LocalizedLabel::native("Remove window", "Fenster entfernen")
     }
 }

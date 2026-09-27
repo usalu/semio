@@ -259,7 +259,9 @@ describe("wgpu runtime mailbox admission", () => {
   it("never ages a checkout with a live owner into a fault", () => {
     const ledger = new InteractionCheckoutLedger();
     ledger.checkOut("frame-deferred");
-    for (let opportunity = 0; opportunity < 100_000; opportunity += 1) expect(ledger.admit(true, false, true)).toBe("deferred");
+    let deferred = 0;
+    for (let opportunity = 0; opportunity < 100_000; opportunity += 1) if (ledger.admit(true, false, true) === "deferred") deferred += 1;
+    expect(deferred).toBe(100_000);
     expect(ledger.takeAbandonedNotice()).toBeNull();
     expect(ledger.opportunities).toBe(100_000);
   });

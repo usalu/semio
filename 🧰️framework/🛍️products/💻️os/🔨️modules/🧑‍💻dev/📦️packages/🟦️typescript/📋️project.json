@@ -292,6 +292,24 @@
         "forwardAllArgs": true
       }
     },
+    "hub-document-sweep": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify hub-sweep",
+        "forwardAllArgs": true
+      }
+    },
+    "tool-run-matrix": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify tool-run",
+        "forwardAllArgs": true
+      }
+    },
     "two-human": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -307,6 +325,33 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify connections",
+        "forwardAllArgs": true
+      }
+    },
+    "idle-budget": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify idle",
+        "forwardAllArgs": true
+      }
+    },
+    "interaction-latency": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify latency",
+        "forwardAllArgs": true
+      }
+    },
+    "memory-soak": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify idle --soak-minutes 30 --windows 10",
         "forwardAllArgs": true
       }
     },

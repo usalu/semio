@@ -46,6 +46,35 @@ fn the_replacement_restarts_the_auto_dismiss_clock() {
 }
 
 #[test]
+fn shell_chrome_deadlines_follow_the_shared_wall_to_monotonic_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⏰️chrome-deadline/🔣️.json")).expect("chrome deadline fixture");
+    assert_eq!(fixture["timing"]["tooltipDwellMs"].as_f64(), Some(CHROME_TOOLTIP_DELAY_MS));
+    assert_eq!(fixture["timing"]["noticeDismissMs"].as_f64(), Some(TRANSIENT_NOTICE_AUTO_DISMISS_MS));
+    for row in fixture["cases"].as_array().expect("deadline cases") {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        if let Some(started_ms) = row["tooltipStartedMs"].as_f64() {
+            shell.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms });
+        }
+        if let Some(shown_at_ms) = row["noticeShownMs"].as_f64() {
+            shell.chrome_build.show_transient_notice(fixture["text"]["notice"].as_str().expect("notice text"), semio_framework::Severity::Info, None, shown_at_ms);
+        }
+        let actual = shell.next_chrome_deadline(row["monotonicNowSeconds"].as_f64().expect("monotonic now"), row["wallNowMs"].as_f64().expect("wall now"));
+        match row["expectedDeadlineSeconds"].as_f64() {
+            Some(expected) => assert!((actual.expect("deadline") - expected).abs() < 0.000_001, "{}", row["id"]),
+            None => assert!(actual.is_none(), "{}", row["id"]),
+        }
+    }
+}
+
+#[test]
+fn shell_chrome_deadline_refuses_non_finite_clock_samples() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms: 1_000.0 });
+    assert!(shell.next_chrome_deadline(f64::NAN, 1_100.0).is_none());
+    assert!(shell.next_chrome_deadline(1.0, f64::INFINITY).is_none());
+}
+
+#[test]
 fn every_severity_takes_a_themed_tone_and_error_and_fatal_share_the_destructive_one() {
     use semio_framework::Severity;
     let theme = Theme::dark();

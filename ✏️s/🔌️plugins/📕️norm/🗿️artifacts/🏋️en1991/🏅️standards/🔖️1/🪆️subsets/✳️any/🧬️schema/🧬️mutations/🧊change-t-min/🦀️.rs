@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeTMin {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-t-min", "change-t-min")
+        protocol::LocalizedLabel::native("Change minimum shade air temperature", "Minimale Außenlufttemperatur ändern")
     }
 }
 //#endregion 🔖️Payload

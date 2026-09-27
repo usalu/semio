@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireTherma
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fire-thermal-inertia", "change-fire-thermal-inertia")
+        protocol::LocalizedLabel::native("Change thermal inertia of the enclosure", "Thermische Trägheit der Umfassungsbauteile ändern")
     }
 }
 //#endregion 🔖️Payload

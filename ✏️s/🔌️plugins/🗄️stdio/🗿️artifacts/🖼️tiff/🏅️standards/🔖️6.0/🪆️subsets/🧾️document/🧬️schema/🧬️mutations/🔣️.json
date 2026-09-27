@@ -99,6 +99,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-tag/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/set-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

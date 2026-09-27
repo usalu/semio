@@ -1,0 +1,273 @@
+{
+  "images": {
+    "paint": {
+      "width": 3,
+      "height": 1,
+      "pixels": [
+        255,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    "coverage": {
+      "width": 3,
+      "height": 1,
+      "pixels": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        128,
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "Linked Pixel Mask",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "paint",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 1.5,
+            "y": 0.5,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
+          },
+          "width": 3,
+          "height": 1,
+          "imageKey": "paint",
+          "mask": {
+            "enabled": true,
+            "linked": true,
+            "invert": false,
+            "width": 3,
+            "height": 1,
+            "imageKey": "coverage",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            }
+          }
+        }
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "alpha": [
+        255,
+        128,
+        0
+      ],
+      "svgMaskX": 0,
+      "opacity": 1,
+      "invert": false
+    },
+    {
+      "name": "Unlinked Pixel Mask",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "paint",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 2.5,
+            "y": 0.5,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
+          },
+          "width": 3,
+          "height": 1,
+          "imageKey": "paint",
+          "mask": {
+            "enabled": true,
+            "linked": false,
+            "invert": false,
+            "width": 3,
+            "height": 1,
+            "imageKey": "coverage",
+            "transform": {
+              "x": 1.5,
+              "y": 0.5,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            }
+          }
+        }
+      ],
+      "origin": [
+        1,
+        0
+      ],
+      "alpha": [
+        128,
+        0,
+        0
+      ],
+      "svgMaskX": -1,
+      "opacity": 1,
+      "invert": false
+    },
+    {
+      "name": "Inverted Unlinked Mask",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "paint",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 2.5,
+            "y": 0.5,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
+          },
+          "width": 3,
+          "height": 1,
+          "imageKey": "paint",
+          "mask": {
+            "enabled": true,
+            "linked": false,
+            "invert": true,
+            "width": 3,
+            "height": 1,
+            "imageKey": "coverage",
+            "transform": {
+              "x": 1.5,
+              "y": 0.5,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            }
+          }
+        }
+      ],
+      "origin": [
+        1,
+        0
+      ],
+      "alpha": [
+        127,
+        255,
+        255
+      ],
+      "svgMaskX": -1,
+      "opacity": 1,
+      "invert": true
+    },
+    {
+      "name": "Isolated Group Mask",
+      "layers": [
+        {
+          "kind": "group",
+          "id": "group",
+          "visible": true,
+          "opacity": 0.5,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
+          },
+          "mask": {
+            "enabled": true,
+            "linked": true,
+            "invert": false,
+            "width": 3,
+            "height": 1,
+            "imageKey": "coverage",
+            "transform": {
+              "x": 1.5,
+              "y": 0.5,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            }
+          },
+          "children": [
+            {
+              "kind": "pixel",
+              "id": "paint",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 1.5,
+                "y": 0.5,
+                "scaleX": 1,
+                "scaleY": 1,
+                "rotation": 0
+              },
+              "width": 3,
+              "height": 1,
+              "imageKey": "paint",
+              "mask": null
+            },
+            {
+              "kind": "pixel",
+              "id": "second",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 1.5,
+                "y": 0.5,
+                "scaleX": 1,
+                "scaleY": 1,
+                "rotation": 0
+              },
+              "width": 3,
+              "height": 1,
+              "imageKey": "paint",
+              "mask": null
+            }
+          ]
+        }
+      ],
+      "origin": [
+        0,
+        0
+      ],
+      "alpha": [
+        128,
+        64,
+        0
+      ],
+      "svgMaskX": 0,
+      "opacity": 0.5,
+      "invert": false
+    }
+  ]
+}

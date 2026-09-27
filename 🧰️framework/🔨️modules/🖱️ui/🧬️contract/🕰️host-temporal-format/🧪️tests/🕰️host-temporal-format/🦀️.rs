@@ -3,6 +3,12 @@ use super::*;
 #[test]
 fn shared_fixture_reply_is_exact_and_strict() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("temporal fixture");
+    for value in fixture["isoGrammar"]["valid"].as_array().expect("valid ISO grammar cases") {
+        assert!(is_host_temporal_iso_v1(value.as_str().unwrap()), "{value}");
+    }
+    for value in fixture["isoGrammar"]["invalid"].as_array().expect("invalid ISO grammar cases") {
+        assert!(!is_host_temporal_iso_v1(value.as_str().unwrap()), "{value}");
+    }
     let row = &fixture["cases"][0];
     let values = serde_json::from_value(row["values"].clone()).expect("temporal values");
     let request = HostTemporalFormatRequestV1 { now_ms: row["nowMs"].as_i64().expect("now"), values };

@@ -166,7 +166,7 @@ fn label_bytes(label: &Option<crate::Label>) -> usize {
 fn component_is_finite(component: &crate::Component) -> bool {
     match component {
         crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().all(f64::is_finite),
-        crate::Component::NumberStepper(props) => [props.value, props.step].into_iter().all(f64::is_finite),
+        crate::Component::NumberStepper(props) => [Some(props.value), Some(props.step), props.min, props.max].into_iter().flatten().all(f64::is_finite) && props.min.zip(props.max).is_none_or(|(min, max)| min <= max),
         crate::Component::Ring(props) => props.t.is_finite(),
         crate::Component::Progress(props) => props.completed.is_finite() && props.total.is_none_or(f64::is_finite),
         crate::Component::Input(props) => [props.min, props.max, props.step].into_iter().flatten().all(|value| value.is_finite()),
@@ -182,9 +182,7 @@ fn is_section(component: &crate::Component) -> bool {
 /// 🎛️ Maximum independently actionable Buttons one inline Tree toolbar may own.
 pub const TREE_INLINE_TOOLBAR_BUTTONS: usize = 4;
 
-fn tree_inline_toolbar_is_valid<'a>(record: &crate::UiNodeRecord, mut get: impl FnMut(crate::UiNodeId) -> Option<&'a crate::UiNodeRecord>) -> bool {
-    let crate::Component::TreeItem(props) = &record.component else { return true };
-    let Some(toolbar_id) = props.inline_toolbar else { return true };
+fn tree_toolbar_is_valid<'a>(record: &crate::UiNodeRecord, toolbar_id: crate::UiNodeId, mut get: impl FnMut(crate::UiNodeId) -> Option<&'a crate::UiNodeRecord>) -> bool {
     if !record.children.iter().any(|child| *child == toolbar_id) {
         return false;
     }
@@ -197,6 +195,16 @@ fn tree_inline_toolbar_is_valid<'a>(record: &crate::UiNodeRecord, mut get: impl 
         return false;
     }
     toolbar.children.iter().all(|button_id| get(*button_id).is_some_and(|button| matches!(&button.component, crate::Component::Button(_)) && button.children.is_empty()))
+}
+
+fn tree_inline_toolbar_is_valid<'a>(record: &crate::UiNodeRecord, get: impl FnMut(crate::UiNodeId) -> Option<&'a crate::UiNodeRecord>) -> bool {
+    let crate::Component::TreeItem(props) = &record.component else { return true };
+    props.inline_toolbar.is_none_or(|toolbar| tree_toolbar_is_valid(record, toolbar, get))
+}
+
+fn tree_section_header_toolbar_is_valid<'a>(record: &crate::UiNodeRecord, get: impl FnMut(crate::UiNodeId) -> Option<&'a crate::UiNodeRecord>) -> bool {
+    let crate::Component::TreeSection(props) = &record.component else { return true };
+    props.header_toolbar.is_none_or(|toolbar| tree_toolbar_is_valid(record, toolbar, get))
 }
 
 fn tree_detail_is_valid<'a>(record: &crate::UiNodeRecord, mut get: impl FnMut(crate::UiNodeId) -> Option<&'a crate::UiNodeRecord>) -> bool {
@@ -257,6 +265,12 @@ pub enum UiContractViolation {
     /// 🎛️ A Tree row's `inline_toolbar` is not its own direct horizontal Toolbar child, or
     /// the Toolbar does not own one to four direct leaf Buttons.
     InvalidTreeInlineToolbar {
+        node: crate::UiNodeId,
+        toolbar: crate::UiNodeId,
+    },
+    /// 🎛️ A Tree section's `header_toolbar` is not its direct horizontal Toolbar child, or the
+    /// Toolbar does not own one to four direct leaf Buttons.
+    InvalidTreeSectionHeaderToolbar {
         node: crate::UiNodeId,
         toolbar: crate::UiNodeId,
     },
@@ -380,6 +394,13 @@ fn validate_core<'a>(
                             }
                             if let Some(detail) = props.detail.filter(|_| !tree_detail_is_valid(record, &mut get)) {
                                 if violations.try_push(UiContractViolation::InvalidTreeDetail { node: id, detail }).is_err() {
+                                    return violations;
+                                }
+                            }
+                        }
+                        if let crate::Component::TreeSection(props) = &record.component {
+                            if let Some(toolbar) = props.header_toolbar.filter(|_| !tree_section_header_toolbar_is_valid(record, &mut get)) {
+                                if violations.try_push(UiContractViolation::InvalidTreeSectionHeaderToolbar { node: id, toolbar }).is_err() {
                                     return violations;
                                 }
                             }
@@ -934,6 +955,11 @@ impl UiPatchApplyProducer {
                     }
                     if let Some(detail) = props.detail.filter(|_| !tree_detail_is_valid(record, |id| draft.nodes.get(&id))) {
                         return self.reject_violation(UiContractViolation::InvalidTreeDetail { node: frame.id, detail });
+                    }
+                }
+                if let crate::Component::TreeSection(props) = &record.component {
+                    if let Some(toolbar) = props.header_toolbar.filter(|_| !tree_section_header_toolbar_is_valid(record, |id| draft.nodes.get(&id))) {
+                        return self.reject_violation(UiContractViolation::InvalidTreeSectionHeaderToolbar { node: frame.id, toolbar });
                     }
                 }
                 if frame.depth > self.limits.max_depth {

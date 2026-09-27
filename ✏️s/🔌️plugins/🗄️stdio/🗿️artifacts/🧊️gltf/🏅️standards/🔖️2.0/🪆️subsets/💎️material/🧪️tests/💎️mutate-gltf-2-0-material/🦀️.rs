@@ -200,8 +200,14 @@ mod subject {
             "delete-sampler" => delete_sampler::apply(&delete_sampler::GltfDeleteSamplerPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
             "move-sampler" => move_sampler::apply(&move_sampler::GltfMoveSamplerPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
             "reorder-samplers" => reorder_samplers::apply(&reorder_samplers::GltfReorderSamplersPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "change-material-alpha-mode" => change_material_alpha_mode::apply(&change_material_alpha_mode::GltfChangeMaterialAlphaModePayload { material: num(params, "material")?, alpha_mode: alpha_mode(params, "alphaMode")? }, before).map_err(|error| error.detail),
-            "change-material-double-sided" => change_material_double_sided::apply(&change_material_double_sided::GltfChangeMaterialDoubleSidedPayload { material: num(params, "material")?, double_sided: boolean(params, "doubleSided")? }, before).map_err(|error| error.detail),
+            "change-material-alpha-mode" => {
+                let mut next = before.clone();
+                change_material_alpha_mode::apply(&mut next, &change_material_alpha_mode::GltfChangeMaterialAlphaModePayload { material: num(params, "material")?, alpha_mode: alpha_mode(params, "alphaMode")? }).map(|()| next).map_err(|error| error.detail)
+            }
+            "change-material-double-sided" => {
+                let mut next = before.clone();
+                change_material_double_sided::apply(&mut next, &change_material_double_sided::GltfChangeMaterialDoubleSidedPayload { material: num(params, "material")?, double_sided: boolean(params, "doubleSided")? }).map(|()| next).map_err(|error| error.detail)
+            }
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }
@@ -270,7 +276,14 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
+    }
+
+    /// 📦️ The produced document as the `actual-gltf` artifact the `gltf-2-0-three-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-gltf", "actual.gltf")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf+json"))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
@@ -292,7 +305,7 @@ mod subject {
         };
         let bytes = serialize_gltf_document(&restored);
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
     //#endregion 🔖️Handlers
 }

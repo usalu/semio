@@ -10,7 +10,7 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{apply_transformation_mutations, ids_or_selection, rotate_objects_mutations, scale_objects_mutations, translate_objects_mutations};
 use crate::op::CadMutation;
 use crate::CadSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️TranslateSelection
@@ -93,8 +93,14 @@ pub mod apply_transformation {
         pub qid: String,
     }
 
+    /// 🔄️ Refused by name while baking into composed pane models is unimplemented (`apply_transformation_mutations`
+    /// has nothing to bake into since the composable-artifact migration) — never an empty success.
     pub fn handle(payload: &ApplyTransformation, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::mutations(apply_transformation_mutations(doc.snapshot, &payload.qid)))
+        let mutations = apply_transformation_mutations(doc.snapshot, &payload.qid);
+        if mutations.is_empty() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.apply-transformation-unavailable"), format!("applyTransformation cannot bake \"{}\": composed pane models accept no baked transformation yet", payload.qid)));
+        }
+        Ok(Emit::mutations(mutations))
     }
 }
 //#endregion 🔖️ApplyTransformation

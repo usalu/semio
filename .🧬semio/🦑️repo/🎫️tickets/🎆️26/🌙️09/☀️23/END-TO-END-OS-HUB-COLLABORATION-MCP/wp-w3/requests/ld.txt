@@ -1,2 +1,5 @@
 semio-framework-os-kernel — LD item 1: store announces only the ops a coalesced batched gesture appended (guest store re-announce fix; unblocks collab-e2e writer typing). Every guest links it.
 semio-framework-replication — LD item 1: new `mutation_envelopes_from_edit_since` (range encoder used by the kernel store). Every guest links it.
+semio-framework-replication — LD item 2: MutationEnvelope gains `observed` + `target` (record/batch codec change; every guest links it; hubs need fresh data roots, rule 23).
+semio-framework-os-kernel — LD item 2: store stamps `observed`; app-channel envelope writer; `Mutation::conflict_target` via derive (every guest).
+semio-s-artifact-writer-writer — LD item 2: the four document leaves declare their `target` field.

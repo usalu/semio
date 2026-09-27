@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloK {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-silo-k", "change-silo-k")
+        protocol::LocalizedLabel::native("Change lateral pressure ratio K", "Horizontallastverhältnis K ändern")
     }
 }
 //#endregion 🔖️Payload

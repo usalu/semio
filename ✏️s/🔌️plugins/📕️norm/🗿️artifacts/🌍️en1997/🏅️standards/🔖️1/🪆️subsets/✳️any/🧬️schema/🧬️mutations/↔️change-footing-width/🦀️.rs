@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeFootingWid
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-footing-width", "change-footing-width")
+        protocol::LocalizedLabel::native("Change footing width", "Fundamentbreite ändern")
     }
 }

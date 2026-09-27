@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeEnSk {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-en-sk", "change-en-sk")
+        protocol::LocalizedLabel::native("Change characteristic ground snow load (EN)", "Charakteristische Schneelast auf dem Boden (EN) ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -1,0 +1,30 @@
+{
+  "schema": "semio.renderer.dock-tab-keyboard.v1",
+  "projection": {
+    "windowId": "shell.chrome",
+    "windowGeneration": 7,
+    "nodes": [
+      { "nodeId": 1, "key": "a", "role": "tabpanel", "depth": 0, "label": "Left view", "live": "off", "focusable": false, "tabbable": false, "actionable": false },
+      { "nodeId": 2, "key": "dock.tab.0.a", "role": "tab", "depth": 0, "label": "A", "live": "off", "focusable": true, "tabbable": true, "actionable": true, "selected": true, "controls": "a" },
+      { "nodeId": 3, "key": "dock.tab.0.b", "role": "tab", "depth": 0, "label": "B", "live": "off", "focusable": true, "tabbable": false, "actionable": true, "selected": false, "controls": "a" },
+      { "nodeId": 4, "key": "dock.tab.0.c", "role": "tab", "depth": 0, "label": "C", "live": "off", "focusable": true, "tabbable": false, "actionable": true, "selected": false, "controls": "a" },
+      { "nodeId": 5, "key": "d", "role": "tabpanel", "depth": 0, "label": "Right view", "live": "off", "focusable": false, "tabbable": false, "actionable": false },
+      { "nodeId": 6, "key": "dock.tab.1.d", "role": "tab", "depth": 0, "label": "D", "live": "off", "focusable": true, "tabbable": true, "actionable": true, "selected": true, "controls": "d" },
+      { "nodeId": 7, "key": "dock.tab.1.e", "role": "tab", "depth": 0, "label": "E", "live": "off", "focusable": true, "tabbable": false, "actionable": true, "selected": false, "controls": "d" }
+    ]
+  },
+  "stacks": [
+    { "id": "left", "panel": "a", "active": "a", "tabs": ["a", "b", "c"] },
+    { "id": "right", "panel": "d", "active": "d", "tabs": ["d", "e"] }
+  ],
+  "cases": [
+    { "id": "left-wrap", "stack": "left", "from": "a", "key": "ArrowLeft", "focus": "c", "activate": null },
+    { "id": "right-wrap", "stack": "left", "from": "c", "key": "ArrowRight", "focus": "a", "activate": null },
+    { "id": "home", "stack": "left", "from": "c", "key": "Home", "focus": "a", "activate": null },
+    { "id": "end", "stack": "left", "from": "a", "key": "End", "focus": "c", "activate": null },
+    { "id": "enter", "stack": "left", "from": "b", "key": "Enter", "focus": "b", "activate": "b" },
+    { "id": "space", "stack": "right", "from": "e", "key": " ", "focus": "e", "activate": "e" }
+  ],
+  "stale": { "node": "dock.tab.0.b", "generation": 6 }
+}
+

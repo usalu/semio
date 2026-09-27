@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeThermalEle
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-thermal-element-type", "change-thermal-element-type")
+        protocol::LocalizedLabel::native("Change element type for thermal actions", "Bauteiltyp für Temperatureinwirkungen ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -45,21 +45,28 @@ fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
 /// `TransactionPrepare.prepared_ops` shape (`Vec<Vec<u8>>`, one element per complete op payload,
 /// never a single stream). `Emit` returns this from `PureCommand`; `TransactionPrepare` sends the
 /// SAME bytes back unmodified — this adapter never decodes an individual op's contents.
+/// `children` is the composing guest's owned-child share of the same gesture (`AppFrame::Emit.child_ops`, the guest's
+/// `ChildEmit` wire pack) — carried from `Emit` to `TransactionPrepare` byte for byte, never decoded here; empty when the
+/// gesture touches no owned child. The shell route's deferred plan never produces it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct PreparedOps {
     pub document: Vec<Vec<u8>>,
     pub config: Vec<Vec<u8>>,
     pub draft: Vec<Vec<u8>>,
+    #[serde(default)]
+    #[value(default)]
+    pub children: Vec<u8>,
 }
 
 impl PreparedOps {
     fn op_counts(&self) -> serde_json::Value {
-        serde_json::json!({ "document": self.document.len(), "config": self.config.len(), "draft": self.draft.len() })
+        serde_json::json!({ "document": self.document.len(), "config": self.config.len(), "draft": self.draft.len(), "childOpBytes": self.children.len() })
     }
 
-    /// 📭️ Whether the preview produced no operation in any lane: nothing to prepare, commit or undo.
+    /// 📭️ Whether the preview produced no operation in any lane and touched no owned child: nothing to prepare,
+    /// commit or undo.
     pub fn is_empty(&self) -> bool {
-        self.document.is_empty() && self.config.is_empty() && self.draft.is_empty()
+        self.document.is_empty() && self.config.is_empty() && self.draft.is_empty() && self.children.is_empty()
     }
 }
 
@@ -422,12 +429,13 @@ struct MockInstanceState {
     force_commit_fault: Option<Fault>,
     force_undo_fails: bool,
     empty_preview: bool,
+    child_preview: Option<Vec<u8>>,
 }
 
 #[cfg(test)]
 impl MockInstanceState {
     fn new(instance: u32) -> Self {
-        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false, empty_preview: false }
+        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false, empty_preview: false, child_preview: None }
     }
 
     fn revision(&self) -> RevisionStamp {
@@ -447,9 +455,10 @@ impl MockInstanceState {
         match command {
             AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
             AppCommand::PureCommand { .. } if self.empty_preview => AppFrame::Emit { ops: PreparedOps::default(), warnings: Vec::new() },
+            AppCommand::PureCommand { .. } if self.child_preview.is_some() => AppFrame::Emit { ops: PreparedOps { children: self.child_preview.clone().unwrap_or_default(), ..PreparedOps::default() }, warnings: Vec::new() },
             AppCommand::PureCommand { capability_id, input } => {
                 let payload = serde_json::to_vec(&serde_json::json!({ "capabilityId": capability_id, "input": input })).unwrap_or_default();
-                AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new() }, warnings: Vec::new() }
+                AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new() }
             }
             AppCommand::TransactionPrepare { txn_id, ops, .. } => {
                 if self.force_budget_exceeded {
@@ -577,6 +586,11 @@ impl MockArtifactChannel {
     /// 📭️ Every later preview on `instance` produces no operation, as a guest verb that changes nothing does.
     pub fn force_empty_preview(&self, instance: u32) {
         self.with_instance(instance, |state| state.empty_preview = true);
+    }
+
+    /// 🧩️ Every later preview on `instance` edits only owned children, carrying `children` as the guest's child groups.
+    pub fn force_child_preview(&self, instance: u32, children: Vec<u8>) {
+        self.with_instance(instance, |state| state.child_preview = Some(children));
     }
 }
 

@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueDet
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fatigue-details", "change-fatigue-details")
+        protocol::LocalizedLabel::native("Change fatigue detail categories", "Kerbfälle ändern")
     }
 }

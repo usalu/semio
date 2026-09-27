@@ -332,8 +332,9 @@ export async function hubProbeOpenPlan(origin: string, token: string, spaceId: s
   return hubProbeCall(origin, "POST", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, token, JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, clientInstanceId: client }));
 }
 
-/** 📡️ One open document socket: its Welcome frame, chained opaque edits and close. */
-export type HubProbeDocument = Readonly<{ welcome: any; edit: (index: number, previous: string) => Promise<string>; close: () => void }>;
+/** 📡️ One open document socket: its Welcome frame, chained opaque edits, how many server frames this tree's wire codec
+ * could not decode (a hub built from another tree), and close. */
+export type HubProbeDocument = Readonly<{ welcome: any; edit: (index: number, previous: string) => Promise<string>; undecodableFrames: () => number; close: () => void }>;
 
 /** 📡️ Opens one document over the plan → socket grant → socket hello path and answers once it is welcomed. */
 export async function hubProbeOpenDocument(origin: string, token: string, spaceId: string, documentId: string, client: string): Promise<HubProbeDocument> {
@@ -347,9 +348,16 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
   socket.binaryType = "arraybuffer";
   const frames: any[] = [];
   const waiters: ((frame: any) => void)[] = [];
+  let undecodable = 0;
   socket.addEventListener("message", (event) => {
     if (!(event.data instanceof ArrayBuffer)) return;
-    const frame = decodeServerFrame(new Uint8Array(event.data)).frame as any;
+    let frame: any;
+    try {
+      frame = decodeServerFrame(new Uint8Array(event.data)).frame;
+    } catch {
+      undecodable += 1;
+      return;
+    }
     if ("Commands" in frame || "Presence" in frame) return;
     frames.push(frame);
     for (const waiter of [...waiters]) waiter(frame);
@@ -380,7 +388,7 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
     if (!JSON.stringify(acked.Ack.stages).includes("Accepted")) throw new Error(`edit ${index} not accepted: ${JSON.stringify(acked.Ack)}`);
     return mutationId;
   };
-  return { welcome: welcome.Welcome, edit, close: () => socket.close(1000, "probe") };
+  return { welcome: welcome.Welcome, edit, undecodableFrames: () => undecodable, close: () => socket.close(1000, "probe") };
 }
 //#endregion 🔖️ProbeClient
 

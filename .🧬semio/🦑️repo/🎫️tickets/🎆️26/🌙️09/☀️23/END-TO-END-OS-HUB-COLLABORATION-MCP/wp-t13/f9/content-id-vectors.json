@@ -1,0 +1,25 @@
+{
+  "_comment": "🆔️ `store::content_id` vectors computed by Python's hashlib (third-party SHA-256).",
+  "vectors": [
+    {
+      "prefix": "catalog",
+      "text": "[]",
+      "id": "catalog-4f53cda18c2baa0c"
+    },
+    {
+      "prefix": "note-text",
+      "text": "block-1\u001f[{\"text\":\"Hallo\"}]",
+      "id": "note-text-700551871999c4d6"
+    },
+    {
+      "prefix": "document",
+      "text": "{\"schema\":\"s.stdio.semio.document\",\"text\":\"ä€😀\"}",
+      "id": "document-c91eb193d2f5fac7"
+    },
+    {
+      "prefix": "x",
+      "text": "",
+      "id": "x-e3b0c44298fc1c14"
+    }
+  ]
+}

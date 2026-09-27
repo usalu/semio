@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertZone {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-zone", "insert-zone")
+        protocol::LocalizedLabel::native("Insert zone", "Zone einfügen")
     }
 }

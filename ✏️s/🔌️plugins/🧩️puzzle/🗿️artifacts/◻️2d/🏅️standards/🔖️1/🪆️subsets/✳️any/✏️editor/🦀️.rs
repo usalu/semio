@@ -5049,8 +5049,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(crate::editor::puzzle2d::config::schema::app_schema_descriptor())
     }
 
+    /// 🚀️ The empty fixture, nothing else. The example documents are `LazyLock`s the example load forces
+    /// when it is actually switched to: warming them here parsed the Concrete Forest and Nakagin documents on
+    /// every construction of this app — every mount, and every `codec` call of a hub creating or validating a
+    /// document, where the interpreter paid for two documents the snapshot never reads.
     fn initial_snapshot() -> Puzzle2dPlaySnapshot {
-        set_active_example::warm_examples();
         Puzzle2dPlaySnapshot::new(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
     }
 

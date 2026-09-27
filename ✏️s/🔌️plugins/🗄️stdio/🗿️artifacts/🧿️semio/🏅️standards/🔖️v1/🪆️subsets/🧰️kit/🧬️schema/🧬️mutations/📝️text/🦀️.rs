@@ -7,6 +7,7 @@ pub use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
 use crate::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::standards::v1::subsets::kit::schema::mutations::{
+    set_snapshot::SetSnapshot,
     add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel, create_object::CreateObject, create_properties::CreateProperties,
     delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign, remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
 };
@@ -44,8 +45,15 @@ fn dec_connections(s: &str) -> Result<Vec<crate::standards::v1::subsets::kit::sc
 
 //#region 🔖️OpText
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
+fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
+    if !value.len().is_multiple_of(2) { return Err("snapshot payload has odd hexadecimal length".into()); }
+    (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+}
+
 fn print_kit_mutation(m: &SemioKitMutation) -> String {
     match m {
+        SemioKitMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioKitMutation::CreateObject(p) => format!("createObject:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
         SemioKitMutation::DeleteObject(p) => format!("deleteObject:{}", enc_str(&p.child_id)),
         SemioKitMutation::CreateModel(p) => format!("createModel:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
@@ -66,6 +74,13 @@ fn print_kit_mutation(m: &SemioKitMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
+    if let Some(payload) = line.strip_prefix("setSnapshot:") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioKitMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     if line == "deleteProperties" {
         return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
     }

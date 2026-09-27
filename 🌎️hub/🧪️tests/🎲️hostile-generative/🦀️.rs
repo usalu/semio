@@ -202,14 +202,16 @@ fn case_request(route: &HostileRouteV1, mutations: &[HostileMutationV1], bearer:
     (method, target, headers.into_iter().filter(|(_, value)| !value.contains('\u{0}') && !value.contains('\r') && !value.contains('\n')).collect(), body, credentialed)
 }
 
-/// ⚖️ Judges one answer with the fixed oracle.
-fn judge_generated(answer: &Result<RawHttpResponse, String>, route: &HostileRouteV1, credentialed: bool, maximum: u16, unavailable: u16) -> Option<HostileFindingV1> {
+/// ⚖️ Judges one answer with the fixed oracle. A CORS preflight (`OPTIONS`) is answered before any credential is
+/// read — browsers never send one with it — so its success is no bypass as long as it discloses nothing (an empty body).
+fn judge_generated(answer: &Result<RawHttpResponse, String>, method: &str, route: &HostileRouteV1, credentialed: bool, maximum: u16, unavailable: u16) -> Option<HostileFindingV1> {
     let response = match answer {
         Ok(response) => response,
         Err(_) => return Some(HostileFindingV1::Dropped),
     };
     if response.status < 400 {
-        return (!credentialed && route.public.is_none()).then_some(HostileFindingV1::CredentialBypassed);
+        let preflight = method == "OPTIONS" && response.body.is_empty();
+        return (!credentialed && route.public.is_none() && !preflight).then_some(HostileFindingV1::CredentialBypassed);
     }
     if response.status > maximum && response.status != unavailable {
         return Some(HostileFindingV1::ServerFailure);
@@ -236,7 +238,7 @@ async fn run_generated_case(state: &HubState, addr: SocketAddr, route: &HostileR
     let (method, target, headers, body, credentialed) = case_request(route, mutations, &bearer, forged);
     let headers: Vec<(&str, &str)> = headers.iter().map(|(name, value)| (name.as_str(), value.as_str())).collect();
     let answer = hostile_http_request(addr, &method, &target, &headers, &body).await;
-    let finding = judge_generated(&answer, route, credentialed, maximum, unavailable);
+    let finding = judge_generated(&answer, &method, route, credentialed, maximum, unavailable);
     if finding.is_none() && !hub_is_live(addr).await {
         return Some(HostileFindingV1::HubUnhealthy);
     }

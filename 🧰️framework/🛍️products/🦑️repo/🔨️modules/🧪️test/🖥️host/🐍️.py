@@ -114,8 +114,9 @@ class Context:
         return json.loads(self.doc_string())
 
     def artifact(self, role: str, filename: str) -> str:
-        """📦️ Absolute path to write one named result artifact to, creating parent directories."""
-        directory = os.path.join(self.artifact_dir, role)
+        """📦️ Absolute path to write one named result artifact to — ``<artifact_dir>/<scenario id>/<role>/<filename>``, so a
+        scenario's artifacts never overwrite another's — creating parent directories."""
+        directory = os.path.join(self.artifact_dir, self.scenario["id"], role)
         os.makedirs(directory, exist_ok=True)
         return os.path.join(directory, filename)
 

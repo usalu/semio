@@ -26,13 +26,19 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     let mut input = InputState::<ActionDescriptor>::default();
     let mut batch = input.reserve_actions(rows.len(), rows.len() * 256).unwrap();
     for row in rows {
-        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-            builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
-            builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
-            builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
-            builder.end_container()
-        }).unwrap();
+        batch
+            .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+                    token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
+                    member: row["member"].as_u64().unwrap() as u8,
+                    abort_correlation_on_error: row["abort"].as_bool().unwrap(),
+                })?;
+                builder.begin_object(None)?;
+                builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
+                builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
+                builder.end_container()
+            })
+            .unwrap();
     }
     batch.publish().unwrap();
     let mut actions = FrameActionOwners::default();

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireCurve 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fire-curve", "change-fire-curve")
+        protocol::LocalizedLabel::native("Change fire curve", "Brandkurve ändern")
     }
 }
 //#endregion 🔖️Payload

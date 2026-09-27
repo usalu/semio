@@ -1,0 +1,155 @@
+{
+  "steps": [
+    {
+      "field": "maskPresent",
+      "value": true,
+      "mask": {
+        "enabled": true,
+        "linked": true,
+        "invert": false,
+        "width": null,
+        "height": null,
+        "imageKey": null,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "field": "maskX",
+      "value": 12.5,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "field": "maskY",
+      "value": -7,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": -7,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "field": "maskScaleX",
+      "value": -2,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": -7,
+          "scaleX": -2,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "field": "maskScaleY",
+      "value": 0.5,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": -7,
+          "scaleX": -2,
+          "scaleY": 0.5,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "field": "maskRotation",
+      "value": 45,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": -7,
+          "scaleX": -2,
+          "scaleY": 0.5,
+          "rotation": 45
+        }
+      }
+    },
+    {
+      "field": "maskWidth",
+      "value": 64,
+      "change": {
+        "width": 64
+      }
+    },
+    {
+      "field": "maskHeight",
+      "value": 48,
+      "change": {
+        "height": 48
+      }
+    },
+    {
+      "field": "maskEnabled",
+      "value": false,
+      "change": {
+        "enabled": false
+      }
+    },
+    {
+      "field": "maskInvert",
+      "value": true,
+      "change": {
+        "invert": true
+      }
+    },
+    {
+      "field": "maskPresent",
+      "value": false,
+      "mask": null
+    }
+  ],
+  "invalid": [
+    {
+      "field": "maskWidth",
+      "value": 0
+    },
+    {
+      "field": "maskHeight",
+      "value": 1.5
+    },
+    {
+      "field": "maskWidth",
+      "value": 16385
+    },
+    {
+      "field": "maskScaleX",
+      "value": 0
+    },
+    {
+      "field": "maskScaleY",
+      "value": 0
+    },
+    {
+      "field": "maskRotation",
+      "value": "45"
+    },
+    {
+      "field": "maskX",
+      "value": true
+    },
+    {
+      "field": "maskScaleX",
+      "value": 1e-20
+    }
+  ]
+}

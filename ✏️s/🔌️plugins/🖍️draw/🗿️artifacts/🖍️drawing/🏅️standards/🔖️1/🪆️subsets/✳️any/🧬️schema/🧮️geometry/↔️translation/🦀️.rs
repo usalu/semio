@@ -21,3 +21,21 @@ mod tests {
         eprintln!("[DEBUG] world translation agrees with all nested-parent fixtures");
     }
 }
+
+/// 🗂️ A selected ancestor owns its descendants' world movement.
+pub fn path_contains(parent: &[u16], child: &[u16]) -> bool {
+    child.starts_with(parent)
+}
+
+#[cfg(test)]
+mod selection_tests {
+    #[test]
+    fn selected_ancestors_move_once() {
+        let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🗂️selection/🔣️.json")).unwrap();
+        for case in cases.as_array().unwrap() {
+            let paths:Vec<Vec<u16>>=serde_json::from_value(case["paths"].clone()).unwrap();
+            let roots:Vec<_>=paths.iter().filter(|path|!paths.iter().any(|parent|parent.len()<path.len() && super::path_contains(parent,path))).cloned().collect();
+            assert_eq!(roots,serde_json::from_value::<Vec<Vec<u16>>>(case["roots"].clone()).unwrap());
+        }
+    }
+}

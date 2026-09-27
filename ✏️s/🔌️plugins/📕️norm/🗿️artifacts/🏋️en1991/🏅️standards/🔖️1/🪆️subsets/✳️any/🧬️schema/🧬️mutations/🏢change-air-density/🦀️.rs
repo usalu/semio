@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAirDensity
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-air-density", "change-air-density")
+        protocol::LocalizedLabel::native("Change air density", "Luftdichte ändern")
     }
 }
 //#endregion 🔖️Payload

@@ -409,7 +409,7 @@ function runFrameTurn(): boolean {
     if (result.quarantined) quarantined = { code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" };
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
-    post({ kind: "frame", lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    post({ kind: "frame", lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else if (assetCancellationStep === "idle") scheduleAssetPump();
     else if (assetCancellationStep === "returned" && !assetPumping) {

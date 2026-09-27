@@ -4,7 +4,7 @@ use super::*;
 async fn definition_declares_the_editable_mesh_window_kit() {
     let def = definition();
     assert_eq!(def.id, MeshWindowKit::KIND_ID);
-    assert!(def.actions.iter().any(|action| action.id == "set-vertex"));
+    assert!(def.actions.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

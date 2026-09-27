@@ -112,6 +112,7 @@
         "description": "Whole-number iterations",
         "live": "off",
         "focusable": true,
+        "tabbable": true,
         "actionable": true,
         "valueMin": 1,
         "valueMax": 10,
@@ -134,6 +135,7 @@
         "label": "Settings",
         "live": "off",
         "focusable": true,
+        "tabbable": true,
         "actionable": true,
         "pressed": true
       },
@@ -145,6 +147,7 @@
         "label": "General",
         "live": "off",
         "focusable": true,
+        "tabbable": true,
         "actionable": true,
         "focused": true,
         "pressed": true
@@ -344,6 +347,7 @@
     ],
     "generationRule": {
       "controlId": "ui.panelToggle.settings",
+      "focusOnlyKeepsGeneration": true,
       "firstRect": [
         1,
         2,
@@ -518,5 +522,63 @@
     "multiline": true,
     "editable": true,
     "readOnly": false
-  }
+  },
+  "passiveChrome": [
+    {
+      "kind": "PanelResize",
+      "id": "passive.0",
+      "element": "div",
+      "label": null,
+      "action": false,
+      "announced": false
+    },
+    {
+      "kind": "ScrollRegion",
+      "id": "passive.1",
+      "element": "div",
+      "label": null,
+      "action": false,
+      "announced": false
+    },
+    {
+      "kind": "DockSplit",
+      "id": "passive.2",
+      "element": "div",
+      "label": null,
+      "action": false,
+      "announced": false
+    },
+    {
+      "kind": "DockJoinCorner",
+      "id": "passive.3",
+      "element": "div",
+      "label": null,
+      "action": false,
+      "announced": false
+    },
+    {
+      "kind": "Generic",
+      "id": "passive.4",
+      "element": "div",
+      "label": null,
+      "action": false,
+      "announced": false
+    },
+    {
+      "kind": "Generic",
+      "id": "named.generic",
+      "element": "button",
+      "label": "Decrease",
+      "action": false,
+      "announced": true
+    },
+    {
+      "kind": "Generic",
+      "id": "action.generic",
+      "element": "button",
+      "label": null,
+      "action": true,
+      "announced": true
+    }
+  ]
 }

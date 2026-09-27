@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertFloors {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-floors", "insert-floors")
+        protocol::LocalizedLabel::native("Insert floor", "Decke einfügen")
     }
 }
 //#endregion 🔖️Payload

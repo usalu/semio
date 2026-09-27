@@ -1,103 +1,55 @@
-//! ⏰️ Every source of "something is due later" this crate's own `AppRuntime` used to track as raw
-//! `app_now_ms()`-stamped fields such as `caret_blink_at_ms`, swept unconditionally on **every**
-//! `frame()` call under the old
-//! `ControlFlow::Poll` loop. This file is the ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-
-//! FAMILY` (packet `os-host`) replacement: each source below is either a token-keyed re-armable
-//! deadline (camera settle, wheel-zoom settle — "the token is replaced when re-armed" per the packet
-//! brief) or a one-shot policy object (`CaretBlink`, `HotSwapPoll`) that a caller feeds into
-//! `ui_render::FrameScheduler` so `winit_app.rs`'s event loop wakes exactly when — and only when —
-//! one of these is actually due, never on a fixed per-frame cadence.
-//!
-//! **Clock-ownership gap, read before wiring `arm_*` call sites (see
-//! `📓️terra-os-host-report.md`'s "what remains blocked" section for the full writeup):**
-//! `ui_render::FrameScheduler::request_deadline`'s `due` and `FrameScheduler::should_render`'s `now`
-//! must be the *same* monotonic clock. `ui_host::window::native::NativeHost`/`CanvasHost` own that
-//! clock privately (`MonotonicClock`/`BrowserClock`) and never hand `now` to the
-//! `WindowDelegate` — there is no accessor. Every function below therefore takes `now_seconds`
-//! as a plain parameter rather than reading any clock itself, so it stays testable with a synthetic
-//! clock; the caller (`os_host::OsHost`, see that file's `OsClock`) is responsible for supplying a
-//! `now_seconds` that tracks the *same* wall-time source `ui_host` uses (`Instant::now()` native,
-//! `performance.now()` wasm) closely enough for these sub-second deadlines — see `OsClock`'s own
-//! docstring for why a separately-constructed clock with the same origin epoch is an accepted
-//! approximation, not a bug.
+//! ⏰️ Bridges accepted control deadlines and finite animation phases onto the host scheduler.
 
-use ui_render::{FrameScheduler, InvalidationReason};
+use ui_render::InvalidationReason;
+
+pub(crate) const RETAINED_CONTROL_CLOCK: ui_render::DeadlineKey = ui_render::DeadlineKey(1);
+
+const UI_ANIMATION_CLOCK: ui_render::DeadlineKey = ui_render::DeadlineKey(2);
+
+/// 🖼️ Retains only the last accepted packet's animation demand across candidate work and discard.
+#[derive(Default)]
+pub(crate) struct AcceptedAnimationClock {
+    active: bool,
+    next_seconds: Option<f64>,
+}
+
+impl AcceptedAnimationClock {
+    pub(crate) fn accept(&mut self, active: bool) {
+        self.active = active;
+        if !active {
+            self.next_seconds = None;
+        }
+    }
+
+    pub(crate) fn sync(&mut self, scheduler: &mut ui_render::FrameScheduler, now_seconds: f64) {
+        self.next_seconds = if self.active && now_seconds.is_finite() { Some(self.next_seconds.filter(|due| *due > now_seconds).unwrap_or(now_seconds + 1.0 / 60.0)) } else { None };
+        scheduler.replace_deadline(UI_ANIMATION_CLOCK, self.next_seconds.map(|due| ui_render::Deadline { due, reason: InvalidationReason::ANIMATION }));
+    }
+}
+
+/// 🎞️ Keeps the shared 1.6/3.2-second shader phase precise at every monotonic clock magnitude.
+pub(crate) fn ui_animation_seconds(now_us: Option<u64>) -> f32 {
+    now_us.map_or(0.0, |now| (now % 3_200_000) as f32 / 1_000_000.0)
+}
+
+/// 🕰️ Translates a worker monotonic deadline into the host scheduler's independent origin.
+pub(crate) fn retained_control_deadline(due_us: Option<u64>, now_us: Option<u64>, host_seconds: f64) -> Option<ui_render::Deadline> {
+    if !host_seconds.is_finite() {
+        return None;
+    }
+    let remaining_us = due_us?.saturating_sub(now_us?);
+    Some(ui_render::Deadline { due: host_seconds + remaining_us as f64 / 1_000_000.0, reason: InvalidationReason::INPUT_STATE })
+}
 
 //#region 🔖️Deadlines
 
 //#region ⏳️Constants
-
-/// ⌨️ Caret blink half-period — ported verbatim from `AppRuntime`'s old `caret_blink_at_ms` 500 ms
-/// constant.
-pub const CARET_BLINK_SECONDS: f64 = 0.500;
 
 /// 🧩️ Native plugin hot-swap mtime poll cadence — this packet's own replacement for the old
 /// every-`frame()`-tick plugin-artifact scan storm; a coarse ~1 s poll per the packet brief.
 pub const NATIVE_HOT_SWAP_POLL_SECONDS: f64 = 1.0;
 
 //#endregion ⏳️Constants
-
-//#region ⌨️CaretBlink
-
-/// ⌨️ A repeating deadline registered **only while the presented frame actually shows a visible
-/// editable caret** — the packet brief's own requirement, verbatim: "a blink timer that runs when
-/// nothing is focused is a frame generator". `sync` is called once per `redraw()` with whatever the
-/// just-built frame determined about caret presence; `fire` is called only when the scheduler's own
-/// `CARET_BLINK` deadline was actually the reason a redraw happened.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CaretBlink {
-    visible: bool,
-    armed: bool,
-}
-
-impl CaretBlink {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new() -> Self {
-        Self { visible: true, armed: false }
-    }
-
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    #[cfg(test)]
-    pub fn is_visible(&self) -> bool {
-        self.visible
-    }
-
-    /// 👁️ Reconciles the blink timer against whether a caret is present in the frame just built. A
-    /// caret appearing arms the repeating deadline; a caret disappearing disarms it and resets to
-    /// visible (so the next time a caret appears it starts solid, matching the old
-    /// `caret_blink_visible: true` boot default) rather than possibly resuming mid-blink invisible.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn sync(&mut self, scheduler: &mut FrameScheduler, now_seconds: f64, caret_present: bool) {
-        if !caret_present {
-            self.armed = false;
-            self.visible = true;
-            return;
-        }
-        if !self.armed {
-            self.armed = true;
-            scheduler.request_deadline(now_seconds + CARET_BLINK_SECONDS, InvalidationReason::PAINT);
-        }
-    }
-
-    /// 🔥️ The blink deadline actually firing: toggles visibility and re-arms for the next half-period.
-    /// A caller only invokes this when it already knows a caret is still present this frame (`sync`
-    /// having just confirmed it) — calling it on a frame with no caret would re-arm a timer `sync`
-    /// itself would immediately disarm again next call, so callers order `sync` before `fire`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    #[cfg(test)]
-    pub fn fire(&mut self, scheduler: &mut FrameScheduler, now_seconds: f64) {
-        self.visible = !self.visible;
-        scheduler.request_deadline(now_seconds + CARET_BLINK_SECONDS, InvalidationReason::PAINT);
-    }
-}
-
-impl Default for CaretBlink {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-//#endregion ⌨️CaretBlink
 
 //#region 🎬️TutorialKeyframes
 

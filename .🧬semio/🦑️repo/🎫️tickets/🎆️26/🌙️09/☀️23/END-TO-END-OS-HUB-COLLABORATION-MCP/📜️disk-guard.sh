@@ -1,13 +1,13 @@
 #!/bin/zsh
-# 🧹 Disk guard: every 5 min; below 100 GiB free prune idle incremental sessions (> 60 min); below 80 GiB prune build units only when
+# 🧹 Disk guard: every 5 min; below 130 GiB free prune idle incremental sessions (> 60 min); below 80 GiB prune build units only when
 # cargo holds no lock on them (`.lock` taken exclusively, non-blocking), their newest file is older than 12 h, and a newer unit of the same package exists.
 root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build"
-log="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-coord-logs/disk-guard.txt"
+log="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-coord-logs/disk-guard.txt"
 mkdir -p "${log:h}"
 free_gib() { df -g /System/Volumes/Data | awk 'NR==2{print $4}' }
 while true; do
   before=$(free_gib)
-  if [ "$before" -lt 100 ]; then
+  if [ "$before" -lt 130 ]; then
     find "$root" -type d -name incremental -prune 2>/dev/null | while read -r inc; do
       find "$inc" -mindepth 2 -maxdepth 2 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null
     done

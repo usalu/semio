@@ -95,7 +95,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -114,6 +114,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Lays out every step of the sequence automatically along the window's flow direction, overwriting their manual positions.",
+                      "de": "Ordnet alle Schritte der Sequenz automatisch entlang der Flussrichtung des Fensters an und überschreibt ihre manuellen Positionen."
+                    },
+                    "reuse": {
+                      "en": "Lays out every step of the sequence automatically along the window's flow direction, overwriting their manual positions.",
+                      "de": "Ordnet alle Schritte der Sequenz automatisch entlang der Flussrichtung des Fensters an und überschreibt ihre manuellen Positionen."
+                    }
                   }
                 }
               },
@@ -132,7 +142,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -158,7 +168,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "input"
                 }
               },
               {
@@ -249,6 +260,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the flow direction (such as left to right or top to bottom) that Reorganize lays the steps out along; only the window's setting changes.",
+                      "de": "Legt die Flussrichtung fest (etwa links nach rechts oder oben nach unten), entlang der Neu anordnen die Schritte auslegt; nur die Einstellung des Fensters ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the flow direction (such as left to right or top to bottom) that Reorganize lays the steps out along; only the window's setting changes.",
+                      "de": "Legt die Flussrichtung fest (etwa links nach rechts oder oben nach unten), entlang der Neu anordnen die Schritte auslegt; nur die Einstellung des Fensters ändert sich."
+                    }
                   }
                 }
               },
@@ -267,7 +288,7 @@
                 "kind": "view",
                 "iconId": "eye",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -294,7 +315,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -967,6 +989,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Runs the sequence's compiled path once from its first step; the document is not changed.",
+                      "de": "Führt den kompilierten Pfad der Sequenz einmal ab dem ersten Schritt aus; das Dokument ändert sich nicht."
+                    },
+                    "reuse": {
+                      "en": "Runs the sequence's compiled path once from its first step; the document is not changed.",
+                      "de": "Führt den kompilierten Pfad der Sequenz einmal ab dem ersten Schritt aus; das Dokument ändert sich nicht."
+                    }
                   }
                 }
               },
@@ -1013,6 +1045,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a running sequence; the document is not changed.",
+                      "de": "Hält eine laufende Sequenz an; das Dokument ändert sich nicht."
+                    },
+                    "reuse": {
+                      "en": "Stops a running sequence; the document is not changed.",
+                      "de": "Hält eine laufende Sequenz an; das Dokument ändert sich nicht."
+                    }
                   }
                 }
               },
@@ -2375,6 +2417,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new step of the given kind to the sequence canvas at x, y.",
+                  "de": "Fügt der Sequenzfläche an x, y einen neuen Schritt der angegebenen Art hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a new step of the given kind to the sequence canvas at x, y.",
+                  "de": "Fügt der Sequenzfläche an x, y einen neuen Schritt der angegebenen Art hinzu."
+                }
               }
             }
           },
@@ -2419,6 +2471,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new step of the given kind into a named slot of an owner step (such as the body of a loop) at x, y.",
+                  "de": "Fügt einen neuen Schritt der angegebenen Art an x, y in einen benannten Slot eines Besitzerschritts ein (etwa den Rumpf einer Schleife)."
+                },
+                "reuse": {
+                  "en": "Adds a new step of the given kind into a named slot of an owner step (such as the body of a loop) at x, y.",
+                  "de": "Fügt einen neuen Schritt der angegebenen Art an x, y in einen benannten Slot eines Besitzerschritts ein (etwa den Rumpf einer Schleife)."
+                }
               }
             }
           },
@@ -2508,6 +2570,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one step by id from the sequence together with the flow edges attached to it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id samt der angeschlossenen Flusskanten aus der Sequenz."
+                },
+                "reuse": {
+                  "en": "Removes one step by id from the sequence together with the flow edges attached to it.",
+                  "de": "Entfernt einen Schritt anhand seiner Id samt der angeschlossenen Flusskanten aus der Sequenz."
+                }
               }
             }
           },
@@ -2553,6 +2625,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes every currently selected step from the sequence together with their flow edges.",
+                  "de": "Entfernt alle aktuell ausgewählten Schritte samt ihrer Flusskanten aus der Sequenz."
+                },
+                "reuse": {
+                  "en": "Removes every currently selected step from the sequence together with their flow edges.",
+                  "de": "Entfernt alle aktuell ausgewählten Schritte samt ihrer Flusskanten aus der Sequenz."
+                }
               }
             }
           },
@@ -2597,6 +2679,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one step to an absolute position x, y on the sequence canvas.",
+                  "de": "Verschiebt einen Schritt an die absolute Position x, y der Sequenzfläche."
+                },
+                "reuse": {
+                  "en": "Moves one step to an absolute position x, y on the sequence canvas.",
+                  "de": "Verschiebt einen Schritt an die absolute Position x, y der Sequenzfläche."
+                }
               }
             }
           },
@@ -2641,6 +2733,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a flow edge from one step to another, so the second runs after the first.",
+                  "de": "Fügt eine Flusskante von einem Schritt zu einem anderen hinzu, sodass der zweite nach dem ersten läuft."
+                },
+                "reuse": {
+                  "en": "Adds a flow edge from one step to another, so the second runs after the first.",
+                  "de": "Fügt eine Flusskante von einem Schritt zu einem anderen hinzu, sodass der zweite nach dem ersten läuft."
+                }
               }
             }
           },
@@ -2685,6 +2787,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes the flow edge between two steps, so they no longer run in that order.",
+                  "de": "Entfernt die Flusskante zwischen zwei Schritten, sodass sie nicht mehr in dieser Reihenfolge laufen."
+                },
+                "reuse": {
+                  "en": "Removes the flow edge between two steps, so they no longer run in that order.",
+                  "de": "Entfernt die Flusskante zwischen zwei Schritten, sodass sie nicht mehr in dieser Reihenfolge laufen."
+                }
               }
             }
           },
@@ -2729,6 +2841,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the parameters of one step with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts durch die angegebene Zuordnung von Namen zu Werten."
+                },
+                "reuse": {
+                  "en": "Replaces the parameters of one step with the given name-to-value map.",
+                  "de": "Ersetzt die Parameter eines Schritts durch die angegebene Zuordnung von Namen zu Werten."
+                }
               }
             }
           },
@@ -2774,6 +2896,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Collapses or expands one step on the canvas, hiding or showing its nested steps.",
+                  "de": "Klappt einen Schritt auf der Fläche ein oder aus und verbirgt oder zeigt seine verschachtelten Schritte."
+                },
+                "reuse": {
+                  "en": "Collapses or expands one step on the canvas, hiding or showing its nested steps.",
+                  "de": "Klappt einen Schritt auf der Fläche ein oder aus und verbirgt oder zeigt seine verschachtelten Schritte."
+                }
               }
             }
           },
@@ -2852,6 +2984,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole sequence with the bundled demo sequence; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Sequenz durch die mitgelieferte Demo-Sequenz; jede andere Beispiel-Id ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole sequence with the bundled demo sequence; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Sequenz durch die mitgelieferte Demo-Sequenz; jede andere Beispiel-Id ändert nichts."
+                }
               }
             }
           },
@@ -3583,6 +3725,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3688,6 +3840,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3781,6 +3943,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4882,6 +5054,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4987,6 +5169,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5080,6 +5272,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5246,7 +5448,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5349,8 +5551,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "c183f05bc1e9538ae589ccc200a1106f1ace49c136f4238bc23892cb3f0d7aa3",
-    "coreWasmSha256": "641505109af18f9cfe6fffba49760a8bbb54642c7842b772cf3ed724b19505b2",
-    "descriptorSha256": "6ec10fd4535b8ea484a4455d45e4747243e29b116ea4e423771775343c3f9237"
+    "wasmSha256": "2ff8a509dc75d1deb88323ec7352816179b5d9860e38a6f0783ec5a678b0137d",
+    "coreWasmSha256": "96c98d7ced52732893eee277c0ae087c9c143d098816df72ce22e70001138f22",
+    "descriptorSha256": "f876de4aa47e2669c27c1e54498d3d0a1b199a2d8d480612baa6d44fd9eae99d"
   }
 }

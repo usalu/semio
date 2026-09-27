@@ -6,8 +6,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
-import type { StreamMuxJsonV1 } from "../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
-import { devStreamMuxServer } from "../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import type { StreamMuxJsonV1, StreamMuxServerV1 } from "../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
 import { installationDirectoryCollision, installationDirectoryEmoji } from "../../../🧩️extension/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
@@ -367,11 +366,12 @@ function readRequestBody(req: { on(event: string, listener: (...args: unknown[])
 
 //#region 🔌️ExtensionStoreVitePlugin
 /** @emoji 🔌 Vite middleware: `GET|POST|DELETE /🧩️extension-modules/install` plus the `extension-modules.watch` stream route
- * (snapshot of every installed extension on each fresh open, then `installed`/`uninstalled`) on the dev stream channel.
+ * (snapshot of every installed extension on each fresh open, then `installed`/`uninstalled`) on the serve's stream channel,
+ * which the serve owner passes as `streams` (the dev serves pass `devStreamMuxServer` from `🧑‍💻dev/🔌️vite-plugins`).
  * `pre`, like the static mount of the same `/🧩️extension-modules` route: the mount answers 404 for every path its install
  * root lacks, so an unmarked store would never see its own install endpoint (ticket 26/09/23 U5). The dev serve lists the
  * store before its static mounts; law: "extension store route precedence" in `../🧪️tests/🧪️authored-extension-installation-identity`. */
-export function semioExtensionStoreVitePlugin(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer?: ExtensionMaterializer }) {
+export function semioExtensionStoreVitePlugin<HttpServer>(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer?: ExtensionMaterializer; readonly streams: (httpServer: HttpServer | null | undefined) => StreamMuxServerV1 }) {
   const store = createExtensionStore({
     installRoot: options.installRoot,
     repoRoot: options.repoRoot,
@@ -380,8 +380,8 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
   return {
     name: "semio-extension-store",
     enforce: "pre" as const,
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: Parameters<typeof devStreamMuxServer>[0] }) {
-      const mux = devStreamMuxServer(server.httpServer);
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: HttpServer | null }) {
+      const mux = options.streams(server.httpServer);
       mux.route(DEV_STREAM_ROUTES.extensionModules, {
         admit: (key) => key === "",
         snapshot: async () => ({ kind: "snapshot", extensions: (await store.listInstalled()) as unknown as StreamMuxJsonV1 }),

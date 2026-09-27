@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFireScenar
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-fire-scenarios", "change-fire-scenarios")
+        protocol::LocalizedLabel::native("Change fire scenarios", "Brandszenarien ändern")
     }
 }

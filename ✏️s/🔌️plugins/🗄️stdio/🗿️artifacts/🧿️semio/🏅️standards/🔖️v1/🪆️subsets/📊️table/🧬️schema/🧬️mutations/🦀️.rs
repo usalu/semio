@@ -37,9 +37,12 @@ use super::reorder_rows;
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate
 /// alias `🦀️.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
 /// `🔤️text`'s already-compiling facet uses.
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
 pub enum SemioTableMutation {
+    SetSnapshot(SetSnapshot),
     CreateColumn(create_column::CreateColumn),
     DeleteColumn(delete_column::DeleteColumn),
     RenameColumn(rename_column::RenameColumn),
@@ -55,7 +58,7 @@ pub enum SemioTableMutation {
 /// `📊️mutate-semio-table`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
+pub const KINDS: &[&str] = &["set-snapshot", "create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

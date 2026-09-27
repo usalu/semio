@@ -6,7 +6,7 @@ use crate::editor::semio_brep::modes::edit;
 use crate::editor::semio_brep::modes::edit::windows::main;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
-use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::standards::v1::subsets::brep::schema::mutations::{set_snapshot, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
@@ -14,6 +14,7 @@ use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use store::EngineHandles;
+use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_BREP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
@@ -63,6 +64,7 @@ impl protocol::OpBinary for SemioBrepEditCommand {
         Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [read(0), read(1), read(2)] }))
     }
 }
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioBrepEditCommand, ["set-vertex"]);
 //#endregion 🔖️Command
 
 //#region 🔖️Mutation
@@ -96,10 +98,21 @@ impl ArtifactEditor for SemioBrepEditor {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = SemioBrepEditCommand;
+    type Command = editing::SnapshotEditingCommand<SemioBrepEditCommand>;
 
     const DIALECT: Dialect = SEMIO_BREP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_BREP_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
+        owner_file: "semio/v1/brep/editor",
+        controller: "s.stdio.semio@v1/brep#editor",
+        artifact_schema: "stdio.semio.brep",
+        preparation: "stdio-semio-brep-snapshot-edit"
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        editing::snapshot_editing_command_id(command, |_| "set-vertex")
+    }
 
     fn initial_snapshot() -> SemioBrepSnapshot {
         SemioBrepSnapshot::default()
@@ -114,7 +127,10 @@ impl ArtifactEditor for SemioBrepEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let SemioBrepEditCommand::SetVertex(args) = command;
+        let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = command else {
+            let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
+            return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
+        };
         let selection = interaction.selection(SEMIO_BREP_INTERACTION_DOMAIN);
         let Some(vertex_id) = selection.ids.first() else { return Ok(Emit::default()) };
         match move_vertex_mutation(doc.snapshot, vertex_id, args.point) {
@@ -123,22 +139,39 @@ impl ArtifactEditor for SemioBrepEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/brep#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
-        if action != "set-vertex" {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));
-        }
-        let point = args.and_then(|value| value.get("point")).and_then(DslValue::as_array).map_or([0.0, 0.0, 0.0], |array| {
-            let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
-            [get(0), get(1), get(2)]
-        });
-        Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point }))
+        editing::snapshot_editing_command_from_action(action, args, |action, args| {
+            if action != "set-vertex" {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));
+            }
+            let point = args.and_then(|value| value.get("point")).and_then(DslValue::as_array).map_or([0.0, 0.0, 0.0], |array| {
+                let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
+                [get(0), get(1), get(2)]
+            });
+            Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point }))
+        })
+    }
+}
+
+impl editing::SnapshotEditingEditor for SemioBrepEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
+        match command { editing::SnapshotEditingCommand::Edit(event) => Some(event), _ => None }
+    }
+
+    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioBrepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -146,7 +179,8 @@ impl ArtifactEditor for SemioBrepEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_brep_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(SEMIO_BREP_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_BREP_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
+    let builder = Editor::builder(SEMIO_BREP_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_BREP_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout());
+    editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

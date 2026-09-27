@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeMembers {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change members", "Ändern: members")
+        protocol::LocalizedLabel::native("Change members", "Bauteile ändern")
     }
 }
 //#endregion 🔖️Payload

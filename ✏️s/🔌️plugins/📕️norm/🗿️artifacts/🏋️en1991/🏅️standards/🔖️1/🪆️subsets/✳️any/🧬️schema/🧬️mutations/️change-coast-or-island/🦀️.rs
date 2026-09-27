@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCoastOrIsl
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-coast-or-island", "change-coast-or-island")
+        protocol::LocalizedLabel::native("Change coastal or island location", "Küsten- oder Insellage ändern")
     }
 }
 //#endregion 🔖️Payload

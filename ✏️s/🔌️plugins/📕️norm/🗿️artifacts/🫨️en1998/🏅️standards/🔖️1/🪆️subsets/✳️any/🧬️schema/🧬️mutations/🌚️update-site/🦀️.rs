@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for UpdateSite {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("update-site", "update-site")
+        protocol::LocalizedLabel::native("Update site seismicity", "Standortseismizität aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         vec!["update-site".into()]

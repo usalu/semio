@@ -10,6 +10,8 @@ import { AdminAccessGate, AdminClient, AdminSessionProvider } from "../../🧱�
 import { SpacesPage } from "../../🧱️elements/🏛️SpacesPage/🟦️.tsx";
 import { ConnectionsPage } from "../../🧱️elements/🔗️ConnectionsPage/🟦️.tsx";
 import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️.tsx";
+import { ObservabilityPage } from "../../🧱️elements/📊️ObservabilityPage/🟦️.tsx";
+import observabilityFixture from "../../../../🧫️fixtures/📊️observability-v1/🔣️.json";
 // #endregion 🔌️Adapters
 
 afterEach(() => {
@@ -386,6 +388,46 @@ describe("ConnectionsPage", () => {
 });
 
 //#region 🛡️AdminTabs
+describe("ObservabilityPage", () => {
+  const renderPage = () =>
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <ObservabilityPage />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+
+  it("renders the hub's residency, catalog, routes and DB I/O from one observability reading", async () => {
+    const fetchMock = mockFetch({ "/admin/api/overview": OVERVIEW_BODY, "/admin/api/observability": observabilityFixture.body });
+    renderPage();
+    await waitFor(() => expect(document.querySelector('[data-row-id="package:gis"]')).not.toBeNull());
+    expect(screen.getByRole("heading", { name: "Compiled guests" })).toBeTruthy();
+    expect(screen.getByText("3 / 9 · 47.7 MiB")).toBeTruthy();
+    expect(screen.getByText(/1 of 3 packages ready, 0 refused · rows pinned 2, verified 1 of 6/)).toBeTruthy();
+    expect(document.querySelector('[data-row-id="package:puzzle"]')?.textContent).toContain("Waiting for verification");
+    const routes = [...document.querySelectorAll('[data-row-id^="route:"]')].map((row) => row.getAttribute("data-row-id"));
+    expect(routes[0]).toBe("route:GET:/readyz");
+    expect(screen.getByText(/3 submissions waited for admission \(41\.3 ms\), 1 still refused/)).toBeTruthy();
+    expect(requestCount(fetchMock, "/admin/api/observability")).toBeGreaterThanOrEqual(1);
+  });
+
+  it("speaks German when the browser selected it", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["de-DE"]);
+    mockFetch({ "/admin/api/overview": OVERVIEW_BODY, "/admin/api/observability": observabilityFixture.body });
+    renderPage();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Kompilierte Gäste" })).toBeTruthy());
+    expect(screen.getByRole("heading", { name: "Vertrauenswürdiger Katalog" })).toBeTruthy();
+    expect(document.querySelector('[data-row-id="package:gis"]')?.textContent).toContain("Wird geprüft");
+  });
+
+  it("reports an unanswered reading instead of stale figures", async () => {
+    mockFetch({ "/admin/api/overview": OVERVIEW_BODY });
+    renderPage();
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("The hub did not answer its observability reading."));
+  });
+});
+
 describe("AdminApp tabs", () => {
   it("changes locale through the owned portalled Select", async () => {
     sessionStorage.clear();

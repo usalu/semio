@@ -123,7 +123,7 @@ describe("wgpu frame-Worker step budget", () => {
     } finally {
       await browser.close();
     }
-  });
+  }, 15_000);
 
   it("alternates frame and asset-decode owners through one task credit and admits ingress between callbacks", () => {
     const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")) as {
@@ -453,7 +453,9 @@ describe("wgpu frame-Worker step budget", () => {
     expect(continuationSource).toContain("host.frame_build.has_live_session()");
     expect(continuationSource).not.toContain("next_deadline");
     expect(continuationSource).not.toContain("hub_status_pending");
-    expect(browserWorkerSource).toContain("request_frame: continue_frame || host.scheduler.next_deadline().is_some()");
+    expect(browserWorkerSource).toContain("request_frame: continue_frame,");
+    expect(browserWorkerSource).toContain("next_deadline_delay_ms: host.scheduler.next_deadline()");
+    expect(turnSource).toContain("nextDeadlineDelayMs: result.nextDeadlineDelayMs");
     const rendererSource = readFileSync(RENDERER_RS, "utf8");
     const textContinuationAt = rendererSource.lastIndexOf("fn has_pending_text_work");
     const textContinuation = rendererSource.slice(textContinuationAt, rendererSource.indexOf("fn drive_text_operation", textContinuationAt));

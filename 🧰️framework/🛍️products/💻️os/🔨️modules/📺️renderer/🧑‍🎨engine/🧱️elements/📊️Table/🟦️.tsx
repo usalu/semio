@@ -6,8 +6,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useMemo, useState } from "react";
-import { Button, ContextMenuController, Icon, Input, Table, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
@@ -19,9 +19,10 @@ import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 //#region Types
 type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };
 type TableCellButton = { readonly iconId: IconName; readonly label?: string; readonly action: ActionDescriptor; readonly placement?: "row" | "menu" };
-type TableCellRecord =
+export type TableCellRecord =
   | { readonly kind: "text"; readonly value: string }
   | { readonly kind: "number"; readonly value: number }
+  | { readonly kind: "editableText"; readonly value: string; readonly action: ActionDescriptor }
   | { readonly kind: "stepper"; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly action: ActionDescriptor }
   | { readonly kind: "buttons"; readonly buttons: readonly TableCellButton[] };
 type TableRowRecord = Record<string, unknown> & { readonly id?: string; readonly _drag?: Record<string, unknown> };
@@ -84,6 +85,52 @@ export function tableStepperKeyDelta(key: string, cell: { readonly value: number
 /** 🧮️ The delta actually dispatched: never past `min`/`max`, and `0` when the cell already sits on that bound. */
 export function tableStepperClampedDelta(delta: number, cell: { readonly value: number; readonly min: number; readonly max: number }): number {
   return Math.min(cell.max, Math.max(cell.min, cell.value + delta)) - cell.value;
+}
+
+export type TableEditableTextState = Readonly<{ base: string; draft: string; dirty: boolean; conflicted: boolean }>;
+
+/** 🔄️ Preserves a dirty cell draft and marks an external persisted change as a conflict. */
+export function reconcileTableEditableText(state: TableEditableTextState, value: string): TableEditableTextState {
+  if (!state.dirty || state.draft === value) return { base: value, draft: value, dirty: false, conflicted: false };
+  return { ...state, conflicted: value !== state.base };
+}
+
+/** 📦️ Merges a committed text draft into its artifact-owned cell action. */
+export function tableEditableTextAction(cell: Extract<TableCellRecord, { kind: "editableText" }>, draft: string): ActionDescriptor {
+  return { ...cell.action, args: { ...(typeof cell.action.args === "object" && cell.action.args != null ? cell.action.args : {}), value: draft } };
+}
+
+/** ✏️ One locally buffered table cell; Enter or blur commits, Shift+Enter inserts a newline, Escape cancels. */
+export function TableEditableTextCell({ cell, id, columnLabel, onAction }: { readonly cell: Extract<TableCellRecord, { kind: "editableText" }>; readonly id: string; readonly columnLabel: string | undefined; readonly onAction: (action: ActionDescriptor) => void }): React.ReactElement {
+  const [state, setState] = useState<TableEditableTextState>(() => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false }));
+  useEffect(() => setState((current) => reconcileTableEditableText(current, cell.value)), [cell.value]);
+  const commit = (): void => {
+    if (!state.dirty || state.conflicted) return;
+    onAction(tableEditableTextAction(cell, state.draft));
+  };
+  const cancel = (): void => {
+    setState({ base: cell.value, draft: cell.value, dirty: false, conflicted: false });
+  };
+  return (
+    <Textarea
+      aria-invalid={state.conflicted || undefined}
+      aria-label={columnLabel}
+      className="min-h-8 w-full min-w-0 resize-y whitespace-pre-wrap font-mono text-xs"
+      data-conflict={state.conflicted ? "true" : undefined}
+      data-dirty={state.dirty ? "true" : undefined}
+      id={id}
+      rows={1}
+      value={state.draft}
+      onBlur={commit}
+      onChange={(event) => setState((current) => ({ ...current, draft: event.target.value, dirty: event.target.value !== current.base }))}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") { event.preventDefault(); cancel(); return; }
+        if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); commit(); }
+      }}
+    />
+  );
 }
 
 /**
@@ -161,6 +208,8 @@ function renderTableCell(cell: TableCellRecord, id: string, columnLabel: string 
       return cell.value;
     case "number":
       return String(cell.value);
+    case "editableText":
+      return <TableEditableTextCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
     case "stepper":
       return <TableStepperCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
     case "buttons":

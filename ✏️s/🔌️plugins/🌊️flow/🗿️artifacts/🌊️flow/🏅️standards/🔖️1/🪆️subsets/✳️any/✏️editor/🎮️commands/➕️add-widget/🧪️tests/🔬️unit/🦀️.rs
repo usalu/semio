@@ -185,11 +185,12 @@ async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
     .await
     .expect("dispatch");
     settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("patchFlowWidgets publication");
-    let patched = app.snapshot().expect("snapshot");
-    let patched_widgets = patched.to_host_snapshot().widgets;
+    let patched = crate::editor::flow::unit_tests::context::composed_scene(&app).await;
     assert!(
-        patched_widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
-        "slider must carry the parsed value: {patched_widgets:?}"
+        patched.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
+        "slider must carry the parsed value: {:?}",
+        patched.widgets
     );
+    patched.retire_cold();
     close_registered_fixture_app(&mut *app);
 }

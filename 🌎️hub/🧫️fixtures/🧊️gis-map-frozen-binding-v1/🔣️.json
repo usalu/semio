@@ -9,7 +9,7 @@
       "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
       "descriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313",
-      "executionProtocol": { "appChannelVersion": 17 }
+      "executionProtocol": { "appChannelVersion": 18 }
     },
     "artifact": { "kind": "s.gis.gismap", "schema": "gis.map", "packSchemaHash": "1414141414141414141414141414141414141414141414141414141414141414" },
     "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
@@ -22,7 +22,7 @@
     },
     "nativeExecutable": "semio_s_plugin_gis::gis_map_inference_service"
   },
-  "expectedDigest": "6343843a352cf26c26ecc8c871124dd46ce378d8f14d2dbd7fcb6b0d9e34dc09",
+  "expectedDigest": "25a58ad69c47710a9b1dd683edd12fc7e88c6a3296b6c356e2115d1c7ee20537",
   "hostile": [
     { "name": "catalog-generation", "path": ["catalogGenerationId"], "value": "0202020202020202020202020202020202020202020202020202020202020202", "accepted": false },
     { "name": "plugin", "path": ["package", "pluginId"], "value": "stdio", "accepted": false },

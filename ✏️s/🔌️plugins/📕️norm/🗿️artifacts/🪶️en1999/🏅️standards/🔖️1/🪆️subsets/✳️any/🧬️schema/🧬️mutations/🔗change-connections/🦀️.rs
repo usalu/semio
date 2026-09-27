@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeConnection
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-connections", "change-connections")
+        protocol::LocalizedLabel::native("Change connections", "Verbindungen ändern")
     }
 }

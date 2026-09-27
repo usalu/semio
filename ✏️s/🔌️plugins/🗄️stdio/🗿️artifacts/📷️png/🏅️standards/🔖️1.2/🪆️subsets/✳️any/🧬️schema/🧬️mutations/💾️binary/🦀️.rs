@@ -13,6 +13,7 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<PngMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::set_snapshot::binary::CODEC,
     crate::schema::mutations::change_header::binary::CODEC,
     crate::schema::mutations::replace_palette::binary::CODEC,
     crate::schema::mutations::change_transparency::binary::CODEC,
@@ -26,6 +27,7 @@ pub const REGISTRY: &[Entry] = &[
     crate::schema::mutations::remove_text_chunk::binary::CODEC,
     crate::schema::mutations::replace_text_chunk::binary::CODEC,
     crate::schema::mutations::replace_pixels::binary::CODEC,
+    crate::schema::mutations::patch_pixels::binary::CODEC,
     crate::schema::mutations::insert_unknown_chunk::binary::CODEC,
     crate::schema::mutations::remove_unknown_chunk::binary::CODEC,
 ];

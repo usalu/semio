@@ -89,6 +89,21 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
   }
 });
 
+test("no profile keeps incremental state in the shared build-dir, whatever the caller's CARGO_INCREMENTAL (cargo unit-graph oracle)", { timeout: 240_000 }, () => {
+  const manifest = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as { profile: Record<string, { inherits?: string; incremental?: boolean }> };
+  const builtIn: Record<string, string> = { test: "dev", bench: "release" };
+  const resolve = (name: string): boolean | undefined => manifest.profile[name]?.incremental ?? (manifest.profile[name]?.inherits ?? builtIn[name] ? resolve(manifest.profile[name]?.inherits ?? builtIn[name]!) : undefined);
+  for (const row of fixture.incrementalFree as { profile: string; package: string; target: string | null }[]) {
+    expect(resolve(row.profile), row.profile).toBe(false);
+    const { CARGO_INCREMENTAL: _unset, ...env } = process.env;
+    const graph = spawnSync("cargo", ["check", "--unit-graph", "-Z", "unstable-options", "--offline", "-p", row.package, "--lib", "--profile", row.profile, ...(row.target ? ["--target", row.target] : [])], { cwd: repoRoot, encoding: "utf8", env, maxBuffer: 256 * 1024 * 1024 });
+    expect(graph.status, graph.stderr).toBe(0);
+    const units = (JSON.parse(graph.stdout) as { units: { profile: { name: string; incremental: boolean } }[] }).units;
+    expect(units.length, `${row.profile} ${row.package}`).toBeGreaterThan(0);
+    expect(units.filter((unit) => unit.profile.incremental).map((unit) => unit.profile.name), `${row.profile} ${row.package} ${row.target ?? "host"}`).toEqual([]);
+  }
+});
+
 test("a cancelled scan stops before reading another package", () => {
   const build = mkdtempSync(join(tmpdir(), "semio-cargo-provenance-cancel-"));
   try {

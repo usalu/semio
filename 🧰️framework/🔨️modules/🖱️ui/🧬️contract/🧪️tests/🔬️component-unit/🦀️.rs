@@ -54,13 +54,13 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
     component_round_trips(Component::KeyValueList(KeyValueListProps { entries: crate::UiFixedList::default() }));
     component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")) }));
-    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false }));
+    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false, min: Some(0.0), max: Some(10.0) }));
     component_round_trips(Component::Ring(RingProps { orb_id: ui_text("orb-1"), t: 0.25 }));
     component_round_trips(Component::IconSelect(IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("shape") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 12.0, total: Some(100.0), value_text: label("12 of 100") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 3.0, total: None, value_text: label("Preparing") }));
     component_round_trips(Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(ui_text("selection")) }));
-    component_round_trips(Component::TreeSection(TreeSectionProps { label: Some(label("Section")), default_open: Some(true), window: Some(TreeWindow { row_extent: Default::default(), total: 512, offset: 128 }) }));
+    component_round_trips(Component::TreeSection(TreeSectionProps { label: Some(label("Section")), default_open: Some(true), header_toolbar: None, window: Some(TreeWindow { row_extent: Default::default(), total: 512, offset: 128 }) }));
     component_round_trips(Component::TreeItem(TreeItemProps {
         label: label("Item"),
         description: None,
@@ -143,6 +143,33 @@ fn inline_tree_toolbar_relation_validates_and_copies_from_the_shared_fixture() {
     snapshot.nodes[1].layout = crate::LayoutSpec::Stack(crate::StackLayout { axis: crate::Axis::Vertical, ..Default::default() });
     let violations = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()).expect_err("a vertical inline toolbar is rejected");
     assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidTreeInlineToolbar { node: crate::UiNodeId(1), toolbar: crate::UiNodeId(2) })));
+}
+
+#[test]
+fn tree_section_header_toolbar_is_a_direct_horizontal_button_toolbar() {
+    let nodes = serde_json::json!([
+        {
+            "id": 1, "key": "command.form", "component": { "type": "treeSection", "label": "Set Theme", "headerToolbar": 2 },
+            "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false }, "style": {}, "activity": "idle", "accessibility": {}, "children": [2]
+        },
+        {
+            "id": 2, "key": "command.form.toolbar", "component": { "type": "container", "role": "toolbar" },
+            "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false }, "style": {}, "activity": "idle", "accessibility": {}, "children": [3, 4]
+        },
+        {
+            "id": 3, "key": "command.execute", "component": { "type": "button", "icon": "check", "label": "Execute" },
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}
+        },
+        {
+            "id": 4, "key": "command.reset", "component": { "type": "button", "icon": "undo", "label": "Reset" },
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}
+        }
+    ]);
+    let mut snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "command-form", "revision": 1, "root": 1, "nodes": nodes, "layoutEpoch": 0 })).expect("section toolbar snapshot");
+    assert_eq!(crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()), Ok(()));
+    snapshot.nodes[1].layout = crate::LayoutSpec::Stack(crate::StackLayout { axis: crate::Axis::Vertical, ..Default::default() });
+    let violations = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()).expect_err("vertical section toolbar rejected");
+    assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidTreeSectionHeaderToolbar { node: crate::UiNodeId(1), toolbar: crate::UiNodeId(2) })));
 }
 
 #[test]

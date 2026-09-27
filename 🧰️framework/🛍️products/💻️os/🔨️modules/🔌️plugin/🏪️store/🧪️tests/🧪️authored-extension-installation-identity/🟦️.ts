@@ -139,11 +139,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * mount and every request to the store's own endpoint was a 404 (ticket 26/09/23 U5, measured on :6580). Real plugins,
    * vite's ordering rule, one request through the resulting middleware chain. */
   describe("extension store route precedence", () => {
+    const devStreams = async () => ((await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts")).devStreamMuxServer;
+
     it("answers its install endpoint before the static extension mount, which still 404s a missing module file", async () => {
       const { staticDirVitePlugin } = (await import(new URL("../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts", source.url).href)) as { staticDirVitePlugin: (repoRoot: string, spec: { readonly kind: "static-dir"; readonly route: string; readonly root: string }) => RoutePlugin[] };
       const root = mkdtempSync(join(tmpdir(), "semio-extension-route-"));
       try {
-        const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root }) as RoutePlugin;
+        const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root, streams: await devStreams() }) as RoutePlugin;
         expect(store.enforce).toBe("pre");
         const mount = staticDirVitePlugin(root, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: "." });
         const listed = await answer([store, ...mount], EXTENSION_INSTALL_PATH);
@@ -159,12 +161,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("publishes installed extensions on the dev stream channel, not as an HTTP response held open", async () => {
-      const { devStreamMuxServer } = (await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts");
+      const devStreamMuxServer = await devStreams();
       const { DEV_STREAM_ROUTES } = (await import("@semio-tech/framework-os")) as typeof import("@semio-tech/framework-os");
       const root = mkdtempSync(join(tmpdir(), "semio-extension-stream-"));
       try {
         const httpServer = { on: () => undefined, once: () => undefined };
-        const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root }) as RoutePlugin & { configureServer: (server: { middlewares: { use: (handler: RouteMiddleware) => void }; httpServer: typeof httpServer }) => void };
+        const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root, streams: devStreamMuxServer }) as RoutePlugin & { configureServer: (server: { middlewares: { use: (handler: RouteMiddleware) => void }; httpServer: typeof httpServer }) => void };
         const handlers: RouteMiddleware[] = [];
         store.configureServer({ middlewares: { use: (handler) => handlers.push(handler) }, httpServer });
         const sent: string[] = [];
@@ -187,7 +189,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const materializer = async (input: { readonly directoryName: string }) => ({ moduleUrl: `${MODULE_EXTENSION_ROUTE}/${input.directoryName}/module.js` });
         const direct = createExtensionStore({ installRoot: root, repoRoot: root, materializer });
         const installed = await direct.installFromBytes(packExtensionPackage({ manifest: fixtureManifest, componentWasm: fixtureWasm }));
-        const plugin = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root, materializer }) as RoutePlugin;
+        const plugin = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root, materializer, streams: await devStreams() }) as RoutePlugin;
         const listed = await answer([plugin], EXTENSION_INSTALL_PATH);
         expect(JSON.parse(listed.chunks.join(""))).toEqual([installed]);
         const removed = await answer([plugin], `${EXTENSION_INSTALL_PATH}?extensionId=${encodeURIComponent(installed.extensionId)}`, "DELETE");

@@ -615,7 +615,11 @@ fn phase_of(name: &str) -> SpaceArtifactCreationPhaseV1 {
 }
 
 fn locale_of(name: &str) -> Locale {
-    if name == "de" { Locale::De } else { Locale::En }
+    if name == "de" {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🌱️ A signed-in workspace on the fixture's open space with its catalog ready.
@@ -667,7 +671,8 @@ fn every_fixture_creation_phase_paints_its_role_and_controls() {
         let mut state = creation_door();
         let catalog = state.creation.catalog.clone().expect("catalog");
         let kind = &catalog.kinds[0];
-        let intent = SpaceArtifactCreateV1 { schema: "semio.hub.space-artifact-create/v1".into(), request_id: "2".repeat(32), expected_catalog_generation_id: catalog.catalog_generation_id.clone(), kind_id: kind.kind_id.clone(), name: "Shared Map".into() };
+        let intent =
+            SpaceArtifactCreateV1 { schema: "semio.hub.space-artifact-create/v1".into(), request_id: "2".repeat(32), expected_catalog_generation_id: catalog.catalog_generation_id.clone(), kind_id: kind.kind_id.clone(), name: "Shared Map".into() };
         let ready = (phase == SpaceArtifactCreationPhaseV1::Ready).then(|| SpaceArtifactCreationReadyV1 {
             artifact_id: format!("artifact-{}", "4".repeat(32)),
             kind_id: kind.kind_id.clone(),
@@ -679,7 +684,19 @@ fn every_fixture_creation_phase_paints_its_role_and_controls() {
             "failed" => HubArtifactOpening::Failed,
             _ => HubArtifactOpening::Idle,
         };
-        state.creation.operation = Some(HubArtifactCreation { intent, space_id: catalog.space_id.clone(), phase, submitted: true, cancel_requested: case["cancelRequested"].as_bool().expect("cancel"), cancel_sent: false, ready, opening, last_answered_at_ms: 0, polls: 0, next_poll_at_ms: 0 });
+        state.creation.operation = Some(HubArtifactCreation {
+            intent,
+            space_id: catalog.space_id.clone(),
+            phase,
+            submitted: true,
+            cancel_requested: case["cancelRequested"].as_bool().expect("cancel"),
+            cancel_sent: false,
+            ready,
+            opening,
+            last_answered_at_ms: 0,
+            polls: 0,
+            next_poll_at_ms: 0,
+        });
         let tree = build_hub_workspace_ui(&state, locale);
         let painted = collected(&tree, texts);
         let buttons = collected(&tree, enabled_buttons);
@@ -736,14 +753,23 @@ fn the_door_seals_one_intent_for_a_chosen_kind_and_a_valid_name() {
     let kind_id = state.creation.catalog.as_ref().expect("catalog").kinds[0].kind_id.clone();
     state.creation.kind_id = Some(kind_id.clone());
     let intent = hub_artifact_creation_intent(&state).expect("a chosen kind and a name seal an intent");
-    assert_eq!(
-        (intent.request_id.as_str(), intent.expected_catalog_generation_id.as_str(), intent.kind_id.as_str(), intent.name.as_str()),
-        ("1".repeat(32).as_str(), fixture_catalog().catalog_generation_id.as_str(), kind_id.as_str(), "Shared Map")
-    );
+    assert_eq!((intent.request_id.as_str(), intent.expected_catalog_generation_id.as_str(), intent.kind_id.as_str(), intent.name.as_str()), ("1".repeat(32).as_str(), fixture_catalog().catalog_generation_id.as_str(), kind_id.as_str(), "Shared Map"));
     assert!(intent.validate());
     let buttons = collected(&build_hub_workspace_ui(&state, Locale::En), enabled_buttons);
     assert!(buttons.contains(&(format!("{HUB_ARTIFACT_CREATION_ID}.create"), true)));
-    state.creation.operation = Some(HubArtifactCreation { intent, space_id: "space-a".into(), phase: SpaceArtifactCreationPhaseV1::Preparing, submitted: true, cancel_requested: false, cancel_sent: false, ready: None, opening: HubArtifactOpening::Idle, last_answered_at_ms: 0, polls: 0, next_poll_at_ms: 0 });
+    state.creation.operation = Some(HubArtifactCreation {
+        intent,
+        space_id: "space-a".into(),
+        phase: SpaceArtifactCreationPhaseV1::Preparing,
+        submitted: true,
+        cancel_requested: false,
+        cancel_sent: false,
+        ready: None,
+        opening: HubArtifactOpening::Idle,
+        last_answered_at_ms: 0,
+        polls: 0,
+        next_poll_at_ms: 0,
+    });
     assert_eq!(hub_artifact_creation_intent(&state), None, "one creation at a time");
     state.creation.operation = None;
     state.creation.name_draft = "   ".into();

@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeZoneWind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-zone-window-shading-fc", "change-zone-window-shading-fc")
+        protocol::LocalizedLabel::native("Change shading reduction factor Fc", "Abminderungsfaktor Fc des Sonnenschutzes ändern")
     }
 }

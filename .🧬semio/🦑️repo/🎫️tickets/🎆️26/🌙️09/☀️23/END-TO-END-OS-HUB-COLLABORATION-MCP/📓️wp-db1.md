@@ -85,6 +85,20 @@ Agent: DB1 (session 13, Opus 5.5), started 19:07. Rules: `📓️session-13-prea
   faster than 24 serial reopens (2.06 s vs 24 × 94 ms), so something still serializes mounts (next: phase breakdown).
 - 20:55 **H9's unit storm law** (probe run, load ~95): **grown 24 × 128 in 12.5 s (baseline 1472 s), storm 605 ms,
   welcome p50 110 ms, max 482 ms (baseline 24.2 s / 11.8 s / 22.7 s)**.
+- 21:0x T13's contract gate HIGH (inline test in `🗄️storage/🦀️.rs`) = H9's `docker_server` helper (added 15:13): moved to
+  `🗄️storage/🧪️tests/🔬️docker-server/🦀️.rs`, same module path. Rule 26: my builds moved to `build-fleet-b`.
+- 21:0x–21:2x **throughput law redesigned for a load-independent storm bound**: `greet` records mount and welcome times; the
+  law now greets the same 24 documents ONE AFTER ANOTHER on a freshly opened database, then all at once on another fresh
+  open, and bounds `storm / serial ≤ 0.5` (wall) and `storm tasks / serial tasks ≤ 1.25` (census) instead of the old
+  `storm p50 / solo ≤ 8` (which compared 24 concurrent reopens to one). Prints the storm census and mount distribution.
+  Fixture schema-first: new `$defs/ThroughputV1` in `⚙️engine/🧬️schema/🔣️.json`; `reopen-storm-check` validates the
+  fixture with the repo AJV before running; one-off check `wp-db1/db1-throughput-schema-check.ts`: fixture valid, the old
+  bound name rejected, storm/serial > 1 rejected. `apply_entries` returns early for entry-less diffs (opaque/foreign
+  schemas: no 64-slot staging arrays); WAL staging copies (`try_admit`, `copy_for_operation`) yield once per 1 ms turn
+  (`db_wal::WalTurn`, renamed from `WalReplayTurn`). My 20:55 build-4 died (143) in the default build-dir convoy, the
+  21:06 cold build-5 on build-fleet-b was stopped by me at 21:23 (16 min, no rustc child, rule 25).
+- ~21:30 cut by the usage limit; every process died overnight (rule 28). 04:58 resume: working tree = HEAD for all my files
+  (auto-commit 22:00), nothing half-applied. 05:01 check-4 (db all drivers + async, lib + tests, build-fleet-b) running.
 ## Status
 
 | # | Item | Status |

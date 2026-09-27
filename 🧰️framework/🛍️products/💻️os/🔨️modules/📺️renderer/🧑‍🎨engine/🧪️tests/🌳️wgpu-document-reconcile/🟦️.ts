@@ -14,6 +14,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { uiIntentToActionDescriptor } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import type { UiValue } from "@semio-tech/framework";
 import laws from "../../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
@@ -44,7 +45,7 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
   readonly actionScope: {
     readonly documentController: string;
     readonly bindingController: string;
-    readonly selectRecord: { readonly id: number; readonly key: string; readonly bindings: readonly { readonly trigger: "change"; readonly action: { readonly scope: string; readonly name: string; readonly version: number }; readonly args: Record<string, unknown> }[] };
+    readonly selectRecord: { readonly id: number; readonly key: string; readonly bindings: readonly { readonly trigger: "change"; readonly action: { readonly scope: string; readonly name: string; readonly version: number }; readonly args: { readonly [key: string]: UiValue } }[] };
     readonly chosenItem: string;
     readonly expectedAction: { readonly controllerId: string; readonly action: string };
     readonly reactTwin: string;
@@ -201,6 +202,6 @@ describe("wgpu retained document reconcile", () => {
     const react = source("reactShellHelpersSource");
     expect(react, "React dispatches the action binding's own scope").toContain(`${action.reactTwin}(intent: UiIntent)`);
     expect(react, "fired intents preserve their authored action binding").toContain("actionBindingToActionDescriptor({ action: intent.action, args: null })");
-    expect(uiIntentToActionDescriptor({ surface: "settings", revision: 1, node: action.selectRecord.id, nodeKey: action.selectRecord.key, trigger: action.selectRecord.bindings[0]!.trigger, action: binding, args: action.selectRecord.bindings[0]!.args, input: action.chosenItem })).toEqual(action.expectedAction);
+    expect(uiIntentToActionDescriptor({ surface: "settings", revision: 1, node: action.selectRecord.id, nodeKey: action.selectRecord.key, trigger: action.selectRecord.bindings[0]!.trigger, action: binding, args: action.selectRecord.bindings[0]!.args, input: action.chosenItem, seq: 1n })).toEqual(action.expectedAction);
   });
 });

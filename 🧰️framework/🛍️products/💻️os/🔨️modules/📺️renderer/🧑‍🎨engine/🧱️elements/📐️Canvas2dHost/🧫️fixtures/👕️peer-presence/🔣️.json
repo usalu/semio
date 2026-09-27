@@ -1,0 +1,112 @@
+{
+  "schema": "semio.os.canvas2d-peer-presence-fixture.v1",
+  "note": "A Canvas2d author's pointer is published in WORLD coordinates (the drawing position) with its camera; a peer with the SAME camera paints the cursor under the author's own screen point, a peer with any camera paints it at the same drawing position. world = (client - size/2) / zoom + camera.",
+  "surfaceId": "drawing.play.composite",
+  "rows": [
+    {
+      "id": "origin-camera-centre",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "size": [
+        800,
+        600
+      ],
+      "client": [
+        400,
+        300
+      ],
+      "world": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "origin-camera-corner",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "size": [
+        800,
+        600
+      ],
+      "client": [
+        100,
+        50
+      ],
+      "world": [
+        -300.0,
+        -250.0
+      ]
+    },
+    {
+      "id": "panned-camera",
+      "camera": {
+        "x": 250,
+        "y": -120,
+        "zoom": 1
+      },
+      "size": [
+        800,
+        600
+      ],
+      "client": [
+        640,
+        420
+      ],
+      "world": [
+        490.0,
+        0.0
+      ]
+    },
+    {
+      "id": "zoomed-in",
+      "camera": {
+        "x": 10,
+        "y": 20,
+        "zoom": 4
+      },
+      "size": [
+        800,
+        600
+      ],
+      "client": [
+        200,
+        500
+      ],
+      "world": [
+        -40.0,
+        70.0
+      ]
+    },
+    {
+      "id": "zoomed-out",
+      "camera": {
+        "x": -300,
+        "y": 90,
+        "zoom": 0.25
+      },
+      "size": [
+        1024,
+        768
+      ],
+      "client": [
+        900,
+        100
+      ],
+      "world": [
+        1252.0,
+        -1046.0
+      ]
+    }
+  ],
+  "peerCamera": {
+    "x": -40,
+    "y": 60,
+    "zoom": 2
+  }
+}

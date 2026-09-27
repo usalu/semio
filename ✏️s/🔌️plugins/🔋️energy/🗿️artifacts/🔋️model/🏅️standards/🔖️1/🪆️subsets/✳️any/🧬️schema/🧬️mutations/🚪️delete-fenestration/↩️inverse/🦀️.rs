@@ -10,9 +10,6 @@ pub fn inverse(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) 
     let Some(existing) = base.model.fenestrations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
-    if false {
-        return Vec::new();
-    }
     // 🔶️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`), so a
     // window that carried its own polygon lists the polygon step FIRST and the re-creation LAST —
     // reversed, the aperture exists again before its shape is put back. `create-fenestration` does

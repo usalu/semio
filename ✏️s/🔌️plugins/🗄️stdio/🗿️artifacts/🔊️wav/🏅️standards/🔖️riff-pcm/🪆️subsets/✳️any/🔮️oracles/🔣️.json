@@ -75,6 +75,7 @@
         "set-snapshot",
         "set-fmt",
         "set-data",
+        "patch-data",
         "set-other-chunks"
       ]
     }
@@ -88,6 +89,27 @@
       "standardDirectoryName": "🔖️riff-pcm",
       "subsetDirectoryName": "✳️any",
       "mutations": [
+        {
+          "id": "patch-data",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-data",
+            "bridgeVersion": 1,
+            "variant": "PatchData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "hound-wav-riff-pcm-mutate-reader"
+            }
+          ]
+        },
         {
           "id": "set-data",
           "capability": "wav-riff-pcm-mutate",

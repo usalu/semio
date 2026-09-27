@@ -28,6 +28,9 @@ otel = []
 sqlite = ["dep:rusqlite"]
 postgres = ["dep:sqlx", "dep:tokio"]
 neo4j = ["dep:neo4rs", "dep:tokio"]
+# 🗝️ The claimed-shared-server test support (`db_storage::claimed_backend`) for OTHER crates' live laws (the hub's
+# directory lanes): never in a runtime build, only in their `[dev-dependencies]`.
+claimed-backend-laws = []
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

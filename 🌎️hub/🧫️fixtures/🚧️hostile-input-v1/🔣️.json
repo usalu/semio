@@ -286,6 +286,11 @@
       "route": "/directory/event-page/v1"
     },
     {
+      "method": "GET",
+      "path": "/directory/preference-page/v1",
+      "route": "DIRECTORY_PREFERENCE_PAGE_PATH_V1"
+    },
+    {
       "method": "POST",
       "path": "/directory/socket-grants",
       "route": "/directory/socket-grants",

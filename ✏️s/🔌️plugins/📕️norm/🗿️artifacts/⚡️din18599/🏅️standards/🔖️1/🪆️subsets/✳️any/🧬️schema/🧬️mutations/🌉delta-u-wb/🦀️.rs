@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeDeltaU
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change delta-u-wb", "delta-u-wb ändern")
+        protocol::LocalizedLabel::native("Change thermal bridge surcharge ΔUWB", "Wärmebrückenzuschlag ΔUWB ändern")
     }
 }

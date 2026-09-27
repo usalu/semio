@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerLam
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-lambda", "change-layer-lambda")
+        protocol::LocalizedLabel::native("Change thermal conductivity λ of the layer", "Wärmeleitfähigkeit λ der Schicht ändern")
     }
 }

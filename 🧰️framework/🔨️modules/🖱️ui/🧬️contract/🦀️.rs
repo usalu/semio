@@ -22,6 +22,8 @@
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema_metadata;
 
+#[path = "🔢️number-format/🦀️.rs"]
+mod number_format;
 #[path = "♿️accessibility/🦀️.rs"]
 mod accessibility;
 #[path = "🎬️action/🦀️.rs"]
@@ -55,6 +57,7 @@ mod surface;
 mod text_edit;
 
 pub use accessibility::*;
+pub use number_format::*;
 pub use action::*;
 pub use builder::*;
 pub use component::*;

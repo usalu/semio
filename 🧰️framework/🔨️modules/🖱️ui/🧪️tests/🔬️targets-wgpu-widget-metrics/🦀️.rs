@@ -4,12 +4,12 @@
 //! "Line height", and the widget rows), so a hand-typed literal creeping back in fails here rather
 //! than in a screenshot diff.
 
+use super::{HitKind, HitTarget, InputState, WidgetInteractionMaps};
 use crate::wgpu::chrome::{ICON_TINY, ICON_TREE_ROW, SIZE_TINY};
 use crate::wgpu::component::ui::{UiPresence, UiProgressNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
 use crate::wgpu::Label;
-use super::{HitKind, HitTarget, InputState, WidgetInteractionMaps};
 use std::collections::HashMap;
 
 /// 📶️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
@@ -102,7 +102,20 @@ async fn orbit_gizmo_heads_keep_diameter_when_the_viewport_moves() {
             let mut scroll = HashMap::new();
             let mut collapsed = HashMap::new();
             let mut selects = HashMap::new();
-            let mut ctx = WidgetContext { draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme, scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects, interaction_maps: None, pick_clip: None, viewport_height: viewport.h };
+            let mut ctx = WidgetContext {
+                draw: &mut draw,
+                overlay: None,
+                atlas: &mut atlas,
+                icons: None,
+                input: &mut input,
+                theme: &theme,
+                scroll_offsets: &mut scroll,
+                collapsed_sections: &mut collapsed,
+                open_selects: &mut selects,
+                interaction_maps: None,
+                pick_clip: None,
+                viewport_height: viewport.h,
+            };
             paint_orbit_view_gizmo(&mut ctx, &camera, viewport, hovered);
             let heads: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).collect();
             assert_eq!(heads.len(), 15);

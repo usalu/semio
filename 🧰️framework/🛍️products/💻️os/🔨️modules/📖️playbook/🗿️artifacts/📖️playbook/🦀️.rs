@@ -635,7 +635,7 @@ pub mod generation_forms {
                 }
             })
             .collect();
-        let mut sections = vec![UiTreeSectionNode { window: None,
+        let mut sections = vec![UiTreeSectionNode { header_toolbar: None, window: None,
             id: format!("{surface_prefix}.generations"),
             label: Some(generation_tree_label("generations", locale, terminology)),
             default_open: Some(true),
@@ -662,7 +662,7 @@ pub mod generation_forms {
             },
             presence: UiPresence::default(),
         }];
-        sections.push(UiTreeSectionNode { window: None,
+        sections.push(UiTreeSectionNode { header_toolbar: None, window: None,
             id: format!("{surface_prefix}.actions"),
             label: Some(generation_tree_label("actions", locale, terminology)),
             default_open: Some(true),

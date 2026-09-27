@@ -17,6 +17,17 @@ export type WgpuDynamicExtensionAdmission = {
 export const WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL = "semioWgpuInstallExtension";
 export const WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL = "semioWgpuRetireExtension";
 
+/** 🚪️ The two page/Worker globals the Rust shell's `js_plugin_install_door` calls; declared once so `globalThis` is a door host. */
+export type WgpuDynamicExtensionDoorHost = {
+  [WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]?: (recordJson: string) => Promise<unknown>;
+  [WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL]?: (extensionId: string) => Promise<void>;
+};
+
+declare global {
+  var semioWgpuInstallExtension: WgpuDynamicExtensionDoorHost[typeof WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL];
+  var semioWgpuRetireExtension: WgpuDynamicExtensionDoorHost[typeof WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL];
+}
+
 export function parseWgpuDynamicExtensionRecord(input: unknown): WgpuDynamicExtensionRecord {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("extension-install.record: expected object");
   const row = input as Record<string, unknown>;
@@ -42,7 +53,7 @@ export async function admitWgpuDynamicExtension(recordJson: string, mount: (reco
 }
 
 export function installWgpuDynamicExtensionDoor(
-  host: { [WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]?: (recordJson: string) => Promise<unknown>; [WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL]?: (extensionId: string) => Promise<void> },
+  host: WgpuDynamicExtensionDoorHost,
   mount: (record: WgpuDynamicExtensionRecord) => Promise<WgpuDynamicExtensionAdmission>,
   retire: (extensionId: string) => Promise<void>,
 ): void {

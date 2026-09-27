@@ -7538,3 +7538,25 @@ async fn shipped_object_kinds_are_the_two_examples_own_catalog_rows() {
     assert_eq!(authored, derived, "PUZZLE3D_SHIPPED_OBJECT_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
 }
 //#endregion 🔖️Pz2ShippedKindCatalog
+
+//#region 🔖️InitialSnapshotCost
+/// 🚀️ LAW (ticket 26/09/23, H12): the initial snapshot costs its document and nothing else. Every construction of
+/// this app pays for it — each mount, and every `codec` call a hub makes to create or validate a document, where
+/// the interpreter multiplies it — so it must never build a scene, sync a precompute session or parse an example
+/// the document does not read. Weighed by this thread's heap peak (`HeapWitness`), deterministic and independent
+/// of other laws: the snapshot may peak no higher than converting the default fixture itself, within 4 KiB.
+#[test]
+fn the_initial_snapshot_costs_only_its_document() {
+    let _ = default_fixture();
+    let peak_of = |work: &dyn Fn()| {
+        let before = semio_framework_trace::retained_heap_bytes_on_this_thread();
+        semio_framework_trace::reset_heap_peak_on_this_thread();
+        work();
+        semio_framework_trace::peak_heap_bytes_on_this_thread() - before
+    };
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into())));
+    let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
+    assert!(document > 0, "the witness weighs the document conversion: {document}");
+    assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
+}
+//#endregion 🔖️InitialSnapshotCost

@@ -4,7 +4,9 @@ import type { InsertPaletteEntryMutation } from './📥️insert-palette-entry/�
 import type { RemovePaletteEntryMutation } from './📤️remove-palette-entry/🟦️.ts';
 import type { ReplacePaletteEntryMutation } from './🎨️replace-palette-entry/🟦️.ts';
 import type { ReplacePixelDataMutation } from './🔲️replace-pixel-data/🟦️.ts';
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 export type BmpMutation =
+  | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot }
   | { readonly mutation: 'change-header-fields'; readonly payload: ChangeHeaderFieldsMutation }
   | { readonly mutation: 'insert-palette-entry'; readonly payload: InsertPaletteEntryMutation }
   | { readonly mutation: 'remove-palette-entry'; readonly payload: RemovePaletteEntryMutation }

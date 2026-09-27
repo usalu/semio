@@ -1,0 +1,139 @@
+{
+  "archive": {
+    "parent_pack": [
+      1,
+      2,
+      3
+    ],
+    "parent_spr": [
+      4,
+      5,
+      6
+    ],
+    "members": [
+      {
+        "ordinal": 0,
+        "reference": {
+          "artifact_id": "image",
+          "artifact_kind": "s.stdio.png",
+          "standard": "1.2",
+          "subset": "*"
+        },
+        "owner": {
+          "parent": {
+            "artifact_id": "drawing",
+            "artifact_kind": "s.draw.drawing",
+            "standard": "1",
+            "subset": "*"
+          },
+          "slot": "assets",
+          "child_id": "image"
+        },
+        "envelope_pack": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "complete-archive-ready-before-publication",
+      "events": [
+        "capture",
+        "create",
+        "restore",
+        "attach"
+      ],
+      "ready": true
+    },
+    {
+      "name": "capture-failure-retains-predecessor",
+      "failure": "capture",
+      "events": [
+        "capture"
+      ],
+      "ready": false
+    },
+    {
+      "name": "create-failure-retains-predecessor",
+      "failure": "create",
+      "events": [
+        "capture",
+        "create"
+      ],
+      "ready": false
+    },
+    {
+      "name": "restore-failure-retains-predecessor",
+      "failure": "restore",
+      "events": [
+        "capture",
+        "create",
+        "restore",
+        "release"
+      ],
+      "ready": false
+    },
+    {
+      "name": "attach-failure-retains-predecessor",
+      "failure": "attach",
+      "events": [
+        "capture",
+        "create",
+        "restore",
+        "attach",
+        "release"
+      ],
+      "ready": false
+    },
+    {
+      "name": "stale-after-capture",
+      "staleAfter": "capture",
+      "events": [
+        "capture"
+      ],
+      "ready": false
+    },
+    {
+      "name": "stale-after-create",
+      "staleAfter": "create",
+      "events": [
+        "capture",
+        "create",
+        "release"
+      ],
+      "ready": false
+    },
+    {
+      "name": "stale-after-restore",
+      "staleAfter": "restore",
+      "events": [
+        "capture",
+        "create",
+        "restore",
+        "release"
+      ],
+      "ready": false
+    },
+    {
+      "name": "stale-after-attach",
+      "staleAfter": "attach",
+      "events": [
+        "capture",
+        "create",
+        "restore",
+        "attach",
+        "release"
+      ],
+      "ready": false
+    },
+    {
+      "name": "stale-before-capture",
+      "initiallyCurrent": false,
+      "events": [],
+      "ready": false
+    }
+  ]
+}

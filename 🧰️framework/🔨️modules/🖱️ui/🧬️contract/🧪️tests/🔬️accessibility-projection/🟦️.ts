@@ -22,6 +22,7 @@ type ExpectedRow = {
   readonly hidden: boolean;
   readonly disabled: boolean;
   readonly focusable: boolean;
+  readonly tabbable: boolean;
   readonly actionable: boolean;
   readonly valueMin?: number | null;
   readonly valueMax?: number | null;
@@ -80,6 +81,7 @@ export function accessibilityProjectionSelfTests(): number {
     assert.equal(node.hidden, row.hidden, `${row.key}: hidden`);
     assert.equal(node.disabled, row.disabled, `${row.key}: disabled`);
     assert.equal(node.focusable, row.focusable, `${row.key}: focusable`);
+    assert.equal(node.tabbable, row.tabbable, `${row.key}: tabbable`);
     assert.equal(node.actionable, row.actionable, `${row.key}: actionable`);
     assert.equal(node.focused, false, "the pure projection stamps no live focus — only a renderer's own walk does");
     assert.equal(node.valueMin, row.valueMin ?? null, `${row.key}: valueMin`);

@@ -14,10 +14,10 @@ export interface DeflateEditMainViewModel {
   readOnly: false;
 }
 
-/** ✏️ `replace-text` payload shape — mirrors `DeflateEditorCommand::ReplaceText`. The whole header
+/** ✏️ `textEdit` payload shape — mirrors `DeflateEditorCommand::ReplaceText`. The whole header
  * summary is parsed back into `SetCompressionParams`/`SetPresetDictionary`; the payload comment
  * line is ignored on parse (informational only, never round-tripped). */
-export interface DeflateReplaceText {
+export interface DeflateTextEdit {
   text: string;
 }
 

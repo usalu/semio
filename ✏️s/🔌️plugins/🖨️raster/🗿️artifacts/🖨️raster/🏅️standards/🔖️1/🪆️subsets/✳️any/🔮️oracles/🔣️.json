@@ -214,7 +214,8 @@
         "change-layer-adjustment-kind",
         "add-layer-asset",
         "remove-layer-asset",
-        "change-layer-pixels"
+        "change-layer-pixels",
+        "change-layer-mask"
       ]
     }
   ],
@@ -488,6 +489,27 @@
             "operation": "change-layer-pixels",
             "bridgeVersion": 1,
             "variant": "ChangeLayerPixels"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-mask",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-mask",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerMask"
           },
           "oracleRequirements": [
             {

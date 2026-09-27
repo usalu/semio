@@ -503,9 +503,13 @@ semio-s-plugin-wfc = { path = "✏️s/🔌️plugins/🀄️wfc/📦️packages
 semio-s-plugin-wfc-engine = { path = "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust" }
 semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }
 
+# 🗃️ No incremental session state in any profile: every checkout, agent and IDE compiles into ONE shared build-dir
+# (`.cargo/config.toml`), where incremental sessions grew to 159 GB overnight (2026-09-27: debug 126 GB, wasm32 33 GB)
+# and, because `incremental` is part of a unit's profile identity, split every unit into two copies by the caller's
+# `CARGO_INCREMENTAL`. `CARGO_INCREMENTAL=1` still opts a private build-dir back in.
 [profile.dev]
 debug = false
-incremental = true
+incremental = false
 
 [profile.dev.build-override]
 opt-level = 3
@@ -622,11 +626,6 @@ codegen-units = 1
 # inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
 # different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
 incremental = false
-
-# 🔐️ The dev-profile hash optimization above is for native hosts' credential checks; guests keep their
-# own `wasm-dev` code for this crate, so a component's bytes do not change with a host-side decision.
-[profile.wasm-dev.package.semio-framework-hash]
-opt-level = 0
 
 # 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
 # profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and

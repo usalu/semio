@@ -11,7 +11,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 15] = [
+const TEXT_KEYWORDS: [(&str, &str); 16] = [
+    ("set-snapshot", "setSnapshot"),
     ("create-object", "createObject"),
     ("delete-object", "deleteObject"),
     ("create-model", "createModel"),
@@ -32,6 +33,7 @@ const TEXT_KEYWORDS: [(&str, &str); 15] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioKitMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_CREATE_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-object");
 const TAG_DELETE_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-object");
 const TAG_CREATE_MODEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-model");
@@ -52,6 +54,7 @@ const TAG_EDIT_DESIGN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "edit-de
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioKitMutation) -> u8 {
     match m {
+        SemioKitMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioKitMutation::CreateObject(_) => TAG_CREATE_OBJECT,
         SemioKitMutation::DeleteObject(_) => TAG_DELETE_OBJECT,
         SemioKitMutation::CreateModel(_) => TAG_CREATE_MODEL,

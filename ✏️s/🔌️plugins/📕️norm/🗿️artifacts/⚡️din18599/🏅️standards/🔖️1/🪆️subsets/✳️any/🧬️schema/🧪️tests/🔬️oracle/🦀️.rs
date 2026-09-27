@@ -6,9 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn ticket_generated() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/🗑️generated/din18599",
-    )
+    std::env::temp_dir().join("semio-norm-din18599-oracle")
 }
 
 fn family_any_dir() -> PathBuf {
@@ -42,7 +40,7 @@ fn json_schema_validates_default_and_noncompliant_snapshots() {
 
 #[test]
 fn python_oracle_matches_evaluate_within_half_percent() {
-    let oracle = family_any_dir().join("🧪️tests/⚡️balance-din18599-1/🐍️.py");
+    let oracle = family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py");
     assert!(oracle.exists(), "{}", oracle.display());
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);

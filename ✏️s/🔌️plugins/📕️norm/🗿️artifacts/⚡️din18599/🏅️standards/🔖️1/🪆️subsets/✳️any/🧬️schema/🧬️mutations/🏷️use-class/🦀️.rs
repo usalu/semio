@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeUseCla
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change use-class", "use-class ändern")
+        protocol::LocalizedLabel::native("Change usage profile", "Nutzungsprofil ändern")
     }
 }

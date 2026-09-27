@@ -69,5 +69,7 @@
     "demonstrator/curation": "sourcing",
     "demonstrator/process3d": "process",
     "demonstrator/gismap": "gis"
-  }
+  },
+  "hubKindVerbs": {"2d.wfcbitmap": "change-seed", "2d.wfcgrid2d": "create-tile", "3d.wfcgrid3d": "changeSeed", "s.gis.gismap": "addFeature", "2d.puzzle": "addNode", "3d.puzzle": "duplicateSelection", "text.document": "setText"},
+  "hubKindPre": {"3d.puzzle": "selectAll"}
 }

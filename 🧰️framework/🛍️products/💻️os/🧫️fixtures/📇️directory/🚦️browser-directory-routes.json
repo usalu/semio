@@ -1,0 +1,30 @@
+{
+  "description": "The hub directory routes a page's backbone worker may call with the human's session (ticket 26/09/23 S16): the space list, one space, the event page and the caller's own preference page (each exactly one canonical safe-decimal `after`), the event stream (`since`) and the command lane. Every other method, path or query is refused before the network. `allowed` rows are the oracle's `routes` (path-to-regexp pattern + the one query parameter and its grammar).",
+  "routes": [
+    { "method": "GET", "pattern": "/directory/spaces", "query": null },
+    { "method": "GET", "pattern": "/directory/spaces/:spaceId", "query": null },
+    { "method": "GET", "pattern": "/directory/events", "query": { "name": "since", "grammar": "digits" } },
+    { "method": "GET", "pattern": "/directory/event-page/v1", "query": { "name": "after", "grammar": "safe-decimal" } },
+    { "method": "GET", "pattern": "/directory/preference-page/v1", "query": { "name": "after", "grammar": "safe-decimal" } },
+    { "method": "POST", "pattern": "/directory/commands", "query": null }
+  ],
+  "requests": [
+    { "method": "GET", "path": "/directory/spaces", "allowed": true },
+    { "method": "GET", "path": "/directory/spaces/01a0e21c-space", "allowed": true },
+    { "method": "GET", "path": "/directory/spaces?x=1", "allowed": false },
+    { "method": "GET", "path": "/directory/events?since=12", "allowed": true },
+    { "method": "GET", "path": "/directory/events?since=12&x=1", "allowed": false },
+    { "method": "GET", "path": "/directory/event-page/v1?after=3", "allowed": true },
+    { "method": "GET", "path": "/directory/event-page/v1?after=03", "allowed": false },
+    { "method": "GET", "path": "/directory/event-page/v1?after=9007199254740992", "allowed": false },
+    { "method": "GET", "path": "/directory/preference-page/v1?after=0", "allowed": true },
+    { "method": "GET", "path": "/directory/preference-page/v1?after=6", "allowed": true },
+    { "method": "GET", "path": "/directory/preference-page/v1?after=-1", "allowed": false },
+    { "method": "GET", "path": "/directory/preference-page/v1?after=6&userId=u2", "allowed": false },
+    { "method": "GET", "path": "/directory/preference-page/v1", "allowed": false },
+    { "method": "POST", "path": "/directory/preference-page/v1?after=0", "allowed": false },
+    { "method": "POST", "path": "/directory/commands", "allowed": true },
+    { "method": "DELETE", "path": "/directory/commands", "allowed": false },
+    { "method": "GET", "path": "/directory/admin", "allowed": false }
+  ]
+}

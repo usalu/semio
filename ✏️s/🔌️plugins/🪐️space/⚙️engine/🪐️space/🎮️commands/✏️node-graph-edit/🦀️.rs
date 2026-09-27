@@ -14,7 +14,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let edit_operations = pack::parse_json(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(pack::JsonValue::as_array).cloned()).unwrap_or_default();
     let mut artifact_mutations = Vec::new();
     let mut config_mutations = Vec::new();

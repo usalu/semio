@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "checkpointId": "checkpoint-authors",
+  "avatarSize": 20.0,
+  "overlap": 8.0,
+  "advance": 12.0,
+  "authors": [
+    {
+      "id": "ada",
+      "name": "Ada Lovelace",
+      "avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%235b21b6'/%3E%3C/svg%3E",
+      "initials": "AL"
+    },
+    {
+      "id": "grace",
+      "name": "Grace Hopper",
+      "initials": "GH"
+    }
+  ],
+  "replacementAvatar": "data:image/svg+xml,invalid"
+}

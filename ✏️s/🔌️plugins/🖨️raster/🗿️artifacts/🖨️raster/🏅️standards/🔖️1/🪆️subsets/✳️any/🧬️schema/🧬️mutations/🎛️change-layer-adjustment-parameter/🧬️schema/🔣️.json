@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-adjustment-parameter/schema.json",
+  "title": "Change Layer Adjustment Parameter",
+  "description": "Changes one brightness/contrast parameter with an expected prior value; null restores the implicit zero default.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "parameter",
+    "expected",
+    "value"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parameter": {
+      "enum": [
+        "brightness",
+        "contrast"
+      ]
+    },
+    "expected": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": -1,
+      "maximum": 1
+    },
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": -1,
+      "maximum": 1
+    }
+  }
+}

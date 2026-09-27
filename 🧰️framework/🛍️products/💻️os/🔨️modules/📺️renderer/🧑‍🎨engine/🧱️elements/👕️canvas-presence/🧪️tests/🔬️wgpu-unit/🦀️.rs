@@ -67,7 +67,12 @@ pub(crate) fn peer(value: &Value) -> PresencePeer {
                 .as_array()
                 .expect("domains")
                 .iter()
-                .map(|domain| PresenceDomain { domain: domain["domain"].as_str().expect("domain").to_string(), granularity: domain["granularity"].as_str().expect("granularity").to_string(), selected: strings(&domain["selected"]), hovered: strings(&domain["hovered"]) })
+                .map(|domain| PresenceDomain {
+                    domain: domain["domain"].as_str().expect("domain").to_string(),
+                    granularity: domain["granularity"].as_str().expect("granularity").to_string(),
+                    selected: strings(&domain["selected"]),
+                    hovered: strings(&domain["hovered"]),
+                })
                 .collect(),
         }),
         color: value.get("color").and_then(Value::as_u64).map(|color| color as u8),

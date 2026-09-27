@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTowerInput
     }
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(
-            &format!("Upsert tower leg {}", self.tower_leg.id),
-            &format!("Turmstiel setzen {}", self.tower_leg.id),
+            &format!("Update tower leg {}", self.tower_leg.id),
+            &format!("Turmstiel {} aktualisieren", self.tower_leg.id),
         )
     }
     fn target(&self) -> Vec<String> {

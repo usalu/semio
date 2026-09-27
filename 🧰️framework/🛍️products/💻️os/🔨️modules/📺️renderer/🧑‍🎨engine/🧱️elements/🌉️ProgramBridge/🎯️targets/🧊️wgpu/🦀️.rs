@@ -352,6 +352,19 @@ mod wasm_program_exchange {
         expect_done(&outcome.frames, seq)
     }
 
+    pub async fn read_app_document_archive(client: &KernelClient, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
+        let seq = next_seq();
+        let outcome = exchange(client, instance_id, vec![AppCommand::ReadDocumentArchive { seq }]).await?;
+        outcome
+            .frames
+            .into_iter()
+            .find_map(|frame| match frame {
+                AppFrame::DocumentArchive { in_reply_to, archive } if in_reply_to == seq => Some(archive),
+                _ => None,
+            })
+            .ok_or_else(|| format!("plugin sent no DocumentArchive for seq {seq}"))
+    }
+
     pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
         let operation = next_seq();
         let admitted = exchange(client, instance_id, vec![AppCommand::LoadDocumentArchive { seq: operation, archive: archive.clone() }]).await?;
@@ -758,6 +771,21 @@ impl ProgramBridgeEntry {
             ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "loadAppArtifactPack", instance_id, &[pack, spr]).await,
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_pack(client, instance_id, pack, spr).await,
+        }
+    }
+
+    pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
+        match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_app_document_archive(client, instance_id).await,
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => {
+                let args = Array::new();
+                args.push(&JsValue::from_f64(f64::from(instance_id)));
+                let result = call_js(handle, "readAppDocumentArchive", &args).await?;
+                let bytes = result.dyn_into::<js_sys::Uint8Array>().map_err(|_| "readAppDocumentArchive returned no byte archive".to_string())?.to_vec();
+                protocol::decode_document_archive_bytes(&bytes).await.map_err(|error| error.to_string())
+            }
         }
     }
 

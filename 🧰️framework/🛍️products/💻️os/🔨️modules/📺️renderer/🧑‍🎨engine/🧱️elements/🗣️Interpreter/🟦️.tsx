@@ -95,6 +95,8 @@ import {
   PAINT2D_SCENE_LANES,
   TILEDMAP_SCENE_LANES,
   WORLD3D_SCENE_LANES,
+  TEXT_EDITOR_SCENE_LANES,
+  TABLE_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
   board2dSceneFromLanes,
   canvas2dSceneFromLanes,
@@ -446,6 +448,8 @@ const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
  * navigator windows rendered completely empty, with no console error and no texture upload
  * (measured on :6033, ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). One table, one decision. */
 const SURFACE_KIND_SCENE_LANES: Record<string, readonly SceneLane<Record<string, unknown>>[]> = {
+  "text-editor": TEXT_EDITOR_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  table: TABLE_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "world-3d": WORLD3D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "canvas-2d": CANVAS2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "board-2d": BOARD2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
@@ -539,8 +543,8 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
 }
 
 /** 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to. Only a
- * scene kind that declares lanes has one — the FIVE whose Rust `SceneDoc` overrides `split_lanes`:
- * `world-3d`, `canvas-2d`, `board-2d`, `tiled-map` and `paint-2d`. Every other kind renders its decoded
+ * scene kind that declares lanes has one — `world-3d`, `canvas-2d`, `board-2d`, `tiled-map`,
+ * `paint-2d` and `text-editor`. Every other kind renders its decoded
  * doc verbatim. A kind that splits but is not listed in {@link SurfaceView}'s route gets its lane
  * fields as EMPTY STRINGS, which is silent at every layer — see {@link PagedSurfaceView}. */
 type SurfaceSceneAssembler = (spine: Record<string, unknown>) => Record<string, unknown>;
@@ -1113,7 +1117,7 @@ type DeclarativeUiControl =
   | (DeclarativeControlBase & { readonly type: "toggle"; readonly id: string; readonly iconId: string; readonly pressed: boolean; readonly text?: string; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "keyValue"; readonly entries: readonly { readonly label: string; readonly value: string }[] })
   | (DeclarativeControlBase & { readonly type: "slider"; readonly id: string; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly unit?: string; readonly onChange: ActionDescriptor })
-  | (DeclarativeControlBase & { readonly type: "numberStepper"; readonly id: string; readonly value: number; readonly step: number; readonly uniform: boolean; readonly onAbsolute: ActionDescriptor; readonly onDelta: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "numberStepper"; readonly id: string; readonly value: number; readonly step: number; readonly uniform: boolean; readonly min?: number; readonly max?: number; readonly onAbsolute: ActionDescriptor; readonly onDelta: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "ring"; readonly id: string; readonly orbId: string; readonly t: number; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "iconSelect"; readonly id: string; readonly value: string; readonly uniform: boolean; readonly classifierKind: string; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "button"; readonly iconId: string; readonly label: string; readonly action: ActionDescriptor });
@@ -1156,12 +1160,12 @@ export function renderUiControl(control: DeclarativeUiControl, onAction: (action
     case "keyValue":
       return <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>{control.entries.map((entry, index) => <div key={`${entry.label}:${index}`} className="contents"><dt className="text-muted-foreground">{entry.label}</dt><dd className="tabular-nums">{entry.value}</dd></div>)}</dl>;
     case "slider": {
-      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} value={[control.value]} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
+      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} value={[control.value]} aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null }).valueText ?? undefined} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
       if (!control.unit) return slider;
       return <div className="flex min-w-0 w-full items-center gap-single">{slider}<span className="text-muted-foreground shrink-0 text-xs tabular-nums">{control.value} {control.unit}</span></div>;
     }
     case "numberStepper":
-      return <Stepper id={control.id} step={control.step} value={control.uniform ? control.value : undefined} mixed={!control.uniform} onChange={(value) => dispatchDeclarativeControlAction(onAction, control.onAbsolute, { value })} onDelta={(delta) => dispatchDeclarativeControlAction(onAction, control.onDelta, { delta })} />;
+      return <Stepper id={control.id} step={control.step} min={control.min} max={control.max} value={control.uniform ? control.value : undefined} mixed={!control.uniform} onChange={(value) => dispatchDeclarativeControlAction(onAction, control.onAbsolute, { value })} onDelta={(delta) => dispatchDeclarativeControlAction(onAction, control.onDelta, { delta })} />;
     case "ring":
       return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchDeclarativeControlAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: declarativeControlDisabled(control), id: control.orbId, selected: true, t: control.t }]} />;
     case "iconSelect":
@@ -1273,27 +1277,37 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
  * commit-on-blur input in the fleet was uneditable for the same reason.
  *
  * The draft follows the published value whenever the GUEST changes it (the render-phase adjustment
- * React documents for derived state), so an outside edit still wins, while local typing is kept. */
-function useCommitDraft(published: string): [string, (next: string) => void] {
+ * React documents for derived state), so an outside edit still wins, while local typing is kept.
+ * Changing the command binding discards the previous target’s draft; unchanged and already submitted
+ * values do not emit another command. */
+function useCommitDraft(published: string, scope: string): [string, (next: string) => void, (value: string) => boolean] {
   const [draft, setDraft] = useState(published);
-  const publishedRef = useRef(published);
-  if (publishedRef.current !== published) {
-    publishedRef.current = published;
+  const publishedRef = useRef({ value: published, scope });
+  const committedRef = useRef(published);
+  if (publishedRef.current.value !== published || publishedRef.current.scope !== scope) {
+    publishedRef.current = { value: published, scope };
+    committedRef.current = published;
     if (draft !== published) setDraft(published);
   }
-  return [draft, setDraft];
+  return [draft, setDraft, (value) => {
+    if (value === committedRef.current) return false;
+    committedRef.current = value;
+    return true;
+  }];
 }
 
 function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
-  const [draft, setDraft] = useCommitDraft(component.value);
+  const draftScope = useMemo(() => JSON.stringify(record.bindings), [record.bindings]);
+  const [draft, setDraft, takeDraftCommit] = useCommitDraft(component.value, draftScope);
   const lane = useContinuousTriggerLane(context, record);
   // 🎚️ A number field with no `commit` mode IS a continuous control: a held spinner, an arrow key on
   // repeat and a scripted value stream all emit a value per frame, and each one costs a whole
   // document round trip. It rides the same coalescing lane as a slider, and its blur is the release.
   const continuous = component.kind === "number" && !commitOnBlur;
   const commitValue = (raw: string) => {
+    if (commitOnBlur && !takeDraftCommit(raw)) return;
     const value: UiValue = component.kind === "number" ? toUiValue(Number(raw)) : toUiValue(raw);
     if (continuous) {
       lane.offer(value);
@@ -1314,6 +1328,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       <Textarea
         id={nodeDomId(context.store, record)}
         data-ui-node-id={record.id} data-ui-node-key={record.key}
+        aria-label={record.accessibility.label ?? undefined}
+        disabled={record.disabled}
         className="min-h-[4.5rem] w-full min-w-0"
         value={commitOnBlur ? draft : component.value}
         placeholder={component.placeholder ?? undefined}
@@ -1328,6 +1344,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     <Input
       id={nodeDomId(context.store, record)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
+      aria-label={record.accessibility.label ?? undefined}
+      disabled={record.disabled}
       type={inputType}
       className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0"
       value={component.kind === "file" ? undefined : commitOnBlur ? draft : component.value}
@@ -1346,8 +1364,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
 function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
   return (
-    <Select id={`${nodeDomId(context.store, record)}-select`} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
-      <SelectTrigger id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
+    <Select id={`${nodeDomId(context.store, record)}-select`} disabled={record.disabled} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+      <SelectTrigger id={nodeDomId(context.store, record)} aria-label={record.accessibility.label ?? undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
       <SelectContent>
@@ -1414,6 +1432,8 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
     <Stepper
       id={nodeDomId(context.store, record)}
       step={component.step}
+      min={component.min ?? undefined}
+      max={component.max ?? undefined}
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
       onChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}

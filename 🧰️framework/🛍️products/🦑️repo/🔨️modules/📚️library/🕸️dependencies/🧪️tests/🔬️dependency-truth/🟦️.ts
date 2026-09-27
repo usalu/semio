@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { dependencyClassifyOracleEntry, dependencyIsCompositionManifest, dependencyParseGoModule, type DependencyBaselineEntry, type DependencyEcosystem, type DependencyKind } from "../../📇️inventory/🟦️.ts";
+import { dependencyClassifyOracleEntry, dependencyTestDomain, dependencyIsCompositionManifest, dependencyParseGoModule, type DependencyBaselineEntry, type DependencyEcosystem, type DependencyKind } from "../../📇️inventory/🟦️.ts";
 import { DEPENDENCY_REPO_POLICY_ROOT, DEPENDENCY_REPO_POLICY_ROUTERS, dependencyRepoPolicyImportBoundaryFailure, dependencyRepoPolicyLibrarySpecifier, dependencyRepoPolicyRouterSetFailure, dependencyTruthReportFromEntries } from "../../⚖️truth/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
@@ -23,10 +25,17 @@ export function dependencyTruthSelfTests(): number {
   if (goExternal.some((entry) => entry.name === "github.com/example/first") || goExternal.some((entry) => entry.name === "github.com/example/replaced")) throw new Error("[verify dependencies self-test] first-party Go module or local replace was retained as external.");
   if (!goExternal.some((entry) => entry.name === "example.net/external" && entry.kind === "production-build")) throw new Error("[verify dependencies self-test] external indirect Go requirement was not retained as production build input.");
   const oracleRuntime: DependencyBaselineEntry = { ecosystem: "rust", name: "runtime-oracle-name", version: "1", kinds: ["production-runtime"], users: ["product/Cargo.toml"], productionReachable: true };
-  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"], "🧪️oracle");
+  const testDomain = dependencyTestDomain({ testsDirName: "🧪️tests", testFixturesDirName: "🧫️fixtures", testExamplesDirName: "📚️examples", testOraclesDirName: "🔮️oracles", testProbeDirName: "🔬️probes", testGeneratorDirName: "🏭️generator", testDomainPath: "repo/🧪️test" });
+  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"], testDomain);
   if (!oracleRuntime.kinds.includes("production-runtime") || oracleRuntime.oracleConflictUsers?.[0] !== "product/Cargo.toml") throw new Error("[verify dependencies self-test] direct runtime manifest hid behind an oracle registry name.");
   const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/oracleCargo.toml"], productionReachable: false };
-  dependencyClassifyOracleEntry(oracleOnly, ["isolated"], "🧪️oracle");
+  dependencyClassifyOracleEntry(oracleOnly, ["isolated"], testDomain);
+  for (const [user, owned] of [["plugin/🗿️artifacts/pdf/🏭️generator/Cargo.toml", true], ["plugin/🗿️artifacts/pdf/🔬️probes/read/Cargo.toml", true], ["plugin/🔮️oracles/Cargo.toml", true], ["repo/🧪️test/Cargo.toml", true], ["plugin/🏭️bridge/Cargo.toml", false], ["plugin/🧪️oracle/Cargo.toml", false], ["repo/🧪️test-copy/Cargo.toml", false]] as const) {
+    const declared: DependencyBaselineEntry = { ecosystem: "rust", name: "reference", version: "1", kinds: ["production-runtime"], users: [user], productionReachable: true };
+    dependencyClassifyOracleEntry(declared, ["reference"], testDomain);
+    if ((declared.kinds.join() === "test-oracle") !== owned) throw new Error(`[verify dependencies self-test] test-domain ownership of ${user} was ${owned ? "missed" : "invented"}.`);
+  }
+  if (!dependencyTestDomain(JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"))).directoryNames.includes("🏭️generator")) throw new Error("[verify dependencies self-test] the taxonomy's fixture-generator directory is not part of the dependency test domain.");
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
   const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });

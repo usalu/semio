@@ -8,11 +8,9 @@
   "exports": {
     ".": "./🟦️.ts"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "ajv": "^8.20.0"
-  },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "ajv": "^8.20.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
   },

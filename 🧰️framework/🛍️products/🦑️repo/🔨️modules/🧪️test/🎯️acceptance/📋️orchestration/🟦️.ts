@@ -48,7 +48,7 @@ export type AcceptanceCheckResult = Readonly<{
 }>;
 
 /** 🧩️ What a plan check needs from the gate's environment. */
-export type AcceptanceRequirement = "hub" | "serve" | "backends";
+export type AcceptanceRequirement = "hub" | "serve" | "localServe" | "backends" | "hubAdmin";
 
 /** 🧪️ One check of the goal plan: an Nx target plus its arguments; `{hub}` and `{serve}` are substituted. */
 export type GoalPlanCheck = Readonly<{
@@ -75,6 +75,7 @@ export type GoalSummary = Readonly<{
   plan: string;
   hub: string | null;
   serve: string | null;
+  localServe: string | null;
   startedAt: string;
   finishedAt: string;
   verdict: AcceptanceStatus;
@@ -193,6 +194,31 @@ export function publishAcceptanceCheckResult(repoRoot: string, result: Acceptanc
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(result, null, 2)}\n`);
 }
+/** 🧯️ Runs one harness body and guarantees its acceptance record: an error the body throws (an unreachable hub, a
+ * missing binary, a refused sign-in) is published as a `fail` record — or `blocked` when `blockedWhen` classifies it as a
+ * missing precondition — carrying the error in en + de, and the process exit code is set; nothing is swallowed silently.
+ * The body publishes its own record when it completes. */
+export async function withAcceptanceRecord(repoRoot: string, check: string, body: () => Promise<void>, blockedWhen: (error: unknown) => boolean = () => false): Promise<void> {
+  const startedAt = new Date();
+  try {
+    await body();
+  } catch (error) {
+    const message = String(error instanceof Error ? error.message : error).split("\n")[0]!.slice(0, 600);
+    const blocked = blockedWhen(error);
+    publishAcceptanceCheckResult(
+      repoRoot,
+      acceptanceCheckResult({
+        check,
+        status: blocked ? "blocked" : "fail",
+        startedAt,
+        measured: { harnessError: true },
+        summary: { en: `${blocked ? "precondition missing" : "harness stopped"}: ${message}`, de: `${blocked ? "Voraussetzung fehlt" : "Prüfprogramm abgebrochen"}: ${message}` },
+      }),
+    );
+    process.exitCode = 1;
+  }
+}
+
 //#endregion 🧾️CheckResult
 
 //#region 🎯️GoalGate
@@ -200,7 +226,9 @@ export function publishAcceptanceCheckResult(repoRoot: string, result: Acceptanc
 export type GoalGateOptions = Readonly<{
   hub: string | null;
   serve: string | null;
+  localServe: string | null;
   hubBinary: string | null;
+  hubAdminCapability: string | null;
   users: readonly Readonly<{ email: string; password: string }>[];
   planPath: string;
   outDir: string;
@@ -242,14 +270,18 @@ const STATUS_WORD: Readonly<Record<AcceptanceStatus, LocalizedText>> = {
   skipped: { en: "skipped", de: "übersprungen" },
 };
 
-/** 🔣️ Substitutes the gate's tokens: `{hub}`, `{serve}`, `{hubBinary}` and `{user<N>Email}` / `{user<N>Password}`
+/** 🔣️ Substitutes the gate's tokens: `{hub}`, `{serve}` (a serve joined to that hub), `{localServe}` (a local-only serve
+ * where every plugin loads — the program matrix and idle census enumerate its catalog), `{hubBinary}`, `{hubAdminCapability}` (the hub launcher's `0600`
+ * admin-capability file, a path) and `{user<N>Email}` / `{user<N>Password}`
  * (1-based, from `--users`). Credentials are only ever substituted into ENVIRONMENT values, never into arguments, so no
  * secret reaches a log line. */
 function substitute(value: string, options: GoalGateOptions): string {
   return value
     .replaceAll("{hub}", options.hub ?? "")
     .replaceAll("{serve}", options.serve ?? "")
+    .replaceAll("{localServe}", options.localServe ?? "")
     .replaceAll("{hubBinary}", options.hubBinary ?? "")
+    .replaceAll("{hubAdminCapability}", options.hubAdminCapability ?? "")
     .replace(/\{user(\d)(Email|Password)\}/gu, (_, index: string, field: string) => options.users[Number(index) - 1]?.[field === "Email" ? "email" : "password"] ?? "");
 }
 
@@ -257,13 +289,17 @@ function syntheticResult(check: GoalPlanCheck, status: AcceptanceStatus, started
   return acceptanceCheckResult({ check: check.id, status, startedAt, measured, summary, evidence });
 }
 
-function missingRequirement(check: GoalPlanCheck, options: GoalGateOptions): AcceptanceRequirement | undefined {
-  return check.requires.find((requirement) => (requirement === "hub" && !options.hub) || (requirement === "serve" && !options.serve));
+/** 🐳️ The pre-step that stands up the shared postgres + neo4j servers once for every check requiring `backends`. */
+const GOAL_GATE_BACKENDS_CHECK: GoalPlanCheck = { id: "backends-up", title: { en: "Shared postgres and neo4j servers", de: "Gemeinsame postgres- und neo4j-Server" }, criteria: ["2.4"], project: "os-hub-ts", target: "backend-up", args: ["all"], requires: [], browsers: 0 };
+
+function missingRequirement(check: GoalPlanCheck, options: GoalGateOptions, backendsReady: boolean | null): AcceptanceRequirement | undefined {
+  return check.requires.find((requirement) => (requirement === "hub" && !options.hub) || (requirement === "serve" && !options.serve) || (requirement === "localServe" && !options.localServe) || (requirement === "hubAdmin" && !options.hubAdminCapability) || (requirement === "backends" && backendsReady === false));
 }
 
-async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGateOptions, children: Set<ChildProcess>): Promise<AcceptanceCheckResult> {
+async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null): Promise<AcceptanceCheckResult> {
   const startedAt = new Date();
-  const missing = missingRequirement(check, options);
+  const missing = missingRequirement(check, options, backendsReady);
+  if (missing === "backends") return syntheticResult(check, "blocked", startedAt, { missing }, { en: "the shared postgres/neo4j servers did not start (os-hub-ts:backend-up)", de: "die gemeinsamen postgres/neo4j-Server starteten nicht (os-hub-ts:backend-up)" }, []);
   if (missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `needs --${missing} <url>`, de: `benötigt --${missing} <url>` }, []);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, {}, { en: "cancelled before start", de: "vor dem Start abgebrochen" }, []);
   const resultPath = join(options.outDir, `${check.id}.json`);
@@ -275,7 +311,8 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   const exitCode = await (options.execute ?? spawnGoalGateCheck)(repoRoot, check, args, env, logPath, children);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, { exitCode }, { en: "cancelled while running", de: "während der Ausführung abgebrochen" }, [logPath]);
   if (existsSync(resultPath)) {
-    const record = JSON.parse(readFileSync(resultPath, "utf8")) as AcceptanceCheckResult;
+    const written = JSON.parse(readFileSync(resultPath, "utf8")) as AcceptanceCheckResult;
+    const record: AcceptanceCheckResult = { ...written, check: check.id };
     const violations = acceptanceSchemaViolations(repoRoot, "checkResult", record);
     if (violations.length) return syntheticResult(check, "fail", startedAt, { exitCode, schemaViolations: violations.length }, { en: `harness wrote an invalid record: ${violations[0]}`, de: `Prüfprogramm schrieb einen ungültigen Datensatz: ${violations[0]}` }, [resultPath, logPath]);
     if (record.status === "pass" && exitCode !== 0) return { ...record, status: "fail", measured: { ...record.measured, exitCode }, evidence: [...record.evidence, logPath] };
@@ -285,7 +322,7 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   return syntheticResult(check, status, startedAt, { exitCode }, exitCode === 0 ? { en: `${check.project}:${check.target} exited 0`, de: `${check.project}:${check.target} endete mit 0` } : { en: `${check.project}:${check.target} exited ${exitCode}`, de: `${check.project}:${check.target} endete mit ${exitCode}` }, [logPath]);
 }
 
-async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], options: GoalGateOptions, children: Set<ChildProcess>): Promise<AcceptanceCheckResult[]> {
+async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null): Promise<AcceptanceCheckResult[]> {
   const results = new Map<string, AcceptanceCheckResult>();
   const pending = [...checks];
   const running = new Map<string, Promise<void>>();
@@ -295,7 +332,7 @@ async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], o
     if (index >= 0) {
       const check = pending.splice(index, 1)[0]!;
       browsers += check.browsers;
-      running.set(check.id, runCheck(repoRoot, check, options, children).then((result) => {
+      running.set(check.id, runCheck(repoRoot, check, options, children, backendsReady).then((result) => {
         results.set(check.id, result);
         browsers -= check.browsers;
         running.delete(check.id);
@@ -317,7 +354,7 @@ function stepStatus(results: readonly AcceptanceCheckResult[]): AcceptanceStatus
 /** 📝️ The human summary of one run in one language: the verdict, the totals and one row per check. */
 export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string {
   const heading = language === "en" ? ["Step", "Check", "Status", "Seconds", "Summary"] : ["Schritt", "Prüfung", "Status", "Sekunden", "Zusammenfassung"];
-  const lines = [`# ${plan.title[language]}`, "", `${language === "en" ? "Verdict" : "Ergebnis"}: **${STATUS_WORD[summary.verdict][language]}** — ${Object.entries(summary.totals).map(([status, count]) => `${STATUS_WORD[status as AcceptanceStatus][language]} ${count}`).join(", ")}`, "", `Hub: ${summary.hub ?? "—"} · Serve: ${summary.serve ?? "—"} · ${summary.startedAt} → ${summary.finishedAt}`, "", `| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`];
+  const lines = [`# ${plan.title[language]}`, "", `${language === "en" ? "Verdict" : "Ergebnis"}: **${STATUS_WORD[summary.verdict][language]}** — ${Object.entries(summary.totals).map(([status, count]) => `${STATUS_WORD[status as AcceptanceStatus][language]} ${count}`).join(", ")}`, "", `Hub: ${summary.hub ?? "—"} · ${language === "en" ? "Serve" : "Oberfläche"}: ${summary.serve ?? "—"} · ${language === "en" ? "Local-only serve" : "Lokale Oberfläche"}: ${summary.localServe ?? "—"} · ${summary.startedAt} → ${summary.finishedAt}`, "", `| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`];
   for (const step of summary.steps) {
     const planned = plan.steps.find((candidate) => candidate.id === step.id);
     for (const result of step.checks) {
@@ -352,6 +389,13 @@ export async function runGoalGate(repoRoot: string, options: GoalGateOptions): P
   const steps: { id: string; status: AcceptanceStatus; checks: AcceptanceCheckResult[] }[] = [];
   let gatedBy: string | null = null;
   const selected = plan.steps.filter((step) => (options.only.length ? options.only.includes(step.id) : !step.optional || options.includeOptional));
+  let backendsReady: boolean | null = null;
+  if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
+    const backendsLog = join(options.outDir, "backends-up.log");
+    console.log("[goal-gate] ▶ backends: bun nx run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
+    backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, NX_TUI: "false" }, backendsLog, children)) === 0;
+    console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
+  }
   for (const [index, step] of selected.entries()) {
     console.log(`[goal-gate] step ${index + 1}/${selected.length} ${step.id} (${step.mode}, ${step.checks.length} checks): ${step.title.en}`);
     let checks: AcceptanceCheckResult[];
@@ -360,10 +404,10 @@ export async function runGoalGate(repoRoot: string, options: GoalGateOptions): P
       const gate = gatedBy;
       checks = step.checks.map((check) => syntheticResult(check, "blocked", now, { gatedBy: gate }, { en: `blocked: gating step ${gate} did not pass`, de: `blockiert: der vorausgehende Schritt ${gate} ist nicht bestanden` }, []));
     } else if (step.mode === "parallel") {
-      checks = await runParallel(repoRoot, step.checks, options, children);
+      checks = await runParallel(repoRoot, step.checks, options, children, backendsReady);
     } else {
       checks = [];
-      for (const check of step.checks) checks.push(await runCheck(repoRoot, check, options, children));
+      for (const check of step.checks) checks.push(await runCheck(repoRoot, check, options, children, backendsReady));
     }
     const status = stepStatus(checks);
     steps.push({ id: step.id, status, checks });
@@ -374,7 +418,7 @@ export async function runGoalGate(repoRoot: string, options: GoalGateOptions): P
   const totals: Record<AcceptanceStatus, number> = { pass: 0, fail: 0, blocked: 0, skipped: 0 };
   for (const step of steps) for (const check of step.checks) totals[check.status] += 1;
   const verdict: AcceptanceStatus = totals.fail > 0 ? "fail" : totals.blocked > 0 || totals.skipped > 0 ? "blocked" : "pass";
-  const summary: GoalSummary = { schema: "semio.acceptance.goal-summary/v1", plan: plan.id, hub: options.hub, serve: options.serve, startedAt, finishedAt: new Date().toISOString(), verdict, totals, steps };
+  const summary: GoalSummary = { schema: "semio.acceptance.goal-summary/v1", plan: plan.id, hub: options.hub, serve: options.serve, localServe: options.localServe, startedAt, finishedAt: new Date().toISOString(), verdict, totals, steps };
   const violations = acceptanceSchemaViolations(repoRoot, "goalSummary", summary);
   if (violations.length) throw new Error(`goal summary violates the acceptance schema:\n${violations.join("\n")}`);
   writeFileSync(join(options.outDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
@@ -398,7 +442,7 @@ function option(segments: readonly string[], flag: string): string | undefined {
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🎯️ `acceptance goal [--hub <url>] [--serve <url>] [--hub-binary <path>] [--users <json>] [--plan <path>] [--only <step,…>]
+/** 🎯️ `acceptance goal [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>]
  * [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]` and `acceptance plan` (prints the plan). */
 export class AcceptanceScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -412,7 +456,7 @@ export class AcceptanceScript extends Script {
       }
       return;
     }
-    if (verb !== "goal") throw new Error("usage: acceptance <goal|plan> [--hub <url>] [--serve <url>] [--hub-binary <path>] [--users <json>] [--plan <path>] [--only <step,…>] [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]");
+    if (verb !== "goal") throw new Error("usage: acceptance <goal|plan> [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>] [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]");
     const controller = new AbortController();
     const cancel = (): void => controller.abort();
     process.once("SIGINT", cancel);
@@ -422,7 +466,9 @@ export class AcceptanceScript extends Script {
       const summary = await runGoalGate(this.repoRoot, {
         hub: option(rest, "--hub") ?? null,
         serve: option(rest, "--serve") ?? null,
+        localServe: option(rest, "--local-serve") ?? null,
         hubBinary: option(rest, "--hub-binary") ?? null,
+        hubAdminCapability: option(rest, "--hub-admin-capability") ?? null,
         users: readGoalGateUsers(option(rest, "--users")),
         planPath,
         outDir,

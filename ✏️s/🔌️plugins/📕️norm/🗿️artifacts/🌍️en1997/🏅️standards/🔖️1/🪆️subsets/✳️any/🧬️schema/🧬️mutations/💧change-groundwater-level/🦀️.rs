@@ -24,6 +24,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeGroundwate
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-groundwater-level", "change-groundwater-level")
+        protocol::LocalizedLabel::native("Change groundwater level", "Grundwasserstand ändern")
     }
 }

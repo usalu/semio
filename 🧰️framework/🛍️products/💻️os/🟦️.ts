@@ -144,6 +144,10 @@ export const BACKBONE_ENDPOINT_PATH = "/semio-backbone";
  * long-lived stream, so none of them occupies one of the six HTTP/1.1 connections a browser allows per origin. */
 export const STREAM_MUX_PATH = "/semio-stream-mux";
 
+/** 📣️ The `import.meta.env` key a serve that hosts {@link STREAM_MUX_PATH} defines for its pages (the dev serve's backbone
+ * plugin does, during `serve` only); a page without it — a production bundle, a test harness — has no channel to dial. */
+export const STREAM_MUX_ANNOUNCEMENT = "VITE_SEMIO_STREAM_MUX_PATH";
+
 /** 🛣️ The routes the dev serve publishes on {@link STREAM_MUX_PATH}: staged plugin availability (snapshot + `built`),
  * installed extensions (snapshot + `installed`/`uninstalled`), one plugin's activation job (progress, cancellation) and the
  * change notices of one `folder://` backbone. */
@@ -1714,9 +1718,28 @@ function packPushBytes(out: number[], bytes: Uint8Array): void {
 }
 /** 🔤️ Byte-lexicographic string comparison — the TS twin of Rust `str`'s `Ord` (which compares
  * the UTF-8 byte sequence), used everywhere `pack_value` sorts by `.as_bytes()` (symbol table,
- * `DslValue::Object` keys). Differs from JS's default UTF-16-code-unit `<`/`.sort()` only outside
- * the BMP, but is implemented properly rather than assumed equivalent. */
-function packByteCompare(a: string, b: string): number {
+ * `DslValue::Object` keys). UTF-8 byte order IS code point order, and code point order equals UTF-16
+ * code unit order at the first differing unit unless that unit is a surrogate — so the units are
+ * compared directly and only a surrogate at the first difference (outside the BMP, or a lone surrogate
+ * that `TextEncoder` writes as U+FFFD) takes the exact encode-and-compare path. A shared prefix of
+ * units is a shared prefix of bytes, so the shorter string sorts first.
+ *
+ * 🐛️ The comparator used to allocate a `TextEncoder` and encode BOTH strings on every comparison:
+ * encoding the plugin manifests at boot spent ~0.5 s in it alone (ticket 26/09/23 F2). */
+export function packByteCompare(a: string, b: string): number {
+  if (a === b) return 0;
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index++) {
+    const left = a.charCodeAt(index);
+    const right = b.charCodeAt(index);
+    if (left === right) continue;
+    if ((left & 0xf800) === 0xd800 || (right & 0xf800) === 0xd800) return packEncodedByteCompare(a, b);
+    return left - right;
+  }
+  return a.length - b.length;
+}
+
+function packEncodedByteCompare(a: string, b: string): number {
   const encoder = new TextEncoder();
   const ab = encoder.encode(a);
   const bb = encoder.encode(b);
@@ -2654,6 +2677,7 @@ export type AppCommandValue =
         readonly prepared_ops: readonly (readonly number[])[];
         readonly label: string;
         readonly origin: readonly number[];
+        readonly prepared_child_ops: readonly number[];
       };
     }
   | { readonly transactionCommit: { readonly seq: number; readonly txn_id: string } }
@@ -2708,7 +2732,7 @@ export type AppFrameValue =
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
   | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[]; readonly report: readonly number[] } }
-  | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
+  | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[]; readonly child_ops: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
   | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[]; readonly tool_run: readonly number[] } }
@@ -3004,6 +3028,7 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeVecBytes(out, cmd.transactionPrepare.prepared_ops);
     writeStr(out, cmd.transactionPrepare.label);
     writeBytes(out, cmd.transactionPrepare.origin);
+    writeBytes(out, cmd.transactionPrepare.prepared_child_ops);
   } else if ("transactionCommit" in cmd) {
     out.push(APP_COMMAND_TAGS.transactionCommit);
     writeVarintU64(out, cmd.transactionCommit.seq);
@@ -3155,7 +3180,8 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       const prepared_ops = readVecBytes(bytes, pos);
       const label = readStr(bytes, pos);
       const origin = readBytes(bytes, pos);
-      return { transactionPrepare: { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } };
+      const prepared_child_ops = readBytes(bytes, pos);
+      return { transactionPrepare: { seq, txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops } };
     }
     case APP_COMMAND_TAGS.transactionCommit:
       return { transactionCommit: { seq: readVarintU64(bytes, pos), txn_id: readStr(bytes, pos) } };
@@ -3308,6 +3334,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Emit.draft_ops);
     writeBytes(out, frame.Emit.output);
     writeBytes(out, frame.Emit.diagnostics);
+    writeBytes(out, frame.Emit.child_ops);
   } else if ("Draft" in frame) {
     out.push(APP_FRAME_TAGS.Draft);
     writeVarintU64(out, frame.Draft.in_reply_to);
@@ -3468,7 +3495,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Error: { in_reply_to, fault, report } };
     }
     case APP_FRAME_TAGS.Emit:
-      return { Emit: { in_reply_to: readVarintU64(bytes, pos), document_ops: readBytes(bytes, pos), config_ops: readBytes(bytes, pos), draft_ops: readBytes(bytes, pos), output: readBytes(bytes, pos), diagnostics: readBytes(bytes, pos) } };
+      return { Emit: { in_reply_to: readVarintU64(bytes, pos), document_ops: readBytes(bytes, pos), config_ops: readBytes(bytes, pos), draft_ops: readBytes(bytes, pos), output: readBytes(bytes, pos), diagnostics: readBytes(bytes, pos), child_ops: readBytes(bytes, pos) } };
     case APP_FRAME_TAGS.Draft:
       return { Draft: { in_reply_to: readVarintU64(bytes, pos), pack: readBytes(bytes, pos), spr: readBytes(bytes, pos), ops: readStr(bytes, pos) } };
     case APP_FRAME_TAGS.Children:
@@ -3609,7 +3636,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 17;
+export const APP_CHANNEL_VERSION = 18;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -4074,6 +4101,7 @@ export class AppChannelClient {
       throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing admission Done frame for seq ${operation}`);
     }
     let cancellationSent = false;
+    let debugArchivePoll = 0;
     for (;;) {
       if (signal?.aborted && !cancellationSent) {
         const cancelSequence = this.nextSeq();
@@ -4092,6 +4120,7 @@ export class AppChannelClient {
       );
       if (!frame) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing operation status for ${operation}`);
       const status = frame.DocumentArchiveLoad.status;
+      if (debugArchivePoll++ % 100 === 0) console.debug("[DEBUG] document archive restore", this.appId, status);
       progress?.(status);
       if (status.state === "pending" || status.state === "running") {
         await Promise.resolve();
@@ -4264,7 +4293,7 @@ export class AppChannelClient {
    * its OWNING plugin. */
   async transactionPrepareOwner(txnId: string, mutationId: string, payload: Uint8Array): Promise<AppFrameValue[]> {
     return this.sendCommand({
-      transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], label: "", origin: [] },
+      transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], label: "", origin: [], prepared_child_ops: [] },
     });
   }
 
@@ -4282,6 +4311,7 @@ export class AppChannelClient {
         prepared_ops: preparedOps.map((op) => Array.from(op)),
         label,
         origin: Array.from(origin),
+        prepared_child_ops: [],
       },
     });
   }

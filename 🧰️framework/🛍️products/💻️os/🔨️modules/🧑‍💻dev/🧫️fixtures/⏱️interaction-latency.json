@@ -1,0 +1,55 @@
+{
+ "schema": "semio.os-dev.interaction-latency-scenarios/v1",
+ "description": "Interactions the latency gate drives in the served s shell: the input, its target and the bounds the measurement is judged by. Input → end of the first frame after it; paints = wasm renderFrame calls of the canvas session classes during the gesture.",
+ "loadCeilingPerCore": 1.0,
+ "scenarios": [
+  {
+   "id": "writer-typing",
+   "pluginId": "writer",
+   "appId": "s.writer.writer@1/*#editor",
+   "window": "writer-main",
+   "target": ".semio-text-editor-host canvas",
+   "action": "type",
+   "inputs": 24,
+   "intervalMs": 180,
+   "maxP95Ms": 100,
+   "maxPaintsPerInput": 2
+  },
+  {
+   "id": "jack-typing",
+   "pluginId": "trinity",
+   "appId": "s.trinity.jack@1/*#editor",
+   "window": "trinity-jack-editor",
+   "target": ".semio-text-editor-host canvas",
+   "action": "type",
+   "inputs": 24,
+   "intervalMs": 180,
+   "maxP95Ms": 100,
+   "maxPaintsPerInput": 2
+  },
+  {
+   "id": "draw-drag",
+   "pluginId": "draw",
+   "appId": "s.draw.drawing@1/*#editor",
+   "window": "",
+   "target": "canvas",
+   "action": "drag",
+   "inputs": 30,
+   "intervalMs": 33,
+   "maxP95Ms": 50,
+   "maxPaintsPerInput": 2
+  },
+  {
+   "id": "dag-drag",
+   "pluginId": "dag",
+   "appId": "s.dag.dag@1/*#editor",
+   "window": "",
+   "target": "canvas",
+   "action": "drag",
+   "inputs": 30,
+   "intervalMs": 33,
+   "maxP95Ms": 50,
+   "maxPaintsPerInput": 3
+  }
+ ]
+}

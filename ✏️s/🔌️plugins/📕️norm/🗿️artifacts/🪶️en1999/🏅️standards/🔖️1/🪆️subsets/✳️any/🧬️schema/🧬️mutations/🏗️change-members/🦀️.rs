@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMembers {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-members", "change-members")
+        protocol::LocalizedLabel::native("Change members", "Bauteile ändern")
     }
 }

@@ -10,7 +10,7 @@
 
 use crate::editor::epw::modes::edit;
 use crate::editor::epw::modes::edit::windows::main;
-use crate::standards::energyplus::subsets::any::schema::mutations::set_record_field;
+use crate::standards::energyplus::subsets::any::schema::mutations::{set_record_field, set_snapshot};
 use crate::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
@@ -90,6 +90,7 @@ impl protocol::OpBinary for EpwEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(EpwEditorCommand, []);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -108,10 +109,41 @@ impl ArtifactEditor for EpwEditor {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = EpwEditorCommand;
+    type Command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<EpwEditorCommand>;
 
     const DIALECT: Dialect = EPW_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_EPW_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
+        owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.stdio.epw@energyplus/*#editor",
+        artifact_schema: "stdio.epw",
+        preparation: "stdio-epw-snapshot-edit"
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
+            "set-cell" => {
+                let raw_column = semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["column", "columnName"], "");
+                let column = raw_column
+                    .parse::<usize>()
+                    .ok()
+                    .and_then(|index| main::EPW_TABLE_COLUMNS.get(index).copied())
+                    .unwrap_or(raw_column.as_str())
+                    .to_string();
+                Ok(EpwEditorCommand::SetCell {
+                    row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0),
+                    column,
+                    value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], ""),
+                })
+            }
+            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.unhandled-action"), format!("unknown epw editor action '{other}'"))),
+        })
+    }
 
     fn initial_snapshot() -> EpwSnapshot {
         EpwSnapshot::default()
@@ -129,7 +161,10 @@ impl ArtifactEditor for EpwEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let EpwEditorCommand::SetCell { row, column, value } = command;
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(EpwEditorCommand::SetCell { row, column, value }) = command else {
+            let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
+        };
         let Some(field_index) = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == column) else { return Ok(Emit::default()) };
         if doc.snapshot.records.get(*row as usize).is_none() {
             return Ok(Emit::default());
@@ -137,11 +172,35 @@ impl ArtifactEditor for EpwEditor {
         Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *row as usize, field_index, value: value.clone() })], description: Some(format!("Set {column}")), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.epw@energyplus/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for EpwEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
+        match command {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -149,7 +208,15 @@ impl ArtifactEditor for EpwEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(EPW_EDITOR_DIALECT).document(["stdio", "epw"]).icon_id("cloud-sun").mode_def(edit::definition()).default_mode_id(edit::EPW_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
+    let builder = Editor::builder(EPW_EDITOR_DIALECT)
+        .document(["stdio", "epw"])
+        .icon_id("cloud-sun")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::EPW_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Weather"));
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

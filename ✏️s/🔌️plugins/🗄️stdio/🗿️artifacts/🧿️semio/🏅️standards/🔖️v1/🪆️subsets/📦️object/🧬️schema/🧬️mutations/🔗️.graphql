@@ -1,3 +1,5 @@
+type SetSnapshotMutation { SetSnapshot: SetSnapshot! }
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # import SemioPoint3, SemioQuaternion from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
 # import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
 # import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"
@@ -17,4 +19,4 @@ type DeleteMeshMutation { DeleteMesh: EmptyRecord! }
 type CreateProperties { child_id: String! target: ArtifactRef! }
 type CreatePropertiesMutation { CreateProperties: CreateProperties! }
 type DeletePropertiesMutation { DeleteProperties: EmptyRecord! }
-union SemioObjectMutation = MoveObjectMutation | RotateObjectMutation | ScaleObjectMutation | CreateBrepMutation | DeleteBrepMutation | CreateMeshMutation | DeleteMeshMutation | CreatePropertiesMutation | DeletePropertiesMutation
+union SemioObjectMutation = MoveObjectMutation | RotateObjectMutation | ScaleObjectMutation | CreateBrepMutation | DeleteBrepMutation | CreateMeshMutation | DeleteMeshMutation | CreatePropertiesMutation | DeletePropertiesMutation | SetSnapshotMutation

@@ -10,12 +10,6 @@ static EMPTY: LazyLock<Puzzle2dSnapshot> = LazyLock::new(Puzzle2dSnapshot::defau
 static CONCRETE_FOREST: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest example json must match Puzzle2dSnapshot"));
 static NAKAGIN: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(&crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json()).expect("nakagin example json must match Puzzle2dSnapshot"));
 
-pub fn warm_examples() {
-    LazyLock::force(&EMPTY);
-    LazyLock::force(&CONCRETE_FOREST);
-    LazyLock::force(&NAKAGIN);
-}
-
 pub(crate) fn canonical_example_id(example_id: &str) -> &'static str {
     match example_id {
         PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID | "concrete" => PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,

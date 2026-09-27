@@ -271,6 +271,7 @@ impl ArtifactCreationServiceV1 {
                     catalog_generation_id: intent.catalog_generation.clone(),
                     phase: SpaceArtifactCreationPhaseV1::Indeterminate,
                     ready: None,
+                    progress: None,
                 })
             }
             Err(error) => self.terminal(intent, matches!(error, AuthorityError::Cancelled), &format!("genesis publication failed: {error}"), context).await,

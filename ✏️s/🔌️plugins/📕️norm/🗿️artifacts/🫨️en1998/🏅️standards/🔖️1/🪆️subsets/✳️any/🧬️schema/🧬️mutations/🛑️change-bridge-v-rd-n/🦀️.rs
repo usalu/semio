@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBridgeVRdN
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-bridge-v-rd-n", "change-bridge-v-rd-n")
+        protocol::LocalizedLabel::native("Change design shear resistance of the bridge", "Bemessungswert der Querkrafttragfähigkeit der Brücke ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-v-rd-n".into()]

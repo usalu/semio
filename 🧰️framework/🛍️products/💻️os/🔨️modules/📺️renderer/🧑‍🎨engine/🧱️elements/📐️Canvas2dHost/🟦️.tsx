@@ -6,10 +6,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
-import { applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
+import { fitCanvasFrame, type Canvas2dFraming, applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -17,6 +17,8 @@ import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { Canvas2dGumballOverlay, parseCanvas2dGumballMeta } from "./🟦️GumballOverlay.tsx";
 import { createGestureSampleLaneV1, type GestureSampleLaneV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Canvas2dHost
@@ -475,8 +477,9 @@ export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, 
 export class JsonLayersCanvasSession implements GraphWasmSession {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private logicalWidth = 1;
-  private logicalHeight = 1;
+  private logicalWidth = 0;
+  private logicalHeight = 0;
+  private framingRevision: number | undefined;
   private dpr = 1;
   private readonly imageCache = new Map<string, HTMLImageElement>();
   private panning = false;
@@ -499,6 +502,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     camera: CanvasCamera,
     onCameraChange: (camera: CanvasCamera) => void,
     onPointer?: CanvasPointerDispatch,
+    private readonly readFraming?: () => Canvas2dFraming | null | undefined,
   ) {
     this.readLayersJson = readLayersJson;
     this.camera = camera;
@@ -513,6 +517,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
   }
 
   syncLayersJson(): void {
+    this.syncFraming();
     void this.preloadImages().then(() => this.renderFrame());
   }
 
@@ -526,6 +531,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     this.logicalWidth = logicalW;
     this.logicalHeight = logicalH;
     this.dpr = dpr;
+    this.syncFraming();
     await this.preloadImages();
     this.renderFrame();
     return undefined;
@@ -535,6 +541,17 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     this.logicalWidth = width;
     this.logicalHeight = height;
     this.dpr = dpr;
+    this.syncFraming();
+  }
+
+  private syncFraming(): void {
+    const request = this.readFraming?.();
+    if (!request || request.revision === this.framingRevision) return;
+    const camera = fitCanvasFrame(request,this.logicalWidth,this.logicalHeight);
+    if (!camera) return;
+    this.framingRevision = request.revision;
+    this.camera = camera;
+    this.onCameraChange(camera);
   }
 
   updateCamera(camera: CanvasCamera): void {
@@ -771,13 +788,48 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
-  cameraRef.current = initialCamera;
+  const framingRef = useRef(scene?.framing);
+  framingRef.current = scene?.framing;
   const sessionRef = useRef<JsonLayersCanvasSession | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const [presenceCamera, setPresenceCamera] = useState<CanvasCamera>(initialCamera);
+  const presenceWindowId = windowInstanceId ?? node.surfaceId ?? "canvas";
+  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const presencePointerRef = useRef<readonly [number, number] | null>(null);
+  const presencePublishAtRef = useRef(0);
+  /** 👕️ Publishes this window's camera and the pointer in WORLD coordinates for the next presence beat (throttled), so a
+   * peer paints the cursor at the same drawing position whatever its own camera. */
+  const publishCanvasPresenceView = useCallback((force: boolean) => {
+    const now = Date.now();
+    if (!force && now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    presencePublishAtRef.current = now;
+    const rect = containerRef.current?.getBoundingClientRect();
+    const camera = cameraRef.current;
+    const pointer = presencePointerRef.current;
+    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+      windowId: presenceWindowId,
+      space: "canvas",
+      kind: { kind: "canvas", x: camera.x, y: camera.y, zoom: camera.zoom },
+      size: [rect?.width ?? 0, rect?.height ?? 0],
+      ...(pointer ? { pointer: [pointer[0], pointer[1], 0] as const } : {}),
+    });
+  }, [presenceWindowId]);
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const onPresencePointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const world = screenToWorldLogical(event.clientX - rect.left, event.clientY - rect.top, cameraRef.current, rect.width, rect.height);
+    presencePointerRef.current = [world.x, world.y];
+    publishCanvasPresenceView(false);
+  }, [publishCanvasPresenceView]);
+  const onPresencePointerLeave = useCallback(() => {
+    presencePointerRef.current = null;
+    publishCanvasPresenceView(true);
+  }, [publishCanvasPresenceView]);
   const activeUtility = useMemo(() => {
     try {
       const layers = JSON.parse(scene?.layersJson ?? "[]") as readonly { readonly role?: string; readonly utility?: string }[];
@@ -806,17 +858,20 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         (next) => {
           cameraRef.current = next;
           sessionRef.current?.updateCamera(next);
+          setPresenceCamera(next);
+          publishCanvasPresenceView(false);
           if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
           cameraSyncTimeoutRef.current = setTimeout(() => dispatch("setCamera", { camera: next }), CAMERA_SYNC_DEBOUNCE_MS);
         },
         // 🖱️ The session builds its gesture lane over this dispatcher, so the lane is per mounted host and
         // is rebuilt with the session whenever `dispatch`'s identity (node ids / `onAction`) changes.
         (action, args) => dispatch(action, args),
+        () => framingRef.current,
       );
       sessionRef.current = session;
       return session;
     };
-  }, [dispatch]);
+  }, [dispatch, publishCanvasPresenceView]);
 
   useEffect(() => {
     return () => {
@@ -827,7 +882,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
 
   useEffect(() => {
     sessionRef.current?.syncLayersJson();
-  }, [scene?.layersJson]);
+  }, [scene?.layersJson, scene?.framing]);
 
   const layersJsonRef = useRef(scene?.layersJson);
   layersJsonRef.current = scene?.layersJson;
@@ -1052,6 +1107,8 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onContextMenu={onContextMenu}
+      onPointerMove={onPresencePointerMove}
+      onPointerLeave={onPresencePointerLeave}
     >
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
       <Canvas2dGumballOverlay
@@ -1061,6 +1118,16 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         viewportWidth={viewportSize.width}
         viewportHeight={viewportSize.height}
         onDispatch={(action, args) => dispatch(action, args)}
+      />
+      <CanvasPresenceOverlayV1
+        runtimeKey="local"
+        windowId={presenceWindowId}
+        space="canvas"
+        myActor={localPresenceActor ?? ""}
+        locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
+        localCanvas={presenceCamera}
+        localSizePx={[viewportSize.width, viewportSize.height]}
+        scenePath={`canvas/${presenceWindowId}`}
       />
       <ContextMenuController
         title={contextMenuTitleLabel}

@@ -1230,7 +1230,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
         }));
     }
     let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Renders the document's own structure (nodes, members, supports, loads — a projection of the
@@ -1248,7 +1248,7 @@ pub fn render_with_progress(
     let layers = fem2d_structure_layers_with(doc, "#38bdf8", "#94a3b8", "#f97316", interaction);
     let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, camera, active_utility, window_instance_id);
     let layers_json = crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta);
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

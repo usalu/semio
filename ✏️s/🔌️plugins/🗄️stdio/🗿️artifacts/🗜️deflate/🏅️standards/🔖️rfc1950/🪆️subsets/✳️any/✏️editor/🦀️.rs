@@ -9,12 +9,15 @@
 
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
-use crate::schema::mutations::{set_compression_params, set_preset_dictionary};
+use crate::schema::mutations::{set_compression_params, set_preset_dictionary, set_snapshot};
 use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 #[cfg(test)]
 use semio_framework_plugin::Component;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault,
+    InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract,
+    ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
 use store::EngineHandles;
 
@@ -88,6 +91,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DeflateEditorCommand, ["textEdit"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -118,6 +122,157 @@ fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::
 }
 //#endregion 🔖️TextParse
 
+//#region 🧵️RetainedTextRoute
+const DEFLATE_TEXT_ACTION_ID: &str = "textEdit";
+const DEFLATE_TEXT_TOOL_IDS: &[&str] = &[DEFLATE_TEXT_ACTION_ID];
+const DEFLATE_TEXT_PAYLOAD_SCHEMA: &str = "stdio.deflate.text-edit.v1";
+const DEFLATE_TEXT_MAXIMUM_RAW_BYTES: usize = 8 * 1_024;
+const DEFLATE_TEXT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
+    &[ArtifactToolPublicationContract { tool_id: DEFLATE_TEXT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deflate_text_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(DEFLATE_TEXT_MAXIMUM_RAW_BYTES, 64, 1, 4, 7_500)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deflate_command_id(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>) -> &'static str {
+    semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| DEFLATE_TEXT_ACTION_ID)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>) -> Result<Emit<DeflateMutation>, Fault> {
+    let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DeflateEditorCommand::ReplaceText { text }) = command else {
+        return Err(Fault::from("stdio-deflate-snapshot-edit-routed-to-native-reducer"));
+    };
+    let (method, window_bits, level_hint, dict_id) = parse_header_summary(text).ok_or_else(|| {
+        Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.deflate.invalid-summary"),
+            "The compression summary must contain valid method, windowBits, levelHint, and presetDictionary fields.",
+        )
+    })?;
+    Ok(Emit {
+        artifact_mutations: vec![
+            DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }),
+            DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id }),
+        ],
+        description: Some("Set compression header".into()),
+        ..Default::default()
+    })
+}
+
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deflate_text_reduce(
+    command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>,
+    _snapshot: &DeflateSnapshot,
+    _config: &NoConfig,
+    _history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DeflateEditor>>>,
+    _operation: &AppOperationContext,
+) -> Result<Emit<DeflateMutation>, Fault> {
+    deflate_text_emit(command)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deflate_text_extent(
+    command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>,
+    _snapshot: &DeflateSnapshot,
+    _interaction: &protocol::InteractionState,
+) -> Option<usize> {
+    matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(_)).then_some(4)
+}
+
+struct DeflateTextCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl DeflateTextCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: DEFLATE_TEXT_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for DeflateTextCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<DeflateEditor>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<DeflateEditor>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        DEFLATE_TEXT_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        deflate_text_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > DEFLATE_TEXT_MAXIMUM_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("stdio deflate text edit rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for DeflateTextCommandJobFactory {
+    type Owner = EditorApp<DeflateEditor>;
+    const TOOL_IDS: &'static [&'static str] = DEFLATE_TEXT_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = DEFLATE_TEXT_PUBLICATION_CONTRACTS;
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_deflate_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<DeflateEditor>>) -> Result<Option<ToolOperationSpec>, Fault> {
+    if request.tool_id != DEFLATE_TEXT_ACTION_ID {
+        return Ok(None);
+    }
+    if deflate_command_id(&request.command) != request.tool_id {
+        return Err(Fault::from("stdio-deflate-text-command-tool-mismatch"));
+    }
+    let tool_id = deflate_command_id(&request.command);
+    let operation = AppOperationContext {
+        app_instance_id: request.app_instance_id,
+        parent_document_id: request.parent_document_id,
+        operation_id: request.operation.operation.0,
+        generation: request.operation.generation.0,
+        canonical_base_revision: request.canonical_base_revision,
+    };
+    let payload = ArtifactRetainedCommandPayload::try_new(
+        ArtifactRetainedCommandInputs {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            context: Some(request.context),
+            operation,
+            completion: request.completion,
+        },
+        deflate_command_id,
+        DEFLATE_TEXT_MAXIMUM_RAW_BYTES,
+        4,
+        Box::new(BoundedArtifactCommandWork::new(tool_id, deflate_text_reduce, deflate_text_extent)),
+    )?;
+    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+}
+//#endregion 🧵️RetainedTextRoute
+
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct DeflateEditor;
@@ -133,10 +288,37 @@ impl ArtifactEditor for DeflateEditor {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = DeflateEditorCommand;
+    type Command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>;
 
     const DIALECT: Dialect = DEFLATE_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
+        owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.stdio.deflate@rfc1950/*#editor",
+        artifact_schema: "stdio.deflate",
+        preparation: "stdio-deflate-snapshot-edit",
+        native: {
+            factory_name: "DeflateTextCommandJobFactory",
+            factory_type: DeflateTextCommandJobFactory,
+            contract: deflate_text_contract(),
+            build: build_deflate_text_tool_job,
+            tools: ["textEdit"]
+        },
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        deflate_command_id(command)
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
+            "textEdit" => Ok(DeflateEditorCommand::ReplaceText {
+                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], ""),
+            }),
+            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.deflate.unhandled-action"), format!("unknown deflate editor action '{other}'"))),
+        })
+    }
 
     fn initial_snapshot() -> DeflateSnapshot {
         DeflateSnapshot::default()
@@ -155,23 +337,42 @@ impl ArtifactEditor for DeflateEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let DeflateEditorCommand::ReplaceText { text } = command;
-        let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text) else { return Ok(Emit::default()) };
-        Ok(Emit {
-            artifact_mutations: vec![
-                DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }),
-                DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id }),
-            ],
-            description: Some("Set compression header".into()),
-            ..Default::default()
-        })
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DeflateEditorCommand::ReplaceText { .. }) = command else {
+            let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot);
+        };
+        deflate_text_emit(command)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.deflate@rfc1950/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for DeflateEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
+        match command {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -179,14 +380,15 @@ impl ArtifactEditor for DeflateEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(DEFLATE_EDITOR_DIALECT)
+    let builder = Editor::builder(DEFLATE_EDITOR_DIALECT)
         .document(["stdio", "deflate"])
         .icon_id("package")
         .mode_def(edit::definition())
         .default_mode_id(edit::DEFLATE_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Compression"));
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

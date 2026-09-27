@@ -96,9 +96,12 @@ use super::set_primitive_topology;
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh")]
 pub enum SemioMeshMutation {
+    SetSnapshot(SetSnapshot),
     CreateMesh(create_mesh::CreateMesh),
     DeleteMesh(delete_mesh::DeleteMesh),
     CreatePrimitive(create_primitive::CreatePrimitive),
@@ -123,7 +126,7 @@ pub enum SemioMeshMutation {
 /// `🔺️mutate-semio-mesh`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &[
+pub const KINDS: &[&str] = &["set-snapshot", 
     "create-mesh",
     "delete-mesh",
     "create-primitive",
@@ -183,6 +186,7 @@ pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
     match m {
+        SemioMeshMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
         SemioMeshMutation::CreateMesh(p) => format!("create-mesh mesh={}", enc_mesh(&p.mesh)),
         SemioMeshMutation::DeleteMesh(p) => format!("delete-mesh id={}", enc_str(&p.id)),
         SemioMeshMutation::CreatePrimitive(p) => format!("create-primitive mesh-id={} primitive={}", enc_str(&p.mesh_id), enc_primitive(&p.primitive)),
@@ -213,6 +217,13 @@ fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
+    if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
+        let bytes = hex_decode(payload)?;
+        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
+        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        return Ok(SemioMeshMutation::SetSnapshot(SetSnapshot { snapshot }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -273,6 +284,7 @@ impl OpText for SemioMeshMutation {
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioMeshMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_CREATE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-mesh");
 const TAG_DELETE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-mesh");
 const TAG_CREATE_PRIMITIVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-primitive");
@@ -295,6 +307,7 @@ const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-ve
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioMeshMutation) -> u8 {
     match m {
+        SemioMeshMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioMeshMutation::CreateMesh(_) => TAG_CREATE_MESH,
         SemioMeshMutation::DeleteMesh(_) => TAG_DELETE_MESH,
         SemioMeshMutation::CreatePrimitive(_) => TAG_CREATE_PRIMITIVE,

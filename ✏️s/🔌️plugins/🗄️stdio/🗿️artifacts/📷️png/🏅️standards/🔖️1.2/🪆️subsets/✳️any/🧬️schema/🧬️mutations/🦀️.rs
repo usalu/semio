@@ -19,7 +19,9 @@ pub use super::remove_text_chunk::RemoveTextChunkMutation;
 pub use super::remove_unknown_chunk::RemoveUnknownChunkMutation;
 pub use super::replace_palette::ReplacePaletteMutation;
 pub use super::replace_pixels::ReplacePixelsMutation;
+pub use super::patch_pixels::PatchPixelsMutation;
 pub use super::replace_text_chunk::ReplaceTextChunkMutation;
+pub use super::set_snapshot::SetSnapshot;
 //#endregion Owners
 
 //#region Aggregate
@@ -27,6 +29,7 @@ pub use super::replace_text_chunk::ReplaceTextChunkMutation;
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = PngSnapshot, diff = PngDiff, schema = "s.stdio.png")]
 pub enum PngMutation {
+    SetSnapshot(SetSnapshot),
     ChangeHeader(ChangeHeaderMutation),
     ReplacePalette(ReplacePaletteMutation),
     ChangeTransparency(ChangeTransparencyMutation),
@@ -40,6 +43,7 @@ pub enum PngMutation {
     RemoveTextChunk(RemoveTextChunkMutation),
     ReplaceTextChunk(ReplaceTextChunkMutation),
     ReplacePixels(ReplacePixelsMutation),
+    PatchPixels(PatchPixelsMutation),
     InsertUnknownChunk(InsertUnknownChunkMutation),
     RemoveUnknownChunk(RemoveUnknownChunkMutation),
 }
@@ -49,6 +53,7 @@ pub enum PngMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     vec![
+        PngMutation::SetSnapshot(SetSnapshot { snapshot: PngSnapshot::default() }),
         crate::schema::mutations::change_header::test_case(),
         crate::schema::mutations::replace_palette::test_case(),
         crate::schema::mutations::change_transparency::test_case(),
@@ -62,6 +67,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
         crate::schema::mutations::remove_text_chunk::test_case(),
         crate::schema::mutations::replace_text_chunk::test_case(),
         crate::schema::mutations::replace_pixels::test_case(),
+        crate::schema::mutations::patch_pixels::test_case(),
         crate::schema::mutations::insert_unknown_chunk::test_case(),
         crate::schema::mutations::remove_unknown_chunk::test_case(),
     ]

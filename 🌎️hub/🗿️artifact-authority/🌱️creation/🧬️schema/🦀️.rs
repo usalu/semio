@@ -293,6 +293,7 @@ impl ArtifactCreationIntentV1 {
                 catalog_generation_id: self.catalog_generation.clone(),
                 phase: SpaceArtifactCreationPhaseV1::Accepted,
                 ready: None,
+                progress: None,
             })
             .validate()
             || !self.ready().validate()
@@ -434,6 +435,7 @@ impl ArtifactCreationOperationV1 {
             catalog_generation_id: self.intent.catalog_generation.clone(),
             phase: self.phase,
             ready: self.receipt.as_ref().map(|receipt| receipt.ready.clone()),
+            progress: None,
         }
     }
 }

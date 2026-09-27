@@ -32,6 +32,15 @@ export type SpaceArtifactCreationReadyV1 = Readonly<{
   parentDialect: SpaceArtifactCreationDialectV1;
 }>;
 
+/** 📈️ Where a running creation is; only `accepted`/`preparing` report it, and `completedUnits <= totalUnits`. */
+export type SpaceArtifactCreationStageV1 = "queued" | "compiling-guest" | "genesis" | "publishing";
+
+export type SpaceArtifactCreationProgressV1 = Readonly<{
+  stage: SpaceArtifactCreationStageV1;
+  completedUnits: number;
+  totalUnits: number;
+}>;
+
 export type SpaceArtifactCreationStatusV1 = Readonly<{
   schema: typeof SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1;
   requestId: string;
@@ -39,6 +48,7 @@ export type SpaceArtifactCreationStatusV1 = Readonly<{
   catalogGenerationId: string;
   phase: SpaceArtifactCreationPhaseV1;
   ready?: SpaceArtifactCreationReadyV1;
+  progress?: SpaceArtifactCreationProgressV1;
 }>;
 
 export type SpaceArtifactCreationKindV1 = Readonly<{
@@ -140,7 +150,19 @@ export function parseSpaceArtifactCreateJsonV1(source: string): SpaceArtifactCre
   return result;
 }
 
-/** 📤️ Decodes one canonical, bounded server status and withholds incomplete ready tuples. */
+/** 📈️ One exact progress record, or `null`. */
+function creationProgress(value: unknown): SpaceArtifactCreationProgressV1 | null {
+  const row = record(value);
+  const stages: readonly SpaceArtifactCreationStageV1[] = ["queued", "compiling-guest", "genesis", "publishing"];
+  if (row === null || !exactFields(row, ["stage", "completedUnits", "totalUnits"]) || !stages.includes(row.stage as SpaceArtifactCreationStageV1)) return null;
+  const completedUnits = row.completedUnits,
+    totalUnits = row.totalUnits;
+  if (!Number.isSafeInteger(completedUnits) || !Number.isSafeInteger(totalUnits) || (totalUnits as number) < 1 || (completedUnits as number) < 0 || (completedUnits as number) > (totalUnits as number)) return null;
+  return { stage: row.stage as SpaceArtifactCreationStageV1, completedUnits: completedUnits as number, totalUnits: totalUnits as number };
+}
+
+/** 📤️ Decodes one canonical, bounded server status and withholds incomplete ready tuples; only a running
+ * creation carries progress. */
 export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArtifactCreationStatusV1 {
   if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_MAX_BYTES) throw new Error("space artifact creation status: capacity");
   const row = record(JSON.parse(source));
@@ -150,11 +172,16 @@ export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArt
     parsedRequestId = requestId(row.requestId),
     spaceId = identity(row.spaceId),
     catalogGenerationId = digest(row.catalogGenerationId),
-    parsedReady = row.ready === undefined ? undefined : ready(row.ready);
+    parsedReady = row.ready === undefined ? undefined : ready(row.ready),
+    parsedProgress = row.progress === undefined ? undefined : creationProgress(row.progress),
+    running = phase === "accepted" || phase === "preparing";
   if (row.schema !== SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 || parsedRequestId === null || spaceId === null || catalogGenerationId === null || phase === null) throw new Error("space artifact creation status: invalid owner");
-  if (!exactFields(row, phase === "ready" ? ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", "ready"] : ["schema", "requestId", "spaceId", "catalogGenerationId", "phase"])) throw new Error("space artifact creation status: invalid fields");
+  const fields = ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", ...(phase === "ready" ? ["ready"] : []), ...(running && row.progress !== undefined ? ["progress"] : [])];
+  if (!exactFields(row, fields)) throw new Error("space artifact creation status: invalid fields");
   if ((phase === "ready") !== (parsedReady !== undefined && parsedReady !== null)) throw new Error("space artifact creation status: invalid ready");
-  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase, ready: parsedReady! } : { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase };
+  if (parsedProgress === null) throw new Error("space artifact creation status: invalid progress");
+  const base = { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase } as const;
+  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { ...base, ready: parsedReady! } : parsedProgress !== undefined ? { ...base, progress: parsedProgress } : base;
   if (JSON.stringify(result) !== source) throw new Error("space artifact creation status: noncanonical");
   return result;
 }

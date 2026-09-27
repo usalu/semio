@@ -129,7 +129,7 @@ fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
     channel.force_empty_preview(0);
 
     let prepared = adapter.prepare(&catalog, &principal, &session, "note.editor.duplicateSelection", serde_json::json!({}), 0, 0).unwrap();
-    assert_eq!(prepared.preview["opsCount"], serde_json::json!({ "document": 0, "config": 0, "draft": 0 }));
+    assert_eq!(prepared.preview["opsCount"], serde_json::json!({ "document": 0, "config": 0, "draft": 0, "childOpBytes": 0 }));
     let report = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle.clone()), ..Default::default() }, 0, 1).unwrap();
 
     assert_eq!(report.status, InvocationStatus::Succeeded);
@@ -140,6 +140,32 @@ fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
     assert!(!channel.frame_log().iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "no guest transaction is opened over an empty op list");
     assert!(assert_events(&audit).iter().any(|event| event.outcome == "no_change"), "the audit lane records the no-change outcome");
     assert!(adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 2).is_err(), "the prepared handle is spent");
+}
+#[test]
+fn an_action_that_edits_only_owned_children_commits_their_groups_byte_for_byte() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let catalog = single_capability_catalog(synthetic_capability("flow.editor.addWidget", &["artifacts.write"], ApprovalMode::Never, false));
+    let session = SessionHandle::new("sess_children");
+    let principal = principal(&["artifact.write"]);
+    let groups = vec![9, 8, 7, 6];
+    channel.force_child_preview(0, groups.clone());
+
+    let prepared = adapter.prepare(&catalog, &principal, &session, "flow.editor.addWidget", serde_json::json!({}), 0, 0).unwrap();
+    assert_eq!(prepared.preview["opsCount"], serde_json::json!({ "document": 0, "config": 0, "draft": 0, "childOpBytes": 4 }));
+    let report = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap();
+
+    assert_eq!(report.status, InvocationStatus::Succeeded);
+    assert!(!report.warnings.contains(&NO_CHANGE_WARNING.to_string()), "a child-only edit is a change: {:?}", report.warnings);
+    assert!(report.undo_token.is_some(), "a committed child group can be undone");
+    let carried = channel
+        .frame_log()
+        .iter()
+        .find_map(|(_, command)| match command {
+            AppCommand::TransactionPrepare { ops, .. } => Some(ops.children.clone()),
+            _ => None,
+        })
+        .expect("a TransactionPrepare was sent");
+    assert_eq!(carried, groups, "the child groups reach the guest byte for byte");
 }
 //#endregion 🔖️NoChange
 

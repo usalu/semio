@@ -3802,6 +3802,10 @@ enum HistoryEnvelopeField {
     Actor,
     DependencyCount,
     Dependency,
+    ObservedFlag,
+    Observed,
+    TargetCount,
+    TargetSegment,
     DiffSchema,
     DiffPayload,
     InverseSchema,
@@ -3817,6 +3821,7 @@ struct HistoryEnvelopeCursor {
     end: u64,
     field: HistoryEnvelopeField,
     dependencies: u64,
+    target_segments: u64,
     mutation_id: Option<std::ops::Range<u64>>,
 }
 
@@ -3826,7 +3831,7 @@ impl HistoryEnvelopeCursor {
         if end > pages.len {
             return Err(DbError::Corrupt("history command range exceeds retained pages".to_string()));
         }
-        Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None })
+        Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, mutation_id: None })
     }
 
     fn skip_text(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<(), DbError> {
@@ -3861,12 +3866,37 @@ impl HistoryEnvelopeCursor {
                 if self.dependencies > HISTORY_REPLAY_MAX_OPERATION_IDS as u64 {
                     return Err(DbError::LimitExceeded("history dependency item credit"));
                 }
-                self.field = if self.dependencies == 0 { HistoryEnvelopeField::DiffSchema } else { HistoryEnvelopeField::Dependency };
+                self.field = if self.dependencies == 0 { HistoryEnvelopeField::ObservedFlag } else { HistoryEnvelopeField::Dependency };
             }
             HistoryEnvelopeField::Dependency => {
                 self.skip_text(pages, scratch)?;
                 self.dependencies -= 1;
                 if self.dependencies == 0 {
+                    self.field = HistoryEnvelopeField::ObservedFlag;
+                }
+            }
+            HistoryEnvelopeField::ObservedFlag => {
+                self.field = match pages.read_varint(&mut self.pos, self.end)? {
+                    0 => HistoryEnvelopeField::TargetCount,
+                    1 => HistoryEnvelopeField::Observed,
+                    _ => return Err(DbError::Corrupt("history envelope observed flag is invalid".to_string())),
+                };
+            }
+            HistoryEnvelopeField::Observed => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::TargetCount;
+            }
+            HistoryEnvelopeField::TargetCount => {
+                self.target_segments = pages.read_varint(&mut self.pos, self.end)?;
+                if self.target_segments > HISTORY_REPLAY_MAX_OPERATION_IDS as u64 {
+                    return Err(DbError::LimitExceeded("history target segment credit"));
+                }
+                self.field = if self.target_segments == 0 { HistoryEnvelopeField::DiffSchema } else { HistoryEnvelopeField::TargetSegment };
+            }
+            HistoryEnvelopeField::TargetSegment => {
+                self.skip_text(pages, scratch)?;
+                self.target_segments -= 1;
+                if self.target_segments == 0 {
                     self.field = HistoryEnvelopeField::DiffSchema;
                 }
             }

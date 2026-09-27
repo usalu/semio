@@ -9,3 +9,8 @@ export function translate(transform:readonly number[],parent:readonly number[],d
   result[1]!+=matrix[1]*delta[0]!+matrix[3]*delta[1]!;
   return result.every(Number.isFinite) ? result : null;
 }
+
+/** 🗂️ Selected ancestors own descendant movement. */
+export function selectionRoots(paths:readonly (readonly number[])[]):number[][] {
+  return paths.filter(path=>!paths.some(parent=>parent.length<path.length && parent.every((index,depth)=>path[depth]===index))).map(path=>[...path]);
+}

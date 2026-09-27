@@ -5,6 +5,7 @@ import { readImplementationCoverage, reportsDir } from "../../📊️reporting/�
 import { loadClassifiedBaseline } from "../../🕸️dependencies/📋️orchestration/🟦️.ts";
 import {
   type ComparisonProfile,
+  adapterRegistersSubject,
   type DiscoveredCase,
   type Implementation,
   type TestResult,
@@ -12,17 +13,21 @@ import {
   computeCoverageMetrics,
   evaluateCrossSubjectParity,
   evaluateParity,
+  executePipeline,
   formatMetrics,
   loadOracleRegistry,
   markRunComplete,
   oracleImplementation,
+  pipelineRoleArtifacts,
+  pipelineTable,
+  probeTable,
   profileTable,
   renderDiff,
   renderJUnit,
   summarizeRun,
   testCacheDir,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script, type TestLevel, resolveTestLevel } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script, type TestLevel, resolveTestLevel, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -50,10 +55,12 @@ export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, lev
  * 🔬️ The languages dispatched as this case's subject: those the owner ships a package in, minus the
  * one whose adapter IS the declared oracle. An oracle registered with `hostPath` equal to the case
  * directory is an implementation written in that adapter itself — the second implementation the
- * subject is judged against — so the same adapter can never also answer as the subject.
+ * subject is judged against — so the same adapter can never also answer as the subject. Neither can the
+ * oracle-language adapter that registers no subject handler at all: it hosts a third-party reference
+ * (a reader driven from that adapter) and nothing else.
  */
 export function subjectImplementations(repoRoot: string, discovered: DiscoveredCase, decision: ReturnType<typeof oracleDecision>, candidates: readonly Implementation[]): Implementation[] {
-  return candidates.filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate) && !(decision.hostedByCase && decision.implementation === candidate));
+  return candidates.filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate) && !(decision.implementation === candidate && (decision.hostedByCase || !adapterRegistersSubject(repoRoot, discovered, candidate))));
 }
 
 /** 🎯️ The declared execution mode of one planned scenario — what a no-oracle substitute must match. */
@@ -117,7 +124,29 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
 
     const diffDir = testCacheDir(repoRoot, "diffs");
     mkdirSync(diffDir, { recursive: true });
-    if (decision.implementation !== null && decision.unavailable === null) {
+    const pipelineId = buildCasePlan(repoRoot, discovered, level).plan.comparisonPipeline;
+    if (decision.implementation !== null && decision.unavailable === null && pipelineId !== null) {
+      // ⚖️A profile that names a pipeline compares an artifact BUNDLE through external probes: the pipeline verdict IS
+      // the parity verdict, per scenario pair, and the two projections are never diffed against each other.
+      const registry = loadOracleRegistry(repoRoot);
+      const pipeline = pipelineTable(registry).get(pipelineId);
+      const probes = probeTable(registry);
+      for (const subject of caseResults.filter((result) => result.role === "subject")) {
+        const oracle = caseResults.find((result) => result.role === "oracle" && result.scenario === subject.scenario);
+        if (pipeline === undefined || oracle === undefined) {
+          problems.push(pipeline === undefined ? `${discovered.caseDir}: comparison pipeline ${pipelineId} is not registered` : `no oracle result to compare against: ${subject.testId}`);
+          continue;
+        }
+        const roles = pipelineRoleArtifacts([oracle, subject]);
+        const { verdict, reports, problems: stageProblems } = executePipeline(repoRoot, pipeline, probes, roles.artifacts, { budgetMs: testLevelBudgetMs(level) });
+        const failed = verdict.verdicts.filter((row) => !row.ok && !row.optional);
+        parity.push({ testId: subject.testId, profile: decision.comparison, equal: verdict.equal && roles.problems.length === 0, diffs: failed.length + verdict.missingProbes.length });
+        problems.push(...[...roles.problems, ...stageProblems].map((problem) => `${subject.testId}: ${problem}`));
+        if (verdict.equal && roles.problems.length === 0) continue;
+        writeFileSync(join(diffDir, `${subject.testId.replace(/[^A-Za-z0-9]+/g, "_")}.pipeline.json`), `${JSON.stringify({ verdict, artifacts: Object.fromEntries(roles.artifacts), reports: Object.fromEntries(reports) }, null, 2)}\n`);
+        problems.push(`pipeline parity failed: ${subject.testId} (${failed.map((row) => `stage ${row.stage} ${row.probe} ${row.key}: ${row.reason}`).join("; ") || verdict.missingProbes.join(", ")})`);
+      }
+    } else if (decision.implementation !== null && decision.unavailable === null) {
       const { verdicts, unmatched } = evaluateParity(decision.comparison, caseResults, profiles);
       for (const verdict of verdicts) {
         parity.push({ testId: verdict.testId, profile: verdict.profile, equal: verdict.equal, diffs: verdict.diffs });

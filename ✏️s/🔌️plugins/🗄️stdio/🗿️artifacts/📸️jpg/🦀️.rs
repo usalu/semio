@@ -287,6 +287,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🦀️.rs"]

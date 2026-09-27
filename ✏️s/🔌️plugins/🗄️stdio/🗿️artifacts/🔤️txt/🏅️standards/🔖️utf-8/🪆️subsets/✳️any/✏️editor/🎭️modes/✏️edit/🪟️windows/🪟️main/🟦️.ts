@@ -8,9 +8,9 @@ export interface TxtMainViewModel {
   readOnly: boolean;
 }
 
-/** ✏️ `replace-text` payload shape — mirrors `TxtEditorCommand::ReplaceText`, a whole-document
+/** ✏️ `textEdit` payload shape — mirrors `TxtEditorCommand::ReplaceText`, a whole-document
  * replace (re-split into `lines` on the document's own line ending). */
-export interface TxtReplaceText {
+export interface TxtTextEdit {
   text: string;
 }
 

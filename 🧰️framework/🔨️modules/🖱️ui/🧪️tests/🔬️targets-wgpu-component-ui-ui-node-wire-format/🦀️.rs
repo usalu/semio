@@ -55,7 +55,7 @@ mod ui_node_wire_format_tests {
                 }),
                 UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "V".into() }], presence: UiPresence::default() }),
                 UiNode::Slider(UiSliderNode { menu: None, id: "sl1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some("%".into()), on_change: act("sliderChange"), presence: UiPresence::default() }),
-                UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: act("setAbs"), on_delta: act("setDelta"), presence: UiPresence::default() }),
+                UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("setAbs"), on_delta: act("setDelta"), presence: UiPresence::default() }),
                 UiNode::Ring(UiRingNode { menu: None, id: "ring1".into(), orb_id: "orb1".into(), t: 0.25, presence: UiPresence::default(), on_change: act("ringChange") }),
                 UiNode::IconSelect(UiIconSelectNode { menu: None, id: "icn1".into(), value: "star".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("iconChange"), presence: UiPresence::default() }),
                 UiNode::Field(UiFieldNode {
@@ -71,7 +71,7 @@ mod ui_node_wire_format_tests {
                 UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
                 UiNode::Tree(UiTreeNode { presentation: Default::default(),
                     menu: None,
-                    sections: vec![UiTreeSectionNode { window: None,
+                    sections: vec![UiTreeSectionNode { header_toolbar: None, window: None,
                         id: "treesec1".into(),
                         label: Some(Label::data("Items")),
                         default_open: Some(true),
@@ -246,7 +246,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
         assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
         assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
-        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
+        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
         assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
         assert_presence_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: None, value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
         assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
@@ -376,7 +376,7 @@ mod ui_node_wire_format_tests {
     #[semio_framework_async_macros::async_test]
     async fn scene_records_serialize_to_golden_json() {
         let scenes = (
-            Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into(), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+            Canvas2dScene { framing: None, camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into(), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
             TableScene::base("[]", "[]"),
             Paint2dScene {
                 document_sync_json: "{}".into(),

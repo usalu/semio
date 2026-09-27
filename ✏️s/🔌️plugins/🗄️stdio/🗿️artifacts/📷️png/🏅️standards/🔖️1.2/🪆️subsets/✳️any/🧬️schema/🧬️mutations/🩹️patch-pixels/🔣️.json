@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-pixels",
+  "semanticKind": "patch-pixels",
+  "displayName": "Patch Pixels",
+  "emoji": "🩹️",
+  "aggregateVariant": "PatchPixels",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "patch-pixels",
+  "binaryTag": 18,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

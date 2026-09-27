@@ -1,0 +1,27 @@
+/** 🩺️ F2 — debug run of the hot-update law's sandbox: serves it, loads it in Chromium, prints the console. */
+import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createServer } from "vite";
+import { chromium } from "playwright";
+import { semioSourceFreshnessVitePlugins } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+const root = mkdtempSync(join(tmpdir(), "f2-hot-"));
+mkdirSync(join(root, "🧰️framework"), { recursive: true });
+writeFileSync(join(root, "🧰️framework/🍃️leaf.ts"), 'export const value: string = "0";\n');
+writeFileSync(join(root, "🧰️framework/🟦️.ts"), ['import { value } from "./🍃️leaf.ts";', "const state = { value, updates: 0 };", 'Object.defineProperty(window, "__hot", { value: state });', 'console.log("main ran", value, !!import.meta.hot);', 'if (import.meta.hot) import.meta.hot.accept("./🍃️leaf.ts", (next) => { if (next) { state.value = next.value; state.updates += 1; } });', ""].join("\n"));
+writeFileSync(join(root, "index.html"), '<!doctype html><html><head><meta charset="utf-8"></head><body><script type="module" src="/🧰️framework/🟦️.ts"></script></body></html>');
+const server = await createServer({ configFile: false, root, logLevel: "info", cacheDir: join(root, ".vite"), optimizeDeps: { noDiscovery: true, include: [] }, server: { host: "127.0.0.1", port: 6587, strictPort: true, watch: null }, plugins: semioSourceFreshnessVitePlugins({ repoRoot: root }) });
+await server.listen();
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+page.on("console", (m) => console.log("console", m.type(), m.text()));
+page.on("pageerror", (e) => console.log("pageerror", String(e)));
+page.on("response", (r) => { if (r.status() >= 400) console.log("http", r.status(), decodeURIComponent(r.url())); });
+await page.goto("http://127.0.0.1:6587/");
+await page.waitForTimeout(6000);
+console.log("state", await page.evaluate(() => (window as any).__hot ?? null));
+writeFileSync(join(root, "🧰️framework/🍃️leaf.ts"), 'export const value: string = "1";\n');
+await page.waitForTimeout(4000);
+console.log("state after edit", await page.evaluate(() => (window as any).__hot ?? null));
+await browser.close();
+await server.close();

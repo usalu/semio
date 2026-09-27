@@ -1054,6 +1054,7 @@ impl SqliteDirectory {
                 }
                 tx.execute("INSERT OR IGNORE INTO hub_document_index (space_id, document_id, payload) VALUES (?1, ?2, ?3)", rusqlite::params![scope.space_id, scope.document_id, payload]).map_err(backend)?;
             }
+            DirectoryEventBody::UserPreferenceRecorded { .. } => {}
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 let descriptor = tx.query_row("SELECT space_id, document_id, artifact_kind, artifact_schema, owner_plugin_id, owner_package_id, owner_version, owner_package_hash, pack_schema_hash, bootstrap_version, bootstrap_head_seq, bootstrap_commit_seq, bootstrap_epoch, bootstrap_snapshot_hash FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], document_descriptor_row).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?;
                 let index_payload: Option<String> =

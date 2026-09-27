@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHoistClass
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-hoist-class", "change-hoist-class")
+        protocol::LocalizedLabel::native("Change hoisting class", "Hubklasse ändern")
     }
 }
 //#endregion 🔖️Payload

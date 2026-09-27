@@ -46,7 +46,6 @@ INFILTRATION_ACH = 0.5
 INTERNAL_GAIN_W = 200.0
 GLAZING_AREA_M2 = 12.0
 WINDOW_U_W_M2K = 3.0
-GROUND_TEMPERATURE_C = 10.0
 
 #: 🏛️ The published air-to-air U-values [W/(m²·K)], lightweight (600) and high-mass (900) sets.
 LIGHT_U = {"wall": 0.514, "roof": 0.318, "floor": 0.039}
@@ -159,7 +158,6 @@ def derive_parameters(case, model):
         "infiltrationAch": infiltration["design_flow_ach"],
         "internalGainW": sum(gain["watts_per_area"] * FLOOR_AREA_M2 for gain in model["equipment"]),
         "conditioned": bool(model["ideal_loads"]),
-        "groundTemperatureC": model["ground_temperature"]["building_surface_c"][0],
         "surfaces": surfaces,
         "windows": windows,
     }
@@ -169,13 +167,17 @@ def _close(actual, expected, tolerance, what):
     assert abs(actual - expected) <= tolerance, f"{what}: derived {actual!r}, ANSI/ASHRAE 140 §5.2 states {expected!r}"
 
 
-def assert_matches_the_standard(case, derived):
-    """🏛️ The independent half: hold the derived quantities against §5.2's own published values."""
+def assert_matches_the_standard(case, derived, model):
+    """🏛️ The independent half: hold the derived quantities against §5.2's own published values, and the floor to
+    §5.2's raised floor — exposed to outdoor air, sheltered from sun and wind, no surface coupled to the ground."""
     _close(derived["zoneVolumeM3"], ZONE_VOLUME_M3, 1e-6, f"case {case} zone volume")
     _close(derived["floorAreaM2"], FLOOR_AREA_M2, 1e-6, f"case {case} floor area")
     _close(derived["infiltrationAch"], INFILTRATION_ACH, 1e-9, f"case {case} infiltration rate")
     _close(derived["internalGainW"], INTERNAL_GAIN_W, 1e-6, f"case {case} internal gain")
-    _close(derived["groundTemperatureC"], GROUND_TEMPERATURE_C, 1e-9, f"case {case} ground temperature")
+    for surface in model["surfaces"]:
+        assert surface["outside_boundary_condition"] == "OutdoorAir", f"case {case} {surface['name']}: §5.2 couples no surface to the ground, found {surface['outside_boundary_condition']!r}"
+    floors = [surface for surface in model["surfaces"] if surface["class"] == "Floor"]
+    assert len(floors) == 1 and not floors[0]["sun_exposed"] and not floors[0]["wind_exposed"], f"case {case}: §5.2's one raised floor sees neither sun nor wind, found {floors!r}"
     assert derived["conditioned"] == (case not in FREE_FLOAT_CASES), f"case {case} conditioning does not match §5.2"
 
     published = HEAVY_U if case in HEAVY_CASES else LIGHT_U
@@ -207,7 +209,7 @@ def _parameters_for(case):
     def handler(ctx: Context) -> Outcome:
         model = json.loads(ctx.fixture_bytes(_model_uri(case)).decode("utf-8"))
         derived = derive_parameters(case, model)
-        assert_matches_the_standard(case, derived)
+        assert_matches_the_standard(case, derived, model)
         return Outcome(projection=derived, raw=json.dumps(derived, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
     return handler
@@ -241,14 +243,14 @@ def adapter() -> Adapter:
     and manufacture a guaranteed-green self-comparison."""
     built = Adapter("python")
     for case in ALL_CASES:
-        built = built.oracle(f"case-parameters-{case}", _parameters_for(case))
+        built = built.oracle(f"case-parameters-{case.lower()}", _parameters_for(case))
     for case in CONDITIONED_CASES:
-        built = built.oracle(f"annual-energy-{case}", _reference_for(case))
+        built = built.oracle(f"annual-energy-{case.lower()}", _reference_for(case))
     for case in PEAK_CASES:
-        built = built.oracle(f"peak-load-{case}", _reference_for(case))
+        built = built.oracle(f"peak-load-{case.lower()}", _reference_for(case))
     for case in sorted(FREE_FLOAT_CASES):
-        built = built.oracle(f"free-float-{case}", _reference_for(case))
+        built = built.oracle(f"free-float-{case.lower()}", _reference_for(case))
     for case in HOURLY_CASES:
-        built = built.oracle(f"hourly-temperature-{case}", _reference_for(case))
+        built = built.oracle(f"hourly-temperature-{case.lower()}", _reference_for(case))
     return built
 # endregion 🔖️Registration

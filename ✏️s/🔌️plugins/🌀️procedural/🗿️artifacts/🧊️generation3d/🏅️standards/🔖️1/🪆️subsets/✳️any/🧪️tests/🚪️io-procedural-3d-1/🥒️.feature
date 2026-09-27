@@ -60,11 +60,11 @@ Feature: Encode one committed cube in every text mesh grammar generation3d expor
   @id-read
   @level-quick
   @mode-differential
-  Scenario Outline: The committed <format> encoding of the unit cube is read back as the unit cube
+  Scenario Outline: The committed <id> encoding of the unit cube is read back as the unit cube
     Given the committed second-implementation encoding
       """
       {
-        "format": "<format>",
+        "format": "<id>",
         "encoding": "shared://🚪️io/🧊️unit-cube/<file>",
         "cube": "shared://🚪️io/🧊️unit-cube/🔣️.json"
       }
@@ -73,19 +73,19 @@ Feature: Encode one committed cube in every text mesh grammar generation3d expor
     And it exposes one record per triangle of the committed cube
     And an independent reader recovers the committed cube's triangle count, bounds and enclosed volume
     Examples:
-      | format | file                          |
-      | stl    | 🔺️second-implementation.stl  |
-      | obj    | 🗿️second-implementation.obj  |
-      | ply    | 🧱️second-implementation.ply  |
+      | id  | file                        |
+      | stl | 🔺️second-implementation.stl |
+      | obj | 🗿️second-implementation.obj |
+      | ply | 🧱️second-implementation.ply |
 
   @id-round-trip
   @level-quick
   @mode-round-trip
-  Scenario Outline: Writing and re-reading the unit cube in <format> does not move the geometry the format can carry
+  Scenario Outline: Writing and re-reading the unit cube in <id> does not move the geometry the format can carry
     Given the committed unit cube
       """
       {
-        "format": "<format>",
+        "format": "<id>",
         "cube": "shared://🚪️io/🧊️unit-cube/🔣️.json"
       }
       """
@@ -93,7 +93,7 @@ Feature: Encode one committed cube in every text mesh grammar generation3d expor
     And writing it in the format and reading it back recovers the same triangle count, bounds and enclosed volume
     And the recovered vertex count is the one the format's own model can carry, not the one another format's can
     Examples:
-      | format |
-      | stl    |
-      | obj    |
-      | ply    |
+      | id  |
+      | stl |
+      | obj |
+      | ply |

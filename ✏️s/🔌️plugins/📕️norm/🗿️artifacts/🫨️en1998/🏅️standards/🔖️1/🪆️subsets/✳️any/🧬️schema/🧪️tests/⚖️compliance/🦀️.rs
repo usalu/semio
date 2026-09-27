@@ -200,7 +200,7 @@ async fn example_snapshot_validates_against_json_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn python_oracle_matches_within_half_percent() {
-    let script = family_any_dir().join("🔮️oracles/🐍️.py");
+    let script = family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py");
     if !script.exists() {
         return;
     }
@@ -588,7 +588,7 @@ async fn multipart_examples_evaluate_expected_verdicts() {
 
 #[semio_framework_async_macros::async_test]
 async fn de_ground_combo_table_matches_oracle_for_all_combos() {
-    let script = family_any_dir().join("🔮️oracles/🐍️.py");
+    let script = family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py");
     let output = Command::new("python3").arg(&script).arg("--combo-table").output().expect("oracle combo table");
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let py: serde_json::Value = serde_json::from_slice(&output.stdout).expect("json");

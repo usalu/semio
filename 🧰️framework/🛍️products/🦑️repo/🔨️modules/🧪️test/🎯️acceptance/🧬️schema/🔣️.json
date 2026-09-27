@@ -32,7 +32,7 @@
         "evidence": { "type": "array", "maxItems": 64, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } }
       }
     },
-    "requirement": { "enum": ["hub", "serve", "backends"] },
+    "requirement": { "enum": ["hub", "serve", "localServe", "backends", "hubAdmin"] },
     "planCheck": {
       "type": "object",
       "additionalProperties": false,
@@ -86,12 +86,13 @@
     "goalSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "plan", "hub", "serve", "startedAt", "finishedAt", "verdict", "totals", "steps"],
+      "required": ["schema", "plan", "hub", "serve", "localServe", "startedAt", "finishedAt", "verdict", "totals", "steps"],
       "properties": {
         "schema": { "const": "semio.acceptance.goal-summary/v1" },
         "plan": { "$ref": "#/$defs/checkId" },
         "hub": { "type": ["string", "null"], "maxLength": 512 },
         "serve": { "type": ["string", "null"], "maxLength": 512 },
+        "localServe": { "type": ["string", "null"], "maxLength": 512 },
         "startedAt": { "$ref": "#/$defs/timestamp" },
         "finishedAt": { "$ref": "#/$defs/timestamp" },
         "verdict": { "$ref": "#/$defs/status" },

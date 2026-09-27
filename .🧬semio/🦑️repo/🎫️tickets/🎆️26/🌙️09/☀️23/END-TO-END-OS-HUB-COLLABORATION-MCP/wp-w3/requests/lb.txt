@@ -1,0 +1,6 @@
+# LB guest-linked crates whose code changed (session 13 landing window) — crate + reason
+semio-s-plugin-stdio + ALL 36 stdio artifact crates (semio-s-artifact-stdio-*) + semio-s-artifact-stdio-contract  T12 open kinds: stdio kind ids `stdio.<x>` → `s.stdio.<x>` (35 artifact_kind ids, 25 native-factory rows, 25 receipts + schema enum); txt/tsv/html editors declare their kind; D1: `set_active_example_description()` + 62 `setActiveExample` descriptions; LB-F1: 52 editors' tool-job items moved into `impl ArtifactEditor` (+ `semio-framework-job` dep in 19 crates). Descriptors, `native-codec-factories.json`, `trusted-stdio-catalog.json` MUST be regenerated (describe + generate)
+semio-s-plugin-gis, semio-s-artifact-gis-gismap, semio-s-artifact-gis-gisterrain  T12: gisterrain `artifact_kind()` (`s.gis.gisterrain`) declared at plugin level + activation; D1: 12 descriptions + 9 Chrome audiences (gis2d/gis3d)
+semio-s-plugin-vcs, semio-s-artifact-vcs-vcs  D1: 5 descriptions + noMutation → Chrome
+semio-s-plugin-demonstrator  code unchanged; embeds the gis panes whose descriptions/audiences changed → re-describe
+semio-s-plugin-energy, semio-s-artifact-energy-model  T12 energy drift: dead `if false { return Vec::new(); }` removed from the delete-fenestration / delete-shading-surface inverses

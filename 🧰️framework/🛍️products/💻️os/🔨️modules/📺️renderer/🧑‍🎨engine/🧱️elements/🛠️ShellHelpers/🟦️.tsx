@@ -630,6 +630,18 @@ export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new S
 export const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 export const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
+/** 🖱️ The least spacing between two presence beats a local window-view change (pointer, camera, caret) triggers, so a
+ * peer's cursor follows within ~one frame budget instead of the next {@link PRESENCE_HEARTBEAT_INTERVAL_MS} beat. Pinned
+ * by `💓️presence-liveness-v1` (`a-moving-pointer-beats-live`). */
+export const PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS = 100;
+
+/** ⏳️ How long a view-change beat waits: none once the last beat is {@link PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS} old,
+ * else the rest of that spacing (a clock that ran backwards waits the whole spacing). */
+export function presenceLiveViewBeatDelayMsV1(lastBeatAtMs: number, nowMs: number): number {
+  const elapsed = nowMs - lastBeatAtMs;
+  return elapsed < 0 ? PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS : Math.max(0, PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS - elapsed);
+}
+
 /** ⏱️ How long one presence beat may wait for the document component's ephemeral snapshot before it
  * goes out without one. Strictly below {@link PRESENCE_HEARTBEAT_INTERVAL_MS} so a slow document can
  * never push a beat into the next interval, and the pair sits far below the hub's own

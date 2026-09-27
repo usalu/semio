@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeNetFlo
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change net-floor-area", "net-floor-area ändern")
+        protocol::LocalizedLabel::native("Change net floor area", "Nettogrundfläche ändern")
     }
 }

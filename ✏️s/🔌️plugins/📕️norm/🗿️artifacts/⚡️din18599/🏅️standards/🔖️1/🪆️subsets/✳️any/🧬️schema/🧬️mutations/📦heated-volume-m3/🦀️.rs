@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHeated
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change heated-volume", "heated-volume ändern")
+        protocol::LocalizedLabel::native("Change heated building volume", "Beheiztes Gebäudevolumen ändern")
     }
 }

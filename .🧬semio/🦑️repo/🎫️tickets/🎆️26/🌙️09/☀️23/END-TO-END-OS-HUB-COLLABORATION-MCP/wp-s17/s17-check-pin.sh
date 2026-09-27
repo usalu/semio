@@ -16,9 +16,9 @@ for phase in A B C; do
   args=(); for c in $crates; do args+=(-p $c); done
   until [ "$(ps -axo command | /usr/bin/grep -c '^[^ ]*rustc ')" -le 14 ]; do sleep 30; done
   echo "PHASE $phase START $(date '+%T')" >> "$1"
-  nice -n 10 cargo check $args --lib --tests --message-format short >> "$1" 2>&1
+  nice -n 10 cargo check $args --lib --tests --keep-going --message-format short >> "$1" 2>&1
   code=$?
   echo "PHASE $phase EXIT=$code $(date '+%T')" >> "$1"
-  [ $code -ne 0 ] && break
+  true
 done
 echo "ALL_DONE $(date '+%T')" >> "$1"

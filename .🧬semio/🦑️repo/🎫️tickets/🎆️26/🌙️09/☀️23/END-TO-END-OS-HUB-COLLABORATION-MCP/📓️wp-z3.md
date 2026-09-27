@@ -9,11 +9,12 @@ Captures `wp-z3/generated/` (expendable). One-off codemods/probes `wp-z3/*`.
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| 1 | Linux `winit` backends (Z2 B4 / H10 patch) landed + checked native macOS + wasm32; Linux build in Docker | APPLIED 19:1x (3 manifests, root + 12 bridge locks re-resolved, all 49 tracked locks `--locked --offline` green); native check blocked twice (P8 cache poisoning, then a fleet lock pile-up); Docker proof on hold (rule 22) | `wp-z3/winit-linux-backends.py`, `generated/check-native-*.txt` |
+| 1 | Linux `winit` backends (Z2 B4 / H10 patch) landed + checked native macOS + wasm32; Linux build in Docker | LANDED (row in `📓️landing.md`): native `--lib --tests` ui (wgpu-engine) + ui-host **green** 27 05:43; renderer check stopped in a fleet-b lock convoy (Linux-only table, inert on macOS); wasm32 left to the REBUILD fast gate (rule 29); Docker/Linux re-proof held by rule 22 | `wp-z3/winit-linux-backends.py`, `generated/check-native-*.txt` |
 | 1b | Shared build-dir poisoned by a scratch clone (found while checking item 1) | FIXED + GATE LANDED: 351 foreign dep-info (all `debug`, P8's clone) invalidated; `cargo-provenance check`/`repair` verb, nx `repo:cargo-provenance-{check,repair}`, `repo:test-cargo-provenance` laws **5/5** (fixture + Ajv, Python ntpath/posixpath oracle, real-cargo poisoning oracle), launch rows | log 20:1x–20:3x |
+| 1c | Who builds with incremental on (rule 28: debug incremental 126 GB + wasm32 33 GB overnight) | ROOT-FIXED: root `Cargo.toml` `[profile.dev] incremental = true` made every cargo without `CARGO_INCREMENTAL=0` (IDE, Codex peer, launch rows, devs) write sessions into the shared build-dir and split units by the caller's env → `incremental = false`; `CARGO_INCREMENTAL=0` units stay Fresh (measured); law with cargo `--unit-graph` oracle over 6 profile/target rows **PASS** (provenance suite 6/6) | log 05:1x |
 | 2 | Hub in Docker: cold build + run → `/healthz`, `/readyz`; image size, cold build time; backup/restore drill in the container | OPEN | |
 | 3 | Devcontainer zero-touch (`bun install` → `dev s` + local hub + semio MCP) measured inside the container | PREPARED: `docker-in-docker:2` (`moby: false`) feature so V1's `os-hub-ts:backend-*` runs unchanged inside (backends publish on 127.0.0.1) + law row; timed run blocked by rule 22 (no image builds) | log 20:5x |
-| 4 | Native Windows audit of `dev s` / hub / semio MCP / fleet `📜️script.ts` verbs; root fixes + laws exercising the Windows branch | 5 ROOT FIXES LANDED + LAWS: owner-only files (TS + Rust twins, one fixture), process table (POSIX + Windows), cache-prune safety on Windows, file-URL pathname, `shell: true` spawn; `repo-lib:test-windows-command-paths` **17/17** (direct + nx); Rust twin **4/4** + `cargo check` for `x86_64-pc-windows-msvc`/linux/wasip2 green; MCP crate check pending (lock convoy) | §4 below |
+| 4 | Native Windows audit of `dev s` / hub / semio MCP / fleet `📜️script.ts` verbs; root fixes + laws exercising the Windows branch | 5 ROOT FIXES LANDED + LAWS: owner-only files (TS + Rust twins, one fixture), process table (POSIX + Windows), cache-prune safety on Windows, file-URL pathname, `shell: true` spawn; `repo-lib:test-windows-command-paths` **17/17** (direct + nx); Rust twin **4/4** + `cargo check` for `x86_64-pc-windows-msvc`/linux/wasip2 green; `cargo check -p semio-framework-os-mcp --lib --tests` **green** 27 06:30 (0 warnings in my files) | §4 below |
 | 5 | Native Linux proxy (devcontainer image): hub + `dev s` React shell boot | OPEN | |
 
 ## Log
@@ -101,3 +102,34 @@ Captures `wp-z3/generated/` (expendable). One-off codemods/probes `wp-z3/*`.
   (`moby: false`: Docker CE, Ubuntu noble) — V1's backends publish on `127.0.0.1`, which a host socket
   (docker-outside-of-docker) would not reach from inside the container. Law row in `🐳️containers/🧪️tests/🚀️runtime-bootstrap`
   (+ fixture `dockerDaemonFeature`): PASS.
+- 21:0x–21:2x (before the usage cut) item 4 continued: `bunx`/`npx` launchers → `bun x` (8 sites in the root router: storybook,
+  MCP inspector, dependency-cruiser ×2, playwright, schema oracle ×2, prettier — `.cmd` shims cannot be spawned without a
+  shell on Windows; the prettier row had `shell: true`); laws + "package runners start through `bun x`" and "every launch
+  row runs unchanged in PowerShell, cmd.exe and POSIX shells" (417 rows, only VS Code `${…}` variables) → **19/19**.
+- 21:2x cut by the usage limit (all processes died overnight, preamble rule 28). My in-flight edits were auto-committed at
+  22:00 (`40a2736`) and are intact (re-verified 05:0x).
+- 05:0x resumed. Tracked `Cargo.lock` audit: root in sync (`--locked --offline`), my 9 winit entries present. 35 `🏭️bridge`
+  locks drifted again overnight (peer manifest edits); they are test-platform tools run with `cargo run --offline` (never
+  `--locked`), so they re-resolve on use and do not gate the rebuild — left to their owners (my 21:2x resync of 25 of them
+  is superseded).
+- 05:1x **rule 28 incremental hunt, root cause:** root `Cargo.toml` declared `[profile.dev] incremental = true`. Every cargo
+  started without `CARGO_INCREMENTAL=0` (rust-analyzer, the Codex peer's builds, launch rows/nx targets that pass
+  `process.env` through, devs) therefore wrote incremental sessions into the shared build-dir — `dev` also covers the
+  `wasm32-unknown-unknown`/`wasm32-wasip2` debug units, matching 126 GB + 33 GB — and, since `incremental` is part of a
+  unit's profile identity (W1's own note on `wasm-dev`), every unit existed twice (one per caller convention). Fixed:
+  `[profile.dev] incremental = false` with the reason; release/wasm-dev/wasm-release were already false, test/bench
+  inherit. Measured: cargo `--unit-graph` without `CARGO_INCREMENTAL` before = `(dev, incremental: true)`, after = 85/85
+  kernel units false, 45/45 `wasm-dev` wasip2 units false; `CARGO_INCREMENTAL=0 cargo check -p semio-framework-hash -v`
+  → `Fresh` (no fleet rebuild). Law (provenance suite) "no profile keeps incremental state in the shared build-dir,
+  whatever the caller's CARGO_INCREMENTAL": fixture rows dev/test/release/wasm-dev/wasm-release/dev@wasm32-unknown-unknown,
+  manifest inheritance resolved + cargo's own unit graph as oracle → suite **6/6**. (A peer's pending root `Cargo.toml`
+  hunk — dropping `[profile.wasm-dev.package.semio-framework-hash]` — was left untouched.)
+- 05:39 coordinator stopped my cold fleet-b check (33 min, lock waits). Split: `cargo check -p semio-framework-ui --features
+  wgpu-engine -p semio-framework-ui-host --lib --tests` (build-fleet-b, `wp-z3/z3-cargo.sh` via `w2-detach.py`) **green in
+  3 m 15 s** (143 warnings = type-checked). Renderer `--lib --tests` then sat 29 min at 35 units with 0 % CPU and no rustc child
+  (~17 fleet cargos idle, a lock convoy in build-fleet-b) → stopped (rule 25). Landing row written 06:0x; rule 29: native green
+  suffices, wasm32 = REBUILD fast gate. `wp-w3/requests/z3.txt`: ui Cargo.toml → guests recompile once.
+- 06:12–06:30 `cargo check -p semio-framework-os-mcp --lib --tests` (build-fleet-b) **green in 17 m 41 s**: the MCP crate with
+  `🔐️owner-only` mounted, bridge offers and the agent credential routed through it; none of the 120 warnings is in my files
+  (`.🧬semio/🌐hub/s13-z3-logs/check-mcp-owner-only-1.txt`). The module's own laws ran 4/4 in the standalone harness yesterday;
+  the in-crate rendezvous/agent-credential laws are not re-run (rule 25: checks only until REBUILD START).

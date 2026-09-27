@@ -2,59 +2,262 @@
   "schemaVersion": 1,
   "snapshot": {
     "focusedWindowId": "world-main",
-    "activeUtilityByWindowId": { "world-main": "transform", "graph-main": "select" },
+    "activeUtilityByWindowId": {
+      "world-main": "transform",
+      "graph-main": "select"
+    },
     "activeToolId": "fill",
     "activePanelTabByGroup": {
-      "top-left": "panel.top-left", "top-middle": "panel.top-middle", "top-right": "panel.top-right", "right-middle": "panel.right-middle",
-      "bottom-right": "panel.bottom-right", "bottom-middle": "panel.bottom-middle", "bottom-left": "panel.bottom-left", "left-middle": "panel.left-middle"
+      "top-left": "panel.top-left",
+      "top-middle": "panel.top-middle",
+      "top-right": "panel.top-right",
+      "right-middle": "panel.right-middle",
+      "bottom-right": "panel.bottom-right",
+      "bottom-middle": "panel.bottom-middle",
+      "bottom-left": "panel.bottom-left",
+      "left-middle": "panel.left-middle"
     },
     "interactionSelection": {
-      "world": { "granularity": "object", "ids": ["solid-a", "solid-b"], "anchorId": "solid-a" },
-      "graph": { "granularity": "node", "ids": ["node-a"] }
+      "world": {
+        "granularity": "object",
+        "ids": [
+          "solid-a",
+          "solid-b"
+        ],
+        "anchorId": "solid-a"
+      },
+      "graph": {
+        "granularity": "node",
+        "ids": [
+          "node-a"
+        ]
+      }
     },
     "openDialogId": "confirm.reset",
-    "expandedTreeIds": ["catalogue.solids", "settings.appearance"],
+    "expandedTreeIds": [
+      "catalogue.solids",
+      "settings.appearance"
+    ],
     "commandPanelOpen": false
   },
   "mutated": {
     "focusedWindowId": "graph-main",
-    "activeUtilityByWindowId": { "graph-main": "wire" },
+    "activeUtilityByWindowId": {
+      "graph-main": "wire"
+    },
     "activeToolId": "brush",
     "activePanelTabByGroup": {
-      "top-left": "mutated.top-left", "top-middle": "mutated.top-middle", "top-right": "mutated.top-right", "right-middle": "mutated.right-middle",
-      "bottom-right": "mutated.bottom-right", "bottom-middle": "mutated.bottom-middle", "bottom-left": "mutated.bottom-left", "left-middle": "mutated.left-middle"
+      "top-left": "mutated.top-left",
+      "top-middle": "mutated.top-middle",
+      "top-right": "mutated.top-right",
+      "right-middle": "mutated.right-middle",
+      "bottom-right": "mutated.bottom-right",
+      "bottom-middle": "mutated.bottom-middle",
+      "bottom-left": "mutated.bottom-left",
+      "left-middle": "mutated.left-middle"
     },
-    "interactionSelection": { "map": { "granularity": "position", "ids": ["position-a"] } },
+    "interactionSelection": {
+      "map": {
+        "granularity": "position",
+        "ids": [
+          "position-a"
+        ]
+      }
+    },
     "openDialogId": "confirm.other",
-    "expandedTreeIds": ["mutated.one"],
+    "expandedTreeIds": [
+      "mutated.one"
+    ],
     "commandPanelOpen": true
   },
   "deltas": [
-    { "kind": "selection", "domainId": "world", "granularity": "object", "ids": [] },
-    { "kind": "treeExpansion", "id": "catalogue.solids", "expanded": false },
-    { "kind": "dialog", "id": "confirm.other" },
-    { "kind": "panelTab", "group": "bottom-middle", "tabId": null },
-    { "kind": "commandPanel", "open": true },
-    { "kind": "commandPanel", "open": false }
+    {
+      "kind": "selection",
+      "domainId": "world",
+      "granularity": "object",
+      "ids": []
+    },
+    {
+      "kind": "treeExpansion",
+      "id": "catalogue.solids",
+      "expanded": false
+    },
+    {
+      "kind": "dialog",
+      "id": "confirm.other"
+    },
+    {
+      "kind": "panelTab",
+      "group": "bottom-middle",
+      "tabId": null
+    },
+    {
+      "kind": "commandPanel",
+      "open": true
+    },
+    {
+      "kind": "commandPanel",
+      "open": false
+    }
   ],
   "afterDeltas": {
     "focusedWindowId": "world-main",
-    "activeUtilityByWindowId": { "world-main": "transform", "graph-main": "select" },
+    "activeUtilityByWindowId": {
+      "world-main": "transform",
+      "graph-main": "select"
+    },
     "activeToolId": "fill",
     "activePanelTabByGroup": {
-      "top-left": "panel.top-left", "top-middle": "panel.top-middle", "top-right": "panel.top-right", "right-middle": "panel.right-middle",
-      "bottom-right": "panel.bottom-right", "bottom-left": "panel.bottom-left", "left-middle": "panel.left-middle"
+      "top-left": "panel.top-left",
+      "top-middle": "panel.top-middle",
+      "top-right": "panel.top-right",
+      "right-middle": "panel.right-middle",
+      "bottom-right": "panel.bottom-right",
+      "bottom-left": "panel.bottom-left",
+      "left-middle": "panel.left-middle"
     },
-    "interactionSelection": { "graph": { "granularity": "node", "ids": ["node-a"] } },
+    "interactionSelection": {
+      "graph": {
+        "granularity": "node",
+        "ids": [
+          "node-a"
+        ]
+      }
+    },
     "openDialogId": "confirm.other",
-    "expandedTreeIds": ["settings.appearance"],
+    "expandedTreeIds": [
+      "settings.appearance"
+    ],
     "commandPanelOpen": false
   },
   "gestureMatrix": [
-    { "kind": "scene", "id": "world-main", "position": [0.0, 0.0, 0.0] },
-    { "kind": "canvas", "id": "graph-main", "x": 0.0, "y": 0.0 },
-    { "kind": "entity", "id": "graph-main", "domain": "node", "entity": "height", "offset": [0.25, 0.75] },
-    { "kind": "curve", "id": "graph-main", "domain": "edge", "entity": "e1", "t": 0.25 },
-    { "kind": "domain", "id": "graph-main", "domain": "slider", "entity": "height", "value": 7.5 }
-  ]
+    {
+      "kind": "scene",
+      "id": "world-main",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "kind": "canvas",
+      "id": "graph-main",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "kind": "entity",
+      "id": "graph-main",
+      "domain": "node",
+      "entity": "height",
+      "offset": [
+        0.25,
+        0.75
+      ]
+    },
+    {
+      "kind": "curve",
+      "id": "graph-main",
+      "domain": "edge",
+      "entity": "e1",
+      "t": 0.25
+    },
+    {
+      "kind": "domain",
+      "id": "graph-main",
+      "domain": "slider",
+      "entity": "height",
+      "value": 7.5
+    }
+  ],
+  "clock": {
+    "frameIntervalMs": 16.666666666666668,
+    "durationMs": 50,
+    "rate": 2,
+    "wallFramesMs": [
+      1000,
+      1016.6666666666666,
+      1033.3333333333333
+    ],
+    "expectedPlayheadMs": [
+      0,
+      33.333333333333336,
+      50
+    ],
+    "expectedPlaying": [
+      true,
+      true,
+      false
+    ],
+    "deadlines": [
+      {
+        "id": "playing",
+        "mode": "playing",
+        "lastTickWallMs": 1000,
+        "playheadMs": 10,
+        "durationMs": 50,
+        "rate": 2,
+        "convergeEndWallMs": null,
+        "expectedWallMs": 1016.6666666666666
+      },
+      {
+        "id": "playing-near-end",
+        "mode": "playing",
+        "lastTickWallMs": 1000,
+        "playheadMs": 45,
+        "durationMs": 50,
+        "rate": 2,
+        "convergeEndWallMs": null,
+        "expectedWallMs": 1002.5
+      },
+      {
+        "id": "recording",
+        "mode": "recording",
+        "lastTickWallMs": 1000,
+        "playheadMs": 10,
+        "durationMs": 10,
+        "rate": 1,
+        "convergeEndWallMs": null,
+        "expectedWallMs": 1016.6666666666666
+      },
+      {
+        "id": "paused",
+        "mode": "paused",
+        "lastTickWallMs": 1000,
+        "playheadMs": 10,
+        "durationMs": 50,
+        "rate": 1,
+        "convergeEndWallMs": null,
+        "expectedWallMs": null
+      },
+      {
+        "id": "deviated",
+        "mode": "deviated",
+        "lastTickWallMs": 1000,
+        "playheadMs": 10,
+        "durationMs": 50,
+        "rate": 1,
+        "convergeEndWallMs": null,
+        "expectedWallMs": null
+      },
+      {
+        "id": "converging-paused",
+        "mode": "paused",
+        "lastTickWallMs": 1000,
+        "playheadMs": 10,
+        "durationMs": 50,
+        "rate": 1,
+        "convergeEndWallMs": 1008,
+        "expectedWallMs": 1008
+      }
+    ],
+    "merge": {
+      "wallNowMs": 1000,
+      "monotonicNowSeconds": 40,
+      "chromeWallMs": 1008,
+      "tutorialWallMs": 1016.6666666666666,
+      "expectedMonotonicSeconds": 40.008
+    }
+  }
 }

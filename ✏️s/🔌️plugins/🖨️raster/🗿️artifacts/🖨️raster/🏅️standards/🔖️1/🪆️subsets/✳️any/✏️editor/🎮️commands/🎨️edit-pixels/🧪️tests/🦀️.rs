@@ -2,6 +2,30 @@
 use super::*;
 
 #[test]
+fn edit_pixels_keeps_the_source_asset_when_a_mask_references_it() {
+    use crate::standards::v1::subsets::any::schema::{empty_raster_document,snapshot::retire_raster_snapshot};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    let fixture=&fixture["assetRetention"];let key=fixture["imageKey"].as_str().unwrap();
+    let mut document=empty_raster_document();
+    let image=RasterImage {width:2,height:2,pixels:[255,255,255,255].repeat(4)};
+    let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
+    document.assets.insert(key.into(),crate::mint_raster_asset_child(key,&asset)).unwrap();
+    if let RasterLayerNode::Pixel {image_key,width,height,mask,..}=&mut document.layers[0] {
+        *image_key=Some(key.into());*width=Some(2);*height=Some(2);
+        *mask=Some(crate::RasterLayerMask {enabled:true,linked:true,invert:false,width:Some(2),height:Some(2),image_key:Some(key.into()),transform:crate::RasterTransform::default()});
+    }
+    let command=EditPixels {layer_id:layer_node_id(&document.layers[0]).to_owned(),expected_image_key:Some(key.into()),operation:fixture["operation"].to_string(),selection:None};
+    let (mut job,layer,parent,index)=prepare(&command,&document).unwrap();
+    while !job.advance(4).unwrap().done {}
+    let mut encoder=PngEncodeJob::new(job.into_result().unwrap()).unwrap();
+    while !encoder.advance().unwrap().done {}
+    let emit=publish(encoder.into_result().unwrap(),layer,parent,index,&document).unwrap();
+    retire_raster_snapshot(document);
+    let removed:Vec<String>=emit.artifact_mutations.iter().filter_map(|op|if let RasterMutation::RemoveLayerAsset(payload)=op {Some(payload.asset_id.clone())}else{None}).collect();
+    assert_eq!(serde_json::to_value(removed).unwrap(),fixture["expectedRemovedAssets"]);
+}
+
+#[test]
 fn edit_pixels_rejects_stale_image_revision() {
     let mut document = crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
     document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Test", 2, 2));

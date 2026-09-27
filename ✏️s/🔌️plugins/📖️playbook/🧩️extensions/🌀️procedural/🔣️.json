@@ -216,6 +216,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Exports the block's preview geometry as STEP, OBJ, STL or GLB and stores the result in the block's parameters for the shell to read back; nothing is written to disk.",
+                  "de": "Exportiert die Vorschaugeometrie des Bausteins als STEP, OBJ, STL oder GLB und legt das Ergebnis in den Parametern des Bausteins ab, damit die Shell es ausliest; auf die Festplatte wird nichts geschrieben."
+                },
+                "reuse": {
+                  "en": "Exports the block's preview geometry as STEP, OBJ, STL or GLB and stores the result in the block's parameters for the shell to read back; nothing is written to disk.",
+                  "de": "Exportiert die Vorschaugeometrie des Bausteins als STEP, OBJ, STL oder GLB und legt das Ergebnis in den Parametern des Bausteins ab, damit die Shell es ausliest; auf die Festplatte wird nichts geschrieben."
+                }
               }
             }
           },
@@ -333,6 +343,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the resulting geometry handles in its parameters.",
+                  "de": "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die entstandenen Geometrie-Handles in seinen Parametern ab."
+                },
+                "reuse": {
+                  "en": "Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the resulting geometry handles in its parameters.",
+                  "de": "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die entstandenen Geometrie-Handles in seinen Parametern ab."
+                }
               }
             }
           },
@@ -1064,6 +1084,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -1169,6 +1199,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -1262,6 +1302,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -1411,13 +1461,13 @@
     "dependencies": [
       {
         "pluginId": "playbook",
-        "version": "^0.1.0"
+        "version": "=0.1.0"
       }
     ]
   },
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -1458,8 +1508,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "1b81b6902f473cb1b7146f1e41309cac0a1bf7787e2f28f6439625034fecbb00",
-    "coreWasmSha256": "44c6d51568e900d861a08f9f5b519ace85abe0dd30af7585379307b61f1cd2bd",
-    "descriptorSha256": "4bb03de181958b7ed118e0657a408a9c67390f09af33fc726357910f928772bc"
+    "wasmSha256": "c562f6c0931cc7b65fb0eee3e3ea7c96349236bc3d090d3aaf2a9f66b532d6ad",
+    "coreWasmSha256": "3c730cbedb5d1e1336d72d5e2ec7c099a5704a7bcab2cf4175830bdfba644817",
+    "descriptorSha256": "e309103148c3220e70b29f5d677e6406c09bc85c725beda6c31cbd5a59e743f8"
   }
 }

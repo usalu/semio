@@ -1,16 +1,4 @@
-//! 🧬️ Raster artifact — closed semantic mutation dispatch enum (constitutional: op). Derived from
-//! `RasterSnapshot`'s recursive layer-tree shape per `📓️derivation-rules.md`: the five old
-//! option-bag/whole-tree variants (`AddLayer`, `RemoveLayer`, `PatchLayer`, `MoveLayer`, and the old
-//! whole-document-replace variant) are gone, replaced by ten real verbs (`create-layer`, `delete-layer`,
-//! `reorder-layers`, `rename-layer`, `change-layer-visible`, `change-layer-opacity`,
-//! `change-layer-blend-mode`, `move-layer`, `resize-layer`, `change-layer-adjustment-kind`) plus two
-//! justified additions for the `assets` id-keyed root collection (`add-layer-asset`,
-//! `remove-layer-asset` — see that leaf's docstring). The old whole-document-replace variant dies
-//! with NO replacement: whole-document replace goes through `store::ArtifactStore::reset`, entirely
-//! outside this enum.
-//!
-//! All twelve triads are mounted directly as `mutations`-sibling modules in `🦀️.rs`, each with
-//! its own unique emoji-prefixed directory — no inline `#[path = "."]` self-wiring.
+//! 🧬️ Closed raster mutation vocabulary: layer structure, properties, assets, pixels and masks.
 
 use crate::diff::RasterDiff;
 use crate::RasterSnapshot;
@@ -29,6 +17,7 @@ use super::rename_layer;
 use super::reorder_layers;
 use super::resize_layer;
 use super::change_layer_pixels;
+use super::change_layer_mask;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -52,6 +41,7 @@ pub enum RasterMutation {
     AddLayerAsset(add_layer_asset::AddLayerAsset),
     RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset),
     ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels),
+    ChangeLayerMask(change_layer_mask::ChangeLayerMask),
 }
 
 /// 🧯️ Cold disposal of a scratch mutation nobody will apply again — the store retires decoded
@@ -85,6 +75,9 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🎭️change-layer-mask/🧪️tests/🦀️.rs"]
+mod mask_tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
@@ -239,7 +232,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
 pub const KINDS: &[&str] =
-    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels"];
+    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

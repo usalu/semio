@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for InsertBeam {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-beam", "insert-beam")
+        protocol::LocalizedLabel::native("Insert composite beam", "Verbundträger einfügen")
     }
 }
 //#endregion 🔖️Payload

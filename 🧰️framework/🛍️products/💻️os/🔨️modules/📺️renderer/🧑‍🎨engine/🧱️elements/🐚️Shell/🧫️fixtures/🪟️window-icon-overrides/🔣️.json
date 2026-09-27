@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "windowKindId": "main",
+  "kindIconId": "puzzle",
+  "windowIds": ["main", "main-2", "main-projection", "main-plain"],
+  "commands": [
+    { "windowId": "main", "iconId": "box", "expectedIconId": "box" },
+    { "windowId": "main-2", "iconId": "circle", "expectedIconId": "circle" },
+    { "windowId": "main", "iconId": "diamond", "expectedIconId": "diamond" },
+    { "windowId": "main-projection", "iconId": "star", "expectedIconId": "star" }
+  ],
+  "projectionFallback": {
+    "windowId": "main-projection",
+    "templateId": "world-projection:{\"mode\":{\"kind\":\"orthographic\"},\"orientation\":{\"type\":\"cardinal\",\"view\":\"top\"}}",
+    "expectedIconId": "projection-orthographic"
+  },
+  "kindFallback": { "windowId": "main-plain", "templateId": null, "expectedIconId": "puzzle" },
+  "retireReuse": { "windowId": "main-2", "staleIconId": "circle", "expectedReusedIconId": "puzzle" },
+  "rejected": [
+    { "windowId": "missing", "iconId": "ghost" },
+    { "windowId": "main", "iconId": "" }
+  ]
+}

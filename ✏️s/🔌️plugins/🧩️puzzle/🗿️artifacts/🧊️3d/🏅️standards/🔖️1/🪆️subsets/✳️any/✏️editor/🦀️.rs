@@ -7984,19 +7984,17 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Some(crate::editor::puzzle3d::config::schema::app_schema_descriptor())
     }
 
-    /// 🚀️ Boots on `default_fixture()` (Concrete Forest) and warms only ITS OWN precompute session.
+    /// 🚀️ The `default_fixture()` (Concrete Forest) document, nothing else.
     ///
     /// 🐛️ This used to pre-warm `NAKAGIN_EXAMPLE_FIXTURE` first — 128 755 B of DSL parsed into a typed
     /// fixture that the boot document never reads, paid by every mount before its first frame. The
     /// static is a `LazyLock`: the example that needs it forces it when it is actually switched to.
+    /// It then built a scene and synced a whole precompute session (mesh fallbacks, collision scene) into a
+    /// throwaway `Puzzle3dPlayApp` dropped on return: every rendering app syncs its own session before its
+    /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
+    /// creating or validating a document paid for it in the interpreter.
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
-        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into());
-        let config = Puzzle3dRuntime::default();
-        let active_utility = puzzle3d_scene_active_utility(&config, None, None);
-        let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), config, &active_utility);
-        let app = Puzzle3dPlayApp::default();
-        sync_precompute_session(&mut app.precompute.borrow_mut(), &scene);
-        snapshot
+        Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into())
     }
 
     fn clipboard_media_type() -> Option<MediaType> {

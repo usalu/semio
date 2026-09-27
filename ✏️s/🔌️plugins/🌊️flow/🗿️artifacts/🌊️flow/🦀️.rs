@@ -108,7 +108,7 @@ fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
 /// 🌉 Inverse of [`widget_params`] — reconstructs the exact `Widget` variant from its `kind` tag and
 /// flattened params; an unrecognized `kind` honestly surfaces as a note carrying the raw tag rather
 /// than silently dropping the node.
-fn widget_from_node(node: &SemioFlowNode) -> Widget {
+pub(crate) fn widget_from_node(node: &SemioFlowNode) -> Widget {
     let params: HashMap<&str, &str> = node.params.iter().map(|param| (param.key.as_str(), param.value.as_str())).collect();
     let get = |key: &str| params.get(key).map(|value| value.to_string()).unwrap_or_default();
     let id = node.id.clone();
@@ -172,6 +172,36 @@ pub fn flow_genesis_content_pack(document: &FlowSnapshot, slot: &str, child_id: 
     }
     let scene = document.content.local_owner::<FlowWorkingScene>()?;
     Some(<SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
+}
+
+/// 🪆️ The flow document every reader and writer works on: the parent's exact `content` coordinate carrying the scene
+/// of the composed child it names. That child is flow's only persisted scene — the parent pack holds just the
+/// coordinate — so the parent's own working-scene owner, which only a parsed or genesis document carries and no edit
+/// refreshes, rendered graphs without the widgets `addWidget` had added and let every parent-lane edit re-point the
+/// coordinate at a child no store held (ticket 26/09/23, P8 `wp-p8.md` § flow). A coordinate whose child is not composed
+/// yet (a document parsed from text, before genesis) reads the scene genesis will compose it from.
+pub fn flow_composed_snapshot(snapshot: &FlowSnapshot, children: &semio_framework_plugin::ChildContentView) -> Result<FlowSnapshot, semio_framework_plugin::Fault> {
+    let child_id = &snapshot.content.child_id;
+    let scene = match children.dialect("content", child_id) {
+        Some(dialect) if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" => {
+            let content = children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
+            let (widgets, synapses, layout) = working_from_flow_content_snapshot(&content);
+            Arc::new(FlowWorkingScene { widgets, synapses, layout })
+        }
+        Some(dialect) => {
+            return Err(semio_framework_plugin::Fault::new(
+                semio_framework_plugin::FaultOrigin::App,
+                semio_framework_plugin::FaultCode::new("flow.content-dialect"),
+                format!("the flow content child \"{child_id}\" is {}@{}/{}, not s.stdio.semio@v1/flow", dialect.artifact_kind, dialect.standard, dialect.subset),
+            ))
+        }
+        None => snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| {
+            semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.content-unavailable"), format!("the flow content child \"{child_id}\" is not composed"))
+        })?,
+    };
+    let mut content = snapshot.content.clone();
+    content.set_local_owner(scene);
+    Ok(FlowSnapshot { schema: snapshot.schema.clone(), content })
 }
 
 /// 🌉 Maps one exact working widget and layout entry into its typed Semio child node.

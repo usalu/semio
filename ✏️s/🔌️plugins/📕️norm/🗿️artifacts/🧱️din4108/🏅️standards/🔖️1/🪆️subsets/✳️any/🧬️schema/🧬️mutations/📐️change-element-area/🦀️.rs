@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeElementA
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-element-area", "change-element-area")
+        protocol::LocalizedLabel::native("Change element area", "Bauteilfläche ändern")
     }
 }

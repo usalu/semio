@@ -29,6 +29,10 @@ use std::collections::HashMap;
 mod gesture;
 pub use gesture::PixelStrokeCommand;
 
+#[path = "🧩️compositing/🦀️.rs"]
+mod compositing;
+use semio_framework_pixels::compositing::layers::{RasterStackLayer,RasterStackContent};
+
 // #region 🔖️Document
 #[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(tag = "kind")]
@@ -75,6 +79,8 @@ enum LayerNodeJson {
     #[serde(rename = "adjustment", rename_all = "camelCase")]
     #[value(rename = "adjustment", rename_all = "camelCase")]
     Adjustment {
+        id: String,
+        transform: TransformJson,
         #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
@@ -125,6 +131,8 @@ fn default_one() -> f64 {
 }
 
 #[derive(Clone, Debug, Deserialize, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct MaskJson {
     #[serde(default = "default_true")]
     #[value(default = "default_true")]
@@ -132,9 +140,18 @@ struct MaskJson {
     #[serde(default)]
     #[value(default)]
     invert: bool,
+    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    linked: bool,
+    image_key: Option<String>,
+    #[serde(default = "default_transform")]
+    #[value(default = "default_transform")]
+    transform: TransformJson,
     width: Option<u32>,
     height: Option<u32>,
 }
+
+fn default_transform()->TransformJson {TransformJson {x:0.0,y:0.0,scale_x:1.0,scale_y:1.0,rotation:0.0}}
 
 #[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -170,6 +187,7 @@ struct MaskState {
 #[derive(Clone)]
 struct RasterDocument {
     layers: Vec<LayerNode>,
+    stack: Vec<RasterStackLayer>,
 }
 
 fn blend_from_str(raw: &str) -> BlendMode {
@@ -227,7 +245,8 @@ fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintErr
     if doc.schema != "raster.document" {
         return Err(FrameworkSurfacePaintError::UnsupportedSchema(doc.schema));
     }
-    Ok(RasterDocument { layers: doc.layers.into_iter().map(parse_layer).collect() })
+    let stack=compositing::layers(&doc.layers).map_err(FrameworkSurfacePaintError::Composite)?;
+    Ok(RasterDocument { layers: doc.layers.into_iter().map(parse_layer).collect(),stack })
 }
 // #endregion 🔖️Document
 
@@ -238,6 +257,7 @@ pub enum FrameworkSurfacePaintError {
     Json(serde_json::Error),
     Image(image::ImageError),
     UnsupportedSchema(String),
+    Composite(String),
 }
 
 impl std::fmt::Display for FrameworkSurfacePaintError {
@@ -246,6 +266,7 @@ impl std::fmt::Display for FrameworkSurfacePaintError {
             Self::Json(error) => error.fmt(formatter),
             Self::Image(error) => error.fmt(formatter),
             Self::UnsupportedSchema(schema) => write!(formatter, "unsupported schema {schema}"),
+            Self::Composite(message) => formatter.write_str(message),
         }
     }
 }
@@ -255,7 +276,7 @@ impl std::error::Error for FrameworkSurfacePaintError {
         match self {
             Self::Json(error) => Some(error),
             Self::Image(error) => Some(error),
-            Self::UnsupportedSchema(_) => None,
+            Self::UnsupportedSchema(_) | Self::Composite(_) => None,
         }
     }
 }
@@ -342,8 +363,7 @@ fn apply_blur_box(rgba: &mut [u8], width: u32, height: u32, radius: u32) {
 // #region 🔖️Host
 #[derive(Default)]
 struct RasterLayerBuffers {
-    paint: HashMap<String, Vec<u8>>,
-    mask: HashMap<String, Vec<u8>>,
+    paint: HashMap<String, Arc<semio_framework_pixels::RasterImage>>,
 }
 
 pub struct RasterHost {
@@ -358,13 +378,12 @@ pub struct RasterHost {
     /// `add/remove-layer-asset` triads already live on that owner; authoring a second mutation set
     /// here would duplicate authoritative state, the exact violation this ticket exists to remove.
     document: RasterDocument,
-    /// 🖼️ (d) ephemeral working representation — decoded-image GPU cache, rebuildable from `buffers`.
-    images: raster::RasterImageCache,
     /// 🖌️ (d) ephemeral working representation during an active paint gesture — raw pixel scratch
     /// buffers keyed by layer: drop at any instant and nothing a user has committed is lost. The eventual persisted commit of
     /// painted pixels is an `image:in`-shaped asset import through the plugin's real `add-layer-asset`
     /// mutation (see the module docstring) — this host never calls that; it only holds the scratch.
     buffers: RasterLayerBuffers,
+    composite: compositing::RetainedComposite,
     /// 🧰️ (c) Preview/Effect — active tool id. Mirrors `RasterConfig.active_utility_id`
     /// (`RasterConfigMutation::SetActiveUtility`, plugin-owned LOCAL_UI state).
     active_utility: String,
@@ -405,15 +424,22 @@ impl Default for RasterHost {
 }
 
 impl RasterHost {
+    pub fn advance_composite(&mut self,budget:usize)->Result<semio_framework_pixels::editing::PixelProgress,String>{self.composite.advance(budget,&self.document.stack,&self.buffers.paint)}
+    pub fn composite_pixels(&self)->Option<&semio_framework_pixels::RasterImage>{self.composite.output.as_ref().map(|output|&output.image)}
+    pub fn composite_pending(&self)->bool{self.composite.pending}
+    pub fn cancel_composite(&mut self){self.composite.cancel();}
+    pub fn composite_progress_json(&self)->String{self.composite.progress_json()}
+    pub fn set_composite_view(&mut self,mode:&str,id:Option<&str>){self.composite.select(match (mode,id){("layer",Some(id))=>compositing::View::Layer(id.into()),("mask",Some(id))=>compositing::View::Mask(id.into()),_=>compositing::View::Composite});}
+
     pub fn new() -> Self {
         let theme_clear = theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(theme_clear);
         Self {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
-            document: RasterDocument { layers: vec![] },
-            images: raster::RasterImageCache::default(),
+            document: RasterDocument { layers: vec![],stack:vec![] },
             buffers: RasterLayerBuffers::default(),
+            composite: compositing::RetainedComposite::default(),
             active_utility: "selectMarquee".into(),
             brush_size: 24.0,
             brush_opacity: 1.0,
@@ -521,7 +547,23 @@ impl RasterHost {
 
     pub fn sync_document_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         self.document = parse_document(json)?;
+        self.refresh_image_extents();
+        self.composite.invalidate();
         Ok(())
+    }
+
+    fn refresh_image_extents(&mut self){
+        fn visit(nodes:&mut [LayerNode],stack:&[RasterStackLayer],images:&HashMap<String,Arc<semio_framework_pixels::RasterImage>>){
+            for (node,layer) in nodes.iter_mut().zip(stack){match (node,&layer.content){
+                (LayerNode::Pixel {id,width,height,..},RasterStackContent::Pixel {width:display_width,height:display_height,image_key})=>{
+                    let fallback=RasterHost::layer_pixel_buffer_key(id);let image=images.get(image_key.as_deref().unwrap_or(&fallback));
+                    *width=display_width.unwrap_or_else(||image.map_or(512,|image|image.width));*height=display_height.unwrap_or_else(||image.map_or(512,|image|image.height));
+                }
+                (LayerNode::Group {children,..},RasterStackContent::Group(stack))=>visit(children,stack,images),
+                _=>{}
+            }}
+        }
+        visit(&mut self.document.layers,&self.document.stack,&self.buffers.paint);
     }
 
     pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
@@ -531,9 +573,9 @@ impl RasterHost {
         let height = rgba.height();
         let key = Self::layer_pixel_buffer_key(layer_id);
         let raw = rgba.into_raw();
-        self.buffers.paint.insert(key.clone(), raw.clone());
-        let image = image_from_rgba(width, height, raw);
-        self.images.insert(key, image);
+        self.buffers.paint.insert(key.clone(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
+        self.refresh_image_extents();
+        self.composite.invalidate();
         Ok(())
     }
 
@@ -543,9 +585,9 @@ impl RasterHost {
         let width = rgba.width();
         let height = rgba.height();
         let raw = rgba.into_raw();
-        self.buffers.paint.insert(key.to_string(), raw.clone());
-        let image = image_from_rgba(width, height, raw);
-        self.images.insert(key.to_string(), image);
+        self.buffers.paint.insert(key.to_string(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
+        self.refresh_image_extents();
+        self.composite.invalidate();
         Ok(())
     }
 
@@ -573,83 +615,17 @@ impl RasterHost {
         serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }).to_string()
     }
 
-    fn layer_image(&mut self, id: &str, width: u32, height: u32, image_key: &Option<String>) -> Arc<RasterImage> {
-        let key = image_key.clone().unwrap_or_else(|| Self::layer_pixel_buffer_key(id));
-        if let Some(img) = self.images.get(&key) {
-            return img;
-        }
-        if let Some(buf) = self.buffers.paint.get(&key).cloned() {
-            let image = image_from_rgba(width, height, buf);
-            return self.images.insert(key, image);
-        }
-        self.images.insert(key, image_from_rgba(1, 1, vec![0; 4]))
-    }
-
-    fn append_layer_node(&mut self, scene: &mut Scene, cam: Affine, node: &LayerNode, isolated_id: Option<&str>) {
-        match node {
-            LayerNode::Pixel { id, visible, opacity, blend, transform, width, height, image_key, mask } => {
-                if !visible {
-                    return;
-                }
-                if let Some(iso) = isolated_id {
-                    if iso != id {
-                        return;
+    fn append_selection_chrome(&self,scene:&mut Scene,parent:Affine,layers:&[LayerNode]) {
+        for layer in layers {
+            match layer {
+                LayerNode::Pixel {id,visible,transform,width,height,..} if *visible=>{
+                    if self.show_selection_chrome&&(self.hovered_id.as_deref()==Some(id.as_str())||self.selected_ids.iter().any(|selected|selected==id)) {
+                        let world=parent*(*transform)*Affine::IDENTITY.translate(Vec2::new(-f64::from(*width)/2.0,-f64::from(*height)/2.0));
+                        scene.stroke(&Stroke::new(2.0/self.camera.zoom.max(0.1)),world,Color::from_rgba8(80,160,255,220),None,&Rect::new(0.0,0.0,f64::from(*width),f64::from(*height)));
                     }
                 }
-                let img = self.layer_image(id, *width, *height, image_key);
-                let world = cam * (*transform) * Affine::IDENTITY.translate(Vec2::new(-(*width as f64) * 0.5, -(*height as f64) * 0.5));
-                let clip = Rect::new(0.0, 0.0, *width as f64, *height as f64);
-                scene.push_layer(FillRule::NonZero, *blend, *opacity, world, &clip);
-                if let Some(mask_state) = mask {
-                    if mask_state.enabled {
-                        let mask_key = format!("mask:{id}");
-                        let mut mask_rgba = self.buffers.mask.entry(mask_key.clone()).or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize]).clone();
-                        if mask_state.invert {
-                            for a in mask_rgba.as_chunks_mut::<4>().0 {
-                                a[3] = 255 - a[3];
-                            }
-                        }
-                        let mask_img = self.images.insert(mask_key, image_from_rgba(mask_state.width, mask_state.height, mask_rgba));
-                        raster::draw_image_arc(scene, &mask_img, world);
-                    }
-                }
-                let image_world = world * Affine::new([f64::from(*width) / f64::from(img.width().max(1)), 0.0, 0.0, f64::from(*height) / f64::from(img.height().max(1)), 0.0, 0.0]);
-                raster::draw_image_arc(scene, &img, image_world);
-                scene.pop_layer();
-                if self.show_selection_chrome && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id)) {
-                    let stroke = Rect::new(0.0, 0.0, *width as f64, *height as f64);
-                    scene.stroke(&Stroke::new(2.0 / self.camera.zoom.max(0.1)), world, Color::from_rgba8(80, 160, 255, 220), None, &stroke);
-                }
-            }
-            LayerNode::Group { id, visible, opacity, blend, transform, children, mask, .. } => {
-                if !visible {
-                    return;
-                }
-                let child_cam = cam * (*transform);
-                if let Some(iso) = isolated_id {
-                    if iso != id {
-                        for child in children {
-                            self.append_layer_node(scene, child_cam, child, Some(iso));
-                        }
-                        return;
-                    }
-                }
-                scene.push_layer(FillRule::NonZero, *blend, *opacity, Affine::IDENTITY, &Rect::new(-1e6, -1e6, 1e6, 1e6));
-                for child in children {
-                    self.append_layer_node(scene, child_cam, child, isolated_id);
-                }
-                scene.pop_layer();
-                let _ = mask;
-            }
-            LayerNode::Adjustment { visible, opacity, blend, kind, params, .. } => {
-                if !visible || isolated_id.is_some() {
-                    return;
-                }
-                if kind == "brightnessContrast" {
-                    let b = params.brightness.unwrap_or(0.0);
-                    let c = params.contrast.unwrap_or(0.0);
-                    let _ = (b, c, opacity, blend);
-                }
+                LayerNode::Group {visible,transform,children,..} if *visible=>self.append_selection_chrome(scene,parent*(*transform),children),
+                _=>{}
             }
         }
     }
@@ -662,22 +638,27 @@ impl RasterHost {
         self.build_scene_for_layer(Some(layer_id))
     }
 
-    pub fn build_mask_scene(&mut self, layer_id: &str) -> Scene {
-        let mut scene = Scene::new();
-        let cam = camera::camera_content_affine(&self.camera, &self.viewport);
-        let key = format!("mask:{layer_id}");
-        let rgba = self.buffers.mask.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
-        let img = self.images.insert(key, image_from_rgba(512, 512, rgba));
-        raster::draw_image_arc(&mut scene, &img, cam);
-        scene
+    pub fn build_mask_scene(&mut self,layer_id:&str)->Scene {
+        self.set_composite_view("mask",Some(layer_id));self.build_current_scene()
     }
 
-    fn build_scene_for_layer(&mut self, isolated: Option<&str>) -> Scene {
-        let mut scene = Scene::new();
-        let cam = camera::camera_content_affine(&self.camera, &self.viewport);
-        for layer in self.document.layers.clone() {
-            self.append_layer_node(&mut scene, cam, &layer, isolated);
+    fn build_scene_for_layer(&mut self,isolated:Option<&str>)->Scene {
+        self.set_composite_view(if isolated.is_some(){"layer"}else{"composite"},isolated);self.build_current_scene()
+    }
+
+    pub fn build_current_scene(&mut self)->Scene {
+        let _=self.advance_composite(65536);
+        let mut scene=Scene::new();
+        let cam=camera::camera_content_affine(&self.camera,&self.viewport);
+        if let (Some(output),Some(image))=(&self.composite.output,&self.composite.image) {
+            let world=cam*Affine::IDENTITY.translate(Vec2::new(output.origin[0],output.origin[1]));
+            if matches!(self.composite.view,compositing::View::Mask(_)) {
+                scene.fill(FillRule::NonZero,world,Color::from_rgba8(0,0,0,255),None,&Rect::new(0.0,0.0,f64::from(output.image.width),f64::from(output.image.height)));
+            }
+            raster::draw_image_arc(&mut scene,image,world);
         }
+        if !matches!(self.composite.view,compositing::View::Mask(_)){self.append_selection_chrome(&mut scene,cam,&self.document.layers);}
+        let isolated=match &self.composite.view{compositing::View::Layer(id)|compositing::View::Mask(id)=>Some(id.as_str()),compositing::View::Composite=>None};
         if let Some(gesture) = &self.paint_gesture {
             if isolated.is_none_or(|id| id == gesture.command.layer_id) {
                 let world = cam * gesture.world;
@@ -977,9 +958,9 @@ impl RasterHost {
  * holding hundreds of megabytes of paint buffers never frees them inside one frame turn. */
 pub struct RasterHostRetirement {
     layers: Vec<LayerNode>,
-    images: raster::RasterImageCache,
-    paint: HashMap<String, Vec<u8>>,
-    mask: HashMap<String, Vec<u8>>,
+    stack: Vec<RasterStackLayer>,
+    composite: compositing::RetainedComposite,
+    paint: HashMap<String, Arc<semio_framework_pixels::RasterImage>>,
     active_utility: String,
     hovered_id: Option<String>,
     selected_ids: Vec<String>,
@@ -993,9 +974,9 @@ impl RasterHostRetirement {
         let RasterHost {
             camera: _,
             viewport: _,
-            document: RasterDocument { layers },
-            images,
-            buffers: RasterLayerBuffers { paint, mask },
+            document: RasterDocument { layers,stack },
+            composite,
+            buffers: RasterLayerBuffers { paint },
             active_utility,
             brush_size: _,
             brush_opacity: _,
@@ -1012,7 +993,7 @@ impl RasterHostRetirement {
             checkerboard_light_cell: _,
             checkerboard_dark_cell: _,
         } = host;
-        Self { layers, images, paint, mask, active_utility, hovered_id, selected_ids, paint_gesture, pixel_edit, released: false }
+        Self { layers,stack,composite,paint,active_utility,hovered_id,selected_ids,paint_gesture,pixel_edit,released:false }
     }
 
     fn close_layer_step(&mut self) -> bool {
@@ -1023,7 +1004,7 @@ impl RasterHostRetirement {
         false
     }
 
-    fn close_map_step(map: &mut HashMap<String, Vec<u8>>) -> bool {
+    fn close_map_step<T>(map: &mut HashMap<String,T>) -> bool {
         let Some(key) = map.keys().next().cloned() else { return true };
         map.remove(&key);
         false
@@ -1033,7 +1014,9 @@ impl RasterHostRetirement {
         if self.released {
             return true;
         }
-        if !self.close_layer_step() || !self.images.close_step() || !Self::close_map_step(&mut self.paint) || !Self::close_map_step(&mut self.mask) || self.selected_ids.pop().is_some() {
+        if !self.composite.close_step(){return false;}
+        if let Some(layer)=self.stack.pop(){if let RasterStackContent::Group(children)=layer.content{self.stack.extend(children);}return false;}
+        if !self.close_layer_step() || !Self::close_map_step(&mut self.paint) || self.selected_ids.pop().is_some() {
             return false;
         }
         if self.paint_gesture.as_mut().is_some_and(|gesture| !gesture.close_step()) || self.pixel_edit.as_mut().is_some_and(|command| !command.close_step()) { return false; }
@@ -1046,7 +1029,7 @@ impl RasterHostRetirement {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.released && self.layers.is_empty() && self.images.is_empty() && self.paint.is_empty() && self.mask.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none() && self.paint_gesture.is_none() && self.pixel_edit.is_none()
+        self.released && self.layers.is_empty() && self.stack.is_empty() && self.paint.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none() && self.paint_gesture.is_none() && self.pixel_edit.is_none()
     }
 }
 
@@ -1159,9 +1142,15 @@ impl RasterSession {
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
-    pub fn render_frame(&mut self) {
-        let _ = self.state.borrow_mut().render_frame_gpu();
+    pub fn render_frame(&mut self)->Result<bool,JsValue> {
+        let mut state=self.state.borrow_mut();state.render_frame_gpu()?;Ok(state.host.composite_pending())
     }
+
+    #[wasm_bindgen(js_name = renderProgressJson)]
+    pub fn render_progress_json(&self)->String{self.state.borrow().host.composite_progress_json()}
+
+    #[wasm_bindgen(js_name = cancelRender)]
+    pub fn cancel_render(&mut self){self.state.borrow_mut().host.cancel_composite();}
 
     #[wasm_bindgen(js_name = setCamera)]
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {

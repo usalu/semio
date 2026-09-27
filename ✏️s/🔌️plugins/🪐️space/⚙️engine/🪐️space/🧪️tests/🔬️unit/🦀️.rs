@@ -253,12 +253,10 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 16, batch: 24, migrated: 16, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
+    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 40, batch: 0, migrated: 40, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
     assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
-    // 📣️ `presenceHeartbeat` joined the HostOnly lane (see `SpaceCommandJobFactory`'s own
-    // `PUBLICATION_CONTRACTS` and the committed `🧫️retained-command-limits` fixture): seven now.
-    assert_eq!(host_only_ids.len(), 7);
-    assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 24);
+    // 📣️ The seven host relays plus the three studio exports and the compiled-DAG submit gesture, which touch no store.
+    assert_eq!(host_only_ids.len(), 11);
 }
 
 #[semio_framework_async_macros::async_test]

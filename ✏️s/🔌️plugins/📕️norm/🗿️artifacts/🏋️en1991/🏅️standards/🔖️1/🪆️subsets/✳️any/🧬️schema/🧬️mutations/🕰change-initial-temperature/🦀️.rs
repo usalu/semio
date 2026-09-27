@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeInitialTem
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-initial-temperature", "change-initial-temperature")
+        protocol::LocalizedLabel::native("Change initial temperature", "Aufstelltemperatur ändern")
     }
 }
 //#endregion 🔖️Payload

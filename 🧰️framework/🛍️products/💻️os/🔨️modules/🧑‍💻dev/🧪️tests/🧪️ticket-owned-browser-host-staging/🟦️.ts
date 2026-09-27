@@ -1395,7 +1395,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       const ts = await import("typescript"), { PassThrough } = await import("node:stream");
       const { isAbsolute } = await import("node:path");
       const styling = ts.createSourceFile("styling.ts", readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-      const sourceFunctions = ["contentTypeForStaticDirAsset", "createStaticDirMiddleware", "staticDirVitePlugin"].map((name) => {
+      const sourceFunctions = ["contentTypeForStaticDirAsset", "serveFileWithValidatorsV1", "createStaticDirMiddleware", "staticDirVitePlugin"].map((name) => {
         const node = styling.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name);
         if (!node) throw new Error(`missing production function ${name}`);
         return node.getText(styling);
@@ -1456,7 +1456,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
           response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
           response.on("end", () => resolveBody(Buffer.concat(chunks)));
           response.on("error", reject);
-          middleware({ url: new URL(url, "https://example.invalid").pathname }, response, () => reject(new Error(`unserved ${url}`)));
+          middleware({ url: new URL(url, "https://example.invalid").pathname, method: "GET", headers: {} }, response, () => reject(new Error(`unserved ${url}`)));
         });
         const actual = await body, expected = readFileSync(file);
         expect(actual.equals(expected), url).toBe(true);

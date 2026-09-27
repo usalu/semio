@@ -1,5 +1,5 @@
 //! ✏️ `png` edit (any) — Main window: real `ImageWindowKit`
-//! render of the current document (editable variant).
+//! render of the current document (read-only native canvas; typed edits live in Details).
 
 use crate::standards::v1_2::subsets::any::io::encode_png;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
@@ -11,7 +11,7 @@ pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    ImageWindowKit::editable_window_kind()
+    ImageWindowKit::window_kind()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

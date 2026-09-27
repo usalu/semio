@@ -512,6 +512,17 @@ class OsMcpUserPathScript extends BundleScript {
   }
 }
 
+/** 💼️ Runs the generic inference quartet against a live hub: a guest-executed wfc grid3d solve (result, no proposal),
+ * cancel, a hub-executed gis inference relayed through the gateway, offer withdrawal, approval committing through the normal
+ * edit path, and a second agent observing the commit. `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL` and `OS_MCP_HUB_PASSWORD` select
+ * the target. */
+class OsMcpInferenceQuartetScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("inference-quartet-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000);
+  }
+}
+
 /** 🛡️ Runs the security gate against a live hub: per-tool scopes (read-only vs full grant), the read-audience cap, the
  * agent-session rate limit, and revocation (the connected agent's next request is refused; the hub's connection census
  * drops its sockets). `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_HUB_ADMIN_CAPABILITY_FILE`
@@ -818,6 +829,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("plugin-coverage-check", OsMcpPluginCoverageScript)
   .register("user-path-check", OsMcpUserPathScript)
   .register("security-check", OsMcpSecurityScript)
+  .register("inference-quartet-check", OsMcpInferenceQuartetScript)
   .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);

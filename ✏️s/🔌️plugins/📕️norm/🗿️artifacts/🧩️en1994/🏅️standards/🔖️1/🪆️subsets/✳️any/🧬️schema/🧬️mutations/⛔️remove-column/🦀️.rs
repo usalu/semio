@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveColumn {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-column", "remove-column")
+        protocol::LocalizedLabel::native("Remove composite column", "Verbundstütze entfernen")
     }
 }
 //#endregion 🔖️Payload

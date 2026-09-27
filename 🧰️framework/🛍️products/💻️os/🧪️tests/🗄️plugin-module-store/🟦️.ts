@@ -344,11 +344,17 @@ describe("🌎️ hub plugin source on the store", () => {
   /** ⏩️ Drives the faked backoff clock until `pending` settles (the backoff timers are scheduled only as the downloads reach them). */
   const settle = async <T>(pending: Promise<T>): Promise<T> => {
     let done = false;
-    const watched = pending.finally(() => {
-      done = true;
-    });
+    const watched = pending.then(
+      () => {
+        done = true;
+      },
+      () => {
+        done = true;
+      },
+    );
     for (let step = 0; step < 400 && !done; step += 1) await vi.advanceTimersByTimeAsync(250);
-    return watched;
+    await watched;
+    return pending;
   };
 
   it("fetches one file again after a declared transient answer, keeps every verified file, and names the retry in the progress", async () => {

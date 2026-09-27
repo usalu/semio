@@ -40,12 +40,13 @@ fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let fixture = doc.snapshot;
-    let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
-    let operations = crate::schema::mutations::snapshot_operations(fixture, &next);
-    if operations.is_empty() {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::amend(operations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(","))))
+    let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
+    let next = patched_widgets_fixture(&composed, &payload.widget_ids, &payload.field, &payload.value);
+    let scene = crate::flow_working_scene(&next);
+    let mut emit = crate::editor::flow::flow_scene_publication(&composed, &scene.widgets, &scene.synapses, &scene.layout);
+    if emit.child_emits.is_empty() {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.patch-widgets-unchanged"), format!("patchFlowWidgets changed no widget among [{}] with {} = {:?}", payload.widget_ids.join(","), payload.field, payload.value)));
     }
+    emit.coalesce_key = Some(format!("patch-{}-{}", payload.field, payload.widget_ids.join(",")));
+    Ok(emit)
 }

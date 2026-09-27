@@ -119,12 +119,7 @@ fn every_ladder_index_moves_the_watchdog_signature() {
 }
 
 fn clip_fixture_rect(value: &serde_json::Value) -> crate::wgpu::draw_types::ScissorRect {
-    crate::wgpu::draw_types::ScissorRect {
-        x: value[0].as_u64().expect("rect x") as u32,
-        y: value[1].as_u64().expect("rect y") as u32,
-        w: value[2].as_u64().expect("rect width") as u32,
-        h: value[3].as_u64().expect("rect height") as u32,
-    }
+    crate::wgpu::draw_types::ScissorRect { x: value[0].as_u64().expect("rect x") as u32, y: value[1].as_u64().expect("rect y") as u32, w: value[2].as_u64().expect("rect width") as u32, h: value[3].as_u64().expect("rect height") as u32 }
 }
 
 fn clip_fixture_pieces(row: &serde_json::Value, surface: crate::wgpu::draw_types::ScissorRect) -> Result<Vec<crate::wgpu::draw_types::ScissorRect>, ()> {
@@ -191,7 +186,11 @@ fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
                 DrawMeasureCursor::Glass(0)
             }
             "world" => {
-                draw.scene_passes.push(crate::wgpu::kernel_3d_scene::ScenePass3d { layer_index: 0, viewport: row["sceneViewport"].as_array().map(|viewport| [viewport[0].as_f64().unwrap() as f32, viewport[1].as_f64().unwrap() as f32, viewport[2].as_f64().unwrap() as f32, viewport[3].as_f64().unwrap() as f32]).unwrap(), ..Default::default() });
+                draw.scene_passes.push(crate::wgpu::kernel_3d_scene::ScenePass3d {
+                    layer_index: 0,
+                    viewport: row["sceneViewport"].as_array().map(|viewport| [viewport[0].as_f64().unwrap() as f32, viewport[1].as_f64().unwrap() as f32, viewport[2].as_f64().unwrap() as f32, viewport[3].as_f64().unwrap() as f32]).unwrap(),
+                    ..Default::default()
+                });
                 DrawMeasureCursor::PassGrid { pass: 0 }
             }
             _ => unreachable!(),
@@ -232,10 +231,15 @@ fn values_capacity_for_clip_law(row: &serde_json::Value) -> usize {
 fn overlapping_silhouette_pieces_are_refused_before_retained_draw_ownership() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
     let row = fixture["cases"].as_array().expect("clip cases").iter().find(|row| row["id"] == "overlapping-pieces-refused-before-alpha").expect("overlap refusal case");
-    let rects = row["clip"].as_array().expect("overlapping pieces").iter().map(|value| {
-        let rect = clip_fixture_rect(value);
-        crate::wgpu::geometry::Rect::new(rect.x as f32, rect.y as f32, rect.w as f32, rect.h as f32)
-    }).collect::<Vec<_>>();
+    let rects = row["clip"]
+        .as_array()
+        .expect("overlapping pieces")
+        .iter()
+        .map(|value| {
+            let rect = clip_fixture_rect(value);
+            crate::wgpu::geometry::Rect::new(rect.x as f32, rect.y as f32, rect.w as f32, rect.h as f32)
+        })
+        .collect::<Vec<_>>();
     let mut draw = crate::wgpu::draw_types::DrawList::default();
     draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
     draw.begin_silhouette_clip(&rects);
@@ -294,7 +298,8 @@ fn a_textured_world_instance_is_encoded_into_its_pass_target() {
             instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d {
                 texture_key: "/reference.png".to_string(),
                 model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([3.5, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [12.0, 8.0, 1.0]),
-                background: [0.0; 4], appearance: [0.85, 0.0, 0.0, 0.0],
+                background: [0.0; 4],
+                appearance: [0.85, 0.0, 0.0, 0.0],
             }],
         }],
         ..Default::default()
@@ -359,7 +364,11 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     for label in encoded_world_pipelines {
         assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
     }
-    assert_eq!(draw_source.matches("format: world_encoded_format, blend:").count(), encoded_world_pipelines.len(), "standard, translucent, painted, celebration, line, textured and procedural-grid pipelines all target the encoded UNORM view exactly once");
+    assert_eq!(
+        draw_source.matches("format: world_encoded_format, blend:").count(),
+        encoded_world_pipelines.len(),
+        "standard, translucent, painted, celebration, line, textured and procedural-grid pipelines all target the encoded UNORM view exactly once"
+    );
     assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the WGPU producer declares that its World attachment expects encoded output");
 }
 
@@ -413,10 +422,15 @@ fn every_successful_gpu_transition_is_measured_before_returning() {
         cursor.overrun_run = transition["initialRun"].as_u64().unwrap() as u32;
         let mut ticks = [Some(10_000), Some(10_000 + transition["elapsedUs"].as_u64().unwrap())].into_iter();
         let complete = transition["complete"].as_bool().unwrap();
-        let result = measure_prepared_gpu_opportunity(&mut cursor, None, || ticks.next().flatten(), |cursor| {
-            cursor.command += 1;
-            Ok(complete)
-        });
+        let result = measure_prepared_gpu_opportunity(
+            &mut cursor,
+            None,
+            || ticks.next().flatten(),
+            |cursor| {
+                cursor.command += 1;
+                Ok(complete)
+            },
+        );
         assert_eq!(result, Ok(complete), "{}", transition["id"]);
         assert_eq!(cursor.overrun_run, transition["expectedRun"].as_u64().unwrap() as u32, "{} resets the streak despite returning before a color encode", transition["id"]);
         assert!(ticks.next().is_none(), "every successful transition reads both clock edges");
@@ -424,10 +438,15 @@ fn every_successful_gpu_transition_is_measured_before_returning() {
     cursor.overrun_run = 0;
     for (index, elapsed) in law["advancingOverruns"]["elapsedUs"].as_array().unwrap().iter().enumerate() {
         let mut ticks = [Some(10_000), Some(10_000 + elapsed.as_u64().unwrap())].into_iter();
-        let result = measure_prepared_gpu_opportunity(&mut cursor, Some((17, Some(DrawMeasureCursor::LayerUi { layer: 0, item: index, overlay: false }))), || ticks.next().flatten(), |cursor| {
-            cursor.command += 1;
-            Ok(false)
-        });
+        let result = measure_prepared_gpu_opportunity(
+            &mut cursor,
+            Some((17, Some(DrawMeasureCursor::LayerUi { layer: 0, item: index, overlay: false }))),
+            || ticks.next().flatten(),
+            |cursor| {
+                cursor.command += 1;
+                Ok(false)
+            },
+        );
         let terminal = index as u64 + 1 == law["advancingOverruns"]["terminalAt"].as_u64().unwrap();
         assert_eq!(result.is_err(), terminal, "advancing color work still obeys the two millisecond ceiling");
         if let Err(error) = result {

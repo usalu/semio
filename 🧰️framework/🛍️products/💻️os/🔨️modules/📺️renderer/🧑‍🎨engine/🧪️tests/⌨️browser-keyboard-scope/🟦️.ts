@@ -91,7 +91,7 @@ describe("browser keyboard scope", () => {
     root.append(canvas);
     document.body.append(root);
     const events: BrowserKeyboardEvent[] = [];
-    const projection = [{ windowId: "reopened-world", windowGeneration: 8, nodes: [{ nodeId: 3, key: "world", role: "treeitem", depth: 0, live: "off", focusable: true, focused: true }] }];
+    const projection = [{ windowId: "reopened-world", windowGeneration: 8, nodes: [{ nodeId: 3, key: "world", role: "treeitem", depth: 0, live: "off", focusable: true, tabbable: true, focused: true }] }];
     const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
     canvas.focus();
@@ -118,7 +118,7 @@ describe("browser keyboard scope", () => {
     const events: BrowserKeyboardEvent[] = [];
     let projection = [{ windowId: "shell.chrome", windowGeneration: 1, nodes: [
       { nodeId: 1, key: "ui.search.dialog", role: "dialog", depth: 0, live: "off" },
-      { nodeId: 2, key: row.retiredNodeKey, role: "combobox", depth: 1, live: "off", focusable: true, focused: true, editable: true },
+      { nodeId: 2, key: row.retiredNodeKey, role: "combobox", depth: 1, live: "off", focusable: true, tabbable: true, focused: true, editable: true },
     ] }];
     const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
@@ -143,10 +143,10 @@ describe("browser keyboard scope", () => {
     document.body.append(root);
     const projection = [{ windowId: "shell.chrome", windowGeneration: 1, nodes: [
       { nodeId: 1, key: "ui.search.dialog", role: "dialog", depth: 0, live: "off" },
-      { nodeId: 2, key: "ui.search.input", role: "combobox", depth: 1, live: "off", focusable: true, editable: true, controls: "ui.search.list", activeDescendant: "studio.undo", expanded: true, valueText: "ruck" },
+      { nodeId: 2, key: "ui.search.input", role: "combobox", depth: 1, live: "off", focusable: true, tabbable: true, editable: true, controls: "ui.search.list", activeDescendant: "studio.undo", expanded: true, valueText: "ruck" },
       { nodeId: 3, key: "ui.search.list", role: "listbox", depth: 1, live: "off" },
       { nodeId: 4, key: "studio.undo", role: "option", depth: 2, live: "off", label: "Undo", selected: true },
-      { nodeId: 5, key: "settings.theme.select", role: "combobox", depth: 0, live: "off", focusable: true, valueText: "dark" },
+      { nodeId: 5, key: "settings.theme.select", role: "combobox", depth: 0, live: "off", focusable: true, tabbable: true, valueText: "dark" },
     ] }];
     const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose);

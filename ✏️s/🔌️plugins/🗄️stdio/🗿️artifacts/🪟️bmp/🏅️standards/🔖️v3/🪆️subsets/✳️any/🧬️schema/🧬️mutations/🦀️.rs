@@ -10,6 +10,7 @@ pub use super::insert_palette_entry::InsertPaletteEntryMutation;
 pub use super::remove_palette_entry::RemovePaletteEntryMutation;
 pub use super::replace_palette_entry::ReplacePaletteEntryMutation;
 pub use super::replace_pixel_data::ReplacePixelDataMutation;
+pub use super::set_snapshot::SetSnapshot;
 //#endregion Owners
 
 //#region Aggregate
@@ -17,6 +18,7 @@ pub use super::replace_pixel_data::ReplacePixelDataMutation;
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = BmpSnapshot, diff = BmpDiff, schema = "s.stdio.bmp")]
 pub enum BmpMutation {
+    SetSnapshot(SetSnapshot),
     ChangeHeaderFields(ChangeHeaderFieldsMutation),
     InsertPaletteEntry(InsertPaletteEntryMutation),
     RemovePaletteEntry(RemovePaletteEntryMutation),
@@ -29,6 +31,7 @@ pub enum BmpMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
     vec![
+        BmpMutation::SetSnapshot(SetSnapshot { snapshot: BmpSnapshot::default() }),
         crate::schema::mutations::change_header_fields::test_case(),
         crate::schema::mutations::insert_palette_entry::test_case(),
         crate::schema::mutations::remove_palette_entry::test_case(),

@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileCount 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-pile-count", "change-pile-count")
+        protocol::LocalizedLabel::native("Change number of piles", "Pfahlanzahl ändern")
     }
 }

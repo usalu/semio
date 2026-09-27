@@ -8,14 +8,14 @@ durable data `.🧬semio/🌐hub/s13-v1-*`. Builds/tests prefixed `nice -n 10`.
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| 1 | Zero-touch postgres + neo4j backends (`📜️script.ts` verb, used by the pg/neo4j gates, launch rows) | **DONE (harness measured)**; full two-client pg run needs a current-tree all-driver `os-hub` (the only one, H9's 15:33, refuses today's catalog) | `backend-up-1.txt`, `backend-oracle-1.txt`, `claim-probe-1.txt`, `s13-v1-logs/two-client-postgres-2.txt` |
-| 2a | editor/viewer/locale matrix → `@semio-tech/framework-os-dev:program-matrix` (`verify matrix`) | code landed, tsc 0 errors; **live run pending** (memory rule 22: swap 18.8/20 GB) | `🧑‍💻dev/🧪️tests/🧮️program-matrix/` |
+| 1 | Zero-touch postgres + neo4j backends (`📜️script.ts` verb, used by the pg/neo4j gates, launch rows) | **DONE (harness measured)**; shared pair survived the night (Up 15 h); `backend-run` (DB1) measured; full two-client pg run needs the rebuilt all-driver `os-hub` | `backend-up-1.txt`, `backend-oracle-1.txt`, `claim-probe-1.txt`, `s13-v1-logs/two-client-postgres-2.txt` |
+| 2a | editor/viewer/locale matrix `@semio-tech/framework-os-dev:program-matrix` + S16's tool-run column `:tool-run-matrix` + S16's hub-document sweep `:hub-document-sweep` | matrix **measured PASS 4/4** on local-only 6680; tool-run + hub sweep ported 11:xx (dry-run `blocked` records, tsc 0) — first live runs S16's after the restage | `s13-v1-logs/matrix-proof-3.txt`, `generated/dry-{tool-run,hub-sweep}.json` |
 | 2b | two-human orchestrator → `@semio-tech/framework-os-dev:two-human` (`verify two-human`) | code landed, tsc 0 errors; live run pending | `🧑‍💻dev/🧪️tests/👥️two-human/` |
-| 2c | `@semio-tech/framework-os-mcp-rs:plugin-coverage-check` + `user-path-check` | code landed, tsc 0 errors; live run pending | `🌉️mcp/🧪️tests/🧩️plugin-coverage/`, `🚶️user-path/` |
-| 2d | `os-hub-ts:backup-restore-drill`, `os-hub-ts:residency-watch`, `@semio-tech/framework-os-kernel:reopen-storm-check` | code landed (hub tsc: 0 errors in my files); runs need a hub boot / cargo test (rule 25: coordinator approval) | `🌎️hub/🧪️tests/💾️backup-restore/`, `🧠️residency/` |
-| 2e | command-reachability census + `unimplemented!()`/`todo!()` production census as gates | open | |
+| 2c | `@semio-tech/framework-os-mcp-rs:plugin-coverage-check` + `user-path-check` | coverage **measured PASS 2/2** (note, draw: created + mutated over the semio MCP); user-path needs hub + serve (pending) | `s13-v1-logs/plugin-coverage-2.txt` |
+| 2d | `os-hub-ts:backup-restore-drill`, `:residency-watch` (+H12), `:boot-watch` (H12), `@semio-tech/framework-os-kernel:reopen-storm-check` (+DB1 pg/neo4j via `os-hub-ts:backend-run`) | drill **measured PASS 1/1** (B2 catalog, note, 20 edits; SIGTERM→exit 590 ms, tar 568 MB in 1.2 s, 134 files byte-identical, restored ready 62 s, frontier/descriptor/checkpoint/listing/next edit all equal); residency/storm unrun (hub / rule 25) | `s13-v1-logs/backup-drill-2.{txt,json}` |
+| 2e | `workspace:verify -- production-placeholders` / `-- interactivity commands` (scanner + `git grep` oracle) | **measured**: placeholders **PASS** (22 875 sources, 0 production); commands 20:5x FAIL 34/1160 → 06:1x after LC's P8 landing **FAIL 4/1165** (space 3, animate 1), oracle agrees; laws 12/12 | `generated/placeholders-1.txt`, `commands-3.txt`, `s13-v1-logs/goal-gate-compliance-1/` |
 | 2f | `os-hub-ts:hub-freshness` (Cargo freshness over the `os-hub.sources.json` record the staging verbs now write) | **measured** on hub 8021: `unverifiable` (C11's copied binary has no record) — correct verdict | `generated/freshness-8021.json` |
-| 3 | goal gate `@semio-tech/repo-test-domain:acceptance-goal` (+ `acceptance-plan`) | schema + plan + runner landed; laws **15/15 pass** (Ajv 2020 oracle); live run pending | `🧪️test/🎯️acceptance/` |
+| 3 | goal gate `@semio-tech/repo-test-domain:acceptance-goal` (+ `acceptance-plan`), launch row `⚖️gate🎯️repo-goal` | landed; plan 9 steps / 40 checks (G11 security, F2 connection-budget, H12 boot-watch, DB1 pg/neo4j storm in); zero-touch backends pre-step; laws **16/16** (Ajv 2020 oracle); live run after REBUILD | `🧪️test/🎯️acceptance/` |
 
 ### Log (session 13)
 
@@ -81,3 +81,103 @@ durable data `.🧬semio/🌐hub/s13-v1-*`. Builds/tests prefixed `nice -n 10`.
   `🧑‍💻dev/🔌️vite-plugins/🟦️.ts` `Database.transaction`).
 - 20:4x coordinator rule 25 (no cargo test/build from V1 before REBUILD START without approval) → reopen-storm-check and any hub
   build are unrun; backup drill needs a hub binary with a published catalog (C11's copy works; runs ~11 min boot ×2 at load 80).
+- 20:5x item 2e: `runSourceCensus` (acceptance module) + root `verify production-placeholders` / `verify interactivity commands`: comment-
+  and string-aware Rust scanner over every git-tracked `*.rs` (22 807), test-only by path segment, cross-checked per line / per file
+  against `git grep` (third-party oracle). Placeholders **PASS** (0 production; 3 test-only in `🔄️machine`/`🖌️render` tests).
+  Commands: 1160 production `.action_interactive_job` declarations (literal ids, const paths, `*tool_id` loops, qualified
+  classification), **34 `BatchOnlyPendingRewrite` = unreachable**: space 28 (patchParameter … renameSpace), cad 5 (applyTransformation,
+  importCadFile, saveSelected/InPlay/Current), animate 1 (exportVideoFromDeck); architect 0 (T12's 8 are fixed); non-literal 0;
+  oracle agrees → gate FAIL is a real finding for T13/S17. Laws `🧪️tests/🧮️source-census` 12/12.
+- 21:0x repo contract (coordinator: 4 HIGHs in my layout): fixtures moved to owners (`🎯️acceptance/🧫️fixtures/{🎯️goal-gate,🧮️source-census}/`,
+  `🧑‍💻dev/🧫️fixtures/🧮️program-matrix.json`); contract re-run `generated/contract-2.txt`: **0 findings in V1 files**.
+- 21:0x launch rows (seed + launch.json via `v1-launch-rows.py`, group `4_gate`, 411.22–411.35) + inputs `acceptanceHubUrl`,
+  `acceptanceServeUrl`, `acceptanceUsers`: `⚖️gate🎯️repo-goal`, `…📋️plan`, `⚖️gate🧮️program-matrix⚛️react` (+`🌐️de`),
+  `⚖️gate👥️two-human⚛️react` (+`🌐️de`), `⚖️gate🌉️os-mcp🧩️plugin-coverage`, `⚖️gate🌉️os-mcp🚶️user-path` (+`🌐️de`),
+  `⚖️gate💾️hub-backup-restore`, `⚖️gate🧠️hub-residency`, `⚖️gate🏷️hub-freshness`, `⚖️gate🚧️production-placeholders`,
+  `⚖️gate🎛️command-reachability`. two-human defaults to the development users when `--users` is empty.
+- 21:09 matrix proof 2 on S16's hub-joined 6541 (S16 agreed): beacon `ready:s`, registry 60, loaded 1 (space), 59 `available`,
+  5 programs → 0 selected → FAIL 0/0. Cause: a hub-joined lane installs plugins per document; S15's 75/75 ran on a local-only
+  serve (all 60 loaded). Harness now treats `available` as resting and fails with that explanation.
+- 21:30–04:5x usage cut (rule 28). 05:0x reconcile: all V1 files present (auto-committed 22:00), shared pg/neo4j containers
+  **survived** (Up 9 h, healthy). tsc: 0 errors in V1 files (os/repo scratch config and hub config; remaining errors are peers':
+  `🖱️ui/🧬️contract/…/🔬️graph`, `🧑‍💻dev/🔌️vite-plugins`, `💻️os/🧪️tests/🧪️backbone-envelope-io`).
+- 05:0x integrated peers' extensions: H12 (`residency-watch --rounds` + admin observability, new `os-hub-ts:boot-watch`,
+  `hubSeedTrustedCatalog`), DB1 (`os-hub-ts:backend-run <pg|neo4j> -- <cmd>`, storm laws read the claimed env), G11
+  (`mcp-security` in the plan), F2 (`connection-budget` in the plan). Launch rows `⚖️gate🌅️hub-boot-watch`, `⚖️gate🌪️reopen-storm`
+  (+`🐘️postgres`, `🕸️neo4j` through `backend-run`; nested `--` measured: `backend-run -- postgres -- printenv OS_HUB_DATABASE_URL` →
+  `…/semio_run_run_98962`, claim released). Plan fix: `hub-reopen-storm` is `@semio-tech/framework-os-kernel` (was mis-named os-hub-ts).
+  Gate: any check requiring `backends` → one `os-hub-ts:backend-up -- all` pre-step; failure blocks only those checks (new law).
+- 05:1x launch.json parity with the generator (`v1-launch-parity.ts`: `generateLaunchJson(renderCatalogFiles)` vs file):
+  **fresh=true, 11 220 lines identical**. Backup drill proof launched (w2-detach pid 2047; C11's 19:07 binary + B2 catalog clone,
+  kind note, 20 edits, 1 round; the 09-23 hub-dev catalog predates `pluginModule`, so B2).
+- 05:1x drill proof 1 (`backup-drill-1.txt`) hung: `startHub` (integration harness) spawns the hub without the fd-3 local-bootstrap
+  pipe, and a development-mode hub panics `Bad file descriptor` at once (reproduced directly) while `startHub` keeps polling its HTTP
+  wait. Stopped my pids (2047/2049/2050/3749). Drill now boots through `startLocalHub` (pipe on fd 3, credential sign-in) +
+  `waitForReadiness(TRUSTED_CATALOG_READINESS_STALL_BOUND_MS)`; stop = SIGTERM + exit wait + `finishLocalHub`.
+- 05:28 matrix proof 3 on MY local-only serve 6680 (coordinator-approved; w2-detach pid 9684, vite 9763): census registry 60,
+  **loaded 60**, 148 programs, selected 4, installs settled in 0.3 s → **PASS 4/4**: note editor `addBlock` edits [0,1,0,1]
+  `Add Block↶`, raster editor `addLayer` [0,1,0,1] `Add Layer↶`, both viewers rendered, 0 faults, chips hit-testable
+  (`matrix-proof-3.txt`). Serve stopped 05:3x (pids 9684, 9763 mine; 6680 free).
+- 05:35–05:57 drill proof 2 (w2-detach 20351, C11's 19:07 binary + B2 catalog clone, kind note, 20 edits): cold boot ready
+  **562.5 s** (load ~100), seed, SIGTERM → exit **590 ms**, `tar` **567 668 736 B in 1 191 ms**, restore to a second root, **134/134
+  files sha256-identical**, restored boot ready **62 s**, frontier = descriptor = checkpoint pair = listing = before, next chained edit
+  accepted → **PASS 1/1**, scratch roots removed. Seen on the way: 38 `wire str: truncated` from `decodeServerFrame` on `Commands`
+  frames — this tree's TS codec expects the new `origin` field the 19:07 binary does not send (tree ahead of binary, expected until
+  the rebuilt hub); the probe client now counts undecodable frames (`undecodableFrames`) instead of throwing in the listener.
+- 05:45 plugin-coverage proof 1 (note): created OK but 0 mutations/20 empty descriptions → my port had dropped G10's shape: the
+  `capabilities_describe` structured content IS the capability (quick law `capabilities_describe_tool_call_returns_the_full_definition`).
+  Fixed; proof 2 (note, draw; staged 15:12 `semio-os-mcp`, `--folder` gateway): **PASS 2/2** — draw 18 capabilities / 17 mutations /
+  5 destructive / 3 empty descriptions, created + `invoke ok`; note 20 / 18 / 4 / 0, `addBlock` SUCCEEDED (`plugin-coverage-2.txt`).
+- 06:0x coordinator: live two-human/user-path/residency only after 7800 is on B3 (the tree's host refuses B2 guests' edit batches
+  after LD's wire change); until then robustness + plan wiring + dry runs. Done:
+  - **Plan wiring**: new requirement/token `localServe` (`--local-serve`, schema enum + summary field): program-matrix en/de,
+    F2's `idle-budget` + `memory-soak` run on a local-only serve (every plugin loaded), hub-joined checks keep `{serve}`; launch
+    input `acceptanceLocalServeUrl` (default 6070, the `🔒local-only` row), matrix rows + `⚖️gate🎯️repo-goal` edited in seed +
+    launch.json (`wp-v1/v1-launch-edit.py`); parity with the generator re-measured **fresh=true (11 270 lines)**. F2's
+    `connection-budget` added (`{serve}`). Plan: 9 steps, 42 checks (`acceptance plan`).
+  - **The gate owns check identity**: a harness record is filed under the plan check id (`program-matrix` → `program-matrix-en`/`-de`,
+    `hub-boot` → `hub-boot-watch`, …), so several plan checks can share one harness.
+  - **No harness ends without its record**: `withAcceptanceRecord(repoRoot, check, body, blockedWhen)` (acceptance module) publishes a
+    `fail` — or `blocked` for a missing precondition — record with the error in en + de; used by hub freshness, residency,
+    backup drill, program-matrix, two-human, plugin-coverage; user-path's setup is stepwise and stops at the first refusal.
+  - **Negative dry runs** (hub 8189 / serve 6689 absent, measured): hub-freshness `blocked` "no process listens on port 8189",
+    residency-watch `blocked`, two-human `blocked` (`ERR_CONNECTION_REFUSED`, 19 s, browser closed), user-path `blocked` (row 0
+    "hub unreachable", 0.3 s, no browser launched), program-matrix `blocked`; every record schema-valid (`generated/dry-*.json`).
+  - **Goal gate end to end** (`acceptance-goal --only compliance`, nx → gate → 3 nx checks → records): placeholders PASS 45 s,
+    command-reachability FAIL 4/1165 23 s, dependencies-literal-external FAIL exit 1 in 893 s (literal-external 247, oracle
+    conflicts 20 — T13's scope). The run's summary write refused itself: my `localServe` schema edit landed while the gate ran
+    with the older code (`/: missing localServe`) — a self-inflicted race, re-run 2 launched 06:22 (pid 53466) on the final code.
+- 06:3x **Freshness laws** (`🎯️acceptance/🧪️tests/🏷️hub-freshness/`, synthetic staged executable + sources record, oracle
+  `find -newer <reference stamped at build start>`): missing executable / no record / malformed record → unverifiable,
+  untouched → fresh (find: none newer), touched → stale (= find's list), vanished → stale — **6/6**. All acceptance laws
+  (goal-gate 16, source-census 12, hub-freshness 6) **34/34** (`bun test`); tsc 0 errors in V1 files.
+- 06:3x F2's hub-open timings folded into two-human's record: `createToMountedP50Ms/MaxMs`, `openRowToMountedP50Ms/MaxMs`, the
+  bounds and `overBound`, en + de summary; new flags `--max-create-to-mounted-ms`, `--max-open-to-mounted-ms` (a kind over a bound
+  fails the check) and `--mount-budget-ms` (default 15 min: how long a creation/open may take to mount before the row errors — the
+  bounds judge, the budget only stops a hang). Plan: two-human en/de pass **120 000 / 30 000 ms** (create→mounted includes the
+  server-owned creation; open→mounted = the hub's 30 s Welcome/reopen bound) — V1's choice, F2/coordinator may tighten.
+- 06:4x goal gate compliance re-run 2 on the final code (`s13-v1-logs/goal-gate-compliance-2/`): placeholders PASS 23 s,
+  command-reachability FAIL 4/1165 16 s, dependencies-literal-external FAIL 366 s; **summary.json (schema-valid) + summary.en.md +
+  summary.de.md written**, exit 1 (verdict fail). German header labels localized afterwards ("Oberfläche", "Lokale Oberfläche").
+- 10:5x R9 changed the launch generator (every declared project target registered; `generateLaunchJson(repoRoot, playgrounds,
+  declaredProjectTargets(repoRoot))`); V1's tooling now edits the SEED only (`v1-launch-rows.py`, `v1-launch-edit.py`) and renders
+  launch.json with the generator (`v1-launch-parity.ts --write`); parity **fresh=true (21 068 lines)** after my 4 new rows.
+- 11:xx S16's two remaining acceptance harnesses ported (rule 21, S16's 06:3x versions, S16 confirmed unchanged):
+  - `🧑‍💻dev/🧪️tests/⏯️tool-run-matrix/` (`verify tool-run` / `program-matrix --column tool-run`, nx `tool-run-matrix`): the 18
+    tool-declaring programs + `mutating` flags in `🧑‍💻dev/🧫️fixtures/⏯️tool-run-matrix.json`; run A (start → progress → pause holds →
+    resume → finalize → commit + undo, or read-only finalize) and run B (start → abort → nothing committed); PASS = A meets the
+    declared contract AND B aborts clean. Witness helpers reused from program-matrix (exported).
+  - `🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/` (`verify hub-sweep`, nx `hub-document-sweep`): one persistent (scratch) profile, kinds
+    enumerated live from the staged `createArtifact` choices, sign in → Space Browser open → create by encoded choice → saga wait
+    (300 s / 900 s puzzle) → pinned verb (B2 pins now `hubKindVerbs`/`hubKindPre` in the matrix pins fixture) → clean round trip,
+    0 faults; `--reopen`, `--cancel install|open`; every notice/creation/execution-target/install band recorded.
+  - Plan: `tool-run-matrix-en/-de` (`{localServe}`), `hub-document-sweep-en/-de` (`{serve}`, creds via env tokens). Launch rows
+    `⚖️gate⏯️tool-run⚛️react(+🌐️de)`, `⚖️gate🗂️hub-document-sweep⚛️react(+🌐️de)`. Dry runs (absent serve): both `blocked`.
+- 11:1x rule 30 (REBUILD START 09:53, no project.json/nx edits until 7800 on B3): my two ~11:00 additive framework-os-dev targets
+  (`tool-run-matrix`, `hub-document-sweep`) were flagged to main → **kept** (command-only, not derive inputs); further project.json/nx
+  edits held until 7800 is on B3.
+- 11:2x repo contract re-run (`s13-v1-logs/contract-3.txt`): **0 findings in V1 files** (incl. the new ⏯️/🗂️ harnesses and the
+  🏷️hub-freshness laws). All acceptance laws 34/34. No V1 process or port left (8180–8189/6680–6689 free); shared pg/neo4j up.
+- **Waiting** (coordinator 11:2x) for the live-verification wave after 7800 is on B3: then two-human en/de, user-path en/de,
+  residency, hub-freshness (fresh case, the rebuilt hub's `os-hub.sources.json`), storm (via `backend-run` for pg/neo4j),
+  tool-run + hub sweep (S16 first), and the full `⚖️gate🎯️repo-goal`.

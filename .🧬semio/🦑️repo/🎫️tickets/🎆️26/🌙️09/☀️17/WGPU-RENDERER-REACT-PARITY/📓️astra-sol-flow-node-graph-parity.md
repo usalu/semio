@@ -78,3 +78,28 @@ Native 68 ran 1,257 renderer tests and exposed three packet-adjacent assertions:
 - The saturation law left one queue slot open because the old graph dispatch emitted two actions. An absent interaction domain intentionally suppresses selection and hover, so the wheel emits only its domain-independent viewport action and the old setup admitted it. The graph queue is now completely full; the board setup still leaves one slot because its wheel reserves two and its later pointer-up case deliberately fills the last slot. Both paths retain the invariant that a refused reservation leaves the camera unchanged.
 
 No Cargo command was run locally. The exact focused filter is `test(engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack) | test(a_press_on_a_node_body_selects_that_node_and_a_released_drag_publishes_its_move) | test(saturated_graph_and_board_wheel_queues_preserve_cameras)`.
+
+## Current acceptance reinforcement
+
+The persisted-move law now continues past the artifact child mirror: after settling the exact `nodeGraphEdit` move row, it renders the active `flow-main` scene, decodes the typed `NodeGraphScene`, parses `hostSnapshotJson`, and requires `layout.add` to equal `{ "x": 284.0, "y": 48.0 }`. This is the geometry source the WGPU Flow host consumes on the next scene publication.
+
+A fresh actual React/Ajv run used the registered long-suite configuration with ticket-local `TMPDIR`. `🕸️node-graph-domain-interaction/🟦️.tsx` passed 5/5 tests in 8.49 seconds. An immediately preceding invocation reached zero tests because the default system temp directory was full; it is not a validation result. The ticket-local compile cache was deleted after the successful run.
+
+The exact native laws requested for coordinated execution are:
+
+- `renderer_operation_rows_decode_through_one_closed_vocabulary`
+- `operation_parser_refuses_beyond_the_retained_route_row_and_wire_authorities`
+- `node_graph_move_wire_publishes_the_requested_widget_layout`
+- `node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it`
+- `main_scene_declares_its_scoped_graph_interaction_targets`
+- `framework_graph_selection_projects_back_to_raw_scene_node_ids`
+
+No fresh native result is claimed here; the parent owns the shared Cargo lane.
+
+## Dependency-clean producer-to-app boundary
+
+The current WGPU producer and Flow app receipts deliberately remain in their owning crates. The renderer crate owns the real `EngineCanvas` gesture law and the exact bounded `interactionSelect` and `nodeGraphEdit` rows. The Flow plugin owns the real `s.flow.flow@1/*#editor` fixture, retained typed-operation settlement, content-child persistence, scoped selection projection, and the next `flow.play.main` scene. Neither crate currently exposes its private test harness to the other, and the workspace has no integration package that owns both.
+
+Adding a test-only renderer-to-plugin dependency or exporting private Flow fixture helpers would create a cross-layer test API solely to collapse two existing receipts into one process. The dependency-clean acceptance therefore uses the shared neutral wire/fixture at the boundary: the renderer law proves the producer row and the strengthened Flow law consumes that exact closed row and proves the persisted scene. A future single-process bridge belongs in a deliberately owned integration package if one is introduced. Until the activated WGPU page exposes a public settled-owner witness, the physical journey may claim renderer action and visible geometry only; it must not claim owner persistence from local host movement.
+
+Terra's fresh source audit confirms the historical FlowReact4 empty-selection and unchanged-layout failures describe older source, while the current controller implements strict move/disconnect admission, scoped selection projection, and child persistence. No new renderer repair is justified without a fresh current physical failure. The root-owned browser activation remains the final current-surface check.

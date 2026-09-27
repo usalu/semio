@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeExceptiona
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-exceptional-snow-north-german-lowlands", "change-exceptional-snow-north-german-lowlands")
+        protocol::LocalizedLabel::native("Change exceptional snow load in the North German Lowlands", "Außergewöhnliche Schneelast im Norddeutschen Tiefland ändern")
     }
 }
 //#endregion 🔖️Payload

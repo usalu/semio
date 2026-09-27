@@ -50,7 +50,15 @@ import { runProgramMatrixCli } from "../🧮️program-matrix/🟦️.ts";
 
 import { runTwoHumanCli } from "../👥️two-human/🟦️.ts";
 
+import { runToolRunMatrixCli } from "../⏯️tool-run-matrix/🟦️.ts";
+
+import { runHubDocumentSweepCli } from "../🗂️hub-document-sweep/🟦️.ts";
+
 import { runConnectionBudgetCli } from "../🔀️connection-budget/🟦️.ts";
+
+import { runIdleBudgetCli } from "../💤️idle-budget/🟦️.ts";
+
+import { runInteractionLatencyCli } from "../⏱️interaction-latency/🟦️.ts";
 
 import { PluginCapabilityLintScript } from "../🧹️capability-policy/🟦️.ts";
 
@@ -67,12 +75,29 @@ class VerifyScript extends BundleScript {
       await runCollabE2eVerify();
       return;
     }
+    if (segments[0] === "hub-sweep") {
+      await runHubDocumentSweepCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🗂️hub-document-sweep"), segments.slice(1));
+      return;
+    }
     if (segments[0] === "two-human") {
       await runTwoHumanCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
       return;
     }
+    if (segments[0] === "latency") {
+      await runInteractionLatencyCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/⏱️interaction-latency"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "idle") {
+      await runIdleBudgetCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/💤️idle-budget"), segments.slice(1));
+      return;
+    }
     if (segments[0] === "connections") {
       await runConnectionBudgetCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🔀️connection-budget"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "tool-run" || (segments[0] === "matrix" && segments[segments.indexOf("--column") + 1] === "tool-run" && segments.includes("--column"))) {
+      const rest = segments.slice(1).filter((segment, index, all) => segment !== "--column" && all[index - 1] !== "--column");
+      await runToolRunMatrixCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/⏯️tool-run-matrix"), rest);
       return;
     }
     if (segments[0] === "matrix") {

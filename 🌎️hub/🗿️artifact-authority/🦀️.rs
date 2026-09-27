@@ -103,6 +103,7 @@ impl AuthorityLimits {
 pub enum AuthorityProgressStage {
     Preflight,
     CatalogLoading,
+    GuestCompiling,
     GuestCodecExecuting,
     CatalogResolved,
     InputValidated,
@@ -127,6 +128,7 @@ impl AuthorityProgressStage {
         match self {
             Self::Preflight => "preflight",
             Self::CatalogLoading => "catalog-loading",
+            Self::GuestCompiling => "guest-compiling",
             Self::GuestCodecExecuting => "guest-codec-executing",
             Self::CatalogResolved => "catalog-resolved",
             Self::InputValidated => "input-validated",

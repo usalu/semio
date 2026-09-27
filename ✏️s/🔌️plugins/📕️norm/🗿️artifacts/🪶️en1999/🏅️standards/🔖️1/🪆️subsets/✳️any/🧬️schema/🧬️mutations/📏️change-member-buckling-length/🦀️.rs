@@ -33,6 +33,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMemberBuck
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-member-buckling-length", "change-member-buckling-length")
+        protocol::LocalizedLabel::native("Change member buckling length", "Knicklänge des Bauteils ändern")
     }
 }

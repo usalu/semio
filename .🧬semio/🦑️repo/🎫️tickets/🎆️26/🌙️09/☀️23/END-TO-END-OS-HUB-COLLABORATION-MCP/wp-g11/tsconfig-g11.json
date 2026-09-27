@@ -1,0 +1,28 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "incremental": false,
+  "noEmit": true,
+  "lib": [
+   "DOM",
+   "DOM.Iterable",
+   "ESNext"
+  ],
+  "types": [
+   "bun-types",
+   "node"
+  ],
+  "typeRoots": [
+   "/Users/ueli/Documents/semio/node_modules/@types",
+   "/Users/ueli/Documents/semio/node_modules"
+  ]
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83e\uddea\ufe0ftest/\ud83c\udfaf\ufe0facceptance/\ud83d\udccb\ufe0forchestration/\ud83d\udfe6\ufe0f.ts",
+  "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83e\uddea\ufe0ftest/\ud83c\udfaf\ufe0facceptance/\ud83e\uddea\ufe0ftests/\ud83c\udfaf\ufe0fgoal-gate/\ud83d\udfe6\ufe0f.ts",
+  "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83e\uddea\ufe0ftests/\ud83d\udee1\ufe0fsecurity/\ud83d\udfe6\ufe0f.ts",
+  "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+  "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83e\uddea\ufe0ftests/\ud83d\udcbc\ufe0finference-quartet/\ud83d\udfe6\ufe0f.ts"
+ ]
+}

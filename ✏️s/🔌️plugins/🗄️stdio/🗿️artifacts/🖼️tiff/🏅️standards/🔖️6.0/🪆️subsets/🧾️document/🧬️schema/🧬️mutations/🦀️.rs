@@ -14,10 +14,13 @@ pub use super::replace_tag::ReplaceTagMutation;
 //#endregion Owners
 
 //#region Aggregate
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = TiffSnapshot, diff = TiffDiff, schema = "s.stdio.tiff")]
 pub enum TiffMutation {
+    SetSnapshot(SetSnapshot),
     ChangeByteOrder(ChangeByteOrderMutation),
     InsertIfd(InsertIfdMutation),
     RemoveIfd(RemoveIfdMutation),

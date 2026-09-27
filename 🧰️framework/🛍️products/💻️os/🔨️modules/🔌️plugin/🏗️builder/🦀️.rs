@@ -359,7 +359,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         let definition = app.definition.clone();
-        self.app_defs.push((app, crate::app::declarations::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA }));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<A>() }));
         self.app_schema_descriptors.push(app_schema::<A>);
         self.document_app_ids.push(A::APP_ID);
         self
@@ -425,7 +425,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA }));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
         // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
@@ -486,7 +486,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples };
-        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA }));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);
         // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })

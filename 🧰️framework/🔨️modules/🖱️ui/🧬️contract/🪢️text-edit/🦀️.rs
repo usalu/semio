@@ -25,6 +25,12 @@ pub struct TextRoot {
     bytes: usize,
 }
 
+impl Clone for TextRoot {
+    fn clone(&self) -> Self {
+        self.lease()
+    }
+}
+
 impl TextRoot {
     pub fn from_owned(text: String) -> Result<Self, TextEditFault> {
         let bytes = text.len();
@@ -41,6 +47,17 @@ impl TextRoot {
 
     pub const fn is_empty(&self) -> bool {
         self.bytes == 0
+    }
+
+    /// 📄 Copies one bounded UTF-8 page from an immutable text snapshot.
+    pub fn copy_page(&self, start: usize, max_bytes: usize) -> Result<String, TextEditFault> {
+        let mut projection = self.projection(start, max_bytes)?;
+        for _ in 0..TEXT_ROOT_DEPTH * 2 + 2 {
+            if projection.step(1)? {
+                return projection.take();
+            }
+        }
+        Err(TextEditFault::RootDepth)
     }
 
     fn projection(&self, start: usize, max_bytes: usize) -> Result<TextProjection, TextEditFault> {

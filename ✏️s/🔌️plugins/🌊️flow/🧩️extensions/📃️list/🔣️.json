@@ -36,13 +36,13 @@
     "dependencies": [
       {
         "pluginId": "flow",
-        "version": "*"
+        "version": "=0.1.0"
       }
     ]
   },
   "execution": "linked",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -70,8 +70,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "aa184ff5f3fb9b4c1d2cd307a5ffae2ef471069531a208982081f50d870cc768",
-    "coreWasmSha256": "07f682181012bef104544b0de2eeacdc01009190f890e204dd666c799bfd9603",
-    "descriptorSha256": "4676b51019cb4571d90719c926b3db11ae3bbddba9f55bd634b27baa94f5fa86"
+    "wasmSha256": "10014bdd4b73fff65a4e40f6697dba8188498182dc5ee0594e471a680778a8c3",
+    "coreWasmSha256": "42c5f8db5919733883817b40b6cfac1155ab5465e21872bae0969ca3f44c928e",
+    "descriptorSha256": "9d61d6a87f74887865e4ecd76ba0e628a4f67e85cde47d68918f7b9de00387e0"
   }
 }

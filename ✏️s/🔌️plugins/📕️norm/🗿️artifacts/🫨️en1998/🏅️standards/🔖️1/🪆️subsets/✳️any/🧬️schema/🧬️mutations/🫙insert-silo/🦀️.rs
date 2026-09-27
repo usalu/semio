@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertSilo {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-silo", "insert-silo")
+        protocol::LocalizedLabel::native("Insert silo", "Silo einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-silo".into()]

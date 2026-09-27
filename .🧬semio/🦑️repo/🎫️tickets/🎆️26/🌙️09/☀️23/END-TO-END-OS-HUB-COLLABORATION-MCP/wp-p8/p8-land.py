@@ -11,6 +11,7 @@ so the tree is never left half-landed; patches before it stay landed (their gate
   python3 p8-land.py --test           after the gates (or alone, on a landed tree) run the laws the sets changed
   python3 p8-land.py --restore flow   put one set's pre-landing files back (only files nobody edited since)
   python3 p8-land.py --gates-only --only agent-lane   re-run a landed set's compile gates (nothing written or restored)
+  python3 p8-land.py --write --no-gates --from law      write (with backups) and defer the gates to one combined check
   python3 p8-land.py --write --only orphan   HELD set, not in the default order: land it only with the class fix
                                              for content-addressed children (it turns the reasoning law red today)
 
@@ -182,6 +183,9 @@ def main(argv: list[str]) -> int:
                 print(output[0])
                 return 1
             record_written(name)
+            if "--no-gates" in argv:
+                print(f"  ✓ {name} written (gates deferred to one combined check: --no-gates)")
+                continue
             for index, gate in enumerate(gates):
                 if not cargo("check", gate, GENERATED / f"land-{name}-check-{index}.txt"):
                     print(f"gate failed after {name}: restoring its files and stopping")

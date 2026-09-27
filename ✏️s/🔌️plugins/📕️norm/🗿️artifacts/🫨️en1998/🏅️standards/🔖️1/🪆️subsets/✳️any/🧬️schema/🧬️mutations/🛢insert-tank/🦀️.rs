@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertTank {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-tank", "insert-tank")
+        protocol::LocalizedLabel::native("Insert tank", "Tank einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-tank".into()]

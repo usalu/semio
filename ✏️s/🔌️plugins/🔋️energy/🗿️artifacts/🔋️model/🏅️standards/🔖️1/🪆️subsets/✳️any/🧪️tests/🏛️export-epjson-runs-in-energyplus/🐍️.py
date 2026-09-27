@@ -470,10 +470,10 @@ def adapter() -> Adapter:
     this file as a subject too would make EnergyPlus its own subject."""
     built = Adapter("python")
     for case in VALIDATED_CASES:
-        built = built.oracle("schema-validity-%s" % case, _schema_validity(case))
+        built = built.oracle("schema-validity-%s" % case.lower(), _schema_validity(case))
     for case in ACCOUNTED_CASES:
-        built = built.oracle("nothing-dropped-%s" % case, _nothing_dropped(case))
+        built = built.oracle("nothing-dropped-%s" % case.lower(), _nothing_dropped(case))
     for case in SIMULATED_CASES:
-        built = built.oracle("energyplus-run-%s" % case, _energyplus_run(case))
+        built = built.oracle("energyplus-run-%s" % case.lower(), _energyplus_run(case))
     return built
 # endregion 🔖️Registration

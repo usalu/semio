@@ -2635,6 +2635,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole curation with one of the bundled example stocks or the empty curation, by example id.",
+                  "de": "Ersetzt die gesamte Kuratierung durch einen der mitgelieferten Beispielbestände oder die leere Kuratierung, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole curation with one of the bundled example stocks or the empty curation, by example id.",
+                  "de": "Ersetzt die gesamte Kuratierung durch einen der mitgelieferten Beispielbestände oder die leere Kuratierung, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -2679,6 +2689,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds every object kind the installed sourcing modules (such as beams, slabs and windows) offer to the stock, keeping the existing stock and curated counts.",
+                  "de": "Fügt dem Bestand alle Objektarten hinzu, die die installierten Beschaffungsmodule (etwa Träger, Decken und Fenster) anbieten; vorhandener Bestand und kuratierte Anzahlen bleiben erhalten."
+                },
+                "reuse": {
+                  "en": "Adds every object kind the installed sourcing modules (such as beams, slabs and windows) offer to the stock, keeping the existing stock and curated counts.",
+                  "de": "Fügt dem Bestand alle Objektarten hinzu, die die installierten Beschaffungsmodule (etwa Träger, Decken und Fenster) anbieten; vorhandener Bestand und kuratierte Anzahlen bleiben erhalten."
+                }
               }
             }
           },
@@ -2723,6 +2743,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
+                  "de": "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
+                },
+                "reuse": {
+                  "en": "Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.",
+                  "de": "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."
+                }
               }
             }
           },
@@ -2767,6 +2797,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one more of the given stock object to the curated selection, at most up to its available quantity.",
+                  "de": "Nimmt ein weiteres Exemplar des angegebenen Bestandsobjekts in die Kuratierung auf, höchstens bis zur verfügbaren Menge."
+                },
+                "reuse": {
+                  "en": "Adds one more of the given stock object to the curated selection, at most up to its available quantity.",
+                  "de": "Nimmt ein weiteres Exemplar des angegebenen Bestandsobjekts in die Kuratierung auf, höchstens bis zur verfügbaren Menge."
+                }
               }
             }
           },
@@ -2865,6 +2905,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many of one stock object are curated, by a relative delta or an absolute value clamped to its availability; zero removes it from the curation.",
+                  "de": "Legt fest, wie viele Exemplare eines Bestandsobjekts kuratiert sind, per relativer Änderung oder absolutem Wert bis zur Verfügbarkeit; null entfernt es aus der Kuratierung."
+                },
+                "reuse": {
+                  "en": "Sets how many of one stock object are curated, by a relative delta or an absolute value clamped to its availability; zero removes it from the curation.",
+                  "de": "Legt fest, wie viele Exemplare eines Bestandsobjekts kuratiert sind, per relativer Änderung oder absolutem Wert bis zur Verfügbarkeit; null entfernt es aus der Kuratierung."
+                }
               }
             }
           },
@@ -2909,6 +2959,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one stock object from the curated selection entirely; the stock itself is unchanged.",
+                  "de": "Entfernt ein Bestandsobjekt vollständig aus der Kuratierung; der Bestand selbst bleibt unverändert."
+                },
+                "reuse": {
+                  "en": "Removes one stock object from the curated selection entirely; the stock itself is unchanged.",
+                  "de": "Entfernt ein Bestandsobjekt vollständig aus der Kuratierung; der Bestand selbst bleibt unverändert."
+                }
               }
             }
           },
@@ -3328,6 +3388,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses how object instances are shown in the curation grid window; only that window's view changes.",
+                  "de": "Wählt, wie Objektinstanzen im Kuratierungs-Rasterfenster dargestellt werden; nur die Ansicht dieses Fensters ändert sich."
+                },
+                "reuse": {
+                  "en": "Chooses how object instances are shown in the curation grid window; only that window's view changes.",
+                  "de": "Wählt, wie Objektinstanzen im Kuratierungs-Rasterfenster dargestellt werden; nur die Ansicht dieses Fensters ändert sich."
+                }
               }
             }
           },
@@ -4059,6 +4129,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4164,6 +4244,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4257,6 +4347,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5434,6 +5534,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5539,6 +5649,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5632,6 +5752,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5803,7 +5933,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5849,8 +5979,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "ea7da4ebc08ef693f048dc44540548855754519a0d0d34ee1f06811b293107fa",
-    "coreWasmSha256": "634a7e82d734d7467b1dc1b2910777bf21010b4172ecc25d073ee8c6ab9c9272",
-    "descriptorSha256": "f38c7c77fa1beb43efe3d7e97d053ad93bf2e26af64f1a99c8ec99a791adc1e3"
+    "wasmSha256": "96bb251e73e8826de629a644db5e92f4876b7d9dcd651ba94a4e61da135fcba3",
+    "coreWasmSha256": "3a7ec659ffebbb2d0b8357022a2b25667326acbcfcdfeb8c307fe6b2cb82829f",
+    "descriptorSha256": "c2f6c29802909e7f81abcdcbbdfe7646ab0dc3b27239ca1a084d99236048c2be"
   }
 }

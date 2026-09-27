@@ -312,6 +312,10 @@ pub mod standards {
                         pub mod replace_palette;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-pixels/🦀️.rs"]
+                        pub mod patch_pixels;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️replace-text-chunk/🦀️.rs"]
                         pub mod replace_text_chunk;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]

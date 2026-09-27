@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeConsequenc
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change consequence-class", "Ändern: consequence-class")
+        protocol::LocalizedLabel::native("Change consequence class", "Schadensfolgeklasse ändern")
     }
 }
 //#endregion 🔖️Payload

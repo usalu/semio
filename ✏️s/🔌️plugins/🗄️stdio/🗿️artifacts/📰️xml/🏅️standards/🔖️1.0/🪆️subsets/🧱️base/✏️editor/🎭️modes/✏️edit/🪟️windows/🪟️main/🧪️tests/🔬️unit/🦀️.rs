@@ -21,6 +21,25 @@ async fn render_walks_element_children() {
     assert_eq!(child.key.as_str(), "0");
 }
 
+#[test]
+fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
+    let document = XmlSnapshot {
+        schema: "stdio.xml".into(),
+        doc: crate::schema::snapshot::XmlDocument {
+            root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "Grüße\n%20".into() }] }),
+            doctype: None,
+            declaration: None,
+            prolog: Vec::new(),
+        },
+    };
+    let node = render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("editor render");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
+    assert!(json.contains("Grüße\\n%20"), "natural XML text remains in the draft: {json}");
+    assert!(json.contains("\\\"editAction\\\":\\\"set-node\\\""), "the draft applies through the retained whole-document route: {json}");
+    assert!(json.contains("\\\"nodeId\\\":\\\"$\\\""), "the draft targets the XML root: {json}");
+    assert!(json.contains("Apply") && json.contains("Discard"), "draft controls follow the active locale: {json}");
+}
+
 //#region 🪟️WindowLaws
 
 /// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost

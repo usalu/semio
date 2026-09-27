@@ -98,7 +98,8 @@ fn relative_clock_refresh_preserves_the_accepted_label_until_the_exact_next_repl
     assert_eq!(state.request.as_ref().map(|request| request.now_ms), Some(next.now_ms));
     assert_eq!(state.visible().and_then(|reply| reply.label("relative")), Some("first:relative"));
     assert!(state.publish(next_generation, &next, temporal_reply(1, &next, "next")));
-    assert_eq!(state.visible().and_then(|reply| reply.label("relative")), Some("first:relative"));
+    assert_eq!(state.visible().and_then(|reply| reply.label("relative")), Some("next:relative"));
+    assert_eq!(state.accepted.as_ref().and_then(|reply| reply.label("relative")), Some("first:relative"));
     state.seal(52);
     state.acknowledge(52);
     assert_eq!(state.visible().and_then(|reply| reply.label("relative")), Some("next:relative"));

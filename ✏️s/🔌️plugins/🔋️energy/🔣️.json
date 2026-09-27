@@ -151,6 +151,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
+                      "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
+                    },
+                    "reuse": {
+                      "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
+                      "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
+                    }
                   }
                 }
               },
@@ -232,6 +242,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Assigns an existing construction (its layer build-up) to one surface of the energy model by id.",
+                      "de": "Weist einer Fläche des Energiemodells anhand ihrer Id eine vorhandene Konstruktion (ihren Schichtaufbau) zu."
+                    },
+                    "reuse": {
+                      "en": "Assigns an existing construction (its layer build-up) to one surface of the energy model by id.",
+                      "de": "Weist einer Fläche des Energiemodells anhand ihrer Id eine vorhandene Konstruktion (ihren Schichtaufbau) zu."
+                    }
                   }
                 }
               },
@@ -914,6 +934,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -1003,6 +1033,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -1092,6 +1132,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -1181,6 +1231,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -1270,6 +1330,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -1359,6 +1429,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -1424,6 +1504,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -1547,6 +1637,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Writes the given value into one table cell, addressed by row index and column, replacing what the cell held before.",
+                      "de": "Schreibt den angegebenen Wert in eine Tabellenzelle, adressiert über Zeilenindex und Spalte, und ersetzt ihren bisherigen Inhalt."
+                    },
+                    "reuse": {
+                      "en": "Writes the given value into one table cell, addressed by row index and column, replacing what the cell held before.",
+                      "de": "Schreibt den angegebenen Wert in eine Tabellenzelle, adressiert über Zeilenindex und Spalte, und ersetzt ihren bisherigen Inhalt."
+                    }
                   }
                 }
               },
@@ -2229,6 +2329,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -2318,6 +2428,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -2407,6 +2527,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -2496,6 +2626,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -2585,6 +2725,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -2674,6 +2824,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -2739,6 +2899,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -3447,6 +3617,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -3536,6 +3716,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -3625,6 +3815,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -3714,6 +3914,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -3803,6 +4013,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -3892,6 +4112,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -3957,6 +4187,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -4022,7 +4262,7 @@
                     "required": true
                   }
                 ],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -4049,7 +4289,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               },
               {
@@ -4731,6 +4972,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    },
+                    "reuse": {
+                      "en": "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+                      "de": "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird."
+                    }
                   }
                 }
               },
@@ -4820,6 +5071,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    },
+                    "reuse": {
+                      "en": "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+                      "de": "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann."
+                    }
                   }
                 }
               },
@@ -4909,6 +5170,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    },
+                    "reuse": {
+                      "en": "Continues a paused tool run from the step where it stopped.",
+                      "de": "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."
+                    }
                   }
                 }
               },
@@ -4998,6 +5269,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    },
+                    "reuse": {
+                      "en": "Advances a paused tool run by exactly one step and pauses it again.",
+                      "de": "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."
+                    }
                   }
                 }
               },
@@ -5087,6 +5368,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    },
+                    "reuse": {
+                      "en": "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+                      "de": "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war."
+                    }
                   }
                 }
               },
@@ -5176,6 +5467,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    },
+                    "reuse": {
+                      "en": "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+                      "de": "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument."
+                    }
                   }
                 }
               },
@@ -5241,6 +5542,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    },
+                    "reuse": {
+                      "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+                      "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
+                    }
                   }
                 }
               }
@@ -5510,6 +5821,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole energy model with a bundled example, the demo or one of the ASHRAE 140 BESTEST cases (600 to 950), by example id.",
+                  "de": "Ersetzt das gesamte Energiemodell durch ein mitgeliefertes Beispiel, die Demo oder einen der ASHRAE-140-BESTEST-Fälle (600 bis 950), anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole energy model with a bundled example, the demo or one of the ASHRAE 140 BESTEST cases (600 to 950), by example id.",
+                  "de": "Ersetzt das gesamte Energiemodell durch ein mitgeliefertes Beispiel, die Demo oder einen der ASHRAE-140-BESTEST-Fälle (600 bis 950), anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -5625,6 +5946,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one surface: name, class, construction, outside boundary (outdoor air, ground, other-side temperature, adiabatic, or interzone with its partner surface), sun or wind exposure, or multiplier.",
+                  "de": "Setzt eine Eigenschaft einer Fläche: Name, Klasse, Konstruktion, äußere Randbedingung (Außenluft, Erdreich, Temperatur der Gegenseite, adiabat oder zonenübergreifend mit Partnerfläche), Sonnen- oder Windexposition oder Multiplikator."
+                },
+                "reuse": {
+                  "en": "Sets one property of one surface: name, class, construction, outside boundary (outdoor air, ground, other-side temperature, adiabatic, or interzone with its partner surface), sun or wind exposure, or multiplier.",
+                  "de": "Setzt eine Eigenschaft einer Fläche: Name, Klasse, Konstruktion, äußere Randbedingung (Außenluft, Erdreich, Temperatur der Gegenseite, adiabat oder zonenübergreifend mit Partnerfläche), Sonnen- oder Windexposition oder Multiplikator."
+                }
               }
             }
           },
@@ -5722,6 +6053,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one window: name, glazing construction, solar heat gain coefficient, visible transmittance, height, sill height, frame or divider conductance, or overhang and fin dimensions.",
+                  "de": "Setzt eine Eigenschaft eines Fensters: Name, Verglasungskonstruktion, Gesamtenergiedurchlassgrad, Lichttransmission, Höhe, Brüstungshöhe, Rahmen- oder Sprossenleitwert oder Maße von Überstand und Seitenblende."
+                },
+                "reuse": {
+                  "en": "Sets one property of one window: name, glazing construction, solar heat gain coefficient, visible transmittance, height, sill height, frame or divider conductance, or overhang and fin dimensions.",
+                  "de": "Setzt eine Eigenschaft eines Fensters: Name, Verglasungskonstruktion, Gesamtenergiedurchlassgrad, Lichttransmission, Höhe, Brüstungshöhe, Rahmen- oder Sprossenleitwert oder Maße von Überstand und Seitenblende."
+                }
               }
             }
           },
@@ -5819,6 +6160,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one thermal zone: its name, multiplier, whether it is conditioned, or whether it counts towards the total floor area.",
+                  "de": "Setzt eine Eigenschaft einer thermischen Zone: Name, Multiplikator, ob sie konditioniert ist oder ob sie zur Gesamtnutzfläche zählt."
+                },
+                "reuse": {
+                  "en": "Sets one property of one thermal zone: its name, multiplier, whether it is conditioned, or whether it counts towards the total floor area.",
+                  "de": "Setzt eine Eigenschaft einer thermischen Zone: Name, Multiplikator, ob sie konditioniert ist oder ob sie zur Gesamtnutzfläche zählt."
+                }
               }
             }
           },
@@ -5916,6 +6267,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one glazing material: name, thickness, conductivity, solar or visible transmittance, or front or back infrared emissivity.",
+                  "de": "Setzt eine Eigenschaft eines Verglasungsmaterials: Name, Dicke, Wärmeleitfähigkeit, solaren oder sichtbaren Transmissionsgrad oder vorderen oder hinteren Infrarot-Emissionsgrad."
+                },
+                "reuse": {
+                  "en": "Sets one property of one glazing material: name, thickness, conductivity, solar or visible transmittance, or front or back infrared emissivity.",
+                  "de": "Setzt eine Eigenschaft eines Verglasungsmaterials: Name, Dicke, Wärmeleitfähigkeit, solaren oder sichtbaren Transmissionsgrad oder vorderen oder hinteren Infrarot-Emissionsgrad."
+                }
               }
             }
           },
@@ -6013,6 +6374,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one gas gap between glazing layers: its name, thickness, or gas (air, argon, krypton or xenon).",
+                  "de": "Setzt eine Eigenschaft eines Gaszwischenraums zwischen Verglasungsschichten: Name, Dicke oder Gas (Luft, Argon, Krypton oder Xenon)."
+                },
+                "reuse": {
+                  "en": "Sets one property of one gas gap between glazing layers: its name, thickness, or gas (air, argon, krypton or xenon).",
+                  "de": "Setzt eine Eigenschaft eines Gaszwischenraums zwischen Verglasungsschichten: Name, Dicke oder Gas (Luft, Argon, Krypton oder Xenon)."
+                }
               }
             }
           },
@@ -6111,6 +6482,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one property of one opaque material: name, roughness, thickness, conductivity, specific heat, or thermal, solar or visible absorptance.",
+                  "de": "Setzt eine Eigenschaft eines opaken Materials: Name, Rauigkeit, Dicke, Wärmeleitfähigkeit, spezifische Wärmekapazität oder thermischen, solaren oder sichtbaren Absorptionsgrad."
+                },
+                "reuse": {
+                  "en": "Sets one property of one opaque material: name, roughness, thickness, conductivity, specific heat, or thermal, solar or visible absorptance.",
+                  "de": "Setzt eine Eigenschaft eines opaken Materials: Name, Rauigkeit, Dicke, Wärmeleitfähigkeit, spezifische Wärmekapazität oder thermischen, solaren oder sichtbaren Absorptionsgrad."
+                }
               }
             }
           },
@@ -6246,6 +6627,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the heating and cooling setpoint schedules of one thermostat, with optional throttling ranges in kelvin.",
+                  "de": "Legt die Heiz- und Kühlsollwert-Zeitpläne eines Thermostats fest, mit optionalen Regelbereichen in Kelvin."
+                },
+                "reuse": {
+                  "en": "Sets the heating and cooling setpoint schedules of one thermostat, with optional throttling ranges in kelvin.",
+                  "de": "Legt die Heiz- und Kühlsollwert-Zeitpläne eines Thermostats fest, mit optionalen Regelbereichen in Kelvin."
+                }
               }
             }
           },
@@ -6391,6 +6782,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the building site: latitude, longitude, elevation, time zone and the angle of the building's north axis.",
+                  "de": "Legt den Standort des Gebäudes fest: Breite, Länge, Höhe, Zeitzone und den Winkel der Nordachse des Gebäudes."
+                },
+                "reuse": {
+                  "en": "Sets the building site: latitude, longitude, elevation, time zone and the angle of the building's north axis.",
+                  "de": "Legt den Standort des Gebäudes fest: Breite, Länge, Höhe, Zeitzone und den Winkel der Nordachse des Gebäudes."
+                }
               }
             }
           },
@@ -6454,6 +6855,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one thermal zone by id; refused while any surface, space, gain, HVAC object or airflow node still refers to it.",
+                  "de": "Löscht eine thermische Zone anhand ihrer Id; wird abgelehnt, solange noch eine Fläche, ein Raum, eine Last, ein HLK-Objekt oder ein Luftknoten auf sie verweist."
+                },
+                "reuse": {
+                  "en": "Deletes one thermal zone by id; refused while any surface, space, gain, HVAC object or airflow node still refers to it.",
+                  "de": "Löscht eine thermische Zone anhand ihrer Id; wird abgelehnt, solange noch eine Fläche, ein Raum, eine Last, ein HLK-Objekt oder ein Luftknoten auf sie verweist."
+                }
               }
             }
           },
@@ -6517,6 +6928,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one surface by id together with every window hosted on it and every adjacency naming it; refused while another surface uses it as its interzone partner.",
+                  "de": "Löscht eine Fläche anhand ihrer Id samt aller darin sitzenden Fenster und aller sie nennenden Nachbarschaften; wird abgelehnt, solange eine andere Fläche sie als Partnerfläche nutzt."
+                },
+                "reuse": {
+                  "en": "Deletes one surface by id together with every window hosted on it and every adjacency naming it; refused while another surface uses it as its interzone partner.",
+                  "de": "Löscht eine Fläche anhand ihrer Id samt aller darin sitzenden Fenster und aller sie nennenden Nachbarschaften; wird abgelehnt, solange eine andere Fläche sie als Partnerfläche nutzt."
+                }
               }
             }
           },
@@ -6614,6 +7035,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renames one construction or edits its layer build-up: adds or removes a material layer, or moves a layer up or down.",
+                  "de": "Benennt eine Konstruktion um oder bearbeitet ihren Schichtaufbau: fügt eine Materialschicht hinzu, entfernt sie oder verschiebt eine Schicht nach oben oder unten."
+                },
+                "reuse": {
+                  "en": "Renames one construction or edits its layer build-up: adds or removes a material layer, or moves a layer up or down.",
+                  "de": "Benennt eine Konstruktion um oder bearbeitet ihren Schichtaufbau: fügt eine Materialschicht hinzu, entfernt sie oder verschiebt eine Schicht nach oben oder unten."
+                }
               }
             }
           },
@@ -6729,6 +7160,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the simulation's zone and system timesteps in minutes and the number of warm-up days; a running simulation restarts with them.",
+                  "de": "Legt die Zonen- und Systemzeitschritte der Simulation in Minuten und die Zahl der Vorlauftage fest; eine laufende Simulation startet damit neu."
+                },
+                "reuse": {
+                  "en": "Sets the simulation's zone and system timesteps in minutes and the number of warm-up days; a running simulation restarts with them.",
+                  "de": "Legt die Zonen- und Systemzeitschritte der Simulation in Minuten und die Zahl der Vorlauftage fest; eine laufende Simulation startet damit neu."
+                }
               }
             }
           },
@@ -6846,6 +7287,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses the simulated per-surface result (conduction loss or gain, transmitted or absorbed solar) the 3D model window is coloured by; a running simulation is not restarted.",
+                  "de": "Wählt das simulierte Flächenergebnis (Transmissionsverlust oder -gewinn, transmittierte oder absorbierte Solarstrahlung), nach dem das 3D-Modellfenster eingefärbt wird; eine laufende Simulation startet nicht neu."
+                },
+                "reuse": {
+                  "en": "Chooses the simulated per-surface result (conduction loss or gain, transmitted or absorbed solar) the 3D model window is coloured by; a running simulation is not restarted.",
+                  "de": "Wählt das simulierte Flächenergebnis (Transmissionsverlust oder -gewinn, transmittierte oder absorbierte Solarstrahlung), nach dem das 3D-Modellfenster eingefärbt wird; eine laufende Simulation startet nicht neu."
+                }
               }
             }
           },
@@ -6983,6 +7434,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the simulated calendar period from a start month and day to an end month and day.",
+                  "de": "Legt den simulierten Kalenderzeitraum von einem Startmonat und -tag bis zu einem Endmonat und -tag fest."
+                },
+                "reuse": {
+                  "en": "Sets the simulated calendar period from a start month and day to an end month and day.",
+                  "de": "Legt den simulierten Kalenderzeitraum von einem Startmonat und -tag bis zu einem Endmonat und -tag fest."
+                }
               }
             }
           },
@@ -7098,6 +7559,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new surface with the given name and class to an existing zone, built from an existing construction.",
+                  "de": "Fügt einer vorhandenen Zone eine neue Fläche mit dem angegebenen Namen und der Klasse hinzu, aufgebaut aus einer vorhandenen Konstruktion."
+                },
+                "reuse": {
+                  "en": "Adds a new surface with the given name and class to an existing zone, built from an existing construction.",
+                  "de": "Fügt einer vorhandenen Zone eine neue Fläche mit dem angegebenen Namen und der Klasse hinzu, aufgebaut aus einer vorhandenen Konstruktion."
+                }
               }
             }
           },
@@ -7213,6 +7684,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new thermal zone with the given name, volume in cubic metres, multiplier and conditioning.",
+                  "de": "Fügt eine neue thermische Zone mit dem angegebenen Namen, Volumen in Kubikmetern, Multiplikator und Konditionierung hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a new thermal zone with the given name, volume in cubic metres, multiplier and conditioning.",
+                  "de": "Fügt eine neue thermische Zone mit dem angegebenen Namen, Volumen in Kubikmetern, Multiplikator und Konditionierung hinzu."
+                }
               }
             }
           },
@@ -7293,6 +7774,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renames one thermal zone; zone names key every simulation report, so a name already in use is refused.",
+                  "de": "Benennt eine thermische Zone um; Zonennamen sind der Schlüssel aller Simulationsberichte, ein bereits vergebener Name wird abgelehnt."
+                },
+                "reuse": {
+                  "en": "Renames one thermal zone; zone names key every simulation report, so a name already in use is refused.",
+                  "de": "Benennt eine thermische Zone um; Zonennamen sind der Schlüssel aller Simulationsberichte, ein bereits vergebener Name wird abgelehnt."
+                }
               }
             }
           },
@@ -8087,6 +8578,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -8192,6 +8693,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -8285,6 +8796,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -9299,7 +9820,7 @@
                     "required": true
                   }
                 ],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -9326,7 +9847,8 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
-                  }
+                  },
+                  "audience": "chrome"
                 }
               }
             ],
@@ -10065,6 +10587,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -10170,6 +10702,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -10263,6 +10805,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -10754,7 +11306,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -10942,8 +11494,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4737a0f44dc66e6e0fd3397cd3280e0d0875d7c320b6304b7f8cc86f0fbda64b",
-    "coreWasmSha256": "edbe53db179734599125d85eb323ba693907955344bf9ec3ad28ebc4320c8136",
-    "descriptorSha256": "7669e3165454e97aba353c15e6001f42f74781a197f90a7803f789d2fd49ecbf"
+    "wasmSha256": "6659cd499188913f6f996991f18b785dc094a8a69ffe3855da78c23fee61ada0",
+    "coreWasmSha256": "8098911de0a2a54ab0926a7da6d61dc2af3624b432ee3154864d8e571fcb409c",
+    "descriptorSha256": "17cc4414adf7407d6feef25ab630598fdba65f2359a20663ae6556afa5f8b85c"
   }
 }

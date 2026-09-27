@@ -33,6 +33,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMemberMYEd
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-member-my-ed", "change-member-my-ed")
+        protocol::LocalizedLabel::native("Change bending moment My of the member", "Biegemoment My des Bauteils ändern")
     }
 }

@@ -9,8 +9,8 @@
 use crate::editor::json_i_json::modes::edit;
 use crate::editor::json_i_json::modes::edit::windows::main;
 use crate::schema::mutations::{JsonPath, JsonPathSegment, SetScalarMutation, SetScalarPayload};
-use crate::schema::snapshot::JsonValue;
 use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
@@ -31,21 +31,21 @@ pub const JSON_I_JSON_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdi
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum JsonIJsonIJsonEditorCommand {
     SetNode { node_id: String, value: String },
+    EditSnapshot { event: SnapshotEditEvent },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
 /// 🧭️ `main::encode_path_id`'s inverse. `node_id` is the addressed node's window PATH — its
 /// ancestors' sibling keys and its own, joined by `TREE_WINDOW_PATH_SEPARATOR` — and
-/// `main::JSON_ROOT_NODE_ID` alone (or the legacy empty string a pre-window body sent) is the root.
-/// A `/`-joined id from the pre-window encoding still decodes, so an in-flight command survives.
+/// `main::JSON_ROOT_NODE_ID` alone is the root.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
-    if node_id.is_empty() || node_id == main::JSON_ROOT_NODE_ID {
+    if node_id == main::JSON_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
     let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
-    let segments: Vec<&str> = if node_id.contains(separator) { node_id.split(separator).collect() } else { node_id.split('/').collect() };
+    let segments: Vec<&str> = node_id.split(separator).collect();
     segments
         .into_iter()
         .filter(|segment| !segment.is_empty() && *segment != main::JSON_ROOT_NODE_ID)
@@ -65,23 +65,36 @@ fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
 impl protocol::OpText for JsonIJsonIJsonEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            JsonIJsonIJsonEditorCommand::SetNode { node_id, value } => format!("set-node node-id={} value={}", node_id.replace(' ', "%20"), value.replace(' ', "%20")),
-            JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", example_id.replace(' ', "%20")),
+            JsonIJsonIJsonEditorCommand::SetNode { node_id, value } => format!("set-node node-id={} value={}", crate::schema::diff::hex_encode(node_id.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes())),
+            JsonIJsonIJsonEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::schema::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
+            JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::schema::diff::hex_encode(example_id.as_bytes())),
         }
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            return Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id: rest.replace("%20", " ") });
+            let bytes = crate::schema::diff::hex_decode(rest).map_err(|error| store::TextError::new(format!("i-json editor command: invalid id hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+            let example_id = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("i-json editor command: invalid id utf8: {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id });
+        }
+        if let Some(raw) = line.strip_prefix("snapshot-edit event=") {
+            let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("i-json editor command: invalid snapshot edit hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("i-json editor command: invalid snapshot edit: {error}"), dsl::TextSpan::at(1, 1)))?;
+            return Ok(JsonIJsonIJsonEditorCommand::EditSnapshot { event });
         }
         let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("json editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut node_id = None;
         let mut value = None;
         for token in rest.split(' ') {
             let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("json editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
-            let decoded = raw.replace("%20", " ");
             match key {
-                "node-id" => node_id = Some(decoded),
-                "value" => value = Some(decoded),
+                "node-id" => {
+                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("i-json editor command: invalid node id hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+                    node_id = Some(String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("i-json editor command: invalid node id utf8: {error}"), dsl::TextSpan::at(1, 1)))?);
+                }
+                "value" => {
+                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("i-json editor command: invalid value hex: {error}"), dsl::TextSpan::at(1, 1)))?;
+                    value = Some(String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("i-json editor command: invalid value utf8: {error}"), dsl::TextSpan::at(1, 1)))?);
+                }
                 _ => {}
             }
         }
@@ -95,7 +108,7 @@ impl protocol::OpBinary for JsonIJsonIJsonEditorCommand {
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TreeWindowKit`
     /// mints `set-node`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
-    const TOOL_JOB_IDS: &'static [&'static str] = JSON_I_JSON_RETAINED_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = JSON_I_JSON_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
@@ -117,8 +130,18 @@ const JSON_I_JSON_KIT_ACTION_ID: &str = "set-node";
 /// ids. Without the kit verb's row the reactor refused every `set-node` with
 /// `interactive-job.missing-factory`.
 const JSON_I_JSON_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, JSON_I_JSON_KIT_ACTION_ID];
+const JSON_I_JSON_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    JSON_I_JSON_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const JSON_I_JSON_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.json.i-json.tool-command.v1";
-const JSON_I_JSON_RETAINED_RAW_BYTES: usize = 8_192;
+const JSON_I_JSON_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
 /// `Effect::LoadDocument`, so its only lane is `HostOnly`. `set-node` publishes the artifact
 /// mutation it reduces into, so its only lane is `Artifact`.
@@ -129,7 +152,7 @@ const JSON_I_JSON_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContr
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(JSON_I_JSON_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500)
+    ToolExecutionContract::bounded_first_step(JSON_I_JSON_RETAINED_RAW_BYTES, 4_096, 1, JSON_I_JSON_RETAINED_RAW_BYTES, 7_500)
 }
 
 /// 📚️ The document a named example loads. The subset publishes exactly one (crate::standards::v_rfc8259::subsets::i_json::examples::demo, `ID = "demo"`),
@@ -149,9 +172,12 @@ fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<JsonIJsonIJsonEditorCommand, Fault> {
+    if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
+        return Ok(JsonIJsonIJsonEditorCommand::EditSnapshot { event });
+    }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        JSON_I_JSON_KIT_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        JSON_I_JSON_KIT_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.json.i-json.unhandled-action"),
@@ -165,6 +191,7 @@ fn json_i_json_command_from_action(action: &str, args: Option<&dsl::DslValue>) -
 fn json_i_json_command_id(command: &JsonIJsonIJsonEditorCommand) -> &'static str {
     match command {
         JsonIJsonIJsonEditorCommand::SetNode { .. } => JSON_I_JSON_KIT_ACTION_ID,
+        JsonIJsonIJsonEditorCommand::EditSnapshot { event } => event.action_id(),
         JsonIJsonIJsonEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
@@ -178,6 +205,13 @@ fn json_i_json_retained_extent(_command: &JsonIJsonIJsonEditorCommand, _snapshot
 /// its document, `set-node` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, _snapshot: &JsonSnapshot) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    if let JsonIJsonIJsonEditorCommand::EditSnapshot { event } = command {
+        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(_snapshot, event).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(error.code), error.to_string()))?;
+        if next.schema != _snapshot.schema {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.i-json.schema-identity-read-only"), "the document schema identity is fixed by the selected JSON dialect"));
+        }
+        return Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: next.value }))], description: Some("Edit JSON details".into()), ..Default::default() });
+    }
     let (node_id, value) = match command {
         JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => {
             return Ok(Emit {
@@ -187,9 +221,18 @@ fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, _snapshot: &JsonSnaps
             })
         }
         JsonIJsonIJsonEditorCommand::SetNode { node_id, value } => (node_id, value),
+        JsonIJsonIJsonEditorCommand::EditSnapshot { .. } => unreachable!(),
     };
-    let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
-    Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path, value: JsonValue::String { value: value.clone() } }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
+    let path = decode_path_id(node_id)
+        .map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.i-json.invalid-node-path"), detail))?;
+    let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(value).map_err(|error| {
+        Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.i-json.invalid-node-value"),
+            format!("value for node '{node_id}' is not valid JSON: {error}"),
+        )
+    })?;
+    Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path, value: parsed.value }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -283,7 +326,7 @@ impl ArtifactEditor for JsonIJsonEditor {
     const DIALECT: Dialect = JSON_I_JSON_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<JsonIJsonEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/🦀️.rs",
         controller: "s.stdio.json@rfc8259/i-json#editor",
@@ -296,10 +339,14 @@ impl ArtifactEditor for JsonIJsonEditor {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(JsonIJsonRetainedCommandJobFactory::new(&controller))
+        registry.register(JsonIJsonRetainedCommandJobFactory::new(&controller))?;
+        semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&request.tool_id) {
+            return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request);
+        }
         if !JSON_I_JSON_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -414,8 +461,8 @@ impl ArtifactEditor for JsonIJsonEditor {
     }
 
     /// ✏️ An unparseable `node_id` is a documented no-op (`Emit::default()`), never a panic. The
-    /// new leaf value always lands as `JsonValue::String` — scalar-type-preserving edits (number,
-    /// bool) are a documented future scope, not attempted here.
+    /// node value is parsed as one complete JSON value, preserving null, boolean, number, string,
+    /// array and object kinds. Invalid input fails atomically before publishing a mutation.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -430,9 +477,33 @@ impl ArtifactEditor for JsonIJsonEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render_editor(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.json@rfc8259/i-json#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for JsonIJsonEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent> {
+        match command {
+            JsonIJsonIJsonEditorCommand::EditSnapshot { event } => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        json_i_json_emit(&JsonIJsonIJsonEditorCommand::EditSnapshot { event: event.clone() }, snapshot)
     }
 }
 //#endregion 🔖️Editor
@@ -440,20 +511,21 @@ impl ArtifactEditor for JsonIJsonEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_json_i_json_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(JSON_I_JSON_EDITOR_DIALECT)
+    let builder = Editor::builder(JSON_I_JSON_EDITOR_DIALECT)
         .document(["semio", "stdio", "json"])
         .icon_id("list-tree")
         .mode_def(edit::definition())
         .default_mode_id(edit::JSON_I_JSON_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Tree"))
         // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::standards::v_rfc8259::subsets::i_json::examples::demo::ID, crate::standards::v_rfc8259::subsets::i_json::examples::demo::label())], crate::standards::v_rfc8259::subsets::i_json::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

@@ -37,3 +37,5 @@ record remove-layer-asset tag=11
 field payload bytes
 record change-layer-pixels tag=12
 field payload bytes
+record change-layer-mask tag=13
+field payload bytes

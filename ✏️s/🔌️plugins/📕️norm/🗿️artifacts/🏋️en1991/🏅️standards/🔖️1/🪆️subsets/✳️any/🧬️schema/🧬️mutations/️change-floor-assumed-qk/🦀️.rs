@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFloorAssum
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-floor-assumed-qk", "change-floor-assumed-qk")
+        protocol::LocalizedLabel::native("Change assumed imposed floor load", "Angenommene Nutzlast der Decke ändern")
     }
 }
 //#endregion 🔖️Payload

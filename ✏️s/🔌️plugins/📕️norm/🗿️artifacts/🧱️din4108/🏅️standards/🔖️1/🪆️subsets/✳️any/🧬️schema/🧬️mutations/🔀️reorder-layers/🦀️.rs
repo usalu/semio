@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ReorderLayers 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("reorder-layers", "reorder-layers")
+        protocol::LocalizedLabel::native("Reorder layers", "Schichtenfolge ändern")
     }
 }

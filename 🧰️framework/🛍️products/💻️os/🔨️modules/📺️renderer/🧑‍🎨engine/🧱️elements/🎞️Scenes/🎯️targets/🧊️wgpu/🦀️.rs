@@ -496,16 +496,30 @@ pub(crate) struct VfsAccessibilityControl {
     pub(crate) expanded: Option<bool>,
 }
 
-#[derive(Clone, Debug, Default)]
-struct VfsAccessibilityPresentation {
-    candidate: Option<Vec<VfsAccessibilityControl>>,
-    candidate_epoch: Option<u64>,
-    queued_candidate: Option<Vec<VfsAccessibilityControl>>,
-    accepted: Vec<VfsAccessibilityControl>,
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct BlockListAccessibilityControl {
+    pub(crate) key: String,
+    pub(crate) label: String,
+    pub(crate) rect: Rect,
+    pub(crate) action: ActionDescriptor,
 }
 
-impl VfsAccessibilityPresentation {
-    fn stage(&mut self, controls: Vec<VfsAccessibilityControl>) {
+#[derive(Clone, Debug)]
+struct SceneAccessibilityPresentation<T> {
+    candidate: Option<Vec<T>>,
+    candidate_epoch: Option<u64>,
+    queued_candidate: Option<Vec<T>>,
+    accepted: Vec<T>,
+}
+
+impl<T> Default for SceneAccessibilityPresentation<T> {
+    fn default() -> Self {
+        Self { candidate: None, candidate_epoch: None, queued_candidate: None, accepted: Vec::new() }
+    }
+}
+
+impl<T> SceneAccessibilityPresentation<T> {
+    fn stage(&mut self, controls: Vec<T>) {
         if self.candidate_epoch.is_some() {
             self.queued_candidate = Some(controls);
         } else {
@@ -543,6 +557,7 @@ struct SceneSurfaceState {
     scroll_offsets: BTreeMap<String, f32>,
     viewport: Viewport,
     canvas_camera_owner: Option<crate::interpreter::ScenePointerTarget>,
+    canvas_framing_revision: Option<u32>,
     drag: Option<SceneDrag>,
     pointer_was_down: bool,
     last_click_ms: f64,
@@ -568,7 +583,10 @@ struct SceneSurfaceState {
     ink_edit: Option<InkEditState>,
     text_editor_ui: TextEditorUiState,
     host_temporal: HostTemporalPresentation,
-    vfs_accessibility: VfsAccessibilityPresentation,
+    table_accessibility: SceneAccessibilityPresentation<TableStepperAccessibilityCell>,
+    table_editable_accessibility: SceneAccessibilityPresentation<TableEditableTextAccessibilityCell>,
+    vfs_accessibility: SceneAccessibilityPresentation<VfsAccessibilityControl>,
+    block_list_accessibility: SceneAccessibilityPresentation<BlockListAccessibilityControl>,
     //#region GenericPointerDispatch
     last_pointer_pos: (f32, f32),
     //#endregion GenericPointerDispatch
@@ -795,6 +813,64 @@ impl SceneSurfaceRetirement {
                 return false;
             }
             state.host_temporal.request = None;
+            return false;
+        }
+        for controls in [&mut state.table_accessibility.candidate, &mut state.table_accessibility.queued_candidate] {
+            if let Some(entries) = controls.as_mut() {
+                if let Some(entry) = entries.pop() {
+                    self.values.push(SceneValueRetirement::Text(entry.key));
+                    self.values.push(SceneValueRetirement::Text(entry.label));
+                    self.values.push(SceneValueRetirement::Text(entry.target.row_id));
+                    self.values.push(SceneValueRetirement::Text(entry.target.column_id));
+                    return false;
+                }
+                if entries.capacity() != 0 {
+                    *entries = Vec::new();
+                    return false;
+                }
+                *controls = None;
+                return false;
+            }
+        }
+        if let Some(entry) = state.table_accessibility.accepted.pop() {
+            self.values.push(SceneValueRetirement::Text(entry.key));
+            self.values.push(SceneValueRetirement::Text(entry.label));
+            self.values.push(SceneValueRetirement::Text(entry.target.row_id));
+            self.values.push(SceneValueRetirement::Text(entry.target.column_id));
+            return false;
+        }
+        if state.table_accessibility.accepted.capacity() != 0 {
+            state.table_accessibility.accepted = Vec::new();
+            return false;
+        }
+        for controls in [&mut state.table_editable_accessibility.candidate, &mut state.table_editable_accessibility.queued_candidate] {
+            if let Some(entries) = controls.as_mut() {
+                if let Some(entry) = entries.pop() {
+                    self.values.push(SceneValueRetirement::Text(entry.key));
+                    self.values.push(SceneValueRetirement::Text(entry.label));
+                    self.values.push(SceneValueRetirement::Text(entry.target.row_id));
+                    self.values.push(SceneValueRetirement::Text(entry.target.column_id));
+                    self.values.push(SceneValueRetirement::Text(entry.target.value));
+                    return false;
+                }
+                if entries.capacity() != 0 {
+                    *entries = Vec::new();
+                    return false;
+                }
+                *controls = None;
+                return false;
+            }
+        }
+        if let Some(entry) = state.table_editable_accessibility.accepted.pop() {
+            self.values.push(SceneValueRetirement::Text(entry.key));
+            self.values.push(SceneValueRetirement::Text(entry.label));
+            self.values.push(SceneValueRetirement::Text(entry.target.row_id));
+            self.values.push(SceneValueRetirement::Text(entry.target.column_id));
+            self.values.push(SceneValueRetirement::Text(entry.target.value));
+            return false;
+        }
+        if state.table_editable_accessibility.accepted.capacity() != 0 {
+            state.table_editable_accessibility.accepted = Vec::new();
             return false;
         }
         for controls in [&mut state.vfs_accessibility.candidate, &mut state.vfs_accessibility.queued_candidate] {
@@ -1597,6 +1673,7 @@ pub(crate) fn mount_canvas_camera(scene: &UiComponentSceneNode, owner: crate::in
         if !state.canvas_camera_owner.as_ref().is_some_and(|current| current.same_component_host(&owner)) {
             state.viewport = Viewport { x: canvas.camera_x as f32, y: canvas.camera_y as f32, zoom: canvas.zoom as f32 };
             state.canvas_camera_owner = Some(owner);
+            state.canvas_framing_revision = None;
             state.camera_dispatch_controller_id = None;
             state.canvas_click = None;
             state.drag = None;
@@ -3207,13 +3284,24 @@ pub struct VirtualFileSystemChromeLabels {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BlockListChromeLabels {
+    pub steps: &'static str,
+    pub add_step: &'static str,
+    pub delete: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SceneChromeLabels {
     pub virtual_file_system: VirtualFileSystemChromeLabels,
+    pub block_list: BlockListChromeLabels,
 }
 
 impl SceneChromeLabels {
     pub const fn english() -> Self {
-        Self { virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" } }
+        Self {
+            virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
+            block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
+        }
     }
 }
 
@@ -3323,6 +3411,9 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         5 => {
+            if !engine_canvas::advance_raster_composite(scene) {
+                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+            }
             if !engine_canvas::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
                 return cursor.finish();
             }
@@ -3433,7 +3524,7 @@ fn render_list_scene_step(
         SurfaceKind::Table => render_table(scene, bounds, ctx, driver_drag),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx, chrome_labels.virtual_file_system),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
-        SurfaceKind::BlockList => render_block_list(scene, bounds, ctx, driver_drag),
+        SurfaceKind::BlockList => render_block_list(scene, bounds, ctx, driver_drag, chrome_labels.block_list),
         SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
         SurfaceKind::EventFeed => render_event_feed(scene, bounds, ctx),
         _ => return ui_wgpu::wgpu::ScenePaintStep::Fault,
@@ -3732,6 +3823,7 @@ struct TableSortJson {
 enum TableCellPayload {
     Text { value: String },
     Number { value: f64 },
+    EditableText { value: String, action: ActionDescriptor },
     Stepper { value: f64, min: f64, max: f64, step: f64, action: ActionDescriptor },
     Buttons { buttons: Vec<TableCellButtonPayload> },
 }
@@ -3794,7 +3886,7 @@ fn table_row_buttons(buttons: &[TableCellButtonPayload]) -> Vec<&TableCellButton
 
 /// 🧾️ Renders a table cell's interactive controls (stepper/buttons) directly, or returns the plain
 /// text to draw for text/number/legacy-string cells.
-fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<'_>) -> Option<String> {
+fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidgetContext<'_>) -> Option<String> {
     let Ok(payload) = serde_json::from_value::<TableCellPayload>(cell.clone()) else {
         return Some(match cell {
             Value::String(s) => s.clone(),
@@ -3804,6 +3896,10 @@ fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<
     match payload {
         TableCellPayload::Text { value } => Some(value),
         TableCellPayload::Number { value } => Some(value.to_string()),
+        TableCellPayload::EditableText { value, action } => {
+            render_widget(&WidgetNode::Input { id: id.to_string(), input_kind: "text".into(), value, placeholder: None, commit: Some("table-cell".into()), min: None, max: None, step: None, accept: None, on_change: Some(action) }, rect, ctx);
+            None
+        }
         TableCellPayload::Stepper { value, min, max, step, action } => {
             let seg = rect.w / 3.0;
             let minus = Rect::new(rect.x, rect.y, seg, rect.h);
@@ -3933,6 +4029,7 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
             let index = ((x - cell_rect.x) / seg).floor();
             Some(usize::try_from(index as i64).ok().and_then(|index| row_buttons.get(index)).map(|button| button.action.clone()))
         }
+        TableCellPayload::EditableText { .. } => Some(None),
         TableCellPayload::Text { .. } | TableCellPayload::Number { .. } => None,
     }
 }
@@ -3941,6 +4038,27 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
 pub(crate) struct TableStepperFocusTarget {
     pub(crate) row_id: String,
     pub(crate) column_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct TableEditableTextFocusTarget {
+    pub(crate) row_id: String,
+    pub(crate) column_id: String,
+    pub(crate) value: String,
+}
+
+impl TableEditableTextFocusTarget {
+    pub(crate) fn control_id(&self, host_id: &str) -> String {
+        format!("{host_id}.row.{}.{}.editable", self.row_id, self.column_id)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TableEditableTextCommitOutcome {
+    Unchanged,
+    Committed,
+    Publishing,
+    Conflict,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -3954,10 +4072,97 @@ pub(crate) struct TableStepperAccessibilityCell {
     pub(crate) value: f64,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct TableEditableTextAccessibilityCell {
+    pub(crate) key: String,
+    pub(crate) label: String,
+    pub(crate) target: TableEditableTextFocusTarget,
+    pub(crate) rect: Rect,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum TableStepperKeyOutcome {
     Unhandled,
     Consumed,
+}
+
+/** ✏️ Resolves one painted editable text cell to its stable row/column address and persisted base. */
+pub(crate) fn table_editable_text_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableEditableTextFocusTarget> {
+    if !inner.contains(x, y) {
+        return None;
+    }
+    let theme = scene_input_theme();
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    let metrics = table_metrics(inner, columns.len(), &theme);
+    if !metrics.body.contains(x, y) {
+        return None;
+    }
+    let column_index = usize::try_from(((x - inner.x) / metrics.col_w.max(1.0)).floor() as i64).ok()?;
+    let column = columns.get(column_index)?;
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let row_index = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64).ok()?;
+    let row = rows.get(row_index)?;
+    let row_id = table_row_id(row, row_index);
+    let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
+    let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+    if !table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable).contains(x, y) {
+        return None;
+    }
+    let TableCellPayload::EditableText { value, .. } = serde_json::from_value::<TableCellPayload>(row.get(&column.id)?.clone()).ok()? else { return None };
+    Some(TableEditableTextFocusTarget { row_id, column_id: column.id.clone(), value })
+}
+
+/** 📦️ Commits an editable cell draft only while its persisted base still matches the focused base. */
+pub(crate) fn table_editable_text_commit(
+    scene: &UiComponentSceneNode,
+    row_id: &str,
+    column_id: &str,
+    base: &str,
+    draft: &str,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Result<TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    if !columns.iter().any(|column| column.id == column_id) {
+        return None;
+    }
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let (_, row) = rows.iter().enumerate().find(|(index, row)| table_row_id(row, *index) == row_id)?;
+    let TableCellPayload::EditableText { value, action } = serde_json::from_value::<TableCellPayload>(row.get(column_id)?.clone()).ok()? else { return None };
+    if draft == value {
+        return Some(Ok(TableEditableTextCommitOutcome::Unchanged));
+    }
+    if value != base {
+        return Some(Ok(TableEditableTextCommitOutcome::Conflict));
+    }
+    Some(input.begin_retained_text_action(action, "value".into()).map(|_| TableEditableTextCommitOutcome::Publishing))
+}
+
+pub(crate) fn table_editable_text_commit_owned(
+    scene: &UiComponentSceneNode,
+    row_id: &str,
+    column_id: &str,
+    base: &str,
+    draft: String,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Result<TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    if !columns.iter().any(|column| column.id == column_id) {
+        return None;
+    }
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let (_, row) = rows.iter().enumerate().find(|(index, row)| table_row_id(row, *index) == row_id)?;
+    let TableCellPayload::EditableText { value, action } = serde_json::from_value::<TableCellPayload>(row.get(column_id)?.clone()).ok()? else { return None };
+    if draft == value {
+        return Some(Ok(TableEditableTextCommitOutcome::Unchanged));
+    }
+    if value != base {
+        return Some(Ok(TableEditableTextCommitOutcome::Conflict));
+    }
+    Some(input.begin_retained_string_action_owned(action, "value".into(), draft).map(|_| TableEditableTextCommitOutcome::Publishing))
 }
 
 /** 🎯️ Resolves the read-only centre of one painted Table stepper into its stable row/column
@@ -4023,6 +4228,36 @@ pub(crate) fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, in
                 min,
                 max,
                 value,
+            });
+        }
+    }
+    cells
+}
+
+/** ♿️ Projects every visible editable cell as a multiline textbox over its painted cell. */
+pub(crate) fn table_editable_text_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableEditableTextAccessibilityCell> {
+    let Some(table) = scene.table.as_ref() else { return Vec::new() };
+    let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
+    let theme = scene_input_theme();
+    let metrics = table_metrics(inner, columns.len(), &theme);
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let mut cells = Vec::new();
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+        if row_y + metrics.row_h <= metrics.body.y || row_y >= metrics.body.y + metrics.body.h {
+            continue;
+        }
+        let row_id = table_row_id(row, row_index);
+        let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
+        for (column_index, column) in columns.iter().enumerate() {
+            let Some(cell) = row.get(&column.id) else { continue };
+            let Ok(TableCellPayload::EditableText { value, .. }) = serde_json::from_value::<TableCellPayload>(cell.clone()) else { continue };
+            cells.push(TableEditableTextAccessibilityCell {
+                key: format!("{}.row.{}.{}.editable", scene.host_id, row_id, column.id),
+                label: column.label.clone(),
+                target: TableEditableTextFocusTarget { row_id: row_id.clone(), column_id: column.id.clone(), value },
+                rect: table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable),
             });
         }
     }
@@ -4179,7 +4414,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             let x = body.x + col_index as f32 * col_w;
             let cell_rect = table_cell_rect(inner, y, col_index, &metrics, driver_drag, draggable);
             let text = match row.get(&column.id) {
-                Some(value) => render_table_cell(value, cell_rect, ctx),
+                Some(value) => render_table_cell(value, &format!("{}.row.{}.{}.editable", scene.host_id, row_id, column.id), cell_rect, ctx),
                 None => Some("—".into()),
             };
             if let Some(text) = text {
@@ -4200,6 +4435,8 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         // geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
         ctx.input.register_hit(HitTarget { rect: row_rect, event: Some(table_row_action(scene, table, row, &row_id, SceneModifiers::default())), control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
     }
+    stage_table_stepper_accessibility_cells(&scene.host_id, table_stepper_accessibility_cells(scene, bounds, driver_drag));
+    stage_table_editable_text_accessibility_cells(&scene.host_id, table_editable_text_accessibility_cells(scene, bounds, driver_drag));
     ctx.draw.pop_scissor();
 }
 
@@ -4393,7 +4630,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
     }
     let body_end = targets.len();
 
-    let mut py = palette_rect.y + row_h;
+    let mut py = palette_rect.y + pad;
     for entry in &palette {
         let palette_row = Rect::new(palette_rect.x + pad, py, (palette_rect.w - pad * 2.0).max(0.0), row_h);
         let palette_handle_rect = block_list_handle_rect(palette_row, theme);
@@ -4522,14 +4759,14 @@ fn block_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x
 }
 
 /// 🖌️ Draws one planned block-list target.
-fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockListTarget) {
+fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockListTarget, labels: BlockListChromeLabels) {
     let theme = ctx.theme;
     let pad = theme.padding_standard;
     let row_h = theme.control_height;
     let rect = target.rect;
     match &target.paint {
         BlockListPaint::AddStep => {
-            render_widget(&WidgetNode::Button { id: Some(target.control_id.clone()), icon_id: Some("plus".into()), label: "Add Step".into(), event: target.action.clone() }, rect, ctx);
+            render_widget(&WidgetNode::Button { id: Some(target.control_id.clone()), icon_id: Some("plus".into()), label: labels.add_step.into(), event: target.action.clone() }, rect, ctx);
         }
         BlockListPaint::StepCard { title, description, selected, leading_inset, surface_grip } => {
             ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], if *selected { theme.selected } else { theme.button }, theme.border_radius);
@@ -4582,41 +4819,58 @@ fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockL
     }
 }
 
+fn block_list_accessibility_controls(plan: &BlockListPlan, bounds: Rect, labels: BlockListChromeLabels) -> Vec<BlockListAccessibilityControl> {
+    plan.targets
+        .iter()
+        .enumerate()
+        .filter_map(|(index, target)| {
+            let clip = if plan.body_range.contains(&index) { plan.body } else { bounds };
+            let visible = target.rect.x < clip.x + clip.w && target.rect.x + target.rect.w > clip.x && target.rect.y < clip.y + clip.h && target.rect.y + target.rect.h > clip.y;
+            let action = target.action.clone().filter(|_| visible)?;
+            let label = match &target.paint {
+                BlockListPaint::AddStep => labels.add_step.to_string(),
+                BlockListPaint::IconButton { .. } => labels.delete.to_string(),
+                BlockListPaint::PaletteEntry { label, .. } => label.clone(),
+                BlockListPaint::StepCard { .. } | BlockListPaint::BlockRow { .. } | BlockListPaint::DragHandle { .. } => return None,
+            };
+            Some(BlockListAccessibilityControl { key: target.control_id.clone(), label, rect: target.rect, action })
+        })
+        .collect()
+}
+
 /// 🧩️ Renders the strict-list Blockly-like block-list builder (`SurfaceKind::BlockList`): steps
 /// stacked vertically (each with its ordered blocks) plus a palette rail for inserting new blocks,
 /// mirroring `🧩️BlockListHost/🟦️.tsx`'s layout and action verbs.
-fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
+fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag, labels: BlockListChromeLabels) {
     let theme = ctx.theme;
     if scene.block_list.is_none() {
+        stage_block_list_accessibility_controls(&scene.host_id, Vec::new());
         return render_placeholder("block-list", bounds, ctx);
     }
     let plan = block_list_plan(scene, bounds, theme, driver_drag);
     let pad = theme.padding_standard;
     let row_h = theme.control_height;
+    stage_block_list_accessibility_controls(&scene.host_id, block_list_accessibility_controls(&plan, bounds, labels));
 
-    draw_text(ctx, "Steps", plan.header.x + pad, plan.header.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+    draw_text(ctx, labels.steps, plan.header.x + pad, plan.header.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
     for target in &plan.targets[..plan.body_range.start] {
-        paint_block_list_target(ctx, target);
+        paint_block_list_target(ctx, target, labels);
     }
 
     ctx.input.register_hit(HitTarget { rect: plan.body, event: None, control_id: Some(scroll_key(&scene.host_id, "blockList")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     ctx.draw.push_scissor(plan.body);
     reserve_list_rows(ctx, list_visible_row_capacity(plan.body, row_h));
-    if plan.body_range.is_empty() {
-        draw_text(ctx, "No steps", plan.body.x + pad, plan.body.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
-    }
     for target in &plan.targets[plan.body_range.clone()] {
         if target.rect.y + target.rect.h < plan.body.y || target.rect.y > plan.body.y + plan.body.h {
             continue;
         }
-        paint_block_list_target(ctx, target);
+        paint_block_list_target(ctx, target, labels);
     }
     ctx.draw.pop_scissor();
 
     ctx.draw.push_line(plan.palette_rect.x, plan.palette_rect.y, plan.palette_rect.x, plan.palette_rect.y + plan.palette_rect.h, theme.separator, theme.stroke_hairline);
-    draw_text(ctx, "Palette", plan.palette_rect.x + pad, plan.palette_rect.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
     for target in &plan.targets[plan.body_range.end..] {
-        paint_block_list_target(ctx, target);
+        paint_block_list_target(ctx, target, labels);
     }
 }
 
@@ -4635,6 +4889,34 @@ fn block_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, th
         }
     }
     None
+}
+
+fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, action: &ActionDescriptor) -> bool {
+    let Some(list) = scene.block_list.as_ref() else { return false };
+    if action.controller_id != scene.controller_id {
+        return false;
+    }
+    let steps: Vec<BlockListStepJson> = serde_json::from_str(&list.steps_json).unwrap_or_default();
+    let palette: Vec<BlockListPaletteEntryJson> = serde_json::from_str(&list.palette_json).unwrap_or_default();
+    let arg = |key: &str| action.args.as_ref().and_then(|args| args.get(key)).and_then(semio_framework::DslValue::as_str);
+    match action.action.as_str() {
+        "addStep" => true,
+        "removeStep" => arg("stepId").is_some_and(|step_id| steps.iter().any(|step| step.id == step_id)),
+        "removeBlock" => match (arg("stepId"), arg("blockId")) {
+            (Some(step_id), Some(block_id)) => steps.iter().any(|step| step.id == step_id && step.blocks.iter().any(|block| block.id == block_id)),
+            _ => false,
+        },
+        "addBlock" => arg("kind").is_some_and(|kind| palette.iter().any(|entry| entry.block_kind == kind)),
+        _ => false,
+    }
+}
+
+pub(crate) fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    if scene.component_kind != SurfaceKind::BlockList {
+        return None;
+    }
+    let control = accepted_block_list_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
+    block_list_accessibility_action_is_current(scene, &control.action).then(|| write_scene_action(input, &control.action))
 }
 
 //#endregion BlockList
@@ -4971,8 +5253,80 @@ pub(crate) fn stage_vfs_accessibility_controls(host_id: &str, controls: Vec<VfsA
     mutate_scene_state(host_id, |state| state.vfs_accessibility.stage(controls));
 }
 
+pub(crate) fn stage_block_list_accessibility_controls(host_id: &str, controls: Vec<BlockListAccessibilityControl>) {
+    mutate_scene_state(host_id, |state| state.block_list_accessibility.stage(controls));
+}
+
+pub(crate) fn stage_table_stepper_accessibility_cells(host_id: &str, cells: Vec<TableStepperAccessibilityCell>) {
+    mutate_scene_state(host_id, |state| state.table_accessibility.stage(cells));
+}
+
+pub(crate) fn stage_table_editable_text_accessibility_cells(host_id: &str, cells: Vec<TableEditableTextAccessibilityCell>) {
+    mutate_scene_state(host_id, |state| state.table_editable_accessibility.stage(cells));
+}
+
+pub(crate) fn accepted_table_stepper_accessibility_cells(host_id: &str) -> Vec<TableStepperAccessibilityCell> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn accepted_table_editable_text_accessibility_cells(host_id: &str) -> Vec<TableEditableTextAccessibilityCell> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_editable_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn seal_table_stepper_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn seal_table_editable_text_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_editable_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_table_stepper_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_table_editable_text_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_editable_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_table_stepper_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_accessibility.discard(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_table_editable_text_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_editable_accessibility.discard(epoch);
+        }
+    });
+}
+
 pub(crate) fn accepted_vfs_accessibility_controls(host_id: &str) -> Vec<VfsAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.vfs_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn accepted_block_list_accessibility_controls(host_id: &str) -> Vec<BlockListAccessibilityControl> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.block_list_accessibility.accepted.clone()).unwrap_or_default())
 }
 
 pub(crate) fn vfs_accessibility_control_survives_candidate(host_id: &str, target: &VfsAccessibilityFocusTarget, epoch: u64) -> bool {
@@ -5004,6 +5358,30 @@ pub(crate) fn discard_vfs_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.vfs_accessibility.discard(epoch);
+        }
+    });
+}
+
+pub(crate) fn seal_block_list_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.block_list_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_block_list_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.block_list_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_block_list_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.block_list_accessibility.discard(epoch);
         }
     });
 }
@@ -5142,7 +5520,15 @@ mod event_feed_tests;
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnAuthorJson {
     #[serde(default)]
+    id: String,
+    #[serde(default)]
     name: String,
+    #[serde(default, deserialize_with = "deserialize_history_avatar")]
+    avatar: Option<String>,
+}
+
+fn deserialize_history_avatar<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    Ok(Option::<String>::deserialize(deserializer)?.filter(|source| !source.is_empty()))
 }
 
 #[derive(Debug, Deserialize)]
@@ -5164,6 +5550,17 @@ struct HistoryColumnJson {
 const HISTORY_LANE_PITCH: f32 = 16.0;
 const HISTORY_LANE_PAD: f32 = 8.0;
 const HISTORY_AUTHOR_SLOT: f32 = 40.0;
+const HISTORY_AVATAR_SIZE: f32 = 20.0;
+const HISTORY_AVATAR_OVERLAP: f32 = 8.0;
+
+fn history_avatar_x(base: f32, index: usize) -> f32 {
+    base + index as f32 * (HISTORY_AVATAR_SIZE - HISTORY_AVATAR_OVERLAP)
+}
+
+fn history_avatar_image_id(host_id: &str, checkpoint_id: &str, author: &HistoryColumnAuthorJson, index: usize) -> String {
+    let author_key = if author.id.is_empty() { index.to_string() } else { author.id.clone() };
+    format!("{host_id}.history.avatar.{checkpoint_id}.{author_key}")
+}
 
 fn history_lane_count(columns: &[HistoryColumnJson]) -> usize {
     columns.iter().map(|column| column.lane + 1).max().unwrap_or(1).max(1)
@@ -5219,6 +5616,22 @@ fn graph_timeline_avatar_initials(name: &str) -> String {
     } else {
         letters
     }
+}
+
+fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, author: Option<&HistoryColumnAuthorJson>, x: f32, y: f32) {
+    let theme = ctx.theme;
+    let rect = Rect::new(x, y, HISTORY_AVATAR_SIZE, HISTORY_AVATAR_SIZE);
+    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, HISTORY_AVATAR_SIZE * 0.5);
+    let inside = [rect.x + 1.0, rect.y + 1.0, rect.w - 2.0, rect.h - 2.0];
+    let image = author.and_then(|author| author.avatar.as_deref()).and_then(|source| crate::interpreter::current_ui_image_key(image_id, source));
+    if let Some(key) = image {
+        ctx.draw.push_rounded_raster_quad(&key, inside, [0.0, 0.0, 1.0, 1.0], 1.0, (HISTORY_AVATAR_SIZE - 2.0) * 0.5);
+        return;
+    }
+    ctx.draw.push_rounded(inside, theme.muted, (HISTORY_AVATAR_SIZE - 2.0) * 0.5);
+    let initials = author.map(|author| graph_timeline_avatar_initials(&author.name)).unwrap_or_else(|| "?".to_string());
+    let width = ctx.atlas.measure_text(&initials, theme.font_size_small).0;
+    draw_text(ctx, &initials, rect.x + (HISTORY_AVATAR_SIZE - width) * 0.5, rect.y + HISTORY_AVATAR_SIZE * 0.7, theme.font_size_small, theme.text);
 }
 
 /// 🕰️ Renders `SurfaceKind::GraphTimeline`: the checkpoint history graph — lane guides, parent
@@ -5313,13 +5726,16 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let dot_y = y + row_h * 0.5;
         ctx.draw.push_rounded([dot_x - 3.0, dot_y - 3.0, 6.0, 6.0], theme.text, 3.0);
 
-        let avatar_size = 20.0;
         let avatar_x = graph_x0 + graph_width + 4.0;
-        let avatar_y = y + row_h * 0.5 - avatar_size * 0.5;
-        let initial = column.authors.first().map(|author| graph_timeline_avatar_initials(&author.name)).unwrap_or_else(|| "?".into());
-        ctx.draw.push_rounded([avatar_x, avatar_y, avatar_size, avatar_size], theme.button, avatar_size * 0.5);
-        let initial_x_frac = if initial.chars().count() >= 2 { 0.18 } else { 0.32 };
-        draw_text(ctx, &initial, avatar_x + avatar_size * initial_x_frac, avatar_y + avatar_size * 0.7, theme.font_size_small, theme.text);
+        let avatar_y = y + row_h * 0.5 - HISTORY_AVATAR_SIZE * 0.5;
+        if column.authors.is_empty() {
+            paint_history_avatar(ctx, &format!("{}.history.avatar.{}.unknown", scene.host_id, column.checkpoint_id), None, avatar_x, avatar_y);
+        } else {
+            for (author_index, author) in column.authors.iter().enumerate() {
+                let image_id = history_avatar_image_id(&scene.host_id, &column.checkpoint_id, author, author_index);
+                paint_history_avatar(ctx, &image_id, Some(author), history_avatar_x(avatar_x, author_index), avatar_y);
+            }
+        }
 
         if let Some(description) = &column.description {
             draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
@@ -5901,6 +6317,26 @@ fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewpor
     }
 }
 
+/// 📷️ Resolves one framing revision after layout and publishes its resulting local camera.
+fn apply_canvas_framing(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
+    let Some(request) = scene.canvas_2d.as_ref().and_then(|canvas| canvas.framing.as_ref()) else { return false };
+    if scene_state(&scene.host_id).canvas_framing_revision == Some(request.revision) {
+        return false;
+    }
+    let Some(camera) = request.fit(bounds.w as f64, bounds.h as f64) else { return false };
+    let viewport = Viewport { x: camera.x as f32, y: camera.y as f32, zoom: camera.zoom as f32 };
+    if ![viewport.x, viewport.y, viewport.zoom].iter().all(|value| value.is_finite()) {
+        return false;
+    }
+    mutate_scene_state(&scene.host_id, |state| {
+        state.viewport = viewport;
+        state.canvas_framing_revision = Some(request.revision);
+        state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
+    });
+    schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
+    true
+}
+
 /// 🗒️ `role === "meta"` (activeUtility bookkeeping) and `visible === false` records are
 /// non-visual — skip rendering entirely, matches `layers.filter(role !== "meta")` in
 /// `canvas-2d-host.tsx`'s `JsonLayersCanvasSession.renderFrame`.
@@ -5920,6 +6356,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     let inner = bounds;
     ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let mut viewport = Viewport { x: canvas.camera_x as f32, y: canvas.camera_y as f32, zoom: canvas.zoom as f32 };
+    apply_canvas_framing(scene, inner);
     let local = scene_state(&scene.host_id);
     if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
@@ -7587,6 +8024,12 @@ pub(crate) fn ink_pointer_cancel_into(surface_id: &str) {
         state.ink_marquee_points.clear();
         state.ink_overrides.clear();
     });
+}
+
+#[cfg(test)]
+pub(crate) fn ink_pointer_state_is_clear(surface_id: &str) -> bool {
+    let state = scene_state(surface_id);
+    !state.pointer_was_down && state.drag.is_none() && state.ink_marquee_points.is_empty() && state.ink_overrides.is_empty()
 }
 
 fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Option<InkInteractionDocument>, ui_wgpu::wgpu::BoundedActionFault> {
@@ -10258,11 +10701,55 @@ fn render_text_editor_overlays(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     if let Some(draft) = ui.rename.as_ref() {
         render_text_editor_rename_input(scene, bounds, ctx, &draft.text);
     }
+    render_text_editor_explicit_draft_controls(scene, bounds, ctx);
     if !ui.completions_open {
         return;
     }
     let completions = text_editor_completions(editor);
     render_text_editor_completions(scene, bounds, ctx, &completions, ui.completion_index);
+}
+
+fn text_editor_explicit_draft_button_rects(bounds: Rect, theme: &Theme) -> (Rect, Rect) {
+    let width = 96.0;
+    let gap = 8.0;
+    let height = theme.control_height_small;
+    let y = bounds.y + bounds.h - height - 8.0;
+    let apply = Rect::new(bounds.x + bounds.w - width - 8.0, y, width, height);
+    let discard = Rect::new(apply.x - width - gap, y, width, height);
+    (discard, apply)
+}
+
+fn render_text_editor_explicit_draft_controls(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let Some(settings) = engine_canvas::text_editor_explicit_draft_settings(scene) else { return };
+    let dirty = engine_canvas::text_editor_explicit_draft_is_dirty(scene);
+    let conflicted = engine_canvas::text_editor_explicit_draft_has_conflict(scene);
+    let status = engine_canvas::text_editor_explicit_draft_status(scene);
+    let (discard, apply) = text_editor_explicit_draft_button_rects(bounds, ctx.theme);
+    let footer = Rect::new(bounds.x, discard.y - 8.0, bounds.w, discard.h + 16.0);
+    ctx.draw.push_rounded([footer.x, footer.y, footer.w, footer.h], ctx.theme.panel, 0.0);
+    if conflicted {
+        draw_text(ctx, &settings.conflict_label, footer.x + 8.0, footer.y + footer.h * 0.62, ctx.theme.font_size_small, ctx.theme.error);
+    } else if let Some(error) = status.error.as_deref() {
+        draw_text(ctx, &format!("{}: {error}", settings.failed_label), footer.x + 8.0, footer.y + footer.h * 0.62, ctx.theme.font_size_small, ctx.theme.error);
+    } else if status.pending {
+        draw_text(ctx, &format!("{} {}%", settings.applying_label, (status.progress * 100.0).round() as u32), footer.x + 8.0, footer.y + footer.h * 0.62, ctx.theme.font_size_small, ctx.theme.text_muted);
+    }
+    let apply_id = if status.cancellable { "cancel" } else { "apply" };
+    let apply_label = if status.cancellable {
+        settings.cancel_label.as_str()
+    } else if status.pending {
+        settings.applying_label.as_str()
+    } else {
+        settings.apply_label.as_str()
+    };
+    for (id, rect, label, fill, enabled) in
+        [("discard", discard, settings.discard_label.as_str(), ctx.theme.panel, !status.pending && (dirty || conflicted)), (apply_id, apply, apply_label, ctx.theme.accent, status.cancellable || !status.pending && dirty && !conflicted)]
+    {
+        ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], fill, ctx.theme.border_radius * 0.5);
+        draw_ink_rect_outline(ctx.draw, rect.x, rect.y, rect.w, rect.h, ctx.theme.panel_border, 1.0);
+        draw_text(ctx, label, rect.x + 8.0, rect.y + rect.h * 0.68, ctx.theme.font_size_small, if enabled { ctx.theme.text } else { ctx.theme.text_muted });
+        ctx.input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("{}.editor.draft.{id}", scene.host_id)), kind: HitKind::Generic, drag_axis: None, drag_data: None });
+    }
 }
 
 /// 📋️ The completions dropdown — React's `rounded border border-border bg-popover p-1 shadow-md`
@@ -10518,6 +11005,23 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
 pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let ui = text_editor_ui(&scene.host_id);
     let accelerator = modifiers.ctrl || modifiers.meta;
+    if engine_canvas::text_editor_explicit_draft_settings(scene).is_some() {
+        if accelerator && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("z")) {
+            return Ok(engine_canvas::text_editor_move_explicit_draft_history(scene, modifiers.shift));
+        }
+        if modifiers.ctrl && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("y")) {
+            return Ok(engine_canvas::text_editor_move_explicit_draft_history(scene, true));
+        }
+        if accelerator && matches!(key, KeyAction::Enter) {
+            return engine_canvas::text_editor_apply_explicit_draft_into(scene, input);
+        }
+        if matches!(key, KeyAction::Escape) {
+            if engine_canvas::text_editor_cancel_explicit_publication(scene) {
+                return Ok(true);
+            }
+            return Ok(engine_canvas::text_editor_discard_explicit_draft(scene));
+        }
+    }
     if let Some(draft) = ui.rename.as_ref() {
         match key {
             KeyAction::Escape => return Ok(text_editor_cancel_rename(scene)),
@@ -10563,6 +11067,25 @@ pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
+    if engine_canvas::text_editor_explicit_draft_settings(scene).is_some() {
+        let (discard, apply) = text_editor_explicit_draft_button_rects(inner, &scene_input_theme());
+        if discard.contains(x, y) {
+            if engine_canvas::text_editor_explicit_draft_status(scene).pending {
+                return Ok(true);
+            }
+            return Ok(engine_canvas::text_editor_discard_explicit_draft(scene));
+        }
+        if apply.contains(x, y) {
+            let status = engine_canvas::text_editor_explicit_draft_status(scene);
+            if status.pending && !status.cancellable {
+                return Ok(true);
+            }
+            if engine_canvas::text_editor_cancel_explicit_publication(scene) {
+                return Ok(true);
+            }
+            return engine_canvas::text_editor_apply_explicit_draft_into(scene, input);
+        }
+    }
     if text_editor_ui(&scene.host_id).completions_open {
         let count = text_editor_completions(editor).len();
         if let Some(index) = text_editor_completion_hit(scene, inner, &scene_input_theme(), count, x, y) {

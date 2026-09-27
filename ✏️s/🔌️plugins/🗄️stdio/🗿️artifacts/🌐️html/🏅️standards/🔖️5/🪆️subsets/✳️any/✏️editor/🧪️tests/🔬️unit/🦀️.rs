@@ -108,7 +108,7 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let target = html_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&HtmlSnapshot::default()).await;
-    dispatch_settled(&mut app, "replace-text", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
+    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
     assert_eq!(app.snapshot().expect("html snapshot"), target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
@@ -120,7 +120,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 async fn replace_text_refuses_text_that_is_not_the_artifacts_dsl() {
     let example = html_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&example).await;
-    let fault = dispatch_settled(&mut app, "replace-text", &[("text", "not a dsl document")]).await.expect_err("invalid text is refused");
+    let fault = dispatch_settled(&mut app, "textEdit", &[("text", "not a dsl document")]).await.expect_err("invalid text is refused");
     assert!(format!("{fault:?}").contains("stdio.html.invalid-text"), "{fault:?}");
     assert_eq!(app.snapshot().expect("html snapshot"), example);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);

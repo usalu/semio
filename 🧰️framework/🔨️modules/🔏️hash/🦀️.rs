@@ -219,6 +219,104 @@ pub fn hex_lower(bytes: &[u8]) -> String {
 }
 //#endregion 🔐️Sha256
 
+//#region 🔑️HmacSha256
+const HMAC_BLOCK_BYTES: usize = 64;
+
+/// 🔑️ One HMAC-SHA256 key (RFC 2104), keyed once: the SHA-256 states after absorbing the inner and
+/// outer pads. Every MAC under the key starts from them, so a MAC costs the message's compressions
+/// plus one; a 32-byte message (a PBKDF2 iteration) costs exactly two.
+#[derive(Clone)]
+pub struct HmacSha256 {
+    inner: [u32; 8],
+    outer: [u32; 8],
+}
+
+impl HmacSha256 {
+    /// 🗝️ Keys the MAC; a key longer than one block is hashed first.
+    pub fn new(key: &[u8]) -> Self {
+        let mut block = [0u8; HMAC_BLOCK_BYTES];
+        if key.len() > HMAC_BLOCK_BYTES {
+            block[..32].copy_from_slice(&Sha256::digest(key));
+        } else {
+            block[..key.len()].copy_from_slice(key);
+        }
+        let (mut inner_pad, mut outer_pad) = ([0x36u8; HMAC_BLOCK_BYTES], [0x5cu8; HMAC_BLOCK_BYTES]);
+        for index in 0..HMAC_BLOCK_BYTES {
+            inner_pad[index] ^= block[index];
+            outer_pad[index] ^= block[index];
+        }
+        let (mut inner, mut outer) = (SHA256_INITIAL, SHA256_INITIAL);
+        sha256_compress(&mut inner, &inner_pad);
+        sha256_compress(&mut outer, &outer_pad);
+        block.fill(0);
+        inner_pad.fill(0);
+        outer_pad.fill(0);
+        Self { inner, outer }
+    }
+
+    /// 🧷️ The MAC of one message.
+    pub fn mac(&self, message: &[u8]) -> [u8; 32] {
+        let mut inner = Sha256 { state: self.inner, buffer: [0; 64], buffer_len: 0, total_len: HMAC_BLOCK_BYTES as u64 };
+        inner.update(message);
+        self.outer_of(&inner.finalize())
+    }
+
+    /// 🏎️ The MAC of one 32-byte message in exactly two compressions: both final blocks are the
+    /// message or inner digest, the FIPS 180-4 padding and the fixed bit length of pad + 32 bytes.
+    pub fn mac32(&self, message: &[u8; 32]) -> [u8; 32] {
+        let mut state = self.inner;
+        sha256_compress(&mut state, &sha256_last_block_after_pad(message));
+        self.outer_of(&sha256_state_bytes(&state))
+    }
+
+    fn outer_of(&self, inner_digest: &[u8; 32]) -> [u8; 32] {
+        let mut state = self.outer;
+        sha256_compress(&mut state, &sha256_last_block_after_pad(inner_digest));
+        sha256_state_bytes(&state)
+    }
+}
+
+fn sha256_last_block_after_pad(message: &[u8; 32]) -> [u8; 64] {
+    let mut block = [0u8; 64];
+    block[..32].copy_from_slice(message);
+    block[32] = 0x80;
+    block[56..].copy_from_slice(&(((HMAC_BLOCK_BYTES + 32) * 8) as u64).to_be_bytes());
+    block
+}
+
+fn sha256_state_bytes(state: &[u32; 8]) -> [u8; 32] {
+    let mut digest = [0; 32];
+    for (chunk, word) in digest.as_chunks_mut::<4>().0.iter_mut().zip(state) {
+        chunk.copy_from_slice(&word.to_be_bytes());
+    }
+    digest
+}
+
+/// 🧷️ HMAC-SHA256 (RFC 2104) of one message under one key.
+pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
+    HmacSha256::new(key).mac(message)
+}
+
+/// 🧮️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and one 32-byte output block: the password is keyed
+/// once and every further iteration costs two compressions.
+pub fn pbkdf2_sha256(password: &[u8], salt: &[u8], iterations: u32) -> [u8; 32] {
+    let key = HmacSha256::new(password);
+    let mut seed = Vec::with_capacity(salt.len() + 4);
+    seed.extend_from_slice(salt);
+    seed.extend_from_slice(&1u32.to_be_bytes());
+    let mut block = key.mac(&seed);
+    let mut accumulator = block;
+    for _ in 1..iterations {
+        block = key.mac32(&block);
+        for (sum, byte) in accumulator.iter_mut().zip(block) {
+            *sum ^= byte;
+        }
+    }
+    seed.fill(0);
+    accumulator
+}
+//#endregion 🔑️HmacSha256
+
 //#region 🌳️Blake3
 /// 🌳️ Repository-owned BLAKE3 (unkeyed, non-extendable, 32-byte output) — the only mode this
 /// codebase ever calls: plain `hash`/`Hasher::update`/`Hasher::finalize`. No keyed hashing, no

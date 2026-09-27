@@ -787,6 +787,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a process step that applies one measure (such as a cut or a drill) with a workshop machine's capability at the given position on the stock.",
+                  "de": "Fügt einen Prozessschritt hinzu, der eine Maßnahme (etwa einen Schnitt oder eine Bohrung) mit der Fähigkeit einer Werkstattmaschine an der angegebenen Position des Rohteils ausführt."
+                },
+                "reuse": {
+                  "en": "Adds a process step that applies one measure (such as a cut or a drill) with a workshop machine's capability at the given position on the stock.",
+                  "de": "Fügt einen Prozessschritt hinzu, der eine Maßnahme (etwa einen Schnitt oder eine Bohrung) mit der Fähigkeit einer Werkstattmaschine an der angegebenen Position des Rohteils ausführt."
+                }
               }
             }
           },
@@ -872,7 +882,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -891,6 +901,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Swaps the stock (the raw part, such as a box or cylinder) for one of the given kind and resets the whole process: every step and the timeline cursor are cleared.",
+                  "de": "Tauscht das Rohteil (etwa Quader oder Zylinder) gegen eines der angegebenen Art und setzt den gesamten Prozess zurück: alle Schritte und der Zeitleisten-Cursor werden gelöscht."
+                },
+                "reuse": {
+                  "en": "Swaps the stock (the raw part, such as a box or cylinder) for one of the given kind and resets the whole process: every step and the timeline cursor are cleared.",
+                  "de": "Tauscht das Rohteil (etwa Quader oder Zylinder) gegen eines der angegebenen Art und setzt den gesamten Prozess zurück: alle Schritte und der Zeitleisten-Cursor werden gelöscht."
+                }
               }
             }
           },
@@ -995,6 +1015,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole process document (stock, workshop and steps) with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Prozessdokument (Rohteil, Werkstatt und Schritte) durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole process document (stock, workshop and steps) with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Prozessdokument (Rohteil, Werkstatt und Schritte) durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -1039,6 +1069,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes the process step currently selected in the 3D view; nothing happens without a selection.",
+                  "de": "Entfernt den aktuell in der 3D-Ansicht ausgewählten Prozessschritt; ohne Auswahl geschieht nichts."
+                },
+                "reuse": {
+                  "en": "Removes the process step currently selected in the 3D view; nothing happens without a selection.",
+                  "de": "Entfernt den aktuell in der 3D-Ansicht ausgewählten Prozessschritt; ohne Auswahl geschieht nichts."
+                }
               }
             }
           },
@@ -1153,6 +1193,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the processed model in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das bearbeitete Modell im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the processed model in the chosen format to a downloaded file on the user's machine.",
+                  "de": "Schreibt das bearbeitete Modell im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -1194,6 +1244,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a STEP, OBJ, STL or GLB model; the chosen file is then imported as the new stock.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein STEP-, OBJ-, STL- oder GLB-Modell; die gewählte Datei wird dann als neues Rohteil importiert."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a STEP, OBJ, STL or GLB model; the chosen file is then imported as the new stock.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein STEP-, OBJ-, STL- oder GLB-Modell; die gewählte Datei wird dann als neues Rohteil importiert."
+                }
               }
             }
           },
@@ -1238,6 +1298,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole process document with the supplied document; nothing of the previous stock, workshop or steps is kept.",
+                  "de": "Ersetzt das gesamte Prozessdokument durch das übergebene; von Rohteil, Werkstatt und Schritten bleibt nichts erhalten."
+                },
+                "reuse": {
+                  "en": "Replaces the whole process document with the supplied document; nothing of the previous stock, workshop or steps is kept.",
+                  "de": "Ersetzt das gesamte Prozessdokument durch das übergebene; von Rohteil, Werkstatt und Schritten bleibt nichts erhalten."
+                }
               }
             }
           },
@@ -1282,6 +1352,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a machine from the catalogue to the workshop under the given machine id, with the capabilities that catalogue entry provides.",
+                  "de": "Fügt der Werkstatt eine Maschine aus dem Katalog unter der angegebenen Maschinen-Id hinzu, mit den Fähigkeiten dieses Katalogeintrags."
+                },
+                "reuse": {
+                  "en": "Adds a machine from the catalogue to the workshop under the given machine id, with the capabilities that catalogue entry provides.",
+                  "de": "Fügt der Werkstatt eine Maschine aus dem Katalog unter der angegebenen Maschinen-Id hinzu, mit den Fähigkeiten dieses Katalogeintrags."
+                }
               }
             }
           },
@@ -1326,6 +1406,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one machine by id from the workshop.",
+                  "de": "Entfernt eine Maschine anhand ihrer Id aus der Werkstatt."
+                },
+                "reuse": {
+                  "en": "Removes one machine by id from the workshop.",
+                  "de": "Entfernt eine Maschine anhand ihrer Id aus der Werkstatt."
+                }
               }
             }
           },
@@ -1370,6 +1460,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Updates one workshop machine to the supplied definition, changing only its name, icon or capabilities where they differ.",
+                  "de": "Aktualisiert eine Werkstattmaschine auf die übergebene Definition und ändert nur Name, Symbol oder Fähigkeiten, wo sie abweichen."
+                },
+                "reuse": {
+                  "en": "Updates one workshop machine to the supplied definition, changing only its name, icon or capabilities where they differ.",
+                  "de": "Aktualisiert eine Werkstattmaschine auf die übergebene Definition und ändert nur Name, Symbol oder Fähigkeiten, wo sie abweichen."
+                }
               }
             }
           },
@@ -1395,7 +1495,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -1414,6 +1514,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole document with a stock read from the given model file (name and data-URL payload) and clears the process timeline.",
+                  "de": "Ersetzt das gesamte Dokument durch ein Rohteil aus der angegebenen Modelldatei (Name und Data-URL-Inhalt) und leert die Prozesszeitleiste."
+                },
+                "reuse": {
+                  "en": "Replaces the whole document with a stock read from the given model file (name and data-URL payload) and clears the process timeline.",
+                  "de": "Ersetzt das gesamte Dokument durch ein Rohteil aus der angegebenen Modelldatei (Name und Data-URL-Inhalt) und leert die Prozesszeitleiste."
+                }
               }
             }
           },
@@ -1458,6 +1568,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one process step by id from the timeline.",
+                  "de": "Entfernt einen Prozessschritt anhand seiner Id aus der Zeitleiste."
+                },
+                "reuse": {
+                  "en": "Removes one process step by id from the timeline.",
+                  "de": "Entfernt einen Prozessschritt anhand seiner Id aus der Zeitleiste."
+                }
               }
             }
           },
@@ -1502,6 +1622,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.",
+                  "de": "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."
+                },
+                "reuse": {
+                  "en": "Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.",
+                  "de": "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."
+                }
               }
             }
           },
@@ -1546,6 +1676,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Updates one process step to the supplied definition, changing only the fields that differ.",
+                  "de": "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."
+                },
+                "reuse": {
+                  "en": "Updates one process step to the supplied definition, changing only the fields that differ.",
+                  "de": "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."
+                }
               }
             }
           },
@@ -1590,6 +1730,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                },
+                "reuse": {
+                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                }
               }
             }
           },
@@ -1634,6 +1784,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.",
+                  "de": "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."
+                },
+                "reuse": {
+                  "en": "Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.",
+                  "de": "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."
+                }
               }
             }
           },
@@ -1768,6 +1928,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many process steps the timeline cursor has applied, which the 3D view shows the stock after.",
+                  "de": "Legt fest, wie viele Prozessschritte der Zeitleisten-Cursor angewendet hat, wonach die 3D-Ansicht das Rohteil zeigt."
+                },
+                "reuse": {
+                  "en": "Sets how many process steps the timeline cursor has applied, which the 3D view shows the stock after.",
+                  "de": "Legt fest, wie viele Prozessschritte der Zeitleisten-Cursor angewendet hat, wonach die 3D-Ansicht das Rohteil zeigt."
+                }
               }
             }
           },
@@ -1812,6 +1982,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the timeline cursor by the given number of steps forward or back (never below zero).",
+                  "de": "Bewegt den Zeitleisten-Cursor um die angegebene Zahl von Schritten vor oder zurück (nie unter null)."
+                },
+                "reuse": {
+                  "en": "Moves the timeline cursor by the given number of steps forward or back (never below zero).",
+                  "de": "Bewegt den Zeitleisten-Cursor um die angegebene Zahl von Schritten vor oder zurück (nie unter null)."
+                }
               }
             }
           },
@@ -1856,6 +2036,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the timeline cursor one step back so the 3D view shows the stock before the last applied step.",
+                  "de": "Bewegt den Zeitleisten-Cursor einen Schritt zurück, sodass die 3D-Ansicht das Rohteil vor dem zuletzt angewendeten Schritt zeigt."
+                },
+                "reuse": {
+                  "en": "Moves the timeline cursor one step back so the 3D view shows the stock before the last applied step.",
+                  "de": "Bewegt den Zeitleisten-Cursor einen Schritt zurück, sodass die 3D-Ansicht das Rohteil vor dem zuletzt angewendeten Schritt zeigt."
+                }
               }
             }
           },
@@ -1900,6 +2090,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the timeline cursor one step forward so the 3D view shows the stock after the next step.",
+                  "de": "Bewegt den Zeitleisten-Cursor einen Schritt vor, sodass die 3D-Ansicht das Rohteil nach dem nächsten Schritt zeigt."
+                },
+                "reuse": {
+                  "en": "Moves the timeline cursor one step forward so the 3D view shows the stock after the next step.",
+                  "de": "Bewegt den Zeitleisten-Cursor einen Schritt vor, sodass die 3D-Ansicht das Rohteil nach dem nächsten Schritt zeigt."
+                }
               }
             }
           },
@@ -3071,6 +3271,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3176,6 +3386,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3269,6 +3489,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4559,6 +4789,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4664,6 +4904,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4757,6 +5007,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4948,7 +5208,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5137,8 +5397,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "7f355d5c8d9cc640216148ec61b7082151d3f7e0fa07843b15af521cc60718a6",
-    "coreWasmSha256": "80cb154cc45f466c9a17554360fb9baa96f0a463707074243b7dcd9e56638aee",
-    "descriptorSha256": "3328341b9177676a0b0d35bd2e978116af927b7e4131ea29e67979c7dbeb4df5"
+    "wasmSha256": "3041b2d112136ebe648f356bd1d74c0ca2dafa13754e3b82918d83912aabeb61",
+    "coreWasmSha256": "0fd930f29e13de63c230dc262a17ee3a190300c45f64ce42b153cd0a945beac8",
+    "descriptorSha256": "228379d537813193f87d71d5a8bf776227086d89520ed6d9cd0392bdda0f2d1d"
   }
 }

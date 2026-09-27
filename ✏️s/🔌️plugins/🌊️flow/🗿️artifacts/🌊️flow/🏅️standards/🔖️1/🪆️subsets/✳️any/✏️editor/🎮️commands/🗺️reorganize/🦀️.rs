@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::host_operations;
+use crate::editor::flow::host_scene_edit;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -16,8 +16,10 @@ pub const REORGANIZE_OPTIONS_JSON: &str = r#"{"orientation":"leftRight"}"#;
 
 /// 🔄️ The reorganize document operations, extracted so the extension action can reuse them without
 /// round-tripping through the command enum.
-pub fn reorganize_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Vec<FlowMutation> {
-    host_operations(snapshot, config, session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
+/// 🗺️ Lays the composed scene out left-to-right and publishes the new layout on the content child — nothing when the
+/// layout is already the host's own arrangement.
+pub fn reorganize_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    host_scene_edit(composed, config, session, |host| Ok(host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok()))
 }
 //#endregion 🔖️Reorganize
 
@@ -25,7 +27,7 @@ pub fn reorganize_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowCon
 pub struct Reorganize {}
 
 pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(reorganize_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)))
+    reorganize_edit(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)
 }
 
 //#region 🧪️Tests

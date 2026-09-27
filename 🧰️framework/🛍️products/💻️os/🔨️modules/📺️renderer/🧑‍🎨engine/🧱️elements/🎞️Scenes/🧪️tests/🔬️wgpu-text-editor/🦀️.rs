@@ -33,6 +33,7 @@ fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
 fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> ui_wgpu::wgpu::TextEditorScene {
     ui_wgpu::wgpu::TextEditorScene {
         buffer: buffer.to_string(),
+        lanes: Vec::new(),
         language: None,
         selection_json: None,
         tokens_json: None,

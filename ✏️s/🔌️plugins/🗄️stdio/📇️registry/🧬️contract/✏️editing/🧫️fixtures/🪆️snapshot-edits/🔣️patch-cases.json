@@ -1,0 +1,598 @@
+{
+  "base": {
+    "schema": "fixture",
+    "title": "Alpha",
+    "active": true,
+    "count": 2,
+    "ratio": 1.5,
+    "optional": "present",
+    "choice": {
+      "kind": "first",
+      "level": 1
+    },
+    "labels": {
+      "z": "last",
+      "a/b": "slash",
+      "til~de": "tilde"
+    },
+    "items": [
+      {
+        "id": "a",
+        "enabled": true
+      },
+      {
+        "id": "b",
+        "enabled": false
+      },
+      {
+        "id": "c",
+        "enabled": true
+      }
+    ]
+  },
+  "actionInputs": [
+    {
+      "id": "direct-bool",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/active",
+        "value": false
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/active",
+        "value": false
+      }
+    },
+    {
+      "id": "direct-number",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/count",
+        "value": 7
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/count",
+        "value": 7
+      }
+    },
+    {
+      "id": "direct-string",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/title",
+        "value": "Typed"
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/title",
+        "value": "Typed"
+      }
+    },
+    {
+      "id": "direct-source-draft",
+      "action": "replaceSnapshotSource",
+      "args": {
+        "value": "invalid local draft"
+      },
+      "expectedEvent": {
+        "operation": "replaceSource",
+        "source": "invalid local draft"
+      }
+    },
+    {
+      "id": "direct-null",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/optional",
+        "value": null
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/optional",
+        "value": null
+      }
+    },
+    {
+      "id": "direct-empty-string",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/title",
+        "value": ""
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/title",
+        "value": ""
+      }
+    },
+    {
+      "id": "direct-root-pointer",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "",
+        "value": {
+          "schema": "fixture",
+          "title": "Alpha",
+          "active": true,
+          "count": 2,
+          "ratio": 1.5,
+          "optional": "present",
+          "choice": {
+            "kind": "first",
+            "level": 1
+          },
+          "labels": {
+            "z": "last",
+            "a/b": "slash",
+            "til~de": "tilde"
+          },
+          "items": [
+            {
+              "id": "a",
+              "enabled": true
+            },
+            {
+              "id": "b",
+              "enabled": false
+            },
+            {
+              "id": "c",
+              "enabled": true
+            }
+          ]
+        }
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "",
+        "value": {
+          "schema": "fixture",
+          "title": "Alpha",
+          "active": true,
+          "count": 2,
+          "ratio": 1.5,
+          "optional": "present",
+          "choice": {
+            "kind": "first",
+            "level": 1
+          },
+          "labels": {
+            "z": "last",
+            "a/b": "slash",
+            "til~de": "tilde"
+          },
+          "items": [
+            {
+              "id": "a",
+              "enabled": true
+            },
+            {
+              "id": "b",
+              "enabled": false
+            },
+            {
+              "id": "c",
+              "enabled": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "direct-empty-key",
+      "action": "renameSnapshotKey",
+      "args": {
+        "path": "/labels/z",
+        "value": ""
+      },
+      "expectedEvent": {
+        "operation": "renameKey",
+        "path": "/labels/z",
+        "key": ""
+      }
+    },
+    {
+      "id": "encoded-typed-control",
+      "action": "setSnapshotValue",
+      "args": {
+        "path": "/count",
+        "value": "18446744073709551615",
+        "valueEncoding": "json"
+      },
+      "expectedEvent": {
+        "operation": "setValue",
+        "path": "/count",
+        "value": 18446744073709551615
+      }
+    }
+  ],
+  "accepted": [
+    {
+      "id": "set-string",
+      "event": {
+        "operation": "setValue",
+        "path": "/title",
+        "value": "Beta"
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/title",
+          "value": "Beta"
+        }
+      ]
+    },
+    {
+      "id": "set-escaped-slash",
+      "event": {
+        "operation": "setValue",
+        "path": "/labels/a~1b",
+        "value": "changed"
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/labels/a~1b",
+          "value": "changed"
+        }
+      ]
+    },
+    {
+      "id": "set-escaped-tilde",
+      "event": {
+        "operation": "setValue",
+        "path": "/labels/til~0de",
+        "value": "changed"
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/labels/til~0de",
+          "value": "changed"
+        }
+      ]
+    },
+    {
+      "id": "insert-map-key-before-existing-order",
+      "event": {
+        "operation": "insertValue",
+        "path": "/labels/a",
+        "value": "first"
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/labels/a",
+          "value": "first"
+        }
+      ]
+    },
+    {
+      "id": "insert-proto-key",
+      "event": {
+        "operation": "insertValue",
+        "path": "/labels/__proto__",
+        "value": "safe"
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/labels/__proto__",
+          "value": "safe"
+        }
+      ]
+    },
+    {
+      "id": "insert-constructor-key",
+      "event": {
+        "operation": "insertValue",
+        "path": "/labels/constructor",
+        "value": "safe"
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/labels/constructor",
+          "value": "safe"
+        }
+      ]
+    },
+    {
+      "id": "insert-prototype-key",
+      "event": {
+        "operation": "insertValue",
+        "path": "/labels/prototype",
+        "value": "safe"
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/labels/prototype",
+          "value": "safe"
+        }
+      ]
+    },
+    {
+      "id": "insert-array",
+      "event": {
+        "operation": "insertValue",
+        "path": "/items/1",
+        "value": {
+          "id": "x",
+          "enabled": true
+        }
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/items/1",
+          "value": {
+            "id": "x",
+            "enabled": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "append-array",
+      "event": {
+        "operation": "insertValue",
+        "path": "/items/-",
+        "value": {
+          "id": "x",
+          "enabled": true
+        }
+      },
+      "patch": [
+        {
+          "op": "add",
+          "path": "/items/-",
+          "value": {
+            "id": "x",
+            "enabled": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "remove-optional",
+      "event": {
+        "operation": "removeValue",
+        "path": "/optional"
+      },
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/optional"
+        }
+      ]
+    },
+    {
+      "id": "move-array",
+      "event": {
+        "operation": "moveValue",
+        "from": "/items/0",
+        "path": "/items/2"
+      },
+      "patch": [
+        {
+          "op": "move",
+          "from": "/items/0",
+          "path": "/items/2"
+        }
+      ]
+    },
+    {
+      "id": "rename-map-key",
+      "event": {
+        "operation": "renameKey",
+        "path": "/labels/a~1b",
+        "key": "renamed"
+      },
+      "patch": [
+        {
+          "op": "move",
+          "from": "/labels/a~1b",
+          "path": "/labels/renamed"
+        }
+      ]
+    },
+    {
+      "id": "replace-enum",
+      "event": {
+        "operation": "setValue",
+        "path": "/choice",
+        "value": {
+          "kind": "second",
+          "name": "chosen"
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/choice",
+          "value": {
+            "kind": "second",
+            "name": "chosen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "large-integer",
+      "event": {
+        "operation": "setValue",
+        "path": "/count",
+        "value": 9007199254740992
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/count",
+          "value": 9007199254740992
+        }
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "id": "missing-required",
+      "event": {
+        "operation": "removeValue",
+        "path": "/title"
+      },
+      "code": "snapshot-edit.schema-invalid"
+    },
+    {
+      "id": "unknown-field",
+      "event": {
+        "operation": "insertValue",
+        "path": "/unknown",
+        "value": true
+      },
+      "code": "snapshot-edit.schema-invalid"
+    },
+    {
+      "id": "fractional-integer",
+      "event": {
+        "operation": "setValue",
+        "path": "/count",
+        "value": 2.5
+      },
+      "code": "snapshot-edit.schema-invalid"
+    },
+    {
+      "id": "malformed-pointer",
+      "event": {
+        "operation": "setValue",
+        "path": "title",
+        "value": "x"
+      },
+      "code": "snapshot-edit.invalid-pointer"
+    },
+    {
+      "id": "bad-escape",
+      "event": {
+        "operation": "setValue",
+        "path": "/labels/a~2b",
+        "value": "x"
+      },
+      "code": "snapshot-edit.invalid-pointer"
+    },
+    {
+      "id": "out-of-bounds",
+      "event": {
+        "operation": "removeValue",
+        "path": "/items/9"
+      },
+      "code": "snapshot-edit.index-out-of-bounds"
+    },
+    {
+      "id": "move-descendant",
+      "event": {
+        "operation": "moveValue",
+        "from": "/items",
+        "path": "/items/0/child"
+      },
+      "code": "snapshot-edit.descendant-move"
+    },
+    {
+      "id": "insert-existing",
+      "event": {
+        "operation": "insertValue",
+        "path": "/labels/z",
+        "value": "duplicate"
+      },
+      "code": "snapshot-edit.key-exists"
+    }
+  ],
+  "sourceRoundTrip": {
+    "schema": "fixture",
+    "title": "Grüße 🌍\n{quoted: \"text\"}",
+    "active": true,
+    "count": 2,
+    "ratio": 1.5,
+    "optional": "This detail is not represented by the native fixture codec",
+    "choice": {
+      "kind": "first",
+      "level": 1
+    },
+    "labels": {
+      "z": "last",
+      "a/b": "slash",
+      "til~de": "tilde"
+    },
+    "items": [
+      {
+        "id": "a",
+        "enabled": true
+      },
+      {
+        "id": "b",
+        "enabled": false
+      },
+      {
+        "id": "c",
+        "enabled": true
+      }
+    ]
+  },
+  "rejectedSources": [
+    {
+      "id": "malformed-json-source",
+      "source": "not json",
+      "code": "snapshot-edit.invalid-source"
+    },
+    {
+      "id": "duplicate-source-member",
+      "source": "{\"title\":\"a\",\"title\":\"b\"}",
+      "code": "snapshot-edit.ambiguous-object"
+    },
+    {
+      "id": "escaped-duplicate-source-member",
+      "source": "{\"title\":\"a\",\"\\u0074itle\":\"b\"}",
+      "code": "snapshot-edit.ambiguous-object"
+    },
+    {
+      "id": "nested-duplicate-source-member",
+      "source": "{\"labels\":{\"same\":1,\"same\":2}}",
+      "code": "snapshot-edit.ambiguous-object"
+    }
+  ],
+  "wideIntegerSource": "{\"unsigned\":18446744073709551615,\"signed\":-9223372036854775808}",
+  "constraintCases": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        }
+      }
+    },
+    "accepted": {
+      "operation": "setValue",
+      "path": "/count",
+      "value": 4
+    },
+    "rejected": {
+      "operation": "setValue",
+      "path": "/count",
+      "value": 255
+    },
+    "errorCode": "snapshot-edit.constraint-invalid",
+    "errorPath": "$.count"
+  },
+  "floatInputs": [
+    { "source": "0", "accepted": true },
+    { "source": "1", "accepted": true },
+    { "source": "-1", "accepted": true },
+    { "source": "1.5", "accepted": true },
+    { "source": "9007199254740991", "accepted": true },
+    { "source": "9007199254740993", "accepted": false },
+    { "source": "-9007199254740993", "accepted": false }
+  ]
+}

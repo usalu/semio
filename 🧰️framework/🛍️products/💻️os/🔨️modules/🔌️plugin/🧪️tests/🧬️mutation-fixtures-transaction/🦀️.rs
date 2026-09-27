@@ -495,7 +495,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     let operations = protocol::encode_envelopes(&envelopes);
 
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
+    let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], &[], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
     assert!(outcome.rejection.is_none());
     app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
     let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
@@ -514,9 +514,9 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
 #[semio_framework_async_macros::async_test]
 async fn second_prepare_while_pending_is_rejected_instance_busy() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], "first", Some(protocol::MutationOrigin::Owner)).await;
+    let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], "first", Some(protocol::MutationOrigin::Owner)).await;
     assert!(first.rejection.is_none());
-    let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], "second", Some(protocol::MutationOrigin::Owner)).await;
+    let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], "second", Some(protocol::MutationOrigin::Owner)).await;
     let rejection = second.rejection.expect("second prepare while pending must be rejected");
     assert_eq!(rejection.code.0, "transaction.instance-busy");
     close_transaction_store_roots(&mut app);
@@ -525,7 +525,7 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
+    let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
     let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
     assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");

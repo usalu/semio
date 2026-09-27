@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerMat
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-material-id", "change-layer-material-id")
+        protocol::LocalizedLabel::native("Change layer material", "Baustoff der Schicht ändern")
     }
 }

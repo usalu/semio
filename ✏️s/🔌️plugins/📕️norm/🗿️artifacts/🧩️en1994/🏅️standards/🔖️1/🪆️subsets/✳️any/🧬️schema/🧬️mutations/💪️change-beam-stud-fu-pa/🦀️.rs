@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamStudFU
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-beam-stud-fu-pa", "change-beam-stud-fu-pa")
+        protocol::LocalizedLabel::native("Change ultimate tensile strength fu of the studs", "Zugfestigkeit fu der Kopfbolzendübel ändern")
     }
 }
 //#endregion 🔖️Payload

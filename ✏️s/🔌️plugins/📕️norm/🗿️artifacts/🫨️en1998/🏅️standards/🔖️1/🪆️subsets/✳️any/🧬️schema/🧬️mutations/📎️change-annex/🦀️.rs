@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeAnnex {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-annex", "change-annex")
+        protocol::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-annex".into()]

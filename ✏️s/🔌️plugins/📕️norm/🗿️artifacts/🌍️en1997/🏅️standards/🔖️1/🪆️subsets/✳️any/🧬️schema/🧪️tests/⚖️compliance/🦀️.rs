@@ -360,7 +360,7 @@ fn family_any_dir() -> PathBuf {
 }
 
 fn oracle_script() -> PathBuf {
-    family_any_dir().join("🧪️tests/🌍️compliance-en1997-1/🐍️.py")
+    family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py")
 }
 
 fn snapshot_schema_path() -> PathBuf {

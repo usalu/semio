@@ -6,7 +6,7 @@ never the receiving socket's actor: until now `state.db.hello(…, actor.clone()
 every replica read as its own echo (ticket 26/09/23 session 12, run s12i). One hunk in `🌎️hub/🏗️bootstrap/🦀️.rs` (the hello call and
 its constant) plus the existing joiner/reconnect catch-up law in `🧪️tests/🔬️bin-unit/🦀️.rs`, which now also pins the origin.
 
-Apply in the landing window (hub rebuild + restart needed; rule 24 forbids builds now). Dry run by default; `--apply` writes.
+Dry run by default; `--apply` writes; `--revert` restores the pre-landing lines (every anchor again asserted exactly once).
 """
 
 import difflib
@@ -63,14 +63,16 @@ def replaced(path, source, edits):
 
 
 def main():
-    apply = "--apply" in sys.argv
+    apply = "--apply" in sys.argv or "--revert" in sys.argv
+    revert = "--revert" in sys.argv
     for path, edits in ((BOOTSTRAP, BOOTSTRAP_EDITS), (LAWS, LAW_EDITS)):
+        edits = [(new, old) for old, new in edits] if revert else edits
         before = path.read_text(encoding="utf-8")
         after = replaced(path, before, edits)
         sys.stdout.writelines(difflib.unified_diff(before.splitlines(True), after.splitlines(True), path.name, path.name + " (patched)", n=1))
         if apply:
             path.write_text(after, encoding="utf-8")
-    print(f"\n{'APPLIED' if apply else 'DRY RUN'}: 2 files")
+    print(f"\n{'REVERTED' if revert else 'APPLIED' if apply else 'DRY RUN'}: 2 files")
 
 
 if __name__ == "__main__":

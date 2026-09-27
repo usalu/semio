@@ -1,19 +1,46 @@
 {
-  "document": { "id": "drawing-window-neutral", "layers": [], "assets": {} },
+  "document": {
+    "id": "drawing-window-neutral",
+    "layers": [],
+    "assets": {}
+  },
   "presence": {
     "engagementInput": "Peer layer",
-    "camera": { "x": 2, "y": 3, "zoom": 1.25 }
+    "camera": {
+      "x": 2,
+      "y": 3,
+      "zoom": 1.25
+    }
   },
   "windowInstances": [
-    { "id": "drawing-left", "windowKindId": "drawing-composite" },
-    { "id": "drawing-right", "windowKindId": "drawing-composite" },
-    { "id": "drawing-properties", "windowKindId": "drawing-properties" }
+    {
+      "id": "drawing-left",
+      "windowKindId": "drawing-composite"
+    },
+    {
+      "id": "drawing-right",
+      "windowKindId": "drawing-composite"
+    },
+    {
+      "id": "drawing-properties",
+      "windowKindId": "drawing-properties"
+    }
   ],
   "baseConfig": {
-    "viewport": { "x": 512, "y": 512, "zoom": 0.75 }
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "framed": false
   },
   "nextConfig": {
-    "viewport": { "x": 18, "y": -9, "zoom": 2.5 }
+    "viewport": {
+      "x": 18,
+      "y": -9,
+      "zoom": 2.5
+    },
+    "framed": true
   },
   "baseTransient": {
     "engagementInput": "",
@@ -29,7 +56,14 @@
   },
   "configMutation": {
     "kind": "snapshot",
-    "config": { "viewport": { "x": 18, "y": -9, "zoom": 2.5 } }
+    "config": {
+      "viewport": {
+        "x": 18,
+        "y": -9,
+        "zoom": 2.5
+      },
+      "framed": true
+    }
   },
   "transientMutation": {
     "kind": "snapshot",
@@ -44,12 +78,32 @@
     {
       "windowId": "drawing-left",
       "windowKindId": "drawing-composite",
-      "mutation": { "kind": "snapshot", "config": { "viewport": { "x": 18, "y": -9, "zoom": 2.5 } } }
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "viewport": {
+            "x": 18,
+            "y": -9,
+            "zoom": 2.5
+          },
+          "framed": true
+        }
+      }
     },
     {
       "windowId": "drawing-right",
       "windowKindId": "drawing-composite",
-      "mutation": { "kind": "snapshot", "config": { "viewport": { "x": -7, "y": 31, "zoom": 0.5 } } }
+      "mutation": {
+        "kind": "snapshot",
+        "config": {
+          "viewport": {
+            "x": -7,
+            "y": 31,
+            "zoom": 0.5
+          },
+          "framed": true
+        }
+      }
     }
   ],
   "transientMutations": [
@@ -68,7 +122,15 @@
     }
   ],
   "rejections": [
-    { "windowId": "missing-drawing", "claimedWindowKindId": "drawing-composite", "code": "drawing-window-stale" },
-    { "windowId": "drawing-properties", "claimedWindowKindId": "drawing-composite", "code": "drawing-window-kind-mismatch" }
+    {
+      "windowId": "missing-drawing",
+      "claimedWindowKindId": "drawing-composite",
+      "code": "drawing-window-stale"
+    },
+    {
+      "windowId": "drawing-properties",
+      "claimedWindowKindId": "drawing-composite",
+      "code": "drawing-window-kind-mismatch"
+    }
   ]
 }

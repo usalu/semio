@@ -1,5 +1,5 @@
 /** 🔁️ The one registered all-plugin rebuild: the build-input gates (no cargo unit built from outside this tree, a fresh
- * mutation-authority projection), every component built ONCE for both its descriptor and its dev staging, the generated registry
+ * mutation-authority projection, the guest-linked framework crates compiling for every wasm target), every component built ONCE for both its descriptor and its dev staging, the generated registry
  * and its check, the restaged `s` guests and their convergence proof, the flow-core browser bindings, then the catalog preflight
  * (seconds) and the trusted catalog of every package, from one tree, in the order `🔣️.json` declares. The whole span runs inside ONE queued exclusive `wasm-build`
  * lease, so no other all-plugin wasm build lands between a descriptor and the staging it describes. Each step is an
@@ -40,6 +40,45 @@ export function readRebuildChain(path = join(dirname(fileURLToPath(import.meta.u
       return Object.freeze({ id: value.id, stage: value.stage, command: Object.freeze([...value.command]) }) as RebuildStepV1;
     }),
   );
+}
+
+/** 🧊️ One fail-fast `cargo check --lib` of guest-linked framework crates for one wasm target, as `🔣️.json` declares it. */
+export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; packages: readonly string[]; features: readonly string[] }>;
+
+/** 📜️ Reads the declared guest-framework checks: known targets, non-empty distinct package names, features naming a checked package. */
+export function readGuestFrameworkChecks(path = join(dirname(fileURLToPath(import.meta.url)), "🔣️.json")): readonly GuestFrameworkCheckV1[] {
+  const document = JSON.parse(readFileSync(path, "utf8")) as { guestFrameworkChecks?: unknown };
+  const crate = /^[a-z][a-z0-9-]*$/u;
+  if (!Array.isArray(document.guestFrameworkChecks) || document.guestFrameworkChecks.length === 0) throw new Error("rebuild chain declares no guestFrameworkChecks");
+  return Object.freeze(
+    document.guestFrameworkChecks.map((value: any) => {
+      const packages = value?.packages, features = value?.features;
+      if (!["wasm32-wasip2", "wasm32-unknown-unknown"].includes(value?.target) || !Array.isArray(packages) || packages.length === 0 || new Set(packages).size !== packages.length || !packages.every((name: unknown) => typeof name === "string" && crate.test(name))
+        || !Array.isArray(features) || !features.every((feature: unknown) => typeof feature === "string" && packages.includes(feature.split("/")[0]) && feature.split("/").length === 2))
+        throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} is not a known target with distinct crates and crate-qualified features`);
+      return Object.freeze({ target: value.target, packages: Object.freeze([...packages]), features: Object.freeze([...features]) }) as GuestFrameworkCheckV1;
+    }),
+  );
+}
+
+/** 🧊️ The cargo argument vector of one declared guest-framework check. */
+export function guestFrameworkCheckArgs(check: GuestFrameworkCheckV1): readonly string[] {
+  return Object.freeze(["check", "--lib", "--target", check.target, ...check.packages.flatMap((name) => ["-p", name]), ...(check.features.length ? ["--features", check.features.join(",")] : [])]);
+}
+
+/** 🧊️ `guest-framework-check`: the declared checks in order; cargo stops at the first crate that fails, so a broken guest-linked framework
+ * crate refuses the rebuild in minutes instead of inside the 60-component build. */
+export class GuestFrameworkCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length) throw new Error("usage: guest-framework-check");
+    const repoRoot = getWorkspaceRoot();
+    for (const check of readGuestFrameworkChecks()) {
+      const started = Date.now();
+      console.log(`guest-framework-check ${check.target}: ${check.packages.join(", ")}`);
+      runCmd("cargo", [...guestFrameworkCheckArgs(check)], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+      console.log(`guest-framework-check ${check.target} done in ${Math.round((Date.now() - started) / 1000)} s`);
+    }
+  }
 }
 
 /** 🧭️ The contiguous step range `--from`/`--to` select, refusing an unknown or inverted bound. */

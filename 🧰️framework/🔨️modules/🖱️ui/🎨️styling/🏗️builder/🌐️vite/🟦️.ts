@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
-import { createServer, type Server } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -309,11 +309,7 @@ function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
       next();
       return;
     }
-    const contentType = contentTypeForUiAsset(filePath);
-    if (contentType) {
-      res.setHeader("Content-Type", contentType);
-    }
-    createReadStream(filePath).pipe(res);
+    serveFileWithValidatorsV1(req, res, filePath, contentTypeForUiAsset(filePath));
   };
 }
 
@@ -345,8 +341,7 @@ function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<Playgrou
     if (!entry) return next();
     const source = resolve(repoRoot, entry.source);
     if (!existsSync(source) || !statSync(source).isFile()) return next();
-    res.setHeader("Content-Type", "model/gltf-binary");
-    createReadStream(source).pipe(res);
+    serveFileWithValidatorsV1(req, res, source, "model/gltf-binary");
   };
 }
 
@@ -517,8 +512,7 @@ function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware 
       return;
     }
     if ((url === `/${faviconDelivery.ico}` || url === `/${STATIC_SITE_FAVICON_ALIASES.ico}`) && content.icoPath && existsSync(content.icoPath)) {
-      res.setHeader("Content-Type", "image/x-icon");
-      createReadStream(content.icoPath).pipe(res);
+      serveFileWithValidatorsV1(req, res, content.icoPath, "image/x-icon");
       return;
     }
     next();
@@ -809,6 +803,54 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 `;
 }
 //#endregion 🔖️StatusSurfaceHtml
+
+//#region 🔖️ServeClose
+/** @emoji 🧷️ The part of a dev serve's HTTP server that closing it needs; an HTTP/2 server has no `closeAllConnections`. */
+export type ServeCloseHttpServer = {
+  close(callback?: (error?: Error) => void): unknown;
+  closeAllConnections(): void;
+  readonly listening: boolean;
+  emit(event: "close"): boolean;
+};
+
+/** @emoji 🔎️ Whether a serve's HTTP server can close every connection it holds. */
+export function isServeCloseHttpServer(value: object | null): value is ServeCloseHttpServer {
+  return value !== null && typeof (value as Partial<ServeCloseHttpServer>).closeAllConnections === "function" && typeof (value as Partial<ServeCloseHttpServer>).close === "function";
+}
+
+/** @emoji 🚪️ Makes closing a dev serve mean what Vite asks of it under every runtime: every open connection gone, `close`
+ * emitted once, the callback called. Vite destroys the sockets it tracked and then waits for `server.close`; Bun 1.3's
+ * `node:http` ignores `socket.destroy()` on a served connection, so its graceful `close` never completes while a browser holds
+ * a keep-alive connection. `server.restart()` (every edit of the config entry) then stopped listening and never listened
+ * again, shutdown hung, and every resource released on the server's `close` event (source watchers, the stream channel)
+ * stayed live — measured: bun 1.3.14 unreachable 10 s after a restart under a connected page, node 24 restarted in 4 ms
+ * (ticket 26/09/23 F2, `📓️wp-f2.md`). `closeAllConnections` is the runtime's own "close every connection": on Node it
+ * destroys them and `close` proceeds as usual; on Bun it stops the server outright, so the plugin completes the close.
+ *
+ * @see https://nodejs.org/api/http.html#servercloseallconnections
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/♨️hot-update/🟦️.ts */
+export function semioServeCloseVitePlugin() {
+  return {
+    name: "semio-serve-close",
+    apply: "serve" as const,
+    configureServer(server: { readonly httpServer: object | null }) {
+      const httpServer = server.httpServer;
+      if (!isServeCloseHttpServer(httpServer)) return;
+      const close = httpServer.close.bind(httpServer);
+      httpServer.close = (callback) => {
+        const listening = httpServer.listening;
+        httpServer.closeAllConnections();
+        if (!listening || httpServer.listening) return close(callback);
+        process.nextTick(() => {
+          httpServer.emit("close");
+          callback?.();
+        });
+        return httpServer;
+      };
+    },
+  };
+}
+//#endregion 🔖️ServeClose
 
 /** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
 export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
@@ -1298,8 +1340,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
       return;
     }
     if (existsSync(filePath)) {
-      res.setHeader("Content-Type", contentTypeForTileExt(ext));
-      createReadStream(filePath).pipe(res);
+      serveFileWithValidatorsV1(req, res, filePath, contentTypeForTileExt(ext));
       return;
     }
     if (mode === "bundle") {
@@ -1314,8 +1355,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
         res.end();
         return;
       }
-      res.setHeader("Content-Type", contentTypeForTileExt(result.ext));
-      createReadStream(filePath).pipe(res);
+      serveFileWithValidatorsV1(req, res, filePath, contentTypeForTileExt(result.ext));
     } catch {
       res.statusCode = 502;
       res.end();
@@ -1476,6 +1516,42 @@ export function contentTypeForStaticDirAsset(filePath: string): string | undefin
   return undefined;
 }
 
+/** @emoji 🏷️ Serves one file with HTTP validators: a weak `ETag` from its size and nanosecond mtime, `Last-Modified`,
+ * `Content-Length` and `Cache-Control: no-cache` (always revalidate — a restage rewrites files in place). A request whose
+ * `If-None-Match` names the current tag (weak comparison, RFC 9110 §13.1.2), or — without one — whose `If-Modified-Since`
+ * is not older than the file, is answered `304` with no body; `HEAD` gets the headers only.
+ *
+ * 🐛️ Without validators every reload of `s` re-downloaded every staged descriptor, the 8 MB guest font pack and every
+ * component core module in full (measured: 15.7 MB of descriptors + 8.4 MB of fonts per warm reload, ticket 26/09/23 F2);
+ * with them an unchanged file costs one `304`. */
+export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerResponse, filePath: string, contentType: string | undefined): void {
+  const stats = statSync(filePath, { bigint: true });
+  const tag = `W/"${stats.size.toString(16)}-${stats.mtimeNs.toString(16)}"`;
+  const modifiedSeconds = Number(stats.mtimeMs / 1000n);
+  res.setHeader("ETag", tag);
+  res.setHeader("Last-Modified", new Date(modifiedSeconds * 1000).toUTCString());
+  res.setHeader("Cache-Control", "no-cache");
+  if (contentType) res.setHeader("Content-Type", contentType);
+  const matches = req.headers["if-none-match"];
+  const since = req.headers["if-modified-since"];
+  const opaque = (value: string): string => value.trim().replace(/^W\//u, "");
+  const notModified =
+    typeof matches === "string"
+      ? matches.split(",").some((candidate) => candidate.trim() === "*" || opaque(candidate) === opaque(tag))
+      : typeof since === "string" && Number.isFinite(Date.parse(since)) && Math.floor(Date.parse(since) / 1000) >= modifiedSeconds;
+  if (notModified) {
+    res.statusCode = 304;
+    res.end();
+    return;
+  }
+  res.setHeader("Content-Length", stats.size.toString());
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
+  createReadStream(filePath).pipe(res);
+}
+
 /** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
 function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
@@ -1506,11 +1582,7 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
       res.end();
       return;
     }
-    const contentType = contentTypeForStaticDirAsset(filePath);
-    if (contentType) {
-      res.setHeader("Content-Type", contentType);
-    }
-    createReadStream(filePath).pipe(res);
+    serveFileWithValidatorsV1(req, res, filePath, contentTypeForStaticDirAsset(filePath));
   };
 }
 

@@ -1,6 +1,6 @@
 @capability-gltf-2-0-mutate
 @oracle-three-gltf-2-0-mutate-reader
-@comparison-semantic-gltf-v1
+@comparison-semantic-gltf-reader-v1
 @mutations-gltf-2-0-material
 Feature: Apply every registered glTF 2.0 material mutation to a real-world document
   The `gltf-2-0-material` catalog (`../../🔮️oracles/🔣️.json`) declares the 18 kinds the 4 families
@@ -41,11 +41,12 @@ Feature: Apply every registered glTF 2.0 material mutation to a real-world docum
   @mode-differential
   Scenario Outline: Apply <id> to the real document
     Given the real input document shared://<id>-applied/before.gltf
+    And the committed after-document shared://<id>-applied/after.gltf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then three's GLTFLoader reads the subject's document and the committed after-document as the same glTF
     Examples:
       | id                           | params                                                |
       | create-material              | {"position":1}                                        |
@@ -72,12 +73,13 @@ Feature: Apply every registered glTF 2.0 material mutation to a real-world docum
   @mode-property
   Scenario Outline: Undoing <id> restores the real document
     Given the real input document shared://<id>-applied/before.gltf
+    And the committed after-document shared://<id>-applied/after.gltf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
     And the mutation's own inverse is applied to the result
-    Then the document matches its pre-mutation semantic projection
+    Then three's GLTFLoader reads the restored document and the committed before-document as the same glTF
     Examples:
       | id                           | params                                                |
       | create-material              | {"position":1}                                        |

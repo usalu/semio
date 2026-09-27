@@ -2,7 +2,7 @@
 //! encodes, the answer shapes the page may hand back, and the source law that the lanes this seam
 //! exists for are no longer compiled out of the browser build.
 
-use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP};
+use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP, DIRECTORY_HTTP_TIMEOUT_MS};
 use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
 
 const SHELL_SOURCE: &str = include_str!("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
@@ -15,8 +15,18 @@ fn a_get_request_carries_the_op_verb_url_and_no_body() {
     assert_eq!(value["op"], DIRECTORY_DOOR_OP);
     assert_eq!(value["method"], "GET");
     assert_eq!(value["url"], "https://hub.example/directory/spaces/space-a");
+    assert_eq!(value["timeoutMs"], DIRECTORY_HTTP_TIMEOUT_MS);
     assert!(value.get("bearer").is_none(), "an unauthenticated browser call sends no Authorization header");
     assert!(value.get("body").is_none(), "a GET carries no body field at all");
+}
+
+#[test]
+fn every_directory_hop_carries_the_neutral_bounded_deadline() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏳️wgpu-directory-http-deadline/🔣️.json")).expect("fixture");
+    let encoded = encode_directory_door_request(HttpMethod::Get, fixture["request"]["url"].as_str().expect("url"), None, None).expect("encodes");
+    let request: serde_json::Value = serde_json::from_str(&encoded).expect("request");
+    assert_eq!(request["timeoutMs"], fixture["timeoutMs"]);
+    assert_eq!(DIRECTORY_HTTP_TIMEOUT_MS, fixture["timeoutMs"].as_u64().expect("timeout"));
 }
 
 #[test]
@@ -104,7 +114,18 @@ fn an_answer_with_both_a_text_and_a_byte_body_is_refused() {
 fn a_round_trip_preserves_every_field() {
     let encoded = encode_directory_door_request(HttpMethod::Post, "https://hub.example/directory/commands", Some("bearer"), Some(b"{}")).expect("encodes");
     let decoded: super::DirectoryDoorRequestV1 = serde_json::from_str(&encoded).expect("decodes");
-    assert_eq!(decoded, super::DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.into(), method: "POST".into(), url: "https://hub.example/directory/commands".into(), bearer: Some("bearer".into()), body: Some("{}".into()), accept: None });
+    assert_eq!(
+        decoded,
+        super::DirectoryDoorRequestV1 {
+            op: DIRECTORY_DOOR_OP.into(),
+            method: "POST".into(),
+            url: "https://hub.example/directory/commands".into(),
+            timeout_ms: DIRECTORY_HTTP_TIMEOUT_MS,
+            bearer: Some("bearer".into()),
+            body: Some("{}".into()),
+            accept: None,
+        }
+    );
 }
 //#endregion 🧪️Wire
 

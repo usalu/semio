@@ -13,7 +13,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 17] = [
+const TEXT_KEYWORDS: [(&str, &str); 18] = [
+    ("set-snapshot", "setSnapshot"),
     ("create-layer", "createLayer"),
     ("delete-layer", "deleteLayer"),
     ("create-node", "createNode"),
@@ -36,6 +37,7 @@ const TEXT_KEYWORDS: [(&str, &str); 17] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioDrawingMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_CREATE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-layer");
 const TAG_DELETE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-layer");
 const TAG_CREATE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-node");
@@ -58,6 +60,7 @@ const TAG_CHANGE_STROKE_WIDTH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioDrawingMutation) -> u8 {
     match m {
+        SemioDrawingMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
         SemioDrawingMutation::CreateLayer(_) => TAG_CREATE_LAYER,
         SemioDrawingMutation::DeleteLayer(_) => TAG_DELETE_LAYER,
         SemioDrawingMutation::CreateNode(_) => TAG_CREATE_NODE,

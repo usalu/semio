@@ -1,6 +1,31 @@
 use super::*;
 use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
 
+#[test]
+fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
+    let _guard = prepared_process_guard();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    for overlay_route in [false, true] {
+        for row in fixture["primitives"].as_array().unwrap() {
+            let mut draw = DrawList::default();
+            let mut overlay = DrawList::default();
+            for (list, field) in [(&mut draw, "draw"), (&mut overlay, "overlay")] {
+                for kind in row[field].as_array().unwrap() {
+                    let mut instance = crate::wgpu::draw_types::UiInstance::solid([0.0, 0.0, 24.0, 24.0], crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
+                    instance.params[2] = kind.as_f64().unwrap() as f32;
+                    if overlay_route { list.layers[0].overlay_ui_instances.push(instance); } else { list.layers[0].ui_instances.push(instance); }
+                }
+            }
+            let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, Some(overlay), 0.0), 1);
+            assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+            let mut packet = job.take_packet().expect("measured packet");
+            assert_eq!(packet.has_animated_primitives(), row["active"].as_bool().unwrap(), "{}", row["id"]);
+            while !packet.retire_step() {}
+            while !job.close_step() {}
+        }
+    }
+}
+
 static PREPARED_PROCESS_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 /// 🔒️ EVERY law in this case takes this guard, first statement, no exceptions.
@@ -67,6 +92,7 @@ fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
     let mut directives = PreparedRenderDirectives::default();
     assert!(directives.try_push(RenderDirective::PreservePreviousOnFailure).is_ok());
     let packet = PreparedRenderPacket {
+        has_animated_primitives: false,
         scene_revision: revision,
         preview_generation: generation,
         damage: PreparedRenderScissors::default(),
@@ -464,7 +490,7 @@ fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry
     }
     let grid_rows: Vec<_> = measured.iter().enumerate().filter(|(_, (cursor, _))| matches!(cursor, DrawMeasureCursor::PassGrid { pass: 0 })).collect();
     assert_eq!(grid_rows.len(), 1, "one retained grid becomes exactly one prepared scalar");
-    assert_eq!(grid_rows[0].1.1, PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<ProceduralGrid3d>(), ..Default::default() }, "the grid scalar owns its exact retained bytes in one cancellable step");
+    assert_eq!(grid_rows[0].1 .1, PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<ProceduralGrid3d>(), ..Default::default() }, "the grid scalar owns its exact retained bytes in one cancellable step");
     let textured = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassTexturedInstance { .. })).expect("textured reference scalar");
     let grid_index = grid_rows[0].0;
     let opaque = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassInstance { translucent: false, .. })).expect("opaque instance scalar");
@@ -1216,11 +1242,10 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
             _ => None,
         };
         if let Some((rect, color)) = item {
-            let step = steps.iter().find(|step| {
-                step.get("id").is_some()
-                    && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == rect[index])
-                    && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == color[index])
-            }).expect("every emitted draw has an authored identity");
+            let step = steps
+                .iter()
+                .find(|step| step.get("id").is_some() && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == rect[index]) && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == color[index]))
+                .expect("every emitted draw has an authored identity");
             order.push(step["id"].as_str().unwrap().to_string());
         }
     }

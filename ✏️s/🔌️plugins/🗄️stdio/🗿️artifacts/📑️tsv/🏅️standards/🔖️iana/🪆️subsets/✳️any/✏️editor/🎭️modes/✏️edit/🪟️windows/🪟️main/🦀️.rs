@@ -4,7 +4,7 @@
 //! columns are synthesized positionally (`Column N`).
 
 use crate::TsvSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -26,9 +26,10 @@ pub fn definition() -> WindowKindDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &TsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
-    let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
+    let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect::<Vec<_>>();
     let rows = document.records.clone();
-    TableWindowKit::render(&TableView { columns, rows })
+    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
+    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.tsv@iana/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

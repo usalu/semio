@@ -31,3 +31,5 @@ record replace-pixels tag=10
 field payload bytes
 record change-re-encode-quality tag=11
 field payload bytes
+record set-snapshot tag=12
+field payload bytes

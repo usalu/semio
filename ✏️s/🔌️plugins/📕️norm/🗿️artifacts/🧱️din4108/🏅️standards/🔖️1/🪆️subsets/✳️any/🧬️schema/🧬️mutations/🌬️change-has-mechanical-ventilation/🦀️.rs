@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeHasMecha
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-has-mechanical-ventilation", "change-has-mechanical-ventilation")
+        protocol::LocalizedLabel::native("Change mechanical ventilation", "Mechanische Lüftung ändern")
     }
 }

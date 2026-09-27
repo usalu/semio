@@ -14,7 +14,7 @@ use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
+use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_control_presentation, slider_unit_label, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer};
@@ -179,11 +179,7 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
     // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
     // a registered drag source — any of those make it a real interaction target.
-    let inside_self = if tree.disclosure_is_interactive(id) {
-        disclosure_header_band(tree, id, Rect::new(abs_x, abs_y, layout.width, layout.height), reversed, tree_metrics).contains(x, y)
-    } else {
-        inside
-    };
+    let inside_self = if tree.disclosure_is_interactive(id) { disclosure_header_band(tree, id, Rect::new(abs_x, abs_y, layout.width, layout.height), reversed, tree_metrics).contains(x, y) } else { inside };
     let is_plain_container = is_plain_stack_container(tree, id, node);
     if inside_self && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
         Some(id)
@@ -193,18 +189,16 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
 }
 
 fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Rect {
-    let tree_section = tree
-        .node(id)
-        .and_then(|node| Some((tree.node(node.parent?)?, &node.key)))
-        .and_then(|(parent, key)| match (&parent.spec.0, key) {
-            (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
-            _ => None,
-        });
+    let tree_section = tree.node(id).and_then(|node| Some((tree.node(node.parent?)?, &node.key))).and_then(|(parent, key)| match (&parent.spec.0, key) {
+        (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
+        _ => None,
+    });
     let scoped_metrics = tree_metrics.map(|metrics| crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, metrics));
     match (tree_section, scoped_metrics.as_ref()) {
         (Some(section), Some(metrics)) => tree_section_header_band(rect, tree_section_header_height(section, metrics), reversed),
         (None, Some(metrics)) if tree.authored_tree_item(id).is_some() => tree_section_header_band(rect, metrics.row_height, reversed),
-        _ => Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h)),
+        _ if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::Section(_))) => Rect::new(rect.x, rect.y, rect.w, crate::wgpu::mounted_layout::retained_section_title_height(tree, id).min(rect.h)),
+        _ => Rect::new(rect.x, rect.y, rect.w, scoped_metrics.map_or(0.0, |metrics| metrics.row_height).min(rect.h)),
     }
 }
 
@@ -374,6 +368,8 @@ impl FocusState {
             if let Some(previous_node) = tree.node_mut(previous) {
                 previous_node.flags.set(NodeFlags::FOCUSED, false);
                 previous_node.flags.set(NodeFlags::FOCUS_VISIBLE, false);
+                previous_node.state.caret_visible = false;
+                previous_node.state.slider_readout_click_at = None;
                 let buffer = previous_node.state.edit.take();
                 if let Some(edit) = buffer {
                     if commits_on_blur(&previous_node.spec.0) {
@@ -393,6 +389,7 @@ impl FocusState {
                         next_node.state.edit = Some(EditState { text: value.to_string(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
                     }
                 }
+                next_node.state.caret_visible = next_node.state.edit.is_some();
             }
             tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
         }
@@ -503,10 +500,11 @@ fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::Action
 /// `IconSelect`'s value IS its icon string, which React edits through the `IconSelector`'s own
 /// textarea (`🎴️IconSelector/🟦️.tsx`'s `onEditorChange`), so the retained target edits it the same
 /// way rather than inventing a second gesture for it.
-fn editable_value(node: &UiNode) -> Option<&str> {
+fn editable_value(node: &UiNode) -> Option<String> {
     match node {
-        UiNode::Input(input) => Some(input.value.as_str()),
-        UiNode::IconSelect(select) => Some(select.value.as_str()),
+        UiNode::Input(input) => Some(input.value.clone()),
+        UiNode::IconSelect(select) => Some(select.value.clone()),
+        UiNode::NumberStepper(stepper) => Some(ui_contract::format_ui_number(stepper.value)),
         _ => None,
     }
 }
@@ -532,6 +530,7 @@ fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
             fired_action(&input.on_change, trigger, value)
         }
         UiNode::IconSelect(select) => fired_action(&select.on_change, Trigger::Change, DslValue::String(text.to_string())),
+        UiNode::NumberStepper(stepper) => text.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| constrain_stepper_value(value, stepper)).and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
         _ => None,
     }
 }
@@ -575,27 +574,63 @@ pub fn constrain_number_input(value: f64, min: Option<f64>, max: Option<f64>, st
     stepped.max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))
 }
 
+fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
+    value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY))
+}
+
+fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
+    node.state.edit.as_ref().and_then(|edit| edit.text.parse::<f64>().ok()).filter(|value| value.is_finite()).unwrap_or(stepper.value)
+}
+
+fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
+    node.state.slider_draft_value.unwrap_or(slider.value)
+}
+
+fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
+    constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))
+}
+
+fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32) -> Option<f64> {
+    let [decrement, _, increment] = number_stepper_segments(bounds, inline, border);
+    if decrement.contains(x, y) {
+        Some(-1.0)
+    } else if increment.contains(x, y) {
+        Some(1.0)
+    } else {
+        None
+    }
+}
+
+fn number_stepper_can_step(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -> bool {
+    let value = number_stepper_live_value(node, stepper);
+    if sign < 0.0 {
+        stepper.min.is_none_or(|min| value > min)
+    } else {
+        stepper.max.is_none_or(|max| value < max)
+    }
+}
+
 /// 👆️ The action a press/drag at `(x, y)` over `bounds` commits for a pointer-valued control —
 /// `Toggle` flips its own `presence.selected`, `Slider`/`Ring` read the gesture position off the
 /// same geometry `paint` drew them at (`layout::{slider_value_at, ring_t_at}`), and a
-/// `NumberStepper`'s outer thirds step its value (relative through `on_delta` when that binding
+/// `NumberStepper`'s square side buttons step its value (relative through `on_delta` when that binding
 /// exists, absolute through `on_absolute` otherwise — React's `NumberStepperView` makes exactly that
 /// choice). `None` for the stepper's own value segment, for an unbound trigger, and for every
 /// variant whose press means something else (`Button`/`Select`/`Stack`, handled by the caller).
-fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32) -> Option<FiredAction> {
+fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32, inline_suffix_width: f32, control_gap: f32) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Toggle(toggle) => fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)),
-        UiNode::Slider(slider) => fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_value_at(bounds, x, slider.min, slider.max, slider.step))),
+        UiNode::Slider(slider) => {
+            let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
+            let track = slider_control_presentation(bounds, slider.value, slider.min, slider.max, unit_width, control_gap, inline).slider.track_cell;
+            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_value_at(track, x, slider.min, slider.max, slider.step)))).flatten()
+        }
         UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
         UiNode::NumberStepper(stepper) => {
-            let [decrement, _value, increment] = number_stepper_segments(bounds);
-            let sign = if decrement.contains(x, y) {
-                -1.0
-            } else if increment.contains(x, y) {
-                1.0
-            } else {
+            let sign = number_stepper_sign_at(bounds, x, y, inline, border)?;
+            if !number_stepper_can_step(node, stepper, sign) {
                 return None;
-            };
+            }
             // ➕️➖️ Only a node that DECLARES a `Delta` binding takes the relative path — React's
             // `NumberStepperView` supplies `onDelta` only when `record.bindings` contains one
             // (`🗣️Interpreter/🟦️.tsx`). Supplying it unconditionally sent every +/− click down a
@@ -615,7 +650,7 @@ fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32) -> Option<Fi
 /// `ArrowRight`/`ArrowUp`/`PageUp` step up, `ArrowLeft`/`ArrowDown`/`PageDown` step down,
 /// `Home`/`End` jump to the ends, and `PageUp`/`PageDown` or any `Shift` chord move ten steps at
 /// once. `None` for every other key, so it never swallows one.
-fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
+fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: bool) -> Option<f64> {
     let delta = match key {
         "ArrowRight" | "ArrowUp" | "PageUp" => 1.0,
         "ArrowLeft" | "ArrowDown" | "PageDown" => -1.0,
@@ -627,9 +662,13 @@ fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64
     let value = match key {
         "Home" => slider.min,
         "End" => slider.max,
-        _ => slider.value + delta * step * multiplier,
+        _ => current + delta * step * multiplier,
     };
     Some(value.clamp(slider.min, slider.max))
+}
+
+fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
+    slider_key_value_from(slider, slider.value, key, shift)
 }
 
 /// 🎚️ How many steps a `PageUp`/`PageDown` (or a `Shift` chord) moves a slider — React's own
@@ -643,7 +682,7 @@ fn number_stepper_fired(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -
     if binds_delta {
         fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(sign * stepper.step))
     } else {
-        fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(stepper.value + sign * stepper.step))
+        fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(constrain_stepper_value(number_stepper_live_value(node, stepper) + sign * stepper.step, stepper)))
     }
 }
 
@@ -830,6 +869,37 @@ pub enum TooltipStep {
     /// 🚪️ The armed hover-out delay elapsed — the caller closed the tooltip as part of this step.
     Dismissed,
 }
+
+pub(crate) const CARET_BLINK_SECONDS: f64 = 0.5;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CaretSource {
+    Retained,
+    Scene,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct CaretStep {
+    pub(crate) node: NodeId,
+    pub(crate) source: CaretSource,
+    pub(crate) visible: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct CaretClock {
+    node: NodeId,
+    source: CaretSource,
+    visible: bool,
+    next_at: f64,
+}
+
+pub(crate) struct RouterClockStep {
+    pub(crate) tooltip: TooltipStep,
+    pub(crate) caret: Option<CaretStep>,
+    pub(crate) commands: Vec<UiCommand>,
+    pub(crate) changed: bool,
+    pub(crate) next_deadline: Option<f64>,
+}
 //#endregion 🔖️Tooltip
 
 //#region 🔖️DragDrop
@@ -999,6 +1069,18 @@ struct RetiringDragPayload {
     entry: Option<(String, String)>,
 }
 
+#[derive(Clone, Copy, Debug)]
+struct StepperRepeat {
+    node: NodeId,
+    sign: f64,
+    next_at: f64,
+}
+
+const STEPPER_REPEAT_DELAY_SECONDS: f64 = 0.5;
+const STEPPER_REPEAT_INTERVAL_SECONDS: f64 = 0.1;
+const STEPPER_REPEAT_CLOCK_EPSILON_SECONDS: f64 = 0.000_001;
+const SLIDER_DOUBLE_CLICK_SECONDS: f64 = 0.5;
+
 impl RetiringDragPayload {
     fn new(payload: DragPayload) -> Self {
         Self { entries: payload.into_iter(), entry: None }
@@ -1042,6 +1124,8 @@ pub(crate) struct EventRouter {
     drag: Option<DragSession>,
     tree_drag_driver: UiDriverDrag,
     tree_drag_metrics: TreeRowMetrics,
+    control_border: f32,
+    control_gap: f32,
     tree_drag_handle_press: Option<NodeId>,
     /// 🫳️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
     /// `set_drag_payload`.
@@ -1058,19 +1142,21 @@ pub(crate) struct EventRouter {
     thumb_start: Option<(f32, f32, f32, f32)>,
     /// ⏱️ Monotonic seconds, advanced once per frame by `advance_clock`. Every hover-reveal deadline
     /// is an absolute value on this clock, never a countdown, so a dropped frame cannot lose time.
-    clock_seconds: f32,
+    clock_seconds: f64,
     /// 💡️ When the current hover leaf was entered, and whether its dwell already fired — so a
     /// tooltip opens exactly once per hover, not every frame after the deadline.
-    hover_since: Option<(NodeId, f32)>,
+    hover_since: Option<(NodeId, f64)>,
     hover_revealed: Option<NodeId>,
     /// 🚪️ Deadline armed by `maybe_dismiss_tooltip_on_hover_out` once the pointer leaves an open
     /// tooltip's anchor and bounds — see `DismissPolicy::hover_out_delay_seconds`.
-    tooltip_dismiss_at: Option<f32>,
+    tooltip_dismiss_at: Option<f64>,
     /// 🔤️ The open `Select`'s live typeahead query and the `clock_seconds` of its last keystroke.
     /// React keeps the same buffer behind a 700 ms timer it restarts per key
     /// (`🧱️elements/🔽️Select/🟦️.tsx:661-666`); this expires it against the same monotonic clock
     /// every other reveal deadline here uses, so a dropped frame cannot lose time.
-    select_typeahead: Option<(String, f32)>,
+    select_typeahead: Option<(String, f64)>,
+    stepper_repeat: Option<StepperRepeat>,
+    caret: Option<CaretClock>,
     /// 🔢️ The per-surface monotonic `seq` every fired intent carries — this window's own twin of
     /// `UiDocumentStore`'s `seq` counter (`📃️UiDocumentStore/🟦️.tsx`'s `buildIntent`). Minted here,
     /// enforced at the queue (`BoundedActionQueue::admit_intent`).
@@ -1100,6 +1186,8 @@ impl EventRouter {
             drag: None,
             tree_drag_driver: UiDriverDrag::Handle,
             tree_drag_metrics: TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()),
+            control_border: crate::wgpu::theme::Theme::default().stroke_hairline,
+            control_gap: crate::wgpu::theme::Theme::default().gap_standard,
             tree_drag_handle_press: None,
             drag_payloads: BTreeMap::new(),
             drop_accept: BTreeMap::new(),
@@ -1111,6 +1199,8 @@ impl EventRouter {
             hover_revealed: None,
             tooltip_dismiss_at: None,
             select_typeahead: None,
+            stepper_repeat: None,
+            caret: None,
             intents: UiIntentSequencer::default(),
             flow: UiFlow::DEFAULT,
             focus_visible: false,
@@ -1139,11 +1229,14 @@ impl EventRouter {
             };
             Some(OpenOverlay { root, anchor, ..*overlay })
         }));
-        self.drag = presented.drag.as_ref().and_then(|drag| {
-            Some(DragSession { source: remap(drag.source)?, payload: drag.payload.clone(), ghost: drag.ghost.clone(), pointer_x: drag.pointer_x, pointer_y: drag.pointer_y, drop_target: drag.drop_target.and_then(remap) })
-        });
+        self.drag = presented
+            .drag
+            .as_ref()
+            .and_then(|drag| Some(DragSession { source: remap(drag.source)?, payload: drag.payload.clone(), ghost: drag.ghost.clone(), pointer_x: drag.pointer_x, pointer_y: drag.pointer_y, drop_target: drag.drop_target.and_then(remap) }));
         self.tree_drag_driver = presented.tree_drag_driver;
         self.tree_drag_metrics = presented.tree_drag_metrics;
+        self.control_border = presented.control_border;
+        self.control_gap = presented.control_gap;
         self.tree_drag_handle_press = presented.tree_drag_handle_press.and_then(remap);
         self.thumb_start = presented.thumb_start;
         self.clock_seconds = presented.clock_seconds;
@@ -1151,6 +1244,8 @@ impl EventRouter {
         self.hover_revealed = presented.hover_revealed.and_then(remap);
         self.tooltip_dismiss_at = presented.tooltip_dismiss_at;
         self.select_typeahead = presented.select_typeahead.clone();
+        self.stepper_repeat = presented.stepper_repeat.and_then(|repeat| remap(repeat.node).map(|node| StepperRepeat { node, ..repeat }));
+        self.caret = presented.caret.and_then(|caret| remap(caret.node).map(|node| CaretClock { node, ..caret }));
         self.intents = presented.intents.clone();
         self.flow = presented.flow;
         self.focus_visible = presented.focus_visible;
@@ -1158,7 +1253,18 @@ impl EventRouter {
 
     /// 🧹️ Silently retires one input owner or storage scalar during surface unmount.
     pub(crate) fn close_step(&mut self) -> bool {
-        if self.capture.release_any().is_some() || self.focus.focused.take().is_some() || self.hovered.take().is_some() || self.press_origin.take().is_some() || self.tree_drag_handle_press.take().is_some() || self.thumb_start.take().is_some() || self.hover_since.take().is_some() || self.hover_revealed.take().is_some() || self.tooltip_dismiss_at.take().is_some() {
+        if self.capture.release_any().is_some()
+            || self.focus.focused.take().is_some()
+            || self.hovered.take().is_some()
+            || self.press_origin.take().is_some()
+            || self.tree_drag_handle_press.take().is_some()
+            || self.thumb_start.take().is_some()
+            || self.hover_since.take().is_some()
+            || self.hover_revealed.take().is_some()
+            || self.tooltip_dismiss_at.take().is_some()
+            || self.stepper_repeat.take().is_some()
+            || self.caret.take().is_some()
+        {
             return false;
         }
         if self.focus.tab_order.pop().is_some() || self.hover_chain.pop().is_some() || self.overlays.open.pop().is_some() {
@@ -1267,6 +1373,14 @@ impl EventRouter {
     /// activated focus; any pointer press clears it.
     pub(crate) fn focus_visible(&self) -> bool {
         self.focus_visible
+    }
+
+    pub(crate) fn set_control_border(&mut self, border: f32) {
+        self.control_border = border.max(0.0);
+    }
+
+    pub(crate) fn set_control_gap(&mut self, gap: f32) {
+        self.control_gap = gap.max(0.0);
     }
 
     pub(crate) fn set_tree_drag_policy(&mut self, tree: &mut UiTree, driver: UiDriverDrag, metrics: TreeRowMetrics) -> Vec<UiCommand> {
@@ -1416,34 +1530,157 @@ impl EventRouter {
         commands
     }
 
+    fn update_stepper_hover_segment(&mut self, tree: &mut UiTree, target: Option<NodeId>, x: f32, y: f32) {
+        if let Some(previous) = self.hovered {
+            if let Some(node) = tree.node_mut(previous) {
+                if matches!(node.spec.0, UiNode::NumberStepper(_)) {
+                    node.state.stepper_hovered_segment = None;
+                    tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+                }
+            }
+        }
+        let Some(target) = target else { return };
+        let Some(bounds) = absolute_rect(tree, target) else { return };
+        let Some(node) = tree.node_mut(target) else { return };
+        if !matches!(node.spec.0, UiNode::NumberStepper(_)) || node.spec.0.presence().state == UiState::Disabled {
+            return;
+        }
+        node.state.stepper_hovered_segment = Some(number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).map_or(0, |sign| if sign < 0.0 { -1 } else { 1 }));
+        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+    }
+
     //#region 🔖️TooltipClock
+    fn set_retained_caret_visible(tree: &mut UiTree, node: NodeId, visible: bool) -> bool {
+        let Some(record) = tree.node_mut(node) else { return false };
+        if record.state.caret_visible == visible {
+            return false;
+        }
+        record.state.caret_visible = visible;
+        tree.mark_dirty(node, NodeFlags::DIRTY_PAINT);
+        true
+    }
+
+    fn focused_editable(&self, tree: &UiTree) -> Option<NodeId> {
+        self.focus.focused.filter(|node| tree.node(*node).is_some_and(|node| node.state.edit.is_some()))
+    }
+
+    pub(crate) fn synchronize_retained_caret(&mut self, tree: &mut UiTree, reset: bool) -> bool {
+        let focused = self.focused_editable(tree);
+        if focused.is_none() && self.caret.is_some_and(|caret| caret.source == CaretSource::Scene) {
+            return false;
+        }
+        let same = self.caret.is_some_and(|caret| caret.source == CaretSource::Retained && Some(caret.node) == focused);
+        if same && !reset {
+            return false;
+        }
+        let mut changed = false;
+        if let Some(previous) = self.caret.take() {
+            if previous.source == CaretSource::Retained {
+                changed |= Self::set_retained_caret_visible(tree, previous.node, false);
+            }
+        }
+        let Some(node) = focused else { return changed };
+        Self::set_retained_caret_visible(tree, node, true);
+        self.caret = Some(CaretClock { node, source: CaretSource::Retained, visible: true, next_at: self.clock_seconds + CARET_BLINK_SECONDS });
+        true
+    }
+
+    pub(crate) fn arm_scene_caret(&mut self, tree: &mut UiTree, node: NodeId, seconds: f64) -> Option<CaretStep> {
+        if !seconds.is_finite() || seconds < self.clock_seconds || !tree.node(node).is_some_and(|node| matches!(node.spec.0, UiNode::ComponentScene(_))) {
+            return None;
+        }
+        self.clock_seconds = seconds;
+        if let Some(previous) = self.caret.take() {
+            if previous.source == CaretSource::Retained {
+                Self::set_retained_caret_visible(tree, previous.node, false);
+            }
+        }
+        self.caret = Some(CaretClock { node, source: CaretSource::Scene, visible: true, next_at: seconds + CARET_BLINK_SECONDS });
+        Some(CaretStep { node, source: CaretSource::Scene, visible: true })
+    }
+
+    pub(crate) fn clear_scene_caret(&mut self, node: NodeId) -> Option<CaretStep> {
+        self.caret.filter(|caret| caret.source == CaretSource::Scene && caret.node == node)?;
+        self.caret = None;
+        Some(CaretStep { node, source: CaretSource::Scene, visible: false })
+    }
+
+    fn advance_caret(&mut self, tree: &mut UiTree, seconds: f64) -> (Option<CaretStep>, bool) {
+        let Some(mut caret) = self.caret else { return (None, false) };
+        if seconds < caret.next_at {
+            return (None, false);
+        }
+        caret.visible = !caret.visible;
+        caret.next_at = seconds + CARET_BLINK_SECONDS;
+        self.caret = Some(caret);
+        let state_changed = caret.source != CaretSource::Retained || Self::set_retained_caret_visible(tree, caret.node, caret.visible);
+        (Some(CaretStep { node: caret.node, source: caret.source, visible: caret.visible }), state_changed)
+    }
+
     /// ⏱️ Feeds one frame's monotonic seconds in and answers what hover reveal owes this frame —
     /// the immediate-mode stand-in for React's `setTimeout`/`clearTimeout` pair in
     /// `ChromeControlHint` (`🧱️elements/💡️ChromeControlHint/🟦️.tsx:44-57`). A non-monotonic value is
     /// ignored rather than rewinding every armed deadline.
-    pub(crate) fn advance_clock(&mut self, tree: &mut UiTree, seconds: f32) -> (TooltipStep, Vec<UiCommand>) {
+    pub(crate) fn next_clock_deadline(&self) -> Option<f64> {
+        let mut deadline = self.stepper_repeat.map(|repeat| repeat.next_at);
+        if let Some(caret) = self.caret {
+            deadline = Some(deadline.map_or(caret.next_at, |current| current.min(caret.next_at)));
+        }
+        if let Some(dismiss_at) = self.tooltip_dismiss_at {
+            deadline = Some(deadline.map_or(dismiss_at, |current| current.min(dismiss_at)));
+        }
+        if !self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
+            if let Some((_, entered)) = self.hover_since.filter(|(leaf, _)| self.hover_revealed != Some(*leaf)) {
+                let reveal_at = entered + f64::from(TOOLTIP_DWELL_SECONDS);
+                deadline = Some(deadline.map_or(reveal_at, |current| current.min(reveal_at)));
+            }
+        }
+        deadline
+    }
+
+    pub(crate) fn suspend_clock(&mut self, tree: &mut UiTree) -> bool {
+        let repeat = self.stepper_repeat.take().is_some();
+        let hover = self.hover_since.take().is_some();
+        let revealed = self.hover_revealed.take().is_some();
+        let dismiss = self.tooltip_dismiss_at.take().is_some();
+        let caret = self.caret.take();
+        let caret_changed = caret.is_some_and(|caret| caret.source != CaretSource::Retained || Self::set_retained_caret_visible(tree, caret.node, false));
+        repeat | hover | revealed | dismiss | caret_changed
+    }
+
+    pub(crate) fn revealed_tooltip_node(&self) -> Option<NodeId> {
+        self.hover_revealed
+    }
+
+    pub(crate) fn advance_clock(&mut self, tree: &mut UiTree, seconds: f64) -> RouterClockStep {
         if !seconds.is_finite() || seconds < self.clock_seconds {
-            return (TooltipStep::Idle, Vec::new());
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret: None, commands: Vec::new(), changed: false, next_deadline: self.next_clock_deadline() };
         }
         self.clock_seconds = seconds;
+        let (caret, caret_changed) = self.advance_caret(tree, seconds);
+        let mut changed = caret_changed | self.advance_stepper_repeat(tree, seconds);
         if let Some(deadline) = self.tooltip_dismiss_at {
             if seconds >= deadline {
                 self.tooltip_dismiss_at = None;
+                changed = true;
                 if self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
-                    return (TooltipStep::Dismissed, self.close_topmost_overlay(tree));
+                    let commands = self.close_topmost_overlay(tree);
+                    return RouterClockStep { tooltip: TooltipStep::Dismissed, caret, commands, changed, next_deadline: self.next_clock_deadline() };
                 }
             }
-            return (TooltipStep::Idle, Vec::new());
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
         }
         if self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
-            return (TooltipStep::Idle, Vec::new());
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
         }
-        let Some((leaf, entered)) = self.hover_since else { return (TooltipStep::Idle, Vec::new()) };
-        if self.hover_revealed == Some(leaf) || seconds - entered < TOOLTIP_DWELL_SECONDS {
-            return (TooltipStep::Idle, Vec::new());
+        let Some((leaf, entered)) = self.hover_since else {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
+        };
+        if self.hover_revealed == Some(leaf) || seconds - entered < f64::from(TOOLTIP_DWELL_SECONDS) {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
         }
         self.hover_revealed = Some(leaf);
-        (TooltipStep::Reveal(leaf), Vec::new())
+        RouterClockStep { tooltip: TooltipStep::Reveal(leaf), caret, commands: Vec::new(), changed: true, next_deadline: self.next_clock_deadline() }
     }
 
     //#endregion 🔖️TooltipClock
@@ -1584,7 +1821,7 @@ impl EventRouter {
         }
         match delay {
             Some(delay) => {
-                self.tooltip_dismiss_at.get_or_insert(self.clock_seconds + delay);
+                self.tooltip_dismiss_at.get_or_insert(self.clock_seconds + f64::from(delay));
                 Vec::new()
             }
             None => self.close_topmost_overlay(tree),
@@ -1670,9 +1907,7 @@ impl EventRouter {
         let Some(hit) = self.hit_test(tree, root, x, y) else { return };
         let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return };
         let Some(viewport) = tree.accepted_layout(scrollable) else { return };
-        let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| {
-            (width.max(child.x + child.width), height.max(child.y + child.height))
-        });
+        let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| (width.max(child.x + child.width), height.max(child.y + child.height)));
         let max_x = (content_width - viewport.width).max(0.0);
         let max_y = (content_height - viewport.height).max(0.0);
         if let Some(node) = tree.node_mut(scrollable) {
@@ -1695,6 +1930,57 @@ impl EventRouter {
     //#endregion 🔖️ScrollApi
 
     //#region 🔖️EditApi
+    fn apply_stepper_local_delta(&mut self, tree: &mut UiTree, id: NodeId, delta: f64) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let value = constrain_stepper_value(number_stepper_live_value(node, stepper) + delta, stepper);
+        let text = ui_contract::format_ui_number(value);
+        let caret = text.len();
+        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    fn normalize_stepper_edit(&mut self, tree: &mut UiTree, id: NodeId) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let Some(value) = node.state.edit.as_ref().and_then(|edit| edit.text.parse::<f64>().ok()).filter(|value| value.is_finite()) else { return };
+        let text = ui_contract::format_ui_number(constrain_stepper_value(value, stepper));
+        let caret = text.len();
+        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+    }
+
+    fn arm_stepper_repeat(&mut self, tree: &UiTree, id: NodeId, x: f32, y: f32) {
+        let Some(node) = tree.node(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let Some(bounds) = absolute_rect(tree, id) else { return };
+        let Some(sign) = number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border) else { return };
+        if number_stepper_can_step(node, stepper, sign) {
+            self.stepper_repeat = Some(StepperRepeat { node: id, sign, next_at: self.clock_seconds + STEPPER_REPEAT_DELAY_SECONDS + STEPPER_REPEAT_INTERVAL_SECONDS });
+        }
+    }
+
+    fn advance_stepper_repeat(&mut self, tree: &mut UiTree, seconds: f64) -> bool {
+        let Some(mut repeat) = self.stepper_repeat else { return false };
+        if seconds + STEPPER_REPEAT_CLOCK_EPSILON_SECONDS < repeat.next_at {
+            return false;
+        }
+        if !tree.node(repeat.node).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) && node.spec.0.presence().state != UiState::Disabled) {
+            self.stepper_repeat = None;
+            return true;
+        }
+        let ticks = ((seconds + STEPPER_REPEAT_CLOCK_EPSILON_SECONDS - repeat.next_at) / STEPPER_REPEAT_INTERVAL_SECONDS).floor().max(0.0) as u32 + 1;
+        let step = tree.node(repeat.node).and_then(|node| match &node.spec.0 {
+            UiNode::NumberStepper(stepper) => Some(stepper.step),
+            _ => None,
+        });
+        if let Some(step) = step {
+            self.apply_stepper_local_delta(tree, repeat.node, repeat.sign * step * f64::from(ticks));
+        }
+        repeat.next_at += STEPPER_REPEAT_INTERVAL_SECONDS * f64::from(ticks);
+        self.stepper_repeat = Some(repeat);
+        true
+    }
+
     /// 🎬️ The focused editable node's buffer as a dispatchable action, for a node that commits on
     /// every keystroke (`Trigger::Change` — React's `InputView` with no `commit: "blur"`, and its
     /// `IconSelector` editor, both of which fire per change). `None` for a blur-committing node,
@@ -1702,7 +1988,7 @@ impl EventRouter {
     fn changed_buffer_action(&self, tree: &UiTree) -> Option<(NodeId, FiredAction)> {
         let id = self.focus.focused?;
         let node = tree.node(id)?;
-        if commits_on_blur(&node.spec.0) {
+        if commits_on_blur(&node.spec.0) || matches!(node.spec.0, UiNode::Slider(_)) {
             return None;
         }
         edit_commit_action(node, &node.state.edit.as_ref()?.text).map(|fired| (id, fired))
@@ -1713,6 +1999,56 @@ impl EventRouter {
         if let Some((id, fired)) = self.changed_buffer_action(tree) {
             self.push_app_command(tree, id, fired, out);
         }
+    }
+
+    fn apply_slider_local_value(&mut self, tree: &mut UiTree, id: NodeId, value: f64) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::Slider(slider) = &node.spec.0 else { return };
+        node.state.slider_draft_value = Some(constrain_slider_value(value, slider));
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    fn note_slider_readout_click(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> bool {
+        let Some(bounds) = absolute_rect(tree, id) else { return false };
+        let Some(node) = tree.node(id) else { return false };
+        let UiNode::Slider(slider) = &node.spec.0 else { return false };
+        let value = slider_live_value(node, slider);
+        let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| tree.accepted_inline_suffix_width(id).unwrap_or(0.0));
+        if !slider_control_presentation(bounds, value, slider.min, slider.max, unit_width, self.control_gap, self.flow.inline).slider.value_cell.contains(x, y) {
+            if let Some(node) = tree.node_mut(id) {
+                node.state.slider_readout_click_at = None;
+            }
+            return false;
+        }
+        let Some(node) = tree.node_mut(id) else { return false };
+        let double_click = node.state.slider_readout_click_at.is_some_and(|at| self.clock_seconds - at <= SLIDER_DOUBLE_CLICK_SECONDS);
+        node.state.slider_readout_click_at = (!double_click).then_some(self.clock_seconds);
+        if double_click {
+            let text = ui_contract::format_ui_number(value);
+            let caret = text.len();
+            node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        }
+        true
+    }
+
+    fn finish_slider_readout_edit(&mut self, tree: &mut UiTree, id: NodeId) -> Option<FiredAction> {
+        let node = tree.node(id)?;
+        let UiNode::Slider(slider) = &node.spec.0 else { return None };
+        let raw = node.state.edit.as_ref()?.text.parse::<f64>().ok().filter(|value| value.is_finite());
+        let candidate = raw.filter(|value| *value >= slider.min && *value <= slider.max).map(|value| constrain_slider_value(value, slider));
+        let live = slider_live_value(node, slider);
+        let action = slider.on_change.clone();
+        let epsilon = if slider.step > 0.0 { slider.step * 0.25 } else { 1e-9 };
+        let changed = candidate.filter(|value| (*value - live).abs() > epsilon);
+        if let Some(node) = tree.node_mut(id) {
+            node.state.edit = None;
+            if let Some(value) = changed {
+                node.state.slider_draft_value = Some(value);
+            }
+        }
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)))
     }
 
     fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
@@ -1733,6 +2069,7 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return out };
         let Some(edit) = node.state.edit.as_mut() else { return out };
         insert_at_caret(edit, text);
+        self.normalize_stepper_edit(tree, id);
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
         self.push_buffer_change(tree, &mut out);
         out
@@ -1762,6 +2099,9 @@ impl EventRouter {
                 false
             }
         };
+        if mutated {
+            self.normalize_stepper_edit(tree, id);
+        }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
         if mutated {
             self.push_buffer_change(tree, &mut out);
@@ -1781,10 +2121,28 @@ impl EventRouter {
         // inline rename editor is built on. A change-committing node already dispatched every
         // keystroke, so Enter adds nothing there and must not double-fire.
         if matches!(key, "Enter" | "NumpadEnter") {
+            if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()) {
+                let fired = self.finish_slider_readout_edit(tree, id);
+                let _ = self.focus.clear_focus(tree);
+                if let Some(fired) = fired {
+                    self.push_app_command(tree, id, fired, &mut out);
+                }
+                out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                return out;
+            }
+            if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_))) {
+                let _ = self.focus.clear_focus(tree);
+                self.stepper_repeat = None;
+                out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                return out;
+            }
             // ⏎️ A line that binds `Trigger::Submit` CONFIRMS on Enter and keeps its per-keystroke
             // `Trigger::Change` — React's window search fires both from one field, so resolving Enter
             // into the commit slot would have silenced one of them.
-            let submitted = tree.node(id).and_then(|node| search_line_action(node, Trigger::Submit, node.state.edit.as_ref().map_or(editable_value(&node.spec.0).unwrap_or_default(), |edit| edit.text.as_str())));
+            let submitted = tree.node(id).and_then(|node| {
+                let fallback = editable_value(&node.spec.0).unwrap_or_default();
+                search_line_action(node, Trigger::Submit, node.state.edit.as_ref().map_or(fallback.as_str(), |edit| edit.text.as_str()))
+            });
             if let Some(fired) = submitted {
                 self.push_app_command(tree, id, fired, &mut out);
                 return out;
@@ -1798,6 +2156,7 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return out };
         let Some(edit) = node.state.edit.as_mut() else { return out };
         let has_selection = edit.anchor != edit.caret;
+        let mut mutated = false;
         match key {
             "ArrowLeft" => {
                 edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).0 } else { prev_char_boundary(&edit.text, edit.caret) };
@@ -1829,11 +2188,13 @@ impl EventRouter {
                     edit.text.replace_range(start..end, "");
                     edit.caret = start;
                     edit.anchor = start;
+                    mutated = true;
                 } else if edit.caret > 0 {
                     let start = prev_char_boundary(&edit.text, edit.caret);
                     edit.text.replace_range(start..edit.caret, "");
                     edit.caret = start;
                     edit.anchor = start;
+                    mutated = true;
                 }
             }
             "Delete" => {
@@ -1842,10 +2203,16 @@ impl EventRouter {
                     edit.text.replace_range(start..end, "");
                     edit.caret = start;
                     edit.anchor = start;
+                    mutated = true;
                 } else if edit.caret < edit.text.len() {
                     let end = next_char_boundary(&edit.text, edit.caret);
                     edit.text.replace_range(edit.caret..end, "");
+                    mutated = true;
                 }
+            }
+            "a" | "A" if modifiers.ctrl || modifiers.meta => {
+                edit.anchor = 0;
+                edit.caret = edit.text.len();
             }
             "c" | "C" if modifiers.ctrl || modifiers.meta => {
                 if has_selection {
@@ -1861,6 +2228,7 @@ impl EventRouter {
                     edit.text.replace_range(start..end, "");
                     edit.caret = start;
                     edit.anchor = start;
+                    mutated = true;
                 } else {
                     return out;
                 }
@@ -1871,8 +2239,13 @@ impl EventRouter {
             }
             _ => return out,
         }
+        if mutated {
+            self.normalize_stepper_edit(tree, id);
+        }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
-        self.push_buffer_change(tree, &mut out);
+        if mutated {
+            self.push_buffer_change(tree, &mut out);
+        }
         out
     }
     //#endregion 🔖️EditApi
@@ -1909,6 +2282,9 @@ impl EventRouter {
         self.drag_payloads.retain(|id, _| tree.contains(*id));
         self.drop_accept.retain(|id, _| tree.contains(*id));
         self.scroll_thumbs.retain(|thumb, (scrollable, _)| tree.contains(*thumb) && tree.contains(*scrollable));
+        if self.stepper_repeat.is_some_and(|repeat| !tree.contains(repeat.node)) {
+            self.stepper_repeat = None;
+        }
     }
 
     /// 🚦️ Resolves the event's target (capture target if captured, else `hit_test`), updates
@@ -1987,8 +2363,33 @@ impl EventRouter {
                     }
                     Some(UiNode::Select(select)) => fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone())),
                     Some(UiNode::Toggle(toggle)) => value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value))),
-                    Some(UiNode::Slider(slider)) => value.parse::<f64>().ok().map(|value| constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))).and_then(|value| fired_action(&slider.on_change, Trigger::Change, DslValue::float(value))),
-                    Some(UiNode::NumberStepper(stepper)) => value.parse::<f64>().ok().and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
+                    Some(UiNode::Slider(slider)) => {
+                        let action = slider.on_change.clone();
+                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| constrain_slider_value(value, slider));
+                        let live = tree.node(target).and_then(|node| match &node.spec.0 {
+                            UiNode::Slider(slider) => Some(slider_live_value(node, slider)),
+                            _ => None,
+                        });
+                        let changed = bounded.filter(|value| live.is_none_or(|live| (*value - live).abs() > slider.step.max(f64::EPSILON) * 0.25));
+                        if let Some(value) = changed {
+                            self.apply_slider_local_value(tree, target, value);
+                        }
+                        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)))
+                    }
+                    Some(UiNode::NumberStepper(stepper)) => {
+                        let action = stepper.on_absolute.clone();
+                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY)));
+                        let fired = bounded.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)));
+                        if let Some(value) = bounded {
+                            if let Some(node) = tree.node_mut(target) {
+                                let text = ui_contract::format_ui_number(value);
+                                let caret = text.len();
+                                node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                            }
+                            tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        }
+                        fired
+                    }
                     Some(UiNode::Ring(ring)) => value.parse::<f64>().ok().map(|value| value.clamp(0.0, 1.0)).and_then(|value| fired_action(&ring.on_change, Trigger::Change, DslValue::float(value))),
                     _ => None,
                 };
@@ -2015,20 +2416,49 @@ impl EventRouter {
         commands
     }
 
+    pub(crate) fn dispatch_accessibility_slider_editor(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let mut commands = Vec::new();
+        if !tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some() && node.spec.0.presence().state != UiState::Disabled) {
+            return commands;
+        }
+        match event {
+            AccessibilityUiEvent::Focus => {
+                if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
+                    self.push_app_command(tree, blurred, fired, &mut commands);
+                }
+                commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
+            }
+            AccessibilityUiEvent::Blur => {
+                if self.focus.focused == Some(target) {
+                    let _ = self.focus.clear_focus(tree);
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            AccessibilityUiEvent::Value(value) => {
+                if let Some(node) = tree.node_mut(target) {
+                    let caret = value.len();
+                    node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                }
+                tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+            }
+            AccessibilityUiEvent::Activate => {}
+        }
+        commands
+    }
+
     pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
         self.dispatch_pointer(tree, root, 1, event)
     }
 
     pub(crate) fn dispatch_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
-        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. })
-            && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id)
-        {
+        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. }) && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id) {
             return Vec::new();
         }
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         match event {
             UiEvent::PointerCancel => {
+                self.stepper_repeat = None;
                 if let Some((id, _)) = self.capture.release(pointer_id) {
                     if let Some(node) = tree.node_mut(id) {
                         node.flags.set(NodeFlags::ACTIVE, false);
@@ -2041,9 +2471,13 @@ impl EventRouter {
                 self.press_origin = None;
                 self.thumb_start = None;
                 self.tree_drag_handle_press = None;
+                self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
                 commands.extend(self.update_hover(tree, None));
             }
             UiEvent::PointerMove { x, y, .. } => {
+                if self.stepper_repeat.is_some_and(|repeat| absolute_rect(tree, repeat.node).is_none_or(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border) != Some(repeat.sign))) {
+                    self.stepper_repeat = None;
+                }
                 self.maybe_promote_to_drag(*x, *y);
                 match self.capture.target {
                     Some((_, _, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
@@ -2063,6 +2497,7 @@ impl EventRouter {
                         commands.push(cmd);
                     }
                 }
+                self.update_stepper_hover_segment(tree, target, *x, *y);
                 commands.extend(self.update_hover(tree, target));
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
@@ -2078,13 +2513,19 @@ impl EventRouter {
                     .topmost()
                     .filter(|overlay| overlay.kind == OverlayKind::SelectPopup)
                     .and_then(|overlay| tree.node(overlay.root).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).map(|_| overlay.root));
-                let target = scroll_target
-                    .or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y)))
-                    .or_else(|| self.hit_test(tree, root, *x, *y));
+                let target = scroll_target.or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y))).or_else(|| self.hit_test(tree, root, *x, *y));
+                self.update_stepper_hover_segment(tree, target, *x, *y);
                 commands.extend(self.update_hover(tree, target));
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
+                    }
+                    let disabled_stepper_side = tree.node(id).is_some_and(|node| {
+                        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return false };
+                        absolute_rect(tree, id).and_then(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border)).is_some_and(|sign| !number_stepper_can_step(node, stepper, sign))
+                    });
+                    if disabled_stepper_side {
+                        return commands;
                     }
                     if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
                         let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
@@ -2102,6 +2543,11 @@ impl EventRouter {
                                 self.push_app_command(tree, blurred, fired, &mut commands);
                             }
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(id) });
+                        } else if self.focus.focused.is_some() {
+                            if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                                self.push_app_command(tree, blurred, fired, &mut commands);
+                            }
+                            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                         }
                         // 🫳️ W2 wiring: a `Tree` row's `draggable`/`drag_data` (re-derived by key —
                         // see `find_tree_item_spec`) registers this press as a promotable drag
@@ -2120,6 +2566,7 @@ impl EventRouter {
                             }
                         }
                         if tree.node(id).is_some_and(|node| (commits_while_dragging(&node.spec.0) || (*button == PointerButton::Primary && matches!(node.spec.0, UiNode::NumberStepper(_)))) && node.spec.0.presence().state != UiState::Disabled) {
+                            self.arm_stepper_repeat(tree, id, *x, *y);
                             commands.extend(self.pointer_commit(tree, id, *x, *y));
                         }
                     }
@@ -2130,7 +2577,8 @@ impl EventRouter {
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 }
             }
-            UiEvent::PointerUp { x, y, .. } => {
+            UiEvent::PointerUp { x, y, button, .. } => {
+                self.stepper_repeat = None;
                 let captured_scene = self.capture.target.and_then(|(_, id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
                 if let Some((active_id, kind)) = self.capture.release(pointer_id) {
                     match kind {
@@ -2143,6 +2591,7 @@ impl EventRouter {
                             let select_scroll_release =
                                 tree.node(active_id).filter(|node| matches!(node.spec.0, UiNode::Select(_))).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).is_some();
                             if !suppress_tree_handle_click && (select_scroll_release || self.resolve_target(tree, root, *x, *y) == Some(active_id)) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
+                                let slider_readout = *button == PointerButton::Primary && self.note_slider_readout_click(tree, active_id, *x, *y);
                                 // 🔽️🎴️ W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
                                 // a `Button` (this covers `Select`'s own synthesized item rows too —
                                 // see `reconcile::children_of`'s `Select` arm — since they're plain
@@ -2154,7 +2603,8 @@ impl EventRouter {
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
                                 let disclosed = self.pointer_toggle_disclosure(tree, active_id, *x, *y);
                                 let row_also_activates = disclosed && tree.authored_tree_item(active_id).is_some() && tree.node(active_id).is_some_and(|node| matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()));
-                                if disclosed && !row_also_activates {
+                                if slider_readout {
+                                } else if disclosed && !row_also_activates {
                                 } else if is_select && select_scroll_release {
                                     let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);
                                 } else if is_select {
@@ -2211,6 +2661,7 @@ impl EventRouter {
                         commands.push(command);
                     }
                 }
+                self.update_stepper_hover_segment(tree, target, *x, *y);
                 commands.extend(self.update_hover(tree, target));
             }
             UiEvent::KeyDown { key, modifiers } => {
@@ -2223,9 +2674,16 @@ impl EventRouter {
                     let over_overlay = self.overlays.topmost().is_some();
                     commands.extend(self.close_topmost_overlay(tree));
                     if !over_overlay {
-                        let aborted = self.focus.focused.and_then(|id| tree.node(id).and_then(|node| search_line_action(node, Trigger::Abort, "")).map(|fired| (id, fired)));
-                        if let Some((id, fired)) = aborted {
-                            self.push_app_command(tree, id, fired, &mut commands);
+                        let numeric_editor_focused = self.focus.focused.is_some_and(|id| tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) || matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()));
+                        if numeric_editor_focused {
+                            let _ = self.focus.clear_focus(tree);
+                            self.stepper_repeat = None;
+                            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                        } else {
+                            let aborted = self.focus.focused.and_then(|id| tree.node(id).and_then(|node| search_line_action(node, Trigger::Abort, "")).map(|fired| (id, fired)));
+                            if let Some((id, fired)) = aborted {
+                                self.push_app_command(tree, id, fired, &mut commands);
+                            }
                         }
                     }
                 } else if select_consumed {
@@ -2389,7 +2847,7 @@ impl EventRouter {
     /// 🔤️ Appends `char` to the live typeahead query, restarting it when the previous keystroke is
     /// older than `select::SELECT_TYPEAHEAD_RESET_SECONDS`.
     fn extend_select_typeahead(&mut self, char: char) -> String {
-        let fresh = self.select_typeahead.as_ref().is_some_and(|(_, at)| self.clock_seconds - at < select::SELECT_TYPEAHEAD_RESET_SECONDS);
+        let fresh = self.select_typeahead.as_ref().is_some_and(|(_, at)| self.clock_seconds - at < f64::from(select::SELECT_TYPEAHEAD_RESET_SECONDS));
         let mut query = if fresh { self.select_typeahead.take().map(|(query, _)| query).unwrap_or_default() } else { String::new() };
         query.push(char);
         self.select_typeahead = Some((query.clone(), self.clock_seconds));
@@ -2413,25 +2871,35 @@ impl EventRouter {
     /// (React renders it as a button, so Enter/Space click it), a `Slider` steps
     /// (`slider_key_value`), and a `NumberStepper`'s `ArrowUp`/`ArrowDown` are its +/− segments —
     /// the same binding-gated choice `pointer_commit_action` makes for a click on them.
-    fn focused_value_key_activation(&self, tree: &UiTree, key: &str, modifiers: EventModifiers) -> Option<(NodeId, FiredAction)> {
+    fn focused_value_key_activation(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Option<(NodeId, FiredAction)> {
         let id = self.focus.focused?;
         let node = tree.node(id)?;
         if node.spec.0.presence().state == UiState::Disabled {
             return None;
         }
-        let fired = match &node.spec.0 {
-            UiNode::Toggle(toggle) if matches!(key, "Enter" | "NumpadEnter" | " ") => fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)),
-            UiNode::Slider(slider) => fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_key_value(slider, key, modifiers.shift)?)),
+        let (fired, local_delta, local_slider) = match &node.spec.0 {
+            UiNode::Toggle(toggle) if matches!(key, "Enter" | "NumpadEnter" | " ") => (fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)), None, None),
+            UiNode::Slider(slider) if node.state.edit.is_none() => {
+                let value = slider_key_value_from(slider, slider_live_value(node, slider), key, modifiers.shift)?;
+                (fired_action(&slider.on_change, Trigger::Change, DslValue::float(value)), None, Some(value))
+            }
             UiNode::NumberStepper(stepper) => {
                 let sign = match key {
                     "ArrowUp" => 1.0,
                     "ArrowDown" => -1.0,
                     _ => return None,
                 };
-                number_stepper_fired(node, stepper, sign)
+                (number_stepper_fired(node, stepper, sign), Some(sign * stepper.step), None)
             }
-            _ => None,
-        }?;
+            _ => (None, None, None),
+        };
+        if let Some(value) = local_slider {
+            self.apply_slider_local_value(tree, id, value);
+        }
+        if let Some(delta) = local_delta {
+            self.apply_stepper_local_delta(tree, id, delta);
+        }
+        let fired = fired?;
         Some((id, fired))
     }
     //#endregion 🔖️WidgetKeyboard
@@ -2439,10 +2907,28 @@ impl EventRouter {
     /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued
     /// control kinds — see `pointer_commit_action`. The rect it measures the gesture against is the
     /// node's own absolute painted rect, the same one `paint` drew the knob/segments at.
-    fn pointer_commit(&mut self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+    fn pointer_commit(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+        let bounds = absolute_rect(tree, id)?;
+        let inline_suffix_width = tree.accepted_inline_suffix_width(id).unwrap_or(0.0);
         let node = tree.node(id)?;
-        let fired = pointer_commit_action(node, absolute_rect(tree, id)?, x, y)?;
-        self.app_command(tree, id, fired)
+        let (local_delta, local_slider) = match &node.spec.0 {
+            UiNode::Slider(slider) => {
+                let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
+                let track = slider_control_presentation(bounds, slider_live_value(node, slider), slider.min, slider.max, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
+                (None, track.contains(x, y).then(|| slider_value_at(track, x, slider.min, slider.max, slider.step)))
+            }
+            UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
+            _ => (None, None),
+        };
+        let fired = pointer_commit_action(node, bounds, x, y, self.flow.inline, self.control_border, inline_suffix_width, self.control_gap);
+        let command = fired.and_then(|fired| self.app_command(tree, id, fired));
+        if let Some(value) = local_slider {
+            self.apply_slider_local_value(tree, id, value);
+        }
+        if let Some(delta) = local_delta {
+            self.apply_stepper_local_delta(tree, id, delta);
+        }
+        command
     }
 }
 //#endregion 🔖️UiCommand

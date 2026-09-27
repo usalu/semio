@@ -134,6 +134,23 @@ pub(crate) mod context {
     pub async fn settle(app: &mut FlowApp) {
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("retained Flow command publication");
     }
+
+    /// 🚫️ Settles a retained command its handler refuses and returns the handler's own fault message — a verb that
+    /// cannot act says so by name instead of settling as a silent success.
+    pub async fn settle_refusal(app: &mut FlowApp) -> String {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.err().expect("the handler refuses by name").message
+    }
+
+    /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —
+    /// never the parent's genesis owner (see `crate::flow_composed_snapshot`).
+    pub async fn composed_scene(app: &FlowApp) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+        use store::SpaceMember;
+        let snapshot = app.snapshot().expect("snapshot");
+        let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &snapshot.content.child_id).await.expect("composed content child").document_pack_bytes().await.expect("content child pack")).expect("content child snapshot");
+        let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&child);
+        FlowSnapshot { schema: snapshot.schema.clone(), content: crate::flow_content_child_handle_and_cache(widgets, synapses, layout) }.to_host_snapshot()
+    }
     
     pub async fn render_with_view(app: &mut FlowApp, body_key: &str, view: &ViewModel) -> String {
         let tree = app.render(body_key, None, view).await.expect("render");

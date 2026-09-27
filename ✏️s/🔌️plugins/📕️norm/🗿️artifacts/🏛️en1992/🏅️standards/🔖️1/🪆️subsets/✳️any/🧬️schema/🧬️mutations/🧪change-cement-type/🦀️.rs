@@ -18,6 +18,6 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeCementType
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cement-type to {}", self.new_cement_type), &format!("cement-type auf {} ändern", self.new_cement_type))
+        protocol::LocalizedLabel::native(&format!("Change cement type to {}", self.new_cement_type), &format!("Zementart auf {} ändern", self.new_cement_type))
     }
 }

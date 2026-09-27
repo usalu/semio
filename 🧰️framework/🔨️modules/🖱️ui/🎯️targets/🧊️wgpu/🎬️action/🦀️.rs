@@ -21,6 +21,8 @@ pub const ACTION_ITEM_BYTE_CAPACITY: usize = 16 * 1024;
 pub const ACTION_QUEUE_BYTE_CAPACITY: usize = 1024 * 1024;
 pub const ACTION_CLAIM_CAPACITY: usize = 256;
 pub const ACTION_CLAIM_BATCH_CAPACITY: usize = 16;
+pub const RETAINED_ACTION_STRING_PAGE_BYTES: usize = 4 * 1024;
+pub const RETAINED_ACTION_STRING_BYTE_CAPACITY: usize = 16 * 1024 * 1024;
 
 //#region 🎬️Intent
 /// 🏷️ The argument field a trigger's scalar payload travels under — React's `uiInputField`
@@ -251,6 +253,81 @@ pub struct ActionQueueReceipt {
 pub struct QueuedActionDescriptor {
     pub descriptor: ActionDescriptor,
     pub receipt: Option<ActionQueueReceipt>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedStringActionStep {
+    Pending { copied_bytes: usize, total_bytes: usize },
+    Complete,
+}
+
+/// 📦️ Builds one atomic action string over bounded UTF-8 pages while the caller retains the source.
+pub struct RetainedStringAction {
+    descriptor: ActionDescriptor,
+    argument: String,
+    output: String,
+    total_bytes: usize,
+}
+
+impl RetainedStringAction {
+    pub fn new(descriptor: ActionDescriptor, argument: String, total_bytes: usize) -> Result<Self, BoundedActionFault> {
+        if descriptor.controller_id.is_empty() || descriptor.action.is_empty() || argument.is_empty() {
+            return Err(BoundedActionFault::Structure);
+        }
+        checked_action_string_bytes(&[&descriptor.controller_id, &descriptor.action, &argument])?;
+        if total_bytes > RETAINED_ACTION_STRING_BYTE_CAPACITY {
+            return Err(BoundedActionFault::ByteCredits);
+        }
+        if descriptor.args.as_ref().is_some_and(|args| !matches!(args, DslValue::Object(_))) {
+            return Err(BoundedActionFault::Structure);
+        }
+        let mut output = String::new();
+        output.try_reserve_exact(total_bytes).map_err(|_| BoundedActionFault::ByteCredits)?;
+        Ok(Self { descriptor, argument, output, total_bytes })
+    }
+
+    pub fn copied_bytes(&self) -> usize {
+        self.output.len()
+    }
+
+    pub fn total_bytes(&self) -> usize {
+        self.total_bytes
+    }
+
+    pub fn progress(&self) -> f32 {
+        if self.total_bytes == 0 {
+            1.0
+        } else {
+            self.output.len() as f32 / self.total_bytes as f32
+        }
+    }
+
+    pub fn push_page(&mut self, page: &str) -> Result<RetainedStringActionStep, BoundedActionFault> {
+        if page.len() > RETAINED_ACTION_STRING_PAGE_BYTES || page.is_empty() && self.output.len() != self.total_bytes {
+            return Err(if page.len() > RETAINED_ACTION_STRING_PAGE_BYTES { BoundedActionFault::ByteCredits } else { BoundedActionFault::Structure });
+        }
+        let next = self.output.len().checked_add(page.len()).ok_or(BoundedActionFault::ByteCredits)?;
+        if next > self.total_bytes {
+            return Err(BoundedActionFault::ByteCredits);
+        }
+        self.output.push_str(page);
+        Ok(if next == self.total_bytes { RetainedStringActionStep::Complete } else { RetainedStringActionStep::Pending { copied_bytes: next, total_bytes: self.total_bytes } })
+    }
+
+    pub fn finish(mut self, receipt: Option<ActionQueueReceipt>) -> Result<QueuedActionDescriptor, BoundedActionFault> {
+        if self.output.len() != self.total_bytes {
+            return Err(BoundedActionFault::Structure);
+        }
+        let mut entries = match self.descriptor.args.take() {
+            Some(DslValue::Object(entries)) => entries,
+            None => Vec::new(),
+            _ => return Err(BoundedActionFault::Structure),
+        };
+        entries.retain(|(key, _)| key != &self.argument);
+        entries.push((self.argument, DslValue::String(self.output)));
+        self.descriptor.args = Some(DslValue::Object(entries));
+        Ok(QueuedActionDescriptor { descriptor: self.descriptor, receipt })
+    }
 }
 
 #[derive(Debug)]

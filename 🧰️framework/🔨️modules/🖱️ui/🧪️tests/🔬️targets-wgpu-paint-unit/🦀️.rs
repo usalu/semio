@@ -1,7 +1,7 @@
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
-use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_SOLID, KIND_WAITING_BORDER};
+use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_ROUNDED, KIND_SOLID, KIND_WAITING_BORDER};
 use crate::wgpu::select::{arm_retained_select_scroll_at, select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
 use crate::wgpu::tree::EditState;
 
@@ -49,6 +49,21 @@ fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
     let atlas = FontAtlas::builtin();
     assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     (tree, root, theme, atlas)
+}
+
+fn paint_retained_node_for_test(tree: &UiTree, node: NodeId, theme: &Theme, atlas: &mut FontAtlas) -> DrawList {
+    let layout = tree.accepted_layout(node).expect("retained node layout");
+    let absolute = tree.absolute_rect(node).expect("retained node bounds");
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..16_384 {
+        match paint_node_step_with_driver(tree, node, absolute.x - layout.x, absolute.y - layout.y, theme, atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, &mut draw, &mut cursor) {
+            RetainedNodePaintStep::Pending => {}
+            RetainedNodePaintStep::Complete => return draw,
+            RetainedNodePaintStep::Fault => panic!("retained node paint fault"),
+        }
+    }
+    panic!("retained node paint exceeded its fixed budget")
 }
 
 #[test]
@@ -223,8 +238,9 @@ fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
 }
 
 fn loading_tree() -> UiNode {
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Loading),
         drop_action: None,
         menu: None,
@@ -233,8 +249,9 @@ fn loading_tree() -> UiNode {
 }
 
 fn waiting_tree() -> UiNode {
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Waiting),
         drop_action: None,
         menu: None,
@@ -265,22 +282,18 @@ fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
 }
 
 fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
-    UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })
+    UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })
 }
 
 #[test]
-fn painting_a_uniform_number_stepper_nests_a_border_around_its_center_value() {
+fn painting_a_uniform_number_stepper_uses_one_outer_border_and_two_dividers() {
     let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
     let mut draw = DrawList::default();
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
     let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    // Outer control border (bg + 4 edges = 5) + 2 divider lines + nested center-value border
-    // (bg + 4 edges = 5) + minus/"2.000"/plus glyphs (1 + 5 + 1 = 7) = 19 — the exact instance
-    // count `golden_number_stepper_known_gap`'s doc comment measured `widgets::render_number_stepper`
-    // emitting (vs this region's pre-fix 14), now matched by porting the nested border.
-    assert_eq!(total, 19, "uniform NumberStepper should now nest a border around its center value, matching widgets' 19-instance output");
+    assert_eq!(total, 8, "one control border, two dividers, and the value glyph without an icon atlas");
 }
 
 #[test]
@@ -303,18 +316,104 @@ fn slider(id: &str, unit: Option<&str>) -> UiNode {
 }
 
 #[test]
-fn painting_a_slider_with_a_unit_emits_extra_glyphs_for_the_readout() {
+fn painting_a_slider_keeps_its_numeric_readout_independent_from_the_external_unit_sibling() {
     let (mut plain_tree, plain_root, theme, mut plain_atlas) = setup(&slider("sl", None));
-    let mut plain_draw = DrawList::default();
-    paint_tree(&mut plain_tree, plain_root, &theme, &mut plain_atlas, None, false, &mut plain_draw);
+    let plain_draw = paint_retained_node_for_test(&plain_tree, plain_root, &theme, &mut plain_atlas);
 
     let (mut unit_tree, unit_root, theme2, mut unit_atlas) = setup(&slider("sl", Some("mm")));
-    let mut unit_draw = DrawList::default();
-    paint_tree(&mut unit_tree, unit_root, &theme2, &mut unit_atlas, None, false, &mut unit_draw);
+    let unit_draw = paint_retained_node_for_test(&unit_tree, unit_root, &theme2, &mut unit_atlas);
 
-    let plain_total: usize = plain_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    let unit_total: usize = unit_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    assert!(unit_total > plain_total, "a slider with a unit should paint extra glyphs for its value+unit readout");
+    let plain_glyphs: Vec<_> = plain_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
+    let unit_glyphs: Vec<_> = unit_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
+    assert_eq!(plain_glyphs.iter().filter(|glyph| glyph.color == [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]).count(), 3, "the internal Slider readout stays numeric only");
+    assert_eq!(
+        unit_glyphs.iter().filter(|glyph| glyph.color == [theme2.text_muted.r, theme2.text_muted.g, theme2.text_muted.b, theme2.text_muted.a]).count(),
+        "0.5 mm".chars().count(),
+        "the external sibling advances and paints every formatted scalar, including its separating space"
+    );
+    assert!(unit_glyphs.len() > plain_glyphs.len());
+}
+
+fn compact_tree_slider(unit: Option<&str>) -> UiNode {
+    let mut item = UiTreeItemNode::base("slider.item", Label::data("Distance"));
+    let UiNode::Slider(slider) = slider("slider.control", unit) else { unreachable!() };
+    item.control = Some(UiControlNode::Slider(slider));
+    UiNode::Tree(UiTreeNode {
+        presentation: ui_contract::TreePresentation::Compact,
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "slider.section".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+        presence: UiPresence::default(),
+        drop_action: None,
+        menu: None,
+        interaction_domain: None,
+    })
+}
+
+#[test]
+fn inline_tree_slider_paints_the_same_external_unit_sibling_and_preserves_its_accepted_width() {
+    let (mut tree, root, theme, mut atlas) = setup(&compact_tree_slider(Some("mm")));
+    let section = tree.explicit_child(root, "slider.section").unwrap();
+    let item = tree.explicit_child(section, "slider.item").unwrap();
+    let slider = tree.explicit_child(item, "slider.control").unwrap();
+    assert!(tree.accepted_inline_suffix_width(slider).unwrap() > 0.0);
+    let draw = paint_retained_node_for_test(&tree, slider, &theme, &mut atlas);
+    let unit_glyphs =
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01 && instance.color == [theme.text_muted.r, theme.text_muted.g, theme.text_muted.b, theme.text_muted.a]).count();
+    assert_eq!(unit_glyphs, "0.5 mm".chars().count(), "the inline Tree control paints the same external '0.5 mm' sibling as a standalone Slider");
+}
+
+#[test]
+fn compact_slider_edit_uses_the_unscoped_input_font_while_its_resting_readout_stays_compact() {
+    let paint = |editing: bool| {
+        let (mut tree, root, theme, mut atlas) = setup(&compact_tree_slider(None));
+        let section = tree.explicit_child(root, "slider.section").unwrap();
+        let item = tree.explicit_child(section, "slider.item").unwrap();
+        let slider = tree.explicit_child(item, "slider.control").unwrap();
+        if editing {
+            tree.node_mut(slider).unwrap().state.edit = Some(EditState { text: "0.5".into(), caret: 3, anchor: 3, composition: None, scroll_x: 0.0 });
+        }
+        let draw = paint_retained_node_for_test(&tree, slider, &theme, &mut atlas);
+        let mut positions: Vec<f32> = draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .filter(|instance| {
+                (instance.params[2] - KIND_GLYPH).abs() < 0.01
+                    && if editing { instance.color == [theme.text.r, theme.text.g, theme.text.b, theme.text.a] } else { instance.color == [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a] }
+            })
+            .map(|instance| instance.rect[0])
+            .collect();
+        positions.sort_by(f32::total_cmp);
+        positions.last().copied().unwrap_or_default() - positions.first().copied().unwrap_or_default()
+    };
+    let resting = paint(false);
+    let editing = paint(true);
+    assert!(editing > resting, "React's compact rest text is 9.6px, while its numeric Input edit text uses the wider unscoped 12.8px body advance ({editing} <= {resting})");
+}
+
+#[test]
+fn slider_paints_the_shared_rail_range_thumb_and_numeric_readout() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == "fractional-middle").unwrap();
+    let rect = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32];
+    let node =
+        UiSliderNode { id: "slider".into(), value: case["value"].as_f64().unwrap(), min: case["min"].as_f64().unwrap(), max: case["max"].as_f64().unwrap(), step: 0.1, unit: None, on_change: action(), presence: UiPresence::default(), menu: None };
+    let bounds = Rect::new(case["bounds"][0].as_f64().unwrap() as f32, case["bounds"][1].as_f64().unwrap() as f32, case["bounds"][2].as_f64().unwrap() as f32, case["bounds"][3].as_f64().unwrap() as f32);
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let mut draw = DrawList::default();
+    paint_slider(&node, bounds, &theme, &mut atlas, &mut draw);
+    let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+    let rounded: Vec<_> = instances.iter().copied().filter(|instance| (instance.params[2] - KIND_ROUNDED).abs() < 0.01).collect();
+    assert_eq!(rounded.len(), 3);
+    for (instance, expected) in rounded.iter().zip([rect(&case["rail"]), rect(&case["range"]), rect(&case["thumb"])]) {
+        assert!(instance.rect.iter().zip(expected).all(|(left, right)| (*left - right).abs() < 0.001));
+    }
+    assert_eq!(rounded[0].color, [theme.muted.r, theme.muted.g, theme.muted.b, theme.muted.a]);
+    assert_eq!(rounded[1].color, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
+    assert_eq!(rounded[2].color, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
+    let glyphs: Vec<_> = instances.iter().copied().filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
+    assert_eq!(glyphs.len(), case["formatted"].as_str().unwrap().chars().count());
+    assert!(glyphs.iter().all(|glyph| glyph.rect[0] >= case["valueCell"][0].as_f64().unwrap() as f32));
 }
 
 fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
@@ -349,8 +448,9 @@ fn tree_with_item_description() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.description = Some("desc".into());
     item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -359,8 +459,9 @@ fn tree_with_item_description() -> UiNode {
 }
 
 fn tree_with_bare_item() -> UiNode {
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -674,8 +775,9 @@ fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring()
 fn tree_with_draggable_item() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.draggable = Some(true);
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -801,6 +903,22 @@ fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declar
     assert!(focused_total > stale_total, "a focused Input with a live EditState should paint its live (longer) buffer text, not the stale shorter declarative value");
 }
 
+#[test]
+fn retained_input_paints_a_caret_only_while_the_accepted_cadence_is_visible() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    assert_eq!(fixture["halfPeriodMs"].as_u64(), Some(500));
+    let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
+    let node = tree.node_mut(root).expect("retained input");
+    node.state.edit = Some(EditState { text: "hello".into(), caret: 5, anchor: 5, composition: None, scroll_x: 0.0 });
+    node.state.caret_visible = true;
+    let visible = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    assert!(has_solid_instance_colored(&visible, theme.accent), "the accepted visible phase paints one caret primitive");
+
+    tree.node_mut(root).expect("retained input").state.caret_visible = false;
+    let hidden = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    assert!(!has_solid_instance_colored(&hidden, theme.accent), "the hidden phase keeps the edit buffer while omitting its caret primitive");
+}
+
 fn toggle(id: &str) -> UiNode {
     UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: id.into(), icon_id: IconName::CircleDot, text: Some(Label::data("Toggle")), on_change: action(), presence: UiPresence::default(), menu: None })
 }
@@ -852,7 +970,21 @@ fn painting_a_focused_toggle_swaps_its_border_to_the_accent_focus_ring() {
 
 #[test]
 fn painting_a_focused_number_stepper_swaps_its_outer_border_to_the_accent_focus_ring() {
-    assert_focus_swaps_border_color(|| stepper("ns", 2.0, true), "NumberStepper");
+    for focused in [false, true] {
+        for keyboard in [false, true] {
+            let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
+            if focused {
+                if keyboard {
+                    focus(&mut tree, root);
+                } else {
+                    focus_pointer(&mut tree, root);
+                }
+            }
+            let mut draw = DrawList::default();
+            paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+            assert_eq!(has_solid_instance_colored(&draw, theme.accent), focused, "React Stepper uses focus-within for both input modalities");
+        }
+    }
 }
 
 #[test]
@@ -861,7 +993,7 @@ fn painting_a_focused_icon_select_swaps_its_border_to_the_accent_focus_ring() {
 }
 
 #[test]
-fn painting_a_hovered_number_stepper_tints_its_outer_background() {
+fn painting_a_hovered_number_stepper_preserves_its_center_background() {
     let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
     tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
     tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
@@ -869,7 +1001,7 @@ fn painting_a_hovered_number_stepper_tints_its_outer_background() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
-    assert!(has_solid_instance_colored(&draw, theme.button_hover), "a hovered NumberStepper should tint its shared minus/plus background to theme.button_hover");
+    assert!(!has_solid_instance_colored(&draw, theme.button_hover), "whole-control hover must not tint the center input");
 }
 //#endregion 🔖️W2WidgetVisuals
 
@@ -1036,7 +1168,15 @@ fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
 /// (`framework.panel.toolRun` on the live generation3d wgpu playground).
 #[test]
 fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
-    let section = |id: &str, item: &str| UiTreeSectionNode { window: None, id: id.into(), label: Some(Label::data(id)), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base(item, Label::data(item))] };
+    let section = |id: &str, item: &str| UiTreeSectionNode {
+        header_toolbar: None,
+        window: None,
+        id: id.into(),
+        label: Some(Label::data(id)),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        items: vec![UiTreeItemNode::base(item, Label::data(item))],
+    };
     let tree_of = |id: &str, item: &str| UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None });
     let (mut tree, root, theme, _) = setup(&tree_of("mounted", "row"));
     let Some(node) = tree.node_mut(root) else { panic!("retained tree root") };
@@ -1060,8 +1200,9 @@ fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant()
     let mut nested = UiTreeItemNode::base("nested", Label::data("Nested"));
     nested.default_open = Some(true);
     nested.items = Some(vec![UiTreeItemNode::base("leaf", Label::data("Leaf"))]);
-    let authored = UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
+    let authored = UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -1462,3 +1603,74 @@ fn a_celebrating_element_paints_a_different_ring_as_the_clock_advances_while_an_
     assert_eq!(ring(UiState::Introducing, 0.0), ring(UiState::Introducing, 0.6), "the introduce pulse is shader-side, so paint emits the same instance at any clock");
 }
 //#endregion 🎉️CelebratePaint
+
+#[test]
+fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
+    let number = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_f64().expect("fixture number") as f32;
+    let text_value = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_str().expect("fixture text");
+    let control = || UiNode::Button(UiButtonNode { id: Some("geometry.control".into()), icon_id: IconName::CircleDot, label: Label::data("Control"), action: action(), style: None, presence: UiPresence::default(), menu: None });
+
+    let section = UiNode::Section(UiSectionNode { id: "geometry-section".into(), label: Some(Label::data(text_value(&["section", "title"]))), default_open: Some(true), presence: UiPresence::default(), children: vec![control()], menu: None });
+    let mut section_tree = UiTree::new();
+    section_tree.apply_tree(&section);
+    let section_root = section_tree.root.expect("section root");
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut section_tree, section_root, theme, number(&["section", "width"]), 400.0));
+    let section_child = section_tree.node(section_root).and_then(|node| node.first_child).expect("section child");
+    let title_bottom = section_tree.accepted_layout(section_child).expect("section child layout").y - crate::wgpu::flex::SECTION_TITLE_BODY_GAP;
+    let mut section_draw = DrawList::default();
+    paint_tree(&mut section_tree, section_root, &theme, &mut atlas, None, false, &mut section_draw);
+    let title_glyphs: Vec<_> = section_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01 && instance.rect[1] < title_bottom).collect();
+    assert!(!title_glyphs.is_empty());
+    assert!(title_glyphs.iter().all(|glyph| glyph.rect[1] + glyph.rect[3] <= title_bottom + 0.01), "title glyphs stay inside the wrapped title rect");
+    assert!(title_glyphs.len() >= text_value(&["section", "title"]).chars().filter(|scalar| !scalar.is_whitespace()).count() * 2, "the Section title uses semibold double strikes");
+
+    let field = UiNode::Field(UiFieldNode {
+        id: "geometry-field".into(),
+        label: Label::data(text_value(&["field", "label"])),
+        description: Some(text_value(&["field", "description"]).into()),
+        required: Some(false),
+        error: Some(text_value(&["field", "error"]).into()),
+        child: Box::new(control()),
+        presence: UiPresence::default(),
+        menu: None,
+    });
+    let mut field_tree = UiTree::new();
+    field_tree.apply_tree(&field);
+    let field_root = field_tree.root.expect("field root");
+    let field_control = field_tree.node(field_root).and_then(|node| node.first_child).expect("field control");
+    let mut field_atlas = FontAtlas::builtin();
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut field_tree, field_root, theme, number(&["field", "width"]), 400.0));
+    let control_layout = field_tree.accepted_layout(field_control).expect("field control layout");
+    let mut field_draw = DrawList::default();
+    paint_tree(&mut field_tree, field_root, &theme, &mut field_atlas, None, false, &mut field_draw);
+    let color_matches = |instance: &&crate::wgpu::draw::UiInstance, color: crate::wgpu::theme::Rgba| (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001;
+    let glyphs: Vec<_> = field_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
+    let description: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.text_muted)).collect();
+    let error: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.error)).collect();
+    assert!(!description.is_empty() && !error.is_empty());
+    assert!(description.iter().all(|glyph| glyph.rect[1] >= crate::wgpu::flex::FIELD_LABEL_LINE_HEIGHT && glyph.rect[1] + glyph.rect[3] <= control_layout.y + 0.01));
+    assert!(error.iter().all(|glyph| glyph.rect[1] >= control_layout.y + control_layout.height + theme.gap_standard - 0.01));
+}
+
+#[test]
+fn number_stepper_catalog_icons_match_chromiums_measured_content_boxes() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    let geometry = law["geometry"].as_array().unwrap().iter().find(|case| case["id"] == law["icons"]["case"]).unwrap();
+    let rect = |value: &serde_json::Value| Rect::new(value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32);
+    let theme = Theme { stroke_hairline: geometry["border"].as_f64().unwrap() as f32, ..Theme::default() };
+    let [minus, _, plus] = crate::wgpu::layout::number_stepper_segments(rect(&geometry["bounds"]), ui_contract::FlowInline::Ltr, theme.stroke_hairline);
+    let icons = IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
+    let mut draw = DrawList::default();
+    push_stepper_icon(&mut draw, Some(&icons), "minus", minus, ui_contract::FlowInline::Ltr, &theme);
+    push_stepper_icon(&mut draw, Some(&icons), "plus", plus, ui_contract::FlowInline::Ltr, &theme);
+    let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+    assert_eq!(instances.len(), 2);
+    for (instance, expected) in instances.iter().zip(law["icons"]["rects"].as_array().unwrap()) {
+        for (actual, expected) in instance.rect.iter().zip(expected.as_array().unwrap()) {
+            assert!((f64::from(*actual) - expected.as_f64().unwrap()).abs() <= 1.0 / 64.0, "Chromium layout-unit tolerance");
+        }
+    }
+}

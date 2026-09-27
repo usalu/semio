@@ -70,6 +70,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 if lanes != (2, 1) { return Err(format!("Drawing exact-window lane count changed: {lanes:?}")); }
                 let left_scene = scene(&mut app, &left).await?;
                 let right_scene = scene(&mut app, &right).await?;
+                if left_scene.framing.is_some() || right_scene.framing.is_some() { return Err("Stored navigation requested another initial fit".into()); }
                 if (left_scene.camera_x, left_scene.camera_y, left_scene.zoom) != (18.0, -9.0, 2.5)
                     || (right_scene.camera_x, right_scene.camera_y, right_scene.zoom) != (-7.0, 31.0, 0.5)
                 {
@@ -94,6 +95,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 let reopened_left = scene(&mut reopened, &left).await?;
                 let reopened_right = scene(&mut reopened, &right).await?;
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                if reopened_left.framing.is_some() || reopened_right.framing.is_some() { return Err("Restored navigation requested another fit".into()); }
                 if reopened_left.camera_x != left_scene.camera_x || reopened_right.camera_x != right_scene.camera_x { return Err("Drawing Canvas config changed during restore".into()); }
                 let stale = ViewModel { window_id: Some("lost-drawing".into()), window_instances: view.window_instances.clone(), ..Default::default() };
                 if addressed(&stale, DrawingCanvasWindowConfig::default()).is_ok() { return Err("Drawing accepted stale window identity".into()); }

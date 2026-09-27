@@ -104,6 +104,18 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
 }
 
 #[test]
+fn stale_kind_focus_falls_back_to_the_first_authored_instance() {
+    let root = DockNode::Row(vec![
+        (DockNode::Stack { windows: vec![DockStackTab::instance("canvas-top", "canvas", WindowStackCorner::TopLeft)], active: "canvas-top".into() }, 1.0),
+        (DockNode::Stack { windows: vec![DockStackTab::instance("canvas-perspective", "canvas", WindowStackCorner::TopLeft)], active: "canvas-perspective".into() }, 2.0),
+    ]);
+    let app = sample_app(&["canvas"], Some(WindowLayout { root: dock_node_to_layout_root(&root) }));
+    let dock = DockState::from_app(&app, Some("canvas"));
+    assert_eq!(dock.active_window_id.as_deref(), Some("canvas-top"));
+    assert_eq!(dock.active_stack.as_deref(), Some([0].as_slice()));
+}
+
+#[test]
 fn split_axis_extent_uses_row_width_not_canvas_max() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = DockNode::Column(vec![(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), 0.5), (stack_with("c"), 0.5)]);
@@ -292,11 +304,7 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, bounds, true);
-    let fill = draw
-        .layers
-        .iter()
-        .find(|layer| layer.clip.is_some() && layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h]))
-        .expect("full silhouette content fill");
+    let fill = draw.layers.iter().find(|layer| layer.clip.is_some() && layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
     assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(2));
     assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
 }

@@ -348,6 +348,7 @@ export type BrowserFrameWorkerMessage =
       readonly cursor: string;
       readonly fullscreen: boolean | null;
       readonly requestFrame: boolean;
+      readonly nextDeadlineDelayMs: number | null;
       readonly progress: number;
       readonly workerDurationMs: number;
       /** @emoji ⏳️ The step's EXECUTING milliseconds — what the Worker's own ledger priced. */
@@ -456,6 +457,7 @@ export class BrowserFrameTransport {
   private inFlight = false;
   private frameRequested = false;
   private rafHandle: number | undefined;
+  private deadlineTimer: number | undefined;
   private bootTimer: number | undefined;
   /** @emoji 🫀️ The last instant ANY message arrived from the frame Worker — the clock silence is measured
    * against. `NEGATIVE_INFINITY` until the Worker speaks for the first time, so "never sent a single
@@ -582,6 +584,7 @@ export class BrowserFrameTransport {
   /** @emoji 🎞️ Coalesces frame requests and schedules at most one UI rAF directive turn. */
   requestFrame(): void {
     if (!this.accepting()) return;
+    this.clearDeadlineTimer();
     this.frameRequested = true;
     if (this.requestRaf && this.rafHandle === undefined) {
       this.rafHandle = this.requestRaf((timestampMs) => {
@@ -988,6 +991,21 @@ export class BrowserFrameTransport {
       if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
     }
     if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();
+    else if (message.generation === this.generation) this.replaceDeadlineTimer(message.nextDeadlineDelayMs);
+  }
+
+  private clearDeadlineTimer(): void {
+    if (this.deadlineTimer !== undefined) this.clearTimer(this.deadlineTimer);
+    this.deadlineTimer = undefined;
+  }
+
+  private replaceDeadlineTimer(delayMs: number | null): void {
+    this.clearDeadlineTimer();
+    if (delayMs === null || !Number.isFinite(delayMs) || delayMs < 0) return;
+    this.deadlineTimer = this.setTimer(() => {
+      this.deadlineTimer = undefined;
+      this.requestFrame();
+    }, Math.min(Math.ceil(delayMs), 2_147_483_647));
   }
 
   private fail(code: BrowserFrameWorkerFaultCode, detail: string): void {
@@ -1035,6 +1053,7 @@ export class BrowserFrameTransport {
   }
 
   private clearQueues(): void {
+    this.clearDeadlineTimer();
     for (const controller of this.imageDecodes.values()) controller.abort();
     this.imageDecodes.clear();
     for (const pending of this.introspections.values()) {

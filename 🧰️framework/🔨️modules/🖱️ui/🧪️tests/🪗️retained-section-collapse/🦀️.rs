@@ -68,10 +68,7 @@ fn advance_to_checked_out_layout(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semi
         }
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
         let _ = ui.step_layouts(pool, atlas, &mut cx);
-        let checked_out = ui
-            .windows
-            .get("fixture")
-            .and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
+        let checked_out = ui.windows.get("fixture").and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
         if let Some(generation) = checked_out {
             return generation;
         }
@@ -112,17 +109,11 @@ fn upward_tree() -> UiNode {
     let mut populated_nested = UiTreeItemNode::base("populated-nested", Label::data("Populated nested"));
     populated_nested.default_open = Some(true);
     populated_nested.items = Some(vec![UiTreeItemNode::base("nested-child", Label::data("Nested child"))]);
-    UiNode::Tree(UiTreeNode { presentation: Default::default(),
+    UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
         sections: vec![
-            UiTreeSectionNode { id: "empty-section".into(), label: Some(Label::data("Empty section")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new(), window: None },
-            UiTreeSectionNode {
-                id: "nested-section".into(),
-                label: Some(Label::data("Nested section")),
-                default_open: Some(true),
-                presence: UiPresence::default(),
-                items: vec![empty_nested, populated_nested],
-                window: None,
-            },
+            UiTreeSectionNode { header_toolbar: None, id: "empty-section".into(), label: Some(Label::data("Empty section")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new(), window: None },
+            UiTreeSectionNode { header_toolbar: None, id: "nested-section".into(), label: Some(Label::data("Nested section")), default_open: Some(true), presence: UiPresence::default(), items: vec![empty_nested, populated_nested], window: None },
         ],
         presence: UiPresence::default(),
         drop_action: None,
@@ -135,32 +126,15 @@ fn upward_nested_disclosure() -> UiNode {
     let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
     branch.default_open = Some(false);
     branch.items = Some(vec![UiTreeItemNode::base("child", Label::data("Child"))]);
-    let tree = UiNode::Tree(UiTreeNode { presentation: Default::default(),
-        sections: vec![UiTreeSectionNode {
-            id: "section".into(),
-            label: Some(Label::data("Section")),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            items: vec![branch],
-            window: None,
-        }],
+    let tree = UiNode::Tree(UiTreeNode {
+        presentation: Default::default(),
+        sections: vec![UiTreeSectionNode { header_toolbar: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch], window: None }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
         interaction_domain: None,
     });
-    UiNode::Stack(UiStackNode {
-        id: Some("panel".into()),
-        direction: "vertical".into(),
-        gap: None,
-        padding: None,
-        presence: UiPresence::default(),
-        activate: None,
-        drop_action: None,
-        drop_overlay: None,
-        menu: None,
-        children: vec![tree],
-    })
+    UiNode::Stack(UiStackNode { id: Some("panel".into()), direction: "vertical".into(), gap: None, padding: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None, children: vec![tree] })
 }
 
 fn nested_rows(ui: &Ui) -> (&UiTree, crate::wgpu::arena::NodeId, crate::wgpu::arena::NodeId) {
@@ -342,14 +316,7 @@ fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
         menu: None,
         children: vec![UiNode::Tree(UiTreeNode {
             presentation: Default::default(),
-            sections: vec![UiTreeSectionNode {
-                id: "section".into(),
-                label: Some(Label::data("Section")),
-                default_open: Some(true),
-                presence: UiPresence::default(),
-                items: vec![branch],
-                window: None,
-            }],
+            sections: vec![UiTreeSectionNode { header_toolbar: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch], window: None }],
             presence: UiPresence::default(),
             drop_action: None,
             menu: None,

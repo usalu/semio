@@ -291,6 +291,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
+                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧭️change-byte-order/🦀️.rs"]

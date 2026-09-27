@@ -35,3 +35,38 @@ async fn parse_header_summary_round_trips_a_rendered_snapshot() {
 async fn parse_header_summary_rejects_a_missing_required_field() {
     assert!(parse_header_summary("method=8\nwindowBits=7").is_none());
 }
+
+#[test]
+fn details_reject_window_bits_outside_the_normative_schema_atomically() {
+    semio_framework_schema::register_artifact_schema_descriptors(vec![crate::schema::deflate_artifact_schema_descriptor()]).expect("register deflate schema");
+    let base = DeflateSnapshot::default();
+    let accepted = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
+        &base,
+        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/windowBits".into(), value: dsl::DslValue::uint(15) },
+        DEFLATE_EDITOR_DIALECT,
+    )
+    .expect("maximum boundary");
+    assert_eq!(accepted.window_bits, 15);
+    let error = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
+        &base,
+        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/windowBits".into(), value: dsl::DslValue::uint(255) },
+        DEFLATE_EDITOR_DIALECT,
+    )
+    .expect_err("windowBits maximum");
+    assert_eq!(error.code, "snapshot-edit.constraint-invalid");
+    assert_eq!(error.path, "$.windowBits");
+    assert!(error.message.contains("maximum"));
+    assert_eq!(base.window_bits, DeflateSnapshot::default().window_bits);
+    let identity_error = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
+        &base,
+        &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: dsl::DslValue::String("stdio.unknown".into()) },
+        DEFLATE_EDITOR_DIALECT,
+    )
+    .expect_err("schema identity");
+    assert_eq!(identity_error.code, "snapshot-edit.schema-identity");
+    assert_eq!(base.schema, STDIO_DEFLATE_DOCUMENT_SCHEMA);
+    let mut unknown = base.clone();
+    unknown.schema = "stdio.unknown".into();
+    let adapter_error = semio_s_artifact_stdio_contract::editing::validate_snapshot_schema_for_dialect(&dsl::ToValue::to_value(&unknown), DEFLATE_EDITOR_DIALECT).expect_err("registered adapter identity");
+    assert_eq!(adapter_error.code, "snapshot-edit.schema-identity");
+}

@@ -1,7 +1,7 @@
 //! 🏠️ Composition and retirement of the renderer runtime, presenter, scheduler and deadline sources.
 //! RuntimeMailbox owns worker dispatch; the host presents completed frames and schedules wakeups.
 
-use crate::deadlines::{CaretBlink, HotSwapPoll};
+use crate::deadlines::HotSwapPoll;
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering};
@@ -70,11 +70,11 @@ fn performance_now_ms() -> f64 {
 
 /// 🏠️ Owns presentation, scheduling and host lifecycle around the worker-owned runtime.
 pub struct OsHost {
+    pub(crate) animation_clock: crate::deadlines::AcceptedAnimationClock,
     pub(crate) runtime: RuntimeMailbox,
     pub(crate) presenter: AppPresenter,
     pub scheduler: FrameScheduler,
     pub clock: OsClock,
-    pub caret: CaretBlink,
     pub hot_swap: HotSwapPoll,
     /// ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): monotonically incremented
     /// once per `redraw()` call — the `Generation` `winit_app.rs` stamps its
@@ -111,7 +111,6 @@ struct OsHostRetirementState {
     presenter: Option<AppPresenter>,
     scheduler: Option<FrameScheduler>,
     clock: Option<OsClock>,
-    caret: Option<CaretBlink>,
     hot_swap: Option<HotSwapPoll>,
     events: Option<ui_host::EventQueue>,
     ui_token: Option<ui_host::UiThreadToken>,
@@ -608,11 +607,11 @@ impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter) -> Self {
         Self {
+            animation_clock: crate::deadlines::AcceptedAnimationClock::default(),
             runtime,
             presenter,
             scheduler: FrameScheduler::new(),
             clock: OsClock::new(),
-            caret: CaretBlink::new(),
             hot_swap: HotSwapPoll::new(),
             frame_generation: 0,
             frame_ready: false,
@@ -642,11 +641,11 @@ impl OsHost {
             return Err(self);
         };
         let Self {
+            animation_clock: _,
             runtime,
             presenter,
             scheduler,
             clock,
-            caret,
             hot_swap,
             frame_generation: _,
             frame_ready: _,
@@ -665,7 +664,6 @@ impl OsHost {
             presenter: Some(presenter),
             scheduler: Some(scheduler),
             clock: Some(clock),
-            caret: Some(caret),
             hot_swap: Some(hot_swap),
             events: Some(events),
             ui_token: Some(ui_token),
@@ -814,7 +812,7 @@ impl OsHostRetirementState {
                 crate::kernel_runtime::KernelCloseStatus::Fault => return false,
             }
         }
-        for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
+        for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.clock, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
             if owner.retire() {
                 return false;
             }
@@ -827,7 +825,6 @@ impl OsHostRetirementState {
             && self.presenter.is_none()
             && self.scheduler.is_none()
             && self.clock.is_none()
-            && self.caret.is_none()
             && self.hot_swap.is_none()
             && self.events.is_none()
             && self.ui_token.is_none()

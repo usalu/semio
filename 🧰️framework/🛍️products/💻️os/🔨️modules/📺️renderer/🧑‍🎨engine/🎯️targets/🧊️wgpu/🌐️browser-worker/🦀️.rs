@@ -51,6 +51,7 @@ struct BrowserTickOutput {
     cursor: &'static str,
     fullscreen: Option<bool>,
     request_frame: bool,
+    next_deadline_delay_ms: Option<f64>,
     continue_frame: bool,
     progress: f32,
     quarantined: bool,
@@ -347,7 +348,7 @@ impl BrowserRendererWorker {
         if let Some(detail) = self.quarantined.clone() {
             return encode_tick_timed(
                 generation,
-                BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
+                BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, next_deadline_delay_ms: None, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
             );
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
@@ -382,9 +383,8 @@ impl BrowserRendererWorker {
                 // frame. Without them a settled browser shell ticks only on input, so a build that needed
                 // a second step never got one and a queued `DispatchEvents` was never pumped
                 // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-                request_frame: continue_frame || host.scheduler.next_deadline().is_some(),
-                // 🚏️ The dedicated Worker owns runnable retained work directly. A future shell deadline
-                // remains page-rAF paced and must not create an unbounded MessagePort loop.
+                request_frame: continue_frame,
+                next_deadline_delay_ms: host.scheduler.next_deadline().map(|deadline| ((deadline.due - host.clock.now_seconds()) * 1000.0).max(0.0)).filter(|delay| delay.is_finite()),
                 continue_frame,
                 progress: 1.0,
                 quarantined: present_fault.is_some(),
@@ -798,8 +798,6 @@ impl BrowserRendererBootstrap {
                 modifiers: PointerModifiers::default(),
                 space_pressed: false,
                 wheel_zoom_deadline_ms: 0.0,
-                caret_blink_at_ms: 0.0,
-                caret_blink_visible: true,
                 text_streams: std::array::from_fn(|_| None),
                 text_fault: None,
                 frame_fault: None,

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/ui/retained-control-tooltip.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provenance", "timing", "text", "placements"],
+  "properties": {
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["what", "implementations"],
+      "properties": {
+        "what": { "type": "string", "minLength": 1 },
+        "implementations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rust", "typescript"],
+          "properties": {
+            "rust": { "type": "string", "minLength": 1 },
+            "typescript": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clockOriginSeconds", "dwellMs", "dismissMs"],
+      "properties": {
+        "clockOriginSeconds": { "type": "number" },
+        "dwellMs": { "const": 400 },
+        "dismissMs": { "const": 0 }
+      }
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "shortcut", "formatted"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "shortcut": { "type": "string", "minLength": 1 },
+        "formatted": { "type": "string", "minLength": 1 }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "anchor", "content", "viewport", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "anchor": { "$ref": "#/$defs/rect" },
+          "content": { "$ref": "#/$defs/size" },
+          "viewport": { "$ref": "#/$defs/size" },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["side", "left", "top"],
+            "properties": {
+              "side": { "enum": ["top", "bottom"] },
+              "left": { "type": "number" },
+              "top": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rect": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+    "size": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+  }
+}

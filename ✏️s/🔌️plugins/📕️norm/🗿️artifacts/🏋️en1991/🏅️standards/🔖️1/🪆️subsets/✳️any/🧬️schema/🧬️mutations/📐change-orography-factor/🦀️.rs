@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeOrographyF
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-orography-factor", "change-orography-factor")
+        protocol::LocalizedLabel::native("Change orography factor", "Topografiebeiwert ändern")
     }
 }
 //#endregion 🔖️Payload

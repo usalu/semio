@@ -72,6 +72,10 @@ pub struct Deadline {
     pub reason: InvalidationReason,
 }
 
+/// 🔑 Identifies one caller-owned, replaceable wake within a window scheduler.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DeadlineKey(pub u64);
+
 //#endregion ⏰️Deadline
 
 //#region 📅️FrameScheduler
@@ -83,13 +87,14 @@ pub struct Deadline {
 pub struct FrameScheduler {
     dirty: InvalidationReason,
     deadlines: Vec<Deadline>,
+    keyed_deadlines: std::collections::BTreeMap<DeadlineKey, Deadline>,
     visible: bool,
 }
 
 impl FrameScheduler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self { dirty: InvalidationReason::NONE, deadlines: Vec::new(), visible: true }
+        Self { dirty: InvalidationReason::NONE, deadlines: Vec::new(), keyed_deadlines: std::collections::BTreeMap::new(), visible: true }
     }
 
     /// 🚩️ Marks the window dirty for `reason`, effective the next [`Self::should_render`] call.
@@ -103,6 +108,15 @@ impl FrameScheduler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_deadline(&mut self, due: f64, reason: InvalidationReason) {
         self.deadlines.push(Deadline { due, reason });
+    }
+
+    /// 🔄 Replaces or cancels one owner's wake without retaining superseded deadlines.
+    pub fn replace_deadline(&mut self, key: DeadlineKey, deadline: Option<Deadline>) {
+        if let Some(deadline) = deadline.filter(|deadline| deadline.due.is_finite()) {
+            self.keyed_deadlines.insert(key, deadline);
+        } else {
+            self.keyed_deadlines.remove(&key);
+        }
     }
 
     /// 👁️ A hidden window still tracks deadlines (see [`Self::should_render`]'s doc) but never
@@ -121,7 +135,7 @@ impl FrameScheduler {
     /// its next `WaitUntil`, independent of whether the window is currently visible.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn next_deadline(&self) -> Option<Deadline> {
-        self.deadlines.iter().copied().min_by(|a, b| a.due.total_cmp(&b.due))
+        self.deadlines.iter().chain(self.keyed_deadlines.values()).copied().min_by(|a, b| a.due.total_cmp(&b.due))
     }
 
     /// 🏁️ Folds every deadline due at or before `now` into the dirty mask (regardless of visibility —
@@ -131,6 +145,14 @@ impl FrameScheduler {
     /// gets `None`: this is the single method that makes an idle window cost zero frames.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn should_render(&mut self, now: f64) -> Option<InvalidationReason> {
+        self.keyed_deadlines.retain(|_, deadline| {
+            if deadline.due <= now {
+                self.dirty.insert(deadline.reason);
+                false
+            } else {
+                true
+            }
+        });
         let mut remaining = Vec::with_capacity(self.deadlines.len());
         for deadline in self.deadlines.drain(..) {
             if deadline.due <= now {

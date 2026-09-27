@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeBridgeLoad
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-bridge-load-group", "change-bridge-load-group")
+        protocol::LocalizedLabel::native("Change traffic load group", "Verkehrslastgruppe ändern")
     }
 }
 //#endregion 🔖️Payload

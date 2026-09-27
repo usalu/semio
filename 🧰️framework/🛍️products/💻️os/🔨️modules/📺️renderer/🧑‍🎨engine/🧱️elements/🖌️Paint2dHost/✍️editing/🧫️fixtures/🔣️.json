@@ -142,5 +142,62 @@
         74
       ]
     }
-  ]
+  ],
+  "selectionTransport": {
+    "chunkPixels": 32768,
+    "maxEncodedCharacters": 40000,
+    "cases": [
+      {
+        "name": "Empty selection",
+        "width": 3,
+        "mask": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "spans": [],
+        "bounds": null
+      },
+      {
+        "name": "Partial coverage",
+        "width": 3,
+        "mask": [
+          0,
+          255,
+          255,
+          0,
+          128,
+          0
+        ],
+        "spans": [
+          [
+            1,
+            2,
+            255
+          ],
+          [
+            4,
+            1,
+            128
+          ]
+        ],
+        "bounds": {
+          "x": 1,
+          "y": 0,
+          "width": 2,
+          "height": 2
+        }
+      }
+    ],
+    "boundary": {
+      "length": 65539,
+      "start": 32767,
+      "count": 32770,
+      "value": 128
+    },
+    "cancellationAfter": 32768
+  }
 }

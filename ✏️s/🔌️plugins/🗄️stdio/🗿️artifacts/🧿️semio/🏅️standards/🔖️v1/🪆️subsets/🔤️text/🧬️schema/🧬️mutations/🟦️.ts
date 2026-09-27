@@ -7,6 +7,7 @@
  * envelope this previously declared. None of the 7 leaf structs carry
  * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
  * leaf's own field names are the literal Rust snake_case names verbatim. */
+import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioTextRun, SemioTextMark } from "../📸️snapshot/🟦️.ts";
 
 export interface InsertRun {
@@ -51,4 +52,5 @@ export type SemioTextMutation =
   | { ChangeRunLanguage: ChangeRunLanguage }
   | { ReorderRuns: ReorderRuns }
   | { AddMark: AddMark }
-  | { RemoveMark: RemoveMark };
+  | { RemoveMark: RemoveMark }
+  | { SetSnapshot: SetSnapshot };

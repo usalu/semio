@@ -45,7 +45,20 @@ type RasterLayerPatchEntry {
   patch: RasterLayerPatch!
 }
 
+type RasterPixelContent {
+  imageKey: String
+  width: Int
+  height: Int
+}
+
+type RasterMaskContent {
+  mask: RasterLayerMask
+}
+
 type RasterLayerPatch {
+  maskContent: RasterMaskContent
+  pixelContent: RasterPixelContent
+  pixelTransform: RasterTransform
   name: String
   visible: Boolean
   opacity: Float

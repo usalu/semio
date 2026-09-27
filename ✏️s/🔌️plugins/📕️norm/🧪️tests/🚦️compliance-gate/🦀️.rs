@@ -141,7 +141,7 @@ where
             }
             let mut probe = dsl::ToValue::to_value(doc);
             match get_value_at_path(&probe, &remedy.target.path) {
-                Ok(dsl::DslValue::Array(_)) | Ok(dsl::DslValue::Map(_)) => {
+                Ok(dsl::DslValue::Array(_)) | Ok(dsl::DslValue::Object(_)) => {
                     partials.push(format!("remedy[{remedy_index}] targets non-scalar path (skipped for flip)"));
                     continue;
                 }

@@ -108,6 +108,7 @@ fn retained_surface_record(scene: &UiComponentSceneNode) -> ui_contract::UiNodeR
         SurfaceKind::NodeGraph => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, scene.node_graph.as_ref().expect("NodeGraph scene payload")).expect("bounded NodeGraph scene encodes")),
         SurfaceKind::TiledMap => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, scene.tiled_map.as_ref().expect("TiledMap scene payload")).expect("bounded TiledMap scene encodes")),
         SurfaceKind::Board2d => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, scene.board2d.as_ref().expect("Board2d scene payload")).expect("bounded Board2d scene encodes")),
+        SurfaceKind::TextEditor => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TextEditor, scene.text_editor.as_ref().expect("TextEditor scene payload")).expect("bounded TextEditor scene encodes")),
         kind => panic!("retained EngineCanvas fixture does not support {kind:?}"),
     };
     let mut record = ui_contract::UiNodeRecord {
@@ -344,7 +345,7 @@ pub(super) fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bou
     assert!(complete, "retained EngineCanvas document painted within its opportunity ceiling");
     drop_world3d_states(world3d_states);
     let owner = crate::interpreter::retained_scene_target_at(window_id, bounds.x + 1.0, bounds.y + 1.0).expect("retained EngineCanvas surface exposes its exact mounted target");
-    assert_eq!(owner.surface_id, scene.surface_id);
+    assert_eq!(owner.surface_id, window_id);
     assert_eq!(owner.kind, scene.component_kind);
     RetainedSurfacePaint { draw, owner }
 }

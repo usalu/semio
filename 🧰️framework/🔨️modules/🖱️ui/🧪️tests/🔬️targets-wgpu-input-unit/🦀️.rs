@@ -7,9 +7,15 @@ fn closing_input_reports_each_admitted_action_receipt_once() {
     let mut input = InputState::<()>::default();
     let mut batch = input.reserve_actions(rows.len(), rows.len() * 128).unwrap();
     for row in rows {
-        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 128, |builder| {
-            builder.set_receipt(crate::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })
-        }).unwrap();
+        batch
+            .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 128, |builder| {
+                builder.set_receipt(crate::wgpu::ActionQueueReceipt {
+                    token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
+                    member: row["member"].as_u64().unwrap() as u8,
+                    abort_correlation_on_error: row["abort"].as_bool().unwrap(),
+                })
+            })
+            .unwrap();
     }
     batch.publish().unwrap();
     let mut cancelled = Vec::new();
@@ -74,23 +80,14 @@ fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom
     let child = UiTreeItemNode::base("child", Label::data("Child"));
     let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
     branch.items = Some(vec![child]);
-    let section = UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch] };
+    let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch] };
     let mut tree = UiTree::new();
-    let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
-    let row = |id: &str| {
-        UiNode::Stack(UiStackNode {
-            direction: "vertical".into(),
-            gap: None,
-            padding: None,
-            id: Some(id.into()),
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            children: Vec::new(),
-            menu: None,
-        })
-    };
+    let owner = tree.insert_child(
+        None,
+        Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))),
+    );
+    let row =
+        |id: &str| UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
     let section_row = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit("section".into()), WidgetSpec(row("section"))));
     let branch_row = tree.insert_child(Some(section_row), Node::new(NodeKey::Explicit("branch".into()), WidgetSpec(row("branch"))));
     let _child_row = tree.insert_child(Some(branch_row), Node::new(NodeKey::Explicit("child".into()), WidgetSpec(row("child"))));
@@ -217,9 +214,12 @@ fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
         let mut item = UiTreeItemNode::base(id, Label::data(row["label"].as_str().expect("label")));
         item.draggable = row["draggable"].as_bool();
         item.drag_data = drag_data;
-        let section = UiTreeSectionNode { window: None, id: "fixture".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+        let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "fixture".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
         let mut tree = UiTree::new();
-        let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
+        let owner = tree.insert_child(
+            None,
+            Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))),
+        );
         let stack = UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None };
         let row_node = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit(id.into()), WidgetSpec(UiNode::Stack(stack))));
         let rect = Rect::new(0.0, 0.0, row_width, metrics.row_height);

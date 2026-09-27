@@ -324,21 +324,21 @@ pub fn adapter() -> Adapter {
     for case in VALIDATED {
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("schema-validity-{case}"), subject::schema_validity(case));
+            built = built.subject(&format!("schema-validity-{}", case.to_ascii_lowercase()), subject::schema_validity(case));
         }
         let _ = case;
     }
     for case in ACCOUNTED {
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("nothing-dropped-{case}"), subject::nothing_dropped(case));
+            built = built.subject(&format!("nothing-dropped-{}", case.to_ascii_lowercase()), subject::nothing_dropped(case));
         }
         let _ = case;
     }
     for case in SIMULATED {
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("energyplus-run-{case}"), subject::energyplus_run(case));
+            built = built.subject(&format!("energyplus-run-{}", case.to_ascii_lowercase()), subject::energyplus_run(case));
         }
         let _ = case;
     }

@@ -207,13 +207,13 @@ fn direct_drag_previews_then_commits_parent_space_translation_once() {
     while !query.advance(&document) {}
     let mut session = DrawingSession::with_active_utility("selectDirect");
     session.step_gesture(drawing_gesture::Event::PointerDown { utility:"selectDirect".into(),world:start,shift:false,ctrl:false,meta:false },&document,&NoConfig::default());
-    session.prepare_layer_move(&document,query.best.as_ref(),start);
+    prepare_drag(&mut session,&document,start);
     session.move_layer_preview(end);
-    assert_eq!(session.preview().translation,Some((id.clone(),[8.0,10.0])));
+    assert_eq!(session.preview().translation,Some((vec![id.clone()],[8.0,10.0])));
     assert_eq!(document,before);
     let emit = session.finish_layer_move(end,&document,&NoConfig::default()).unwrap();
     assert_eq!(emit.artifact_mutations.len(),1);
-    assert_eq!(emit.description.as_deref(),Some("Move layer"));
+    assert_eq!(emit.description.as_deref(),Some("Move selection"));
     assert!(session.preview().translation.is_none());
     assert!(session.gesture.matches("idle"));
     let DrawingMutation::UpdateLayerTransform(update) = &emit.artifact_mutations[0] else { panic!("Expected one transform edit") };
@@ -233,7 +233,7 @@ fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
     for cancelled in [true,false] {
         let mut session = DrawingSession::with_active_utility("selectDirect");
         session.step_gesture(drawing_gesture::Event::PointerDown { utility:"selectDirect".into(),world:[0.0,0.0],shift:false,ctrl:false,meta:false },&document,&NoConfig::default());
-        session.prepare_layer_move(&document,query.best.as_ref(),[0.0,0.0]);
+        prepare_drag(&mut session,&document,[0.0,0.0]);
         let emit = if cancelled {
             session.move_layer_preview([30.0,20.0]);
             crate::editor::drawing::commands::canvas_pointer_up::cancel_gesture(&mut session,&document,&NoConfig::default())
@@ -243,4 +243,88 @@ fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
         assert!(session.gesture.matches("idle"));
     }
     eprintln!("[DEBUG] direct drag cancellation and clicks leave the document unchanged");
+}
+
+#[test]
+fn selection_move_preparation_yields_and_rejects_locked_or_missing_targets_atomically() {
+    for invalid in ["locked","hidden","missing","singular"] {
+        let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+        crate::schema::layer_base_mut(&mut first).id="first".into();
+        let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+        crate::schema::layer_base_mut(&mut second).id="second".into();
+        let mut parent=crate::schema::create_drawing_group_layer("Parent");
+        let base=crate::schema::layer_base_mut(&mut parent);
+        base.locked=invalid=="locked";
+        base.visible=invalid!="hidden";
+        base.transform.scale_x=if invalid=="singular" {0.0} else {2.0};
+        if let DrawingLayerNode::Group(group)=&mut parent { group.children.push(second); }
+        let document=DrawingSnapshot { layers:vec![first,parent],..Default::default() };
+        let mut preparation=LayerMovePreparation { ids:vec!["first".into(),if invalid=="missing" {"gone".into()} else {"second".into()}],next:TracePath::root(0),found:0,movement:LayerMove { targets:Vec::new(),start:[0.0,0.0],cursor:[0.0,0.0],active:false } };
+        let before=document.clone();
+        assert_eq!(preparation.advance(&document).unwrap(),false);
+        assert_eq!(preparation.movement.targets.len(),1);
+        let mut error=false;
+        for _ in 0..8 { match preparation.advance(&document) { Err(_)=>{error=true;break;},Ok(true)=>break,Ok(false)=>{} } }
+        assert!(error,"{invalid}");
+        assert_eq!(document,before);
+    }
+    eprintln!("[DEBUG] selected movement yields and refuses invalid targets before any mutation");
+}
+
+#[test]
+fn selection_move_commits_equal_world_displacements_under_distinct_parents() {
+    let mut a=crate::schema::create_drawing_shape_layer_rect("A");
+    crate::schema::layer_base_mut(&mut a).id="a".into();
+    let mut b=crate::schema::create_drawing_shape_layer_rect("B");
+    crate::schema::layer_base_mut(&mut b).id="b".into();
+    let mut parent=crate::schema::create_drawing_group_layer("Parent");
+    let base=crate::schema::layer_base_mut(&mut parent);
+    base.transform.rotation=std::f64::consts::FRAC_PI_2;
+    base.transform.scale_x=2.0;
+    if let DrawingLayerNode::Group(group)=&mut parent { group.children.push(b); }
+    let mut document=DrawingSnapshot { layers:vec![a,parent],..Default::default() };
+    let before=crate::schema::flatten_drawing_document_to_scene_nodes(&document);
+    let mut preparation=LayerMovePreparation { ids:vec!["a".into(),"b".into()],next:TracePath::root(0),found:0,movement:LayerMove { targets:Vec::new(),start:[0.0,0.0],cursor:[0.0,0.0],active:false } };
+    let mut complete=false;
+    for _ in 0..8 { if preparation.advance(&document).unwrap() {complete=true;break;} }
+    assert!(complete);
+    let mut session=DrawingSession::with_active_utility("selectDirect");
+    session.layer_move=Some(preparation.movement);
+    let emit=session.finish_layer_move([12.0,8.0],&document,&NoConfig::default()).unwrap();
+    assert_eq!(emit.artifact_mutations.len(),2);
+    for mutation in emit.artifact_mutations { crate::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
+    let after=crate::schema::flatten_drawing_document_to_scene_nodes(&document);
+    for (before,after) in before.iter().zip(after) {
+        assert!((after.transform[4]-before.transform[4]-12.0).abs()<1e-10);
+        assert!((after.transform[5]-before.transform[5]-8.0).abs()<1e-10);
+    }
+}
+
+fn prepare_drag(session: &mut DrawingSession, document: &DrawingSnapshot, start: [f64;2]) {
+    let mut query=DrawingPointQuery::new("canvasPointerDown",TracePointerJob::new_query(document,start,0.0,false),false,"replace".into(),false);
+    while !query.cursor.advance(document) {}
+    query.drag_start=Some(start);
+    session.point_query=Some(query);
+    for _ in 0..1000 {
+        if session.prepare_layer_move(document,&[]).unwrap() { session.point_query=None; return; }
+    }
+    panic!("Movement preparation did not complete");
+}
+
+#[test]
+fn repeated_pen_and_polygon_drafts_keep_distinct_layers() {
+    for utility in ["pen","shapePolygon"] {
+        let mut document=DrawingSnapshot::default();
+        let mut ids=std::collections::HashSet::new();
+        for _ in 0..3 {
+            let mut points=UiFixedList::default();
+            for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { points.try_push(point).unwrap(); }
+            let mut query=DrawingDraftQuery::new("canvasCommitDraft",utility.into(),points);
+            let emit=loop {if let Some(emit)=query.advance(&document) {break emit;} };
+            let DrawingMutation::CreateLayer(created)=&emit.artifact_mutations[0] else {panic!("Expected creation")};
+            assert!(ids.insert(layer_id(&created.layer).to_string()),"{utility} reused a completed draft id");
+            for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap();}
+        }
+        assert_eq!(document.layers.len(),3);
+    }
 }

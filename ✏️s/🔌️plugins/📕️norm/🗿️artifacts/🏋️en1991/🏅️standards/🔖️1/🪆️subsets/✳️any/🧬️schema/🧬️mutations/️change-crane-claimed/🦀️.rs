@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCraneClaim
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-crane-claimed", "change-crane-claimed")
+        protocol::LocalizedLabel::native("Change crane load declaration", "Angabe der Kranlasten ändern")
     }
 }
 //#endregion 🔖️Payload

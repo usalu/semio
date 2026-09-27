@@ -62,6 +62,25 @@ type RemoveLayerAsset {
   assetId: String!
 }
 
+type ChangeLayerMask {
+  layerId: String!
+  expected: RasterLayerMask
+  mask: RasterLayerMask
+}
+
+type ChangeLayerPixels {
+  layerId: String!
+  expectedImageKey: String
+  content: RasterPixelContent!
+  transform: RasterTransform
+}
+
+type RasterPixelContent {
+  imageKey: String
+  width: Int
+  height: Int
+}
+
 union RasterMutation =
     CreateLayer
   | DeleteLayer
@@ -75,3 +94,5 @@ union RasterMutation =
   | ChangeLayerAdjustmentKind
   | AddLayerAsset
   | RemoveLayerAsset
+  | ChangeLayerPixels
+  | ChangeLayerMask

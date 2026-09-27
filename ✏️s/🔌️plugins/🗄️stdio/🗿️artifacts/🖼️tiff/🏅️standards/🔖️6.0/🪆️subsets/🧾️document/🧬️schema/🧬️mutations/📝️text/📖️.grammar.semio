@@ -37,3 +37,5 @@ number = FLOAT | INT
 rational-list = "[" rational-comma-list? "]"
 rational-comma-list = rational-item {"," rational-item}*
 rational-item = "[" number "," number "]"
+
+set-snapshot-op = "set-snapshot" "snapshot" "=" (IDENT | TEXT)

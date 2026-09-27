@@ -9,11 +9,11 @@ Private cargo target: `.tmp-ticket/wp-wg10/target`. Captures: `wp-wg10/generated
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | S12-6 genesis-on-open parity native ↔ React ↔ wasm32 (one kernel primitive, fixture law, live) | **source landed (not yet compiled green, convoy)**: the hub's canonical checkpoint pair is the one seed of a hub open on every shell — kernel decoder + admission (Rust twin of the TS), `DirectoryClient::document_canonical_checkpoint_pair` (native + both wasm32 transports), actor seed (`ArtifactHost::set_document_seed`, Hello at the pair's baseline), Shell rewired, local `codec.genesis` path retired. TS law **26/26** (`ts-pair-1.txt`); Rust laws written, not run yet |
-| 1b | Landing: WG8's `kernel-patch-transport-deadline.py` (coordinator, WG10-1) | dry run clean on the current tree (20:5x); apply right after item 1 compiles |
-| 2 | Full cross-shell journey native ↔ React `s` on one hub document on 7800, en + de, measured — incl. the live CURSOR leg on a board-canvas kind (audit s13 P1-5) | pending (needs the item-1 test binary) |
+| 1 | S12-6 genesis-on-open parity native ↔ React ↔ wasm32 (one kernel primitive, fixture law, live) | **LANDED: native + wasm32 green, laws green**: the hub's canonical checkpoint pair is the one seed of a hub open on every shell. Kernel laws **11/11**, TS pair law **26/26**, wasm32 kernel wasip2 + sync-unknown + renderer-unknown **green** (06:34). **Live: pending** — item 2's cross-shell run on 7800 B3 is its live proof |
+| 1b | Landing: WG8's `kernel-patch-transport-deadline.py` (coordinator, WG10-1) | **LANDED**: native + wasm32 green, laws **2/2** |
+| 2 | Full cross-shell journey native ↔ React `s` on one hub document on 7800, en + de, measured — incl. the live CURSOR leg on a board-canvas kind (audit s13 P1-5) | **waits for 7800 on B3** (coordinator resumes WG10 then). On B2 + current tree the edit legs cannot pass (LD's `observed` envelope field: the current host refuses B2 guests' batches, C11 20:17). Runner ready: `wp-wg10/run-cross-shell.sh` (WG8's, WG10 paths) |
 | 3 | `hub-live-collaboration-check` 12/12 on 7800 after the all-package catalog + more kinds (board canvases, text) | waits on W3 (all-package catalog) |
-| 4 | Native accessibility (AccessKit tree for chrome + keyboard traversal), measured, root fixes | **source in (21:1x), not yet compiled**: AccessKit behind `♿️native-accessibility` (tree projection of the SAME dump the browser mirror renders — chrome + every visible document window; actions → the shell's `DispatchEvent::Accessibility`), wired into the native winit window (hidden → adapter → shown) and the Shell's presented-frame publication; fixture + schema + Rust law with AccessKit's consumer tree as oracle. Cargo.lock: +20 packages (see log). Keyboard traversal: not yet measured |
+| 4 | Native accessibility (AccessKit tree for chrome + keyboard traversal), measured, root fixes | **LANDED: native + wasm32 green, laws green**: AccessKit bridge behind `♿️native-accessibility` (chrome + every visible document window; AT actions → shell accessibility events), keyboard ring (Tab/Shift+Tab over the chrome's focusable publication then windows, Enter/Space activate, painted focus ring), Cargo.lock +20 packages. Renderer laws **29/29**, TS **3/3**. Measured gap (source): natively Tab only cycled dock windows, no chrome control was keyboard-reachable, nothing painted keyboard focus, no platform accessibility tree existed. Live macOS VoiceOver/AX measurement: pending (needs a native app run) |
 | 5 | Presence/ephemeral wire as ONE kernel primitive + TS twin + fixture law (audit s13 P2-2); re-verify a native late-join shows full history after WG9's echo-suppression set | pending (after 1–4) |
 
 ### Log (session 13)
@@ -94,4 +94,43 @@ Private cargo target: `.tmp-ticket/wp-wg10/target`. Captures: `wp-wg10/generated
   - fixture `🧑‍🎨engine/🧫️fixtures/♿️native-accessibility-tree/🔣️.json` + schema `🧬️schema/♿️native-accessibility-tree` + law
     `🧪️tests/♿️native-accessibility` (5 laws: consumer-tree roles/names/state/actions/focus, the role table, actions → shell events,
     id stability, publication versioning).
+
+- 21:1x (before the cut) item 4 laws: Rust `🧪️tests/♿️native-accessibility` gained `only_the_bridge_module_names_accesskit` (coordinator:
+  AccessKit approved behind the one module; a walk over every renderer `.rs` asserts no other file names the crate); TS runner
+  `🧪️tests/♿️native-accessibility/🟦️.ts` **3/3** (`ts-a11y-1.txt`: Ajv schema; every role `uiAccessibilityRoleV1` or the chrome can
+  announce has a platform role in the table). Z3 told about the Linux deps (acknowledged).
+- ~21:30 cut by the usage limit (coordinator rule 28: every process died overnight). Nothing of mine was running a hub/serve.
+- 04:58 resumed. Reconciled: every item-1 / transport-deadline / item-4 edit is on disk (`git diff` + greps), Cargo.lock carries
+  the 8 accesskit packages; the keyboard-ring edit had NOT been applied (its last anchor had moved) → anchor fixed, applied
+  (`wp-wg10/edit-shell-keyboard-ring.py`): Tab/Shift+Tab walk the chrome's focusable/enabled/visible accessibility publication then
+  the dock windows (`keyboard_ring`, `advance_keyboard_ring`), Enter/Space press the ring's control through
+  `handle_accessibility_event(Activate)`, overlay phase 10 paints the focus ring (`theme.focus_ring`) around its hit rect; the dead
+  `cycle_active_window` deleted. Law `🐚️Shell/🧪️tests/⌨️native-keyboard-ring` over fixture `🧫️fixtures/⌨️native-keyboard-ring`.
+  Measured before the fix (source reading, 21:2x): natively Tab only cycled dock windows; no chrome control was keyboard-reachable
+  and no keyboard focus was painted; the chrome accessibility projection existed only for the browser mirror.
+- 05:0x native check 9 (kernel `sync,ureq` + plugin host + renderer + MCP, lib + tests, `build-fleet-b`, cold) running.
+- 05:26 check 9 deadlocked 23 min in build-fleet-b (`sample`: `prebuild_lock_exclusive` → `flock`, 0 rustc child) → killed; rerun on a
+  private check-only build-dir `.🧬semio/🦑️repo/⚡️cache/cargo/build-wg10` (coordinator deletes it at REBUILD START).
+- 05:47 **native check GREEN** (`check-native-10.txt`, 20 min cold): os-kernel `sync,ureq` + plugin-host + renderer-wgpu + os-mcp,
+  `--lib --tests` (warnings = type-checked; my 4 new warnings fixed: 2 in the runtime law, 2 in the keyboard-ring law).
+- 05:59 **kernel laws 11/11** (`laws-kernel-1.txt`): canonical pair limits / 2 pairs / 15 refusals / 7 admissions, client fetch
+  (route, `Accept`, bearer, 503 asked again, 401/404/503 named), `a_seeded_hub_actor_says_hello_at_the_canonical_pair_baseline`,
+  codec registry laws without `genesis`, the transport-deadline laws, the epoch law (helpers lifted).
+- 06:0x landing rows (3) in `📓️landing.md`, `wp-w3/requests/wg10.txt` written. wasm32 checks queued 5th in the mutex
+  (`check-wasm-1.txt`); rule 29: native + laws suffice for the row, wasm32 is REBUILD's fast gate — leave the queue at 06:50.
+  Renderer laws building (`laws-renderer-1.txt`).
+- 06:0x–06:34 renderer laws: run 1 (parallel) 26/29 — the two Shell seal laws (mine + a peer's pre-existing
+  `chrome_accessibility_dispatch_validates_current_identity_and_activates_once`) refused `retained presented input candidate could not be
+  sealed` (process-wide seal state across parallel tests, WG7's known case) and the door source law
+  `the_directory_command_queue_compiles_on_the_browser_target` was red: WG8's native-only `SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE`
+  sat inside the shared `🎮️DirectoryCommandQueue` region → moved beside `shell_directory_transport`. Runs 2–3 `--test-threads=1`: ring law
+  harness fixes (retire the previous frame's hits like `InputFrame` does; Enter on the search toggle opens the palette and moves focus
+  into its query field, as React does → fixture step says so). **Run 4: 29/29** (`laws-renderer-4.txt`).
+- 06:28–06:34 **wasm32 GREEN ×3** (`check-wasm-1.txt`, mutex hold): kernel `--target wasm32-wasip2`, kernel `--features sync --target
+  wasm32-unknown-unknown`, renderer `--target wasm32-unknown-unknown` — covers item 1, the transport patch and item 4's lib code.
+- 06:20 hub 8091 (C11 recipe: B2 clone + 19:07 current-tree `os-hub`, `wp-wg10/wg10-hub.sh`, hold 51503 / hub 51505, ready ~06:30) and
+  React serve 6590 → 8091 (pid 59118, detached via `wp-w2/w2-detach.py`) started for a cursor-leg run; cut ~06:35 before it ran.
+- 09:55 resumed (rule 30: REBUILD START 09:53, build-wg10 deleted). Landing rows updated with wasm32 + law evidence; requests file
+  `wp-w3/requests/wg10.txt` stands. Rule 22: stopped hub 8091 (hold 51503 → hub exited) and serve 6590 (59118 + vite 59161) —
+  idle until 7800 is on B3. Waiting for the coordinator; on call for chain errors in kernel/renderer.
 

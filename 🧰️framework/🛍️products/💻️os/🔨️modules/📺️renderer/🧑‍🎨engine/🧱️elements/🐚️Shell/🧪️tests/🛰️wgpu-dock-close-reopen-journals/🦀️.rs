@@ -144,11 +144,7 @@ fn a_window_options_popup_dismissal_preserves_the_immediate_close_cap_gesture() 
     assert_eq!(shell.dock.collect_window_ids(), expected_windows, "🪟️ one immediate cap gesture removes Top");
     assert_eq!(shell.active_window_id.as_deref(), law["focusedWindow"].as_str(), "🪟️ the survivor receives focus");
     assert!(shell.presented_input_candidate.is_none(), "🎯️ no stale input candidate remains after the accepted gestures");
-    let close_notes = shell
-        .deferred_actions
-        .iter()
-        .filter(|action| action.action == "noteShellCommand" && action.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str) == law["closeCommand"].as_str())
-        .count();
+    let close_notes = shell.deferred_actions.iter().filter(|action| action.action == "noteShellCommand" && action.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str) == law["closeCommand"].as_str()).count();
     assert_eq!(close_notes, law["closeCommandCount"].as_u64().expect("close command count") as usize, "🕒️ the one cap gesture journals one close command");
 }
 
@@ -174,7 +170,9 @@ fn the_reopen_scan_after_a_close_lands_on_a_tab_select_that_closes_nothing() {
 
     let before = shell.dock.collect_window_ids();
     shell.deferred_actions.clear();
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }, &InputState::<ActionDescriptor>::default()));
+    let outcome = semio_framework_async::block_on(
+        shell.handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }, &InputState::<ActionDescriptor>::default()),
+    );
     assert!(outcome.is_ok(), "🛰️ the reopen step crosses no dispatch funnel");
     assert_eq!(shell.dock.collect_window_ids(), before, "🛰️ …and closes nothing: the dock survives the whole cap sequence");
     assert!(shell.deferred_actions.is_empty(), "🕒️ the survivor was already active, so not even an activation is owed");

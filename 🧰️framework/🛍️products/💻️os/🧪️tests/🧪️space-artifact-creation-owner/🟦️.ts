@@ -727,6 +727,51 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
       }
     });
+
+    it("admits exactly the declared session routes — the preference page included — equal to a path-to-regexp + WHATWG URL oracle", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { match } = await import("path-to-regexp");
+      const corpus = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🚦️browser-directory-routes.json", source.url), "utf8")) as {
+        readonly routes: readonly { readonly method: string; readonly pattern: string; readonly query: { readonly name: string; readonly grammar: "digits" | "safe-decimal" } | null }[];
+        readonly requests: readonly { readonly method: string; readonly path: string; readonly allowed: boolean }[];
+      };
+      const oracle = (method: string, path: string): boolean => {
+        const url = new URL(path, "http://oracle.invalid");
+        const parameters = [...url.searchParams];
+        return corpus.routes.some((route) => {
+          if (route.method !== method || match(route.pattern)(url.pathname) === false) return false;
+          if (route.query === null) return url.search === "";
+          if (parameters.length !== 1 || parameters[0]![0] !== route.query.name) return false;
+          const value = parameters[0]![1];
+          return route.query.grammar === "digits" ? /^\d+$/u.test(value) : /^(?:0|[1-9]\d*)$/u.test(value) && Number.isSafeInteger(Number(value));
+        });
+      };
+      const originalFetch = globalThis.fetch;
+      const urls: string[] = [];
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string) => {
+        urls.push(input);
+        return new Response("{}", { status: 200 });
+      };
+      try {
+        const admitted: string[] = [];
+        for (const row of corpus.requests) {
+          const outcome = await browserDirectoryRequest(row.path, { method: row.method }, { timeoutMs: 1_000 }).then(
+            () => true,
+            (error: unknown) => {
+              expect((error as Error).message, row.path).toBe("browser directory operation denied");
+              return false;
+            },
+          );
+          expect(outcome, `${row.method} ${row.path}`).toBe(row.allowed);
+          expect(oracle(row.method, row.path), `${row.method} ${row.path}: oracle`).toBe(row.allowed);
+          if (row.allowed) admitted.push(`/_semio/hub${row.path}`);
+        }
+        expect(urls).toEqual(admitted);
+        expect(corpus.requests.some((row) => row.allowed && row.path.startsWith("/directory/preference-page/v1"))).toBe(true);
+      } finally {
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+    });
   });
 
   describe("hub session capability lane", () => {
@@ -890,7 +935,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("preserves a server Commands batch with a maximum-u64 HLC through the raw actor event", async () => {
-      const batch = new Uint8Array(Buffer.from("01016d0164016100017301aa016902bbcc03ffffffffffffffffff0105", "hex"));
+      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105", "hex"));
       const serverFrame = Uint8Array.from([0, 3, ...batch, 6, ...new TextEncoder().encode("remote"), 1, 100, 0, 1, 101, 0, ...new Array(32).fill(0)]);
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);

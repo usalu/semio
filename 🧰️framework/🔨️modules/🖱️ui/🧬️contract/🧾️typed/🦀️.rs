@@ -20,13 +20,13 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(ToggleProps { 0 => on: bool, 1 => icon: UiText, 2 => text: Option<Label>, 3 => appearance: ToggleAppearance });
         $visitor!(KeyValueListProps { 0 => entries: UiFixedList<KeyValueEntry> });
         $visitor!(SliderProps { 0 => value: f64, 1 => min: f64, 2 => max: f64, 3 => step: f64, 4 => unit: Option<UiText> });
-        $visitor!(NumberStepperProps { 0 => value: f64, 1 => step: f64, 2 => uniform: bool });
+        $visitor!(NumberStepperProps { 0 => value: f64, 1 => step: f64, 2 => uniform: bool, 3 => min: Option<f64>, 4 => max: Option<f64> });
         $visitor!(RingProps { 0 => orb_id: UiText, 1 => t: f64 });
         $visitor!(IconSelectProps { 0 => value: UiText, 1 => uniform: bool, 2 => classifier_kind: UiText });
         $visitor!(ProgressProps { 0 => completed: f64, 1 => total: Option<f64>, 2 => value_text: Label });
         $visitor!(TreeWindow { 0 => total: u32, 1 => offset: u32, 2 => row_extent: TreeWindowRowExtent });
         $visitor!(TreeProps { 0 => interaction_domain: Option<UiText>, 1 => presentation: TreePresentation });
-        $visitor!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool>, 2 => window: Option<TreeWindow> });
+        $visitor!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool>, 2 => header_toolbar: Option<UiNodeId>, 3 => window: Option<TreeWindow> });
         $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId> });
         $visitor!(TableProps { 0 => label: Label, 1 => columns: UiFixedList<Label>, 2 => actions_label: Option<Label>, 3 => window: Option<TreeWindow> });
         $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction> });

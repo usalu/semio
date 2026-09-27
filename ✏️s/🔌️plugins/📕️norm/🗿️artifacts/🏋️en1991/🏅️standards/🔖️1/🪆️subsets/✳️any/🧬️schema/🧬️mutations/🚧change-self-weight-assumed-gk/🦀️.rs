@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSelfWeight
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-self-weight-assumed-gk", "change-self-weight-assumed-gk")
+        protocol::LocalizedLabel::native("Change assumed self-weight", "Angenommene Eigenlast ändern")
     }
 }
 //#endregion 🔖️Payload

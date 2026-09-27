@@ -4,6 +4,33 @@ fn shell() -> ShellState {
     ShellState::new(Vec::new(), String::new())
 }
 
+fn tutorial_runtime(duration_ms: u64, mode: TutorialMode, playhead_ms: f64, rate: f32, last_tick_wall_ms: f64) -> TutorialRuntime {
+    TutorialRuntime {
+        definition: semio_framework::TutorialDefinition {
+            id: "clock".into(),
+            title: LocalizedLabel::data("Clock"),
+            description: None,
+            duration_ms,
+            chapters: Vec::new(),
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework::TutorialTracks::default(),
+            recorded_at: None,
+        },
+        mode,
+        playhead_ms,
+        rate,
+        applied_ms: playhead_ms,
+        pre_sandbox_document_dsl: None,
+        pre_sandbox_ui: semio_framework::TutorialUiSnapshot::default(),
+        last_tick_wall_ms,
+        converge: HashMap::new(),
+        recorder_last_camera_wall_ms: HashMap::new(),
+        recorder_last_camera_pose: HashMap::new(),
+        recorder_last_ui: semio_framework::TutorialUiSnapshot::default(),
+        recorder_last_ui_sample_wall_ms: last_tick_wall_ms,
+    }
+}
+
 //#region PureMathTests
 #[test]
 fn advance_playhead_scales_by_rate() {
@@ -197,6 +224,77 @@ fn gesture_point_rejects_detached_semantic_surface() {
 //#endregion GesturePointTests
 
 //#region LifecycleTests
+#[test]
+fn tutorial_deadline_self_schedules_playback_recording_convergence_and_stops_at_terminal_states() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json")).expect("tutorial fixture");
+    let clock = &fixture["clock"];
+    for row in clock["deadlines"].as_array().expect("deadline rows") {
+        let mode = match row["mode"].as_str().expect("mode") {
+            "playing" => TutorialMode::Playing,
+            "paused" => TutorialMode::Paused,
+            "recording" => TutorialMode::Recording,
+            "deviated" => TutorialMode::Deviated,
+            value => panic!("unknown tutorial mode {value}"),
+        };
+        let mut state = shell();
+        let mut runtime = tutorial_runtime(row["durationMs"].as_u64().expect("duration"), mode, row["playheadMs"].as_f64().expect("playhead"), row["rate"].as_f64().expect("rate") as f32, row["lastTickWallMs"].as_f64().expect("last tick"));
+        if let Some(converge_end) = row["convergeEndWallMs"].as_f64() {
+            let camera = semio_framework::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 };
+            runtime.converge.insert("canvas".into(), TutorialCameraConverge { from: camera.clone(), to: camera, started_wall_ms: converge_end - semio_framework::TUTORIAL_CONVERGE_MS as f64 });
+        }
+        state.tutorial = Some(runtime);
+        let actual = state.next_tutorial_deadline_ms(1_000.0);
+        match row["expectedWallMs"].as_f64() {
+            Some(expected) => assert!((actual.expect("deadline") - expected).abs() < 0.000_001, "{}", row["id"]),
+            None => assert!(actual.is_none(), "{}", row["id"]),
+        }
+    }
+
+    let mut playing = shell();
+    playing.tutorial = Some(tutorial_runtime(clock["durationMs"].as_u64().expect("clock duration"), TutorialMode::Playing, 0.0, clock["rate"].as_f64().expect("clock rate") as f32, clock["wallFramesMs"][0].as_f64().expect("first frame")));
+    for (index, wall_ms) in clock["wallFramesMs"].as_array().expect("wall frames").iter().enumerate() {
+        playing.tutorial_tick(wall_ms.as_f64().expect("wall frame"));
+        let runtime = playing.tutorial.as_ref().expect("playing runtime");
+        assert!((runtime.playhead_ms - clock["expectedPlayheadMs"][index].as_f64().expect("expected playhead")).abs() < 0.000_001);
+        let expected_playing = clock["expectedPlaying"][index].as_bool().expect("expected playing");
+        assert_eq!(runtime.mode == TutorialMode::Playing, expected_playing);
+        assert_eq!(playing.next_tutorial_deadline_ms(wall_ms.as_f64().expect("wall frame")).is_some(), expected_playing, "a live tick rearms independently of frame acceptance");
+    }
+    assert!(playing.next_tutorial_deadline_ms(clock["wallFramesMs"][2].as_f64().expect("terminal frame")).is_none());
+
+    let mut recording = shell();
+    recording.tutorial = Some(tutorial_runtime(10, TutorialMode::Recording, 10.0, 5.0, 1_000.0));
+    recording.tutorial_tick(1_000.0 + clock["frameIntervalMs"].as_f64().expect("frame interval"));
+    let recorded = recording.tutorial.as_ref().expect("recording runtime");
+    assert!((recorded.playhead_ms - (10.0 + clock["frameIntervalMs"].as_f64().expect("frame interval"))).abs() < 0.000_001);
+    assert!(recording.next_tutorial_deadline_ms(recorded.last_tick_wall_ms).is_some());
+
+    let converge_row = clock["deadlines"].as_array().expect("deadline rows").iter().find(|row| row["id"] == "converging-paused").expect("convergence row");
+    let converge_end = converge_row["convergeEndWallMs"].as_f64().expect("convergence end");
+    let mut converging = shell();
+    let mut runtime = tutorial_runtime(50, TutorialMode::Paused, 10.0, 1.0, 1_000.0);
+    let camera = semio_framework::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 };
+    runtime.converge.insert("canvas".into(), TutorialCameraConverge { from: camera.clone(), to: camera, started_wall_ms: converge_end - semio_framework::TUTORIAL_CONVERGE_MS as f64 });
+    converging.tutorial = Some(runtime);
+    converging.tutorial_tick(converge_end);
+    assert!(converging.tutorial.as_ref().expect("converging runtime").converge.is_empty());
+    assert!(converging.next_tutorial_deadline_ms(converge_end).is_none());
+
+    let merge = &clock["merge"];
+    let mut merged = shell();
+    merged.tutorial = Some(tutorial_runtime(50, TutorialMode::Playing, 10.0, 2.0, merge["wallNowMs"].as_f64().expect("wall now")));
+    merged.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "tutorial-clock".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms: merge["chromeWallMs"].as_f64().expect("chrome deadline") - CHROME_TOOLTIP_DELAY_MS });
+    let merged_deadline = merged.next_chrome_deadline(merge["monotonicNowSeconds"].as_f64().expect("monotonic now"), merge["wallNowMs"].as_f64().expect("wall now")).expect("merged deadline");
+    assert!((merged_deadline - merge["expectedMonotonicSeconds"].as_f64().expect("expected monotonic deadline")).abs() < 0.000_001);
+
+    merged.tutorial.as_mut().expect("tutorial").mode = TutorialMode::Paused;
+    merged.chrome_build.tooltip_hover = None;
+    assert!(merged.next_chrome_deadline(40.0, 1_000.0).is_none());
+    merged.tutorial_stop();
+    assert!(merged.tutorial.is_none());
+    assert!(merged.next_tutorial_deadline_ms(1_000.0).is_none());
+}
+
 #[test]
 fn seek_clamps_to_duration_and_updates_playhead() {
     let mut state = shell();

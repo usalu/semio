@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "parameter": "brightness",
+      "before": null,
+      "after": 0.25
+    },
+    {
+      "parameter": "contrast",
+      "before": 0.15,
+      "after": -0.5
+    },
+    {
+      "parameter": "brightness",
+      "before": -0.5,
+      "after": null
+    }
+  ],
+  "invalid": [
+    {
+      "parameter": "gamma",
+      "value": 0.5
+    },
+    {
+      "parameter": "brightness",
+      "value": 1.01
+    },
+    {
+      "parameter": "contrast",
+      "value": -1.01
+    },
+    {
+      "parameter": "brightness",
+      "value": "0.5"
+    }
+  ],
+  "labels": {
+    "en": {
+      "brightness": "Brightness",
+      "contrast": "Contrast"
+    },
+    "de": {
+      "brightness": "Helligkeit",
+      "contrast": "Kontrast"
+    }
+  }
+}

@@ -1331,7 +1331,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -1350,6 +1350,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole shooting document (shots, assets, cameras and scene lighting) with one parsed from the given JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Shooting-Dokument (Aufnahmen, Objekte, Kameras und Szenenlicht) durch eines aus dem angegebenen JSON; ungültiges JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole shooting document (shots, assets, cameras and scene lighting) with one parsed from the given JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Shooting-Dokument (Aufnahmen, Objekte, Kameras und Szenenlicht) durch eines aus dem angegebenen JSON; ungültiges JSON ändert nichts."
+                }
               }
             }
           },
@@ -1440,6 +1450,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole shooting document with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Shooting-Dokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole shooting document with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Shooting-Dokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -1484,6 +1504,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Makes the shot with the given id the active one that shot edits and Export Active Shot apply to.",
+                  "de": "Macht die Aufnahme mit der angegebenen Id zur aktiven, auf die Aufnahmeänderungen und Aktive Aufnahme exportieren wirken."
+                },
+                "reuse": {
+                  "en": "Makes the shot with the given id the active one that shot edits and Export Active Shot apply to.",
+                  "de": "Macht die Aufnahme mit der angegebenen Id zur aktiven, auf die Aufnahmeänderungen und Aktive Aufnahme exportieren wirken."
+                }
               }
             }
           },
@@ -1528,6 +1558,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Makes the asset (3D model) with the given id the active one, or clears the active asset.",
+                  "de": "Macht das Objekt (3D-Modell) mit der angegebenen Id zum aktiven oder hebt das aktive Objekt auf."
+                },
+                "reuse": {
+                  "en": "Makes the asset (3D model) with the given id the active one, or clears the active asset.",
+                  "de": "Macht das Objekt (3D-Modell) mit der angegebenen Id zum aktiven oder hebt das aktive Objekt auf."
+                }
               }
             }
           },
@@ -1546,7 +1586,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -1573,7 +1613,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -1617,6 +1658,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the camera pose stored on one shot, which decides how that shot frames the scene when rendered.",
+                  "de": "Ersetzt die in einer Aufnahme gespeicherte Kamerapose, die bestimmt, wie diese Aufnahme die Szene beim Rendern zeigt."
+                },
+                "reuse": {
+                  "en": "Replaces the camera pose stored on one shot, which decides how that shot frames the scene when rendered.",
+                  "de": "Ersetzt die in einer Aufnahme gespeicherte Kamerapose, die bestimmt, wie diese Aufnahme die Szene beim Rendern zeigt."
+                }
               }
             }
           },
@@ -1661,6 +1712,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Saves the current viewport camera into the document's catalogue of saved cameras under the drafted label.",
+                  "de": "Speichert die aktuelle Ansichtskamera unter der entworfenen Bezeichnung im Katalog gespeicherter Kameras des Dokuments."
+                },
+                "reuse": {
+                  "en": "Saves the current viewport camera into the document's catalogue of saved cameras under the drafted label.",
+                  "de": "Speichert die aktuelle Ansichtskamera unter der entworfenen Bezeichnung im Katalog gespeicherter Kameras des Dokuments."
+                }
               }
             }
           },
@@ -1706,6 +1767,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the viewport camera to one saved camera by id; only the view changes, not the document.",
+                  "de": "Setzt die Ansichtskamera auf eine gespeicherte Kamera anhand ihrer Id; nur die Ansicht ändert sich, nicht das Dokument."
+                },
+                "reuse": {
+                  "en": "Moves the viewport camera to one saved camera by id; only the view changes, not the document.",
+                  "de": "Setzt die Ansichtskamera auf eine gespeicherte Kamera anhand ihrer Id; nur die Ansicht ändert sich, nicht das Dokument."
+                }
               }
             }
           },
@@ -1750,6 +1821,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the compass direction (azimuth, in degrees) the scene's sun shines from.",
+                  "de": "Legt die Himmelsrichtung (Azimut, in Grad) fest, aus der die Sonne der Szene scheint."
+                },
+                "reuse": {
+                  "en": "Sets the compass direction (azimuth, in degrees) the scene's sun shines from.",
+                  "de": "Legt die Himmelsrichtung (Azimut, in Grad) fest, aus der die Sonne der Szene scheint."
+                }
               }
             }
           },
@@ -1794,6 +1875,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how high above the horizon (elevation, in degrees) the scene's sun stands.",
+                  "de": "Legt fest, wie hoch über dem Horizont (Höhe, in Grad) die Sonne der Szene steht."
+                },
+                "reuse": {
+                  "en": "Sets how high above the horizon (elevation, in degrees) the scene's sun stands.",
+                  "de": "Legt fest, wie hoch über dem Horizont (Höhe, in Grad) die Sonne der Szene steht."
+                }
               }
             }
           },
@@ -1838,6 +1929,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the brightness of the scene's sun light.",
+                  "de": "Legt die Helligkeit des Sonnenlichts der Szene fest."
+                },
+                "reuse": {
+                  "en": "Sets the brightness of the scene's sun light.",
+                  "de": "Legt die Helligkeit des Sonnenlichts der Szene fest."
+                }
               }
             }
           },
@@ -1882,6 +1983,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the brightness of the scene's ambient light.",
+                  "de": "Legt die Helligkeit des Umgebungslichts der Szene fest."
+                },
+                "reuse": {
+                  "en": "Sets the brightness of the scene's ambient light.",
+                  "de": "Legt die Helligkeit des Umgebungslichts der Szene fest."
+                }
               }
             }
           },
@@ -1926,6 +2037,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the surface roughness applied to the scene's materials, from glossy to matte.",
+                  "de": "Legt die auf die Materialien der Szene angewandte Oberflächenrauheit fest, von glänzend bis matt."
+                },
+                "reuse": {
+                  "en": "Sets the surface roughness applied to the scene's materials, from glossy to matte.",
+                  "de": "Legt die auf die Materialien der Szene angewandte Oberflächenrauheit fest, von glänzend bis matt."
+                }
               }
             }
           },
@@ -1970,6 +2091,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns cast shadows in the scene on or off.",
+                  "de": "Schaltet Schlagschatten in der Szene ein oder aus."
+                },
+                "reuse": {
+                  "en": "Turns cast shadows in the scene on or off.",
+                  "de": "Schaltet Schlagschatten in der Szene ein oder aus."
+                }
               }
             }
           },
@@ -2014,6 +2145,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Switches the scene's sun light on or off.",
+                  "de": "Schaltet das Sonnenlicht der Szene ein oder aus."
+                },
+                "reuse": {
+                  "en": "Switches the scene's sun light on or off.",
+                  "de": "Schaltet das Sonnenlicht der Szene ein oder aus."
+                }
               }
             }
           },
@@ -2058,6 +2199,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renames the active shot to the given label.",
+                  "de": "Benennt die aktive Aufnahme in die angegebene Bezeichnung um."
+                },
+                "reuse": {
+                  "en": "Renames the active shot to the given label.",
+                  "de": "Benennt die aktive Aufnahme in die angegebene Bezeichnung um."
+                }
               }
             }
           },
@@ -2102,6 +2253,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the output format (PNG or SVG) the active shot renders to.",
+                  "de": "Legt das Ausgabeformat (PNG oder SVG) fest, in das die aktive Aufnahme gerendert wird."
+                },
+                "reuse": {
+                  "en": "Sets the output format (PNG or SVG) the active shot renders to.",
+                  "de": "Legt das Ausgabeformat (PNG oder SVG) fest, in das die aktive Aufnahme gerendert wird."
+                }
               }
             }
           },
@@ -2146,6 +2307,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the crop shape of the active shot, rectangle or ellipse, which the rendered icon is cut to.",
+                  "de": "Legt die Zuschnittform der aktiven Aufnahme fest, Rechteck oder Ellipse, auf die das gerenderte Icon zugeschnitten wird."
+                },
+                "reuse": {
+                  "en": "Sets the crop shape of the active shot, rectangle or ellipse, which the rendered icon is cut to.",
+                  "de": "Legt die Zuschnittform der aktiven Aufnahme fest, Rechteck oder Ellipse, auf die das gerenderte Icon zugeschnitten wird."
+                }
               }
             }
           },
@@ -2190,6 +2361,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one named field (such as label, format or shape) on every shot with the given ids.",
+                  "de": "Setzt ein benanntes Feld (etwa Bezeichnung, Format oder Form) auf allen Aufnahmen mit den angegebenen Ids."
+                },
+                "reuse": {
+                  "en": "Sets one named field (such as label, format or shape) on every shot with the given ids.",
+                  "de": "Setzt ein benanntes Feld (etwa Bezeichnung, Format oder Form) auf allen Aufnahmen mit den angegebenen Ids."
+                }
               }
             }
           },
@@ -2234,6 +2415,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one named field on every asset (3D model) with the given ids.",
+                  "de": "Setzt ein benanntes Feld auf allen Objekten (3D-Modellen) mit den angegebenen Ids."
+                },
+                "reuse": {
+                  "en": "Sets one named field on every asset (3D model) with the given ids.",
+                  "de": "Setzt ein benanntes Feld auf allen Objekten (3D-Modellen) mit den angegebenen Ids."
+                }
               }
             }
           },
@@ -2371,6 +2562,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new shot with the given format and shape, framed by the current viewport camera.",
+                  "de": "Fügt eine neue Aufnahme mit dem angegebenen Format und der Form hinzu, gerahmt von der aktuellen Ansichtskamera."
+                },
+                "reuse": {
+                  "en": "Adds a new shot with the given format and shape, framed by the current viewport camera.",
+                  "de": "Fügt eine neue Aufnahme mit dem angegebenen Format und der Form hinzu, gerahmt von der aktuellen Ansichtskamera."
+                }
               }
             }
           },
@@ -2449,6 +2650,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new placeholder asset of the given format to the scene.",
+                  "de": "Fügt der Szene ein neues Platzhalterobjekt des angegebenen Formats hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a new placeholder asset of the given format to the scene.",
+                  "de": "Fügt der Szene ein neues Platzhalterobjekt des angegebenen Formats hinzu."
+                }
               }
             }
           },
@@ -2493,6 +2704,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Imports a GLB model (data-URL payload, optional name) as a new asset in the scene.",
+                  "de": "Importiert ein GLB-Modell (Data-URL-Inhalt, optionaler Name) als neues Objekt in die Szene."
+                },
+                "reuse": {
+                  "en": "Imports a GLB model (data-URL payload, optional name) as a new asset in the scene.",
+                  "de": "Importiert ein GLB-Modell (Data-URL-Inhalt, optionaler Name) als neues Objekt in die Szene."
+                }
               }
             }
           },
@@ -2537,6 +2758,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.",
+                  "de": "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."
+                },
+                "reuse": {
+                  "en": "Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.",
+                  "de": "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."
+                }
               }
             }
           },
@@ -2581,6 +2812,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the given assets by dx, dy and dz; consecutive drags merge into one undo step.",
+                  "de": "Verschiebt die angegebenen Objekte um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Moves the given assets by dx, dy and dz; consecutive drags merge into one undo step.",
+                  "de": "Verschiebt die angegebenen Objekte um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                }
               }
             }
           },
@@ -2625,6 +2866,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rotates the given assets by an angle around the axis ax, ay, az; consecutive drags merge into one undo step.",
+                  "de": "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Rotates the given assets by an angle around the axis ax, ay, az; consecutive drags merge into one undo step.",
+                  "de": "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                }
               }
             }
           },
@@ -2669,6 +2920,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Scales the given assets by sx, sy and sz; consecutive drags merge into one undo step.",
+                  "de": "Skaliert die angegebenen Objekte um sx, sy und sz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Scales the given assets by sx, sy and sz; consecutive drags merge into one undo step.",
+                  "de": "Skaliert die angegebenen Objekte um sx, sy und sz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."
+                }
               }
             }
           },
@@ -2714,6 +2975,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Selects the given shots in the gallery and document tree; only the editor's view state changes.",
+                  "de": "Wählt die angegebenen Aufnahmen in Galerie und Dokumentbaum aus; nur der Ansichtszustand des Editors ändert sich."
+                },
+                "reuse": {
+                  "en": "Selects the given shots in the gallery and document tree; only the editor's view state changes.",
+                  "de": "Wählt die angegebenen Aufnahmen in Galerie und Dokumentbaum aus; nur der Ansichtszustand des Editors ändert sich."
+                }
               }
             }
           },
@@ -2759,6 +3030,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the label the next Save Camera stores the viewport camera under; the document is not changed.",
+                  "de": "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Sets the label the next Save Camera stores the viewport camera under; the document is not changed.",
+                  "de": "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."
+                }
               }
             }
           },
@@ -2804,6 +3085,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets whether the viewport keeps the model centred; only the view changes.",
+                  "de": "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Sets whether the viewport keeps the model centred; only the view changes.",
+                  "de": "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -2937,6 +3228,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes the whole shooting document as text to a downloaded shooting.shooting.ops file on the user's machine.",
+                  "de": "Schreibt das gesamte Shooting-Dokument als Text in eine heruntergeladene Datei shooting.shooting.ops auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes the whole shooting document as text to a downloaded shooting.shooting.ops file on the user's machine.",
+                  "de": "Schreibt das gesamte Shooting-Dokument als Text in eine heruntergeladene Datei shooting.shooting.ops auf dem Rechner des Nutzers."
+                }
               }
             }
           },
@@ -2978,6 +3279,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a saved shooting document (.ops, .dsl or .spk); the chosen file then replaces the current document.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein gespeichertes Shooting-Dokument (.ops, .dsl oder .spk); die gewählte Datei ersetzt dann das aktuelle Dokument."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a saved shooting document (.ops, .dsl or .spk); the chosen file then replaces the current document.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein gespeichertes Shooting-Dokument (.ops, .dsl oder .spk); die gewählte Datei ersetzt dann das aktuelle Dokument."
+                }
               }
             }
           },
@@ -3019,6 +3330,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."
+                },
+                "reuse": {
+                  "en": "Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.",
+                  "de": "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."
+                }
               }
             }
           },
@@ -3060,6 +3381,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renders the active shot and writes it as a PNG or SVG file named after the shot to the user's machine.",
+                  "de": "Rendert die aktive Aufnahme und schreibt sie als PNG- oder SVG-Datei mit dem Namen der Aufnahme auf den Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Renders the active shot and writes it as a PNG or SVG file named after the shot to the user's machine.",
+                  "de": "Rendert die aktive Aufnahme und schreibt sie als PNG- oder SVG-Datei mit dem Namen der Aufnahme auf den Rechner des Nutzers."
+                }
               }
             }
           },
@@ -3101,6 +3432,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renders every shot and writes each as a PNG or SVG file named after its shot to the user's machine.",
+                  "de": "Rendert alle Aufnahmen und schreibt jede als PNG- oder SVG-Datei mit dem Namen ihrer Aufnahme auf den Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Renders every shot and writes each as a PNG or SVG file named after its shot to the user's machine.",
+                  "de": "Rendert alle Aufnahmen und schreibt jede als PNG- oder SVG-Datei mit dem Namen ihrer Aufnahme auf den Rechner des Nutzers."
+                }
               }
             }
           },
@@ -3912,6 +4253,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4017,6 +4368,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4110,6 +4471,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5320,6 +5691,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5425,6 +5806,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5518,6 +5909,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5704,7 +6105,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5874,8 +6275,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "50b4ec6608a584b838e18deecf12366ea58c0dd0f0d578bb2f2778b6b5071a96",
-    "coreWasmSha256": "09cfdc665934fa774716c39cc53ecdeeac04dafe2520827839b1dcccdc91ff25",
-    "descriptorSha256": "316bc054eca79fba563e9b7bb1107ea49317a6c37a128a6e8604c51bcf9e548a"
+    "wasmSha256": "ab8b7d114f452bdaccf42198751e664386b31788856ebeaae2f18064a1346470",
+    "coreWasmSha256": "cdd414e5b44f09ab05f4c40c9a352e86d9445ec51d22d9dd6abf2d5e9408968a",
+    "descriptorSha256": "0e5080f7aaf6db542fca5fb0192493d67bc6d5166ee04135fda1760dfb25346a"
   }
 }

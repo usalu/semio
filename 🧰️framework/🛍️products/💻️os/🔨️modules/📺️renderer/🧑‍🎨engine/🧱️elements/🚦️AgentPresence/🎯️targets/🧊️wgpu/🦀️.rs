@@ -65,7 +65,11 @@ pub fn agent_presence_color(tone: AgentPresenceTone, theme: &Theme) -> Rgba {
 /// label the way `os.agent.presence.working`'s `{{label}}` placeholder does.
 pub fn agent_presence_text(status: AgentBridgeStatus, presence: &AgentBridgePresence, locale: Locale) -> String {
     match (status, agent_presence_tone(status, presence)) {
-        (AgentBridgeStatus::Incompatible(mismatch), _) => agent_label("The AI client uses bridge version {{gateway}}, this shell version {{shell}}; update the older one", "Der KI-Client nutzt Brückenversion {{gateway}}, diese Oberfläche Version {{shell}}; aktualisiere die ältere", locale).replace("{{gateway}}", &mismatch.gateway.to_string()).replace("{{shell}}", &mismatch.shell.to_string()),
+        (AgentBridgeStatus::Incompatible(mismatch), _) => {
+            agent_label("The AI client uses bridge version {{gateway}}, this shell version {{shell}}; update the older one", "Der KI-Client nutzt Brückenversion {{gateway}}, diese Oberfläche Version {{shell}}; aktualisiere die ältere", locale)
+                .replace("{{gateway}}", &mismatch.gateway.to_string())
+                .replace("{{shell}}", &mismatch.shell.to_string())
+        }
         (_, AgentPresenceTone::Blocked) => agent_label("The AI client's bridge does not answer; restart the AI client to connect again", "Die Brücke des KI-Clients antwortet nicht; starte den KI-Client neu, um erneut zu verbinden", locale),
         (AgentBridgeStatus::Reconnecting, _) => agent_label("Reconnecting to agent…", "Verbindung zum Agent wird wiederhergestellt…", locale),
         (AgentBridgeStatus::Connecting, _) => agent_label("Connecting to agent…", "Verbinde mit Agent…", locale),

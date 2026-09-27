@@ -152,7 +152,16 @@ pub(crate) fn agg_inverse(this: &Mp4Mutation, base: &Mp4Snapshot) -> Vec<Mp4Muta
             Some(track) => vec![Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() })],
             None => Vec::new(),
         },
-        Mp4Mutation::InsertSample(_) | Mp4Mutation::RemoveSample(_) => vec![Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, .. }) => {
+            vec![Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: *track_index, index: *index })]
+        }
+        Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }) => base
+            .tracks
+            .get(*track_index)
+            .and_then(|track| track.samples.get(*index))
+            .map(|sample| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() }))
+            .into_iter()
+            .collect(),
         Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, .. }) => match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
             Some(sample) => vec![Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync })],
             None => Vec::new(),

@@ -33,6 +33,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeBoltCount 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-bolt-count", "change-bolt-count")
+        protocol::LocalizedLabel::native("Change number of bolts", "Schraubenanzahl ändern")
     }
 }

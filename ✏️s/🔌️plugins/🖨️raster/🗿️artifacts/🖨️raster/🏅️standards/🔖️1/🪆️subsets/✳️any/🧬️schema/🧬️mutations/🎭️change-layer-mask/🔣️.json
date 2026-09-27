@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask",
+  "semanticKind": "change-layer-mask",
+  "displayName": "Change Layer Mask",
+  "emoji": "🎭️",
+  "aggregateVariant": "ChangeLayerMask",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-layer-mask",
+  "binaryTag": 13,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

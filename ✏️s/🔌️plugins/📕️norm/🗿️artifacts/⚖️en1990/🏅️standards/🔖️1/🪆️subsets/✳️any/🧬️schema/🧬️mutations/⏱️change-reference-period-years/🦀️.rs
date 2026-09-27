@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeReferenceP
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change reference-period-years", "Ändern: reference-period-years")
+        protocol::LocalizedLabel::native("Change reference period", "Bezugszeitraum ändern")
     }
 }
 //#endregion 🔖️Payload

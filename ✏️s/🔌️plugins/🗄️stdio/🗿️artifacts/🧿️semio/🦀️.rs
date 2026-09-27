@@ -661,6 +661,7 @@ impl RetireOwned for video_mutation::SemioVideoMutation {
 impl RetireOwned for mesh_mutation::SemioMeshMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateMesh(value) => value.mesh.retirement(),
             Self::DeleteMesh(value) => value.id.retirement(),
             Self::CreatePrimitive(value) => seq![value.mesh_id, value.primitive],
@@ -685,6 +686,7 @@ impl RetireOwned for mesh_mutation::SemioMeshMutation {
 impl RetireOwned for drawing_mutation::SemioDrawingMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateLayer(value) => seq![value.index, value.layer],
             Self::DeleteLayer(value) => value.id.retirement(),
             Self::CreateNode(value) => seq![value.parent, value.index, value.node],
@@ -709,6 +711,7 @@ impl RetireOwned for drawing_mutation::SemioDrawingMutation {
 impl RetireOwned for table_mutation::SemioTableMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateColumn(value) => seq![value.name, value.kind, value.index],
             Self::DeleteColumn(value) => value.name.retirement(),
             Self::RenameColumn(value) => seq![value.name, value.new_name],
@@ -724,6 +727,7 @@ impl RetireOwned for table_mutation::SemioTableMutation {
 impl RetireOwned for brep_mutation::SemioBrepMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateVertex(value) => seq![value.id, value.point],
             Self::DeleteVertex(value) => value.id.retirement(),
             Self::CreateEdge(value) => seq![value.id, value.start_vertex, value.end_vertex, value.curve],
@@ -744,6 +748,7 @@ impl RetireOwned for brep_mutation::SemioBrepMutation {
 impl RetireOwned for graph_mutation::SemioGraphMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateNode(value) => seq![value.id, value.kind, value.label, value.position, value.ports, value.properties],
             Self::DeleteNode(value) => value.id.retirement(),
             Self::ChangeNodeKind(value) => seq![value.id, value.new_kind],
@@ -762,6 +767,7 @@ impl RetireOwned for graph_mutation::SemioGraphMutation {
 impl RetireOwned for object_mutation::SemioObjectMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::MoveObject(value) => value.translation.retirement(),
             Self::RotateObject(value) => value.rotation.retirement(),
             Self::ScaleObject(value) => value.scale.retirement(),
@@ -778,6 +784,7 @@ impl RetireOwned for object_mutation::SemioObjectMutation {
 impl RetireOwned for kit_mutation::SemioKitMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::CreateObject(value) => seq![value.child_id, value.target],
             Self::DeleteObject(value) => value.child_id.retirement(),
             Self::CreateModel(value) => seq![value.child_id, value.target],
@@ -800,6 +807,7 @@ impl RetireOwned for kit_mutation::SemioKitMutation {
 impl RetireOwned for text_mutation::SemioTextMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
+            Self::SetSnapshot(value) => value.snapshot.retirement(),
             Self::InsertRun(value) => seq![value.index, value.run],
             Self::RemoveRun(value) => value.index.retirement(),
             Self::EditRun(value) => seq![value.index, value.new_content],
@@ -1561,6 +1569,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "."]
@@ -2210,6 +2220,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "."]
@@ -2814,6 +2826,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "."]
@@ -3603,6 +3617,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -3752,6 +3768,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -3925,6 +3943,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -4101,6 +4121,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -4257,6 +4279,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
+                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]

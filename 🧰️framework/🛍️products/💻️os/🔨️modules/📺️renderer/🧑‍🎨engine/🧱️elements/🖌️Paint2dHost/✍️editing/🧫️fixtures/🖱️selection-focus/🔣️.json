@@ -17,5 +17,9 @@
     "width": 10,
     "height": 10
   },
-  "coverage": 255
+  "coverage": 255,
+  "actions": [
+    "Apply",
+    "Mask from selection"
+  ]
 }

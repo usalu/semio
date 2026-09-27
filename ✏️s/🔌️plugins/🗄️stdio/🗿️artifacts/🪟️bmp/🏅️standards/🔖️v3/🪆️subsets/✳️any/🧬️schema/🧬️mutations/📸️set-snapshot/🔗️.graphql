@@ -1,0 +1,2 @@
+# 📸️ Whole BMP snapshot replacement.
+input SetSnapshot { snapshot: BmpSnapshotInput! }

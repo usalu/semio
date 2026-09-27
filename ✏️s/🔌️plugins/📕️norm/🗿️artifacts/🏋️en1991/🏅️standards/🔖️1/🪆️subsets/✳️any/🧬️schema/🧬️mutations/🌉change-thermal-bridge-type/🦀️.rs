@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeThermalBri
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-thermal-bridge-type", "change-thermal-bridge-type")
+        protocol::LocalizedLabel::native("Change bridge deck type for thermal actions", "Überbautyp für Temperatureinwirkungen ändern")
     }
 }
 //#endregion 🔖️Payload

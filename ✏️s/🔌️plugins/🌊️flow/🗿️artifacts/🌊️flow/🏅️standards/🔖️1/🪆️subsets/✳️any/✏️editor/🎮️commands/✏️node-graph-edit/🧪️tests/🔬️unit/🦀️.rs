@@ -8,15 +8,7 @@ use store::{ArtifactPack, SpaceMember};
 
 async fn content_snapshot(app: &FlowApp) -> SemioFlowSnapshot {
     let parent = app.snapshot().expect("Flow parent snapshot");
-    SemioFlowSnapshot::decode_pack(
-        &app.child_store("content", &parent.content.child_id)
-            .await
-            .expect("Flow content child")
-            .document_pack_bytes()
-            .await
-            .expect("Flow content child pack"),
-    )
-    .expect("Flow content child snapshot")
+    SemioFlowSnapshot::decode_pack(&app.child_store("content", &parent.content.child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("Flow content child snapshot")
 }
 
 /// 🎯️ The batched `DeleteSelection` sub-op must clear the node selection (visible on the rendered
@@ -55,7 +47,10 @@ async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
     let snapshot = app.snapshot().expect("snapshot after Spotlight publication");
     assert_eq!(snapshot.content.child_id, content_id, "Spotlight must publish through the existing content child");
     let content = content_snapshot(&app).await;
-    assert!(content.edges.iter().any(|edge| edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"), "Spotlight and nodeGraphEdit share the exact valid connect vocabulary in the composed content child");
+    assert!(
+        content.edges.iter().any(|edge| edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"),
+        "Spotlight and nodeGraphEdit share the exact valid connect vocabulary in the composed content child"
+    );
 }
 
 #[semio_framework_async_macros::async_test]
@@ -124,6 +119,10 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     let content = content_snapshot(&app).await;
     let moved = content.nodes.iter().find(|node| node.id == "add").map(|node| (node.position.x, node.position.y));
     assert_eq!(moved, Some((284.0, 48.0)), "the renderer's exact move row must survive strict wire parsing and reach the Flow host layout");
+    let rendered = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
+    let scene: ui_wgpu::wgpu::NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&rendered).expect("moved Flow main scene");
+    let published: serde_json::Value = serde_json::from_str(scene.host_snapshot_json.as_deref().expect("Flow main publishes its host snapshot geometry")).expect("published Flow host snapshot JSON");
+    assert_eq!(published["layout"]["add"], serde_json::json!({ "x": 284.0, "y": 48.0 }), "the next public scene republishes the persisted position through WGPU's active hostSnapshotJson geometry authority");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -15,6 +15,7 @@ import { ScaleFixtureGenerateScript, ScaleFixturePreviewGeneratedScript, ScaleFi
 import { CapabilityLayeringLintScript } from "../../🧪️tests/🧹️layering-policy/🟦️.ts";
 import { PluginIndexExportPathLintScript } from "../../🧪️tests/🧹️export-path-policy/🟦️.ts";
 import { HostHandleReachLintScript } from "../../🧪️tests/🧹️host-handle-policy/🟦️.ts";
+import { ChannelVersionScript } from "../../🔖️channel-version/🟦️.ts";
 import { ParitySmokeScript, ParityTriageScript, ParityProbeScript, ParityVerifyScript, ParitySweepScript } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { PluginWatchScript } from "../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts";
 import { PluginCapabilityLintScript } from "../../🧪️tests/🧹️capability-policy/🟦️.ts";
@@ -67,6 +68,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("layer-lint", CapabilityLayeringLintScript)
   .register("index-lint", PluginIndexExportPathLintScript)
   .register("host-handle-lint", HostHandleReachLintScript)
+  .register("channel-version", ChannelVersionScript)
   .register("parity", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const routes = { smoke: ParitySmokeScript, triage: ParityTriageScript, probe: ParityProbeScript, verify: ParityVerifyScript, sweep: ParitySweepScript } as const;

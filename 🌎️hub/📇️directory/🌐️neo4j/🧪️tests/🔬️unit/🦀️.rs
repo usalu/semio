@@ -1,47 +1,27 @@
 use super::*;
-use std::net::TcpListener;
-use std::process::Command;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
 
-static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);
-
-pub(super) struct Neo4jContainer {
-    name: String,
+/// 🕸️ The ONE claimed shared Neo4j (`os-hub-ts backend run neo4j -- …`, an exclusive lease): Community edition serves one
+/// graph, so each lane starts from an emptied graph and the lanes run one at a time (`directory-live-lanes neo4j` passes
+/// `--test-threads=1`) — the lanes never start a server of their own (preamble rule 22).
+pub(super) struct Neo4jFixture {
     pub(super) uri: String,
+    user: String,
+    password: String,
 }
 
-impl Drop for Neo4jContainer {
-    fn drop(&mut self) {
-        let _ = Command::new("docker").args(["rm", "--force", &self.name]).output();
-    }
-}
-
-impl Neo4jContainer {
+impl Neo4jFixture {
     pub(super) async fn connect(&self) -> Neo4jDirectory {
-        Neo4jDirectory::connect(&self.uri, "neo4j", "semio-test").await.expect("connect second neo4j directory")
+        Neo4jDirectory::connect(&self.uri, &self.user, &self.password).await.expect("connect second neo4j directory")
     }
 }
 
-pub(super) async fn test_directory() -> (Neo4jDirectory, Neo4jContainer) {
-    let port = TcpListener::bind(("127.0.0.1", 0)).expect("reserve neo4j fixture port").local_addr().expect("neo4j fixture address").port();
-    let sequence = NEXT_CONTAINER.fetch_add(1, Ordering::Relaxed);
-    let name = format!("semio-hub-neo4j-{}-{sequence}", std::process::id());
-    let mapping = format!("127.0.0.1:{port}:7687");
-    let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "NEO4J_AUTH=neo4j/semio-test", "--publish", &mapping, "neo4j:5-community"]).output().expect("start docker for neo4j fixture");
-    assert!(output.status.success(), "start neo4j fixture: {}", String::from_utf8_lossy(&output.stderr));
-    let uri = format!("127.0.0.1:{port}");
-    let container = Neo4jContainer { name, uri: uri.clone() };
-    let mut last_error = None;
-    for _ in 0..600 {
-        match Neo4jDirectory::connect(&uri, "neo4j", "semio-test").await {
-            Ok(directory) => return (directory, container),
-            Err(error) => last_error = Some(error),
-        }
-        tokio::time::sleep(Duration::from_millis(100)).await;
-    }
-    panic!("connect to neo4j fixture: {}", last_error.expect("neo4j fixture must report a connection error"));
+/// 🕸️ The claimed shared Neo4j with an emptied graph, and the directory over it.
+pub(super) async fn test_directory() -> (Neo4jDirectory, Neo4jFixture) {
+    db::db_storage::claimed_backend::client("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS");
+    let fixture = Neo4jFixture { uri: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_URI"), user: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_USER"), password: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_PASSWORD") };
+    let directory = fixture.connect().await;
+    (directory, fixture)
 }
 
 fn claim_actor(id: &str) -> DirectoryActor {
@@ -50,12 +30,13 @@ fn claim_actor(id: &str) -> DirectoryActor {
 
 /// 🎟️ A real Neo4j transaction yields one immutable claim and retains accepted active invites through its projection rebuild policy.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn invite_redemption_claim_matches_neutral_contract() {
-    let (primary, container) = test_directory().await;
+    let (primary, fixture) = test_directory().await;
     primary.seed().await.expect("seed neo4j invite fixture");
     let invited = primary.create_user("neo4j-invite@example.com", "Neo4j Invite", None, None, None).await.expect("create neo4j invited user");
     let issued = primary.issue_invite("default", SpaceRole::Spectator, 3600, "neo4j-invite-race").await.expect("issue neo4j invite");
-    let secondary = container.connect().await;
+    let secondary = fixture.connect().await;
     let barrier = Arc::new(tokio::sync::Barrier::new(3));
     let first = {
         let barrier = barrier.clone();
@@ -87,7 +68,7 @@ async fn invite_redemption_claim_matches_neutral_contract() {
         .collect();
     assert_eq!(event_ids.len(), 1);
 
-    let directory = container.connect().await;
+    let directory = fixture.connect().await;
     let invite = directory.list_invites("default").await.expect("neo4j claimed invite").into_iter().find(|record| record.id == issued.record.id).expect("claimed neo4j invite row");
     assert!(invite.accepted_at.is_some());
     assert_eq!(invite.accepted_event_id.as_deref(), event_ids.first().copied());
@@ -118,8 +99,9 @@ async fn invite_redemption_claim_matches_neutral_contract() {
 }
 
 #[tokio::test]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn directory_event_page_v1_append_admission_is_transactional_neo4j() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let head = directory.head_seq().await.expect("head before boundary event");
     let mut event = NewDirectoryEvent {
@@ -149,8 +131,9 @@ async fn directory_event_page_v1_append_admission_is_transactional_neo4j() {
 // the `credential-changed` fact move together, an unknown target writes neither, and a refused
 // sign-in's fact carries its public reason code and no credential material.
 #[tokio::test]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn credential_writes_and_facts_stay_in_one_transaction() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     let user = directory.create_user("neo4j-credential@example.com", "Credential", None, None, None).await.expect("create user");
     assert_eq!(directory.get_user(&user.id).await.expect("read user").expect("user").password_hash, None);
@@ -186,24 +169,27 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
 
 // 🔮️ The backend-neutral share-scope corpus (`🧪️tests/🔮️backend-corpus/`) over a real Neo4j.
 #[tokio::test]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn share_scope_corpus_v1_holds_on_neo4j() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
 }
 
 // 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over a real Neo4j.
 #[tokio::test]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn space_administration_read_surface_v1_holds_on_neo4j() {
-    let (directory, _container) = test_directory().await;
+    let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
     crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
 }
 
 // 🔬️ ticket 26/09/18 slice DB2 — the neo4j twin of the directory format-stamp law.
 #[tokio::test]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- … directory-live-lanes neo4j`"]
 async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_neo4j() {
-    let (directory, container) = test_directory().await;
+    let (directory, fixture) = test_directory().await;
     let mut result = directory.graph.execute(query("MATCH (f:DirectoryFormat {id: 'singleton'}) RETURN f.schema AS schema, f.version AS version")).await.expect("read stamp");
     let row = result.next().await.expect("stamp row").expect("stamp written on creation");
     assert_eq!(row.get::<String>("schema").expect("schema"), crate::directory::DIRECTORY_FORMAT_SCHEMA);
@@ -211,13 +197,13 @@ async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_neo4j
     drop(result);
 
     directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION + 1)).await.expect("forge a newer format");
-    let refused = Neo4jDirectory::connect(&container.uri, "neo4j", "semio-test").await.err().map(|error| error.to_string()).unwrap_or_default();
+    let refused = Neo4jDirectory::connect(&fixture.uri, &fixture.user, &fixture.password).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
 
     directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = 'semio/hub/directory-format/v9', f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("forge an unknown schema");
-    let unknown = Neo4jDirectory::connect(&container.uri, "neo4j", "semio-test").await.err().map(|error| error.to_string()).unwrap_or_default();
+    let unknown = Neo4jDirectory::connect(&fixture.uri, &fixture.user, &fixture.password).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
 
     directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = $schema, f.version = $version").param("schema", crate::directory::DIRECTORY_FORMAT_SCHEMA).param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("restore the stamp");
-    container.connect().await;
+    fixture.connect().await;
 }

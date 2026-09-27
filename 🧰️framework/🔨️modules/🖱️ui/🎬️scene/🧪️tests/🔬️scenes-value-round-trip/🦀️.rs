@@ -10,7 +10,7 @@ fn canvas2d_scene_round_trips_with_and_without_snapshot() {
     let leased = Canvas2dScene { snapshot: Some(crate::Canvas2dSnapshotLease { slot: 1, epoch: 2, revision: 3, generation: 4, page_count: 1, byte_count: 16 }), ..bare };
     assert_eq!(Canvas2dScene::from_value(leased.to_value()), Ok(leased.clone()));
 
-    let traced = Canvas2dScene { tool_run_trace: Some("AAQB".into()), lanes: vec![SceneLaneRef { lane: "toolRunTrace".into(), bytes: 4, hash: scene_lane_hash("AAQB") }], ..leased };
+    let traced = Canvas2dScene { framing: Some(crate::Canvas2dFraming { revision: 7,bounds: [-100.0,-50.0,300.0,150.0],padding: 40.0 }), tool_run_trace: Some("AAQB".into()), lanes: vec![SceneLaneRef { lane: "toolRunTrace".into(), bytes: 4, hash: scene_lane_hash("AAQB") }], ..leased };
     assert_eq!(Canvas2dScene::from_value(traced.to_value()), Ok(traced.clone()));
     assert_eq!(Canvas2dScene::decode_pack(&traced.encode_pack().expect("canvas-2d packs")).expect("canvas-2d unpacks"), traced);
 }
@@ -96,7 +96,7 @@ fn node_graph_viewport_and_hover_round_trip_including_all_none() {
 
 #[test]
 fn table_scene_and_tiled_map_scene_round_trip() {
-    let table = TableScene { columns_json: "[]".into(), rows_json: "[]".into(), selection_json: Some("{}".into()), row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: Some("d".into()), domain_granularity_id: Some("g".into()) };
+    let table = TableScene { lanes: Vec::new(), columns_json: "[]".into(), rows_json: "[]".into(), selection_json: Some("{}".into()), row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: Some("d".into()), domain_granularity_id: Some("g".into()) };
     assert_eq!(TableScene::from_value(table.to_value()), Ok(table));
 
     let tiled = TiledMapScene::base("{}".into(), "{}".into());

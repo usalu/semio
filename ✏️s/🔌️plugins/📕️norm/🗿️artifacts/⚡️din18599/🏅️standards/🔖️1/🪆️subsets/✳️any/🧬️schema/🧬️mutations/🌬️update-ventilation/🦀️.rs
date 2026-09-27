@@ -30,6 +30,6 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateVentil
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update ventilation", "ventilation aktualisieren")
+        protocol::LocalizedLabel::native("Update ventilation system", "Lüftungsanlage aktualisieren")
     }
 }

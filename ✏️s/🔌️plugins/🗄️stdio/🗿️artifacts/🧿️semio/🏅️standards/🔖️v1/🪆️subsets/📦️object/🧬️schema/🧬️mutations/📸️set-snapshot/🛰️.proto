@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.stdio.semio.v1.object.mutations;
+import "../../📸️snapshot/🛰️.proto";
+message SetSnapshot { semio.s.stdio.semio.v1.object.snapshot.SemioObjectSnapshot snapshot = 1; }

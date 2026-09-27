@@ -31,7 +31,7 @@ fn one_vertex_snapshot() -> SemioBrepSnapshot {
 async fn command_from_action_parses_the_point_payload() {
     let args = DslValue::Object(vec![("point".to_string(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
     let command = SemioBrepEditor::command_from_action("set-vertex", Some(&args)).expect("set-vertex is supported");
-    assert_eq!(command, SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [1.0, 2.0, 3.0] }));
+    assert_eq!(command, editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [1.0, 2.0, 3.0] })));
 }
 
 #[semio_framework_async_macros::async_test]

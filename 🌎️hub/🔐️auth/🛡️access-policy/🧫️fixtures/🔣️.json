@@ -1020,6 +1020,38 @@
       "action": "agent.delegate",
       "spaceKind": "studio",
       "permitted": false
+    },
+    {
+      "name": "authenticated preference.record (per-user preference lane)",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "preference.record",
+      "permitted": true
+    },
+    {
+      "name": "authenticated preference.read (per-user preference lane)",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "preference.read",
+      "permitted": true
+    },
+    {
+      "name": "share preference.record (per-user preference lane)",
+      "roles": [
+        "share"
+      ],
+      "action": "preference.record",
+      "permitted": false
+    },
+    {
+      "name": "share preference.read (per-user preference lane)",
+      "roles": [
+        "share"
+      ],
+      "action": "preference.read",
+      "permitted": false
     }
   ]
 }

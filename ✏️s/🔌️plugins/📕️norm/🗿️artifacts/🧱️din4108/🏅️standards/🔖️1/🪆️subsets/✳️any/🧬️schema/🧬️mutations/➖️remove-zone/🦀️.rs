@@ -23,6 +23,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveZone {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-zone", "remove-zone")
+        protocol::LocalizedLabel::native("Remove zone", "Zone entfernen")
     }
 }

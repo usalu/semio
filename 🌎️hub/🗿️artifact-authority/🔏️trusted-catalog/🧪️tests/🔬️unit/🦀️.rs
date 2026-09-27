@@ -1006,6 +1006,9 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
     }
 }
 
+/// 🧩️ A selected provider that fails, substitutes, conflicts or binds foreign rows publishes nothing; a provider that
+/// binds NOTHING for a declared row is no trust failure — the row waits for its component's own answer (the catalog
+/// verifies guest rows lazily) and is never served while its component does not give it.
 #[tokio::test]
 async fn selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure() {
     for hostile in ["foreign", "missing", "duplicate", "zero", "hash", "extra", "provider-failure", "registry-conflict"] {
@@ -1017,6 +1020,15 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
         }
         if hostile == "registry-conflict" {
             os_store::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).expect("prior immutable owner");
+        }
+        if hostile == "missing" {
+            let control = TestControl::new();
+            let catalog = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &source, &control.context()).await.expect("a row no provider binds loads and waits for its component's answer");
+            assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-base", "semio:fixture-editor"]);
+            let pending = catalog.codecs.iter().find(|codec| codec.identity.artifact_schema == fixture.schema).expect("the unbound row's codec");
+            assert!(pending.guest.genesis("fixture-document", &control.context()).await.is_err(), "the unbound row is never served: its component does not answer it");
+            assert!(document_codec(&fixture.schema).await.expect("registry").is_none(), "no native codec is published for the unbound row");
+            continue;
         }
         assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err(), "{hostile}");
         assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-base", "semio:fixture-editor"], "{hostile}");
@@ -1031,7 +1043,10 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
     #[cfg(feature = "native-artifact-execution")]
     {
         let fixture = prepared_fixture();
-        assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &TestControl::new().context()).await.is_err());
+        let control = TestControl::new();
+        let catalog = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("rows the linked providers do not bind wait for their components");
+        let pending = catalog.codecs.iter().find(|codec| codec.identity.artifact_schema == fixture.schema).expect("the fixture row's codec");
+        assert!(pending.guest.genesis("fixture-document", &control.context()).await.is_err(), "an unlinked row whose component does not answer it is never served");
         assert!(document_codec(&fixture.schema).await.expect("registry").is_none());
     }
 }
@@ -1694,6 +1709,47 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
     assert_eq!((progress.packages_ready, progress.packages_total, progress.rows_verified), (progress.packages_total, 2, 1));
     let served = &verified.codecs[answered(&background, &verified)];
     assert!(served.guest.genesis("document-1", &control.context()).await.is_ok());
+}
+
+/// 🧬️ LAW (ticket 26/09/23, H12): a guest `codec` call answers through its owner's codec table and constructs no app,
+/// and those answers equal the independently linked native codecs of the plugins this hub links an assembly of — gis
+/// and vcs (puzzle's own law covers a third): the same pack-schema hash, the NATIVE codec decodes the table's genesis
+/// pair, and both print the same op log of it (the `dsl` renderings differ by design: document text vs the kind's DSL). A schema the bundle declares without owning is
+/// refused as unowned. Every plugin contributes at least one owned comparison.
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
+    macro_rules! compare_plugin {
+        ($plugin:expr, $codecs:expr) => {{
+            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+            semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, $plugin.expect("plugin assembles"));
+            let document_id = format!("artifact-{}", "2".repeat(32));
+            let (mut owned, mut unowned) = (Vec::new(), 0usize);
+            for codec in $codecs {
+                match semio_framework_plugin::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, &codec.schema).await {
+                    Err(fault) => {
+                        assert!(format!("{fault:?}").contains("owned by no app"), "{}: {fault:?}", codec.schema);
+                        unowned += 1;
+                    }
+                    Ok(hash) => {
+                        assert_eq!(hash, codec.pack_schema_hash, "{}: pack-schema hash", codec.schema);
+                        let pair = semio_framework_plugin::plugin_runtime::plugin_artifact_genesis(&runtime, &codec.schema, &document_id).await.unwrap_or_else(|fault| panic!("{}: genesis {fault:?}", codec.schema));
+                        let guest = semio_framework_plugin::plugin_runtime::plugin_artifact_print_mirror(&runtime, &codec.schema, &pair.pack, &pair.spr).await.unwrap_or_else(|fault| panic!("{}: guest mirror {fault:?}", codec.schema));
+                        let native = (codec.print_mirror)(&pair.pack, &pair.spr).await.unwrap_or_else(|error| panic!("{}: native mirror {error:?}", codec.schema));
+                        assert_eq!(guest.ops, native.ops, "{}: op-log mirror", codec.schema);
+                        assert!(!guest.dsl.is_empty() && !native.dsl.is_empty(), "{}: both render the document", codec.schema);
+                        owned.push(codec.schema.clone());
+                    }
+                }
+            }
+            (owned, unowned)
+        }};
+    }
+    let gis = compare_plugin!(semio_s_plugin_gis::plugin(), semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().expect("gis receipts").into_iter().map(|receipt| receipt.into_codec().expect("gis codec")));
+    let vcs = compare_plugin!(semio_s_plugin_vcs::plugin(), semio_s_plugin_vcs::native_codecs::native_codec_factory_receipts().expect("vcs receipts").into_iter().map(|receipt| receipt.into_codec().expect("vcs codec")));
+    for (plugin, (owned, unowned)) in [("gis", &gis), ("vcs", &vcs)] {
+        assert!(!owned.is_empty(), "{plugin}: at least one owned kind compared ({unowned} unowned)");
+    }
 }
 
 /// 📈️ A catalog load reports every selected package into the host's progress cell — phase, component bytes and

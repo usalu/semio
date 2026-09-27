@@ -27,13 +27,13 @@
     "dependencies": [
       {
         "pluginId": "sourcing",
-        "version": "*"
+        "version": "=0.1.0"
       }
     ]
   },
   "execution": "declarative",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -52,8 +52,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "bf7932040ca9e69ba7e2bfc92a0a9e733a6cf15d2e4e841876516eb58cad42ff",
-    "coreWasmSha256": "fd6a556719795efa49d104b7756ea1384af3e19bab7273f4c81e1f319f43b44f",
-    "descriptorSha256": "659ee4e8d7ff38542a89b2ac2f093708e8b626fc5e33976bbb453d6b3d68ae28"
+    "wasmSha256": "69834b3b2ef38a86739410d3e69cceb7d7a608c05ca5958a6d76538f08f88f80",
+    "coreWasmSha256": "684a878932a10b916e66999dcb0d4e9d09664ebdf44e79ab7bf28313e31a7c88",
+    "descriptorSha256": "de5ea9b1884a4f9df3f1dae416f1580f19d7a919ee6c95e5f6c39bec70dfc216"
   }
 }

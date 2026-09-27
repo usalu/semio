@@ -16,7 +16,8 @@
         "transformX",
         "transformY",
         "width",
-        "height"
+        "height",
+        "maskPresent"
       ]
     },
     {
@@ -32,8 +33,64 @@
         "transformX",
         "transformY",
         "width",
-        "height"
+        "height",
+        "maskPresent"
+      ]
+    },
+    {
+      "selection": [
+        "paint.foreground"
+      ],
+      "mask": {
+        "enabled": true,
+        "linked": true,
+        "invert": false,
+        "width": null,
+        "height": null,
+        "imageKey": null,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        }
+      },
+      "fields": [
+        "maskPresent",
+        "maskEnabled",
+        "maskInvert",
+        "maskX",
+        "maskY",
+        "maskScaleX",
+        "maskScaleY",
+        "maskRotation",
+        "maskWidth",
+        "maskHeight"
       ]
     }
-  ]
+  ],
+  "blendModes": [
+    "normal",
+    "multiply",
+    "screen",
+    "overlay",
+    "darken",
+    "lighten",
+    "colorDodge",
+    "colorBurn",
+    "hardLight",
+    "softLight",
+    "difference",
+    "exclusion",
+    "hue",
+    "saturation",
+    "color",
+    "luminosity"
+  ],
+  "maskImageExtent": {
+    "width": 3,
+    "height": 2
+  },
+  "blurTrigger": "commit"
 }

@@ -381,31 +381,3 @@ index b1f7865164..e734a2f173 100644
          {
            "if": {
              "properties": {
-@@ -4777,11 +4815,12 @@
-       ]
-     },
-     "ArtifactCreationProgressCopyV1": {
--      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, the cancel affordance, and one line per progress and catalog phase.",
-+      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, the waiting line, the cancel affordance, and one line per progress and catalog phase.",
-       "type": "object",
-       "additionalProperties": false,
-       "required": [
-         "heading",
-+        "waiting",
-         "cancel",
-         "cancelling",
-         "opening",
-@@ -4794,6 +4833,13 @@
-           "minLength": 1,
-           "maxLength": 256
-         },
-+        "waiting": {
-+          "description": "The line a running creation shows once it takes longer than the shell's waiting threshold; `{elapsed}` is the localized elapsed time. The hub is still answering, so the person may keep waiting or cancel.",
-+          "type": "string",
-+          "minLength": 1,
-+          "maxLength": 512,
-+          "pattern": "\\{elapsed\\}"
-+        },
-         "cancel": {
-           "type": "string",
-           "minLength": 1,

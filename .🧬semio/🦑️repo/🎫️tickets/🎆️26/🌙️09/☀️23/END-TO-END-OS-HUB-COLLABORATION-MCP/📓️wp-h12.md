@@ -10,11 +10,12 @@ Z3 (Docker/devcontainer/cross-platform), DB1 (db throughput), W3 (all-package ca
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | Residency at scale (audit P1-2): law + live on B2 (many kinds/documents, RSS bounded by capacity, evicted guest reloads with same results, no thrash under round-robin > capacity); again on the all-package catalog | CODE WRITTEN, not compiled (waiting for < 10 rustc, rule 22): operator budget `OS_HUB_GUEST_RESIDENCY_BYTES` (schema default/min/max), per-operation use counting + frequency admission (anti-thrash), unadmitted guest lives exactly as long as its operation, counters; 6 laws written |
-| 2 | Boot + readiness: `/readyz` per-package phases/bytes/steps schema-first; cold/warm boot on B2; compiled-guest pipeline cached; lazy codec interpretation | CODE WRITTEN, compiling: `TrustedCatalogLoadProgressV1` (per-package phase/bytes/rows, counts only) in `/readyz` `startup.catalog` + observability; **lazy row verification** (load reads + digests only; rows no memory pinned are verified in the background after the hub serves, smallest first, or by the package's first codec call — no call ever runs on an unverified row; a mismatch refuses that package only). Laws: progress law, trust-failure law adapted, readiness law +1 body. Measurement waits for low load |
-| 3 | Session mint + first-creation latency per package after LA's Q1 + codec-app; next bottleneck; laws with bounds | IN PROGRESS: found + fixed (code, not compiled) the creation's duplicate guest validation — genesis validated the identical pair twice (`Input` then `Output`), each a full guest `print-mirror` run (≈ one app-bundle construction each, H10) → one validation, ≈ 1/3 of a creation's guest work saved; law pins one validation + the stage sequence. Q1/Q2/codec-app not landed by LA yet → re-measure after |
-| 4 | Generative/fuzz hostile-input law over every hub HTTP/WS route + frame (deterministic seeds, bounded time, shrinking); fix findings | CODE WRITTEN, compiling: `🌎️hub/🧪️tests/🎲️hostile-generative/🦀️.rs` (SHA-256 counter draws, 7 mutation kinds, schema-driven bodies, shrinking, directory + document socket frame sequences); fixture `generative` section; node:crypto oracle for the draw vectors **PASS** (TS 4/4) |
-| 5 | Observability: structured logs + metrics (per-route latency, admission waits, residency hits/evictions, db I/O census) on an admin route, en + de | CODE WRITTEN, not compiled: `HubObservabilityV1` schema + Rust projection (`🌎️hub/📊️observability`), per-route table (route_layer, templates only), residency + DB I/O census in `/admin/api/observability`; fixture + 4 Rust laws + Ajv oracle (**PASS 3/3**) + 1 bin law written; DB1's admission-wait counters (`admissionWaits/WaitMicros/Refusals`, per kind + totals) wired; admin UI tab **Observability** (en + de, 5 s refresh): admin tsc clean for my files, admin vitest **18/18** (long) |
+| 1 | Residency at scale (audit P1-2): law + live on B2 (many kinds/documents, RSS bounded by capacity, evicted guest reloads with same results, no thrash under round-robin > capacity); again on the all-package catalog | LAWS PASS, live waits for B3: operator budget `OS_HUB_GUEST_RESIDENCY_BYTES` (schema default/min/max), per-operation use counting + frequency admission (anti-thrash), an unadmitted guest lives exactly as long as its operation, counters in observability; 6 residency laws incl. the round-robin-over-capacity law + `no_codec_call_is_served_from_a_row_its_component_has_not_answered` **PASS** (`laws-hub-2`, 10:30). Live `residency-watch --rounds 3` with a 64 MiB budget on B3 pending (W3 chain) |
+| 2 | Boot + readiness: `/readyz` per-package phases/bytes/steps schema-first; cold/warm boot on B2; compiled-guest pipeline cached; lazy codec interpretation | LAWS PASS, live waits for B3: `TrustedCatalogLoadProgressV1` (per-package phase/bytes/rows) in `/readyz` `startup.catalog` + observability; **lazy row verification** (load reads + digests only; unpinned rows verified in the background after hand-over, or by the package's first codec call; never served unverified; a mismatch refuses that package only). Progress law, trust-failure law, readiness laws **PASS** (10:30 / 10:42 / 11:15). `boot-watch` cold/warm on a B3 clone pending |
+| 3 | Session mint + first-creation latency per package after LA's Q1 + codec-app; next bottleneck; laws with bounds | IN PROGRESS: **mint live p50 28 ms** (max 62, 8 sequential, current-tree os-hub 11:04 with LA's Q1/Q2, load ~20; was 261 ms H10 / 8.5 s old 7800). Creation: one guest validation per creation instead of two (genesis validated the identical pair as `Input` then `Output`), law pins one validation + the stage sequence **PASS** (10:30); with item 6 a B2 creation cost ≈ 3 × 830 M fuel, of which ≈ 2 × 1–2 M was the operations. Per-kind creation latency AFTER = B3 (W3 chain) |
+| 4 | Generative/fuzz hostile-input law over every hub HTTP/WS route + frame (deterministic seeds, bounded time, shrinking); fix findings | **DONE**: law PASS (3 seeds, 1 188 requests + 24 socket sequences, 4.1 s, 0 findings) after fixing its 2 real findings (extension-asset `%00` → 500; document socket dropped without close frame → TCP reset); bin laws 11/11 PASS 10:42. Was: `🌎️hub/🧪️tests/🎲️hostile-generative/🦀️.rs` (SHA-256 counter draws, 7 mutation kinds, schema-driven bodies, shrinking, directory + document socket frame sequences); fixture `generative` section; node:crypto oracle for the draw vectors **PASS** (TS 4/4) |
+| 6 | Coordinator top item (09-27 05:1x): puzzle creation 749 s / 579 s (H11) → root-cause genesis, fix at the root, law with a bound, before/after | LANDED (native + wasm32 green, landing row): (a) puzzle 2d/3d `initial_snapshot()` do only their document (2d warmed two example documents, 3d synced a precompute session into a throwaway app); (b) `semio-framework-plugin`: codec calls construct NO app (per-app `ArtifactCodecTableV1`, LA handed over). Laws **4/4 PASS** (10:12): 2d + 3d `the_initial_snapshot_costs_only_its_document`, `codec_calls_construct_no_app`, puzzle `guest_codec_tables_answer_like_the_declared_native_codecs`; hub gis/vcs parity law runs with the hub laws. After-measurement = W3's rebuilt catalog (creation time + fuel) |
+| 5 | Observability: structured logs + metrics (per-route latency, admission waits, residency hits/evictions, db I/O census) on an admin route, en + de | **DONE (live)**: `HubObservabilityV1` schema + Rust projection, per-route table (templates only), residency + catalog + DB I/O census incl. DB1's admission waits on `/admin/api/observability`; admin tab **Observability** (en + de). Laws: Rust lib + 5 bin laws **PASS** (11:15), Ajv oracle 3/3, admin vitest 21/21. Live on 8160 (11:05): body **Ajv-valid**. The live run exposed a blind spot — the address-bucket limiter ran outside routing, so its 429s never reached the route table — fixed (limiter now a `route_layer` inside the metrics) + law `the_observability_route_counts_a_limiter_refusal_under_its_route` **PASS** |
 
 ### Session 13 log
 
@@ -98,3 +99,149 @@ Z3 (Docker/devcontainer/cross-platform), DB1 (db throughput), W3 (all-package ca
   one validation and that stage sequence (`validations` counter on its fixture codec). LC's stage mapping ignores both
   validation stages, so its creation-progress set is unaffected (told main; its vitest-config anchors need re-deriving
   because of my observability oracle line).
+- 21:12 rule 26: check-3 in `build-fleet-b` (cold) launched; 21:3x cut by the usage limit (check-3 died at session end, last line
+  `Checking scopeguard`). LC re-derived its two anchors (dry run 9/9); V1 relay sent 21:1x.
+- 04:58 (09-27) RESUME, rule 28. Reconciled: every H12 edit is intact and was auto-committed at 22:00 (`40a2736e661`); the one
+  staged change on top in bootstrap is a peer's correct follow-up (`admin_observability` now answers
+  `Json<HubObservabilityV1>` instead of `serde_json::Value`). Machine: load 9, 155 GiB free. 05:03 check-4 (`build-fleet-b`,
+  `w2-detach.py`, pid 92860, `s13-h12-logs/check-4.txt`).
+- 05:1x coordinator top item: puzzle creation root cause. H11's sample (2d genesis): interpreter dispatch + LEB + ControlFrame
+  allocs dominate (host-side, Q1 addresses) — but WHAT the guest interprets is the question. Code reading: a codec call builds
+  the owning editor (`plugin_artifact_codec_app` → `create_app` → `EditorApp::with_registry` → `initial_snapshot()`), and
+  genesis calls `initial_snapshot()` a second time (`artifact_app_genesis_pair`); the creation's validation (print-mirror)
+  constructs the app once more. So `initial_snapshot()` runs 3× per creation — and puzzle's did far more than its document:
+  - 2d `initial_snapshot()` → `set_active_example::warm_examples()` forced EMPTY + CONCRETE_FOREST + NAKAGIN: two example
+    documents rendered to JSON and parsed into `Puzzle2dSnapshot`, then discarded (the snapshot is the EMPTY fixture);
+  - 3d `initial_snapshot()` converted the Concrete Forest fixture (its document), then built a scene from it and synced a
+    full precompute session (`sync_precompute_session`: every mesh fallback, then the collision scene) into a
+    `Puzzle3dPlayApp::default()` that is dropped on return — every rendering app syncs its own session anyway
+    (`with_puzzle3d_app_for`), so that work reached no one; 5d only converts its document.
+  Fix (guest, `🧩️puzzle/🗿️artifacts/{◻️2d,🧊️3d}/…/✏️editor/🦀️.rs`, `🛍️set-active-example/🦀️.rs`): the snapshot is its document
+  only; `warm_examples` deleted (the example load already forces its own `LazyLock`). Laws (editor unit tests):
+  `the_initial_snapshot_costs_only_its_document` ×2 — this thread's heap peak (`semio_framework_trace::HeapWitness`, now also
+  installed in the 2d test binary) while building the snapshot ≤ peak of converting the document itself + 4 KiB.
+  Census (all `✏️s/🔌️plugins` `initial_snapshot` bodies): 18 non-trivial, all build their own default document (remodel demo,
+  cad forest scene, wfc examples, forms spec, fem3d boot snapshot) — no other hidden work. Found on the way (not mine):
+  fem3d editor + viewer `initial_snapshot` print `[DEBUG] …boot snapshot` lines.
+- 05:20 combined check (hub + puzzle 2d/3d `--tests --features …/component-app-assembly`, `build-fleet-b`, `--keep-going`,
+  detached pid 4193, `s13-h12-logs/check-6.txt`). check-4 had failed on a PEER's in-flight `🌱️value/🔁️codec` edit (fixed by
+  them 05:04); check-4's orphaned cargo (mine) held locks and blocked check-5 → stopped.
+- 05:2x LA handed over (its words: "go ahead and land it yourself") the root fix below its codec-app resolution:
+  `VcsArtifactApp`'s five codec methods never read `&self`, yet every codec call constructed the owning app
+  (`EditorApp::with_registry` + store around `initial_snapshot()` + registries), then drained and closed it. Now
+  each registered app records an `ArtifactCodecTableV1` (fn pointers monomorphized per app type: pack-schema-hash,
+  genesis, print-mirror, apply-ops, replay-envelopes; `artifact_codec_table::<A>()`) on `SurfaceDeclaration` and
+  `AppFactory` (all four registration sites incl. `🏗️builder/🦀️.rs` ×3); `plugin_artifact_*` answer through
+  `artifact_codec_owner` → `Plugin::app_codec`. Deleted: the five `PluginApp::artifact_*` trait methods (only callers were
+  the codec runtime; the `#[dyn_enum]` dispatch follows), their `VcsArtifactApp` impls, `plugin_artifact_codec_app`,
+  `close_artifact_codec_app`, `retain_unclosed_artifact_codec_app` and their constants. Script (applied, dry-run clean
+  first): `wp-h12/patches/codec-table.py`. Per puzzle creation this removes 3 app constructions (genesis, validation,
+  and the second `initial_snapshot()` inside construction): the validation no longer re-parses the Concrete Forest
+  fixture in a fresh instance at all.
+  Laws: plugin `codec_calls_construct_no_app` (LA's law rewritten: every app factory replaced by one that PANICS, and
+  pack-schema-hash + genesis + print-mirror still answer for all three fixture schemas); puzzle plugin
+  `guest_codec_tables_answer_like_the_declared_native_codecs` (2d/3d/5d: table answers vs each kind's declared native
+  codec `ArtifactCodec::of::<Snapshot, Mutation>` — same pack-schema hash, byte-identical mirror of the genesis pair);
+  hub `guest_codec_tables_answer_like_the_linked_native_codecs` (gis + vcs vs their linked native receipts; stdio's
+  `plugin()` is configured out in the hub's feature set, so the third plugin is puzzle's own law).
+  Coverage gap noted (not fixed): `🖥️host/🧪️tests/🔬️owned-instance-open` laws described codec calls as the sweep that
+  constructs and closes every app of a staged bundle (disposer proof); since LA's resolution (one app) and now (none)
+  that sweep proves nothing about disposers → needs its own explicit construct-and-close law.
+- 05:35 T13: the three `🏗️builder` `AppFactory` initializers were missing `codec` (E0063, native too) → fixed at once;
+  T13's wasm32-wasip2 check through the plugin crate then compiled (05:40/05:43).
+- 05:4x check-8 → hub bin test HRTB `Send is not general enough` at the Check In spawn (my `verify_rows` streamed
+  closure-built futures through `buffer_unordered`): restructured into `verify_once` / `verify_rows` (collected futures
+  of `verify_row`) → gone. check-9 (05:46, build-landing): plugin lib + lib test, puzzle 2d/3d/5d lib, 2d/3d lib test,
+  hub lib + lib test + bin: compiled (warnings present = type-checked). Only red: hub bin TEST
+  `🔬️bin-unit/🦀️.rs:7528` `messages.code/level` on `&u8` — a peer's in-flight `ApplyOutcome::Rejected` wire change (not in
+  my diff; LD/H11 area).
+- 05:47 guest laws running (pid 30279, `laws-guest-1.txt`); wasm32 check queued in the mutex behind wg9 (05:38).
+- 06:19 laws run 1 (build-landing): puzzle 2d + 3d `the_initial_snapshot_costs_only_its_document` **PASS**. Two laws
+  failed on wrong expectations, not implementation: the plugin fixture's snapshots are hand-written packs (no record spec
+  → pack-schema-hash answers the declared refusal), and a guest print-mirror renders `dsl` as the store's document text
+  while a kind's native codec renders its own DSL — so parity compares hash + op log + that the native codec decodes the
+  table's genesis pair. The failing run itself showed the table path works: puzzle 2d's hash matched the native codec's and
+  genesis + both mirrors answered with every factory unreachable. Corrected 06:20; run 2 killed at the 06:35 cut (EXIT 143).
+- 06:04 wasm32-wasip2 check of plugin + puzzle 2d/3d (`component-app-assembly`) through the wasm mutex: **EXIT 0**
+  (`s13-h12-logs/wasm-1.txt`). Landing row added to `📓️landing.md` (06:3x).
+- 06:35–09:5x cut (usage limit). 09:55 RESUME: the codec-table patch is fully applied (the script writes only after every
+  anchor matched; verified symbol by symbol), compiled native (check-9) and wasm32 (wasm-1) before the cut. Rule 30: no guest
+  edits; laws re-run through the native mutex in `build-fleet-b` (`laws-guest-3.txt`, queued behind ld/lb/la/r9/g11).
+- 10:12 guest laws run 3 (native mutex, build-fleet-b): **4/4 PASS** (`laws-guest-3.txt`). Landing row updated. Hub laws (items
+  1/2/4/5/6: trusted catalog incl. residency + progress + no-unverified-row + gis/vcs parity, observability, creation genesis,
+  readiness, hostile incl. generative) running now in the same lane (`laws-hub-1.txt`).
+- 10:12 hub laws run 1 (`laws-hub-1.txt`, native mutex): lib 44/60 — the 16 failures are one cause outside my code: the
+  trusted-catalog fixture carried `appChannelVersion: 17` while a peer's wire change moved `CHANNEL_VERSION` to 18; the peer
+  updated the fixture at 10:12:40, after my test build → re-run. Bin: readiness laws 2/2, observability laws 4/4,
+  `every_route_answers_hostile_input…` PASS, draw-vector law PASS; `the_hostile_input_fixture_covers_every_registered_route`
+  red on a PEER's new route `DIRECTORY_PREFERENCE_PAGE_PATH_V1` (no hostile vectors) → row added to the fixture.
+- **Generative hostile-input law, first run: 1170 requests + 24 socket sequences in 4.2 s, 21 findings (shrunk):**
+  1. 11 × `OPTIONS` (+ absent/forged/empty/lower-case credential) → 2xx: the CORS preflight answers before any
+     credential is read — by design; the oracle now allows a preflight success that discloses nothing (empty body).
+  2. **`GET /🧩️extension-modules/%00/module.mjs` → 500** (real): a NUL path segment reached `tokio::fs::read`, whose
+     `InvalidInput` mapped to 500. Fix: `extension_asset_path` accepts only an id plus normal, control-free path components
+     (no root/prefix/`.`/`..`/NUL/backslash); read errors map NotFound/IsADirectory/NotADirectory → 404,
+     InvalidInput/InvalidFilename → 400, anything else → typed 503.
+  3. **9 × document socket: bare `Connection reset by peer`** (real): a socket whose hello was not a valid hello got an
+     error frame and was DROPPED without a close frame while the client's frames were unread → TCP reset; the directory
+     socket already closed with 4401. Fix: `close_socket` (Close 4401 after the error frame, then the closing handshake)
+     on both hello refusals, and every document socket now drains the client's remaining frames for its close reply
+     (`drain_closing_socket`, ≤ `SOCKET_CLOSE_DRAIN` 1 s) before it is dropped.
+- 10:2x LC's `AuthorityProgressStage::GuestCompiling` now reported by `GuestArtifactComponent::compiled` (0/1 before, 1/1
+  after the compile) → a creation shows `compiling-guest` while its guest compiles. Hub laws run 2 queued (`laws-hub-2.txt`).
+- 10:18 **before-measurement, B2 puzzle (old guest), owned interpreter of this tree (Q1), release probe, load ~20:**
+  `codec.genesis` of `puzzle.2d.fixture` = **829 481 432 fuel, 17.4 s** — refused at the end (the probe's document id was not
+  server-minted), i.e. nearly all of it is spent BEFORE the genesis logic runs: constructing the bundle's apps. Probe fixed
+  (server-minted id), rebuild queued.
+- 10:30 hub laws run 2 (`laws-hub-2.txt`): lib **59/60** — every H12 trusted-catalog law PASS (6 residency laws incl. the
+  round-robin scale law, catalog progress, `no_codec_call_is_served_from_a_row_its_component_has_not_answered` on a real
+  owned-ABI guest, `guest_codec_tables_answer_like_the_linked_native_codecs` gis + vcs, the rewritten missing-provider
+  law, `all_trust_failures…`); the 1 red is `every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule`
+  (committed descriptors predate the rebuild's describe; not mine). Bin 10/11: generative law **1 finding left** (of 21).
+  H11 (10:2x) flagged the missing-provider law; answered + rewritten (a provider binding nothing defers the row to its
+  component — never served while unanswered — instead of failing the load).
+- 10:3x the remaining finding is deterministic (seed 1 socket case 1, re-run 3/3 from the built test binary in 0.5 s): after
+  a VALID hello every early `return` of the document socket (document not announced, schema-hash mismatch, storage…) sent
+  only an error frame and dropped the socket. Fix at the root: `handle_ws` is now the session (`serve_document_socket`)
+  followed by ONE closing step for every exit — a `1000 session-ended` close (refused and harmless when the session already
+  sent its typed close) and the closing handshake (`close_socket` → `drain_closing_socket`). Run 3 queued (`laws-hub-3.txt`).
+- 10:33 **BEFORE (B2 puzzle component, old guest), release probe with this tree's interpreter, load ~20:**
+  | schema | genesis | print-mirror | pack-schema-hash |
+  |---|---|---|---|
+  | puzzle.2d.fixture | 832 622 870 fuel, 20.3 s | 831 613 376, 19.7 s | 830 300 195, 17.2 s |
+  | puzzle.3d | 832 415 740, 14.2 s | 831 548 018, 10.7 s | 830 227 621, 11.3 s |
+  Every call costs ≈ 830 M fuel of which the operation itself is 1–2.4 M: the rest is the old guest constructing all six
+  apps of the bundle (3 editors incl. 2d's example parses and 3d's precompute sync, 3 viewers). A creation made 3 such calls
+  (genesis + 2 validations) ≈ 2.5 G fuel → H11's 749 s / 579 s on a debug hub at 5–40 % CPU. AFTER = the same probe on B3's
+  puzzle component (codec-app resolution + no app construction + lean `initial_snapshot`) and 1 validation per creation.
+- 10:34–10:38 my refactor left os-hub red (E0596, `&mut sender` on a `&mut` binding, 2 sites) → fixed at once, main told.
+  10:41 `cargo check -p semio-hub --bins --tests` **green** (native lane). 10:42 bin laws **11/11 PASS**: readiness ×2,
+  observability ×4, hostile fixture coverage, hostile typed refusals, draw vectors, **generative law: 1 188 requests + 24
+  socket sequences, 0 findings** (`check-hub-1.txt`). Socket regression guard (every bin law naming socket/presence/
+  welcome/close) queued (`laws-hub-socket-1.txt`).
+- 10:52 socket regression guard: **45/45 PASS** (every bin law naming socket/presence/welcome/close, `laws-hub-socket-1.txt`).
+- 10:5x admin: 3 `ObservabilityPage` laws (fed the language-neutral observability fixture body) → admin vitest **21/21 PASS**.
+- 10:5x more BEFORE rows (B2 old guests, same probe): note.document genesis 37.4 M / print-mirror 36.6 M / hash 35.3 M fuel;
+  drawing.document 35.7 / 34.9 / 33.3 M; s.wfc.wfc2d 178.1 / 178.2 / 175.1 M (`wp-h12/generated/probe-b2-*.txt`). Same
+  shape everywhere: the operation is 1–3 M, the rest is constructing every app of the bundle per call.
+- 11:05 live on my hub 8160 (the chain's 11:04 current-tree `os-hub` build-dev, copied + signed to
+  `.🧬semio/🌐hub/s13-h12-bin/os-hub-1104`; fresh root WITHOUT a catalog; started via `w2-detach.py`, pid 29209):
+  **session mint p50 28 ms, p95 62 ms** (8 sequential after the sign-in rate window; the first probe's 20-in-a-row hit the
+  per-address limiter: 10 × `429`, visible as `server.rate-limit` refused 22 in observability). `/admin/api/observability`
+  live as admin (`observability-8160-1.json`): `POST /auth/sessions` 19 answers p50 22.9 ms / p95 33.1 ms, `GET /readyz` 119
+  (503: no catalog), residency + catalog `null`, DB I/O census 3 tasks, 0 admission waits; the body is **Ajv-valid**
+  against `HubObservabilityV1`. Hub stopped 11:12 (stop script, SIGTERM, 162 ms).
+- 11:1x finding from that live body: `server.rate-limit` refused 22 while `POST /auth/sessions` showed `rateLimited` 0 —
+  the address-bucket `rate_limit_middleware` was a `.layer` OUTSIDE routing, so its refusals never reached the per-route
+  `route_layer`. Fix: the limiter is now a `route_layer` inside the metrics layer (router is flat, no nest/fallback; every
+  limiter class names a registered route, so nothing unrouted loses a limit). New bin law
+  `the_observability_route_counts_a_limiter_refusal_under_its_route` (burst × 401 then a 429 → requests burst+1,
+  clientRefusals burst, rateLimited 1). 11:14 `cargo check -p semio-hub --bins --tests` **green** (warnings shown = typed),
+  bin laws **19/19 PASS** 11:15 (readiness, observability ×5, hostile incl. generative, every credential sign-in law incl.
+  the lockout, refused origin, proxied cleartext) — `check-hub-2.txt`.
+- 11:18 the after-measurements are one detached chain (rule 28), `wp-h12/b3-measure.sh` (pid 38195, log
+  `s13-h12-logs/b3-measure.txt`): waits for W3's `b3-publish.rc` → owned-probe chain with the BEFORE rows' binary (puzzle 2d/3d,
+  note, draw, wfc) → waits for 7800's open-plan probe (≤ 90 min) → hub binary = the chain's post-publish build-dev (has the
+  limiter fix) → `boot-watch` cold + 1 warm on a B3 copy (8162) → hub 8161 on a B3 clone with `OS_HUB_GUEST_RESIDENCY_BYTES`
+  64 MiB → mint ×8 → `residency-watch --rounds 3` (per-kind creation ms, compiles/hits/evictions per round, pair digests)
+  → observability (`wp-h12/obs-read.ts`, Ajv) → stop. Hubs at NI 0, one at a time.

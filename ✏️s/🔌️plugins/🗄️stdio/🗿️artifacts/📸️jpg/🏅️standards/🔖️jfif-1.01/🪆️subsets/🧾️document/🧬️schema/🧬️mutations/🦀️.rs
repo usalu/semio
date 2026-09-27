@@ -18,10 +18,13 @@ pub use super::replace_quant_table::ReplaceQuantTableMutation;
 //#endregion Owners
 
 //#region Aggregate
+use super::set_snapshot::SetSnapshot;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = JpgSnapshot, diff = JpgDiff, schema = "s.stdio.jpg")]
 pub enum JpgMutation {
+    SetSnapshot(SetSnapshot),
     ChangeJfifHeader(ChangeJfifHeaderMutation),
     ReplaceQuantTable(ReplaceQuantTableMutation),
     RemoveQuantTable(RemoveQuantTableMutation),

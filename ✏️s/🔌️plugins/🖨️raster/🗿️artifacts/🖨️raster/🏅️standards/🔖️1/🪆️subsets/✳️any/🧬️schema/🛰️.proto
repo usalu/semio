@@ -34,6 +34,8 @@ message RasterLayerMask {
   bool invert = 3;
   optional uint32 width = 4;
   optional uint32 height = 5;
+  optional string image_key = 6;
+  RasterTransform transform = 7;
 }
 
 message RasterLayerPixel {

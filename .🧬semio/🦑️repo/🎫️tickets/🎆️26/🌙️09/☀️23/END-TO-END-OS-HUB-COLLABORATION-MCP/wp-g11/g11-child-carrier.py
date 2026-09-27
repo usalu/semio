@@ -519,6 +519,7 @@ hunk(SDK, """            let outcome = app.transaction_prepare(txn_id, "", &[], 
 hunk(SDK, """            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(protocol::MutationOrigin::Owner)).await;""", """            let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, &[], label, Some(protocol::MutationOrigin::Owner)).await;""")
 hunk(SDK_LIVE_TESTS, """prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;""", """prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;""")
 hunk(SDK_LIVE_TESTS, """prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new() }).await;""", """prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;""")
+hunk(SDK, """        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact,""", """        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EmitWire, EphemeralSnapshot, MediaArtifact,""")
 #endregion sdk
 
 #region mcp
@@ -589,7 +590,7 @@ hunk(SDK_CONTRACT_TESTS, """    #[semio_framework_async_macros::async_test]
         assert!(!wire.is_empty(), "a gesture that touches a child carries its group");
         assert_eq!(ChildEmit::decode_groups(&wire).expect("the wire pack decodes"), children, "the group survives the wire byte for byte");
         assert!(ChildEmit::encode_groups(&[]).is_empty(), "a childless gesture leaves the wire unchanged");
-        assert_eq!(ChildEmit::decode_groups(&[7, 7, 7]).expect_err("rubbish is refused").code.as_str(), "transaction.child-groups-malformed");
+        assert_eq!(ChildEmit::decode_groups(&[7, 7, 7]).expect_err("rubbish is refused").code.0, "transaction.child-groups-malformed");
 
         let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
         let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, "agent composite", Some(protocol::MutationOrigin::Owner)).await;
@@ -624,7 +625,7 @@ hunk(SDK_CONTRACT_TESTS, """    #[semio_framework_async_macros::async_test]
 
         let stray = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
         let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, "", Some(protocol::MutationOrigin::Owner)).await;
-        assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.as_str(), "transaction.member-rejected");
+        assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -678,6 +679,89 @@ fn an_action_that_edits_only_owned_children_commits_their_groups_byte_for_byte()
 //#endregion 🔖️NoChange""")
 RENDERER_RUNTIME_TESTS = f"{MOD}/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx"
 hunk(RENDERER_RUNTIME_TESTS, """{ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [] } },""", """{ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },""")
+HOST = f"{MOD}/🔌️plugin/🖥️host/🦀️.rs"
+hunk(HOST, """                prepared_ops: draft.prepared_ops.clone(),
+                label: draft.label.clone(),
+                origin: origin_bytes,
+            };""", """                prepared_ops: draft.prepared_ops.clone(),
+                label: draft.label.clone(),
+                origin: origin_bytes,
+                prepared_child_ops: Vec::new(),
+            };""")
+TS_TAGS = f"{OS}/🧪️tests/🧪️backbone-envelope-io/🟦️.ts"
+hunk(TS_TAGS, """{ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [] } }""", """{ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } }""")
+HANDOFF = f"{MOD}/🔌️plugin/🌐️browser-bundle/🎯️action-handoff"
+hunk(f"{HANDOFF}/🧫️fixtures/🔣️.json", """      "Emit": {
+        "in_reply_to": 0,
+        "document_ops": [],
+        "config_ops": [],
+        "draft_ops": [],
+        "output": [],
+        "diagnostics": []
+      }""", """      "Emit": {
+        "in_reply_to": 0,
+        "document_ops": [],
+        "config_ops": [],
+        "draft_ops": [],
+        "output": [],
+        "diagnostics": [],
+        "child_ops": []
+      }""")
+hunk(f"{HANDOFF}/🧬️schema/🔣️.json", """                "output",
+                "diagnostics"
+              ],
+              "properties": {
+                "in_reply_to": {
+                  "const": 0
+                },""", """                "output",
+                "diagnostics",
+                "child_ops"
+              ],
+              "properties": {
+                "in_reply_to": {
+                  "const": 0
+                },""")
+hunk(f"{HANDOFF}/🧬️schema/🔣️.json", """                "diagnostics": {
+                  "type": "array",
+                  "maxItems": 262144,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            }
+          }
+        },
+        "error": {""", """                "diagnostics": {
+                  "type": "array",
+                  "maxItems": 262144,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "child_ops": {
+                  "type": "array",
+                  "maxItems": 262144,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            }
+          }
+        },
+        "error": {""")
+hunk(TS_TAGS, """      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [] } });
+      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4] } });""", """      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } });
+      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4], prepared_child_ops: [] } });""")
+for label in ['"peer-write"', '"first"', '"second"']:
+    hunk(SDK_TXN_TESTS, '.expect("encode")], ' + label + ', Some(', '.expect("encode")], &[], ' + label + ', Some(', 2 if label == '"peer-write"' else 1)
 #endregion laws
 
 

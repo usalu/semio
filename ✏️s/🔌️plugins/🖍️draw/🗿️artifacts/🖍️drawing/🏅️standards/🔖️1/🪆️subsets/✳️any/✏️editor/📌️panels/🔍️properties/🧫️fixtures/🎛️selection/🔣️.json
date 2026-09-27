@@ -47,5 +47,10 @@
       ],
       "expectedFields": []
     }
-  ]
+  ],
+  "controlEvents": {
+    "input": "commit",
+    "select": "change",
+    "toggle": "change"
+  }
 }

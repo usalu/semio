@@ -31,6 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeColdFormed
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-cold-formed", "change-cold-formed")
+        protocol::LocalizedLabel::native("Change cold-formed members", "Kaltprofilierte Bauteile ändern")
     }
 }

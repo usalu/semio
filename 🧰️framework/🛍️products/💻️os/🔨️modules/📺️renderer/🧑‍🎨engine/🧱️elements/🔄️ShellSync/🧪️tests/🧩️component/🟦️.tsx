@@ -17,6 +17,7 @@ import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
 import { HubConnectionIndicator, hubConnectionSummaryV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../../🧫️fixtures/📶️hub-connection-summary.json";
 import hubProjectionSchema from "../../../../🧬️schema/🔗️hub-projection/🔣️.json";
+import hubProjection from "../../../../🧫️fixtures/🔗️hub-projection/🔣️.json";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures
@@ -112,7 +113,12 @@ describe("HubConnectionIndicator", () => {
 
   it("offers the sign-in entry point only when signed out AND an opener exists", () => {
     render(<HubConnectionIndicator statuses={[]} session="signedOut" link="verifying" onSignIn={() => {}} />);
-    expect(document.querySelector("[data-semio-hub-sign-in]")).not.toBeNull();
+    const expected = hubProjection.footerPresentation;
+    const statusRegion = screen.getByRole(expected.status.role, { name: new RegExp(expected.status.labels.en, "i") });
+    const signIn = screen.getByRole(expected.action.role, { name: expected.action.labels.en });
+    expect(statusRegion.id).not.toBe(expected.action.id);
+    expect(signIn.id).toBe(expected.action.id);
+    expect(statusRegion.contains(signIn)).toBe(true);
     cleanup();
     render(<HubConnectionIndicator statuses={[]} session="signedOut" link="verifying" />);
     expect(document.querySelector("[data-semio-hub-sign-in]")).toBeNull();

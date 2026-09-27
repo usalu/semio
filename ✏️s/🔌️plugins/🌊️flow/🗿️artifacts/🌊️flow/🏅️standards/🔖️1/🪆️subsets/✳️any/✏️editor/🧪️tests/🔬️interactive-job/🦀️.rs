@@ -157,11 +157,12 @@ async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authori
 async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
     use crate::editor::flow::unit_tests::context::{dispatch, settle};
     let mut app = flow_app_closing().await;
-    let widget_id = "graph-operation-probe".to_string();
+    dispatch(&mut app, FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: "auto-layout".into(), enabled: true })).await;
+    settle(&mut app).await;
     let commands = [
         FlowCommand::Reorganize(reorganize::Reorganize {}),
-        FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: widget_id.clone(), source_port_id: String::new(), target_node_id: widget_id.clone(), target_port_id: String::new() }),
-        FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: widget_id.clone(), value: widget_id.clone() }),
+        FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "slider".into(), source_port_id: "number".into(), target_node_id: "add".into(), target_port_id: "b".into() }),
+        FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "preview".into(), value: "graph-operation-probe".into() }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
         FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ];

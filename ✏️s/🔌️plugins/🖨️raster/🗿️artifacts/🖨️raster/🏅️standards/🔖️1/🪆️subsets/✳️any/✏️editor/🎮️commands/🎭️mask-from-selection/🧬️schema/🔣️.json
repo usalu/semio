@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/editor/mask-from-selection.json",
+  "title": "Create Layer Mask From Selection",
+  "description": "Creates an undoable image-backed mask using ordered non-overlapping [offset,length,coverage] spans in the selected layer image coordinates. Existing mask changes during preparation conflict; source pixels are preserved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "expectedImageKey",
+    "selection"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expectedImageKey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selection": {
+      "type": "string",
+      "maxLength": 40000,
+      "contentMediaType": "application/json"
+    }
+  }
+}

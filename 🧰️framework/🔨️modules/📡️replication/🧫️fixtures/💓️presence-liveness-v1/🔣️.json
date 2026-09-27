@@ -4,7 +4,8 @@
   "constants": {
     "heartbeatIntervalMs": 5000,
     "ephemeralSnapshotDeadlineMs": 2000,
-    "leaseTtlMs": 15000
+    "leaseTtlMs": 15000,
+    "liveViewBeatIntervalMs": 100
   },
   "laws": [
     {
@@ -21,16 +22,66 @@
     {
       "name": "a-live-socket-is-always-a-row",
       "statement": "Only closing the socket removes a peer from the roster. A lapsed lease drops the app-owned ephemerals (presencePack, dragGhostJson, interaction, views, ui, toolRun) and keeps the admitted identity (actor, userId, label, role, color, surface, principalKind).",
-      "removesRow": ["socket-close"],
-      "stripsEphemeralsOnly": ["lease-lapse"],
-      "strippedFields": ["presencePack", "dragGhostJson", "interaction", "views", "ui", "toolRun"],
-      "retainedFields": ["actor", "userId", "label", "role", "color", "surface", "principalKind"]
+      "removesRow": [
+        "socket-close"
+      ],
+      "stripsEphemeralsOnly": [
+        "lease-lapse"
+      ],
+      "strippedFields": [
+        "presencePack",
+        "dragGhostJson",
+        "interaction",
+        "views",
+        "ui",
+        "toolRun"
+      ],
+      "retainedFields": [
+        "actor",
+        "userId",
+        "label",
+        "role",
+        "color",
+        "surface",
+        "principalKind"
+      ]
     },
     {
       "name": "a-joiner-starts-from-the-settled-roster",
       "statement": "A roster delta is published only when some peer's bytes change, so an attaching socket is handed the current roster once, before any delta, as the ONE non-delta roster frame the wire carries.",
       "replayFramesPerJoin": 1,
       "replayedWhenRosterEmpty": false
+    },
+    {
+      "name": "a-moving-pointer-beats-live",
+      "statement": "A local window view change (pointer, camera, caret) beats the document's presence within liveViewBeatIntervalMs instead of waiting for the next heartbeat; beats caused by view changes are at least liveViewBeatIntervalMs apart, so one human adds at most 1000 / liveViewBeatIntervalMs roster deltas per second per document.",
+      "vectors": [
+        {
+          "lastBeatAtMs": 0,
+          "nowMs": 1000,
+          "delayMs": 0
+        },
+        {
+          "lastBeatAtMs": 1000,
+          "nowMs": 1000,
+          "delayMs": 100
+        },
+        {
+          "lastBeatAtMs": 1000,
+          "nowMs": 1040,
+          "delayMs": 60
+        },
+        {
+          "lastBeatAtMs": 1000,
+          "nowMs": 1100,
+          "delayMs": 0
+        },
+        {
+          "lastBeatAtMs": 1000,
+          "nowMs": 900,
+          "delayMs": 100
+        }
+      ]
     }
   ]
 }

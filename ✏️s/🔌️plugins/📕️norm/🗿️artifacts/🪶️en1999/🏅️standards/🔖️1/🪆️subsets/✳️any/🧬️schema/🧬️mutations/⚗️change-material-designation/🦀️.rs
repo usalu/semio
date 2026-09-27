@@ -32,6 +32,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMaterialDe
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-material-designation", "change-material-designation")
+        protocol::LocalizedLabel::native("Change alloy designation", "Legierungsbezeichnung ändern")
     }
 }

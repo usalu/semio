@@ -12,8 +12,9 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the DSL body is the committed grammar
   `../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line vertices-line edges-line loops-line faces-line shells-line
-  solids-line`, the tagged `curve = L|C|E|N` and `surface = P|C|O|S|T|N` value productions with
-  their exact field lists, and `bool = "0" | "1"`);
+  solids-line coedges-line next-label-line`, every vertex/edge/face closing on its `tol` number, the
+  tagged `curve = L|C|E|N`, `curve2 = L|C|E|N` (a coedge's `~`-marked p-curve, or `-`) and
+  `surface = P|C|O|S|T|N` value productions with their exact field lists, and `bool = "0" | "1"`);
 * the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`, which names every
   member of every curve and surface arm (`origin`/`direction`, `center`/`axis`/`radius`,
   `radiusMajor`/`radiusMinor`, `controlPoints`/`weights`/`degree`/`knots`, `normal`, `halfAngle`,
@@ -65,6 +66,9 @@ LETTER_CURVE = {letter: kind for kind, letter in CURVE_LETTER.items()}
 SURFACE_ORDER = ("plane", "cylinder", "cone", "sphere", "torus", "nurbs")
 SURFACE_LETTER = {"plane": "P", "cylinder": "C", "cone": "O", "sphere": "S", "torus": "T", "nurbs": "N"}
 LETTER_SURFACE = {letter: kind for kind, letter in SURFACE_LETTER.items()}
+#: ➰️ `curve2 = "L" … | "C" … | "E" … | "N" …` — a coedge's p-curve, the same tags one dimension down.
+CURVE2_ORDER = CURVE_ORDER
+LETTER_CURVE2 = LETTER_CURVE
 
 #: 📐️ The scalar members of each tagged arm, in the order the grammar lists them. `p` is a
 #: `point3`, `n` a `number`, `P` a `point3-list`, `N` a `number-list` and `i` the integral `degree`.
@@ -73,6 +77,13 @@ CURVE_FIELDS = {
     "circle": (("center", "p"), ("axis", "p"), ("radius", "n")),
     "ellipse": (("center", "p"), ("axis", "p"), ("radiusMajor", "n"), ("radiusMinor", "n")),
     "nurbs": (("controlPoints", "P"), ("weights", "N"), ("degree", "i"), ("knots", "N")),
+}
+#: 🗺️ `curve2`'s arms, with `q` a `point2` and `Q` a `point2-list`.
+CURVE2_FIELDS = {
+    "line": (("origin", "q"), ("direction", "q")),
+    "circle": (("center", "q"), ("radius", "n")),
+    "ellipse": (("center", "q"), ("xAxis", "q"), ("radiusMajor", "n"), ("radiusMinor", "n")),
+    "nurbs": (("controlPoints", "Q"), ("weights", "N"), ("degree", "i"), ("knots", "N")),
 }
 SURFACE_FIELDS = {
     "plane": (("origin", "p"), ("normal", "p")),
@@ -224,6 +235,20 @@ def print_point(point: dict) -> str:
     return "[%s,%s,%s]" % (print_number(point["x"]), print_number(point["y"]), print_number(point["z"]))
 
 
+def read_point2(reader: Reader) -> dict:
+    """📌️ `point2 = "[" number "," number "]"`."""
+    reader.take("[")
+    x = reader.number()
+    reader.take(",")
+    y = reader.number()
+    reader.take("]")
+    return {"x": x, "y": y}
+
+
+def print_point2(point: dict) -> str:
+    return "[%s,%s]" % (print_number(point["x"]), print_number(point["y"]))
+
+
 def read_geometry(reader: Reader, letters: dict, fields: dict, what: str) -> dict:
     """🧩️ One tagged `curve`/`surface`, read against its arm's own field list."""
     letter = reader.letter()
@@ -237,6 +262,10 @@ def read_geometry(reader: Reader, letters: dict, fields: dict, what: str) -> dic
             reader.take(",")
         if shape == "p":
             value[name] = read_point(reader)
+        elif shape == "q":
+            value[name] = read_point2(reader)
+        elif shape == "Q":
+            value[name] = read_items(reader, read_point2)
         elif shape == "n":
             value[name] = reader.number()
         elif shape == "i":
@@ -259,6 +288,10 @@ def print_geometry(value: dict, letters: dict, fields: dict, what: str) -> str:
         member = value[name]
         if shape == "p":
             parts.append(print_point(member))
+        elif shape == "q":
+            parts.append(print_point2(member))
+        elif shape == "Q":
+            parts.append("[%s]" % ",".join(print_point2(point) for point in member))
         elif shape in ("n", "i"):
             parts.append(print_number(member))
         elif shape == "P":
@@ -285,17 +318,19 @@ def print_surface(value: dict) -> str:
 
 
 def read_vertex(reader: Reader) -> dict:
-    """📍️ `vertex = "[" hex "," point3 "]"`."""
+    """📍️ `vertex = "[" hex "," point3 "," number "]"` — the number is the vertex's own `tol`."""
     reader.take("[")
     vertex_id = reader.hex()
     reader.take(",")
     point = read_point(reader)
+    reader.take(",")
+    tol = reader.number()
     reader.take("]")
-    return {"id": vertex_id, "point": point}
+    return {"id": vertex_id, "point": point, "tol": tol}
 
 
 def read_edge(reader: Reader) -> dict:
-    """➰ `edge = "[" hex "," hex "," hex "," curve "]"`."""
+    """➰ `edge = "[" hex "," hex "," hex "," curve "," number "]"` — the number is the edge's own `tol`."""
     reader.take("[")
     edge_id = reader.hex()
     reader.take(",")
@@ -304,8 +339,10 @@ def read_edge(reader: Reader) -> dict:
     end = reader.hex()
     reader.take(",")
     curve = read_curve(reader)
+    reader.take(",")
+    tol = reader.number()
     reader.take("]")
-    return {"id": edge_id, "startVertex": start, "endVertex": end, "curve": curve}
+    return {"id": edge_id, "startVertex": start, "endVertex": end, "curve": curve, "tol": tol}
 
 
 def flagged_reader(field: str):
@@ -338,7 +375,7 @@ def read_loop(reader: Reader) -> dict:
 
 
 def read_face(reader: Reader) -> dict:
-    """🔷️ `face = "[" hex "," hex "," hex-list "," surface "," bool "]"`."""
+    """🔷️ `face = "[" hex "," hex "," hex-list "," surface "," bool "," number "]"` — the number is the face's own `tol`."""
     reader.take("[")
     face_id = reader.hex()
     reader.take(",")
@@ -349,8 +386,10 @@ def read_face(reader: Reader) -> dict:
     surface = read_surface(reader)
     reader.take(",")
     orientation = reader.bit()
+    reader.take(",")
+    tol = reader.number()
     reader.take("]")
-    return {"id": face_id, "outerLoop": outer, "innerLoops": inner, "surface": surface, "orientation": orientation}
+    return {"id": face_id, "outerLoop": outer, "innerLoops": inner, "surface": surface, "orientation": orientation, "tol": tol}
 
 
 def read_shell(reader: Reader) -> dict:
@@ -373,13 +412,52 @@ def read_solid(reader: Reader) -> dict:
     return {"id": solid_id, "shells": shells}
 
 
-COLLECTIONS = (("vertices", read_vertex), ("edges", read_edge), ("loops", read_loop), ("faces", read_face), ("shells", read_shell), ("solids", read_solid))
+def read_coedge(reader: Reader) -> dict:
+    """🧱️ `coedge = "[" hex "," hex "," bool "," opt-curve2 "," prange "," hex "," hex "," hex "]"` with
+    `opt-curve2 = "-" | "~" curve2` and `prange = "[" number "," number "]"`."""
+    reader.take("[")
+    coedge_id = reader.hex()
+    reader.take(",")
+    edge = reader.hex()
+    reader.take(",")
+    forward = reader.bit()
+    reader.take(",")
+    if reader.peek() == "-":
+        reader.take("-")
+        pcurve = None
+    else:
+        reader.take("~")
+        pcurve = read_geometry(reader, LETTER_CURVE2, CURVE2_FIELDS, "curve2")
+    reader.take(",")
+    reader.take("[")
+    start = reader.number()
+    reader.take(",")
+    end = reader.number()
+    reader.take("]")
+    reader.take(",")
+    loop_id = reader.hex()
+    reader.take(",")
+    following = reader.hex()
+    reader.take(",")
+    preceding = reader.hex()
+    reader.take("]")
+    return {"id": coedge_id, "edge": edge, "forward": forward, "pcurve": pcurve, "prange": [start, end], "loopId": loop_id, "next": following, "prev": preceding}
+
+
+def print_coedge(coedge: dict) -> str:
+    """✍️ The writing direction of `read_coedge`."""
+    pcurve = "-" if coedge["pcurve"] is None else "~" + print_geometry(coedge["pcurve"], CURVE_LETTER, CURVE2_FIELDS, "curve2")
+    return "[%s,%s,%s,%s,[%s,%s],%s,%s,%s]" % (hex_of(coedge["id"]), hex_of(coedge["edge"]), "1" if coedge["forward"] else "0", pcurve, print_number(coedge["prange"][0]), print_number(coedge["prange"][1]), hex_of(coedge["loopId"]), hex_of(coedge["next"]), hex_of(coedge["prev"]))
+
+
+COLLECTIONS = (("vertices", read_vertex), ("edges", read_edge), ("loops", read_loop), ("faces", read_face), ("shells", read_shell), ("solids", read_solid), ("coedges", read_coedge))
 
 
 def parse_dsl(text: str) -> dict:
-    """📖️ The seven body lines of a brep document, under the text envelope."""
+    """📖️ The nine body lines of a brep document, under the text envelope: the schema, the seven collections and
+    `nextLabel`, the native label high-water mark."""
     body = [line.rstrip("\r") for line in split_preamble(text).split("\n") if line.strip() != ""]
-    keys = ["schema"] + [name for name, _ in COLLECTIONS]
+    keys = ["schema"] + [name for name, _ in COLLECTIONS] + ["nextLabel"]
     if len(body) != len(keys):
         raise AssertionError("a brep document is exactly %d body lines, found %d" % (len(keys), len(body)))
     values = []
@@ -391,20 +469,23 @@ def parse_dsl(text: str) -> dict:
     if schema != DOCUMENT_SCHEMA:
         raise AssertionError("the artifact-mark is %r, not %r" % (schema, DOCUMENT_SCHEMA))
     document = {"schema": schema}
-    for (name, reader_of), raw in zip(COLLECTIONS, values[1:]):
+    for (name, reader_of), raw in zip(COLLECTIONS, values[1:-1]):
         reader = Reader(raw)
         document[name] = read_items(reader, reader_of)
         reader.done()
+    if not values[-1].isdigit():
+        raise AssertionError("nextLabel is an unsigned integer, found %r" % values[-1])
+    document["nextLabel"] = int(values[-1])
     return document
 
 
 def print_dsl(document: dict) -> str:
     """✍️ The writing direction of the same grammar, under the same envelope."""
-    vertices = ",".join("[%s,%s]" % (hex_of(vertex["id"]), print_point(vertex["point"])) for vertex in document["vertices"])
-    edges = ",".join("[%s,%s,%s,%s]" % (hex_of(edge["id"]), hex_of(edge["startVertex"]), hex_of(edge["endVertex"]), print_curve(edge["curve"])) for edge in document["edges"])
+    vertices = ",".join("[%s,%s,%s]" % (hex_of(vertex["id"]), print_point(vertex["point"]), print_number(vertex["tol"])) for vertex in document["vertices"])
+    edges = ",".join("[%s,%s,%s,%s,%s]" % (hex_of(edge["id"]), hex_of(edge["startVertex"]), hex_of(edge["endVertex"]), print_curve(edge["curve"]), print_number(edge["tol"])) for edge in document["edges"])
     loops = ",".join("[%s,[%s]]" % (hex_of(loop["id"]), ",".join("[%s,%s]" % (hex_of(item["edge"]), "1" if item["orientation"] else "0") for item in loop["edges"])) for loop in document["loops"])
     faces = ",".join(
-        "[%s,%s,[%s],%s,%s]" % (hex_of(face["id"]), hex_of(face["outerLoop"]), ",".join(hex_of(name) for name in face["innerLoops"]), print_surface(face["surface"]), "1" if face["orientation"] else "0")
+        "[%s,%s,[%s],%s,%s,%s]" % (hex_of(face["id"]), hex_of(face["outerLoop"]), ",".join(hex_of(name) for name in face["innerLoops"]), print_surface(face["surface"]), "1" if face["orientation"] else "0", print_number(face["tol"]))
         for face in document["faces"]
     )
     shells = ",".join("[%s,[%s]]" % (hex_of(shell["id"]), ",".join("[%s,%s]" % (hex_of(item["face"]), "1" if item["orientation"] else "0") for item in shell["faces"])) for shell in document["shells"])
@@ -419,6 +500,8 @@ def print_dsl(document: dict) -> str:
             "faces=[%s]" % faces,
             "shells=[%s]" % shells,
             "solids=[%s]" % solids,
+            "coedges=[%s]" % ",".join(print_coedge(coedge) for coedge in document["coedges"]),
+            "nextLabel=%d" % document["nextLabel"],
         ]
     )
 
@@ -477,6 +560,21 @@ def write_point_bytes(point: dict) -> bytes:
     return struct.pack("<3d", point["x"], point["y"], point["z"])
 
 
+def read_point2_bytes(data: bytes, at: int) -> tuple:
+    """📌️ Two little-endian f64 — a p-curve's parameter-plane point."""
+    x, y = struct.unpack_from("<2d", data, at)
+    return {"x": x, "y": y}, at + 16
+
+
+def write_point2_bytes(point: dict) -> bytes:
+    return struct.pack("<2d", point["x"], point["y"])
+
+
+def read_f64(data: bytes, at: int) -> tuple:
+    """🔢️ One little-endian f64 — every `tol` and every prange bound."""
+    return struct.unpack_from("<d", data, at)[0], at + 8
+
+
 def read_pack_geometry(data: bytes, at: int, order: tuple, fields: dict, what: str) -> tuple:
     """🧩️ One tagged curve/surface record, read against its arm's own field list."""
     ordinal = data[at]
@@ -488,6 +586,15 @@ def read_pack_geometry(data: bytes, at: int, order: tuple, fields: dict, what: s
     for name, shape in fields[kind]:
         if shape == "p":
             value[name], at = read_point_bytes(data, at)
+        elif shape == "q":
+            value[name], at = read_point2_bytes(data, at)
+        elif shape == "Q":
+            count, at = read_varint(data, at)
+            points = []
+            for _ in range(count):
+                point, at = read_point2_bytes(data, at)
+                points.append(point)
+            value[name] = points
         elif shape == "n":
             value[name] = struct.unpack_from("<d", data, at)[0]
             at += 8
@@ -514,6 +621,12 @@ def write_pack_geometry(value: dict, order: tuple, fields: dict) -> bytes:
         member = value[name]
         if shape == "p":
             out += write_point_bytes(member)
+        elif shape == "q":
+            out += write_point2_bytes(member)
+        elif shape == "Q":
+            out += write_varint(len(member))
+            for point in member:
+                out += write_point2_bytes(point)
         elif shape == "n":
             out += struct.pack("<d", member)
         elif shape == "i":
@@ -561,7 +674,8 @@ SOLID_SHELL = ("shell", "isVoid")
 
 
 def parse_pack(data: bytes) -> dict:
-    """📦️ Binary envelope, then `format u8`, the schema, and the six collections in grammar order."""
+    """📦️ Binary envelope, then `format u8`, the schema, the seven collections in grammar order (each vertex, edge and
+    face closing on its `tol` f64; a coedge's p-curve behind a presence byte) and the varint `nextLabel`."""
     body = unwrap_binary(data)
     if body[0] != PACK_FORMAT:
         raise AssertionError("unknown pack format byte %d" % body[0])
@@ -572,7 +686,8 @@ def parse_pack(data: bytes) -> dict:
     for _ in range(count):
         vertex_id, at = read_string(body, at)
         point, at = read_point_bytes(body, at)
-        vertices.append({"id": vertex_id, "point": point})
+        tol, at = read_f64(body, at)
+        vertices.append({"id": vertex_id, "point": point, "tol": tol})
     document["vertices"] = vertices
     count, at = read_varint(body, at)
     edges = []
@@ -581,7 +696,8 @@ def parse_pack(data: bytes) -> dict:
         start, at = read_string(body, at)
         end, at = read_string(body, at)
         curve, at = read_pack_geometry(body, at, CURVE_ORDER, CURVE_FIELDS, "curve")
-        edges.append({"id": edge_id, "startVertex": start, "endVertex": end, "curve": curve})
+        tol, at = read_f64(body, at)
+        edges.append({"id": edge_id, "startVertex": start, "endVertex": end, "curve": curve, "tol": tol})
     document["edges"] = edges
     count, at = read_varint(body, at)
     loops = []
@@ -609,7 +725,8 @@ def parse_pack(data: bytes) -> dict:
         at += 1
         if orientation not in (0, 1):
             raise AssertionError("the face orientation byte is %d, not 0 or 1" % orientation)
-        faces.append({"id": face_id, "outerLoop": outer, "innerLoops": inner, "surface": surface, "orientation": orientation == 1})
+        tol, at = read_f64(body, at)
+        faces.append({"id": face_id, "outerLoop": outer, "innerLoops": inner, "surface": surface, "orientation": orientation == 1, "tol": tol})
     document["faces"] = faces
     for key, field, member in (("shells", SHELL_FACE, "faces"), ("solids", SOLID_SHELL, "shells")):
         count, at = read_varint(body, at)
@@ -623,8 +740,26 @@ def parse_pack(data: bytes) -> dict:
                 items.append(item)
             records.append({"id": record_id, member: items})
         document[key] = records
+    count, at = read_varint(body, at)
+    coedges = []
+    for _ in range(count):
+        coedge_id, at = read_string(body, at)
+        edge, at = read_string(body, at)
+        forward, at = body[at] == 1, at + 1
+        present, at = body[at] == 1, at + 1
+        pcurve = None
+        if present:
+            pcurve, at = read_pack_geometry(body, at, CURVE2_ORDER, CURVE2_FIELDS, "curve2")
+        start, at = read_f64(body, at)
+        end, at = read_f64(body, at)
+        loop_id, at = read_string(body, at)
+        following, at = read_string(body, at)
+        preceding, at = read_string(body, at)
+        coedges.append({"id": coedge_id, "edge": edge, "forward": forward, "pcurve": pcurve, "prange": [start, end], "loopId": loop_id, "next": following, "prev": preceding})
+    document["coedges"] = coedges
+    document["nextLabel"], at = read_varint(body, at)
     if at != len(body):
-        raise AssertionError("%d trailing byte(s) after the last solid record" % (len(body) - at))
+        raise AssertionError("%d trailing byte(s) after nextLabel" % (len(body) - at))
     return document
 
 
@@ -634,11 +769,11 @@ def pack_bytes(document: dict) -> bytes:
     body += write_string(document["schema"])
     body += write_varint(len(document["vertices"]))
     for vertex in document["vertices"]:
-        body += write_string(vertex["id"]) + write_point_bytes(vertex["point"])
+        body += write_string(vertex["id"]) + write_point_bytes(vertex["point"]) + struct.pack("<d", vertex["tol"])
     body += write_varint(len(document["edges"]))
     for edge in document["edges"]:
         body += write_string(edge["id"]) + write_string(edge["startVertex"]) + write_string(edge["endVertex"])
-        body += write_pack_geometry(edge["curve"], CURVE_ORDER, CURVE_FIELDS)
+        body += write_pack_geometry(edge["curve"], CURVE_ORDER, CURVE_FIELDS) + struct.pack("<d", edge["tol"])
     body += write_varint(len(document["loops"]))
     for loop in document["loops"]:
         body += write_string(loop["id"]) + write_varint(len(loop["edges"]))
@@ -651,12 +786,20 @@ def pack_bytes(document: dict) -> bytes:
             body += write_string(name)
         body += write_pack_geometry(face["surface"], SURFACE_ORDER, SURFACE_FIELDS)
         body.append(1 if face["orientation"] else 0)
+        body += struct.pack("<d", face["tol"])
     for key, field, member in (("shells", SHELL_FACE, "faces"), ("solids", SOLID_SHELL, "shells")):
         body += write_varint(len(document[key]))
         for record in document[key]:
             body += write_string(record["id"]) + write_varint(len(record[member]))
             for item in record[member]:
                 body += write_flagged(item, field)
+    body += write_varint(len(document["coedges"]))
+    for coedge in document["coedges"]:
+        body += write_string(coedge["id"]) + write_string(coedge["edge"]) + bytes([1 if coedge["forward"] else 0, 0 if coedge["pcurve"] is None else 1])
+        if coedge["pcurve"] is not None:
+            body += write_pack_geometry(coedge["pcurve"], CURVE2_ORDER, CURVE2_FIELDS)
+        body += struct.pack("<2d", coedge["prange"][0], coedge["prange"][1]) + write_string(coedge["loopId"]) + write_string(coedge["next"]) + write_string(coedge["prev"])
+    body += write_varint(document["nextLabel"])
     token = PACK_TOKEN.encode("utf-8")
     return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
 
@@ -722,16 +865,16 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     tag, args = tagged(mutation)
     if tag == "CreateVertex":
         refuse_duplicate(result["vertices"], args["id"], tag, "vertex")
-        result["vertices"].append({"id": args["id"], "point": clone(args["point"])})
+        result["vertices"].append({"id": args["id"], "point": clone(args["point"]), "tol": args["tol"]})
     elif tag == "DeleteVertex":
         del result["vertices"][index_of(result["vertices"], args["id"], tag, "vertex")]
         result["edges"] = [edge for edge in result["edges"] if edge["startVertex"] != args["id"] and edge["endVertex"] != args["id"]]
     elif tag == "CreateEdge":
         refuse_duplicate(result["edges"], args["id"], tag, "edge")
-        result["edges"].append({"id": args["id"], "startVertex": args["start_vertex"], "endVertex": args["end_vertex"], "curve": clone(args["curve"])})
+        result["edges"].append({"id": args["id"], "startVertex": args["start_vertex"], "endVertex": args["end_vertex"], "curve": clone(args["curve"]), "tol": args["tol"]})
     elif tag == "CreateFace":
         refuse_duplicate(result["faces"], args["id"], tag, "face")
-        result["faces"].append({"id": args["id"], "outerLoop": args["outer_loop"], "innerLoops": clone(args["inner_loops"]), "surface": clone(args["surface"]), "orientation": args["orientation"]})
+        result["faces"].append({"id": args["id"], "outerLoop": args["outer_loop"], "innerLoops": clone(args["inner_loops"]), "surface": clone(args["surface"]), "orientation": args["orientation"], "tol": args["tol"]})
     elif tag == "CreateShell":
         refuse_duplicate(result["shells"], args["id"], tag, "shell")
         result["shells"].append({"id": args["id"], "faces": clone(args["faces"])})
@@ -752,7 +895,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
 
 def edge_mutation(edge: dict) -> dict:
     """➰ The `CreateEdge` that puts one edge back exactly as it was."""
-    return {"CreateEdge": {"id": edge["id"], "start_vertex": edge["startVertex"], "end_vertex": edge["endVertex"], "curve": clone(edge["curve"])}}
+    return {"CreateEdge": {"id": edge["id"], "start_vertex": edge["startVertex"], "end_vertex": edge["endVertex"], "curve": clone(edge["curve"]), "tol": edge["tol"]}}
 
 
 def inverse_mutation(document: dict, mutation: dict) -> list:
@@ -765,7 +908,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         return [{"DeleteVertex": {"id": args["id"]}}]
     if tag == "DeleteVertex":
         vertex = document["vertices"][index_of(document["vertices"], args["id"], tag, "vertex")]
-        steps = [{"CreateVertex": {"id": vertex["id"], "point": clone(vertex["point"])}}]
+        steps = [{"CreateVertex": {"id": vertex["id"], "point": clone(vertex["point"]), "tol": vertex["tol"]}}]
         steps.extend(edge_mutation(edge) for edge in document["edges"] if edge["startVertex"] == args["id"] or edge["endVertex"] == args["id"])
         return steps
     if tag == "CreateEdge":
@@ -776,7 +919,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         return [{"DeleteFace": {"id": args["id"]}}]
     if tag == "DeleteFace":
         face = document["faces"][index_of(document["faces"], args["id"], tag, "face")]
-        return [{"CreateFace": {"id": face["id"], "outer_loop": face["outerLoop"], "inner_loops": clone(face["innerLoops"]), "surface": clone(face["surface"]), "orientation": face["orientation"]}}]
+        return [{"CreateFace": {"id": face["id"], "outer_loop": face["outerLoop"], "inner_loops": clone(face["innerLoops"]), "surface": clone(face["surface"]), "orientation": face["orientation"], "tol": face["tol"]}}]
     if tag == "CreateShell":
         return [{"DeleteShell": {"id": args["id"]}}]
     if tag == "DeleteShell":

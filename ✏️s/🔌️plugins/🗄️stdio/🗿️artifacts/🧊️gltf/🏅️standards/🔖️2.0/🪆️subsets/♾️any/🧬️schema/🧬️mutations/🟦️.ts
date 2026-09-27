@@ -3,6 +3,7 @@
  * values are the camelCase form of the Rust variant names (e.g. `ReorderMeshs` ->
  * `"reorderMeshs"`), NOT the kebab-case `semanticKind` slugs this previously used for the tag
  * value. */
+import type { SetSnapshot } from './📸️snapshot/📸️set/🟦️.ts';
 import type { GltfBindDefaultScenePayload } from './🏠️default-scene/🔗️bind/🟦️.ts';
 import type { GltfBindMorphTargetAttributePayload } from './🎚️morph-attribute/🔗️bind/🟦️.ts';
 import type { GltfBindNodeCameraPayload } from './📷️node-camera/🔗️bind/🟦️.ts';
@@ -244,4 +245,5 @@ export type GltfMutation =
   | { readonly mutation: 'unbindPrimitiveMaterial'; readonly payload: GltfUnbindPrimitiveMaterialPayload }
   | { readonly mutation: 'unbindSceneRootNode'; readonly payload: GltfUnbindSceneRootNodePayload }
   | { readonly mutation: 'removeRequiredExtension'; readonly payload: GltfUnrequireExtensionPayload }
-  | { readonly mutation: 'removeUsedExtension'; readonly payload: GltfWithdrawUsedExtensionPayload };
+  | { readonly mutation: 'removeUsedExtension'; readonly payload: GltfWithdrawUsedExtensionPayload }
+  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot };

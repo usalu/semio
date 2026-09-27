@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeElementI
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-element-inclination-deg", "change-element-inclination-deg")
+        protocol::LocalizedLabel::native("Change element inclination", "Bauteilneigung ändern")
     }
 }

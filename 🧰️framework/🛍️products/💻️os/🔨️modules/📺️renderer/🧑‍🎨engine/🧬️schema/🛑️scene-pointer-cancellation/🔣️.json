@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/renderer/scene-pointer-cancellation-v2.json",
+  "$id": "https://semio.tech/schema/renderer/scene-pointer-cancellation-v3.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "owner", "tiledMap", "cases"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "owner": {
       "type": "object",
       "additionalProperties": false,
@@ -102,7 +102,7 @@
         },
         "gesture": { "type": "string", "minLength": 1 },
         "reactStatus": { "enum": ["missing", "contact-only", "reference"] },
-        "terminal": { "enum": ["discard", "commit-navigation"] },
+        "terminal": { "enum": ["discard", "commit-navigation", "retain-accepted-events"] },
         "invokeNormalPointerUp": { "type": "boolean" },
         "retire": {
           "type": "object",
@@ -118,7 +118,7 @@
           "type": "array",
           "minItems": 2,
           "uniqueItems": true,
-          "items": { "enum": ["selection", "camera"] }
+          "items": { "enum": ["selection", "camera", "gesture-begin", "gesture-live"] }
         },
         "discardTransient": {
           "type": "array",
@@ -143,6 +143,11 @@
           "type": "array",
           "uniqueItems": true,
           "items": { "enum": ["camera"] }
+        },
+        "blockAfterCancel": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["gesture-live", "gesture-commit"] }
         },
         "nextDown": { "const": "accepted" },
         "source": { "type": "string", "minLength": 1 }

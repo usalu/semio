@@ -7,3 +7,6 @@ pub use component::*;
 
 #[path = "../../✍️editing/🦀️.rs"]
 pub mod editing;
+
+#[path = "../../🧩️compositing/🦀️.rs"]
+pub mod compositing;

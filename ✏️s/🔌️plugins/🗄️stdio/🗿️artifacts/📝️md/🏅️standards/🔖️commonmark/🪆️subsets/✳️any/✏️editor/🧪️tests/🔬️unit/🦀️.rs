@@ -100,7 +100,7 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let target = md_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&MdSnapshot::default()).await;
-    dispatch_settled(&mut app, "replace-text", &[("text", &<MdSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
+    dispatch_settled(&mut app, "textEdit", &[("text", &<MdSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("replace-text settles");
     assert_eq!(app.snapshot().expect("md snapshot"), target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

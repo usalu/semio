@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-layer", "remove-layer")
+        protocol::LocalizedLabel::native("Remove layer", "Schicht entfernen")
     }
 }

@@ -1,0 +1,70 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "timing": {
+    "tooltipDwellMs": 400,
+    "noticeDismissMs": 4000
+  },
+  "text": {
+    "tooltip": "Open help",
+    "notice": "Saved"
+  },
+  "cases": [
+    {
+      "id": "tooltip-pending",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000223,
+      "tooltipStartedMs": 1700000000123,
+      "noticeShownMs": null,
+      "expectedDeadlineSeconds": 31536000.55
+    },
+    {
+      "id": "notice-pending",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000373,
+      "tooltipStartedMs": null,
+      "noticeShownMs": 1700000000123,
+      "expectedDeadlineSeconds": 31536004
+    },
+    {
+      "id": "earliest-tooltip-wins",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000223,
+      "tooltipStartedMs": 1700000000123,
+      "noticeShownMs": 1699999997123,
+      "expectedDeadlineSeconds": 31536000.55
+    },
+    {
+      "id": "earliest-notice-wins",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000223,
+      "tooltipStartedMs": 1700000000123,
+      "noticeShownMs": 1699999996323,
+      "expectedDeadlineSeconds": 31536000.35
+    },
+    {
+      "id": "ready-tooltip-does-not-loop",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000523,
+      "tooltipStartedMs": 1700000000123,
+      "noticeShownMs": null,
+      "expectedDeadlineSeconds": null
+    },
+    {
+      "id": "overdue-notice-wakes-now",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000004124,
+      "tooltipStartedMs": null,
+      "noticeShownMs": 1700000000123,
+      "expectedDeadlineSeconds": 31536000.25
+    },
+    {
+      "id": "idle",
+      "monotonicNowSeconds": 31536000.25,
+      "wallNowMs": 1700000000123,
+      "tooltipStartedMs": null,
+      "noticeShownMs": null,
+      "expectedDeadlineSeconds": null
+    }
+  ]
+}

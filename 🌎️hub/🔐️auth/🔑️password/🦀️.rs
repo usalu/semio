@@ -1,5 +1,5 @@
-//! 🔑️ Password credentials for `hub.auth`: PBKDF2-HMAC-SHA256 over the framework's own
-//! [`semio_framework_hash::Sha256`], with no external cryptography dependency (AGENTS.md: no
+//! 🔑️ Password credentials for `hub.auth`: the framework's own PBKDF2-HMAC-SHA256
+//! ([`semio_framework_hash::pbkdf2_sha256`]), with no external cryptography dependency (AGENTS.md: no
 //! runtime dependency on external libraries).
 //!
 //! Schema authority: [`🔣️.json`](../🧬️schema/🔣️.json) `$defs/CredentialHashV1` — the encoded
@@ -9,7 +9,7 @@
 //! credential minted under the old cost.
 
 use crate::directory::constant_time_digest_eq;
-use semio_framework_hash::Sha256;
+use semio_framework_hash::pbkdf2_sha256;
 
 /// 🏷️ The only credential scheme this hub mints or verifies.
 pub const CREDENTIAL_SCHEME: &str = "pbkdf2-sha256";
@@ -22,8 +22,6 @@ pub const SALT_BYTES: usize = 16;
 pub const DIGEST_BYTES: usize = 32;
 pub const PASSWORD_MIN_BYTES: usize = 8;
 pub const PASSWORD_MAX_BYTES: usize = 256;
-
-const HMAC_BLOCK_BYTES: usize = 64;
 
 /// 🛑️ Why a credential could not be derived, parsed, or admitted.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -130,71 +128,6 @@ impl PasswordCredentialV1 {
     pub fn digest(&self) -> [u8; DIGEST_BYTES] {
         self.digest
     }
-}
-
-/// 🔑️ One HMAC-SHA256 key, keyed once: the SHA-256 states after absorbing the inner and outer pads.
-/// Every MAC under the key clones them instead of hashing both pads again, so a PBKDF2 iteration costs
-/// two compressions rather than four.
-struct HmacSha256Key {
-    inner: Sha256,
-    outer: Sha256,
-}
-
-impl HmacSha256Key {
-    fn new(key: &[u8]) -> Self {
-        let mut block = [0u8; HMAC_BLOCK_BYTES];
-        if key.len() > HMAC_BLOCK_BYTES {
-            block[..32].copy_from_slice(&Sha256::digest(key));
-        } else {
-            block[..key.len()].copy_from_slice(key);
-        }
-        let mut inner_pad = [0x36u8; HMAC_BLOCK_BYTES];
-        let mut outer_pad = [0x5cu8; HMAC_BLOCK_BYTES];
-        for index in 0..HMAC_BLOCK_BYTES {
-            inner_pad[index] ^= block[index];
-            outer_pad[index] ^= block[index];
-        }
-        let mut inner = Sha256::new();
-        inner.update(&inner_pad);
-        let mut outer = Sha256::new();
-        outer.update(&outer_pad);
-        block.fill(0);
-        inner_pad.fill(0);
-        outer_pad.fill(0);
-        Self { inner, outer }
-    }
-
-    fn mac(&self, message: &[u8]) -> [u8; 32] {
-        let mut inner = self.inner.clone();
-        inner.update(message);
-        let mut outer = self.outer.clone();
-        outer.update(&inner.finalize());
-        outer.finalize()
-    }
-}
-
-/// 🧷️ HMAC-SHA256 (RFC 2104) over the framework's own SHA-256.
-pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
-    HmacSha256Key::new(key).mac(message)
-}
-
-/// 🧮️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and a single 32-byte output block; the password is
-/// keyed once for all iterations.
-pub fn pbkdf2_sha256(password: &[u8], salt: &[u8], iterations: u32) -> [u8; 32] {
-    let key = HmacSha256Key::new(password);
-    let mut seed = Vec::with_capacity(salt.len() + 4);
-    seed.extend_from_slice(salt);
-    seed.extend_from_slice(&1u32.to_be_bytes());
-    let mut block = key.mac(&seed);
-    let mut accumulator = block;
-    for _ in 1..iterations {
-        block = key.mac(&block);
-        for index in 0..32 {
-            accumulator[index] ^= block[index];
-        }
-    }
-    seed.fill(0);
-    accumulator
 }
 
 fn encode_lower_hex(bytes: &[u8]) -> String {

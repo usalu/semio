@@ -1,0 +1,28 @@
+{
+  "halfPeriodMs": 500,
+  "cases": [
+    {
+      "id": "focus-blink-edit-reset-blur",
+      "steps": [
+        { "event": "focus", "advanceMs": 0, "visible": true, "armed": true },
+        { "event": "tick", "advanceMs": 499, "visible": true, "armed": true },
+        { "event": "tick", "advanceMs": 1, "visible": false, "armed": true },
+        { "event": "edit", "advanceMs": 125, "visible": true, "armed": true },
+        { "event": "tick", "advanceMs": 499, "visible": true, "armed": true },
+        { "event": "tick", "advanceMs": 1, "visible": false, "armed": true },
+        { "event": "blur", "advanceMs": 0, "visible": false, "armed": false },
+        { "event": "tick", "advanceMs": 1000, "visible": false, "armed": false }
+      ]
+    },
+    {
+      "id": "hidden-cancels-and-refocus-restarts-solid",
+      "steps": [
+        { "event": "focus", "advanceMs": 0, "visible": true, "armed": true },
+        { "event": "tick", "advanceMs": 500, "visible": false, "armed": true },
+        { "event": "hide", "advanceMs": 0, "visible": false, "armed": false },
+        { "event": "tick", "advanceMs": 500, "visible": false, "armed": false },
+        { "event": "focus", "advanceMs": 0, "visible": true, "armed": true }
+      ]
+    }
+  ]
+}

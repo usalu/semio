@@ -24,6 +24,11 @@ fn chrome_geometry_fixture() -> Value {
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
 }
 
+fn hub_projection_fixture() -> Value {
+    let path = engine_root().join("🧫️fixtures/🔗️hub-projection/🔣️.json");
+    serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("hub projection fixture")
+}
+
 /// 🌍️ A pane that hosts a world surface, so the Projection chip mounts at all.
 fn world_pane_shell() -> ShellState {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
@@ -362,6 +367,7 @@ fn the_navbar_role_chips_carry_their_inline_hotkey_badge() {
 #[test]
 fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
     let fixture = chrome_geometry_fixture();
+    let hub_fixture = hub_projection_fixture();
     let theme = Theme::light();
     let mut shell = world_pane_shell();
     shell.screen_w = 1440.0;
@@ -371,8 +377,10 @@ fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
     let btn_y = height - theme.footer_height + (theme.footer_height - theme.control_height) * 0.5;
     let layout = shell.footer_chrome_layout(&mut atlas, &theme, width, btn_y, theme.control_height);
     let presence = layout.presence.expect("desktop footer keeps presence");
+    let sign_in = layout.sign_in.expect("a signed-out hub keeps React's separate sign-in button");
     assert!(presence.x + presence.w + theme.gap_standard <= layout.hub.x + 0.01);
-    assert!(layout.hub.x + layout.hub.w + theme.gap_standard <= layout.bottom_right_left + 0.01);
+    assert!(layout.hub.x + layout.hub.w + theme.gap_standard <= sign_in.x + 0.01);
+    assert!(sign_in.x + sign_in.w + theme.gap_standard <= layout.bottom_right_left + 0.01);
     assert!(layout.center.centered.left >= layout.center.free.left && layout.center.centered.right <= layout.center.free.right + 0.01);
 
     let mut draw = DrawList::default();
@@ -388,6 +396,17 @@ fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
     assert_eq!(hits.iter().filter(|hit| hit.control_id.as_deref() == Some("s-sync-status")).count(), 1, "the sync item is React's bottom-left tab, never a duplicate status pill");
     assert!(!hits.iter().any(|hit| hit.control_id.as_deref() == Some("s-presence-peers") || hit.control_id.as_deref() == Some("s-hub-connection")), "ambient status children do not invent button actions");
     assert_eq!(hits.iter().filter(|hit| hit.control_id.as_deref() == Some("framework.hub.signIn")).count(), 1, "a signed-out hub is the footer's separate targetable workspace opener");
+    let nodes = shell.chrome_accessibility_nodes(hits);
+    let status_contract = &hub_fixture["footerPresentation"]["status"];
+    let action_contract = &hub_fixture["footerPresentation"]["action"];
+    let status = nodes.iter().find(|node| node.key == status_contract["id"].as_str().expect("status id")).expect("ambient hub status node");
+    assert_eq!(status.role, status_contract["role"].as_str().expect("status role"));
+    assert_eq!(status.label.as_deref(), status_contract["labels"]["en"].as_str());
+    assert!(!status.actionable);
+    let action = nodes.iter().find(|node| node.key == action_contract["id"].as_str().expect("action id")).expect("sign-in button node");
+    assert_eq!(action.role, action_contract["role"].as_str().expect("action role"));
+    assert_eq!(action.label.as_deref(), action_contract["labels"]["en"].as_str());
+    assert!(action.actionable);
     for hit in hits {
         if shell.panel_tab_anchor(hit.control_id.as_deref().unwrap_or_default()) == Some(PanelAnchor::BottomMiddle) {
             assert!(hit.rect.x >= layout.center.centered.left - 0.01 && hit.rect.x + hit.rect.w <= layout.center.centered.right + 0.01);
@@ -400,6 +419,7 @@ fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
     shell.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
     let mobile = shell.footer_chrome_layout(&mut atlas, &theme, shell.screen_w, btn_y, theme.control_height);
     assert!(mobile.presence.is_none(), "mobile omits presence");
+    assert!(mobile.sign_in.is_some(), "mobile keeps React's signed-out entry point");
     assert!(mobile.hub.w > 0.0 && mobile.hub.x + mobile.hub.w <= shell.screen_w - theme.padding_standard + 0.01, "mobile retains the hub badge inside the physical band");
 }
 

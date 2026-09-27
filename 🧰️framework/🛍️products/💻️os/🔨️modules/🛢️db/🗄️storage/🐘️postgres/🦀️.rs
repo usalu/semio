@@ -74,11 +74,22 @@ const SCHEMA_STATEMENTS: &[&str] = &[
     )",
 ];
 
+/// @emoji 🔒️ The transaction-scoped advisory lock (two-key form, a keyspace apart from the one-key WAL writer locks) that
+/// serialises schema bootstraps on one database: PostgreSQL's `CREATE TABLE IF NOT EXISTS` is not safe against a
+/// concurrent creator of the same table (`duplicate key value violates unique constraint "pg_type_typname_nsp_index"`), so
+/// two storages — two hub processes, a hub and the db CLI, two laws — opening a fresh database at once refused one of
+/// them. Keys: `semi` as a big-endian i32, and the schema generation.
+const SCHEMA_BOOTSTRAP_LOCK: (i32, i32) = (0x7365_6d69, 1);
+
+/// @emoji 🧱️ Runs [`SCHEMA_STATEMENTS`] in one transaction under [`SCHEMA_BOOTSTRAP_LOCK`], so concurrent openers of one
+/// database bootstrap it one after the other and every later one finds the tables.
 async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
+    let mut transaction = pool.begin().await.map_err(map_sqlx_error)?;
+    sqlx::query("SELECT pg_advisory_xact_lock($1, $2)").bind(SCHEMA_BOOTSTRAP_LOCK.0).bind(SCHEMA_BOOTSTRAP_LOCK.1).execute(&mut *transaction).await.map_err(map_sqlx_error)?;
     for statement in SCHEMA_STATEMENTS {
-        sqlx::query(statement).execute(pool).await.map_err(map_sqlx_error)?;
+        sqlx::query(statement).execute(&mut *transaction).await.map_err(map_sqlx_error)?;
     }
-    Ok(())
+    transaction.commit().await.map_err(map_sqlx_error)
 }
 //#endregion 🔖️Schema
 

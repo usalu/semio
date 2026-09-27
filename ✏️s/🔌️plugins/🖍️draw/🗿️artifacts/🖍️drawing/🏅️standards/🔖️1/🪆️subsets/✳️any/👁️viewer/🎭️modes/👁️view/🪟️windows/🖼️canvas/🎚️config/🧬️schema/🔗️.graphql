@@ -1,0 +1,4 @@
+type DrawingViewerCanvasWindowConfig {
+  viewport: Viewport2d!
+  framed: Boolean!
+}

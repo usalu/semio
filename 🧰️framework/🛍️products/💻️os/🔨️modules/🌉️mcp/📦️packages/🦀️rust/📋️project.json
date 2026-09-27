@@ -254,6 +254,16 @@
       },
       "outputs": []
     },
+    "inference-quartet-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-quartet-check"
+      },
+      "outputs": []
+    },
     "schema-mirror": {
       "executor": "nx:run-commands",
       "cache": true,

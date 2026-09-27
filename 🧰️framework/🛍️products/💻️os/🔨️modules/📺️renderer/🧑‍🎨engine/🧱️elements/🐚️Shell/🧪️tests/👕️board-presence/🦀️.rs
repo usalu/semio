@@ -6,8 +6,8 @@
 
 use super::*;
 use crate::canvas_presence::tests::{numeric, peer};
-use store_sync::PresenceViewKind;
 use serde_json::Value;
+use store_sync::PresenceViewKind;
 
 fn fixture() -> Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/👕️canvas-presence/🔣️.json")).expect("canvas presence fixture")

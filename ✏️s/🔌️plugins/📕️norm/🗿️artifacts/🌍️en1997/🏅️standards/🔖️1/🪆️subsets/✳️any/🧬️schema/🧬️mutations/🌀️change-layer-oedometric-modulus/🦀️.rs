@@ -25,6 +25,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeLayerOedom
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-oedometric-modulus", "change-layer-oedometric-modulus")
+        protocol::LocalizedLabel::native("Change oedometric modulus of the soil layer", "Steifemodul der Bodenschicht ändern")
     }
 }

@@ -142,7 +142,7 @@ swap("""            10 => return true,
     }
 
     /// 👥️🖼️ The board presence this frame paints, in paint order:""")
-swap("""/// 👥️🖼️ One peer-presence paint item""", """/// ⌨️ One stop of the native shell's keyboard ring ([`ShellState::keyboard_ring`]): a focusable chrome control by
+swap("""/// 👥️🖼️ One painted piece of board peer presence:""", """/// ⌨️ One stop of the native shell's keyboard ring ([`ShellState::keyboard_ring`]): a focusable chrome control by
 /// its accessibility key, or a dock window by its stack path and id.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum ShellKeyboardStop {
@@ -150,6 +150,6 @@ enum ShellKeyboardStop {
     Window(Vec<usize>, String),
 }
 
-/// 👥️🖼️ One peer-presence paint item""")
+/// 👥️🖼️ One painted piece of board peer presence:""")
 S.write_text(text)
 print("keyboard ring applied")

@@ -43,6 +43,24 @@
     {
       "allOf": [
         {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/patch-data/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "patchData"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-other-chunks/schema.json"
         },
         {

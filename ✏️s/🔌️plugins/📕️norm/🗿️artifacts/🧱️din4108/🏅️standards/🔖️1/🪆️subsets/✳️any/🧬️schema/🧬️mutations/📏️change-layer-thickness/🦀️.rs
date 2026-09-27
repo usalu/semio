@@ -25,6 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerThi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-layer-thickness", "change-layer-thickness")
+        protocol::LocalizedLabel::native("Change layer thickness", "Schichtdicke ändern")
     }
 }

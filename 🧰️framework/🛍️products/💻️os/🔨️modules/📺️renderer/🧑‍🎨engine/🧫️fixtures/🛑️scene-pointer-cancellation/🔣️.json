@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "owner": {
     "identity": ["surfaceId", "generation", "pointerId"],
     "match": "all-fields",
@@ -86,12 +86,13 @@
       "family": "ink",
       "gesture": "pencil-stroke",
       "reactStatus": "reference",
-      "terminal": "discard",
+      "terminal": "retain-accepted-events",
       "invokeNormalPointerUp": false,
       "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
-      "preservePublished": ["selection", "camera"],
+      "preservePublished": ["selection", "camera", "gesture-begin", "gesture-live"],
       "discardTransient": ["stroke-preview", "marquee", "queued-mutation-terminal"],
       "publishOnCancel": [],
+      "blockAfterCancel": ["gesture-live", "gesture-commit"],
       "nextDown": "accepted",
       "source": "🧱️elements/🖋️InkCanvasHost/🟦️.tsx"
     },

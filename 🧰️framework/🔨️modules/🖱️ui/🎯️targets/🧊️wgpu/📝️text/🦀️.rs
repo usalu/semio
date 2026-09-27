@@ -148,12 +148,13 @@ const BITMAP_GLYPH_H: u32 = 16;
 /// (`🎨️styling/🖌️ui/🎨️.css`), read from the ONE generated token source both targets share
 /// (`ui_styling::metrics::typography`) — never a hand-picked multiplier. Ratios are
 /// `1.5 / 1.4286 / 1.5 / 1.5556 / 1.6`, so a single hardcoded factor cannot express them.
-const LINE_HEIGHT_RAMP: [(f32, f32); 5] = [
+const LINE_HEIGHT_RAMP: [(f32, f32); 6] = [
     (ui_styling::metrics::typography::TEXT2XS_PX as f32, ui_styling::metrics::typography::TEXT2XS_LINE_HEIGHT_PX as f32),
     (ui_styling::metrics::typography::TEXT_XS_PX as f32, ui_styling::metrics::typography::TEXT_XS_LINE_HEIGHT_PX as f32),
     (ui_styling::metrics::typography::TEXT_SM_PX as f32, ui_styling::metrics::typography::TEXT_SM_LINE_HEIGHT_PX as f32),
     (ui_styling::metrics::typography::TEXT_BASE_PX as f32, ui_styling::metrics::typography::TEXT_BASE_LINE_HEIGHT_PX as f32),
     (ui_styling::metrics::typography::TEXT_LG_PX as f32, ui_styling::metrics::typography::TEXT_LG_LINE_HEIGHT_PX as f32),
+    (ui_styling::metrics::typography::TEXT2XL_PX as f32, ui_styling::metrics::typography::TEXT2XL_LINE_HEIGHT_PX as f32),
 ];
 
 /// 📏️ The line box `size` occupies — the ONE formula wrapped and single-line text both go through
@@ -432,7 +433,10 @@ static BITMAP_FONT: [[u8; 8]; 95] = [
 /// baseline the shaped faces do. They are stroked (never filled) at [`SYMBOL_STROKE_UNITS`], which
 /// is what keeps them legible at `--text-xs` where a filled counter would close up.
 const SYMBOL_FACE: [(char, &str); 12] = [
-    ('\u{2318}', "M170 -620C231 -620 280 -571 280 -510C280 -449 231 -400 170 -400C109 -400 60 -449 60 -510C60 -571 109 -620 170 -620ZM530 -620C591 -620 640 -571 640 -510C640 -449 591 -400 530 -400C469 -400 420 -449 420 -510C420 -571 469 -620 530 -620ZM170 -260C231 -260 280 -211 280 -150C280 -89 231 -40 170 -40C109 -40 60 -89 60 -150C60 -211 109 -260 170 -260ZM530 -260C591 -260 640 -211 640 -150C640 -89 591 -40 530 -40C469 -40 420 -89 420 -150C420 -211 469 -260 530 -260ZM170 -400H530M170 -260H530M280 -510V-150M420 -510V-150"),
+    (
+        '\u{2318}',
+        "M170 -620C231 -620 280 -571 280 -510C280 -449 231 -400 170 -400C109 -400 60 -449 60 -510C60 -571 109 -620 170 -620ZM530 -620C591 -620 640 -571 640 -510C640 -449 591 -400 530 -400C469 -400 420 -449 420 -510C420 -571 469 -620 530 -620ZM170 -260C231 -260 280 -211 280 -150C280 -89 231 -40 170 -40C109 -40 60 -89 60 -150C60 -211 109 -260 170 -260ZM530 -260C591 -260 640 -211 640 -150C640 -89 591 -40 530 -40C469 -40 420 -89 420 -150C420 -211 469 -260 530 -260ZM170 -400H530M170 -260H530M280 -510V-150M420 -510V-150",
+    ),
     ('\u{2325}', "M60 -600H230L410 -60H620M460 -600H620"),
     ('\u{2303}', "M90 -230L340 -520L590 -230"),
     ('\u{21E7}', "M330 -620L620 -330H480V-60H180V-330H40Z"),
@@ -731,7 +735,7 @@ impl FontAtlas {
             return;
         }
         let glyph = match self.mode {
-            AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch),
+            AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch, device_size_px as f32),
             AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, device_size_px as f32),
         };
         self.pack_glyph(key, glyph);
@@ -824,7 +828,7 @@ impl FontAtlas {
     /// cover, such as CJK or Arabic; a pre-existing limitation this atlas doesn't newly regress).
     fn rasterize_shaped_glyph(&mut self, ch: char, size_px: f32) -> RasterizedGlyph {
         let Some(resolved) = self.shape_single_char(ch, size_px) else {
-            return self.rasterize_bitmap_glyph(ch);
+            return self.rasterize_bitmap_glyph(ch, size_px);
         };
         if let Some(glyph) = self.render_resolved(&resolved, size_px) {
             return glyph;
@@ -832,7 +836,7 @@ impl FontAtlas {
         RasterizedGlyph { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, advance: resolved.advance / self.raster_scale, raster_scale: self.raster_scale, is_color: false }
     }
 
-    fn rasterize_bitmap_glyph(&self, ch: char) -> RasterizedGlyph {
+    fn rasterize_bitmap_glyph(&self, ch: char, device_size_px: f32) -> RasterizedGlyph {
         let index = ch as u32;
         let glyph_index = if (32..127).contains(&index) { (index - 32) as usize } else { 0 };
         let pattern = &BITMAP_FONT[glyph_index.min(BITMAP_FONT.len() - 1)];
@@ -844,7 +848,7 @@ impl FontAtlas {
                 }
             }
         }
-        RasterizedGlyph { bitmap, width: BITMAP_GLYPH_W, height: BITMAP_GLYPH_H, bearing_x: 0.0, bearing_y: 0.0, advance: BITMAP_GLYPH_W as f32 + 2.0, raster_scale: 1.0, is_color: false }
+        RasterizedGlyph { bitmap, width: BITMAP_GLYPH_W, height: BITMAP_GLYPH_H, bearing_x: 0.0, bearing_y: 0.0, advance: device_size_px / self.raster_scale * 0.625, raster_scale: 1.0, is_color: false }
     }
 
     /// 📐️ Bin-packs one rasterized glyph into the alpha (`pixels`) or color (`color_pixels`)

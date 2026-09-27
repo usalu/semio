@@ -2467,8 +2467,8 @@ impl ArtifactChannel for PluginArtifactChannel {
                         instance,
                         store::AppCommand::PureCommand { seq: 0, command, document: Vec::new(), document_spr: Vec::new(), config: Vec::new(), config_spr: Vec::new(), draft: Vec::new(), draft_spr: Vec::new() },
                     )? {
-                        store::AppFrame::Emit { document_ops, config_ops, draft_ops, .. } => {
-                            AppFrame::Emit { ops: PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)? }, warnings: Vec::new() }
+                        store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, .. } => {
+                            AppFrame::Emit { ops: PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops }, warnings: Vec::new() }
                         }
                         store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                         other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
@@ -2480,7 +2480,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     }
                     match self.exchange_one_real(
                         instance,
-                        store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, label, origin: Vec::new() },
+                        store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, label, origin: Vec::new(), prepared_child_ops: ops.children },
                     )? {
                         store::AppFrame::TransactionPrepared { txn_id, rejection, .. } if rejection.is_empty() => AppFrame::TransactionPrepared { txn_id },
                         store::AppFrame::TransactionPrepared { rejection, .. } => return Err(decode_guest_fault(&rejection)),

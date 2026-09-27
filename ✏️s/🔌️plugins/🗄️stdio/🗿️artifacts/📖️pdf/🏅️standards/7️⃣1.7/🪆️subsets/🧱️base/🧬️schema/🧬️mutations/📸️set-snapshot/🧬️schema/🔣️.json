@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-snapshot/schema.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/artifact.json"
+    }
+  }
+}

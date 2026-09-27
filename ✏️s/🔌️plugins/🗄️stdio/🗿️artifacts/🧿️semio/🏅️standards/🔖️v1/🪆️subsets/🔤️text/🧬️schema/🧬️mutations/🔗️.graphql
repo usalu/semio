@@ -1,3 +1,4 @@
+# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioTextMutation schema — real facet mirror of the Rust `🦀️.rs` sibling.
 input InsertRunInput { index: Int! run: SemioTextRunInput! }
 input RemoveRunInput { index: Int! }
@@ -9,3 +10,4 @@ input RemoveMarkInput { runIndex: Int! index: Int! }
 
 input SemioTextRunInput { language: String! content: String! marks: [SemioTextMarkInput!]! }
 input SemioTextMarkInput { kind: String! href: String! }
+input SemioTextMutation { set_snapshot: SetSnapshot }

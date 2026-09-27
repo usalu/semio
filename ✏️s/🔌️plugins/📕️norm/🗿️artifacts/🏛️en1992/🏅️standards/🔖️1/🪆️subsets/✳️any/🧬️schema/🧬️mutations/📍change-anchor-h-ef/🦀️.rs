@@ -19,7 +19,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorHEf 
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change {} of {}", "h_ef", self.anchor_id), &format!("{} von {} ändern", "h_ef", self.anchor_id))
+        protocol::LocalizedLabel::native(&format!("Change effective embedment depth of anchor {}", self.anchor_id), &format!("Effektive Verankerungstiefe von Dübel {} ändern", self.anchor_id))
     }
     fn target(&self) -> Vec<String> { vec![self.anchor_id.clone()] }
 }

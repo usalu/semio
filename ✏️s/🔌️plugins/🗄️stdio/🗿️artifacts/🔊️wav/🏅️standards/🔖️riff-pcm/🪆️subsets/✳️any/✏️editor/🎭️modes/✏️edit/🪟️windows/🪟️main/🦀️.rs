@@ -1,5 +1,5 @@
 //! ✏️ `wav` edit (any) — Main window: real `MediaWindowKit`
-//! render of the current document (editable variant).
+//! render of the current document.
 
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
@@ -10,7 +10,7 @@ pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    MediaWindowKit::editable_window_kind()
+    MediaWindowKit::window_kind()
 }
 
 /// 🎬️ Duration/position stay at the kit's zero defaults — this format's decoded snapshot does not

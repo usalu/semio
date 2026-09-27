@@ -180,12 +180,7 @@ struct EngineSurfaceRegistry {
 
 impl Default for EngineSurfaceRegistry {
     fn default() -> Self {
-        Self {
-            slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }),
-            next_text_editor_receipt: 1,
-            text_editor_outbox_cursor: 0,
-            faulted: false,
-        }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }), next_text_editor_receipt: 1, text_editor_outbox_cursor: 0, faulted: false }
     }
 }
 
@@ -1674,14 +1669,36 @@ struct TextEditorDeliveryInFlight {
     pending_members: u8,
 }
 
+struct TextEditorDraftPublication {
+    source: String,
+    action: ui_wgpu::wgpu::RetainedStringAction,
+}
+
+struct TextEditorDeliveryPublication {
+    source: String,
+    action: ui_wgpu::wgpu::RetainedStringAction,
+    snapshot: TextEditorDeliverySnapshot,
+    include_selection: bool,
+}
+
 #[derive(Default)]
 struct TextEditorDeliveryState {
     active: Option<TextEditorDeliveryInFlight>,
     latest: Option<TextEditorDeliverySnapshot>,
+    publication: Option<TextEditorDeliveryPublication>,
     pending_echoes: VecDeque<String>,
     acknowledged: Option<String>,
     read_only: bool,
     selection_undeclared: bool,
+    explicit_dirty: bool,
+    explicit_base: Option<String>,
+    explicit_conflict: bool,
+    explicit_past: VecDeque<String>,
+    explicit_future: VecDeque<String>,
+    explicit_snapshot: Option<String>,
+    explicit_publication: Option<TextEditorDraftPublication>,
+    explicit_active: Option<std::num::NonZeroU64>,
+    explicit_error: Option<String>,
 }
 
 impl TextEditorDeliveryState {
@@ -1702,6 +1719,9 @@ impl TextEditorDeliveryState {
     fn offer(&mut self, snapshot: TextEditorDeliverySnapshot) {
         if self.latest.as_ref() == Some(&snapshot) || self.active.as_ref().is_some_and(|active| active.snapshot == snapshot) {
             return;
+        }
+        if self.publication.as_ref().is_some_and(|publication| publication.snapshot != snapshot) {
+            self.publication = None;
         }
         self.latest = Some(snapshot);
     }
@@ -1745,6 +1765,10 @@ impl TextEditorDeliveryState {
             return false;
         }
         self.latest = None;
+        if self.publication.as_mut().is_some_and(|publication| Self::close_string(&mut publication.source) || Self::close_snapshot(&mut publication.snapshot)) {
+            return false;
+        }
+        self.publication = None;
         if self.active.as_mut().is_some_and(|active| Self::close_snapshot(&mut active.snapshot)) {
             return false;
         }
@@ -1752,18 +1776,53 @@ impl TextEditorDeliveryState {
         if self.pending_echoes.back_mut().is_some_and(Self::close_string) {
             return false;
         }
-        self.pending_echoes.pop_back();
+        if self.pending_echoes.pop_back().is_some() {
+            return false;
+        }
         if self.acknowledged.as_mut().is_some_and(Self::close_string) {
             return false;
         }
         self.acknowledged = None;
         self.read_only = false;
         self.selection_undeclared = false;
+        self.explicit_dirty = false;
+        if self.explicit_base.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_base = None;
+        self.explicit_conflict = false;
+        if self.explicit_past.back_mut().is_some_and(Self::close_string) || self.explicit_future.back_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_past.pop_back();
+        self.explicit_future.pop_back();
+        if !self.explicit_past.is_empty() || !self.explicit_future.is_empty() {
+            return false;
+        }
+        self.explicit_snapshot = None;
+        self.explicit_publication = None;
+        self.explicit_active = None;
+        self.explicit_error = None;
         true
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.active.is_none() && self.latest.is_none() && self.pending_echoes.is_empty() && self.acknowledged.is_none() && !self.read_only && !self.selection_undeclared
+        self.active.is_none()
+            && self.latest.is_none()
+            && self.publication.is_none()
+            && self.pending_echoes.is_empty()
+            && self.acknowledged.is_none()
+            && !self.read_only
+            && !self.selection_undeclared
+            && !self.explicit_dirty
+            && self.explicit_base.is_none()
+            && !self.explicit_conflict
+            && self.explicit_past.is_empty()
+            && self.explicit_future.is_empty()
+            && self.explicit_snapshot.is_none()
+            && self.explicit_publication.is_none()
+            && self.explicit_active.is_none()
+            && self.explicit_error.is_none()
     }
 }
 
@@ -3152,7 +3211,34 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
             changed = true;
         }
         if entry.editor_sync_cache.scene_json.as_deref() != Some(scene_json.as_str()) {
-            let external = entry.editor_delivery.reconcile_buffer(&editor.buffer);
+            let explicit = text_editor_explicit_draft_settings(scene).is_some();
+            let external = if explicit && entry.editor_delivery.explicit_dirty {
+                if editor.buffer == host.text() {
+                    entry.editor_delivery.explicit_dirty = false;
+                    entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+                    entry.editor_delivery.explicit_conflict = false;
+                    entry.editor_delivery.explicit_past.clear();
+                    entry.editor_delivery.explicit_future.clear();
+                    entry.editor_delivery.explicit_snapshot = Some(editor.buffer.clone());
+                    entry.editor_delivery.explicit_publication = None;
+                    entry.editor_delivery.explicit_active = None;
+                    entry.editor_delivery.explicit_error = None;
+                    true
+                } else {
+                    if entry.editor_delivery.explicit_base.as_deref() != Some(editor.buffer.as_str()) {
+                        entry.editor_delivery.explicit_conflict = true;
+                    }
+                    false
+                }
+            } else if explicit {
+                entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+                entry.editor_delivery.explicit_conflict = false;
+                entry.editor_delivery.explicit_snapshot = Some(editor.buffer.clone());
+                entry.editor_delivery.explicit_error = None;
+                true
+            } else {
+                entry.editor_delivery.reconcile_buffer(&editor.buffer)
+            };
             let applied_scene_json = if external {
                 scene_json.clone()
             } else {
@@ -3224,7 +3310,7 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
                 append_board_tool_run_trace(&mut painted, host, entry);
                 painted
             }
-            SurfaceKind::Paint2d => entry.raster_host.as_mut()?.build_vector_scene(),
+            SurfaceKind::Paint2d => entry.raster_host.as_mut()?.build_current_scene(),
             SurfaceKind::TextEditor => entry.editor.as_ref()?.build_scene(),
             _ => return None,
         };
@@ -3245,6 +3331,30 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
     true
 }
 
+/// 🧩️ Advances raster preparation within one frame-build grant, retaining the previous presented image.
+pub(crate) fn advance_raster_composite(scene: &UiComponentSceneNode) -> bool {
+    if scene.component_kind != SurfaceKind::Paint2d {
+        return true;
+    }
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(host) = registry.get_mut(&scene.host_id).and_then(|entry| entry.raster_host.as_mut()) else {
+            return true;
+        };
+        if let Some(paint) = &scene.paint_2d {
+            let selection: Vec<String> = serde_json::from_str(&paint.selection_json).unwrap_or_default();
+            host.set_composite_view(&paint.view_mode, selection.first().map(String::as_str));
+        }
+        match host.advance_composite(65536) {
+            Ok(progress) => progress.done,
+            Err(error) => {
+                engine_canvas_debug_log(&format!("Raster composite failed: {error}"));
+                true
+            }
+        }
+    })
+}
+
 /// 🔑️ The raster key an engine surface's composited texture is published under — the same key
 /// `EngineGpuCandidate` reserves through `GpuContext::reserve_engine_texture`, so a retained
 /// `push_raster_quad` under it composites the vello-rendered graph into the window's draw list.
@@ -3255,15 +3365,43 @@ pub fn engine_raster_key(surface_id: &str) -> Option<String> {
 
 //#region NodeGraph
 
-pub fn node_graph_apply_note_edit_key(action: KeyAction, modifiers: &PointerModifiers) -> bool {
+pub fn component_scene_has_editable_caret(scene: &UiComponentSceneNode) -> bool {
     ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        for entry in map.values_mut() {
-            let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else {
-                continue;
-            };
+        let surfaces = cell.borrow();
+        let Some(entry) = surfaces.get(&scene.host_id) else { return false };
+        entry.surface_id.as_ref().is_some_and(|surface| surface.as_str() == scene.surface_id)
+            && match (&scene.component_kind, entry.node_graph.as_ref()) {
+                (SurfaceKind::NodeGraph, Some(NodeGraphEngine::Flow(host))) => host.dag.editing_note_id().is_some(),
+                _ => false,
+            }
+    })
+}
+
+#[cfg(test)]
+pub(crate) fn component_scene_begin_note_edit_fixture(scene: &UiComponentSceneNode, widget_id: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let Some(entry) = surfaces.get_mut(&scene.host_id) else { return false };
+        if entry.surface_id.as_ref().is_none_or(|surface| surface.as_str() != scene.surface_id) || scene.component_kind != SurfaceKind::NodeGraph {
+            return false;
+        }
+        let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
+        host.begin_note_edit(widget_id, 0.0, 0.0);
+        host.dag.editing_note_id() == Some(widget_id)
+    })
+}
+
+pub fn component_scene_apply_note_edit_key(scene: &UiComponentSceneNode, action: KeyAction, modifiers: &PointerModifiers) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let applied = {
+            let Some(entry) = surfaces.get_mut(&scene.host_id) else { return false };
+            if entry.surface_id.as_ref().is_none_or(|surface| surface.as_str() != scene.surface_id) || scene.component_kind != SurfaceKind::NodeGraph {
+                return false;
+            }
+            let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
             if host.dag.editing_note_id().is_none() {
-                continue;
+                return false;
             }
             match action {
                 KeyAction::Char(ch) if !modifiers.ctrl_or_meta() => host.note_insert_text(&ch),
@@ -3278,22 +3416,46 @@ pub fn node_graph_apply_note_edit_key(action: KeyAction, modifiers: &PointerModi
                 KeyAction::Enter | KeyAction::Escape => host.note_commit_edit(),
                 _ => return false,
             }
-            return true;
+            true
+        };
+        if applied {
+            mark_engine_scene_repaint(&mut surfaces, &scene.host_id);
         }
-        false
+        applied
     })
 }
 
-pub fn node_graph_sync_caret_blink(visible: bool) {
+/// ✍️ Applies one accepted component scene's caret phase to its exact mounted engine surface.
+pub fn component_scene_set_caret_visible(scene: &UiComponentSceneNode, visible: bool) -> bool {
     ENGINE_SURFACES.with(|cell| {
-        for entry in cell.borrow_mut().values_mut() {
-            if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
-                if host.dag.editing_note_id().is_some() {
-                    host.set_note_caret_visible(visible);
-                }
+        let mut surfaces = cell.borrow_mut();
+        let changed = {
+            let Some(entry) = surfaces.get_mut(&scene.host_id) else { return false };
+            if entry.surface_id.as_ref().is_none_or(|surface| surface.as_str() != scene.surface_id) {
+                return false;
             }
+            match scene.component_kind {
+                SurfaceKind::TextEditor => {
+                    let Some(host) = entry.editor.as_mut() else { return false };
+                    host.set_caret_visible(visible);
+                    true
+                }
+                SurfaceKind::NodeGraph => {
+                    let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
+                    if host.dag.editing_note_id().is_none() {
+                        return false;
+                    }
+                    host.set_note_caret_visible(visible);
+                    true
+                }
+                _ => false,
+            }
+        };
+        if changed {
+            mark_engine_scene_repaint(&mut surfaces, &scene.host_id);
         }
-    });
+        changed
+    })
 }
 
 /// 🖼️ Frames the whole graph of one node-graph surface and answers the camera it installed, or
@@ -3467,11 +3629,7 @@ pub fn node_graph_flow_widget_drop_action(x: f32, y: f32, drag_data: &HashMap<St
             continue;
         }
         let world = node_graph_world_at(surface_id, bounds, x, y)?;
-        return Some(ActionDescriptor {
-            controller_id: (*controller_id).to_string(),
-            action: "addWidget".into(),
-            args: flow_widget_drop_args(&descriptor, world.0, world.1),
-        });
+        return Some(ActionDescriptor { controller_id: (*controller_id).to_string(), action: "addWidget".into(), args: flow_widget_drop_args(&descriptor, world.0, world.1) });
     }
     None
 }
@@ -5853,13 +6011,29 @@ pub fn paint2d_pointer_button_into(
         return Ok(true);
     }
     if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.pixel_edit().cloned()).flatten() {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "editPixels", "surfaceId", &scene.surface_id, "layerId", &edit.layer_id, "expectedImageKey", edit.expected_image_key.as_deref().unwrap_or(""), "operation", &edit.operation, "selection"])?;
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[
+            &scene.controller_id,
+            "editPixels",
+            "surfaceId",
+            &scene.surface_id,
+            "layerId",
+            &edit.layer_id,
+            "expectedImageKey",
+            edit.expected_image_key.as_deref().unwrap_or(""),
+            "operation",
+            &edit.operation,
+            "selection",
+        ])?;
         let mut batch = input.reserve_actions(1, bytes)?;
         batch.action(&scene.controller_id, "editPixels", bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("surfaceId"), &scene.surface_id)?;
             builder.string(Some("layerId"), &edit.layer_id)?;
-            if let Some(key) = &edit.expected_image_key { builder.string(Some("expectedImageKey"), key)?; } else { builder.null(Some("expectedImageKey"))?; }
+            if let Some(key) = &edit.expected_image_key {
+                builder.string(Some("expectedImageKey"), key)?;
+            } else {
+                builder.null(Some("expectedImageKey"))?;
+            }
             builder.string(Some("operation"), &edit.operation)?;
             builder.null(Some("selection"))?;
             builder.end_container()
@@ -5988,6 +6162,45 @@ pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: 
 
 //#region TextEditor
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct TextEditorExplicitDraftSettings {
+    pub edit_action: String,
+    pub edit_argument: String,
+    pub edit_arguments: serde_json::Map<String, Value>,
+    pub apply_label: String,
+    pub discard_label: String,
+    pub conflict_label: String,
+    pub applying_label: String,
+    pub cancel_label: String,
+    pub failed_label: String,
+}
+
+/// 📝 Reads the strict explicit-commit text draft settings shared with the React host.
+pub(crate) fn text_editor_explicit_draft_settings(scene: &UiComponentSceneNode) -> Option<TextEditorExplicitDraftSettings> {
+    let settings = scene.text_editor.as_ref()?.settings_json.as_deref()?;
+    let Value::Object(settings) = serde_json::from_str::<Value>(settings).ok()? else { return None };
+    if settings.get("readOnly") != Some(&Value::Bool(false)) || settings.get("commit")?.as_str()? != "explicit" {
+        return None;
+    }
+    let edit_action = settings.get("editAction")?.as_str()?.to_owned();
+    let edit_argument = settings.get("editArgument")?.as_str()?.to_owned();
+    let apply_label = settings.get("applyLabel")?.as_str()?.to_owned();
+    let discard_label = settings.get("discardLabel")?.as_str()?.to_owned();
+    let conflict_label = settings.get("conflictLabel")?.as_str()?.to_owned();
+    let applying_label = settings.get("applyingLabel")?.as_str()?.to_owned();
+    let cancel_label = settings.get("cancelLabel")?.as_str()?.to_owned();
+    let failed_label = settings.get("failedLabel")?.as_str()?.to_owned();
+    if edit_action.is_empty() || edit_argument.is_empty() || apply_label.is_empty() || discard_label.is_empty() || conflict_label.is_empty() || applying_label.is_empty() || cancel_label.is_empty() || failed_label.is_empty() {
+        return None;
+    }
+    let edit_arguments = match settings.get("editArguments") {
+        Some(Value::Object(arguments)) => arguments.clone(),
+        None => serde_json::Map::new(),
+        _ => return None,
+    };
+    Some(TextEditorExplicitDraftSettings { edit_action, edit_argument, edit_arguments, apply_label, discard_label, conflict_label, applying_label, cancel_label, failed_label })
+}
+
 pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -6020,23 +6233,44 @@ fn emit_text_editor_actions(
         if edited && entry.editor_delivery.read_only {
             return Ok(true);
         }
-        let projected_bytes = projected_document_bytes(host);
-        if edited && projected_bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        if text_editor_explicit_draft_settings(scene).is_some() {
+            if entry.editor_delivery.explicit_publication.is_some() || entry.editor_delivery.explicit_active.is_some() {
+                return Ok(true);
+            }
+            if entry.editor_delivery.explicit_base.is_none() {
+                entry.editor_delivery.explicit_base = scene.text_editor.as_ref().map(|editor| editor.buffer.clone());
+            }
+            let before = edited.then(|| host.text().to_owned());
+            mutate(host);
+            if edited {
+                if before.as_deref() != Some(host.text()) {
+                    if entry.editor_delivery.explicit_past.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
+                        entry.editor_delivery.explicit_past.pop_front();
+                    }
+                    entry.editor_delivery.explicit_past.push_back(before.unwrap_or_default());
+                    entry.editor_delivery.explicit_future.clear();
+                }
+                entry.editor_delivery.explicit_dirty = entry.editor_delivery.explicit_base.as_deref().is_some_and(|base| host.text() != base);
+                entry.editor_delivery.explicit_snapshot = Some(host.text().to_owned());
+                entry.editor_delivery.explicit_error = None;
+            }
+            return Ok(true);
         }
-        text_editor_action_bytes(scene, edited.then_some(projected_bytes))?;
+        let projected_bytes = projected_document_bytes(host);
+        if edited && projected_bytes > ui_wgpu::wgpu::RETAINED_ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+        if edited {
+            ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "text"])?;
+        } else {
+            text_editor_action_bytes(scene, None)?;
+        }
         if !edited && entry.editor_delivery.selection_undeclared {
             mutate(host);
             return Ok(true);
         }
         mutate(host);
-        entry.editor_delivery.offer(TextEditorDeliverySnapshot {
-            controller_id: scene.controller_id.clone(),
-            surface_id: scene.surface_id.clone(),
-            text: host.text().to_owned(),
-            start: host.anchor(),
-            end: host.caret(),
-        });
+        entry.editor_delivery.offer(TextEditorDeliverySnapshot { controller_id: scene.controller_id.clone(), surface_id: scene.surface_id.clone(), text: host.text().to_owned(), start: host.anchor(), end: host.caret() });
         Ok(true)
     })
 }
@@ -6048,16 +6282,8 @@ pub(crate) enum TextEditorActionOutcome<'a> {
 }
 
 fn text_editor_delivery_bytes(snapshot: &TextEditorDeliverySnapshot, include_edit: bool, include_selection: bool) -> Result<(usize, usize, usize), ui_wgpu::wgpu::BoundedActionFault> {
-    let edit = if include_edit {
-        ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text])?
-    } else {
-        0
-    };
-    let selection = if include_selection {
-        ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])?
-    } else {
-        0
-    };
+    let edit = if include_edit { ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text])? } else { 0 };
+    let selection = if include_selection { ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])? } else { 0 };
     let total = edit.checked_add(selection).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
     Ok((edit, selection, total))
 }
@@ -6071,7 +6297,9 @@ fn text_editor_receipt_token(sequence: u64, slot: usize) -> Option<std::num::Non
 
 pub(crate) fn has_pending_text_editor_outbox() -> bool {
     ENGINE_SURFACES.with(|cell| {
-        cell.borrow().slots.iter().any(|slot| slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some()))
+        cell.borrow().slots.iter().any(|slot| {
+            slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some())
+        })
     })
 }
 
@@ -6079,9 +6307,10 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
-        let Some(index) = (0..ENGINE_SURFACE_CAPACITY).map(|offset| (start + offset) % ENGINE_SURFACE_CAPACITY).find(|index| {
-            registry.slots[*index].value.as_ref().is_some_and(|surface| surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some())
-        }) else {
+        let Some(index) = (0..ENGINE_SURFACE_CAPACITY)
+            .map(|offset| (start + offset) % ENGINE_SURFACE_CAPACITY)
+            .find(|index| registry.slots[*index].value.as_ref().is_some_and(|surface| surface.editor_delivery.active.is_none() && surface.editor_delivery.publication.is_none() && surface.editor_delivery.latest.is_some()))
+        else {
             return Ok(false);
         };
         let Some(slot) = registry.slots.get(index) else { return Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
@@ -6092,6 +6321,15 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
         let include_selection = !surface.editor_delivery.selection_undeclared;
         if !include_edit && !include_selection {
             registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.latest = None;
+            registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+            return Ok(true);
+        }
+        if include_edit && snapshot.text.len() > ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY {
+            let descriptor =
+                ActionDescriptor { controller_id: snapshot.controller_id.clone(), action: "textEdit".into(), args: Some(semio_framework::DslValue::Object(vec![("surfaceId".into(), semio_framework::DslValue::String(snapshot.surface_id.clone()))])) };
+            let action = ui_wgpu::wgpu::RetainedStringAction::new(descriptor, "text".into(), snapshot.text.len())?;
+            let publication = TextEditorDeliveryPublication { source: snapshot.text.clone(), action, snapshot, include_selection };
+            registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.publication = Some(publication);
             registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
             return Ok(true);
         }
@@ -6143,6 +6381,15 @@ pub(crate) fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQu
         let Some(slot) = registry.slots.get_mut(index) else { return };
         let generation = slot.generation;
         let Some(surface) = slot.value.as_mut() else { return };
+        if receipt.member == 2 && surface.editor_delivery.explicit_active == Some(receipt.token) {
+            surface.editor_delivery.explicit_active = None;
+            surface.editor_delivery.explicit_error = match outcome {
+                TextEditorActionOutcome::Accepted => None,
+                TextEditorActionOutcome::Refused(reason) => Some(reason.to_owned()),
+                TextEditorActionOutcome::Cancelled => Some("cancelled".into()),
+            };
+            return;
+        }
         let (text, pending_members, source) = {
             let Some(active) = surface.editor_delivery.active.as_mut().filter(|active| active.token == receipt.token && active.source.slot as usize == index && active.source.generation == generation) else { return };
             let member = 1u8.checked_shl(u32::from(receipt.member)).unwrap_or(0);
@@ -6203,6 +6450,246 @@ fn text_editor_action_bytes(scene: &UiComponentSceneNode, document_bytes: Option
     selection.checked_add(edit).and_then(|bytes| bytes.checked_add(document_bytes)).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_QUEUE_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
 }
 
+fn write_text_editor_draft_value(builder: &mut ui_wgpu::wgpu::BoundedActionBuilder, key: Option<&str>, value: &Value) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    match value {
+        Value::Null => builder.null(key),
+        Value::Bool(value) => builder.boolean(key, *value),
+        Value::Number(value) => builder.number(key, value.as_f64().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?),
+        Value::String(value) => builder.string(key, value),
+        Value::Array(values) => {
+            builder.begin_array(key)?;
+            for value in values {
+                write_text_editor_draft_value(builder, None, value)?;
+            }
+            builder.end_container()
+        }
+        Value::Object(entries) => {
+            builder.begin_object(key)?;
+            for (key, value) in entries {
+                write_text_editor_draft_value(builder, Some(key), value)?;
+            }
+            builder.end_container()
+        }
+    }
+}
+
+/// 💾 Publishes the current local draft through its configured artifact-owned action.
+pub(crate) fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(settings) = text_editor_explicit_draft_settings(scene) else { return Ok(false) };
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(entry) = registry.get_mut(&scene.host_id) else { return Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
+        if !entry.editor_delivery.explicit_dirty || entry.editor_delivery.explicit_conflict || entry.editor_delivery.explicit_publication.is_some() || entry.editor_delivery.explicit_active.is_some() {
+            return Ok(true);
+        }
+        let Some(host) = entry.editor.as_ref() else { return Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
+        let source = entry.editor_delivery.explicit_snapshot.take().unwrap_or_else(|| host.text().to_owned());
+        let args = settings.edit_arguments.iter().map(|(key, value)| (key.clone(), semio_framework::DslValue::from(value))).collect();
+        let descriptor = ActionDescriptor { controller_id: scene.controller_id.clone(), action: settings.edit_action.clone(), args: Some(semio_framework::DslValue::Object(args)) };
+        let action = match ui_wgpu::wgpu::RetainedStringAction::new(descriptor, settings.edit_argument.clone(), source.len()) {
+            Ok(action) => action,
+            Err(fault) => {
+                entry.editor_delivery.explicit_snapshot = Some(source);
+                entry.editor_delivery.explicit_error = Some(format!("{fault:?}"));
+                return Err(fault);
+            }
+        };
+        entry.editor_delivery.explicit_publication = Some(TextEditorDraftPublication { source, action });
+        entry.editor_delivery.explicit_error = None;
+        Ok(true)
+    })
+}
+
+pub(crate) enum TextEditorRetainedActionStep {
+    Idle,
+    Pending,
+    Ready(TextEditorRetainedActionBatch),
+}
+
+pub(crate) struct TextEditorRetainedActionBatch {
+    pub(crate) first: ui_wgpu::wgpu::QueuedActionDescriptor,
+    pub(crate) second: Option<ui_wgpu::wgpu::QueuedActionDescriptor>,
+}
+
+/// 📄 Copies one bounded source page and yields the single artifact action only after completion.
+pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetainedActionStep, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
+        let Some(index) = (0..ENGINE_SURFACE_CAPACITY)
+            .map(|offset| (start + offset) % ENGINE_SURFACE_CAPACITY)
+            .find(|index| registry.slots[*index].value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some()))
+        else {
+            return Ok(TextEditorRetainedActionStep::Idle);
+        };
+        let slot_generation = registry.slots[index].generation;
+        let surface = registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        if surface.editor_delivery.explicit_publication.is_none() {
+            let publication = surface.editor_delivery.publication.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            let begin = publication.action.copied_bytes();
+            let mut end = begin.saturating_add(ui_wgpu::wgpu::RETAINED_ACTION_STRING_PAGE_BYTES).min(publication.source.len());
+            while !publication.source.is_char_boundary(end) {
+                end = end.checked_sub(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            }
+            if publication.action.push_page(publication.source.get(begin..end).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?)? != ui_wgpu::wgpu::RetainedStringActionStep::Complete {
+                registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+                return Ok(TextEditorRetainedActionStep::Pending);
+            }
+            let publication = surface.editor_delivery.publication.take().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            registry.next_text_editor_receipt = registry.next_text_editor_receipt.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            let first = publication.action.finish(Some(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 0, abort_correlation_on_error: true }))?;
+            let second = publication.include_selection.then(|| ui_wgpu::wgpu::QueuedActionDescriptor {
+                descriptor: ActionDescriptor {
+                    controller_id: publication.snapshot.controller_id.clone(),
+                    action: "textSelect".into(),
+                    args: Some(semio_framework::DslValue::Object(vec![
+                        ("surfaceId".into(), semio_framework::DslValue::String(publication.snapshot.surface_id.clone())),
+                        ("start".into(), semio_framework::DslValue::uint(publication.snapshot.start as u64)),
+                        ("end".into(), semio_framework::DslValue::uint(publication.snapshot.end as u64)),
+                    ])),
+                },
+                receipt: Some(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 1, abort_correlation_on_error: false }),
+            });
+            let slot = &mut registry.slots[index];
+            if slot.generation != slot_generation {
+                return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+            }
+            let surface = slot.value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            if surface.editor_delivery.latest.as_ref() == Some(&publication.snapshot) {
+                surface.editor_delivery.latest = None;
+            }
+            if surface.editor_delivery.pending_echoes.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
+                surface.editor_delivery.pending_echoes.pop_front();
+            }
+            surface.editor_delivery.pending_echoes.push_back(publication.snapshot.text.clone());
+            surface.editor_delivery.active =
+                Some(TextEditorDeliveryInFlight { source: EngineSurfaceToken { slot: index as u16, generation: slot_generation }, token, snapshot: publication.snapshot, pending_members: 1 | if second.is_some() { 2 } else { 0 } });
+            registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+            return Ok(TextEditorRetainedActionStep::Ready(TextEditorRetainedActionBatch { first, second }));
+        }
+        let publication = surface.editor_delivery.explicit_publication.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let begin = publication.action.copied_bytes();
+        let mut end = begin.saturating_add(ui_wgpu::wgpu::RETAINED_ACTION_STRING_PAGE_BYTES).min(publication.source.len());
+        while !publication.source.is_char_boundary(end) {
+            end = end.checked_sub(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        }
+        if publication.action.push_page(publication.source.get(begin..end).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?)? != ui_wgpu::wgpu::RetainedStringActionStep::Complete {
+            registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+            return Ok(TextEditorRetainedActionStep::Pending);
+        }
+        let publication = surface.editor_delivery.explicit_publication.take().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        registry.next_text_editor_receipt = registry.next_text_editor_receipt.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let receipt = ui_wgpu::wgpu::ActionQueueReceipt { token, member: 2, abort_correlation_on_error: false };
+        let descriptor = publication.action.finish(Some(receipt))?;
+        let slot = &mut registry.slots[index];
+        if slot.generation != slot_generation {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        let surface = slot.value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        surface.editor_delivery.explicit_snapshot = Some(publication.source);
+        surface.editor_delivery.explicit_active = Some(token);
+        registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+        Ok(TextEditorRetainedActionStep::Ready(TextEditorRetainedActionBatch { first: descriptor, second: None }))
+    })
+}
+
+pub(crate) fn text_editor_cancel_explicit_publication(scene: &UiComponentSceneNode) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(surface) = registry.get_mut(&scene.host_id) else { return false };
+        let Some(publication) = surface.editor_delivery.explicit_publication.take() else { return false };
+        surface.editor_delivery.explicit_snapshot = Some(publication.source);
+        surface.editor_delivery.explicit_error = None;
+        true
+    })
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct TextEditorExplicitDraftStatus {
+    pub pending: bool,
+    pub cancellable: bool,
+    pub progress: f32,
+    pub error: Option<String>,
+}
+
+pub(crate) fn text_editor_explicit_draft_status(scene: &UiComponentSceneNode) -> TextEditorExplicitDraftStatus {
+    ENGINE_SURFACES.with(|cell| {
+        let registry = cell.borrow();
+        let Some(surface) = registry.get(&scene.host_id) else { return TextEditorExplicitDraftStatus { pending: false, cancellable: false, progress: 0.0, error: None } };
+        let progress = surface.editor_delivery.explicit_publication.as_ref().map_or_else(|| if surface.editor_delivery.explicit_active.is_some() { 1.0 } else { 0.0 }, |publication| publication.action.progress());
+        TextEditorExplicitDraftStatus {
+            pending: surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.explicit_active.is_some(),
+            cancellable: surface.editor_delivery.explicit_publication.is_some(),
+            progress,
+            error: surface.editor_delivery.explicit_error.clone(),
+        }
+    })
+}
+
+/// 🗑️ Restores the persisted scene buffer and clears the native local draft.
+pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -> bool {
+    let Some(editor) = scene.text_editor.as_ref() else { return false };
+    let Ok(scene_json) = serde_json::to_string(editor) else { return false };
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(entry) = registry.get_mut(&scene.host_id) else { return false };
+        let Some(host) = entry.editor.as_mut() else { return false };
+        if entry.editor_delivery.explicit_active.is_some() {
+            return false;
+        }
+        entry.editor_delivery.explicit_publication = None;
+        if host.sync_from_scene_json(&scene_json).is_err() {
+            return false;
+        }
+        entry.editor_delivery.explicit_dirty = false;
+        entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
+        entry.editor_delivery.explicit_conflict = false;
+        entry.editor_delivery.explicit_past.clear();
+        entry.editor_delivery.explicit_future.clear();
+        entry.editor_delivery.explicit_snapshot = Some(editor.buffer.clone());
+        entry.editor_delivery.explicit_error = None;
+        true
+    })
+}
+
+/// ↩️ Moves within the native local draft history without dispatching document history actions.
+pub(crate) fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNode, redo: bool) -> bool {
+    let Some(editor) = scene.text_editor.as_ref() else { return false };
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(entry) = registry.get_mut(&scene.host_id) else { return false };
+        let Some(host) = entry.editor.as_mut() else { return false };
+        if entry.editor_delivery.explicit_publication.is_some() || entry.editor_delivery.explicit_active.is_some() {
+            return true;
+        }
+        let next = if redo { entry.editor_delivery.explicit_future.pop_back() } else { entry.editor_delivery.explicit_past.pop_back() };
+        let Some(next) = next else { return true };
+        let current = host.text().to_owned();
+        if redo {
+            entry.editor_delivery.explicit_past.push_back(current);
+        } else {
+            entry.editor_delivery.explicit_future.push_back(current);
+        }
+        host.set_text(next.clone());
+        entry.editor_delivery.explicit_dirty = entry.editor_delivery.explicit_base.as_deref().is_some_and(|base| next != base);
+        entry.editor_delivery.explicit_snapshot = Some(next);
+        entry.editor_delivery.explicit_error = None;
+        true
+    })
+}
+
+/// 📝 Reports whether the native editor has an unapplied explicit draft.
+pub(crate) fn text_editor_explicit_draft_is_dirty(scene: &UiComponentSceneNode) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|entry| entry.editor_delivery.explicit_dirty))
+}
+
+/// ⚔️ Reports whether a persisted collaborator edit diverged from the local draft base.
+pub(crate) fn text_editor_explicit_draft_has_conflict(scene: &UiComponentSceneNode) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|entry| entry.editor_delivery.explicit_conflict))
+}
+
 /// 📋️ Reads the exact UTF-8 selection owned by the mounted editor host.
 pub fn text_editor_selection_text(scene: &UiComponentSceneNode) -> Option<String> {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).and_then(|entry| entry.editor.as_ref()).map(EditorHost::selection_text))
@@ -6237,10 +6724,16 @@ pub fn text_editor_replace_selection_into(scene: &UiComponentSceneNode, text: &s
 
 /// ♿️ Applies an accessibility textarea's complete value through the editor's ordered action pair.
 pub fn text_editor_replace_all_into(scene: &UiComponentSceneNode, text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    emit_text_editor_actions(scene, input, true, |_| text.len(), |host| {
-        host.select_all();
-        host.replace_selection(text);
-    })
+    emit_text_editor_actions(
+        scene,
+        input,
+        true,
+        |_| text.len(),
+        |host| {
+            host.select_all();
+            host.replace_selection(text);
+        },
+    )
 }
 
 pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {

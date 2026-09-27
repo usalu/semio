@@ -4,7 +4,7 @@
 
 use crate::editor::dwg_ac1024::modes::edit;
 use crate::editor::dwg_ac1024::modes::edit::windows::main;
-use crate::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+use crate::standards::v_ac1024::subsets::any::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot, DwgMutation};
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -12,6 +12,7 @@ use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,  ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, EditorApp, InteractiveJobClassification,
 };
 use store::EngineHandles;
+use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const DWG_AC1024_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
@@ -19,23 +20,15 @@ pub const DWG_AC1024_DOCUMENT_SCHEMA: &str = "stdio.dwg";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-/// ✏️ The Main window declares the shared `MeshWindowKit::editable_window_kind()`'s
-/// `set-vertex` action (contract §2.6), but this subset's own `🧬️schema/🧬️mutations` declares
-/// no by-index "replace"/"set" op that action could honestly back today (only insert/remove and
-/// whole-document `SetSnapshot`) — per this ticket's explicit allowance, the editor still exists
-/// with a MINIMAL command set: the window really advertises the action, `handle` is a real dispatch
-/// (not `unreachable!()`) that is a no-op today, rather than inventing a mutation the schema does
-/// not have. Report, don't invent.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum DwgAc1024EditCommand {
-    #[default]
-    SetVertex,
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
+    EditSnapshot { event: editing::SnapshotEditEvent },
 }
 
 impl protocol::OpBinary for DwgAc1024EditCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = DWG_AC1024_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(pack::to_json_string(self).into_bytes())
@@ -50,6 +43,15 @@ impl protocol::OpBinary for DwgAc1024EditCommand {
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+const DWG_AC1024_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+];
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.dwg.tool-command.v1";
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
@@ -62,6 +64,7 @@ fn dwgAc1024Editor_example_snapshot(example_id: &str) -> DwgSnapshot {
 }
 
 fn dwgAc1024Editor_command_id(command: &DwgAc1024EditCommand) -> &'static str {
+    if let DwgAc1024EditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         DwgAc1024EditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
         _ => "other",
@@ -69,6 +72,7 @@ fn dwgAc1024Editor_command_id(command: &DwgAc1024EditCommand) -> &'static str {
 }
 
 fn dwgAc1024Editor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DwgAc1024EditCommand, Fault> {
+    if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| DwgAc1024EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(DwgAc1024EditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
@@ -157,7 +161,7 @@ impl ArtifactEditor for DwgAc1024Editor {
     const DIALECT: Dialect = DWG_AC1024_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DWG_AC1024_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<DwgAc1024Editor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.stdio.dwg@ac1024/*#editor",
@@ -169,10 +173,12 @@ impl ArtifactEditor for DwgAc1024Editor {
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        registry.register(DwgAc1024EditorExampleFactory::new(registry.controller_id()))
+        registry.register(DwgAc1024EditorExampleFactory::new(registry.controller_id()))?;
+        editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if !DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -206,6 +212,9 @@ impl ArtifactEditor for DwgAc1024Editor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    }
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -232,33 +241,48 @@ impl ArtifactEditor for DwgAc1024Editor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
+            DwgAc1024EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             DwgAc1024EditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dwgAc1024Editor_example_snapshot(example_id), DWG_AC1024_DOCUMENT_SCHEMA)],
                 description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
-            _ => Ok(Emit::default()),
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.dwg@ac1024/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Editor
 
+
+impl editing::SnapshotEditingEditor for DwgAc1024Editor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
+        match command { DwgAc1024EditCommand::EditSnapshot { event } => Some(event), _ => None }
+    }
+    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| DwgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }))
+    }
+}
+
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_dwg_ac1024_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(DWG_AC1024_DIALECT).document(["stdio", "dwgac1024"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DWG_AC1024_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(DWG_AC1024_DIALECT).document(["stdio", "dwgac1024"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DWG_AC1024_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
-        .build_definition()
+        ;
+    editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

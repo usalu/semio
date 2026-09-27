@@ -7,7 +7,7 @@ use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emi
 //#region 🔖️DuplicateAndPaste
 /// 🔁️ Shared body for `duplicate_app_instance` (sources = selection) and `paste_app_instance` (sources
 /// = clipboard) — both mint a fresh node per source id, offset from the original.
-async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let mut artifact_mutations = Vec::new();
     let mut new_active_node_id = None;
     for node_id in source_ids {

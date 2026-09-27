@@ -10,11 +10,13 @@
 
 use super::*;
 use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ExampleDefinition, ModeDefinition, Modes, WindowKindDefinition, WindowKinds};
+use ui_wgpu::wgpu::WindowLayout;
 
 const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json");
 const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json");
 const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️surface-controls/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️boot-example/🔣️.json");
+const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
@@ -829,6 +831,101 @@ fn a_seeded_mode_layout_always_opens_with_one_window_active() {
 }
 
 #[test]
+fn projection_instance_tab_icons_match_reacts_ephemeral_overrides() {
+    let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("🖼️ the shared window-scope fixture parses");
+    for case in fixture["tabPresentation"].as_array().expect("🖼️ fixture tab-presentation rows") {
+        let actual = dock_tab_icon_id_v1(case["kindIconId"].as_str().expect("🖼️ kind icon"), None, case["templateId"].as_str());
+        assert_eq!(actual, case["expectedIconId"].as_str().expect("🖼️ expected icon"), "{}: wgpu tab icon", case["id"]);
+    }
+}
+
+#[test]
+fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_retire_before_id_reuse() {
+    let fixture: Value = serde_json::from_str(WINDOW_ICON_OVERRIDE_FIXTURE).expect("🖼️ the shared window-icon fixture parses");
+    let kind_id = fixture["windowKindId"].as_str().expect("🖼️ fixture window kind");
+    let kind_icon_id = fixture["kindIconId"].as_str().expect("🖼️ fixture kind icon");
+    let projection = &fixture["projectionFallback"];
+    let window_ids = fixture["windowIds"].as_array().expect("🖼️ fixture window ids");
+    let layout = |include_retired: bool| {
+        let tabs = window_ids
+            .iter()
+            .filter_map(|window_id| {
+                let window_id = window_id.as_str().expect("🖼️ fixture window id");
+                if !include_retired && window_id == fixture["retireReuse"]["windowId"].as_str().expect("🖼️ retired window id") {
+                    return None;
+                }
+                let template_id = (window_id == projection["windowId"].as_str().expect("🖼️ projection window id")).then(|| projection["templateId"].as_str().expect("🖼️ projection template").to_string());
+                Some(DockStackTab::instance_template(window_id, kind_id, template_id, WindowStackCorner::TopLeft))
+            })
+            .collect();
+        crate::dock::DockNode::Stack { windows: tabs, active: window_ids[0].as_str().expect("🖼️ active window id").to_string() }
+    };
+    let full_root = layout(true);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.layout_override = None;
+    let session = shell.session.as_mut().expect("🖼️ test session");
+    let kind = session.app.window_kinds.first_mut();
+    kind.id = kind_id.to_string();
+    kind.icon_id = kind_icon_id.into();
+    session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
+    shell.sync_dock();
+
+    let (_, initial_icons) = shell.dock_chrome_maps();
+    assert_eq!(initial_icons.get(projection["windowId"].as_str().unwrap()).map(String::as_str), projection["expectedIconId"].as_str(), "a projection icon is the pre-publication fallback");
+    assert_eq!(initial_icons.get(fixture["kindFallback"]["windowId"].as_str().unwrap()).map(String::as_str), fixture["kindFallback"]["expectedIconId"].as_str(), "an ordinary instance keeps its kind icon");
+
+    for command in fixture["commands"].as_array().expect("🖼️ fixture icon commands") {
+        let window_id = command["windowId"].as_str().expect("🖼️ command window id");
+        assert!(shell.apply_window_icon_host_command(window_id, command["iconId"].as_str().expect("🖼️ command icon id")), "a command for the exact live instance is accepted");
+        let (_, icons) = shell.dock_chrome_maps();
+        assert_eq!(icons.get(window_id).map(String::as_str), command["expectedIconId"].as_str(), "{window_id}: command icon wins");
+    }
+    let (_, independent) = shell.dock_chrome_maps();
+    assert_eq!(independent.get("main").map(String::as_str), Some("diamond"), "replacing one instance changes only its own slot");
+    assert_eq!(independent.get("main-2").map(String::as_str), Some("circle"), "the sibling instance keeps its independent override");
+    assert_eq!(independent.get("main-projection").map(String::as_str), Some("star"), "a generic override precedes a valid projection icon");
+    for rejected in fixture["rejected"].as_array().expect("🖼️ rejected icon commands") {
+        assert!(!shell.apply_window_icon_host_command(rejected["windowId"].as_str().unwrap(), rejected["iconId"].as_str().unwrap()), "a missing instance or empty icon is refused");
+    }
+
+    shell.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&layout(false)) });
+    shell.sync_dock();
+    let retired_id = fixture["retireReuse"]["windowId"].as_str().expect("🖼️ retired id");
+    assert!(!shell.window_icon_overrides.contains_key(retired_id), "retirement erases the renderer-local owner");
+    shell.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
+    shell.sync_dock();
+    let (_, reused) = shell.dock_chrome_maps();
+    assert_eq!(reused.get(retired_id).map(String::as_str), fixture["retireReuse"]["expectedReusedIconId"].as_str(), "an id reused by a successor starts from kind fallback");
+}
+
+#[test]
+fn dock_sync_seeds_the_authored_instance_and_publishes_its_projection_icons() {
+    let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("🖼️ the shared window-scope fixture parses");
+    let rows = fixture["tabPresentation"].as_array().expect("🖼️ fixture tab-presentation rows");
+    let top_template = rows[0]["templateId"].as_str().expect("🖼️ top template");
+    let perspective_template = rows[1]["templateId"].as_str().expect("🖼️ perspective template");
+    let root = crate::dock::DockNode::Row(vec![
+        (crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-top", "main", Some(top_template.into()), WindowStackCorner::TopLeft)], active: "main-top".into() }, 1.0),
+        (crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
+    ]);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.layout_override = None;
+    shell.active_window_id = Some("main".into());
+    let session = shell.session.as_mut().expect("🖼️ test session");
+    session.app.window_kinds.first_mut().icon_id = "puzzle".into();
+    session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&root) });
+
+    shell.sync_dock();
+
+    assert_eq!(shell.active_window_id.as_deref(), Some("main-top"));
+    assert_eq!(shell.dock.active_window_id.as_deref(), Some("main-top"));
+    assert_eq!(shell.dock.active_stack.as_deref(), Some([0].as_slice()));
+    let (_, icons) = shell.dock_chrome_maps();
+    assert_eq!(icons.get("main-top").map(String::as_str), Some("projection-orthographic"));
+    assert_eq!(icons.get("main-perspective").map(String::as_str), Some("projection-three-point"));
+}
+
+#[test]
 fn an_app_wide_chord_resolves_to_the_window_that_owns_its_verb_in_the_active_mode() {
     let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("⌨️ the shared window-scope fixture parses");
     let mut owners = 0;
@@ -973,4 +1070,190 @@ fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
     let cancel = reserved_controls.iter().find(|(control, _)| control.control_id.starts_with("shell.world3d.cancel")).expect("🛟️ the cancel control is offered");
     assert!(cancel.1[0] >= pill_rect.x + pill_rect.w, "🛟️ the cancel still follows the pill on the reserved row");
     eprintln!("[DEBUG] wgpu overlay row safe area: flush x={} reserved x={} panel right={}", flush_pills[0].1.x, pill_rect.x, panel.x + panel.w);
+}
+
+#[test]
+fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
+    let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
+    let layout = |weights: &Value, change: Option<&Value>| {
+        let children = law["windows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .enumerate()
+            .map(|(index, id)| {
+                let id = id.as_str().unwrap().to_string();
+                let mut windows = vec![crate::dock::DockStackTab::new(id.clone())];
+                if id == "b" {
+                    windows[0].template_id = change.and_then(|row| row["templateId"].as_str()).map(str::to_string);
+                    if let Some(extra) = change.and_then(|row| row["extraId"].as_str()) {
+                        windows.push(crate::dock::DockStackTab::instance(extra, "b", WindowStackCorner::TopLeft));
+                    }
+                }
+                let stack = crate::dock::DockNode::Stack { windows, active: id };
+                (stack, weights[index].as_f64().unwrap() as f32)
+            })
+            .collect();
+        WindowLayout { root: crate::dock::dock_node_to_layout_root(&crate::dock::DockNode::Row(children)) }
+    };
+    for case in law["cases"].as_array().unwrap() {
+        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
+        let kinds = |ids: &Value, label: &str| {
+            WindowKinds::try_from(
+                ids.as_array()
+                    .unwrap()
+                    .iter()
+                    .filter(|id| law["windows"].as_array().unwrap().contains(id))
+                    .map(|id| {
+                        let mut kind = prototype.clone();
+                        kind.id = id.as_str().unwrap().into();
+                        kind.label = if id == "a" { LocalizedLabel::native(label, label) } else { LocalizedLabel::native("B", "B") };
+                        kind
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap()
+        };
+        shell.session.as_mut().unwrap().app.window_kinds = kinds(&law["windows"], "A");
+        shell.session.as_mut().unwrap().app.default_layout = Some(layout(&law["initialWeights"], None));
+        shell.layout_override = (case["source"] == "override").then(|| layout(&law["initialWeights"], None));
+        shell.active_window_id = Some("b".into());
+        shell.sync_dock();
+        let before = shell.layout_override.clone();
+        assert!(shell.focus_active_window());
+        assert_eq!(shell.layout_override, before, "{}: maximize is ephemeral", case["id"]);
+        assert_eq!(shell.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]));
+        if case["source"] == "override" {
+            shell.layout_override = Some(layout(&case["weights"], Some(case)));
+        } else {
+            shell.session.as_mut().unwrap().app.default_layout = Some(layout(&case["weights"], Some(case)));
+        }
+        shell.session.as_mut().unwrap().app.window_kinds = kinds(&case["windows"], case["layoutLabel"].as_str().unwrap());
+        shell.sync_dock();
+        let expected = case["maximized"].as_u64().map(|index| vec![index as usize]);
+        assert_eq!(shell.dock.maximized_stack, expected, "{}: matches React prop resynchronization", case["id"]);
+        assert_eq!(shell.active_window_id.as_deref(), Some("b"), "{}: focus remains on its live instance", case["id"]);
+        if let Some(template) = case["templateId"].as_str() {
+            assert_eq!(shell.world_projection_template.get("b").map(String::as_str), Some(template));
+        }
+        if expected.is_none() {
+            assert!(shell.focus_active_window());
+        }
+        shell.sync_dock();
+        assert_eq!(shell.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]), "{}: unchanged refresh preserves a later maximize", case["id"]);
+    }
+    let retitle = &law["localeRetitle"];
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
+    shell.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
+        law["windows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|id| {
+                let mut kind = prototype.clone();
+                kind.id = id.as_str().unwrap().into();
+                kind.label = if id == "a" { LocalizedLabel::native("A", "A") } else { LocalizedLabel::native("B", "B") };
+                kind
+            })
+            .collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let mut seeded = layout(&law["initialWeights"], Some(retitle));
+    if let ui_wgpu::wgpu::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
+        if let ui_wgpu::wgpu::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
+            stack.children[1].title = retitle["bakedTitle"].as_str().map(str::to_string);
+        }
+    }
+    shell.layout_override = Some(seeded);
+    shell.active_window_id = Some("b".into());
+    shell.locale_id = "en".into();
+    shell.sync_dock();
+    assert!(shell.focus_active_window());
+    shell.locale_id = retitle["locale"].as_str().unwrap().into();
+    shell.sync_dock();
+    assert_eq!(shell.dock.maximized_stack, None);
+    assert_eq!(shell.dock_chrome_maps().0[retitle["extraId"].as_str().unwrap()], retitle["resolvedTitle"].as_str().unwrap());
+    assert!(shell.focus_active_window());
+    shell.sync_dock();
+    assert_eq!(shell.dock.maximized_stack, Some(vec![1]));
+}
+
+#[test]
+fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
+    fn paths(node: &crate::dock::DockNode, path: String, out: &mut Vec<String>) {
+        match node {
+            crate::dock::DockNode::Stack { windows, .. } => {
+                if !windows.is_empty() {
+                    out.push(path);
+                }
+            }
+            crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => {
+                for (index, (child, _)) in children.iter().enumerate() {
+                    paths(child, if path.is_empty() { index.to_string() } else { format!("{path}.{index}") }, out);
+                }
+            }
+        }
+    }
+    let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
+    for case in law["ingressCases"].as_array().unwrap() {
+        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
+        shell.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
+            law["windows"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|id| {
+                    let mut kind = prototype.clone();
+                    kind.id = id.as_str().unwrap().into();
+                    kind
+                })
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
+        let layout = |stacks: &Value| {
+            let children: Vec<Value> = stacks
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|stack| {
+                    let leaves: Vec<Value> = stack
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|leaf| {
+                            let mut leaf = leaf.clone();
+                            leaf["kind"] = Value::String("window".into());
+                            leaf
+                        })
+                        .collect();
+                    serde_json::json!({ "kind": "stack", "children": leaves })
+                })
+                .collect();
+            serde_json::from_value(serde_json::json!({ "root": { "kind": "row", "children": children } })).unwrap()
+        };
+        if let Some(previous) = case.get("previousStacks") {
+            shell.layout_override = Some(layout(previous));
+            shell.sync_dock();
+        }
+        shell.layout_override = Some(layout(&case["stacks"]));
+        shell.sync_dock();
+        let expected: Vec<String> = case["windows"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().into()).collect();
+        assert_eq!(shell.dock.collect_window_ids(), expected, "{}", case["id"]);
+        let mut stack_paths = Vec::new();
+        paths(&shell.dock.root, String::new(), &mut stack_paths);
+        assert_eq!(serde_json::to_value(stack_paths).unwrap(), case["stackPaths"], "{}: surviving axis shape", case["id"]);
+        let instances = ShellState::session_window_instances(shell.session.as_ref().unwrap(), &shell.dock);
+        let extras: Vec<&str> = instances.iter().filter(|instance| !law["windows"].as_array().unwrap().iter().any(|id| id == &instance.id)).map(|instance| instance.id.as_str()).collect();
+        assert_eq!(serde_json::to_value(extras).unwrap(), case["extras"], "{}: published roster", case["id"]);
+        for instance in instances {
+            assert!(shell.session.as_ref().unwrap().app.window_kinds.iter().any(|kind| kind.id == instance.window_kind_id));
+        }
+        assert_eq!(serde_json::to_value(&shell.world_projection_template).unwrap(), case["templates"], "{}: projections only for declared kinds", case["id"]);
+        shell.sync_dock();
+        assert_eq!(shell.dock.collect_window_ids(), expected, "{}: stable repeat", case["id"]);
+        eprintln!("[DEBUG] declared window ingress {}: {:?}", case["id"], expected);
+    }
 }

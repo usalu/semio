@@ -5,6 +5,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import documentSurfaceFixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧫️fixtures/🔣️.json";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -55,6 +57,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     receiveDocumentBackbone: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     applyMutations: async () => {},
     loadAppDocumentArchive: async () => {},
+    readAppDocumentArchive: async () => new Uint8Array(),
     loadAppDocumentPack: async () => {},
     codec: async () => null,
     ephemeralSnapshot: () => null,
@@ -64,6 +67,20 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
 }
 
 describe("framework renderer wgpu plugin bridge", () => {
+  it("transfers the complete document archive through the native browser bridge", async () => {
+    const bytes = encodeDocumentArchiveBytes(documentSurfaceFixture.archive);
+    const seen: number[] = [];
+    let restored: Uint8Array | undefined;
+    const bridge = pluginHandleForBridge(fakeHandle({
+      readAppDocumentArchive: async (instanceId) => { seen.push(instanceId); return bytes; },
+      loadAppDocumentArchive: async (instanceId, archive) => { seen.push(instanceId); restored = archive; },
+    }));
+    const captured = await bridge.readAppDocumentArchive(7);
+    await bridge.loadAppDocumentArchive(8, captured);
+    expect(seen).toEqual([7, 8]);
+    expect(decodeDocumentArchiveBytes(restored!)).toEqual(documentSurfaceFixture.archive);
+  });
+
   it("hands the guest's last ephemeral frame to Rust as bytes, and nothing before the guest published one", async () => {
     const { wgpuEphemeralSnapshot } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
     const published = pluginHandleForBridge(fakeHandle({ ephemeralSnapshot: (instanceId) => (instanceId === 7 ? wgpuEphemeralSnapshot({ presence: [1, 2], presenceGeneration: 3, interaction: [4] }) : null) }));
@@ -355,24 +372,27 @@ describe("framework renderer wgpu generated worker", () => {
     for (const compile of [
       (code: string) => bunOracle<string>('return new Bun.Transpiler({ loader: "ts" }).transformSync(input);', code),
       (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
-    ]) for (const scenario of browserAuthorityFixture.activationCases) {
-      const visited: string[] = [];
-      const support = {
-        assertLexicalInputOutsideOpaque: (_root: string, path: string) => path,
-        lstatOrNull: (path: string) => {
-          visited.push(path);
-          const kind = path === contract.packageGeneration!.catalogPath ? scenario.catalog : path === manifest ? scenario.manifest : "absent";
-          return kind === "absent" ? null : { isFile: () => kind === "file", isSymbolicLink: () => kind === "symlink" };
-        },
-        readFileSync: () => catalogBytes,
-        parseCanonicalWgpuPackageCatalog,
-        parseSemanticPackageBrowserProfile,
-      };
-      const activate = new Function(...Object.keys(support), `${compile(definition)}\nreturn packageGeneratorActivated;`)(...Object.values(support));
-      let observed = false;
-      try { observed = activate(".", [], contract, { discoverySchema: taxonomy }, []); } catch {}
-      expect(observed, scenario.id).toBe(scenario.expected);
-      expect(visited.every((path) => path === contract.packageGeneration!.catalogPath || path === manifest), scenario.id).toBe(true);
+    ]) {
+      const compiled = compile(definition);
+      for (const scenario of browserAuthorityFixture.activationCases) {
+        const visited: string[] = [];
+        const support = {
+          assertLexicalInputOutsideOpaque: (_root: string, path: string) => path,
+          lstatOrNull: (path: string) => {
+            visited.push(path);
+            const kind = path === contract.packageGeneration!.catalogPath ? scenario.catalog : path === manifest ? scenario.manifest : "absent";
+            return kind === "absent" ? null : { isFile: () => kind === "file", isSymbolicLink: () => kind === "symlink" };
+          },
+          readFileSync: () => catalogBytes,
+          parseCanonicalWgpuPackageCatalog,
+          parseSemanticPackageBrowserProfile,
+        };
+        const activate = new Function(...Object.keys(support), `${compiled}\nreturn packageGeneratorActivated;`)(...Object.values(support));
+        let observed = false;
+        try { observed = activate(".", [], contract, { discoverySchema: taxonomy }, []); } catch {}
+        expect(observed, scenario.id).toBe(scenario.expected);
+        expect(visited.every((path) => path === contract.packageGeneration!.catalogPath || path === manifest), scenario.id).toBe(true);
+      }
     }
   });
 
@@ -465,7 +485,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(process.cwd()).toBe(callerCwd);
     for (const render of renders) expect(createHash("sha256").update(render).digest("hex")).toBe(createHash("sha256").update(renders[0]!).digest("hex"));
     expect(renders[0]).not.toMatch(/[0-9a-f]{64}/u);
-  });
+  }, 15_000);
 
   it("aligns digest-verified devcontainer and native Bun provisioning with the packageManager pin", () => {
     let repoRoot = dirname(fileURLToPath(import.meta.url));

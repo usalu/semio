@@ -1,0 +1,17 @@
+{
+  "slider": { "value": 2, "min": 0, "max": 10, "step": 0.5 },
+  "doubleClick": { "clockOriginSeconds": 31536000.123456, "intervalMs": 100, "timeoutMs": 500 },
+  "enter": { "input": "4.4", "expectedValue": 4.5, "expectedDisplay": "4.5", "staleDeclaredDisplay": "4.5" },
+  "rejected": [
+    { "id": "out-of-range-enter", "input": "11", "exit": "Enter", "expectedDisplay": "2", "actionCount": 0 },
+    { "id": "escape-restores-the-live-value", "input": "8", "exit": "Escape", "expectedDisplay": "2", "actionCount": 0 },
+    { "id": "blur-discards-the-draft", "input": "7", "exit": "blur", "expectedDisplay": "2", "actionCount": 0 }
+  ],
+  "keyboard": [
+    { "key": "ArrowRight", "expectedValue": 2.5 },
+    { "key": "PageUp", "expectedValue": 7 },
+    { "key": "Home", "expectedValue": 0 },
+    { "key": "End", "expectedValue": 10 }
+  ],
+  "accessibility": { "label": "Gain", "readoutRole": "button", "editorRole": "spinbutton", "thumbRole": "slider" }
+}

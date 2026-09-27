@@ -17,7 +17,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn, hubSeedTrustedCatalog, startHub, type HubHandle } from "../../🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn, hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
+import { finishLocalHub, startLocalHub, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 /** 🎛️ One drill. */
 export type BackupRestoreDrillOptions = Readonly<{
@@ -27,7 +28,6 @@ export type BackupRestoreDrillOptions = Readonly<{
   kind: string;
   edits: number;
   rounds: number;
-  readyTimeoutMs: number;
   keepRoots: boolean;
   signal: AbortSignal;
   onProgress: (line: string) => void;
@@ -48,11 +48,13 @@ export type BackupRestoreRound = {
   byteIdentical?: boolean;
   restoredReadyMs?: number;
   checks?: Record<string, boolean>;
+  undecodableFrames?: number;
   error?: string;
   roots?: string;
 };
 
-const ADMIN_TOKEN = "backup-drill-admin";
+/** 🧑‍💻️ The launcher profile the drill hub is bootstrapped for (the drill itself signs in with a credential). */
+const DRILL_PROFILE = Object.freeze({ profileId: "developer", subject: "local-backup-drill-01", displayName: "Backup Drill", allowedClientClasses: Object.freeze(["native", "mcp", "react-relay"] as const) });
 const EMAIL = "backup-drill@semio.dev";
 
 function fileDigests(root: string): Map<string, string> {
@@ -90,24 +92,39 @@ async function snapshot(origin: string, token: string, spaceId: string, document
 
 const frontierOf = (welcome: any): string => JSON.stringify({ lastCommitSeq: welcome.server_frontier.last_commit_seq, headEditId: welcome.server_frontier.head_edit_id, headEditOrdinal: welcome.server_frontier.head_edit_ordinal, chainHash: Buffer.from(welcome.server_frontier.chain_hash).toString("hex") });
 
-/** 🚀️ Boots the hub on `dataDir` and answers once its own `/readyz` reports `ready` (the harness's bind wait accepts any
- * HTTP answer, which a hub still loading its catalog already gives). */
-async function bootHub(options: BackupRestoreDrillOptions, dataDir: string): Promise<{ hub: HubHandle; readyMs: number }> {
+/** 🌎️ One booted drill hub: its origin and a SIGTERM stop that answers how long the process took to exit. */
+type DrillHub = Readonly<{ baseUrl: string; stop: () => Promise<number> }>;
+
+/** 🚀️ Boots the hub on `dataDir` the way every local launcher does — the authenticated local-bootstrap pipe on fd 3
+ * (`startLocalHub`), credential sign-in on — and answers once its own `/readyz` admits it, bounded by the hub's own
+ * catalog no-progress bound. `stop` sends SIGTERM (the backup procedure's stop), waits for the exit, then releases the
+ * launcher's run root. */
+async function bootHub(options: BackupRestoreDrillOptions, dataDir: string): Promise<{ hub: DrillHub; readyMs: number }> {
   const started = Date.now();
-  const hub = await startHub({ repoRoot: options.repoRoot, dataDir, adminToken: ADMIN_TOKEN, binaryPath: options.binaryPath, readyTimeoutMs: options.readyTimeoutMs, env: { OS_HUB_MODE: "development", OS_HUB_BIND: "127.0.0.1", OS_HUB_CREDENTIAL_SIGN_IN: "1" } });
-  for (let reported = 0; ; ) {
-    const readiness = await hubProbeCall(hub.baseUrl, "GET", "/readyz").catch(() => null);
-    if (readiness?.status === 200 && readiness.json?.status === "ready") return { hub, readyMs: Date.now() - started };
-    if (options.signal.aborted || Date.now() - started > options.readyTimeoutMs) {
-      await hub.stop();
-      throw new Error(`hub on ${dataDir} not ready within ${options.readyTimeoutMs} ms (last /readyz ${readiness?.status ?? "no answer"} ${String(readiness?.json?.status ?? "")})`);
+  process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
+  const run = await startLocalHub(options.repoRoot, join(options.repoRoot, "🌎️hub", "📦️packages", "🦀️rust"), [DRILL_PROFILE], { dataDir, binaryPath: options.binaryPath, capture: true });
+  const stop = async (): Promise<number> => {
+    const stopping = Date.now();
+    if (run.child.exitCode === null) {
+      run.child.kill("SIGTERM");
+      await waitForChildExit(run.child, 60_000).catch(() => undefined);
     }
-    if (Date.now() - started - reported >= 30_000) {
-      reported = Date.now() - started;
-      options.onProgress(`waiting for /readyz on ${dataDir}: ${readiness?.status ?? "no answer"} ${JSON.stringify(readiness?.json?.blockedBy ?? []).slice(0, 200)} (${Math.round(reported / 1000)} s)`);
-    }
-    await new Promise((resolveDelay) => setTimeout(resolveDelay, 1_000));
+    const exitMs = Date.now() - stopping;
+    await finishLocalHub(run);
+    return exitMs;
+  };
+  const abort = (): void => void run.child.kill("SIGTERM");
+  options.signal.addEventListener("abort", abort, { once: true });
+  try {
+    await waitForReadiness(run, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
+  } catch (error) {
+    const tail = run.output().slice(-1_200);
+    await stop();
+    throw new Error(`hub on ${dataDir} never became ready: ${String(error instanceof Error ? error.message : error)}\n${tail}`);
+  } finally {
+    options.signal.removeEventListener("abort", abort);
   }
+  return { hub: { baseUrl: `http://127.0.0.1:${run.port}`, stop }, readyMs: Date.now() - started };
 }
 
 /** 💾️ Runs every round; each round owns two fresh roots (removed afterwards unless `keepRoots` or the round failed). */
@@ -120,7 +137,7 @@ export async function runBackupRestoreDrill(options: BackupRestoreDrillOptions):
     const original = join(scratch, "original");
     const restored = join(scratch, "restored");
     const archive = join(scratch, "backup.tar");
-    let hub: HubHandle | undefined;
+    let hub: DrillHub | undefined;
     try {
       mkdirSync(original, { recursive: true, mode: 0o700 });
       const generation = hubSeedTrustedCatalog(options.catalogRoot, original);
@@ -142,16 +159,15 @@ export async function runBackupRestoreDrill(options: BackupRestoreDrillOptions):
       const session = await hubProbeOpenDocument(hub.baseUrl, token, spaceId, artifactId, "backup-drill");
       let last = "";
       for (let index = 0; index < options.edits; index += 1) last = await session.edit(index, last);
+      result.undecodableFrames = session.undecodableFrames();
       session.close();
       const reopened = await hubProbeOpenDocument(hub.baseUrl, token, spaceId, artifactId, "backup-drill");
       const frontier = frontierOf(reopened.welcome);
       reopened.close();
       const before = await snapshot(hub.baseUrl, token, spaceId, artifactId);
       result.seedMs = Date.now() - seedStarted;
-      const stopStarted = Date.now();
-      await hub.stop();
+      result.sigtermToExitMs = await hub.stop();
       hub = undefined;
-      result.sigtermToExitMs = Date.now() - stopStarted;
       options.onProgress(`round ${round}: SIGTERM → exit ${result.sigtermToExitMs} ms; archiving`);
       const archiveStarted = Date.now();
       tar(["-cf", archive, "-C", original, "."]);

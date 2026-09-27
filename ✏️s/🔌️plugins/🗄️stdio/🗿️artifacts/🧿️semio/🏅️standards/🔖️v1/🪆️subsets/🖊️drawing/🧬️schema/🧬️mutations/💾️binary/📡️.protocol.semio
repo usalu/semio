@@ -45,3 +45,5 @@ record change-stroke-color tag=15
 field payload bytes
 record change-stroke-width tag=16
 field payload bytes
+record set-snapshot tag=17
+field payload bytes

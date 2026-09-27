@@ -64,6 +64,8 @@ export interface RasterLayerMask {
   invert: boolean;
   width?: number;
   height?: number;
+  imageKey?: string;
+  transform: RasterTransform;
 }
 
 export interface RasterImageAsset {
@@ -202,8 +204,10 @@ export function parseRasterLayerMask(value: unknown, at = "$"): RasterLayerMask 
     enabled: rasterRasterArtifactGuardBoolean(row["enabled"], `${at}.enabled`),
     linked: rasterRasterArtifactGuardBoolean(row["linked"], `${at}.linked`),
     invert: rasterRasterArtifactGuardBoolean(row["invert"], `${at}.invert`),
-    width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
-    height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+    width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 1, maximum: 16384 }),
+    height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 1, maximum: 16384 }),
+    imageKey: row["imageKey"] == null ? undefined : rasterRasterArtifactGuardString(row["imageKey"], `${at}.imageKey`, { minLength: 1 }),
+    transform: parseRasterTransform(row["transform"], `${at}.transform`),
   };
 }
 

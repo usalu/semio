@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { PassThrough } from "node:stream";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import {
@@ -38,7 +39,7 @@ import {
   WCAG_AAA_CONTRAST,
   type Rgba8,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
+import { meshCollectionVitePlugin, serveFileWithValidatorsV1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
 import type { OwnedBuildMiddleware, OwnedBuildServer } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
@@ -250,6 +251,58 @@ describe("build output write authority", () => {
       }
       expect(failures).toEqual([]);
       console.log("[DEBUG] verified seven build adapters across no-write, write and default modes");
+    } finally { rmSync(sandbox, { recursive: true, force: true }); }
+  });
+});
+
+describe("conditional delivery of dev-served files", () => {
+  it("answers validators, 304 for a current tag or date, the file otherwise — as the `fresh` freshness judge decides", async () => {
+    const root = resolve(import.meta.dir, "../../🧫️fixtures/🏷️conditional-delivery");
+    const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
+    const { default: Ajv2020 } = await import("ajv/dist/2020.js"), { default: fresh } = await import("fresh");
+    expect(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")))(fixture)).toBe(true);
+    const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "conditional-delivery-")));
+    const filePath = join(sandbox, fixture.file.path);
+    mkdirSync(dirname(filePath), { recursive: true });
+    writeFileSync(filePath, fixture.file.content);
+    const ask = (method: string, headers: Record<string, string>) => {
+      const answer = { statusCode: 200, headers: {} as Record<string, string>, body: [] as Buffer[] };
+      const done = new Promise<typeof answer>((resolveAnswer) => {
+        const res = Object.assign(new PassThrough(), { statusCode: 200, setHeader(name: string, value: string) { answer.headers[name.toLowerCase()] = value; } });
+        res.on("data", (chunk: Buffer) => answer.body.push(Buffer.from(chunk)));
+        res.on("end", () => resolveAnswer({ ...answer, statusCode: res.statusCode }));
+        serveFileWithValidatorsV1({ method, headers } as unknown as import("node:http").IncomingMessage, res as unknown as import("node:http").ServerResponse, filePath, fixture.file.contentType);
+      });
+      return done;
+    };
+    try {
+      const first = await ask("GET", {});
+      const etag = first.headers.etag!, lastModified = Date.parse(first.headers["last-modified"]!);
+      expect(etag).toMatch(/^W\/"[0-9a-f]+-[0-9a-f]+"$/u);
+      expect(first.headers["cache-control"]).toBe("no-cache");
+      expect(first.headers["content-length"]).toBe(String(Buffer.byteLength(fixture.file.content)));
+      expect(first.headers["content-type"]).toBe(fixture.file.contentType);
+      const expand = (value: string): string => {
+        if (value === "{etag}" || value.includes("{etag}")) return value.replace("{etag}", etag);
+        if (value === "{etag:weakless}") return etag.replace(/^W\//u, "");
+        const date = /^\{lastModified\}(?:([+-])(\d+)s)?$/u.exec(value);
+        if (date) return new Date(lastModified + (date[1] === "-" ? -1 : 1) * Number(date[2] ?? 0) * 1000).toUTCString();
+        return value;
+      };
+      let rewritten = false;
+      for (const row of fixture.cases) {
+        if (row.afterRewrite && !rewritten) {
+          await new Promise((wait) => setTimeout(wait, 20));
+          writeFileSync(filePath, fixture.rewrite);
+          rewritten = true;
+        }
+        const headers = Object.fromEntries(Object.entries(row.headers as Record<string, string>).map(([name, value]) => [name, expand(value)]));
+        const answer = await ask(row.method, headers);
+        const body = Buffer.concat(answer.body).toString("utf8");
+        expect({ name: row.name, status: answer.statusCode, body: body.length > 0 ? "full" : "none" }).toEqual({ name: row.name, status: row.status, body: row.body });
+        if (row.body === "full") expect(body).toBe(rewritten ? fixture.rewrite : fixture.file.content);
+        if (row.method === "GET") expect({ name: row.name, fresh: fresh(headers, { etag: answer.headers.etag, "last-modified": answer.headers["last-modified"] }) }).toEqual({ name: row.name, fresh: row.status === 304 });
+      }
     } finally { rmSync(sandbox, { recursive: true, force: true }); }
   });
 });

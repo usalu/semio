@@ -33,7 +33,7 @@ describe("the wgpu extension store page door", () => {
   });
 
   it("uninstalls by public identity and reports a cancelled file pick without moving package bytes through Rust", async () => {
-    const fetch = vi.fn(async () => new Response(JSON.stringify({ extensionId: fixture.extensionId }), { status: 200, headers: { "content-type": "application/json" } }));
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ extensionId: fixture.extensionId }), { status: 200, headers: { "content-type": "application/json" } }));
     vi.stubGlobal("fetch", fetch);
     expect(await answer({ op: "extension-store-uninstall", extensionId: fixture.extensionId })).toEqual({ extensionId: fixture.extensionId });
     expect(fetch.mock.calls[0]?.[0]).toBe(`/🧩️extension-modules/install?extensionId=${encodeURIComponent(fixture.extensionId)}`);

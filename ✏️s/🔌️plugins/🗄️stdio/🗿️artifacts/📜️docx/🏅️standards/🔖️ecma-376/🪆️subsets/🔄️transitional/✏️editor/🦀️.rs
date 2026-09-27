@@ -7,7 +7,7 @@
 use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
 use crate::schema::diff::DocxBlockPath;
-use crate::schema::mutations::set_block_content;
+use crate::schema::mutations::{set_block_content, set_snapshot};
 use crate::schema::snapshot::{DocxBlock, DocxRun};
 use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
@@ -62,6 +62,7 @@ impl protocol::OpBinary for DocxTransitionalEditorCommand {
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "docx transitional editor command", offset: 0, detail: error.to_string() })
     }
 }
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DocxTransitionalEditorCommand, []);
 //#endregion 🔖️Command
 
 //#region 🔖️Helpers
@@ -93,10 +94,31 @@ impl ArtifactEditor for DocxTransitionalEditor {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = DocxTransitionalEditorCommand;
+    type Command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DocxTransitionalEditorCommand>;
 
     const DIALECT: Dialect = DOCX_TRANSITIONAL_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
+        owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🦀️.rs",
+        controller: "s.stdio.docx@ecma-376/transitional#editor",
+        artifact_schema: "stdio.docx",
+        preparation: "stdio-docx-transitional-snapshot-edit"
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-page")
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
+            "set-page" => Ok(DocxTransitionalEditorCommand::SetPage {
+                index: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["index", "page", "row"], 0),
+                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text", "value"], ""),
+            }),
+            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.transitional.unhandled-action"), format!("unknown docx editor action '{other}'"))),
+        })
+    }
 
     fn initial_snapshot() -> DocxSnapshot {
         DocxSnapshot::default()
@@ -118,7 +140,10 @@ impl ArtifactEditor for DocxTransitionalEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let DocxTransitionalEditorCommand::SetPage { index, text } = command;
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxTransitionalEditorCommand::SetPage { index, text }) = command else {
+            let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
+        };
         let index = *index as usize;
         match build_set_page_mutation(doc.snapshot, index, text) {
             Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {index}")), ..Default::default() }),
@@ -126,11 +151,35 @@ impl ArtifactEditor for DocxTransitionalEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+                doc.snapshot,
+                view_state.locale,
+                "s.stdio.docx@ecma-376/transitional#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
+    }
+}
+
+impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for DocxTransitionalEditor {
+    fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
+        match command {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => Some(event),
+            _ => None,
+        }
+    }
+
+    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
+    }
+
+    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor
@@ -138,14 +187,16 @@ impl ArtifactEditor for DocxTransitionalEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_docx_transitional_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(DOCX_TRANSITIONAL_EDITOR_DIALECT)
+    let builder = Editor::builder(DOCX_TRANSITIONAL_EDITOR_DIALECT)
         .document(["semio", "stdio", "docx"])
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::DOCX_TRANSITIONAL_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Document"))
+        ;
+    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

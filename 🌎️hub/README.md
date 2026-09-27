@@ -119,6 +119,17 @@ bun nx run os-hub:dev-secure-suite    # hub + React `s` + native + MCP children,
 materializes the stdio+GIS bundle and validates it) — that step costs a native compile, not a
 database migration, and until it completes `/readyz` reports `artifactAuthority` closed.
 
+### Boot, readiness and catalog verification
+
+The hub binds its socket first and answers `/healthz` at once; `/readyz` answers `503 not-ready` with `startup` (the
+catalog load's stage and units) until the stores and the trusted catalog are up, and `startup.catalog`
+(`TrustedCatalogLoadProgressV1`: every package's phase, component bytes read, codec rows pinned) once the load selected
+its packages — counts only, no estimate. The load reads and digests every file; a codec row a linked native codec or the
+engine's verification memory (`trusted-catalog/guest-codec-verifications/`) pins is pinned at load, every other row is
+pinned against its component's own `pack-schema-hash` in the background once the hub serves (smallest component first)
+or by the package's first codec call — no codec call ever runs on an unpinned row, and a component that answers
+differently refuses its whole package. `GET /admin/api/observability` → `catalog` shows the progress after boot.
+
 ## Environment variables
 
 Every variable below is read directly with `std::env::var` — there is no config file, no `.env`
@@ -137,6 +148,7 @@ loading and no schema/validation layer. Defaults are the literal fallbacks in th
 | `OS_HUB_ADMIN_SUBJECTS` | empty | Comma-separated `provider:subject` identities granted the admin surface; max 64, duplicates rejected. Required in production mode. For a password credential the provider is literally `credential.password.v1` (`🔐️auth/🦀️.rs`, `CREDENTIAL_IDENTITY_PROVIDER`) and the subject is the email `credential set` was given, e.g. `credential.password.v1:ada@example.com`. A mismatched provider string still boots — the admin routes simply answer `401` for everyone. |
 | `OS_HUB_ADMIN_DIR` | the admin SPA's built `📤️dist` next to the crate | Static asset root for the admin SPA. Set it when the binary is not co-located with its source tree. |
 | `OS_HUB_EXTENSIONS_DIR` | `{OS_HUB_DATA}/extension-modules` | Extension module root; created at boot. |
+| `OS_HUB_GUEST_RESIDENCY_BYTES` | `268435456` (256 MiB) | Component bytes whose compiled guests stay resident (`TrustedCatalogGuestResidencyV1.residentComponentBytes`, 0 … 16 GiB, decimal bytes; anything else fails boot). A guest that does not fit stays only when it was used in more operations than every least-recently-used guest it would release, else it serves the operation that compiled it and is dropped with it — a rotation over more kinds than fit keeps a stable resident set instead of recompiling every kind. `0` keeps nothing resident. Live counters: `GET /admin/api/observability` → `residency`. |
 | `OS_HUB_MERGE_POLICY` | `normal` | `laissez-faire` \| `normal` \| `vigilant`, read once at startup. An unknown value warns and falls back — it does not fail boot. |
 | `OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE` | `false` | `true`/`1` lets the artifact-CAS maintenance supervisor actually delete swept chunks; anything but `true`/`false`/`1`/`0`/empty fails boot. |
 | `OS_HUB_TEST_INFERENCE_CHECKPOINT_FD` | unset | Test-only: an inherited fd the harness steps inference checkpoints over. Never set it in a deployment. |
@@ -325,7 +337,7 @@ today is that a loopback hub no longer hands a credentialed grant to `https://ev
 |---|---|
 | `GET /healthz` | Liveness. Always `200` while the process serves: `{schema: "semio.hub.liveness/v1", status: "live", runId, uptimeMs}`. It says nothing about readiness. |
 | `GET /readyz` | Readiness. `200` when every gate is open, **`503` otherwise**, with the same body either way. |
-| `GET /admin/api/observability` | Per-event counters and latency percentiles, behind the same admin capability as every other `/admin/api` route. Body: `{schema: "semio.hub.observability/v1", level, droppedEvents, declaredEvents, rows: [{event, started, ok, refused, failed, cancelled, total, samples, p50Us, p95Us, p99Us}]}`. |
+| `GET /admin/api/observability` | Counters and latency percentiles, behind the same admin capability as every other `/admin/api` route (`HubObservabilityV1`, [schema](📊️observability/🧬️schema/🔣️.json)): `{schema: "semio.hub.observability/v1", level, uptimeMs, droppedEvents, declaredEvents, rows: [{event, started, ok, refused, failed, cancelled, total, samples, p50Us, p95Us, p99Us}], routes: [{method, route, requests, successes, clientRefusals, rateLimited, unavailable, serverFailures, samples, p50Us, p95Us, p99Us, maxUs}], routesOverflowed, residency, catalog, dbIo}`. `routes` is keyed by method + route template (never a concrete path, at most 256 rows) and counts every answer of a matched route, including the rate limiter's `429`s; `residency` and `catalog` are `null` on a hub without a trusted catalog; `dbIo` is the database I/O census incl. admission waits. The admin UI's Observability tab reads it every 5 s. |
 
 `/readyz`'s body names what is closed and why rather than claiming a bare status: `blocked_by` is a
 list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /

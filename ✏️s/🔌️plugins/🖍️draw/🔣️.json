@@ -5458,7 +5458,72 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "setCamera",
+                "label": {
+                  "native": {
+                    "en": "Set Camera",
+                    "de": "Kamera festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Camera",
+                    "de": "Kamera festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "camera",
+                    "label": {
+                      "native": {
+                        "en": "Camera",
+                        "de": "Kamera"
+                      },
+                      "reuse": {
+                        "en": "Camera",
+                        "de": "Kamera"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -6690,8 +6755,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "1311a754a9b02cb082f0caafe4fcc1ac59f85fa774917fbbcdb0e00a740db82d",
-    "coreWasmSha256": "23999b28c434ef675dad467305c3ed798f55cb18dfaa9f3c1970ec1c40a8f289",
-    "descriptorSha256": "907faf690e730a1b31b2d2dddc5e9b935e5ddbcfdd4d4bf71ea00917f3767d38"
+    "wasmSha256": "5025d8e916c4750587c0a6f4a1cf1d784e3941c238abc3957e5f42dd21591922",
+    "coreWasmSha256": "e781de1ab9907be70eb9240654a7c0fe258dcfa8d28c6ae3843ccfff0dc6d68e",
+    "descriptorSha256": "22be1c65def6a33c31a3a97715e4fa41af179eaa7514fabe8f961f9d780be5c2"
   }
 }

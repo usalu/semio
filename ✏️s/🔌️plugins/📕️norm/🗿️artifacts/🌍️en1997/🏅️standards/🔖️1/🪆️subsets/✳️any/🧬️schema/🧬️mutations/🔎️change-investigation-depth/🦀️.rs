@@ -24,6 +24,6 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeInvestigat
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change-investigation-depth", "change-investigation-depth")
+        protocol::LocalizedLabel::native("Change ground investigation depth", "Erkundungstiefe ändern")
     }
 }

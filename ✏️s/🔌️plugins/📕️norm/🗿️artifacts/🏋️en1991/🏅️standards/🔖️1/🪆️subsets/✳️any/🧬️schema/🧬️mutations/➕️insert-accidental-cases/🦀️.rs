@@ -26,7 +26,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertAccidental
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-accidental-cases", "insert-accidental-cases")
+        protocol::LocalizedLabel::native("Insert accidental design situation", "Außergewöhnliche Bemessungssituation einfügen")
     }
 }
 //#endregion 🔖️Payload

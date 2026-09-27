@@ -1,6 +1,6 @@
 @capability-gltf-2-0-mutate
 @oracle-three-gltf-2-0-mutate-reader
-@comparison-semantic-gltf-v1
+@comparison-semantic-gltf-reader-v1
 @mutations-gltf-2-0-camera
 Feature: Apply every registered glTF 2.0 camera mutation to a real-world document
   The `gltf-2-0-camera` catalog (`../../🔮️oracles/🔣️.json`) declares the 4 kinds `document/cameras`
@@ -13,7 +13,13 @@ Feature: Apply every registered glTF 2.0 camera mutation to a real-world documen
   mutation root — the exact registered domain/operation owners are declared through this catalog and the manifest's
   per-mutation `subset` override, never through moving the directory.
 
-  The independent oracle (`../../../♾️any/🔮️oracles/🦀️.rs`) is the SAME domain-blind `json`-crate
+  The judge is `three`'s GLTFLoader, a third-party READER (`three-gltf-2-0-mutate-reader`): the expected
+  document is not computed, it is the COMMITTED `➡️after.gltf` of each pair (`⬅️before.gltf` for an inverse
+  row), and the `gltf-2-0-three-compare-v1` pipeline reads it and the subject's document with the same
+  loader (`gltf-import` admits both, `gltf-compare` compares the `semantic-gltf-reader-v1` projection). The
+  subject's own `project_gltf` projection is still produced and asserted in role.
+
+  The cross-semio supplement (`../../../♾️any/🔮️oracles/🦀️.rs`) is the SAME domain-blind `json`-crate
   GLB/JSON reader the artifact-root case measures its 7 kinds through, extended here with 4 more
   kinds reimplemented from scratch against the parsed tree: `create_camera`/`delete_camera`/
   `move_camera`/`reorder_cameras` re-derive the exact four-branch index-remap arithmetic
@@ -32,11 +38,12 @@ Feature: Apply every registered glTF 2.0 camera mutation to a real-world documen
   @mode-differential
   Scenario Outline: Apply <id> to the real document
     Given the real input document shared://<fixture>/⬅️before.gltf
+    And the committed after-document shared://<fixture>/➡️after.gltf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then three's GLTFLoader reads the subject's document and the committed after-document as the same glTF
     Examples:
       | id               | fixture                       | params |
       | create-camera    | 🌱️create-camera-applied      | {"position":1,"projection":{"type":"perspective","perspective":{"yfov":1,"znear":0.1}}} |
@@ -49,12 +56,13 @@ Feature: Apply every registered glTF 2.0 camera mutation to a real-world documen
   @mode-property
   Scenario Outline: Undoing <id> restores the real document
     Given the real input document shared://<fixture>/⬅️before.gltf
+    And the committed after-document shared://<fixture>/➡️after.gltf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
     And the mutation's own inverse is applied to the result
-    Then the document matches its pre-mutation semantic projection
+    Then three's GLTFLoader reads the restored document and the committed before-document as the same glTF
     Examples:
       | id               | fixture                       | params |
       | create-camera    | 🌱️create-camera-applied      | {"position":1,"projection":{"type":"perspective","perspective":{"yfov":1,"znear":0.1}}} |

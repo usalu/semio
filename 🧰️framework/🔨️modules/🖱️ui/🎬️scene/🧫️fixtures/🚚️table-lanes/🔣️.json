@@ -1,0 +1,32 @@
+{
+  "schema": "table@1",
+  "lanes": [
+    {
+      "lane": "columns",
+      "field": "columnsJson",
+      "bodyKey": "framework.scene.table.columns",
+      "optional": false
+    },
+    {
+      "lane": "rows",
+      "field": "rowsJson",
+      "bodyKey": "framework.scene.table.rows",
+      "optional": false
+    }
+  ],
+  "columns": [
+    {
+      "id": "0",
+      "label": "Name"
+    },
+    {
+      "id": "1",
+      "label": "Wert 🌍"
+    }
+  ],
+  "row": {
+    "0": "Grüße 日本語",
+    "1": "line one\nline two"
+  },
+  "rowCount": 4096
+}

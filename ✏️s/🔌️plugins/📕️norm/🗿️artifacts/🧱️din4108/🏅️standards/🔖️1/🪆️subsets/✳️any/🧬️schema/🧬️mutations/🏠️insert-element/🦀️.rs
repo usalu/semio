@@ -24,6 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertElement 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-element", "insert-element")
+        protocol::LocalizedLabel::native("Insert envelope element", "Hüllbauteil einfügen")
     }
 }

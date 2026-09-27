@@ -1,0 +1,457 @@
+{
+  "cases": [
+    {
+      "name": "empty-fallback",
+      "nodes": [],
+      "expected": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "authored-artboard",
+      "artboard": {
+        "width": 200,
+        "height": 300
+      },
+      "nodes": [],
+      "expected": [
+        0,
+        0,
+        200,
+        300
+      ]
+    },
+    {
+      "name": "off-origin-path",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                -20,
+                -30
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                80,
+                70
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        -20,
+        -30,
+        80,
+        70
+      ]
+    },
+    {
+      "name": "artboard-union",
+      "artboard": {
+        "width": 200,
+        "height": 200
+      },
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                -20,
+                -30
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                80,
+                70
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        -20,
+        -30,
+        200,
+        200
+      ]
+    },
+    {
+      "name": "hidden-and-transparent-excluded",
+      "artboard": {
+        "width": 200,
+        "height": 200
+      },
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                -20,
+                -30
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                80,
+                70
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": false
+        },
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                -20,
+                -30
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                80,
+                70
+              ]
+            }
+          ],
+          "opacity": 0,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        0,
+        0,
+        200,
+        200
+      ]
+    },
+    {
+      "name": "transformed-image",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            0,
+            2,
+            -3,
+            0,
+            100,
+            200
+          ],
+          "segments": [],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "image": {
+            "src": "image",
+            "width": 40,
+            "height": 20
+          }
+        }
+      ],
+      "expected": [
+        40,
+        200,
+        100,
+        280
+      ]
+    },
+    {
+      "name": "text-metrics",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "text": {
+            "content": "Test",
+            "size": 10
+          }
+        }
+      ],
+      "expected": [
+        0,
+        -10,
+        24,
+        2
+      ]
+    },
+    {
+      "name": "sheared-stroke",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                -20,
+                -30
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                80,
+                70
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "stroke": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 10,
+            "cap": "round",
+            "join": "round"
+          }
+        }
+      ],
+      "expected": [
+        -57.071067811865476,
+        -35,
+        157.07106781186548,
+        75
+      ]
+    },
+    {
+      "name": "empty-close-has-no-bounds",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "segments": [
+            {
+              "kind": "close"
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "rotated-image-four-corners",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            1,
+            1,
+            -1,
+            1,
+            100,
+            200
+          ],
+          "segments": [],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "image": {
+            "src": "image",
+            "width": 40,
+            "height": 20
+          }
+        }
+      ],
+      "expected": [
+        80,
+        200,
+        140,
+        260
+      ]
+    },
+    {
+      "name": "cubic-interior-extremum",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            2,
+            0,
+            0,
+            3,
+            -20,
+            -30
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "cubic",
+              "ctrl1": [
+                0,
+                100
+              ],
+              "ctrl2": [
+                100,
+                100
+              ],
+              "to": [
+                100,
+                0
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        -20,
+        -30,
+        180,
+        195
+      ]
+    },
+    {
+      "name": "reflected-quadratic-interior-extremum",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            -1,
+            0,
+            0,
+            1,
+            20,
+            -10
+          ],
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "quad",
+              "ctrl": [
+                50,
+                100
+              ],
+              "to": [
+                100,
+                0
+              ]
+            }
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true
+        }
+      ],
+      "expected": [
+        -80,
+        -10,
+        20,
+        40
+      ]
+    }
+  ]
+}

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeProjectId 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change project-id", "Ändern: project-id")
+        protocol::LocalizedLabel::native("Change project identifier", "Projektkennung ändern")
     }
 }
 //#endregion 🔖️Payload

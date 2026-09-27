@@ -1,0 +1,2 @@
+# 📸️ Whole SemioTextSnapshot replacement.
+input SetSnapshot { snapshot: SemioTextSnapshot! }
