@@ -1654,6 +1654,7 @@ pub mod native {
     use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
     use semio_framework_os_services::{
         AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpBodyCancellationHandle, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, HttpTransportStart, HttpTransportTerminalGuard, TokioHostRuntime,
+        HTTP_BUCKET_REFILL_INTERVAL_MS,
     };
     use std::io::Read;
     use std::net::{TcpStream, ToSocketAddrs};
@@ -1993,10 +1994,24 @@ pub mod native {
             Self::with_new_http_pool_now(runtime, scope, compute, bytes_per_minute_cap, outstanding_cap, package, actor)
         }
 
+        /// 🔁️ A transport over its own fresh [`HttpPool`] whose per-package byte budget refills every
+        /// [`HTTP_BUCKET_REFILL_INTERVAL_MS`] on the runtime's worker pool. Without that driver the "per minute"
+        /// budget was a lifetime one: a long-lived client (the semio MCP gateway, a wgpu shell's directory
+        /// client) that had moved `bytes_per_minute_cap` bytes answered every later request with an exhausted
+        /// budget, forever (ticket 26/09/23, session 14b).
         pub fn with_new_http_pool_now(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
-            let transport: Arc<dyn AsyncHttpTransport> = Arc::new(UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
-            Self::new_now(runtime, scope, Arc::new(HttpPool::new_with_async_transport_now(transport, bytes_per_minute_cap, outstanding_cap)), package, actor)
+            let http_pool = refilled_http_pool(&runtime, &scope, compute, bytes_per_minute_cap, outstanding_cap, HTTP_BUCKET_REFILL_INTERVAL_MS);
+            Self::new_now(runtime, scope, http_pool, package, actor)
         }
+    }
+
+    /// 🚰️ One fresh [`HttpPool`] over the ureq streaming transport whose refill driver already runs on
+    /// `runtime`'s worker pool every `refill_interval_ms`.
+    fn refilled_http_pool(runtime: &Arc<TokioHostRuntime>, scope: &ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, refill_interval_ms: u64) -> Arc<HttpPool> {
+        let transport: Arc<dyn AsyncHttpTransport> = Arc::new(UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
+        let http_pool = Arc::new(HttpPool::new_with_async_transport_now(transport, bytes_per_minute_cap, outstanding_cap));
+        http_pool.spawn_refill_driver(runtime.worker_pool(), refill_interval_ms);
+        http_pool
     }
 
     impl<R: HostAsyncRuntime + 'static> NativeDirectoryTransport<R> {

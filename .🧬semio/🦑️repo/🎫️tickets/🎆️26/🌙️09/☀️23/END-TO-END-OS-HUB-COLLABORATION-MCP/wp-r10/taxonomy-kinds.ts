@@ -3,14 +3,15 @@
  * 🧭️ R10 item 1: for every unresolved directory in the given scopes, prints its parent's resolved kind and the member
  * kinds already owned by that kind (the registries a new member name belongs in). Uses `instrumented/normalization.ts`
  * (a ticket-local copy of the live normalization module whose only change is `kindId` on directory entries).
- * Usage: bun taxonomy-kinds.ts [--taxonomy <candidate.json>] --json <out> <scope…>
+ * `--root` inventories another checkout (the planned-directory simulation root of `taxonomy-planned.py`).
+ * Usage: bun taxonomy-kinds.ts [--root <repo>] [--taxonomy <candidate.json>] --json <out> <scope…>
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-const ROOT = "/Users/ueli/Documents/semio";
 const { inventoryTaxonomy } = await import("./instrumented/normalization.ts");
 const args = process.argv.slice(2);
 const option = (name: string) => { const index = args.indexOf(name); if (index < 0) return undefined; const value = args[index + 1]; args.splice(index, 2); return value; };
+const ROOT = option("--root") ?? "/Users/ueli/Documents/semio";
 const taxonomyPath = option("--taxonomy");
 const jsonOut = option("--json")!;
 const taxonomy = JSON.parse(readFileSync(taxonomyPath ?? `${ROOT}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`, "utf8"));

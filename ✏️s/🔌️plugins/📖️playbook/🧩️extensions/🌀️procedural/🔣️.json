@@ -115,6 +115,92 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
               }
             ],
             "utilities": [],
@@ -185,6 +271,92 @@
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
                 }
               }
             ],
@@ -1642,8 +1814,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "42efd19ecab8379c2e42a0d9924644fdad8f498ccf6bf3527ccdff5c57d6f8bc",
-    "coreWasmSha256": "890f5c1e303288527fea388ece5827c13165febcd1aaac5b21285faea0c41a4d",
-    "descriptorSha256": "2eb76ad54ade41e942eff22c981dab5070ce1bcc90b3f698e87ec2c0242bbac7"
+    "wasmSha256": "fb220b5418bc2955c12e627d18e7a9e9134aa2521af5f84d73a67361e7a953a8",
+    "coreWasmSha256": "5e61336ff735e8b6d75f2081ef2d3d07c7298192c6fb6ca45b314d3a697c6bac",
+    "descriptorSha256": "512ebbaf25518acd5e9e661408ea6b2fd3e0df2dd4333c4da3e3ff996a4b2af7"
   }
 }

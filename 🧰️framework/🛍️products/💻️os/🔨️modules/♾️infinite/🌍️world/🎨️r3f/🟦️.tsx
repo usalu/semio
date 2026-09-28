@@ -27,11 +27,12 @@ import {
   ThreeOrbitControls,
   type NormalBufferAttributes,
   type ThreeTexture,
+  MeshBVH,
+  type HitPointInfo,
 } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToOrbit, type PinchStep } from "@semio-tech/framework";
 import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement, type ReactNode } from "react";
-import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
 const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;

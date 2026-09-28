@@ -102,7 +102,7 @@ pub mod duplicate_object {
         let select = semio_framework::kernel::Effect::DispatchAction {
             req: semio_framework_plugin::RequestId(1_302),
             action: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-            args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))),
+            args: Some(semio_framework::dsl_value!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
             delay_ms: 0,
         };
         Ok(Emit {

@@ -91,12 +91,8 @@ impl dsl::DslField for LayoutDrawingChild {
 
 /// 🪪️ Mints one source-independent identity from the canonical drawing payload.
 pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
-    use std::hash::{Hash, Hasher};
     let content_json = dsl::os_pack::json::to_json_string(content);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("background-drawing-{content_hash:016x}");
+    let child_id = store::content_id("background-drawing", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     LayoutDrawingChild { handle: store::ArtifactChild::new(child_id, target), content: content.clone() }
@@ -506,7 +502,7 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::LayoutSnapshot;
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
-        name: "Layout".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Layout", "Layout"),
         source_format: LAYOUT_DOCUMENT_SCHEMA.into(),
         component_kind: "layout".into(),
         dimension: "2d".into(),

@@ -52,7 +52,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.epw".into(),
-        name: "Epw".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Epw", "Epw"),
         source_format: STDIO_EPW_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

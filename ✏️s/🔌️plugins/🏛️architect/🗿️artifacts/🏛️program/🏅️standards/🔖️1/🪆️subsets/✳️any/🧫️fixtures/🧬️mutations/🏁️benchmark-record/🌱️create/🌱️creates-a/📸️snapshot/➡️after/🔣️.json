@@ -138,9 +138,9 @@
   "templates": [],
   "knowledgePayload": [],
   "knowledge": {
-    "childId": "architect-knowledge-7904dd65836c8ff4",
+    "childId": "architect-knowledge-4f53cda18c2baa0c",
     "target": {
-      "artifactId": "architect-knowledge-7904dd65836c8ff4",
+      "artifactId": "architect-knowledge-4f53cda18c2baa0c",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -186,9 +186,9 @@
     }
   ],
   "benchmarks": {
-    "childId": "architect-benchmarks-ebb8ef7bad26edae",
+    "childId": "architect-benchmarks-d495e45cb640f017",
     "target": {
-      "artifactId": "architect-benchmarks-ebb8ef7bad26edae",
+      "artifactId": "architect-benchmarks-d495e45cb640f017",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

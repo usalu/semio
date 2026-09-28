@@ -1860,6 +1860,43 @@ fn a_document_socket_admits_a_declared_maximal_batch_and_readmits_an_uncommitted
     });
 }
 
+/// 📏️ C12 P1 live (a 600-envelope outbox answered `hub.unavailable` forever): a `Commands` batch the document backbone
+/// declares legal passes the socket's declaration check, one envelope more is refused PERMANENTLY with the one
+/// `HubBatchLimitRefusalMessageV1` (`hub.batch-limit`, level error), and an engine `LimitExceeded` maps to the same permanent
+/// message — no size refusal ever carries the transient `hub.unavailable` a client would resend without end.
+#[test]
+fn a_batch_beyond_its_declaration_is_refused_permanently_and_never_as_transient() {
+    run_socket_test(|| async {
+        let document = WireArtifactId("p1-declared-batch".to_string());
+        let template = sample_envelope("declared", &document).await;
+        let mut declared = Vec::new();
+        let mut bytes = 0usize;
+        let next = loop {
+            let next = MutationEnvelope { mutation_id: protocol::MutationId(format!("declared-{:x}", declared.len())), ..template.clone() };
+            let mut encoded = Vec::new();
+            protocol::encode_envelope(&next, &mut encoded);
+            let count_bytes = if declared.len() + 1 < 128 { 1 } else if declared.len() + 1 < 16_384 { 2 } else { 3 };
+            if declared.len() == protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES || count_bytes + bytes + encoded.len() > protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES {
+                break next;
+            }
+            bytes += encoded.len();
+            declared.push(next);
+        };
+        let mut over = declared.clone();
+        over.push(next);
+        assert!(declared.len() > 256, "the declared batch ({} envelopes) exceeds the engine's former 256-envelope credit", declared.len());
+        assert!(undeclared_batch_refusal(&declared).is_none(), "a declared batch passes the socket's declaration check");
+        let Some(ApplyOutcome::Rejected { reason, messages }) = undeclared_batch_refusal(&over) else { panic!("one envelope beyond the declaration is refused") };
+        let messages: serde_json::Value = serde_json::from_slice(&messages).expect("messages are JSON");
+        assert_eq!(messages[0]["code"], semio_hub::refusal::HUB_BATCH_LIMIT_REFUSAL_CODE, "{reason}");
+        assert_eq!(messages[0]["level"], "error");
+        assert_eq!(messages.as_array().unwrap().len(), 1);
+        let engine: serde_json::Value = serde_json::from_slice(&messages_for_error(&db::DbError::LimitExceeded("artifact submit batch item credit"))).expect("messages are JSON");
+        assert_eq!(engine[0]["code"], semio_hub::refusal::HUB_BATCH_LIMIT_REFUSAL_CODE, "an engine size refusal is permanent");
+        assert_ne!(engine[0]["code"], semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE);
+    });
+}
+
 /// 🏘️ A member of many spaces reads its space list and its event pages in bounded time, exactly: the list is one
 /// directory query and each event page one membership read (WG8 on 7800: 25–58 s for 82 spaces, the list folded the
 /// whole event log and mounted every document). The oracle is the event-log fold (`os_directory::fold_all`): the same
@@ -7266,6 +7303,28 @@ async fn credential_sign_in_locks_out_after_its_burst_and_recovers_on_the_clock(
     assert_eq!(post_sign_in(addr, &sign_in_body("lockout@example.com", SIGN_IN_PASSWORD)).await.status, 200);
 }
 
+/// 🚦️ A directory-command burst beyond its bucket is refused with the typed `RateLimitRefusalV1` body (class, a positive wait,
+/// the en + de notice), `retry-after` and `no-store` — never an empty 429 a client cannot read.
+#[tokio::test]
+async fn a_directory_command_burst_is_refused_with_a_typed_rate_limit_body() {
+    let (state, _clock) = credential_sign_in_state().await;
+    let addr = spawn_server(state).await;
+    let burst = RateLimitClassV1::DirectoryCommand.policy().burst;
+    for attempt in 0..burst {
+        assert_ne!(raw_http_request(addr, "POST", "/directory/commands", &[("content-type", "application/json")], b"{}").await.status, 429, "attempt {attempt} is within the burst");
+    }
+    let refused = raw_http_request(addr, "POST", "/directory/commands", &[("content-type", "application/json")], b"{}").await;
+    assert_eq!(refused.status, 429);
+    let headers = refused.headers.to_lowercase();
+    assert!(headers.contains("retry-after:") && headers.contains("no-store"), "{}", refused.headers);
+    let body = json_body(&refused);
+    assert_eq!(body["schema"], semio_hub::auth::rate_limit::RATE_LIMIT_REFUSAL_SCHEMA);
+    assert_eq!(body["code"], "rate-limited");
+    assert_eq!(body["class"], "directory-command");
+    assert!(body["retryAfterMs"].as_u64().is_some_and(|milliseconds| milliseconds > 0));
+    assert_eq!(body["message"], serde_json::to_value(semio_hub::auth::rate_limit::RATE_LIMIT_REFUSAL_MESSAGE).unwrap());
+}
+
 /// 🔬️ Signing out revokes the credential-minted session durably: the same token stops resolving and
 /// the revocation is a fact in the log.
 #[tokio::test]
@@ -8160,6 +8219,59 @@ mod quick {
             assert_eq!(next_close_without_authority(&mut socket).await, 4401, "no Ack crosses a revoke that wins before command admission");
             let frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier");
             assert_eq!(frontier.head_seq, 1, "the revoked actor-matching command never reaches durable storage");
+        });
+    }
+
+    /// 🧾️ A `Commands` batch the engine committed after its socket's frame deadline elapsed is still acknowledged on that
+    /// socket, its relay still reaches the socket, and the socket stays open for the next batch: the deadline bounds a
+    /// frame's admission only (ticket 26/09/23 session 14c — H13's transient probe saw batch 24 commit at head 6144 while
+    /// the deadline closed its socket `1013` and its Ack never came).
+    #[test]
+    fn a_batch_committed_past_the_frame_deadline_is_still_acknowledged() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let live_gate = Arc::new(TestLiveGate::default());
+            *live_gate.socket_frame_deadline.lock().expect("frame deadline override") = Some(std::time::Duration::from_millis(200));
+            live_gate.socket_commit_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+            state.live_gate = Some(live_gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-commit-deadline").await;
+            let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-commit-deadline".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-commit-deadline/document/ws");
+            let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            live_gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            live_gate.socket_bootstrap_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            live_gate.document_release.add_permits(1);
+
+            let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-commit-deadline"));
+            let wire_document = WireArtifactId("socket-commit-deadline".into());
+            for (batch_id, id, head) in [(70u64, "late-commit-op", 1u64), (71, "next-commit-op", 2)] {
+                let mut envelope = sample_envelope(id, &wire_document).await;
+                envelope.actor = ActorId(receipt.actor_id.clone());
+                socket.send(client_binary(&ClientFrame::Commands { batch_id, envelopes: vec![envelope] }, Lane::Command).await).await.expect("command sent");
+                tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary").forget();
+                live_gate.socket_command_release.add_permits(1);
+                tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_commit_admitted.acquire()).await.expect("commit boundary deadline").expect("commit boundary").forget();
+                let committed = state.db.document(&document).await.expect("document handle").frontier().await.expect("committed frontier");
+                assert_eq!(committed.head_seq, head, "the engine committed batch {batch_id} before its answer");
+                tokio::time::sleep(std::time::Duration::from_millis(600)).await;
+                live_gate.socket_commit_release.add_permits(1);
+                match next_server_frame_at(&mut socket, "Ack of a batch committed past the frame deadline").await {
+                    ServerFrame::Ack { batch_id: acked, stages, .. } => {
+                        assert_eq!(acked, batch_id);
+                        assert!(stages.iter().any(|stage| matches!(stage, AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Accepted))), "batch {batch_id} is acknowledged as accepted: {stages:?}");
+                    }
+                    other => panic!("batch {batch_id} answered {other:?} instead of its Ack"),
+                }
+                assert!(matches!(next_server_frame_at(&mut socket, "relay").await, ServerFrame::Commands { .. }), "the committed batch's relay follows its Ack");
+            }
         });
     }
 

@@ -211,5 +211,353 @@
       }
     }
   ],
-  "integerArgumentsWhy": "`chunk`, `chunkCount`, `index` and `total` MUST reach the guest as exact unsigned integers. Both twins mint them as integer carriers (Rust `Number::UInt`, TypeScript `packUInt`) rather than letting them widen onto a float on a JSON hop — the defect that took every wgpu dispatch down once the view state first carried a `u64` (`📓️wgpu-end-to-end-verification-2026-09-14.md` §A)."
+  "integerArgumentsWhy": "`chunk`, `chunkCount`, `index` and `total` MUST reach the guest as exact unsigned integers. Both twins mint them as integer carriers (Rust `Number::UInt`, TypeScript `packUInt`) rather than letting them widen onto a float on a JSON hop — the defect that took every wgpu dispatch down once the view state first carried a `u64` (`📓️wgpu-end-to-end-verification-2026-09-14.md` §A).",
+  "stagingWhy": "How a guest turns the chunks of one picked file back into the one file its import action reads (`ImportStaging`, `🎠️kernel/🦀️.rs` region 📥️ImportStaging — the framework half every app shares; generation3d and puzzle3d each hand-rolled one before). Each case sends chunks exactly as a shell dispatches them (`import_chunk_arguments` over `import_payload_chunks` of the run's payload; `chunkCount`/`payloadRepeat` on a send override the derived chunk) and states one outcome per send: `staged:<next>/<count>`, `whole:<run>` (the reassembled payload, name, fan-out and every extra argument, never the chunk envelope) or `refused:<code>`. `openRunsAfter` is the memory census after the last send.",
+  "stagingCases": [
+    {
+      "id": "single-chunk-is-the-whole-file",
+      "runs": [
+        {
+          "name": "registers.csv",
+          "payload": "room,area\nA,12\nB,7\n"
+        }
+      ],
+      "extra": {
+        "windowId": "architect-2::registers"
+      },
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        }
+      ],
+      "outcomes": [
+        "whole:0"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "three-chunk-run-reassembles-multibyte-text",
+      "runs": [
+        {
+          "name": "nakagin.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 2
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "staged:2/3",
+        "whole:0"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-retransmitted-chunk-is-acknowledged-at-the-cursor",
+      "runs": [
+        {
+          "name": "nakagin.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 2
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "staged:2/3",
+        "staged:2/3",
+        "whole:0"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-skipped-chunk-drops-the-run-as-a-gap",
+      "runs": [
+        {
+          "name": "nakagin.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 2
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "refused:file-import.gap"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-chunk-past-its-run-is-an-invalid-envelope",
+      "runs": [
+        {
+          "name": "nakagin.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 3,
+          "chunkCount": 3
+        }
+      ],
+      "outcomes": [
+        "refused:file-import.envelope"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-chunk-larger-than-the-extent-is-refused",
+      "runs": [
+        {
+          "name": "wide.json",
+          "payload": "x"
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0,
+          "chunkCount": 2,
+          "payloadRepeat": {
+            "character": "a",
+            "count": 32769
+          }
+        }
+      ],
+      "outcomes": [
+        "refused:file-import.chunk"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-run-longer-than-one-document-is-refused",
+      "runs": [
+        {
+          "name": "huge.json",
+          "payload": "x"
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0,
+          "chunkCount": 129
+        }
+      ],
+      "outcomes": [
+        "refused:file-import.envelope"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "two-files-of-one-pick-interleave",
+      "runs": [
+        {
+          "name": "a.stl",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          },
+          "fanOut": {
+            "index": 0,
+            "total": 2
+          }
+        },
+        {
+          "name": "b.stl",
+          "payloadRepeat": {
+            "character": "ü",
+            "count": 40000
+          },
+          "fanOut": {
+            "index": 1,
+            "total": 2
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 1,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 1,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 2
+        },
+        {
+          "run": 1,
+          "chunk": 2
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "staged:1/3",
+        "staged:2/3",
+        "staged:2/3",
+        "whole:0",
+        "whole:1"
+      ],
+      "openRunsAfter": 0
+    },
+    {
+      "id": "a-third-pick-takes-the-stalest-slot",
+      "runs": [
+        {
+          "name": "first.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        },
+        {
+          "name": "second.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        },
+        {
+          "name": "third.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 1,
+          "chunk": 0
+        },
+        {
+          "run": 1,
+          "chunk": 1
+        },
+        {
+          "run": 2,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "staged:1/3",
+        "staged:2/3",
+        "staged:1/3",
+        "refused:file-import.gap"
+      ],
+      "openRunsAfter": 2
+    },
+    {
+      "id": "a-repick-restarts-its-run",
+      "runs": [
+        {
+          "name": "nakagin.json",
+          "payloadRepeat": {
+            "character": "é",
+            "count": 40000
+          }
+        }
+      ],
+      "sends": [
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 0
+        },
+        {
+          "run": 0,
+          "chunk": 1
+        },
+        {
+          "run": 0,
+          "chunk": 2
+        }
+      ],
+      "outcomes": [
+        "staged:1/3",
+        "staged:2/3",
+        "staged:1/3",
+        "staged:2/3",
+        "whole:0"
+      ],
+      "openRunsAfter": 0
+    }
+  ]
 }

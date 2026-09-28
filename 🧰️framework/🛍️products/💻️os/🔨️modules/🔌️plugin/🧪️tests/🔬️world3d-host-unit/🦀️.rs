@@ -65,7 +65,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn projection_measures_tree_matches_the_requested_taxonomy() {
         let p = WorldProjectionConfig::default();
-        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
+        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args });
         let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
         assert_eq!(families.len(), 2);
         let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
@@ -98,7 +98,7 @@ mod tests {
             walk(measure, &mut into);
             into
         };
-        let action = |action: &str, args: Option<serde_json::Value>| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) };
+        let action = |action: &str, args: Option<semio_framework::DslValue>| ActionDescriptor { controller_id: "t".into(), action: action.into(), args };
 
         let sun_ids = ids_of(&world3d_sun_measures("puzzle3d", &WorldSunConfig::default(), false, action));
         assert!(sun_ids.contains(&"puzzle3d-measure-sun".to_string()), "{sun_ids:?}");

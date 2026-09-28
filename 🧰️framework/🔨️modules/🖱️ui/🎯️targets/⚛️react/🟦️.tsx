@@ -2825,8 +2825,6 @@ export const uiChromeTranslationBundles = {
           setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
           openTaskManager: { label: { normal: "Aufgaben öffnen", beginner: "Aufgaben öffnen" } },
           openHub: { label: { normal: "Hub und Bereiche öffnen", beginner: "Mit anderen arbeiten" } },
-          exportDocument: { label: { normal: "Dokument exportieren", beginner: "Dokument als Datei sichern" } },
-          importDocument: { label: { normal: "Dokument importieren…", beginner: "Dokument aus Datei öffnen…" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Panel-Tab verschieben", beginner: "Panel-Tab verschieben" } },
@@ -2992,6 +2990,8 @@ export const uiChromeTranslationBundles = {
           iconRenderFailed: { label: { normal: "Symbol konnte nicht gerendert werden", beginner: "Symbol konnte nicht gerendert werden" } },
           documentPlaceholder: { label: { normal: "Dokument", beginner: "Dokument" } },
           languageDocument: { label: { normal: "{{language}}-Dokument", beginner: "{{language}}-Dokument" } },
+          editor: { label: { normal: "Editor", beginner: "Editor" } },
+          languageEditor: { label: { normal: "{{language}}-Editor", beginner: "{{language}}-Editor" } },
           iconShot: { label: { normal: "Symbolbild", beginner: "Symbolbild" } },
           projection: { label: { normal: "Projektion", beginner: "Projektion" } },
           frameVisible: { label: { normal: "Sichtbares einpassen", beginner: "Sichtbares einpassen" } },
@@ -3751,8 +3751,6 @@ export const uiChromeTranslationBundles = {
           setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
           openTaskManager: { label: { normal: "Open Tasks", beginner: "Open Tasks" } },
           openHub: { label: { normal: "Open Hub and Spaces", beginner: "Work With Others" } },
-          exportDocument: { label: { normal: "Export Document", beginner: "Save Document as File" } },
-          importDocument: { label: { normal: "Import Document…", beginner: "Open Document from File…" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Move Panel Tab", beginner: "Move Panel Tab" } },
@@ -3918,6 +3916,8 @@ export const uiChromeTranslationBundles = {
           iconRenderFailed: { label: { normal: "Icon rendering failed", beginner: "Icon rendering failed" } },
           documentPlaceholder: { label: { normal: "Artifact", beginner: "Artifact" } },
           languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
+          editor: { label: { normal: "Editor", beginner: "Editor" } },
+          languageEditor: { label: { normal: "{{language}} editor", beginner: "{{language}} editor" } },
           iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },
           projection: { label: { normal: "Projection", beginner: "Projection" } },
           frameVisible: { label: { normal: "Frame visible", beginner: "Frame visible" } },
@@ -9990,12 +9990,13 @@ import {
   type TreePanelDefinition,
   type TreePanelSource,
   staticTreePanelDefinition,
+  liveTreePanelDefinition,
   usePointerDrag,
   useNativeDragAndDrop,
   PanelTreeUnitsPane,
   PanelEmptyDockZone,
 } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
-export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
+export { Panel, staticTreePanelDefinition, liveTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel
 
@@ -11761,6 +11762,7 @@ export {
 export { GLTFLoader };
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 export { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
+export { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 // #endregion 📰️Three.js
 
 // #region 🎽️XY Flow (additions not already exported inline)

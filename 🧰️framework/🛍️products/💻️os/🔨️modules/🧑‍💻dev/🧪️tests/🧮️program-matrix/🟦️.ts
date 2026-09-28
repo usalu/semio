@@ -18,6 +18,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Browser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
@@ -35,14 +36,22 @@ export type MatrixPins = Readonly<{
   kindVerbs: Readonly<Record<string, string>>;
   kindPre: Readonly<Record<string, string>>;
   kindArgs: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  pluginEdits: Readonly<Record<string, MatrixRenderedEdit>>;
+  kindEdits: Readonly<Record<string, MatrixRenderedEdit>>;
   kindOrigin: Readonly<Record<string, string>>;
   hubKindVerbs: Readonly<Record<string, string>>;
   hubKindPre: Readonly<Record<string, string>>;
 }>;
 
+/** ✍️ A verb driven through the program's own rendered editor instead of the Actions rail. A revision-bound verb
+ * (`set-cell`, `set-node`) requires the document revision its render stamped into the control's own binding — no staged
+ * rail argument can know it — so the harness types `value` into the inline commit-on-blur input `control` (a selector
+ * inside the window body) and commits it the way a user does, with Enter. */
+export type MatrixRenderedEdit = Readonly<{ control: string; value: string }>;
+
 /** 📌️ Reads the pins (`🧑‍💻dev/🧫️fixtures/🧮️program-matrix.json`). */
 export function readMatrixPins(): MatrixPins {
-  const pins = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🧮️program-matrix.json"), "utf8")) as MatrixPins;
+  const pins = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/🧮️program-matrix.json", import.meta.url)), "utf8")) as MatrixPins;
   if (pins.schema !== "semio.os-dev.program-matrix-pins/v1") throw new Error(`program matrix pins: unexpected schema ${String(pins.schema)}`);
   return pins;
 }
@@ -74,26 +83,34 @@ function normSnapshot(repoRoot: string, kind: string): string | null {
   return null;
 }
 
-/** 🗺️ Resolves every selected program's verb and staged arguments, keyed by the row key `<plugin>/<kind>[/<subset>]`:
- * a kind pin beats the plugin pin of the kind's ORIGIN plugin (📽️demonstrator re-hosts other plugins' kinds). */
-function resolvePins(repoRoot: string, pins: MatrixPins, programs: readonly MatrixProgram[]): { verbs: Record<string, string>; args: Record<string, Readonly<Record<string, string>>> } {
+/** 🪜️ Folds `<origin>.<verb>` plugin pins, then `<base>.<verb>` and `<key>.<verb>` kind pins, onto `<key>.<verb>`. */
+function foldVerbPins<T>(into: Record<string, T>, key: string, base: string, origin: string, pluginPins: Readonly<Record<string, T>>, kindPins: Readonly<Record<string, T>>): void {
+  for (const [pinKey, value] of Object.entries(pluginPins)) if (pinKey.startsWith(`${origin}.`)) into[`${key}.${pinKey.slice(origin.length + 1)}`] = value;
+  for (const [pinKey, value] of Object.entries(kindPins)) if (pinKey.startsWith(`${base}.`)) into[`${key}.${pinKey.slice(base.length + 1)}`] = value;
+  if (key !== base) for (const [pinKey, value] of Object.entries(kindPins)) if (pinKey.startsWith(`${key}.`)) into[pinKey] = value;
+}
+
+/** 🗺️ Resolves every selected program's verb, staged arguments and rendered edits, keyed by the row key
+ * `<plugin>/<kind>[/<subset>]`: a kind pin beats the plugin pin of the kind's ORIGIN plugin (📽️demonstrator re-hosts
+ * other plugins' kinds). */
+export function resolvePins(repoRoot: string, pins: MatrixPins, programs: readonly MatrixProgram[]): { verbs: Record<string, string>; args: Record<string, Readonly<Record<string, string>>>; edits: Record<string, MatrixRenderedEdit> } {
   const verbs: Record<string, string> = { ...pins.pluginVerbs };
   const args: Record<string, Readonly<Record<string, string>>> = { ...pins.pluginArgs };
+  const edits: Record<string, MatrixRenderedEdit> = { ...pins.pluginEdits };
   for (const program of programs) {
     const key = keyOf(program);
     const base = baseKeyOf(program);
     const origin = pins.kindOrigin[base] ?? program.pluginId;
     const verb = pins.kindVerbs[key] ?? pins.kindVerbs[base] ?? pins.pluginVerbs[origin];
     if (verb) verbs[key] = verb;
-    for (const [argKey, value] of Object.entries(pins.pluginArgs)) if (argKey.startsWith(`${origin}.`)) args[`${key}.${argKey.slice(origin.length + 1)}`] = value;
-    for (const [argKey, value] of Object.entries(pins.kindArgs)) if (argKey.startsWith(`${base}.`)) args[`${key}.${argKey.slice(base.length + 1)}`] = value;
-    if (key !== base) for (const [argKey, value] of Object.entries(pins.kindArgs)) if (argKey.startsWith(`${key}.`)) args[argKey] = value;
+    foldVerbPins(args, key, base, origin, pins.pluginArgs, pins.kindArgs);
+    foldVerbPins(edits, key, base, origin, pins.pluginEdits, pins.kindEdits);
     if (program.pluginId === "norm") {
       const snapshot = normSnapshot(repoRoot, kindOf(program.appId));
       if (snapshot !== null) args[`${key}.setSnapshot`] = { snapshot };
     }
   }
-  return { verbs, args };
+  return { verbs, args, edits };
 }
 //#endregion 🔖️Pins
 
@@ -347,6 +364,17 @@ export async function submitStagedVerb(page: Page, verbId: string): Promise<stri
   return "absent";
 }
 
+/** ✍️ Drives one verb through the program's own rendered editor ({@link MatrixRenderedEdit}) and answers what it did. */
+export async function driveRenderedEdit(page: Page, edit: MatrixRenderedEdit): Promise<string> {
+  const control = page.locator(`[data-slot="window-body"] ${edit.control}`).first();
+  if ((await control.count()) === 0) return `${edit.control}:absent`;
+  return control
+    .click({ force: true, timeout: 8_000 })
+    .then(() => control.fill(edit.value))
+    .then(() => control.press("Enter"))
+    .then(() => `${edit.control}=${edit.value}`, (error: unknown) => errorLine(edit.control, error));
+}
+
 /** 🫧️ A harmless dispatch that makes the host re-read a spawned program (the host reads it two dispatches behind). */
 async function neutralDispatch(page: Page): Promise<string | null> {
   for (const verb of ["clearSelection", "selectAll"]) {
@@ -361,21 +389,25 @@ async function neutralDispatch(page: Page): Promise<string | null> {
 
 type VerbAttempt = Readonly<{ verbId: string; filled: string[]; mutated: boolean; undone: boolean; redone: boolean; redoDiffersFromUndo: boolean; undoLane: string | null; redoLane: string | null; edits: number[]; applied: number[]; refusal: string | null }>;
 
-/** ✏️ One verb → undo → redo, each read two neutral dispatches later; undo/redo through the rail row first, the chord
- * second, and the lane that answered is recorded. */
-async function runVerb(page: Page, verbId: string, args: Readonly<Record<string, string>> | undefined, refusals: readonly string[], liveId: string): Promise<VerbAttempt> {
+/** ✏️ One verb (staged on the Actions rail, or through its rendered editor when pinned) → undo → redo, each read two
+ * neutral dispatches later; undo/redo through the rail row first, the chord second, and the lane that answered is
+ * recorded. */
+async function runVerb(page: Page, verbId: string, args: Readonly<Record<string, string>> | undefined, edit: MatrixRenderedEdit | undefined, refusals: readonly string[], liveId: string): Promise<VerbAttempt> {
   const cursor = refusals.length;
   await raiseHistory(page);
   let before = witness(await readShell(page));
-  await clickUncovered(page, `[data-slot="window-action-pane"] [id="action.${verbId}"]`);
-  await page.waitForTimeout(1_200);
   const filled: string[] = [];
-  for (const [key, value] of Object.entries(args ?? {})) filled.push(await fillStagedArgument(page, key, value, liveId));
-  if (filled.length > 0) {
-    await page.waitForTimeout(400);
-    before = witness(await readShell(page));
+  if (edit !== undefined) filled.push(await driveRenderedEdit(page, edit));
+  else {
+    await clickUncovered(page, `[data-slot="window-action-pane"] [id="action.${verbId}"]`);
+    await page.waitForTimeout(1_200);
+    for (const [key, value] of Object.entries(args ?? {})) filled.push(await fillStagedArgument(page, key, value, liveId));
+    if (filled.length > 0) {
+      await page.waitForTimeout(400);
+      before = witness(await readShell(page));
+    }
+    await submitStagedVerb(page, verbId);
   }
-  await submitStagedVerb(page, verbId);
   await page.waitForTimeout(2_000);
   await neutralDispatch(page);
   const readVerb = witness(await readShell(page));
@@ -415,7 +447,7 @@ async function runVerb(page: Page, verbId: string, args: Readonly<Record<string,
 }
 
 /** 🎯️ Drives the kind's pinned verb first, then scanned document verbs, until one round-trips. */
-export async function mutateUndoRedo(page: Page, refusals: readonly string[], key: string, verbs: Readonly<Record<string, string>>, args: Readonly<Record<string, Readonly<Record<string, string>>>>, liveId: string, maxRows: number) {
+export async function mutateUndoRedo(page: Page, refusals: readonly string[], key: string, verbs: Readonly<Record<string, string>>, args: Readonly<Record<string, Readonly<Record<string, string>>>>, edits: Readonly<Record<string, MatrixRenderedEdit>>, liveId: string, maxRows: number) {
   const railToggles = await unfoldActionsRail(page);
   const ids = (await readShell(page)).actions.map((id) => id.replace(/^action\./u, ""));
   if (ids.length === 0) return { railToggles, railRows: 0, railRowIds: [] as string[], mutation: null, mutationDetail: "no Actions rail row after unfolding", attempts: [] as VerbAttempt[], known: verbs[key] ?? null };
@@ -429,7 +461,7 @@ export async function mutateUndoRedo(page: Page, refusals: readonly string[], ke
   const attempts: VerbAttempt[] = [];
   let best: VerbAttempt | null = null;
   for (const verbId of order.slice(0, maxRows)) {
-    const attempt = await runVerb(page, verbId, args[`${key}.${verbId}`] ?? args[verbId], refusals, liveId);
+    const attempt = await runVerb(page, verbId, args[`${key}.${verbId}`] ?? args[verbId], edits[`${key}.${verbId}`] ?? edits[verbId], refusals, liveId);
     attempts.push(attempt);
     if (best === null && attempt.mutated) best = attempt;
     if (attempt.mutated && attempt.redoDiffersFromUndo) return { railToggles, railRows: ids.length, railRowIds: ids, mutation: verbId, mutationDetail: null, attempts, known: known ?? null, ...attempt };
@@ -610,6 +642,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
   let programs: MatrixProgram[] = [];
   let verbs: Record<string, string> = {};
   let args: Record<string, Readonly<Record<string, string>>> = {};
+  let renderedEdits: Record<string, MatrixRenderedEdit> = {};
 
   const openProgram = async (program: MatrixProgram): Promise<{ windowIds: string[]; item: string | null; detail: string | null }> => {
     const before = await windowIds(page);
@@ -701,7 +734,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
           row.pre = preOutcome;
           await page.waitForTimeout(1_500);
         }
-        const verb = await mutateUndoRedo(page, refusals, row.key, verbs, args, pins.liveId, options.maxVerbRows);
+        const verb = await mutateUndoRedo(page, refusals, row.key, verbs, args, renderedEdits, pins.liveId, options.maxVerbRows);
         Object.assign(row, {
           railRowIds: verb.railRowIds,
           railRows: verb.railRows,
@@ -716,7 +749,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
           redoLane: "redoLane" in verb ? verb.redoLane : null,
           mutated: "mutated" in verb ? verb.mutated : false,
           redoDiffersFromUndo: "redoDiffersFromUndo" in verb ? verb.redoDiffersFromUndo : false,
-          attempts: verb.attempts.map((attempt) => `${attempt.verbId}:${attempt.edits.join(",")}:${attempt.undoLane ?? "-"}/${attempt.redoLane ?? "-"}${attempt.refusal ? `:${attempt.refusal.slice(0, 80)}` : ""}`),
+          attempts: verb.attempts.map((attempt) => `${attempt.verbId}:${attempt.edits.join(",")}:${attempt.undoLane ?? "-"}/${attempt.redoLane ?? "-"}${attempt.filled.length > 0 ? `:${attempt.filled.join(";").slice(0, 80)}` : ""}${attempt.refusal ? `:${attempt.refusal.slice(0, 80)}` : ""}`),
           historyRows: await historyRows(page),
           renderAfterRedo: (await renderFacts(page, opened.windowIds)).map((facts) => ({ id: facts.id, present: facts.present, skeleton: facts.skeleton, fault: facts.fault, canvases: facts.canvases, textChars: facts.textChars, text: facts.text?.slice(0, 100) })),
         });
@@ -772,7 +805,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
     const { probe, settled, waitedMs } = await settledProbe(options.installBudgetMs);
     if (probe === null) throw new Error("the shell exposed no window.__semioOsCatalogProbe");
     programs = probe.programs.map((entry) => ({ pluginId: entry.pluginId, appId: entry.appId })).filter((program) => options.roles.includes(roleOf(program.appId)) && !pins.excludedKinds.includes(baseKeyOf(program)));
-    ({ verbs, args } = resolvePins(repoRoot, pins, programs));
+    ({ verbs, args, edits: renderedEdits } = resolvePins(repoRoot, pins, programs));
     const selected = programs.filter((program) => {
       const key = keyOf(program);
       if (options.only.length > 0 && !options.only.some((entry) => entry === program.pluginId || entry === key)) return false;

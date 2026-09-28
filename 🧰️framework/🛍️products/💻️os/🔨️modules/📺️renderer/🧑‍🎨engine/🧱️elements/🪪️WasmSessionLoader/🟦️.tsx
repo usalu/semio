@@ -7,6 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
 import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { createContext } from "react";
 // #endregion 🔌️Adapters
@@ -320,10 +321,14 @@ export function createBoardPeerScope(): BoardPeerScope {
 
 export const BoardSessionFactoryContext = createContext<ScopedBoardSessionFactory | null>(null);
 
-/** 🪪️ Joins one exact app-owned constructor to the current shell instance without constructing it. */
+/** 🪪️ Joins one exact app-owned constructor to the current shell instance without constructing it. A hub document's
+ * program (`<plugin>@<bundle sha256>`, {@link parseHubProgramIdV1}) runs its plugin's own app, so it joins that plugin's
+ * constructor: the registrations are keyed by plugin id, and a hub-opened 2d puzzle threw "no registered board session
+ * factory" (ticket 26/09/23 S18 §14c). The scoped factory keeps the program's own id. */
 export function resolveAppSurfaceSessionFactory(registrations: readonly AppSurfaceSessionFactory[], identity: { readonly pluginId: string; readonly appId: string; readonly instanceId: number } | null): ScopedBoardSessionFactory | null {
   if (!identity) return null;
-  const matches = registrations.filter((registration) => registration.kind === "board-2d" && registration.pluginId === identity.pluginId && registration.appId === identity.appId);
+  const pluginId = parseHubProgramIdV1(identity.pluginId)?.pluginId ?? identity.pluginId;
+  const matches = registrations.filter((registration) => registration.kind === "board-2d" && registration.pluginId === pluginId && registration.appId === identity.appId);
   if (matches.length > 1) throw new Error(`Duplicate board session factory for ${identity.pluginId}/${identity.appId}`);
   const registration = matches[0];
   return registration ? { pluginId: identity.pluginId, appId: identity.appId, instanceId: identity.instanceId, create: registration.create, scope: createBoardPeerScope() } : null;

@@ -60,15 +60,95 @@ export function parseAgentBridgeOffer(body: unknown): AgentBridgeConfig | null {
 
 export type BridgeOfferFetch = (input: string, init?: { readonly cache?: RequestCache; readonly signal?: AbortSignal }) => Promise<{ readonly ok: boolean; readonly status: number; json: () => Promise<unknown> }>;
 
-/** 🔎️ Asks the local supervisor for the live gateway's offer. Never throws and never rejects: the typed "not
+/** 🏷️ The rendezvous record version both halves write and read (`🌉️mcp/🛰️rendezvous::RENDEZVOUS_SCHEMA_VERSION`): the live
+ * os session records and the gateway offer records — version 2 gave every offer its {@link AgentBridgeOfferRecordV2} scope. */
+export const AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION = 2;
+
+/** 🎯️ Which shells one gateway offer is for: a hub-bound gateway's offer is for the shell of the human whose delegation it
+ * runs, open on that hub and space; a local (folder) gateway's offer is for any shell of this machine's user. */
+export type AgentBridgeOfferScopeKindV2 = { readonly kind: "hub"; readonly hubOrigin: string; readonly spaceId: string } | { readonly kind: "local" };
+
+/** 📨️ One live gateway's offer record as the gateway publishes it, owner-only, in `<rendezvous>/offers/<pid>.json`
+ * (`🌉️mcp/🛰️rendezvous::BridgeOffer`). `principal` is the principal the gateway acts as — for a delegated agent,
+ * `agent:<delegation id>`. Language-neutral rows: `🧫️fixtures/🛰️offer-answers/🔣️.json` `select`. */
+export type AgentBridgeOfferRecordV2 = {
+  readonly schemaVersion: typeof AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION;
+  readonly url: string;
+  readonly admissionProof: string;
+  readonly principal: string;
+  readonly pid: number;
+  readonly publishedAtMs: number;
+  readonly scope: AgentBridgeOfferScopeKindV2;
+};
+
+/** 🎯️ Who asks for an offer: the shell's hub origin, the space it has open, and the agent principals the hub lists as
+ * delegated BY THIS HUMAN in that space (`GET /auth/agent-delegations` answers only the asking human's own). `null` — a
+ * shell in no hub space. */
+export type AgentBridgeOfferScopeV1 = { readonly hubOrigin: string; readonly spaceId: string; readonly agentPrincipalIds: readonly string[] } | null;
+
+/** 📨️ Reads one offer record file, exactly: a record of another version, with a missing or extra field or an unknown scope
+ * is no offer at all. */
+export function parseAgentBridgeOfferRecordV2(value: unknown): AgentBridgeOfferRecordV2 | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if (Object.keys(record).sort().join(",") !== "admissionProof,pid,principal,publishedAtMs,schemaVersion,scope,url") return null;
+  if (record.schemaVersion !== AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION || typeof record.url !== "string" || typeof record.admissionProof !== "string" || typeof record.principal !== "string") return null;
+  if (typeof record.pid !== "number" || typeof record.publishedAtMs !== "number") return null;
+  const scope = record.scope as Record<string, unknown> | null;
+  if (typeof scope !== "object" || scope === null) return null;
+  const keys = Object.keys(scope).sort().join(",");
+  const parsed: AgentBridgeOfferScopeKindV2 | null =
+    scope.kind === "local" && keys === "kind"
+      ? { kind: "local" }
+      : scope.kind === "hub" && keys === "hubOrigin,kind,spaceId" && typeof scope.hubOrigin === "string" && typeof scope.spaceId === "string"
+        ? { kind: "hub", hubOrigin: scope.hubOrigin, spaceId: scope.spaceId }
+        : null;
+  return parsed === null ? null : { schemaVersion: AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, url: record.url, admissionProof: record.admissionProof, principal: record.principal, pid: record.pid, publishedAtMs: record.publishedAtMs, scope: parsed };
+}
+
+/** 🔐️ The offer a shell of `scope` may dial, newest first (ticket 26/09/23, G12 session 14c: a gateway's offer used to go to
+ * every live os session of the machine, and another person's shell attached to it). A hub gateway's offer is served only
+ * to the shell open on its hub and space whose human delegated its agent; a local gateway's offer to any shell of this
+ * machine's user. A shell with a matching hub offer never takes a local one instead. */
+export function selectAgentBridgeOfferV1(records: readonly AgentBridgeOfferRecordV2[], scope: AgentBridgeOfferScopeV1): AgentBridgeOfferRecordV2 | null {
+  const newest = (candidates: readonly AgentBridgeOfferRecordV2[]): AgentBridgeOfferRecordV2 | null => candidates.reduce<AgentBridgeOfferRecordV2 | null>((best, record) => (best === null || record.publishedAtMs > best.publishedAtMs ? record : best), null);
+  const origin = (value: string): string => value.replace(/\/+$/u, "");
+  const hub = scope === null ? [] : records.filter((record) => record.scope.kind === "hub" && origin(record.scope.hubOrigin) === origin(scope.hubOrigin) && record.scope.spaceId === scope.spaceId && scope.agentPrincipalIds.includes(record.principal));
+  return newest(hub) ?? newest(records.filter((record) => record.scope.kind === "local"));
+}
+
+/** 🎯️ A shell's offer scope from the hub's list of THIS human's delegations in the open space: only a live delegation (not
+ * revoked, not expired) names an agent whose offer the shell may dial — a withdrawn delegation's gateway is never offered
+ * again, while the gateway still runs. */
+export function agentBridgeOfferScopeFromDelegationsV1(hubOrigin: string, spaceId: string, delegations: readonly { readonly agentPrincipalId: string; readonly revoked: boolean; readonly expiresAtMs: number }[], nowMs: number): AgentBridgeOfferScopeV1 {
+  return { hubOrigin, spaceId, agentPrincipalIds: delegations.filter((delegation) => !delegation.revoked && delegation.expiresAtMs > nowMs).map((delegation) => delegation.agentPrincipalId) };
+}
+
+/** 🔗️ The offer request of a shell of `scope` — the endpoint itself for a shell in no hub space. */
+export function agentBridgeOfferPathV1(endpoint: string, scope: AgentBridgeOfferScopeV1): string {
+  if (scope === null) return endpoint;
+  return `${endpoint}?${new URLSearchParams({ hub: scope.hubOrigin, space: scope.spaceId, agents: scope.agentPrincipalIds.join(",") }).toString()}`;
+}
+
+/** 🔎️ The scope an offer request names — `null` when it names no hub space. */
+export function parseAgentBridgeOfferScopeV1(requestUrl: string): AgentBridgeOfferScopeV1 {
+  const at = requestUrl.indexOf("?");
+  const query = new URLSearchParams(at < 0 ? "" : requestUrl.slice(at + 1));
+  const hubOrigin = query.get("hub");
+  const spaceId = query.get("space");
+  if (!hubOrigin || !spaceId) return null;
+  return { hubOrigin, spaceId, agentPrincipalIds: (query.get("agents") ?? "").split(",").filter((agent) => agent.length > 0) };
+}
+
+/** 🔎️ Asks the local supervisor for the offer a shell of `scope` may dial. Never throws and never rejects: the typed "not
  * offered", a host without the endpoint, a non-JSON body and a refused offer are all the same ordinary `null`
  * ("no agent is offering a bridge right now"), because the shell must render identically whether or
  * not anybody ever launches an MCP gateway. */
-export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal): Promise<AgentBridgeConfig | null> {
+export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal, scope: AgentBridgeOfferScopeV1 = null): Promise<AgentBridgeConfig | null> {
   const request = fetchImpl ?? (globalThis.fetch as unknown as BridgeOfferFetch | undefined);
   if (!request) return null;
   try {
-    const response = await request(endpoint, { cache: "no-store", signal });
+    const response = await request(agentBridgeOfferPathV1(endpoint, scope), { cache: "no-store", signal });
     if (!response.ok) return null;
     return parseAgentBridgeOffer(await response.json());
   } catch {

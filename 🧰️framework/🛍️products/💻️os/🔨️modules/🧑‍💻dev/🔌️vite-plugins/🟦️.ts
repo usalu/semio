@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync,
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, STREAM_MUX_ANNOUNCEMENT, STREAM_MUX_PATH, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
-import { AGENT_BRIDGE_OFFER_ENDPOINT, agentBridgeOfferAnswerV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
@@ -1279,16 +1279,13 @@ export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: st
 //#endregion SourceFreshnessVitePlugins
 
 //#region 🛰️AgentBridgeRendezvous
-/** @emoji 🛰️ Where a live os session and a `semio-os-mcp` stdio gateway find each other — the exact
- * layout the gateway's own `🌉️mcp/🛰️rendezvous` facet owns (`~/.semio/agent/bridge`). */
-export const AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION = 1;
-
 /** @emoji 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
  * of their own instead of the per-user default — the exact twin of the gateway's own
  * `🛰️rendezvous::RENDEZVOUS_DIR_ENV`. It is a directory path, never a credential (the admission proof
  * stays in the owner-only offer file the supervisor reads), and it is spelled with the `S_` prefix
- * the gateway's process-entry seal admits. Without it, `newestLiveAgentBridgeOffer` hands a shell
- * whichever gateway published last, so two agents running at once cross-wire. */
+ * the gateway's process-entry seal admits. Without it, `liveAgentBridgeOfferFor` hands a shell
+ * whichever local gateway published last, so two local agents running at once cross-wire (a hub gateway's offer
+ * only ever reaches its own human's shell). */
 export const AGENT_BRIDGE_RENDEZVOUS_DIR_ENV = "S_AGENT_BRIDGE_DIR";
 
 function agentBridgeRendezvousDir(): string {
@@ -1298,39 +1295,32 @@ function agentBridgeRendezvousDir(): string {
   return join(home, ".semio", "agent", "bridge");
 }
 
-/** @emoji 📨️ The newest gateway offer whose publishing process is still alive — what the browser
- * shell dials. `null` means no MCP gateway is currently offering a bridge, which is an ordinary
- * state (nobody launched one), never an error. */
-export function newestLiveAgentBridgeOffer(root: string = agentBridgeRendezvousDir()): { readonly url: string; readonly admissionProof: string; readonly principal: string; readonly pid: number } | null {
+/** @emoji 📨️ The live gateway offer a shell of `scope` may dial (`selectAgentBridgeOfferV1`: a hub gateway's offer only
+ * for its human's shell open on its hub and space, a local gateway's offer for any shell). `null` means no MCP gateway is
+ * offering this shell a bridge, which is an ordinary state (nobody launched one), never an error. */
+export function liveAgentBridgeOfferFor(scope: AgentBridgeOfferScopeV1, root: string = agentBridgeRendezvousDir()): AgentBridgeOfferRecordV2 | null {
   const directory = join(root, "offers");
   if (!existsSync(directory)) return null;
-  const offers = readdirSync(directory)
+  const live = readdirSync(directory)
     .filter((name) => name.endsWith(".json"))
     .flatMap((name) => {
-      const path = join(directory, name);
       try {
-        const offer = JSON.parse(readFileSync(path, "utf8")) as { schemaVersion?: number; url?: string; admissionProof?: string; principal?: string; pid?: number; publishedAtMs?: number };
-        if (offer.schemaVersion !== AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION || typeof offer.url !== "string" || typeof offer.admissionProof !== "string" || typeof offer.pid !== "number") return [];
-        try {
-          process.kill(offer.pid, 0);
-        } catch {
-          return [];
-        }
-        return [{ url: offer.url, admissionProof: offer.admissionProof, principal: offer.principal ?? "agent:local", pid: offer.pid, publishedAtMs: offer.publishedAtMs ?? 0 }];
+        const offer = parseAgentBridgeOfferRecordV2(JSON.parse(readFileSync(join(directory, name), "utf8")));
+        if (offer === null) return [];
+        process.kill(offer.pid, 0);
+        return [offer];
       } catch {
         return [];
       }
     });
-  offers.sort((left, right) => right.publishedAtMs - left.publishedAtMs);
-  const newest = offers[0];
-  return newest ? { url: newest.url, admissionProof: newest.admissionProof, principal: newest.principal, pid: newest.pid } : null;
+  return selectAgentBridgeOfferV1(live, scope);
 }
 
 type RendezvousServerRequest = { url?: string; method?: string };
 type RendezvousServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void };
 
 /** @emoji 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
- * serves the gateway's own offer back to the browser shell on
+ * serves the browser shell the one offer its request's scope may dial ({@link liveAgentBridgeOfferFor}) on
  * {@link AGENT_BRIDGE_OFFER_ENDPOINT} — always `200`, the offer or the typed "not offered". The admission proof never travels through an environment
  * variable or a build-time define: the dev server reads the owner-only offer file and hands it over
  * loopback, on request, exactly like the local supervisor it is.
@@ -1362,7 +1352,7 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly shellKi
       server.httpServer?.once("close", removeRecord);
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith(AGENT_BRIDGE_OFFER_ENDPOINT)) return next();
-        const offer = newestLiveAgentBridgeOffer(root);
+        const offer = liveAgentBridgeOfferFor(parseAgentBridgeOfferScopeV1(req.url), root);
         res.statusCode = 200;
         res.setHeader("content-type", "application/json");
         res.setHeader("cache-control", "no-store");

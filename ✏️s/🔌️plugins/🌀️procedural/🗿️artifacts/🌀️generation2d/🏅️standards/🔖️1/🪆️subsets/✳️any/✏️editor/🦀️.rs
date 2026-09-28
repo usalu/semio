@@ -1401,7 +1401,9 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
         crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(operation, generation, live_generation)
-            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation2d atomic publication authority is absent or stale"))
+            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation2d atomic publication authority is absent or stale"))?;
+        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_app_publication_authority(operation);
+        Ok(())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1514,6 +1516,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

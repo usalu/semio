@@ -35,10 +35,18 @@
       "message": "rebootstrap-required",
       "retryable": true
     },
+    "reopen": {
+      "kind": "artifact-rebootstrap-required",
+      "documentId": "document-a",
+      "message": "actor-lost",
+      "retryable": true
+    },
     "expected": {
       "en": "Restoring document: 128 of 512 bytes; 1 of 4 chunks.",
       "de": "Dokument wird wiederhergestellt: 128 von 512 Bytes; 1 von 4 Blöcken.",
-      "rebootstrapEn": "The server requires a fresh authoritative restore."
+      "rebootstrapEn": "The server requires a fresh authoritative restore.",
+      "reopenEn": "The document is reopening from its last confirmed state; your last change was not applied.",
+      "reopenDe": "Das Dokument wird aus seinem letzten bestätigten Stand neu geöffnet; deine letzte Änderung wurde nicht angewendet."
     }
   }
 }

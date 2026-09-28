@@ -6,8 +6,7 @@
 //! `👁️viewer` named a single one of them (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1) —
 //! library-complete IO with no way in or out. These laws hold the SURFACE: the roster the export
 //! picker publishes, the extensions the file picker accepts, the filename and MIME every download
-//! carries, the import roster equal to the declared import dialects, and the chunk envelope one
-//! picked file arrives in.
+//! carries, and the import roster equal to the declared import dialects.
 //!
 //! **Why they are fixture-driven.** Every row is read from
 //! `🧫️fixtures/🚪️io/🗿️artifact-surface.json`, whose TypeScript twin

@@ -1245,7 +1245,8 @@
             "cancelled",
             "deadline-exceeded",
             "invalid-bootstrap",
-            "transport-failure"
+            "transport-failure",
+            "recovery-exhausted"
           ]
         },
         "message": {

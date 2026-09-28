@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { mediaTransportLabels } from "../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
 import { MediaTransportHost, MediaTransportOwnerContext, type MediaTransportPort } from "../../🟦️.tsx";
 
-type BrowserInput = {
+/** 🧫️ The lifecycle fixture fields the Chromium oracle mounts, as `🧬️schema/♻️lifecycle/🔣️.json` admits them. */
+export type BrowserInput = {
   readonly identity: { readonly instanceId: number; readonly controllerId: string; readonly parentDocumentId: string; readonly windowId: string; readonly revision: string; readonly generation: string; readonly outputPort: "playback:out" };
   readonly media: { readonly kind: "audio" | "video"; readonly mediaType: string; readonly durationMs: number; readonly positionMs: number; readonly selection: readonly [number, number] };
   readonly running: { readonly progress: readonly number[]; readonly detail: readonly string[] };

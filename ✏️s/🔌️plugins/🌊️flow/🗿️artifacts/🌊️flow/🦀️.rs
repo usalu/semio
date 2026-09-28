@@ -343,7 +343,7 @@ pub fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<S
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
-        name: "Flow".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Flow", "Fluss"),
         source_format: "flow.artifact".into(),
         component_kind: "flow".into(),
         dimension: "graph".into(),

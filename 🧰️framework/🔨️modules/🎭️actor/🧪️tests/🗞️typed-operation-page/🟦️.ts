@@ -15,6 +15,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     shellFrameBytes,
     shellMessageKind,
     typedOperationAcknowledgements,
+    typedOperationPageAnswerV1,
     typedOperationResult,
     TYPED_OPERATION_ACK_MAGIC,
     TYPED_OPERATION_LANE_FAULT,
@@ -132,6 +133,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(scan.faults).toEqual(["extension.missing"]);
       expect(scan.kept.length).toBe(0);
       expect(scan.acknowledgements.length).toBe(1);
+    });
+
+    it("answers every declared lane's page with its own acknowledgement, and only a fault page refuses the action", () => {
+      const token = fixture.shellMessageStream.token;
+      for (const lane of fixture.lanes) {
+        const page = typedOperationResult(shellMessage(token.receiver, encodePage(token, lane.tag, "{}")));
+        const answer = typedOperationPageAnswerV1(page);
+        expect(answer.acknowledgement, lane.name).toEqual(page.acknowledgement);
+        expect(answer.refused, lane.name).toBe(lane.tag === fixture.faultTag);
+        expect(answer.artifact, lane.name).toBe(lane.tag === 0);
+      }
     });
   });
 }

@@ -35,9 +35,3 @@ pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, FlowSnapshot>,
     install(payload, session)?;
     Ok(Emit::default())
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

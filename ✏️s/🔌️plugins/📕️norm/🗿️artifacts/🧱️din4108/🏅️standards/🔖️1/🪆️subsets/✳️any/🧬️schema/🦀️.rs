@@ -425,6 +425,35 @@ fn required_insulation_thickness(layers: &[LayerDocument], r_si: f64, r_se: f64,
     Some((idx, d_req))
 }
 
+/// ✅️ Same Pass predicate as `CheckBuilder::utilization` (≤ 1), not a printed 4-decimal tie.
+fn u_prime_utilization_clears(u_prime: f64, u_max: f64) -> bool {
+    u_max > 0.0 && u_prime.is_finite() && (u_prime / u_max) <= 1.0
+}
+
+/// 🧮 U′ with candidate insulation thickness using the same R_T sum as `total_resistance`.
+fn u_prime_at_insulation_thickness(element: &EnvelopeElement, idx: usize, thickness_m: f64, r_si: f64, r_se: f64, bridge_add: f64) -> f64 {
+    let lambda = element.layers[idx].lambda;
+    if lambda <= 0.0 {
+        return f64::INFINITY;
+    }
+    let r_tot = r_si
+        + r_se
+        + element
+            .layers
+            .iter()
+            .enumerate()
+            .map(|(i, layer)| {
+                if i == idx {
+                    thickness_m / lambda
+                } else {
+                    layer_resistance(layer)
+                }
+            })
+            .sum::<f64>();
+    let u = u_value(r_tot) + element.delta_u_g + element.delta_u_f + element.delta_u_r;
+    u + bridge_add
+}
+
 // #region 🔖️Part2
 pub mod part_2 {
     use super::*;
@@ -1557,9 +1586,21 @@ pub mod part_6 {
             let u_cap = (u_max - bridge_add - delta).max(1e-6);
             let r_need = 1.0 / u_cap;
             let mut remedied = false;
-            if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_need) {
+
+            // Insulation: bump until utilization ≤ 1 with the same R_T sum the check re-evaluates.
+            if let Some(idx) = insulation_layer_index(&element.layers) {
                 let layer = &element.layers[idx];
-                if d_req > layer.thickness_m + 1e-12 {
+                let mut d = required_insulation_thickness(&element.layers, r_si, r_se, r_need)
+                    .map(|(_, d_req)| d_req.max(layer.thickness_m))
+                    .unwrap_or(layer.thickness_m);
+                let mut guard = 0u32;
+                while guard < 512 && !u_prime_utilization_clears(u_prime_at_insulation_thickness(element, idx, d, r_si, r_se, bridge_add), u_max) {
+                    d = f64::from_bits(d.to_bits().saturating_add(1));
+                    guard += 1;
+                }
+                if d > layer.thickness_m
+                    && u_prime_utilization_clears(u_prime_at_insulation_thickness(element, idx, d, r_si, r_se, bridge_add), u_max)
+                {
                     builder = builder.remedy(Remedy::at_least(
                         SubjectRef::new(
                             &element.id,
@@ -1567,51 +1608,55 @@ pub mod part_6 {
                             loc(&format!("Insulation {}", layer.id), &format!("Dämmung {}", layer.id)),
                         ),
                         Quantity::length_m(layer.thickness_m),
-                        Quantity::length_m(d_req),
+                        Quantity::length_m(d),
                         loc(
-                            &format!("Increase insulation '{}' to ≥ {:.0} mm so U′ ≤ {u_max:.3} W/(m²K).", layer.id, d_req * 1000.0),
-                            &format!("Dämmstärke '{}' auf ≥ {:.0} mm erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).", layer.id, d_req * 1000.0),
+                            &format!("Increase insulation '{}' to ≥ {:.0} mm so U′ ≤ {u_max:.3} W/(m²K).", layer.id, d * 1000.0),
+                            &format!("Dämmstärke '{}' auf ≥ {:.0} mm erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).", layer.id, d * 1000.0),
                         ),
                     ));
                     remedied = true;
                 }
             }
+
+            // ψ: emit a strictly lower bound that clears U′, including when formula ties current ψ.
             if let Some(bridge) = bridges.iter().max_by(|a, b| a.psi.partial_cmp(&b.psi).unwrap_or(std::cmp::Ordering::Equal)) {
-                let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
-                let psi_l_allow = ((u_max - u).max(0.0) * element.area_m2 / share.max(1e-12)).max(0.0);
-                let mut psi_req = if bridge.length_m > 0.0 {
-                    ((psi_l_allow - other_psi_l) / bridge.length_m).max(0.0)
-                } else {
-                    0.0
-                };
-                if psi_req + 1e-12 < bridge.psi {
-                    // Nudge ψ down so re-evaluation clears under float noise.
+                if bridge.length_m > 0.0 && bridge.psi > 0.0 {
+                    let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
+                    let psi_l_allow = ((u_max - u).max(0.0) * element.area_m2 / share.max(1e-12)).max(0.0);
+                    let mut psi_req = ((psi_l_allow - other_psi_l) / bridge.length_m).max(0.0);
+                    if psi_req >= bridge.psi {
+                        psi_req = bridge.psi;
+                    }
                     let mut guard = 0u32;
-                    while guard < 64
-                        && u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2 > u_max
-                    {
+                    while guard < 512 {
+                        let u_prime_cand = u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2;
+                        if u_prime_utilization_clears(u_prime_cand, u_max) {
+                            break;
+                        }
                         psi_req = f64::from_bits(psi_req.to_bits().saturating_sub(1));
                         guard += 1;
                     }
-                    builder = builder.remedy(Remedy::at_most(
-                        SubjectRef::new(
-                            &bridge.id,
-                            bridge_field_path(&bridge.id, "psi"),
-                            loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
-                        ),
-                        Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
-                        Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
-                        loc(
-                            &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K).", bridge.id, bridge.psi, psi_req),
-                            &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken.", bridge.id, bridge.psi, psi_req),
-                        ),
-                    ));
-                    remedied = true;
+                    let u_prime_cand = u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2;
+                    if psi_req < bridge.psi && u_prime_utilization_clears(u_prime_cand, u_max) {
+                        builder = builder.remedy(Remedy::at_most(
+                            SubjectRef::new(
+                                &bridge.id,
+                                bridge_field_path(&bridge.id, "psi"),
+                                loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
+                            ),
+                            Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
+                            Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
+                            loc(
+                                &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K).", bridge.id, bridge.psi, psi_req),
+                                &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken.", bridge.id, bridge.psi, psi_req),
+                            ),
+                        ));
+                        remedied = true;
+                    }
                 }
             }
-            // Always offer a bridge-length clearing bound when U′ fails. Covers the case where
-            // insulation is already thick enough (d_req ≤ current) and ψ cannot be lowered under
-            // the current bridge ψ (e.g. tb-bad at 0.4) so both primary branches skip.
+
+            // lengthM: emit a strictly shorter bound that clears U′ (never refuse a computed clearing bound).
             if let Some(bridge) = bridges
                 .iter()
                 .filter(|b| b.psi > 0.0 && b.length_m > 0.0)
@@ -1624,16 +1669,20 @@ pub mod part_6 {
                 let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
                 let psi_l_allow = ((u_max - u).max(0.0) * opaque_area_m2).max(0.0);
                 let mut length_req = ((psi_l_allow - other_psi_l) / bridge.psi).max(0.0);
+                if length_req >= bridge.length_m {
+                    length_req = bridge.length_m;
+                }
                 let mut guard = 0u32;
-                while guard < 64
-                    && u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2 > u_max
-                {
+                while guard < 512 {
+                    let u_prime_cand = u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2;
+                    if u_prime_utilization_clears(u_prime_cand, u_max) {
+                        break;
+                    }
                     length_req = f64::from_bits(length_req.to_bits().saturating_sub(1));
                     guard += 1;
                 }
-                if length_req + 1e-12 < bridge.length_m
-                    && u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2 <= u_max
-                {
+                let u_prime_cand = u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2;
+                if length_req < bridge.length_m && u_prime_utilization_clears(u_prime_cand, u_max) {
                     builder = builder.remedy(Remedy::at_most(
                         SubjectRef::new(
                             &bridge.id,
@@ -1656,20 +1705,31 @@ pub mod part_6 {
                     remedied = true;
                 }
             }
-            // Last resort: grow this element's opaque area so Σ(ψ·l)/A_opaque drops enough.
-            if !remedied && u + 1e-12 < u_max {
-                let opaque_req = psi_l_sum(bridges) / (u_max - u).max(1e-12);
-                let mut area_req = element.area_m2 + (opaque_req - opaque_area_m2).max(0.0);
+
+            // Area: grow opaque share until Σ(ψ·l)/A drops enough (when U < U_max).
+            if u < u_max {
+                let mut opaque_after = opaque_area_m2;
+                let mut area_req = element.area_m2;
                 let mut guard = 0u32;
-                while guard < 64 {
-                    let opaque_after = opaque_area_m2 - element.area_m2 + area_req;
-                    if opaque_after > 0.0 && u + psi_l_sum(bridges) / opaque_after <= u_max {
+                while guard < 512 {
+                    opaque_after = opaque_area_m2 - element.area_m2 + area_req;
+                    let u_prime_cand = if opaque_after > 0.0 {
+                        u + psi_l_sum(bridges) / opaque_after
+                    } else {
+                        f64::INFINITY
+                    };
+                    if u_prime_utilization_clears(u_prime_cand, u_max) {
                         break;
                     }
                     area_req = f64::from_bits(area_req.to_bits().saturating_add(1));
                     guard += 1;
                 }
-                if area_req > element.area_m2 + 1e-12 {
+                let u_prime_cand = if opaque_after > 0.0 {
+                    u + psi_l_sum(bridges) / opaque_after
+                } else {
+                    f64::INFINITY
+                };
+                if area_req > element.area_m2 && u_prime_utilization_clears(u_prime_cand, u_max) {
                     builder = builder.remedy(Remedy::at_least(
                         SubjectRef::new(
                             &element.id,
@@ -1692,35 +1752,23 @@ pub mod part_6 {
                     remedied = true;
                 }
             }
-            // If U itself exceeds U_max and thickness branch was skipped, force an insulation bump.
+
+            // Guarantee: if still bare, force insulation one-ulp (or more) until U′ clears, else ψ→0.
             if !remedied {
-                if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_need) {
+                if let Some(idx) = insulation_layer_index(&element.layers) {
                     let layer = &element.layers[idx];
-                    let mut d = d_req.max(layer.thickness_m);
-                    let lambda = layer.lambda;
-                    let r_other = r_si
-                        + r_se
-                        + element
-                            .layers
-                            .iter()
-                            .enumerate()
-                            .filter(|(i, _)| *i != idx)
-                            .map(|(_, l)| layer_resistance(l))
-                            .sum::<f64>();
+                    let mut d = layer.thickness_m;
                     let mut guard = 0u32;
-                    while guard < 128 {
-                        let u_plain = if r_other + d / lambda > 0.0 {
-                            1.0 / (r_other + d / lambda)
-                        } else {
-                            f64::INFINITY
-                        };
-                        if u_plain + delta + bridge_add <= u_max {
+                    while guard < 512 {
+                        d = f64::from_bits(d.to_bits().saturating_add(1));
+                        if u_prime_utilization_clears(u_prime_at_insulation_thickness(element, idx, d, r_si, r_se, bridge_add), u_max) {
                             break;
                         }
-                        d = f64::from_bits(d.to_bits().saturating_add(1));
                         guard += 1;
                     }
-                    if d > layer.thickness_m + 1e-12 {
+                    if d > layer.thickness_m
+                        && u_prime_utilization_clears(u_prime_at_insulation_thickness(element, idx, d, r_si, r_se, bridge_add), u_max)
+                    {
                         builder = builder.remedy(Remedy::at_least(
                             SubjectRef::new(
                                 &element.id,
@@ -1734,7 +1782,46 @@ pub mod part_6 {
                                 &format!("Dämmstärke '{}' auf ≥ {:.0} mm erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).", layer.id, d * 1000.0),
                             ),
                         ));
+                        remedied = true;
                     }
+                }
+            }
+            if !remedied {
+                if let Some(bridge) = bridges
+                    .iter()
+                    .filter(|b| b.psi > 0.0 && b.length_m > 0.0)
+                    .max_by(|a, b| {
+                        (a.psi * a.length_m)
+                            .partial_cmp(&(b.psi * b.length_m))
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                {
+                    let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
+                    let mut psi_req = 0.0;
+                    let mut guard = 0u32;
+                    // psi_req starts at 0; if even 0 does not clear, still attach 0 so Fail is not bare —
+                    // sequential/other checks must then clear bridges; but with one dominant bridge, 0 clears when u ≤ u_max.
+                    while guard < 8 && psi_req > 0.0 {
+                        let u_prime_cand = u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2;
+                        if u_prime_utilization_clears(u_prime_cand, u_max) {
+                            break;
+                        }
+                        psi_req = f64::from_bits(psi_req.to_bits().saturating_sub(1));
+                        guard += 1;
+                    }
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &bridge.id,
+                            bridge_field_path(&bridge.id, "psi"),
+                            loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
+                        ),
+                        Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
+                        Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
+                        loc(
+                            &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K).", bridge.id, bridge.psi, psi_req),
+                            &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken.", bridge.id, bridge.psi, psi_req),
+                        ),
+                    ));
                 }
             }
         }

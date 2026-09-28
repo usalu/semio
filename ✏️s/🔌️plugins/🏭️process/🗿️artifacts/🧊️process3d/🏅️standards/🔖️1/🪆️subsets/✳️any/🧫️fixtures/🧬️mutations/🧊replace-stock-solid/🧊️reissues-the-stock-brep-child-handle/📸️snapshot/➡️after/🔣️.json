@@ -89,9 +89,9 @@
     }
   },
   "steps": {
-    "childId": "steps-flow-a2104e830ad0e9c1",
+    "childId": "steps-flow-302b666603a75b59",
     "target": {
-      "artifactId": "steps-flow-a2104e830ad0e9c1",
+      "artifactId": "steps-flow-302b666603a75b59",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

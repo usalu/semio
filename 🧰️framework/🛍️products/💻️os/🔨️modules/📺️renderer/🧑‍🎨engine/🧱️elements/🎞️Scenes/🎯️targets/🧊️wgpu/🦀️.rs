@@ -1951,8 +1951,8 @@ fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
 /// JSON args projected into the DSL. The ONE builder every scene lane shares — `⚙️EngineCanvas`'s
 /// standalone test lane calls it too rather than keeping a second copy
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
-pub(crate) fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+pub(crate) fn scene_action(scene: &UiComponentSceneNode, action: &str, args: semio_framework::DslValue) -> ActionDescriptor {
+    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: Some(args) }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -2536,17 +2536,16 @@ const CANVAS_CATALOGUE_PAYLOAD_BYTE_CAPACITY: usize = 64 * 1024;
 const CANVAS_DRAG_OVER_THROTTLE_MS: f64 = 50.0;
 const CANVAS_DRAG_OVER_THROTTLE_DISTANCE: f32 = 4.0;
 
-fn canvas_addressed_action(controller_id: &str, surface_id: &str, action: &str, fields: Value) -> ActionDescriptor {
-    let mut args = serde_json::Map::new();
-    args.insert("surfaceId".into(), Value::String(surface_id.to_string()));
-    if let Value::Object(fields) = fields {
-        args.extend(fields);
+fn canvas_addressed_action(controller_id: &str, surface_id: &str, action: &str, fields: semio_framework::DslValue) -> ActionDescriptor {
+    let mut args = vec![("surfaceId".to_string(), semio_framework::DslValue::String(surface_id.to_string()))];
+    if let semio_framework::DslValue::Object(fields) = fields {
+        args.extend(fields.into_iter().filter(|(key, _)| key != "surfaceId"));
     }
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: Some(semio_framework::DslValue::Object(args)) }
 }
 
 fn canvas_catalogue_leave_action(hover: &CanvasCatalogueHover) -> ActionDescriptor {
-    canvas_addressed_action(&hover.controller_id, &hover.surface_id, "canvasDragLeave", json!({}))
+    canvas_addressed_action(&hover.controller_id, &hover.surface_id, "canvasDragLeave", semio_framework::dsl_value!({}))
 }
 
 fn write_scene_action_batch(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
@@ -2591,7 +2590,7 @@ pub(crate) fn canvas_catalogue_drag_over_into(
     actions.push(scene_action(
         scene,
         "canvasDragOver",
-        json!({
+        semio_framework::dsl_value!({
             "surfaceId": scene.surface_id,
             "x": x - inner.x,
             "y": y - inner.y,
@@ -2660,11 +2659,11 @@ pub(crate) fn canvas_catalogue_drop_into(
         return Ok(false);
     }
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
-    let leave = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone()).as_ref().map(canvas_catalogue_leave_action).unwrap_or_else(|| canvas_addressed_action(&scene.controller_id, &scene.surface_id, "canvasDragLeave", json!({})));
+    let leave = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone()).as_ref().map(canvas_catalogue_leave_action).unwrap_or_else(|| canvas_addressed_action(&scene.controller_id, &scene.surface_id, "canvasDragLeave", semio_framework::dsl_value!({})));
     let drop = scene_action(
         scene,
         "canvasDrop",
-        json!({
+        semio_framework::dsl_value!({
             "surfaceId": scene.surface_id,
             "x": x - inner.x,
             "y": y - inner.y,
@@ -3906,7 +3905,7 @@ fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor 
     if let Value::Object(patch_map) = patch {
         args.extend(patch_map);
     }
-    ActionDescriptor { controller_id: base.controller_id.clone(), action: base.action.clone(), args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }
+    ActionDescriptor { controller_id: base.controller_id.clone(), action: base.action.clone(), args: Some(semio_framework::DslValue::from(Value::Object(args))) }
 }
 
 /// 🪪️ A row's identity, exactly as `TableHost`'s `rowIds` map derives it: `id`, then `pluginId`,
@@ -3923,9 +3922,9 @@ fn table_row_id(row: &Value, index: usize) -> String {
 fn table_row_action(scene: &UiComponentSceneNode, table: &ui_wgpu::wgpu::TableScene, row: &Value, row_id: &str, modifiers: SceneModifiers) -> ActionDescriptor {
     match (table.domain_id.as_deref(), table.domain_granularity_id.as_deref()) {
         (Some(domain_id), Some(granularity)) => {
-            scene_action(scene, "interactionSelect", json!({ "domainId": domain_id, "targets": json!([{ "granularity": granularity, "id": row_id }]).to_string(), "merge": modifiers.interaction_merge(), "method": "pick" }))
+            scene_action(scene, "interactionSelect", semio_framework::dsl_value!({ "domainId": domain_id, "targets": json!([{ "granularity": granularity, "id": row_id }]).to_string(), "merge": modifiers.interaction_merge(), "method": "pick" }))
         }
-        _ => scene_action(scene, "selectRow", json!({ "surfaceId": scene.surface_id, "row": row })),
+        _ => scene_action(scene, "selectRow", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "row": semio_framework::DslValue::from(row) })),
     }
 }
 
@@ -4470,7 +4469,7 @@ fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &
         }
         let sort: Option<TableSortJson> = table.sort_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
         let direction = table_next_sort_direction(sort.as_ref(), &column.id);
-        let action = scene_action(scene, "sortTable", json!({ "surfaceId": scene.surface_id, "columnId": column.id, "direction": direction }));
+        let action = scene_action(scene, "sortTable", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "columnId": column.id, "direction": direction }));
         return Some(SceneListHit::row(format!("{}.header.{}", scene.host_id, column.id), Some(action)));
     }
     let rows: Vec<Value> = serde_json::from_str(&table.rows_json).unwrap_or_default();
@@ -4525,7 +4524,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             let direction = table_next_sort_direction(sort.as_ref(), &column.id);
             ctx.input.register_hit(HitTarget {
                 rect: Rect::new(x, inner.y, col_w, header_h),
-                event: Some(scene_action(scene, "sortTable", json!({ "surfaceId": scene.surface_id, "columnId": column.id, "direction": direction }))),
+                event: Some(scene_action(scene, "sortTable", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "columnId": column.id, "direction": direction }))),
                 control_id: Some(format!("{}.header.{}", scene.host_id, column.id)),
                 kind: HitKind::Generic,
                 drag_axis: None,
@@ -4691,14 +4690,14 @@ struct BlockListPlan {
 /// verbatim (`addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock`); reordering is
 /// driven by explicit move-up/move-down buttons rather than the React host's dnd-kit drag, because
 /// this renderer has no cross-frame list-drag primitive.
-fn block_list_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+fn block_list_action(scene: &UiComponentSceneNode, action: &str, args: semio_framework::DslValue) -> ActionDescriptor {
+    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: Some(args) }
 }
 
 fn block_list_selection_action(scene: &UiComponentSceneNode, target: Option<&BlockListSelectionTargetJson>) -> Option<ActionDescriptor> {
     let domain = scene.block_list.as_ref()?.domain_id.as_deref().filter(|id| !id.is_empty())?;
     let target = target.filter(|target| !target.id.is_empty() && !target.granularity.is_empty())?;
-    Some(block_list_action(scene, "interactionSelect", json!({ "domainId": domain, "targets": json!([target]).to_string(), "merge": "replace", "method": "pick" })))
+    Some(block_list_action(scene, "interactionSelect", semio_framework::dsl_value!({ "domainId": domain, "targets": json!([target]).to_string(), "merge": "replace", "method": "pick" })))
 }
 
 fn block_list_handle_rect(row: Rect, theme: &Theme) -> Rect {
@@ -4737,7 +4736,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
     targets.push(BlockListTarget {
         rect: Rect::new(header.x + header.w - theme.control_height * 4.0 - pad, header.y + pad, theme.control_height * 4.0, (row_h - pad * 2.0).max(0.0)),
         control_id: format!("{}.addStep", scene.host_id),
-        action: Some(block_list_action(scene, "addStep", json!({}))),
+        action: Some(block_list_action(scene, "addStep", semio_framework::dsl_value!({}))),
         paint: BlockListPaint::AddStep,
         role: BlockListRole::Action,
     });
@@ -4763,7 +4762,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
         targets.push(BlockListTarget {
             rect: Rect::new(step_rect.x + step_rect.w - pad - btn_w, btn_y, btn_w, theme.control_height_small),
             control_id: format!("{}.step.{}.remove", scene.host_id, step.id),
-            action: Some(block_list_action(scene, "removeStep", json!({ "stepId": step.id }))),
+            action: Some(block_list_action(scene, "removeStep", semio_framework::dsl_value!({ "stepId": step.id }))),
             paint: BlockListPaint::IconButton { icon: "trash-2", target_label: step.title.clone() },
             role: BlockListRole::Action,
         });
@@ -4792,7 +4791,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
             targets.push(BlockListTarget {
                 rect: Rect::new(block_rect.x + block_rect.w - pad - btn_w, block_btn_y, btn_w, theme.control_height_small),
                 control_id: format!("{}.block.{}.remove", scene.host_id, block.id),
-                action: Some(block_list_action(scene, "removeBlock", json!({ "stepId": step.id, "blockId": block.id }))),
+                action: Some(block_list_action(scene, "removeBlock", semio_framework::dsl_value!({ "stepId": step.id, "blockId": block.id }))),
                 paint: BlockListPaint::IconButton { icon: "trash-2", target_label: block.label.clone() },
                 role: BlockListRole::Action,
             });
@@ -4818,7 +4817,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
         targets.push(BlockListTarget {
             rect: palette_row,
             control_id: format!("{}.palette.{}", scene.host_id, entry.block_kind),
-            action: palette_target_step_id.as_ref().map(|step_id| block_list_action(scene, "addBlock", json!({ "stepId": step_id, "kind": entry.block_kind }))),
+            action: palette_target_step_id.as_ref().map(|step_id| block_list_action(scene, "addBlock", semio_framework::dsl_value!({ "stepId": step_id, "kind": entry.block_kind }))),
             paint: BlockListPaint::PaletteEntry {
                 icon_id: entry.icon_id.clone(),
                 label: entry.label.clone(),
@@ -4926,18 +4925,18 @@ fn block_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x
     match &session.source {
         SceneListTransferSource::BlockListStep { step_id, index: source_index } => {
             let BlockListRole::Step { index, .. } = block_list_closest_target(&plan, translated_center_x, translated_center_y, |role| matches!(role, BlockListRole::Step { .. }))? else { return None };
-            (*index != *source_index).then(|| block_list_action(scene, "moveStep", json!({ "stepId": step_id, "index": index })))
+            (*index != *source_index).then(|| block_list_action(scene, "moveStep", semio_framework::dsl_value!({ "stepId": step_id, "index": index })))
         }
         SceneListTransferSource::BlockListBlock { step_id, block_id, index: source_index } => {
             let BlockListRole::Block { index, .. } = block_list_closest_target(&plan, translated_center_x, translated_center_y, |role| matches!(role, BlockListRole::Block { step_id: candidate, .. } if candidate == step_id))? else { return None };
-            (*index != *source_index).then(|| block_list_action(scene, "moveBlock", json!({ "blockId": block_id, "fromStepId": step_id, "toStepId": step_id, "index": index })))
+            (*index != *source_index).then(|| block_list_action(scene, "moveBlock", semio_framework::dsl_value!({ "blockId": block_id, "fromStepId": step_id, "toStepId": step_id, "index": index })))
         }
         SceneListTransferSource::BlockListPalette { kind, mime, payload } if mime == BLOCK_LIST_PALETTE_DRAG_MIME && payload == kind => {
             let step_id = plan.targets.iter().rev().find_map(|target| match &target.role {
                 BlockListRole::Step { step_id, .. } if target.rect.contains(x, y) && plan.body.contains(x, y) => Some(step_id.clone()),
                 _ => None,
             })?;
-            Some(block_list_action(scene, "addBlock", json!({ "stepId": step_id, "kind": kind })))
+            Some(block_list_action(scene, "addBlock", semio_framework::dsl_value!({ "stepId": step_id, "kind": kind })))
         }
         SceneListTransferSource::BlockListPalette { .. } => None,
         SceneListTransferSource::TableRow { .. } => None,
@@ -5798,7 +5797,7 @@ fn event_feed_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, th
         let entry_h = event_feed_row_height(entry, &layout);
         let card = Rect::new(layout.inner.x, top, layout.inner.w, entry_h);
         if event_feed_visible_card(card, layout.inner).is_some_and(|card| card.contains(x, y)) {
-            let action = feed.activate_action.as_deref().map(|action| scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id })));
+            let action = feed.activate_action.as_deref().map(|action| scene_action(scene, action, semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "id": entry.id })));
             return Some(SceneListHit::row(format!("{}.feed.{}", scene.host_id, entry.id), action));
         }
         top += entry_h + layout.card_gap;
@@ -5835,7 +5834,7 @@ fn event_feed_accessibility_controls(
                 entry_id: entry.id.clone(),
                 label: event_feed_accessibility_label(entry, time_label),
                 rect,
-                action: action.map(|action| scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id }))),
+                action: action.map(|action| scene_action(scene, action, semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "id": entry.id }))),
             })
         })
         .collect()
@@ -5847,7 +5846,7 @@ pub(crate) fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, ke
     let feed = scene.event_feed.as_ref()?;
     let action_name = feed.activate_action.as_deref()?;
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).ok()?;
-    let expected = scene_action(scene, action_name, json!({ "surfaceId": scene.surface_id, "id": control.entry_id }));
+    let expected = scene_action(scene, action_name, semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "id": control.entry_id }));
     (entries.iter().any(|entry| entry.id == control.entry_id) && *action == expected).then(|| write_scene_action(input, action))
 }
 
@@ -5932,7 +5931,7 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         if let Some(action) = &feed.activate_action {
             ctx.input.register_hit(HitTarget {
                 rect: visible_row_rect,
-                event: Some(scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id }))),
+                event: Some(scene_action(scene, action, semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "id": entry.id }))),
                 control_id: Some(control_id),
                 kind: HitKind::Generic,
                 drag_axis: None,
@@ -6150,7 +6149,7 @@ pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode
             let clipped_y = y.max(inner.y);
             let rect = Rect::new(inner.x, clipped_y, layout.selectable_width, (y + layout.row_height).min(inner.y + inner.h) - clipped_y);
             (rect.w > 0.0 && rect.h > 0.0).then(|| {
-                let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
+                let action = scene_action(scene, "checkoutCheckpoint", semio_framework::dsl_value!({ "checkpointId": column.checkpoint_id }));
                 GraphTimelineAccessibilityControl {
                     key: format!("{}.history.{}", scene.host_id, column.checkpoint_id),
                     checkpoint_id: column.checkpoint_id.clone(),
@@ -6173,7 +6172,7 @@ pub(crate) fn graph_timeline_accessibility_activate(
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).ok()?;
     let column = columns.iter().find(|column| column.checkpoint_id == control.checkpoint_id)?;
     let expected_key = format!("{}.history.{}", scene.host_id, column.checkpoint_id);
-    let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
+    let action = scene_action(scene, "checkoutCheckpoint", semio_framework::dsl_value!({ "checkpointId": column.checkpoint_id }));
     (control.key == expected_key && control.label == graph_timeline_accessible_name(column) && control.action == action).then(|| write_scene_action(input, &control.action))
 }
 
@@ -6300,7 +6299,7 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 
         ctx.input.register_hit(HitTarget {
             rect: selectable_rect,
-            event: Some(scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }))),
+            event: Some(scene_action(scene, "checkoutCheckpoint", semio_framework::dsl_value!({ "checkpointId": column.checkpoint_id }))),
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
@@ -6321,7 +6320,7 @@ fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32
     let scroll = scroll_offset(&scene.host_id, "history");
     let index = usize::try_from(((y - inner.y + scroll) / layout.row_height.max(1.0)).floor() as i64).ok()?;
     let column = columns.get(index)?;
-    let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
+    let action = scene_action(scene, "checkoutCheckpoint", semio_framework::dsl_value!({ "checkpointId": column.checkpoint_id }));
     Some(SceneListHit::row(format!("{}.history.{}", scene.host_id, column.checkpoint_id), Some(action)))
 }
 
@@ -10902,7 +10901,7 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
         return Some(scene_action(
             scene,
             "openInstance",
-            json!({
+            semio_framework::dsl_value!({
                 "surfaceId": scene.surface_id,
                 "instanceId": instance_id,
             }),
@@ -10914,7 +10913,7 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
             return Some(scene_action(
                 scene,
                 "exportMedia",
-                json!({
+                semio_framework::dsl_value!({
                     "surfaceId": scene.surface_id,
                     "instanceId": parts[0],
                     "format": parts[1],
@@ -10924,10 +10923,10 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
     }
     if uri.starts_with("/spaces/") {
         let space_id = uri.split('/').nth(2)?;
-        return Some(scene_action(scene, "navigateVirtualFileSystemNode", json!({ "surfaceId": scene.surface_id, "spaceId": space_id })));
+        return Some(scene_action(scene, "navigateVirtualFileSystemNode", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "spaceId": space_id })));
     }
     if let Some(space_id) = uri.strip_prefix("studio:") {
-        return Some(scene_action(scene, "navigateVirtualFileSystemNode", json!({ "surfaceId": scene.surface_id, "spaceId": space_id })));
+        return Some(scene_action(scene, "navigateVirtualFileSystemNode", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "spaceId": space_id })));
     }
     None
 }
@@ -11142,7 +11141,7 @@ pub(crate) fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &
                 return None;
             }
             let ids = vfs_selection_for_click(&scene.host_id, &target.row_id, &ordered, false, false);
-            Some(write_scene_action(input, &scene_action(scene, "selectRows", json!({ "surfaceId": scene.surface_id, "ids": ids }))))
+            Some(write_scene_action(input, &scene_action(scene, "selectRows", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "ids": ids }))))
         }
     }
 }
@@ -11188,7 +11187,7 @@ fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Th
     }
     let ordered: Vec<String> = visible.iter().map(|entry| vfs_row_id(&entry.row)).collect();
     let ids = vfs_selection_for_click(&scene.host_id, &row_id, &ordered, modifiers.shift, modifiers.additive());
-    Some(SceneListHit::row(control_id, Some(scene_action(scene, "selectRows", json!({ "surfaceId": scene.surface_id, "ids": ids })))))
+    Some(SceneListHit::row(control_id, Some(scene_action(scene, "selectRows", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "ids": ids })))))
 }
 
 /// 🖱️ The double-click band a press landed in, keyed by the surface's OWN row ordering so a repeat

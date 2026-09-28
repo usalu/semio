@@ -55,24 +55,42 @@
       "type": "array",
       "minItems": 4,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["kind", "key", "expected"],
-        "properties": {
-          "kind": { "enum": ["lookup", "insert", "duplicate"] },
-          "key": { "type": "string", "minLength": 1 },
-          "value": { "type": "string" },
-          "expected": {
+        "oneOf": [
+          {
             "type": "object",
             "additionalProperties": false,
-            "required": ["found", "ordinal", "entryCount"],
+            "required": ["kind", "key", "expected"],
             "properties": {
-              "found": { "type": "boolean" },
-              "ordinal": { "type": "integer", "minimum": 0 },
-              "entryCount": { "type": "integer", "minimum": 0 }
+              "kind": { "const": "lookup" },
+              "key": { "$ref": "#/$defs/key" },
+              "expected": { "$ref": "#/$defs/expected" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "key", "value", "expected"],
+            "properties": {
+              "kind": { "enum": ["insert", "duplicate"] },
+              "key": { "$ref": "#/$defs/key" },
+              "value": { "type": "string" },
+              "expected": { "$ref": "#/$defs/expected" }
             }
           }
-        }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "key": { "type": "string", "minLength": 1 },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["found", "ordinal", "entryCount"],
+      "properties": {
+        "found": { "type": "boolean" },
+        "ordinal": { "type": "integer", "minimum": 0 },
+        "entryCount": { "type": "integer", "minimum": 0 }
       }
     }
   }

@@ -232,6 +232,43 @@ async fn await_retirement_slot_release(handoff: &ArtifactRunnerHandoff, index: u
 }
 
 #[semio_framework_async_macros::async_test]
+async fn a_runner_that_turns_terminal_after_its_retirement_went_idle_wakes_the_retirement() {
+    use std::sync::atomic::Ordering;
+    let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+    let pool_use = pool.acquire_use().unwrap();
+    let handoff = Arc::new(ArtifactRunnerHandoff {
+        pool: pool.clone(),
+        pool_use: std::sync::Mutex::new(None),
+        terminal_job: std::sync::Mutex::new(None),
+        close_runner: std::sync::Mutex::new(None),
+        retirement_maintenance: std::sync::Mutex::new(None),
+        close_error: std::sync::Mutex::new(None),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
+        close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
+        active_history: std::sync::atomic::AtomicBool::new(false),
+        driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Polling as u8),
+        terminal: std::sync::atomic::AtomicBool::new(false),
+    });
+    let reservation = ArtifactRunnerRetirementReservation::try_reserve(pool.clone()).unwrap();
+    let (index, generation) = (reservation.index, reservation.generation);
+    let observed = Arc::downgrade(&handoff);
+    reservation.commit(Arc::new(move || observed.upgrade().is_some_and(|handoff| handoff.terminal.load(Ordering::Acquire))), handoff.clone(), pool_use.clone());
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    while handoff.retirement_turns.load(Ordering::Acquire) == 0 || ARTIFACT_RUNNER_RETIREMENTS[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+        assert!(std::time::Instant::now() < deadline, "the committed retirement never took its first turn");
+        semio_framework_async::yield_once().await;
+    }
+    assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(Ordering::Acquire), generation, "a runner still polling keeps its retirement cursor");
+    handoff.enter_terminal();
+    await_retirement_slot_release(&handoff, index, generation, deadline).await;
+    assert_eq!(Arc::strong_count(&pool_use), 1, "the retired cursor released its WorkerPoolUse");
+    drop(pool_use);
+    assert_eq!(pool.shutdown(), Ok(()));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_terminal() {
     let (authority, storage, pool) = journal_authority().await;
     let handoff = authority.handoff.clone();
@@ -1324,22 +1361,139 @@ async fn live_query_refresh_reports_no_further_diff_right_after_submit_already_r
 }
 //#endregion 🔖️Query
 
-//#region 🔖️Outbox + CommitLog
-#[semio_framework_async_macros::async_test]
-async fn outbox_and_commit_log_accumulate_and_outbox_drains() {
-    let storage = storage().await;
-    let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
-    engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
-
-    assert_eq!(engine.commit_log().await.len(), 1);
-    assert_eq!(engine.commit_log().await[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
-
-    let drained = engine.drain_outbox().await;
-    assert_eq!(drained.len(), 1);
-    assert_eq!(drained[0].mutation_id, protocol::MutationId("op-1".to_string()));
-    assert!(engine.drain_outbox().await.is_empty(), "drain must clear the outbox");
+//#region 🔖️IndexBacklog + Receipts
+async fn single_envelope_commit(engine: &mut ArtifactEngine, index: u64, durability: DurabilityClass) -> CommandReceipt {
+    let id = format!("op-{index}");
+    engine.submit(CommandBatch::new(vec![envelope(&id, &[], "alice", &[]).await]).await.unwrap(), SubmitOptions { durability, ..Default::default() }, index).await.unwrap()
 }
-//#endregion 🔖️Outbox + CommitLog
+
+async fn fs_storage(name: &str) -> (StdArc<db_storage::DbBackend>, std::path::PathBuf) {
+    let dir = std::env::temp_dir().join(format!("db_artifact_{name}_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    (StdArc::new(db_storage::DbBackend::Fs(db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &dir).await.unwrap())), dir)
+}
+
+async fn close_engine(engine: &mut ArtifactEngine) {
+    if engine.close_flush_pending() {
+        engine.close_flush().await.unwrap();
+    }
+    engine.wal.close().await.unwrap();
+    while engine.state.values.close_step().unwrap() {
+        semio_framework_async::yield_once().await;
+    }
+}
+
+/// ⚖️ A commit's receipt never waits for index I/O: 300 acknowledged single-envelope commits leave no index run behind
+/// (the runner writes them after replying) — the state a crash after the Ack and before the index write leaves. The
+/// reopened document refills its backlog from the WAL, its maintenance writes every full run, and later commits continue
+/// the same runs: every indexed seq resolves to its WAL position, nothing twice, nothing missing.
+#[cfg(feature = "fs")]
+#[semio_framework_async_macros::async_test]
+async fn index_runs_follow_the_receipt_and_a_reopen_refills_them_from_the_wal() {
+    let (storage, dir) = fs_storage("index_follows_receipt").await;
+    let before = {
+        let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+        for index in 1..=300 {
+            single_envelope_commit(&mut engine, index, DurabilityClass::Os).await;
+        }
+        let frontier = engine.frontier().await;
+        close_engine(&mut engine).await;
+        frontier
+    };
+    let core = to_core_document_id(&document_id().await).await;
+    let index_facet = storage.index().await;
+    assert_eq!(db_index::CommandIndex::new(&index_facet, core.clone()).await.indexed_through().await.unwrap(), 0, "no receipt waited for an index run");
+    assert_eq!(db_index::FrontierIndex::new(&index_facet, core.clone()).await.indexed_through().await.unwrap(), 0);
+
+    let (mut reopened, _) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 301).unwrap();
+    assert_eq!(reopened.frontier().await, before);
+    reopened.maintain_index().await.unwrap();
+    let commands = db_index::CommandIndex::new(&index_facet, core.clone()).await;
+    assert_eq!(commands.indexed_through().await.unwrap(), 256, "four full runs from the WAL suffix; the partial tail waits");
+    assert_eq!(db_index::FrontierIndex::new(&index_facet, core.clone()).await.indexed_through().await.unwrap(), 256);
+    for index in 301..=400 {
+        single_envelope_commit(&mut reopened, index, DurabilityClass::Os).await;
+        reopened.maintain_index().await.unwrap();
+    }
+    assert_eq!(commands.indexed_through().await.unwrap(), 384);
+    for seq in [1u64, 64, 65, 256, 257, 300, 301, 384] {
+        assert_eq!(commands.lookup(seq).await.unwrap().map(|location| location.offset), Some(seq), "seq {seq}");
+    }
+    assert_eq!(commands.lookup(385).await.unwrap(), None);
+    let mut control = db_index::IndexHandle::new(&index_facet, core.clone(), db_index::IndexKind::Command).await.operation_control(65_536).unwrap();
+    db_index::IndexHandle::new(&index_facet, core, db_index::IndexKind::Command).await.verify(&mut control).await.unwrap();
+    close_engine(&mut reopened).await;
+    drop(reopened);
+    drop(index_facet);
+    drop(storage);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// ⚖️ The engine keeps the receipts of its newest `APPLIED_RECEIPTS_MAX` batches only; a whole-batch resend inside the window
+/// answers its original receipt, an older one is answered by the per-envelope dedupe without a new commit.
+#[cfg(feature = "fs")]
+#[semio_framework_async_macros::async_test]
+async fn applied_receipts_keep_a_bounded_window_and_older_resends_stay_idempotent() {
+    let (storage, dir) = fs_storage("receipt_window").await;
+    let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+    let mut last = None;
+    for index in 1..=(APPLIED_RECEIPTS_MAX as u64 + 10) {
+        last = Some(single_envelope_commit(&mut engine, index, DurabilityClass::Os).await);
+    }
+    assert_eq!(engine.applied_receipts.len(), APPLIED_RECEIPTS_MAX);
+    assert_eq!(engine.applied_receipt_order.len(), APPLIED_RECEIPTS_MAX);
+    let frontier = engine.frontier().await;
+    let newest = single_envelope_commit(&mut engine, APPLIED_RECEIPTS_MAX as u64 + 10, DurabilityClass::Os).await;
+    assert_eq!(Some(newest), last, "a resend inside the window answers its original receipt");
+    let oldest = single_envelope_commit(&mut engine, 1, DurabilityClass::Os).await;
+    assert_eq!(oldest.frontier, frontier, "a resend beyond the window commits nothing");
+    assert_eq!(engine.frontier().await, frontier);
+    assert_eq!(engine.applied_receipts.len(), APPLIED_RECEIPTS_MAX);
+    close_engine(&mut engine).await;
+    drop(engine);
+    drop(storage);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// ⚖️ A document stays writable far past the old 4 096-run listing ceiling (4 runs per 64 single-envelope commits: every
+/// commit failed after ~65.5 k of them): 70 016 single-envelope commits on the filesystem backend, each followed by the
+/// runner's index maintenance, all commit; the four kinds hold a few hundred runs, every indexed seq resolves.
+#[cfg(feature = "fs")]
+#[semio_framework_async_macros::async_test]
+async fn seventy_thousand_single_envelope_commits_stay_writable_with_bounded_index_runs() {
+    const COMMITS: u64 = 70_016;
+    let (storage, dir) = fs_storage("seventy_thousand").await;
+    let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+    for index in 1..=COMMITS {
+        single_envelope_commit(&mut engine, index, DurabilityClass::Memory).await;
+        engine.maintain_index().await.unwrap_or_else(|error| panic!("index maintenance after commit {index}: {error}"));
+    }
+    assert_eq!(engine.frontier().await.head_seq, COMMITS);
+    let core = to_core_document_id(&document_id().await).await;
+    let index_facet = storage.index().await;
+    let mut runs = 0usize;
+    for kind in [db_index::IndexKind::Command, db_index::IndexKind::Inverse, db_index::IndexKind::ActorSeq, db_index::IndexKind::Frontier] {
+        let handle = db_index::IndexHandle::new(&index_facet, core.clone(), kind).await;
+        let mut control = handle.operation_control(1_000_000).unwrap();
+        let stats = handle.stats(&mut control).await.unwrap();
+        assert!(stats.entry_count >= COMMITS, "{kind:?} holds every entry");
+        handle.verify(&mut control).await.unwrap();
+        runs += stats.run_count;
+    }
+    assert!(runs <= 300, "{runs} runs for {COMMITS} commits");
+    let commands = db_index::CommandIndex::new(&index_facet, core.clone()).await;
+    assert_eq!(commands.indexed_through().await.unwrap(), COMMITS);
+    for seq in [COMMITS - 63, COMMITS] {
+        assert_eq!(commands.lookup(seq).await.unwrap().map(|location| location.offset), Some(seq), "seq {seq}");
+    }
+    assert_eq!(db_index::FrontierIndex::new(&index_facet, core).await.indexed_through().await.unwrap(), COMMITS);
+    close_engine(&mut engine).await;
+    drop(engine);
+    drop(index_facet);
+    drop(storage);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+//#endregion 🔖️IndexBacklog + Receipts
 
 //#region 🔖️Actor
 async fn journal_authority() -> (ArtifactAuthority, StdArc<db_storage::DbBackend>, StdArc<semio_framework_async::WorkerPool>) {

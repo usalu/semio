@@ -339,7 +339,7 @@ export async function hubProbeOpenPlan(origin: string, token: string, spaceId: s
  * hub ended it (`ended`: its close code and whether the closing handshake completed, `null` while open past the budget), the
  * relayed envelopes themselves (`relayedEnvelopes`), any batch of envelopes sent as this socket's own actor and answered by
  * its `Ack` (`submitEnvelopes` — how a crafted history transition is tried), and close. */
-export type HubProbeDocument = Readonly<{ plan: any; actorId: string; welcome: any; submit: (index: number, previous: string) => Promise<{ mutationId: string; accepted: boolean; ack: any }>; submitEnvelopes: (batchId: number, envelopes: readonly any[]) => Promise<{ accepted: boolean; ack: any }>; relayedEnvelopes: () => readonly any[]; edit: (index: number, previous: string) => Promise<string>; relayed: (mutationId: string, budgetMs?: number) => Promise<number>; undecodableFrames: () => number; ended: (budgetMs?: number) => Promise<{ code: number; clean: boolean } | null>; close: () => void }>;
+export type HubProbeDocument = Readonly<{ plan: any; actorId: string; welcome: any; submit: (index: number, previous: string) => Promise<{ mutationId: string; accepted: boolean; ack: any }>; submitEnvelopes: (batchId: number, envelopes: readonly any[]) => Promise<{ accepted: boolean; ack: any }>; relayedEnvelopes: () => readonly any[]; edit: (index: number, previous: string) => Promise<string>; relayed: (mutationId: string, budgetMs?: number) => Promise<number>; undecodableFrames: () => number; ended: (budgetMs?: number) => Promise<{ code: number; clean: boolean; reason: string } | null>; close: () => void }>;
 
 /** 📡️ Opens one document over the plan → socket grant → socket hello path and answers once it is welcomed. */
 export async function hubProbeOpenDocument(origin: string, token: string, spaceId: string, documentId: string, client: string): Promise<HubProbeDocument> {
@@ -351,7 +351,7 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
   const granted = parseDocumentSocketGrantReceiptV1(grant.json);
   const socket = new WebSocket(`${origin.replace(/^http/u, "ws")}/scopes/${encodeURIComponent(`${spaceId}/${documentId}`)}/document/ws?surface=${encodeURIComponent(plan.json.surface.surfaceId)}`, ["semio.session.v1", token]);
   socket.binaryType = "arraybuffer";
-  const closing = new Promise<{ code: number; clean: boolean }>((resolveClose) => socket.addEventListener("close", (event) => resolveClose({ code: event.code, clean: event.wasClean })));
+  const closing = new Promise<{ code: number; clean: boolean; reason: string }>((resolveClose) => socket.addEventListener("close", (event) => resolveClose({ code: event.code, clean: event.wasClean, reason: event.reason })));
   const frames: any[] = [];
   const waiters: ((frame: any) => void)[] = [];
   const relayedAt = new Map<string, number>();
@@ -430,7 +430,7 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
       relayWaiters.add(settle);
       settle();
     });
-  const ended = (budgetMs = 30_000): Promise<{ code: number; clean: boolean } | null> => Promise.race([closing, new Promise<null>((resolveOpen) => setTimeout(() => resolveOpen(null), budgetMs))]);
+  const ended = (budgetMs = 30_000): Promise<{ code: number; clean: boolean; reason: string } | null> => Promise.race([closing, new Promise<null>((resolveOpen) => setTimeout(() => resolveOpen(null), budgetMs))]);
   return { plan: plan.json, actorId: granted.actorId, welcome: welcome.Welcome, submit, submitEnvelopes, relayedEnvelopes: () => [...relayedEnvelopes], edit, relayed, undecodableFrames: () => undecodable, ended, close: () => socket.close(1000, "probe") };
 }
 //#endregion 🔖️ProbeClient

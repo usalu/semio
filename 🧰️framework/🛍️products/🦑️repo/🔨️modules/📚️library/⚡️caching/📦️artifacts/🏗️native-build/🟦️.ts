@@ -145,7 +145,10 @@ export function cargoBinarySourcesFreshnessV1(record: CargoBinarySourcesV1, modi
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state.
  * `sourcesRecord` names a {@link CargoBinarySourcesV1} file staged beside the selected executable, in
  * the same atomic publication, so a consumer can tell a stale executable from a fresh one without
- * running Cargo. */
+ * running Cargo. Cargo's stderr is piped and forwarded, never inherited: Bun marks its own stderr
+ * `O_NONBLOCK` once written, an inherited pipe shares that flag, and a Cargo burst (replayed warnings
+ * of fresh units) then fails with `EAGAIN` as soon as a slow reader lets the 64 KiB pipe fill — the
+ * build dies with its diagnostics cut mid-line (ticket 26/09/23 W4, `wp-w4/w4-nonblock-probe.ts`). */
 export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: { command?: "build" | "rustc"; output?: string; sourcesRecord?: string; validate?: (files: ReadonlyMap<string, string>) => void } = {}): Promise<void> {
   const path = resolve(repoRoot, manifest);
   const sourceRoot = dirname(path);
@@ -169,8 +172,9 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: join(capture, "target") },
     detached: process.platform !== "win32",
-    stdio: ["inherit", "pipe", "inherit"],
+    stdio: ["inherit", "pipe", "pipe"],
   });
+  child.stderr!.pipe(process.stderr, { end: false });
   const cancel = (): void => {
     cancelled = true;
     if (!child.pid) return;

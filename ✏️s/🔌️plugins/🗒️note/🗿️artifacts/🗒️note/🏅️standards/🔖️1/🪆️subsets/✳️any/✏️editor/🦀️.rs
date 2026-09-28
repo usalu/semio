@@ -10,7 +10,7 @@
 use crate::editor::note::commands::ink_apply_events;
 use crate::editor::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
 use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
-use crate::editor::note::commands::{load_request, save_download};
+use crate::editor::note::commands::save_download;
 use crate::editor::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
 use crate::editor::note::commands::{set_active_example, set_fixture_json};
 use crate::editor::note::commands::{set_camera, set_camera_zoom};
@@ -79,8 +79,8 @@ pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+pub fn note_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
@@ -197,7 +197,6 @@ semio_framework_plugin::app_commands! {
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "navigatorEngagementInput" as "navigator-engagement-input" => navigator_engagement_input::NavigatorEngagementInput,
         "saveDownload" as "save-download" => save_download::SaveDownload,
-        "loadRequest" as "load-request" => load_request::LoadRequest,
     }
 }
 //#endregion 🔖️Commands
@@ -401,7 +400,6 @@ mod args_bridge {
             }
             "navigatorEngagementInput" => NoteCommand::NavigatorEngagementInput(decode(action, empty())?),
             "saveDownload" => NoteCommand::SaveDownload(decode(action, empty())?),
-            "loadRequest" => NoteCommand::LoadRequest(decode(action, empty())?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the note editor has no command for action '{action}'"))),
         })
     }
@@ -480,7 +478,6 @@ impl ArtifactEditor for NotePlayApp {
             "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "saveDownload" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
-            "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
         }
     }
 
@@ -506,17 +503,6 @@ impl ArtifactEditor for NotePlayApp {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
-    /// (`reset_document_effect`: example switch, fixture import) — the trait default refuses the
-    /// envelope, which faults every note document swap at the archive-load boundary.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, NOTE_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -712,8 +698,7 @@ pub fn create_note_app() -> AppDefinition {
             // ➕️ Palette-visible block insertion (P1) with a staged argument form.
             .mutation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
-            // 🐚️ Import/export footer actions → panel Shell actions emitting host effects (S).
-            .shell_action("loadRequest", LocalizedLabel::native("Import", "Importieren"))
+            // 🐚️ Export footer action → panel Shell action emitting a host effect (S); opening a file is the framework Import Document.
             .shell_action("saveDownload", LocalizedLabel::native("Export", "Exportieren"))
             // 🔧️ Internal content operations — inspector/tree/drag/import-bound, not palette commands.
             // B1: the old `"setGridVisible" | "toggleGrid"`/`"setSnapEnabled" | "toggleSnap"`/
@@ -818,8 +803,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_describe("duplicateSelection", LocalizedLabel::native("Copies every currently selected block and inserts the copies beside the originals.", "Kopiert alle ausgewählten Blöcke und fügt die Kopien neben den Originalen ein."))
             .action_use_when("duplicateSelection", vec!["duplicate the selection".into()])
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole note with one of the plugin's declared playground examples.", "Ersetzt die gesamte Notiz durch eines der deklarierten Beispiele des Plugins."))
-            .action_describe("loadRequest", LocalizedLabel::native("Asks the host to open a file and import it into this note.", "Fordert den Host auf, eine Datei zu öffnen und in diese Notiz zu importieren."))
-            .action_use_when("loadRequest", vec!["import a document".into(), "open a file into the note".into()])
             .action_describe("saveDownload", LocalizedLabel::native("Hands the note to the host as a downloadable file.", "Übergibt die Notiz dem Host als herunterladbare Datei."))
             .action_use_when("saveDownload", vec!["export the note".into(), "download this note".into()])
             .action_describe("moveBlock", LocalizedLabel::native("Moves one block to a new position on the page.", "Verschiebt einen Block an eine neue Position auf der Seite."))
@@ -889,7 +872,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("loadRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))

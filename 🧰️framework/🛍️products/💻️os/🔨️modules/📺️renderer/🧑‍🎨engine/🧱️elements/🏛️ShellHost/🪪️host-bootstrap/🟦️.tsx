@@ -70,14 +70,18 @@ const COPY = {
       `Restoring document: ${value.receivedBytes} of ${value.totalBytes} bytes; ${value.receivedChunks} of ${value.totalChunks} chunks.`,
     cancel: "Cancel restore",
     rebootstrap: "The server requires a fresh authoritative restore. Stale document UI was discarded while reconnecting.",
+    reopen: "The document is reopening from its last confirmed state; your last change was not applied.",
     failed: "Document restore failed",
+    exhausted: "This document could not be reopened after repeated failures. Close it and open it again.",
   },
   de: {
     progress: (value: Extract<BootstrapUiStatus, { kind: "artifact-bootstrap-progress" }>) =>
       `Dokument wird wiederhergestellt: ${value.receivedBytes} von ${value.totalBytes} Bytes; ${value.receivedChunks} von ${value.totalChunks} Blöcken.`,
     cancel: "Wiederherstellung abbrechen",
     rebootstrap: "Der Server verlangt eine neue autoritative Wiederherstellung. Veraltete Dokumentansichten wurden beim Neuverbinden verworfen.",
+    reopen: "Das Dokument wird aus seinem letzten bestätigten Stand neu geöffnet; deine letzte Änderung wurde nicht angewendet.",
     failed: "Dokumentwiederherstellung fehlgeschlagen",
+    exhausted: "Dieses Dokument ließ sich nach wiederholten Fehlern nicht neu öffnen. Schließe es und öffne es erneut.",
   },
 } as const;
 
@@ -102,7 +106,7 @@ export function BootstrapStatusNotice({
       </section>
     );
   }
-  const text = status.kind === "artifact-rebootstrap-required" ? copy.rebootstrap : `${copy.failed}: ${status.message}`;
+  const text = status.kind === "artifact-rebootstrap-required" ? (status.message === "actor-lost" ? copy.reopen : copy.rebootstrap) : status.code === "recovery-exhausted" ? copy.exhausted : `${copy.failed}: ${status.message}`;
   return <section role="alert" aria-live="assertive" data-semio-bootstrap-status={status.documentId}>{text}</section>;
 }
 

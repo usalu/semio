@@ -320,6 +320,51 @@ const docText = (session: Session): Promise<string> =>
       .join(" ¦ "),
   );
 
+/** ⏱️ How often an edit's arrival is polled while it is being timed: an edit round trip is a few hundred ms, so the 500 ms
+ * default poll would be its own error bar. */
+const EDIT_POLL_MS = 40;
+
+/** ⏱️ {@link awaitText} with the epoch ms of the poll that first saw the change (`null` when it never came). */
+async function awaitTextAt(session: Session, predicate: (now: string) => boolean, deadlineMs: number): Promise<{ seen: string | { missed: string }; at: number | null }> {
+  const seen = await until(async () => {
+    const now = await docText(session);
+    return predicate(now) ? { now, at: Date.now() } : null;
+  }, deadlineMs, EDIT_POLL_MS);
+  return seen === null ? { seen: { missed: await docText(session) }, at: null } : { seen: seen.now, at: seen.at };
+}
+
+/** ⏱️ Every distinct document text `session` shows from now on, each with the epoch ms of the poll that first saw it — a
+ * peer's view also moves for presence and renders its own selection, so an edit's arrival is the first time after the
+ * submit that the peer shows the text it settles on. */
+function watchText(session: Session, deadlineMs: number): { readonly stop: () => Promise<readonly { readonly text: string; readonly at: number }[]> } {
+  const seen: { text: string; at: number }[] = [];
+  let running = true;
+  const done = (async () => {
+    for (const deadline = Date.now() + deadlineMs; running && Date.now() < deadline; await new Promise((resolveDelay) => setTimeout(resolveDelay, EDIT_POLL_MS))) {
+      const text = await docText(session).catch(() => "");
+      if (seen.at(-1)?.text !== text) seen.push({ text, at: Date.now() });
+    }
+  })();
+  return {
+    stop: async () => {
+      running = false;
+      await done;
+      return seen;
+    },
+  };
+}
+
+/** ⏱️ Submit → the first poll at which the peer showed the text it settled on (`null` when the edit never applied or the
+ * peer never moved after the submit). */
+const arrivalMs = (texts: readonly { readonly text: string; readonly at: number }[], edit: { readonly applied: boolean; readonly submittedAt: number }): number | null => {
+  const settled = texts.at(-1);
+  const hit = edit.applied && settled !== undefined && settled.at >= edit.submittedAt ? texts.find((entry) => entry.text === settled.text && entry.at >= edit.submittedAt) : undefined;
+  return hit === undefined ? null : hit.at - edit.submittedAt;
+};
+
+/** ⏱️ How long a peer's view must hold still before the text it shows counts as settled. */
+const SETTLE_MS = 1_500;
+
 async function awaitText(session: Session, predicate: (now: string) => boolean, deadlineMs: number): Promise<string | { missed: string }> {
   const seen = await until(async () => {
     const now = await docText(session);
@@ -346,17 +391,18 @@ export function personalArgs(pinned: Readonly<Record<string, string>>, label: st
   return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, personal(value)]));
 }
 
-async function edit(session: Session, plugin: string, pins: ReturnType<typeof readMatrixPins>) {
+async function edit(session: Session, plugin: string, pins: ReturnType<typeof readMatrixPins>, overrides: Readonly<Record<string, string>> = {}) {
   const verb = pins.pluginVerbs[plugin];
   if (verb === undefined) throw new Error(`no pinned document verb for plugin ${plugin}`);
   const before = await docText(session);
   const staged = await session.page.locator(`[id$=".action.${verb}.execute"]`).first().isVisible().catch(() => false);
   if (!staged) await clickUncovered(session.page, `[data-slot="window-action-pane"] [id="action.${verb}"]`);
   await pause(session, 1_000);
-  for (const [key, value] of Object.entries(personalArgs(pins.pluginArgs[`${plugin}.${verb}`] ?? pins.pluginArgs[verb] ?? {}, session.human.label, pins.liveId))) await fillStagedArgument(session.page, key, value, pins.liveId);
+  for (const [key, value] of Object.entries({ ...personalArgs(pins.pluginArgs[`${plugin}.${verb}`] ?? pins.pluginArgs[verb] ?? {}, session.human.label, pins.liveId), ...overrides })) await fillStagedArgument(session.page, key, value, pins.liveId);
+  const submittedAt = Date.now();
   await submitStagedVerb(session.page, verb);
-  const after = await awaitText(session, (now) => now !== before, 20_000);
-  return { verb, after: seenText(after), applied: typeof after === "string" };
+  const after = await awaitTextAt(session, (now) => now !== before, 20_000);
+  return { verb, after: seenText(after.seen), applied: typeof after.seen === "string", submittedAt, localMs: after.at === null ? null : after.at - submittedAt };
 }
 
 async function undo(session: Session, verb: "undo" | "redo" = "undo") {
@@ -411,19 +457,27 @@ async function awaitSharedSpace(session: Session, spaceId: string, misses: unkno
 
 //#region 🔖️Journeys
 /** 🧭️ What one kind's journey gets once A created and opened the document and B opened it from the Space index. */
-type JourneyContext = Readonly<{ A: Session; B: Session; check: (name: string, pass: boolean, detail: unknown) => void; plugin: string; pins: ReturnType<typeof readMatrixPins>; options: TwoHumanOptions; spaceId: string; artifactId: string; misses: unknown[] }>;
+type JourneyContext = Readonly<{ A: Session; B: Session; check: (name: string, pass: boolean, detail: unknown) => void; time: (name: keyof KindTimings, ms: number | null) => void; plugin: string; pins: ReturnType<typeof readMatrixPins>; options: TwoHumanOptions; spaceId: string; artifactId: string; misses: unknown[] }>;
 
 /** ✏️ Both humans author: A edits → B sees, B edits → A sees, A undoes their OWN edit (B's stays), B undoes theirs (both back
  * to the start), B redoes (both see it again), both reload and reopen and converge. */
-async function editJourney({ A, B, check, plugin, pins, options, spaceId, artifactId, misses }: JourneyContext): Promise<void> {
+async function editJourney({ A, B, check, time, plugin, pins, options, spaceId, artifactId, misses }: JourneyContext): Promise<void> {
     const initial = [await docText(A), await docText(B)] as const;
     const head0 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+    const watchB = watchText(B, 90_000);
     const aEdit = await edit(A, plugin, pins);
     const bSawA = await awaitText(B, (now) => now !== initial[1], 30_000);
+    await pause(B, SETTLE_MS);
+    time("aEditLocalMs", aEdit.localMs);
+    time("aEditSeenByBMs", arrivalMs(await watchB.stop(), aEdit));
     check("A edits → B sees", aEdit.applied && typeof bSawA === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSawA)), hubHead: [head0, await hubHead(options.hub, options.adminCapabilityFile, artifactId)] });
     const afterA = [await docText(A), await docText(B)] as const;
+    const watchA = watchText(A, 90_000);
     const bEdit = await edit(B, plugin, pins);
     const aSawB = await awaitText(A, (now) => now !== afterA[0], 30_000);
+    await pause(A, SETTLE_MS);
+    time("bEditLocalMs", bEdit.localMs);
+    time("bEditSeenByAMs", arrivalMs(await watchA.stop(), bEdit));
     check("B edits → A sees", bEdit.applied && typeof aSawB === "string", { b: short(bEdit.after), a: short(seenText(aSawB)) });
     const afterBoth = [await docText(A), await docText(B)] as const;
     const headBeforeAUndo = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
@@ -453,10 +507,17 @@ async function editJourney({ A, B, check, plugin, pins, options, spaceId, artifa
     const settled = [await docText(A), await docText(B)] as const;
     for (const session of [A, B]) await session.page.reload({ waitUntil: "domcontentloaded" });
     for (const session of [A, B]) await boot(session);
-    await openRow(A, spaceId, artifactId, misses);
-    await openRow(B, spaceId, artifactId, misses);
-    await awaitMounted(A, options.mountBudgetMs);
-    await awaitMounted(B, options.mountBudgetMs);
+    const [reopenedA, reopenedB] = await Promise.all(
+      [A, B].map(async (session) => {
+        await openSpace(session, spaceId, misses);
+        await waitRow(session.page, "artifact", artifactId, 90_000);
+        const openedAt = Date.now();
+        await clickRowAction(session.page, "artifact", artifactId, /^(open|öffnen)\b/iu);
+        return (await awaitMounted(session, options.mountBudgetMs)).mountedAt - openedAt;
+      }),
+    );
+    time("reopenAToMountedMs", reopenedA!);
+    time("reopenBToMountedMs", reopenedB!);
     const converged = await until(async () => {
       const [a, b] = [await docText(A), await docText(B)];
       return a === settled[0] && b === settled[1] ? { a: short(a) } : null;
@@ -464,13 +525,14 @@ async function editJourney({ A, B, check, plugin, pins, options, spaceId, artifa
     check("reload converges", converged !== null, { settled: settled.map(short), afterReload: [short(await docText(A)), short(await docText(B))], hubHead: await hubHead(options.hub, options.adminCapabilityFile, artifactId) });
 }
 
-/** 🏷️ The document surfaces a human's shell mounted (`data-surface-id`, `<dialect>#editor|#viewer`), the navbar role chip
- * (`data-role` + its localized text) and the transient notices it shows. */
+/** 🏷️ The document surface a human's shell mounted (the navbar role chip's `data-app-id`, `<dialect>#editor|#viewer`), the
+ * chip itself (`data-role` + its localized text), and what the shell tells the human about it: the chip's own description
+ * (`title`) and the transient notices. */
 const surfaceReading = (page: Page): Promise<{ surfaces: string[]; chips: string[]; notices: string[] }> =>
   page.evaluate(() => ({
-    surfaces: [...new Set([...document.querySelectorAll("[data-surface-id]")].map((element) => element.getAttribute("data-surface-id") ?? "").filter((id) => id.includes("#")))],
+    surfaces: [...new Set([...document.querySelectorAll('[data-slot="surface-role-chip"][data-app-id]')].map((element) => element.getAttribute("data-app-id") ?? "").filter((id) => id.includes("#")))],
     chips: [...document.querySelectorAll('[data-slot="surface-role-chip"]')].map((element) => `${element.getAttribute("data-role")}:${(element.textContent ?? "").trim()}`),
-    notices: [...document.querySelectorAll("[data-semio-transient-notice]")].map((element) => (element.textContent ?? "").replace(/\s+/gu, " ").trim()).filter(Boolean),
+    notices: [...document.querySelectorAll('[data-slot="surface-role-chip"][title], [data-semio-transient-notice]')].map((element) => (element.getAttribute("title") ?? element.textContent ?? "").replace(/\s+/gu, " ").trim()).filter(Boolean),
   }));
 
 /** 🎛️ The ids among `ids` a human can press: present, visible and neither `disabled` nor `aria-disabled`. */
@@ -532,7 +594,7 @@ async function viewerJourney({ A, B, check, plugin, pins, options, spaceId, arti
   const head1 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
   const notices = (await surfaceReading(B.page)).notices;
   check("viewer edit attempts change nothing", after[0] === before[0] && after[1] === before[1] && head1 === head0, { tried, a: [short(before[0]), short(after[0])], b: [short(before[1]), short(after[1])], hubHead: [head0, head1], faults: faultsSince(B, cursor).slice(0, 4) });
-  check("viewer is told why, in its language", readingB.chips.includes(`viewer:${chipText}`) && (notices.some((text) => (options.locale === "de" ? /schreibgeschützt/u : /read-only/iu).test(text)) || offered.length === 0), { chips: readingB.chips, notices, offered });
+  check("viewer is told why, in its language", readingB.chips.includes(`viewer:${chipText}`) && notices.some((text) => (options.locale === "de" ? /schreibgeschützt/u : /read-only/iu).test(text)), { chips: readingB.chips, notices, offered });
   const aEdit = await edit(A, plugin, pins);
   const bSaw = await awaitText(B, (now) => now !== after[1], 30_000);
   check("A edits → viewer sees it live", aEdit.applied && typeof bSaw === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSaw)) });
@@ -574,8 +636,13 @@ function revertTransitionEnvelope(documentId: string, mutationIds: readonly stri
   return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 } };
 }
 
+/** 🪞️ B's edit arguments where the pinned verb would otherwise make B's element indistinguishable from A's (a default text
+ * block next to a default text block renders the same text), so the views can tell WHOSE edit an undo withdrew. */
+const CROSS_UNDO_DISTINCT_ARGS: Readonly<Record<string, Readonly<Record<string, string>>>> = { note: { kind: "table" } };
+
 /** ⏪️ Undo and redo across two authors (row 3.11): each human's undo withdraws only their own newest edit and redo restores
- * only their own — B's undo takes B's edit back and a second one finds nothing of A's to take; A's undo under B's later edit
+ * only their own — B's undo takes B's edit back and a second one leaves A's edit in both views (it may still withdraw an
+ * invisible edit of B's own, so the hub head is recorded, not judged); A's undo under B's later edit
  * keeps B's edit (the later edits replay on the state without A's, a later value of the same field stands) — both views
  * converge after every step and the hub head advances with every committed transition; and a `Revert` crafted by another
  * actor that names A's operations changes nothing on either view (an undo belongs to its author). */
@@ -597,7 +664,7 @@ async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, a
     await pause(A, 2_000);
     const aOperations = crafted.relayedEnvelopes().slice(relayedBeforeA).filter((envelope) => envelope?.diff?.schema !== "semio.history.transition").map((envelope) => String(envelope.mutation_id));
     const afterA = await both();
-    const bEdit = await edit(B, plugin, pins);
+    const bEdit = await edit(B, plugin, pins, CROSS_UNDO_DISTINCT_ARGS[plugin] ?? {});
     const aSawB = await awaitText(A, (now) => now !== afterA[0], 30_000);
     check("B edits → A sees", bEdit.applied && typeof aSawB === "string", { b: short(bEdit.after), a: short(seenText(aSawB)) });
     const afterBoth = await both();
@@ -610,7 +677,7 @@ async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, a
     const bUndoAgain = await undo(B);
     const stillA = await both();
     const head2 = await head();
-    check("B's next undo leaves A's edit alone", !bUndoAgain.undone && stillA[0] === afterA[0] && stillA[1] === afterA[1] && head2 === head1, { a: short(stillA[0]), b: short(stillA[1]), hubHead: [head1, head2], faults: [...faultsSince(A, cursor[0]), ...faultsSince(B, cursor[1])].slice(0, 3) });
+    check("B's next undo leaves A's edit alone", !bUndoAgain.undone && stillA[0] === afterA[0] && stillA[1] === afterA[1], { a: short(stillA[0]), b: short(stillA[1]), hubHead: [head1, head2], faults: [...faultsSince(A, cursor[0]), ...faultsSince(B, cursor[1])].slice(0, 3) });
     const bRedo = await undo(B, "redo");
     const redone = await agreeOn(afterBoth);
     check("B's redo restores only B's edit", bRedo.undone && redone !== null, { a: short(await docText(A)), b: short(await docText(B)), expected: afterBoth.map(short) });
@@ -626,10 +693,13 @@ async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, a
     const aRedone = await agreeOn(afterBoth);
     check("A's redo restores A's edit under B's", aRedone !== null, { a: short(await docText(A)), b: short(await docText(B)), expected: afterBoth.map(short) });
     const head5 = await head();
-    const answered = aOperations.length === 0 ? null : await crafted.submitEnvelopes(1, [revertTransitionEnvelope(artifactId, aOperations)]);
+    const answered: { readonly accepted: boolean; readonly ack: any; readonly unanswered?: string; readonly socketClosed?: { readonly code: number; readonly clean: boolean; readonly reason: string } | null } | null =
+      aOperations.length === 0
+        ? null
+        : await crafted.submitEnvelopes(1, [revertTransitionEnvelope(artifactId, aOperations)]).catch(async (error: unknown) => ({ accepted: false, ack: null, unanswered: String(error instanceof Error ? error.message : error).slice(0, 80), socketClosed: await crafted.ended(5_000) }));
     await pause(A, 6_000);
     const afterCraft = await both();
-    check("another actor's crafted undo of A's edit changes nothing", aOperations.length > 0 && afterCraft[0] === afterBoth[0] && afterCraft[1] === afterBoth[1], { aOperations, hubAccepted: answered?.accepted ?? null, stages: answered === null ? null : JSON.stringify(answered.ack.stages).slice(0, 240), a: short(afterCraft[0]), b: short(afterCraft[1]), expected: afterBoth.map(short), hubHead: [head5, await head()] });
+    check("another actor's crafted undo of A's edit changes nothing", aOperations.length > 0 && answered !== null && answered.ack !== null && afterCraft[0] === afterBoth[0] && afterCraft[1] === afterBoth[1], { aOperations, hubAccepted: answered?.accepted ?? null, stages: answered?.ack ? JSON.stringify(answered.ack.stages).slice(0, 240) : null, unanswered: answered?.unanswered === undefined ? null : { error: answered.unanswered, socketClosed: answered.socketClosed ?? null }, a: short(afterCraft[0]), b: short(afterCraft[1]), expected: afterBoth.map(short), hubHead: [head5, await head()] });
   } finally {
     crafted.close();
   }
@@ -678,7 +748,13 @@ export type TwoHumanOptions = Readonly<{
   signal: AbortSignal;
 }>;
 
-type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; timings?: { createToMountedMs?: number; openRowToMountedMs?: number; createStartedAtMs?: number; openStartedAtMs?: number }; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
+/** ⏱️ One kind's timings: A's create → its first mount (the program installs from the hub catalog for A's profile), B's
+ * Space-index open → its first mount, each edit's own apply and its arrival at the other human (submit → the first poll,
+ * {@link EDIT_POLL_MS}, at which the peer shows the author's edited text), and the warm reopen after a reload (row click →
+ * mounted; the program comes from the device's store). */
+type KindTimings = { createToMountedMs?: number; openRowToMountedMs?: number; createStartedAtMs?: number; openStartedAtMs?: number; aEditLocalMs?: number; aEditSeenByBMs?: number; bEditLocalMs?: number; bEditSeenByAMs?: number; reopenAToMountedMs?: number; reopenBToMountedMs?: number };
+
+type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; timings?: KindTimings; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
 
 /** 📊️ The run's report, rewritten after every kind. */
 export type TwoHumanReport = { tag: string; journey: TwoHumanJourney; hub: string; serves: readonly string[]; locale: string; startedAt: string; finishedAt?: string; spaceId: string | null; kinds: string[]; rows: KindRow[]; misses: unknown[]; fatal?: string; cancelled?: boolean };
@@ -775,7 +851,10 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
           }
         const windowFaults = [...faultsSince(A, windowCursor[0]), ...faultsSince(B, windowCursor[1])];
         check("every window takes focus and commands", windowFaults.length === 0 && shellA.windowIds.length > 0, { windows: shellA.windowIds, faults: windowFaults.slice(0, 4) });
-        await JOURNEYS[options.journey].run({ A, B, check, plugin, pins, options, spaceId, artifactId, misses: report.misses });
+        const time = (name: keyof KindTimings, value: number | null): void => {
+          if (value !== null) row.timings = { ...row.timings, [name]: value };
+        };
+        await JOURNEYS[options.journey].run({ A, B, check, time, plugin, pins, options, spaceId, artifactId, misses: report.misses });
       } catch (error) {
         check("journey", false, String(error instanceof Error ? error.message : error).slice(0, 600));
         await shot(A, `${kind.kindId}-fail`);
@@ -875,14 +954,17 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
     const p50 = (values: readonly number[]): number => (values.length ? values[Math.floor((values.length - 1) / 2)]! : -1);
     const slow = report.rows.filter((row) => (createBoundMs !== null && (row.timings?.createToMountedMs ?? 0) > createBoundMs) || (openBoundMs !== null && (row.timings?.openRowToMountedMs ?? 0) > openBoundMs)).map((row) => row.kindId);
     const status = unreachable ? "blocked" : report.fatal || report.cancelled || total === 0 ? "fail" : passed === total && slow.length === 0 ? "pass" : "fail";
-    const latency = { en: `create→mounted p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (bound ${createBoundMs})`}, open→mounted p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (bound ${openBoundMs})`}${slow.length ? `; over bound: ${slow.join(", ")}` : ""}`, de: `Anlegen→eingebunden p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (Grenze ${createBoundMs})`}, Öffnen→eingebunden p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (Grenze ${openBoundMs})`}${slow.length ? `; über der Grenze: ${slow.join(", ")}` : ""}` };
+    const timesOf = (...names: (keyof KindTimings)[]): number[] => report.rows.flatMap((row) => names.map((name) => row.timings?.[name]).filter((value): value is number => value !== undefined)).sort((left, right) => left - right);
+    const seenTimes = timesOf("aEditSeenByBMs", "bEditSeenByAMs");
+    const reopenTimes = timesOf("reopenAToMountedMs", "reopenBToMountedMs");
+    const latency = { en: `create→mounted p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (bound ${createBoundMs})`}, open→mounted p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (bound ${openBoundMs})`}${slow.length ? `; over bound: ${slow.join(", ")}` : ""}; edit → other human sees p50 ${p50(seenTimes)} ms max ${seenTimes.at(-1) ?? -1} ms; warm reopen p50 ${p50(reopenTimes)} ms max ${reopenTimes.at(-1) ?? -1} ms`, de: `Anlegen→eingebunden p50 ${p50(createTimes)} ms max ${createTimes.at(-1) ?? -1} ms${createBoundMs === null ? "" : ` (Grenze ${createBoundMs})`}, Öffnen→eingebunden p50 ${p50(openTimes)} ms max ${openTimes.at(-1) ?? -1} ms${openBoundMs === null ? "" : ` (Grenze ${openBoundMs})`}${slow.length ? `; über der Grenze: ${slow.join(", ")}` : ""}; Bearbeitung → andere Person sieht sie p50 ${p50(seenTimes)} ms max ${seenTimes.at(-1) ?? -1} ms; warmes Wiederöffnen p50 ${p50(reopenTimes)} ms max ${reopenTimes.at(-1) ?? -1} ms` };
     publishAcceptanceCheckResult(
       repoRoot,
       acceptanceCheckResult({
         check,
         status,
         startedAt,
-        measured: { locale, kinds: total, passed, failed: total - passed, routeMisses: report.misses.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled), createToMountedP50Ms: p50(createTimes), createToMountedMaxMs: createTimes.at(-1) ?? -1, openRowToMountedP50Ms: p50(openTimes), openRowToMountedMaxMs: openTimes.at(-1) ?? -1, createBoundMs: createBoundMs ?? -1, openBoundMs: openBoundMs ?? -1, overBound: slow.length },
+        measured: { locale, kinds: total, passed, failed: total - passed, routeMisses: report.misses.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled), createToMountedP50Ms: p50(createTimes), createToMountedMaxMs: createTimes.at(-1) ?? -1, openRowToMountedP50Ms: p50(openTimes), openRowToMountedMaxMs: openTimes.at(-1) ?? -1, createBoundMs: createBoundMs ?? -1, openBoundMs: openBoundMs ?? -1, overBound: slow.length, editSeenByOtherP50Ms: p50(seenTimes), editSeenByOtherMaxMs: seenTimes.at(-1) ?? -1, warmReopenP50Ms: p50(reopenTimes), warmReopenMaxMs: reopenTimes.at(-1) ?? -1 },
         summary: {
           en: `${passed}/${total} kinds pass the two-human ${journey} journey in ${locale}; ${latency.en}${failing.length ? `; failing: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
           de: `${passed}/${total} Arten bestehen den Zwei-Personen-Weg (${journey}) in ${locale}; ${latency.de}${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,

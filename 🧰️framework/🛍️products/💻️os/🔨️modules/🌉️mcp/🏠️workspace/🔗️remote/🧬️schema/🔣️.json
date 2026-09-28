@@ -9,6 +9,83 @@
     "ScopeId": { "type": "string", "minLength": 1, "maxLength": 256 },
     "HubOrigin": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^https?://[^\\s/]+" },
     "Generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "HubUnavailableCauseV1": {
+      "description": "🔎️ What made the hub directory unavailable (os-mcp 🔗️remote `HubUnavailableCause`): an HTTP answer with its typed hub code, a transport fault with its own bounded detail, or an unreadable answer.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "status", "code"],
+          "properties": {
+            "kind": { "const": "http" },
+            "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+            "code": { "oneOf": [{ "type": "string", "minLength": 1, "maxLength": 64 }, { "type": "null" }] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "detail"],
+          "properties": { "kind": { "const": "transport" }, "detail": { "type": "string", "minLength": 1, "maxLength": 512 } }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "undecodable-response" } } }
+      ]
+    },
+    "HubUnavailableRefusalDetailsV1": {
+      "description": "🗣️ The `details` of a retryable PLUGIN_UNAVAILABLE refusal the hub binding answers: its typed cause and the en + de sentence a client shows.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cause", "summary"],
+      "properties": {
+        "cause": { "$ref": "#/$defs/HubUnavailableCauseV1" },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "HubUnavailableRefusalCorpusV1": {
+      "description": "🧪️ Neutral corpus: one directory-client fault per case and the exact gateway refusal it becomes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "detailMaxChars", "cases"],
+      "properties": {
+        "schema": { "const": "semio.os-mcp.hub-unavailable-refusal-corpus/v1" },
+        "detailMaxChars": { "const": 512 },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "fault", "expected"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "fault": {
+                "oneOf": [
+                  { "type": "object", "additionalProperties": false, "required": ["kind", "io"], "properties": { "kind": { "const": "transport" }, "io": { "type": "string", "minLength": 1 } } },
+                  { "type": "object", "additionalProperties": false, "required": ["kind", "status", "body"], "properties": { "kind": { "const": "http" }, "status": { "type": "integer", "minimum": 100, "maximum": 599 }, "body": { "type": "string" } } },
+                  { "type": "object", "additionalProperties": false, "required": ["kind", "decode"], "properties": { "kind": { "const": "decode" }, "decode": { "type": "string" } } }
+                ]
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["code", "message", "details", "retryable"],
+                "properties": {
+                  "code": { "const": "PLUGIN_UNAVAILABLE" },
+                  "message": { "type": "string", "minLength": 1 },
+                  "details": { "$ref": "#/$defs/HubUnavailableRefusalDetailsV1" },
+                  "retryable": { "const": true }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "AuthenticatedHubDescriptorIndexCaseV1": {
       "type": "object",
       "additionalProperties": false,

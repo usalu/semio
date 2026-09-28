@@ -221,7 +221,7 @@ export const REMODEL_POPULATED_SCENE: RemodelScene = {
       }
     },
     "asset-spare": {
-      childId: "remodeling-asset-84ec1bd76bb83a25",
+      childId: "remodeling-asset-a6becb587255f206",
       target: {
         artifactId: "asset-spare-image",
         dialect: {
@@ -240,7 +240,7 @@ export const REMODEL_POPULATED_SCENE: RemodelScene = {
       height: 480,
       chunks: ["ZnJhbWUtYQ=="]
     },
-    "remodeling-asset-84ec1bd76bb83a25": {
+    "remodeling-asset-a6becb587255f206": {
       kind: "image",
       mime: "image/png",
       width: 64,

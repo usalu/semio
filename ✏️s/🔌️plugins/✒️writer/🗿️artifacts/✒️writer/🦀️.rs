@@ -63,13 +63,9 @@ pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
 /// handle alone is the change signal the parent's diff/mutation machinery reads without ever
 /// comparing embedded content, mirroring lowpoly's `mesh_child_handle`/cad's `cad_model_child_handle`.
 pub fn document_child_handle(_id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_text(text, language_id);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("document-{content_hash:016x}");
+    let child_id = store::content_id("document", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -141,7 +137,7 @@ pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.document".into(),
-        name: "Text Document".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Text Document", "Textdokument"),
         source_format: WRITER_DOCUMENT_SCHEMA.into(),
         component_kind: "writer".into(),
         dimension: "text".into(),

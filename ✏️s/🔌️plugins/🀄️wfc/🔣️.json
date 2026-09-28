@@ -1842,6 +1842,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -2953,6 +2998,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -4713,7 +4803,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -4738,7 +4874,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -7913,6 +8095,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -9039,6 +9266,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -10977,6 +11249,51 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
                 "args": [],
                 "inPalette": false,
                 "semantics": {
@@ -14280,6 +14597,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -15622,6 +15984,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -18155,7 +18562,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -22124,6 +22577,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -23416,6 +23914,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -25181,7 +25724,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -28458,6 +29047,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -29800,6 +30434,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -32351,7 +33030,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -33746,7 +34471,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -34154,8 +34879,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "035061535e439acd1c854bce29b6abd730785049c4472a6f77bd404e693c02c7",
-    "coreWasmSha256": "0f38f3c20a9f82fdb8fe6794e1b48f04235f1a694c51263762b7a8ef1c142960",
-    "descriptorSha256": "176fb6c5226b406a335186ca141e2c23015b7711146bea82633a977989b7d831"
+    "wasmSha256": "b91c78aa08e4144caa83a7617e40caae35a30c3d37cfc9cf3c5756199a492abd",
+    "coreWasmSha256": "ed1cd9b829234feece3f8a55950135e7c16cf717bc9dac0d8416e5f7b2b25d38",
+    "descriptorSha256": "18a83445491ce62be254e08d3c7ee7d1fa055d74eb542faa9a842bf91587f8fd"
   }
 }

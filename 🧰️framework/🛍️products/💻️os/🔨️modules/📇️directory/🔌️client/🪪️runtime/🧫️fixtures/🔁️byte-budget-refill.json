@@ -1,0 +1,9 @@
+{
+  "$comment": "🔁️ A native directory transport's per-package byte budget is an allowance per refill turn, never a lifetime one: `with_new_http_pool_now` starts its pool's refill driver at `productionRefillIntervalMs`; the law exhausts a budget of exactly one request, expects the next one refused naming `refusalFragment`, and one admitted again within `refillBoundSeconds` of a `refillIntervalMs` driver. Ticket 26/09/23 H13 session 14b.",
+  "productionRefillIntervalMs": 60000,
+  "refillIntervalMs": 3000,
+  "refillBoundSeconds": 15,
+  "body": "ok",
+  "admittedRequests": 2,
+  "refusalFragment": "exhausted its network_bytes_per_min budget"
+}

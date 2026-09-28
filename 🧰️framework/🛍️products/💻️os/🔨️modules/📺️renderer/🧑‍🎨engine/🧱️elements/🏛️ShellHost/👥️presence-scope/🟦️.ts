@@ -8,14 +8,18 @@ function presenceRole(role: ArtifactPresencePeer["role"]): PresencePeer["role"] 
   return undefined;
 }
 
-/** 👥️ Projects only a worker-verified, exact-scope surface roster into host chrome. */
+/** 👥️ Projects a worker-verified roster into host chrome: the message must name the session's exact scope and the surface
+ * the session was admitted on (`ScopedPresenceRejectionV1`), and then every peer of the document is projected whatever
+ * surface it runs — the roster is document-wide (contract §C7.0), so an editor sees its spectators and a viewer sees the
+ * authors it watches.
+ * @see ../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION/📋️contract-freeze.md */
 export function scopedPresencePeersV1(
   message: Extract<BackboneWorkerResponse, { readonly kind: "event" }>,
   expectedScope: DocumentScope,
+  expectedSurfaceId: string | null,
 ): readonly PresencePeer[] {
-  if (message.event.kind !== "presence" || message.scope?.spaceId !== expectedScope.spaceId || message.scope.documentId !== expectedScope.documentId || message.documentId !== expectedScope.documentId || message.verifiedSurfaceId === undefined) return [];
+  if (message.event.kind !== "presence" || message.scope?.spaceId !== expectedScope.spaceId || message.scope.documentId !== expectedScope.documentId || message.documentId !== expectedScope.documentId || message.verifiedSurfaceId === undefined || message.verifiedSurfaceId !== expectedSurfaceId) return [];
   return message.event.peers
-    .filter((peer) => peer.surface === message.verifiedSurfaceId)
     .map((peer) => ({
       actor: peer.actor,
       ...(peer.userId === undefined ? {} : { userId: peer.userId }),

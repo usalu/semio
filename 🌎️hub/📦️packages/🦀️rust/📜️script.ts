@@ -2627,7 +2627,7 @@ class HostileInputCheckScript extends BundleScript {
     const range = flagValue(segments, "--seed-range")?.match(/^(\d+)\.\.(\d+)$/u);
     const seeds: number[] = range ? Array.from({ length: Math.max(0, Number(range[2]) - Number(range[1]) + 1) }, (_, index) => Number(range[1]) + index) : (flagValue(segments, "--seeds")?.split(",").map(Number) ?? (fixture.generative.seeds as number[]));
     if (seeds.length === 0 || seeds.some((seed) => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("hostile-input-check needs non-negative integer seeds: --seeds <n,…> | --seed-range <from>..<to>");
-    const { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess, withAcceptanceRecord } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
     const startedAt = new Date();
     let cancelled = false;
     const interrupt = (): void => {
@@ -2638,24 +2638,7 @@ class HostileInputCheckScript extends BundleScript {
       const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
       const oracle = spawnSync("bunx", ["vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
       const law = (name: string, seed?: number): Promise<{ status: number; lines: string[] }> =>
-        new Promise((resolveExit) => {
-          const lines: string[] = [];
-          const child = spawn("cargo", ["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) }, stdio: ["ignore", "pipe", "pipe"] });
-          const stop = (): void => {
-            child.kill("SIGINT");
-          };
-          process.once("SIGINT", stop);
-          const collect = (chunk: Buffer): void => {
-            process.stdout.write(chunk);
-            lines.push(...chunk.toString("utf8").split("\n"));
-          };
-          child.stdout.on("data", collect);
-          child.stderr.on("data", collect);
-          child.once("close", (code) => {
-            process.removeListener("SIGINT", stop);
-            resolveExit({ status: code ?? -1, lines });
-          });
-        });
+        runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
       const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));
       const enumerated: Record<string, boolean> = {};
       for (const name of ["draws", "coverage", "refusals"] as const) {

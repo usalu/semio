@@ -97,7 +97,7 @@ function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenc
         return;
       }
       if (message.event.kind !== "presence") return;
-      const peers = scopedPresencePeersV1(message, scopeCase.scope);
+      const peers = scopedPresencePeersV1(message, scopeCase.scope, scopeCase.surfaceId);
       setRows((current) => ({ ...current, [scopeCase.id]: { ...current[scopeCase.id], peers, presenceEvents: current[scopeCase.id].presenceEvents + 1 } }));
     };
     worker.onerror = (event) => undefined;

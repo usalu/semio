@@ -1,3 +1,5 @@
+import type { BrowserInput } from "./🌐️browser.tsx";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
@@ -20,6 +22,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     import("../../🧫️fixtures/♻️lifecycle/🔣️.json"),
     import("../../🧬️schema/♻️lifecycle/🔣️.json"),
   ]);
+  const admitFixture = new Ajv2020({ strict: true, allErrors: true }).compile<BrowserInput>(schema);
+  if (!admitFixture(fixture)) throw new Error(JSON.stringify(admitFixture.errors));
   void source;
 
   const handle = {

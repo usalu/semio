@@ -65,7 +65,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.gif".into(),
-        name: "Gif".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Gif", "Gif"),
         source_format: STDIO_GIF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

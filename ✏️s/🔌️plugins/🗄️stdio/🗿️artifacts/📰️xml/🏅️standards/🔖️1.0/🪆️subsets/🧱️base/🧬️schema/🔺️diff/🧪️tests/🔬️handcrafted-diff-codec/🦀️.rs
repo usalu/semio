@@ -25,7 +25,7 @@ fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_field
     use protocol::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏳️optional-clear/🔣️.json")).unwrap();
     let mut before = XmlSnapshot::default();
-    before.doc.declaration = Some(XmlDeclaration::default());
+    before.doc.declaration = Some(XmlDeclaration { version: "1.0".into(), ..Default::default() });
     before.doc.doctype = Some(XmlDoctype { name: "root".into(), ..Default::default() });
     before.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() });
     for case in fixture["cases"].as_array().unwrap() {

@@ -20,6 +20,7 @@ import {
   focusedProgramV1,
   guestActiveUtilityByWindowIdV1,
   guestWindowIdV1,
+  createProgramHistoryStoreV1,
   programHistoryKeyV1,
   programHistoryProjectionV1,
   programHistoryProjectionsAfterPatchV1,
@@ -293,7 +294,8 @@ describe("🪟️ the ShellHost decision sites route through the focused program
   });
 
   it("shows the FOCUSED program's ledger", () => {
-    expect(shellHostSource).toContain("const historyProjection = programHistoryProjectionV1(historyProjectionByProgram, programHistoryKeyV1(focusedProgram), EMPTY_SHELL_HISTORY_PROJECTION_V1);");
+    expect(shellHostSource).toContain("const focusedHistoryKey = programHistoryKeyV1(focusedProgram);");
+    expect(shellHostSource).toContain("programHistoryProjectionV1(historyStore.get(), focusedHistoryKey, EMPTY_SHELL_HISTORY_PROJECTION_V1)");
   });
 });
 
@@ -353,6 +355,27 @@ describe("🧾️ a spawned program's ledger is its own", () => {
     const projections = { ...withHostAtCursor3(), [SPAWNED]: { cursor: 2, entries: {} } };
     expect(Object.keys(programHistoryProjectionsRetainedV1(projections, [HOST]))).toEqual([HOST]);
     expect(programHistoryProjectionsRetainedV1(projections, [HOST, SPAWNED])).toBe(projections);
+  });
+
+  it("the store applies a patch synchronously, keeps every other program's projection object, and notifies nobody for a no-op", () => {
+    const store = createProgramHistoryStoreV1<Projection>();
+    store.update(() => withHostAtCursor3());
+    const host = programHistoryProjectionV1(store.get(), HOST, EMPTY);
+    let notified = 0;
+    const unsubscribe = store.subscribe(() => (notified += 1));
+    let applied = false;
+    const patch = patchOf(1);
+    store.update((projections) => {
+      const step = programHistoryProjectionsAfterPatchV1(projections, SPAWNED, EMPTY, (cursor) => historyPatchShouldApplyV1(cursor, patch, false), apply(patch));
+      applied = step.applied;
+      return step.projections;
+    });
+    expect(applied, "the caller learns at once whether its patch applied").toBe(true);
+    expect(notified).toBe(1);
+    expect(programHistoryProjectionV1(store.get(), HOST, EMPTY), "the host's projection keeps its object, so a reader of the host re-renders for nothing").toBe(host);
+    store.update((projections) => programHistoryProjectionsRetainedV1(projections, [HOST, SPAWNED]));
+    expect(notified, "retaining every live program changes nothing").toBe(1);
+    unsubscribe();
   });
 });
 

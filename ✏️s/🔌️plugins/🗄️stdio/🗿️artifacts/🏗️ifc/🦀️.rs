@@ -79,7 +79,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.ifc".into(),
-        name: "Ifc".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Ifc", "Ifc"),
         source_format: STDIO_IFC_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

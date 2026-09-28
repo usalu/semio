@@ -2036,7 +2036,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (namedEmpty.kind !== "invocation") throw new Error("expected invocation");
       expect(namedEmpty.projection.inverseGroup.invocationId).toBe("clearSelection:0");
       expect(() => requireBrowserActorCommandBackboneProjectionV1(namedEmpty, [])).not.toThrow();
-      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Error: { in_reply_to: fixture.commandRequest.actionSequence, fault: [], report: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "error", reason: "action-guest-refused" });
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Error: { in_reply_to: fixture.commandRequest.actionSequence, fault: [], report: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "error", reason: "action-guest-refused", detail: "unknown fault" });
       expect(() => decodeBrowserActorCommandPublicationV1(invocation, fixture.commandRequest.actionSequence + 1)).toThrow();
       expect(() => decodeBrowserActorCommandPublicationV1(new Uint8Array([...invocation, 0]), fixture.commandRequest.actionSequence)).toThrow();
       expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow();
@@ -2219,7 +2219,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(browserActorActionRefusalReasonV1(new Error("browser-actor-action: completion unconfirmed"))).toBe("dispatch-failed");
       expect(browserActorActionRefusalReasonV1(new Error("action-owner-mismatch"))).toBe("owner-mismatch");
       expect(browserActorActionRefusalReasonV1(new Error("action-busy"))).toBe("owner-mismatch");
-      expect(browserActorActionRefusalReasonV1(new Error("action-state-unconfirmed"))).toBe("dispatch-failed");
+      expect(browserActorActionRefusalReasonV1(new Error("action-state-unconfirmed"))).toBe("not-applied");
       expect(browserActorActionRefusalReasonV1(new Error("action-refused"))).toBe("dispatch-failed");
       expect(browserActorActionRefusalReasonV1(new Error("action-command-ingress-refused"))).toBe("dispatch-failed");
       expect(browserActorActionRefusalReasonV1(new Error("action-guest-refused"))).toBeNull();

@@ -1,0 +1,18 @@
+{
+  "schema": "writer.document",
+  "id": "brief",
+  "languageId": "markdown",
+  "uri": "writer://drafts/brief.md",
+  "text": "# Mission Brief\n\nHold the current draft.\n",
+  "document": {
+    "childId": "document-fixture-brief-body",
+    "target": {
+      "artifactId": "document-fixture-brief-body",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      }
+    }
+  }
+}

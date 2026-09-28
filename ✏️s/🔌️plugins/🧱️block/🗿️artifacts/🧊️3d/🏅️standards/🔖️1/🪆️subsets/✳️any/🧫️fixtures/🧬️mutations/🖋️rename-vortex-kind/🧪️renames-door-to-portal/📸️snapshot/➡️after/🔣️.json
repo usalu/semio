@@ -29,9 +29,9 @@
     }
   ],
   "catalog": {
-    "childId": "catalog-e76534bc13e6b5a6",
+    "childId": "catalog-f4edbb0f2f89853d",
     "target": {
-      "artifactId": "catalog-e76534bc13e6b5a6",
+      "artifactId": "catalog-f4edbb0f2f89853d",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

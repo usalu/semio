@@ -1,0 +1,8 @@
+{
+  "mutation": "spliceText",
+  "start": 17,
+  "deleted": "Draft: ",
+  "insert": "",
+  "before": "# Mission Brief\n\n",
+  "after": "Hold the current draft.\n"
+}

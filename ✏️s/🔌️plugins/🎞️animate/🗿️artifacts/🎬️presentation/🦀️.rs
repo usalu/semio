@@ -179,13 +179,9 @@ pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_artifact_stdio
 /// `(child_id, target)` for identical `(source, tiles)`, a different pair once the content actually
 /// changes, mirroring lowpoly's `mesh_child_handle`/writer's `document_child_handle`.
 pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
-    use std::hash::{Hash, Hasher};
     let content = presentation_snapshot_from_source_tiles(source, tiles);
     let content_json = dsl::os_pack::json::to_json_string(&content);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("presentation-{content_hash:016x}");
+    let child_id = store::content_id("presentation", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -199,11 +195,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
 pub fn animation_child_handle() -> AnimationChild {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
     let content_json = dsl::os_pack::json::to_json_string(&SemioAnimationSnapshot::default());
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("animation-{content_hash:016x}");
+    let child_id = store::content_id("animation", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -278,7 +270,7 @@ pub fn genesis_presentation_child_pack(snapshot: &PresentationSnapshot, slot: &s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        name: "Animate Presentation".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Animate Presentation", "Animierte Präsentation"),
         source_format: PRESENTATION_DOCUMENT_SCHEMA.into(),
         component_kind: "panel".into(),
         dimension: "2d".into(),

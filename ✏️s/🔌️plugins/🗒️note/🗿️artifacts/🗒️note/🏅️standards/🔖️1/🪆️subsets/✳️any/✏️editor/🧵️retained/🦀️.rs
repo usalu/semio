@@ -51,7 +51,6 @@ pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &[
     "engagementInput",
     "navigatorEngagementInput",
     "saveDownload",
-    "loadRequest",
 ];
 
 pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
@@ -88,7 +87,6 @@ pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn note_contract() -> ToolExecutionContract {
@@ -190,7 +188,7 @@ impl NoteCommandWork {
         if units.is_empty() || units.len() > NOTE_RETAINED_MAXIMUM_UNITS {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.extent"), "Note command exceeds its fixed semantic-unit envelope"));
         }
-        let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
+        let scope = format!("{}:{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation, operation.authoring_seed);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
@@ -461,6 +459,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let tool_id = request.command.command_id();
     let work = Box::new(NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation)?);

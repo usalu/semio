@@ -60,7 +60,7 @@ pub const EPW_TABLE_COLUMNS: [&str; 35] = [
 /// 🧱️ Stitched into the editor manifest by `crate::editor::epw::create_epw_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Weather Records", "Wetterdatensätze"), icon_id: "table-2".into(), ..semio_s_artifact_stdio_contract::revision_addressed_table_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Weather Records", "Wetterdatensätze"), icon_id: "table-2".into(), ..semio_s_artifact_stdio_contract::row_revision_addressed_table_window_kind() }
 }
 //#endregion 🔖️Definition
 

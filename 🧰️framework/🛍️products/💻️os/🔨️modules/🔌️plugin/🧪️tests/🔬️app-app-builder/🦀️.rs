@@ -431,6 +431,48 @@ mod app_builder_tests {
         assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
     }
 
+    /// 🎯️ LAW: an entity-id argument names a granularity of an interaction its app declares — the selection that verb
+    /// otherwise reads — and publishes each id as `entityId` of that kind; one naming an undeclared interaction or
+    /// granularity is refused by name when the definition is built.
+    #[semio_framework_async_macros::async_test]
+    async fn an_entity_id_argument_names_a_granularity_of_a_declared_interaction() {
+        use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+        let interaction = || InteractionDefinition {
+            id: "graph".into(),
+            label: LocalizedLabel::data("Graph"),
+            granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::data("Node"), icon_id: "circle".into() }],
+            hierarchy: HierarchyProvider::Flat,
+            hover: HoverSpec::default(),
+            selection: SelectionSpec { modes: vec![SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+        };
+        let built = |slug: &'static str, interaction_id: &'static str, granularity_id: &'static str| async move {
+            minimal_app(slug)
+                .await
+                .interaction(interaction())
+                .await
+                .mutation("rename", LocalizedLabel::data("Rename"))
+                .await
+                .action_args("rename", vec![ActionArgDef::entity_ids("nodeIds", LocalizedLabel::data("Nodes"), interaction_id, granularity_id)])
+                .await
+                .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+                .await
+                .try_build_definition()
+        };
+        let definition = built("entity-ids-app", "graph", "node").await.expect("a declared granularity builds");
+        let rename = declared_actions(&definition).find(|action| action.id == "rename").expect("declared");
+        let schema = rename.args[0].json_schema();
+        let items = schema.get("items").expect("an entity-id argument is a list");
+        assert_eq!(
+            (schema.get("type").and_then(DslValue::as_str), items.get("type").and_then(DslValue::as_str), items.get("x-semio-format").and_then(DslValue::as_str), items.get("x-semio-entity-kind").and_then(DslValue::as_str)),
+            (Some("array"), Some("string"), Some("entityId"), Some("graph/node"))
+        );
+        for (slug, interaction_id, granularity_id) in [("entity-ids-undeclared-interaction", "ast", "node"), ("entity-ids-undeclared-granularity", "graph", "edge")] {
+            let error = built(slug, interaction_id, granularity_id).await.expect_err(slug);
+            assert_eq!(error.code, "app-definition.invalid", "{slug}");
+            assert!(error.message.contains(&format!("{interaction_id}/{granularity_id}")), "{slug}: {}", error.message);
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn declaring_introduction_injects_start_introduction_action() {
         use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};

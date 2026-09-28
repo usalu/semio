@@ -17,6 +17,8 @@
     { "pluginId": "puzzle", "appId": "s.puzzle2d@1/*#editor", "instanceId": 1, "matches": true },
     { "pluginId": "puzzle", "appId": "s.puzzle2d@1/*#viewer", "instanceId": 2, "matches": true },
     { "pluginId": "other", "appId": "s.puzzle2d@1/*#editor", "instanceId": 1, "matches": false },
-    { "pluginId": "puzzle", "appId": "s.puzzle3d@1/*#editor", "instanceId": 1, "matches": false }
+    { "pluginId": "puzzle", "appId": "s.puzzle3d@1/*#editor", "instanceId": 1, "matches": false },
+    { "pluginId": "puzzle@fbe769993f80590cf71f4caa0d6005a54d8bc845efbe0b63741e25d6bfd8e223", "appId": "s.puzzle2d@1/*#editor", "instanceId": 3, "matches": true },
+    { "pluginId": "other@fbe769993f80590cf71f4caa0d6005a54d8bc845efbe0b63741e25d6bfd8e223", "appId": "s.puzzle2d@1/*#editor", "instanceId": 3, "matches": false }
   ]
 }

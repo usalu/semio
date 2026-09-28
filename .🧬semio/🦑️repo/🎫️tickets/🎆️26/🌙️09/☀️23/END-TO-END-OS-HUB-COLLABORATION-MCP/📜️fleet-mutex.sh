@@ -39,7 +39,8 @@ echo $$ > "$held/pid"; echo "$slice $(date '+%H:%M:%S')" > "$held/owner"
 rm -f "$ticket"
 trap 'rm -rf "$held"' EXIT
 trap 'rm -rf "$held"; exit 143' INT TERM
-case "$name" in native|overlay) export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" ;; esac
+case "$name" in native|overlay|wasm) j="${CARGO_BUILD_JOBS:-4}"; [ "$j" -gt 4 ] 2>/dev/null && j=4; export CARGO_BUILD_JOBS="$j" ;; esac
+while [ "$(sysctl -n vm.loadavg | awk '{printf "%d", $2}')" -ge "${FLEET_LOAD_GATE:-32}" ]; do sleep 20; done
 "$@"
 rc=$?
 trap - EXIT INT TERM

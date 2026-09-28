@@ -318,6 +318,35 @@ export function programHistoryProjectionsRetainedV1<Projection>(
   const kept = Object.entries(projections).filter(([key]) => live.has(key));
   return kept.length === Object.keys(projections).length ? projections : Object.fromEntries(kept);
 }
+/** 🗃️ Every open program's history projection OUTSIDE the shell's render state. A patch moves one program's entries on every
+ * keystroke; only the readers of those entries (the History tab's live tree, `data-history-json`, the auto check-in clock)
+ * follow it, and the shell re-renders only for a projection field it renders itself (ticket 26/09/23 F3: writer typing
+ * re-rendered the whole shell twice per key for its history alone). `update` is synchronous: its caller learns at once
+ * whether its patch applied. */
+export type ProgramHistoryStoreV1<Projection> = {
+  readonly get: () => ProgramHistoryProjectionsV1<Projection>;
+  readonly update: (next: (projections: ProgramHistoryProjectionsV1<Projection>) => ProgramHistoryProjectionsV1<Projection>) => void;
+  readonly subscribe: (listener: () => void) => () => void;
+};
+
+/** 🗃️ A {@link ProgramHistoryStoreV1} starting empty; an update that returns the same projections notifies nobody. */
+export function createProgramHistoryStoreV1<Projection>(): ProgramHistoryStoreV1<Projection> {
+  let projections: ProgramHistoryProjectionsV1<Projection> = {};
+  const listeners = new Set<() => void>();
+  return {
+    get: () => projections,
+    update: (next) => {
+      const updated = next(projections);
+      if (updated === projections) return;
+      projections = updated;
+      for (const listener of [...listeners]) listener();
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    },
+  };
+}
 //#endregion 🧾️ProgramHistory
 
 //#region 📇️SpawnedBridgeCensus

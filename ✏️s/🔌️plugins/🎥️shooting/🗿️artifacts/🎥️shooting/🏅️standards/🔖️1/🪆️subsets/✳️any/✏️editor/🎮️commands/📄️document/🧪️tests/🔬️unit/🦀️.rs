@@ -51,14 +51,3 @@ async fn set_active_example_loads_hexagonal_cut_concrete_forest_left() {
     let asset = loaded.assets.first().expect("forest asset");
     assert_eq!(asset.url, "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb");
 }
-
-#[semio_framework_async_macros::async_test]
-async fn load_request_declares_the_import_snapshot_json_import_action() {
-    use semio_framework_plugin::Effect;
-    let mut app = shooting_app().await;
-    let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {})).await;
-    match &result.requested_effects[0] {
-        Effect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
-        other => panic!("expected RequestFileOpen, got {other:?}"),
-    }
-}

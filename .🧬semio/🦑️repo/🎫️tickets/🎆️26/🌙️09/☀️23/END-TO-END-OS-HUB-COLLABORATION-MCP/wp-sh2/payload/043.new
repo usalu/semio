@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page",
+  "semanticKind": "apply-directory-page",
+  "displayName": "Apply Directory Page",
+  "emoji": "📬️",
+  "aggregateVariant": "ApplyDirectoryPage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "apply-directory-page",
+  "binaryTag": 1,
+  "invertibility": "non-invertible",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

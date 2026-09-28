@@ -3162,7 +3162,6 @@ impl Puzzle3dSessionRegistry {
         }
         self.generations[slot] = self.generations[slot].saturating_add(1);
         crate::editor::puzzle3d::precompute::retire_abandoned_brush_mesh_uploads();
-        crate::editor::puzzle3d::commands::import_fixture::retire_abandoned_import_runs();
     }
 
     fn resolve_slot(&mut self, app_instance_id: u32, artifact_id: Option<&str>) -> Option<usize> {
@@ -7112,7 +7111,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 }
 
-const PUZZLE3D_IMPORT_RAW_BYTES: usize = 262_144;
+/// 📏️ Raw wire bytes ONE retained 3d command may carry — one whole `importFixture` file, escaped, plus its envelope.
+const PUZZLE3D_IMPORT_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
 const PUZZLE3D_IMPORT_DECODED_ITEMS: usize = 16_384;
 
 struct Puzzle3dRetainedCommandJobFactory {
@@ -7625,7 +7625,7 @@ impl Puzzle3dRetainedCommandProofs {
         artifact_schema: "puzzle.3d.fixture",
         factory: "Puzzle3dRetainedCommandJobFactory",
         factory_type: Puzzle3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(262_144, 16_384, 1, 262_144, 7_500, 1, 1),
+        contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         tools: [
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
@@ -8728,7 +8728,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by the given factor.", "Skaliert die ausgewählten Objekte um den angegebenen Faktor."))
             .action_describe("exportFixture", LocalizedLabel::native("Writes the whole 3D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 3D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
             .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
-            .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 3D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.", "Ersetzt das gesamte 3D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."))
+            .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 3D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 3D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected objects.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."))
             .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
             .action_describe("selectSameKindSelection", LocalizedLabel::native("Extends the selection to every piece of the same kind as the selected one.", "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."))
@@ -8790,6 +8790,10 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
+mod agent_lane_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🧪️Tests

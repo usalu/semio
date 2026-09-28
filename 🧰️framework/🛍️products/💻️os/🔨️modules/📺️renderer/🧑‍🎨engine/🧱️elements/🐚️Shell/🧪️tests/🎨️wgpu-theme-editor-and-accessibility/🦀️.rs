@@ -120,7 +120,7 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
     for step in fixture["workflow"].as_array().expect("theme workflow") {
         let action = step["action"].as_str().expect("action");
         let before = shell.panel_documents.get(surface).unwrap().header().expect("Theme header before mutation");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(step["arguments"].clone())) })).expect("theme host mutation");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(&step["arguments"])) })).expect("theme host mutation");
         let after = shell.panel_documents.get(surface).unwrap().header().expect("Theme header after mutation");
         if after.revision == before.revision || after.generation <= before.generation {
             missing.push(action.to_string());
@@ -148,7 +148,7 @@ fn invalid_theme_field_and_import_inputs_keep_the_exact_retained_revision() {
     let before = initial.header().expect("initial Theme header");
     shell.panel_documents.insert(surface.into(), initial);
     for (action, arguments) in [("setThemeRadius", serde_json::json!({ "key": "nodeDefault", "value": "not-a-number" })), ("applyImportedTheme", serde_json::json!({ "value": "{}" }))] {
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(arguments)) })).expect("invalid Theme input is ignored");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(arguments)) })).expect("invalid Theme input is ignored");
         assert_eq!(shell.panel_documents.get(surface).unwrap().header().expect("retained Theme header"), before, "{action} does not mint a successor");
         assert!(shell.closing_documents.terminal_is_empty(), "{action} retires no owner");
     }

@@ -12,6 +12,7 @@
  *  message a refusal carries.
  */
 
+import { contentId } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { applyRemodelingDiff, emptyRemodelingDiff, type RemodelingDiff, type RemodelingGcpList, type RemodelingMediaStreamList } from "../🔺️diff/🟦️.ts";
 import {
   CAMERA_CALIBRATION_SPEC,
@@ -379,68 +380,6 @@ export function decodeRemodelingMutation(json: unknown): RemodelingMutation {
 //#endregion 🔖️Spec
 
 //#region 🔖️AssetHandles
-const SIP_MASK = (1n << 64n) - 1n;
-const rotl = (value: bigint, bits: bigint): bigint => ((value << bits) | (value >> (64n - bits))) & SIP_MASK;
-
-/** #️⃣ Rust `std::collections::hash_map::DefaultHasher` — SipHash-1-3 keyed `(0, 0)`. */
-class DefaultHasher {
-  private v0 = 0x736f6d6570736575n;
-  private v1 = 0x646f72616e646f6dn;
-  private v2 = 0x6c7967656e657261n;
-  private v3 = 0x7465646279746573n;
-  private tail: number[] = [];
-  private length = 0;
-
-  private round(): void {
-    this.v0 = (this.v0 + this.v1) & SIP_MASK;
-    this.v1 = rotl(this.v1, 13n) ^ this.v0;
-    this.v0 = rotl(this.v0, 32n);
-    this.v2 = (this.v2 + this.v3) & SIP_MASK;
-    this.v3 = rotl(this.v3, 16n) ^ this.v2;
-    this.v0 = (this.v0 + this.v3) & SIP_MASK;
-    this.v3 = rotl(this.v3, 21n) ^ this.v0;
-    this.v2 = (this.v2 + this.v1) & SIP_MASK;
-    this.v1 = rotl(this.v1, 17n) ^ this.v2;
-    this.v2 = rotl(this.v2, 32n);
-  }
-
-  private block(word: bigint): void {
-    this.v3 ^= word;
-    this.round();
-    this.v0 ^= word;
-  }
-
-  write(bytes: ArrayLike<number>): void {
-    for (let index = 0; index < bytes.length; index += 1) {
-      this.tail.push(bytes[index]);
-      this.length += 1;
-      if (this.tail.length === 8) {
-        let word = 0n;
-        for (let byte = 7; byte >= 0; byte -= 1) word = (word << 8n) | BigInt(this.tail[byte]);
-        this.block(word);
-        this.tail = [];
-      }
-    }
-  }
-
-  /** 🔤 `impl Hash for str` — the bytes, then a `0xff` terminator. */
-  writeStr(value: string): void {
-    this.write(new TextEncoder().encode(value));
-    this.write([0xff]);
-  }
-
-  finish(): bigint {
-    let last = BigInt(this.length & 0xff) << 56n;
-    for (let byte = this.tail.length - 1; byte >= 0; byte -= 1) last |= BigInt(this.tail[byte]) << BigInt(8 * byte);
-    this.block(last);
-    this.v2 ^= 0xffn;
-    this.round();
-    this.round();
-    this.round();
-    return (this.v0 ^ this.v1 ^ this.v2 ^ this.v3) & SIP_MASK;
-  }
-}
-
 const REMODELING_DURABLE_CHUNK_RAW_BYTES = 4096;
 const REMODELING_DURABLE_CHUNK_ENCODED_BYTES = Math.floor((REMODELING_DURABLE_CHUNK_RAW_BYTES + 2) / 3) * 4;
 const REMODELING_RASTER_CONTENT_BYTES = 1_114_112;
@@ -556,10 +495,7 @@ export function remodelingContentIsComplete(store: RemodelingDurableArtifactStor
 
 /** 🕸️ `image_asset_child_handle` — content-addressed CHILD handle for one bounded durable asset. */
 export function imageAssetChildHandle(assetId: string, asset: ImageAsset): RemodelingAssetChild {
-  const hasher = new DefaultHasher();
-  hasher.writeStr(asset.mime);
-  hasher.writeStr(asset.data);
-  const childId = `remodeling-asset-${hasher.finish().toString(16).padStart(16, "0")}`;
+  const childId = contentId("remodeling-asset", new TextEncoder().encode(`${asset.mime}\u001f${asset.data}`));
   return { childId, target: { artifactId: `${assetId}-image`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "image" } } };
 }
 

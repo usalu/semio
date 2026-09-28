@@ -45,6 +45,18 @@ function object(value: unknown, path: string, required: readonly string[], optio
   return record;
 }
 
+/** 🚫️ The rejected-result reason of a guest refusal: `action-guest-refused`, then the guest's own fault as the shell displays
+ * it (`code: message`) with control characters and runs of blanks folded to one space, cut on a character boundary to the
+ * result's 256-byte text rule — so the refusal always parses and the human reads WHY (the fault used to be dropped).
+ * Rows: `🧫️fixtures/🔣️.json` `guestRefusals`. */
+export function browserActorGuestRefusalReasonV1(detail: string | null): string {
+  const folded = (detail ?? "").replace(/[\u0000-\u001f\u007f]/gu, " ").split(/\s+/u).filter(Boolean).join(" ");
+  let reason = folded.length === 0 ? "action-guest-refused" : `action-guest-refused: ${folded}`;
+  const encoder = new TextEncoder();
+  while (encoder.encode(reason).length > 256) reason = Array.from(reason).slice(0, -1).join("");
+  return reason.trimEnd();
+}
+
 function text(value: unknown, path: string): string {
   if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > 256 || /[\u0000-\u001f\u007f]/u.test(value)) throw new Error(`${path}: invalid text`);
   return value;
@@ -164,5 +176,5 @@ if (import.meta.vitest) {
   const { decodeAppCommand, decodePackValue } = await import("../../../../🟦️.ts");
   const { createBrowserActorAppCommandRequestV1 } = await import("./🎛️command/🟦️.ts");
   const { createBrowserActorUiIntentRequestV1 } = await import("./🧭️intent/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }

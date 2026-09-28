@@ -49,9 +49,27 @@ export interface TreePanelConfig {
 
 export interface TreePanelDefinition {
   resolveTree(): TreePanelConfig;
+  /** @emoji 📡️ Present on a LIVE source ({@link liveTreePanelDefinition}): its content changes on its own, `resolveTree`
+   * answers one object per change, and the pane re-reads it on every notification. */
+  subscribe?(listener: () => void): () => void;
 }
 
 export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
+
+/** @emoji 📡️ A LIVE tree source: `read` answers the value the tree is built from (a new object only when it changed), `build`
+ * turns it into the config once per value, and the pane re-reads it on every `subscribe` notification — so content that moves
+ * on every keystroke (the History tab's entries) re-renders that one tree, never the host that composed the tab. */
+export function liveTreePanelDefinition<Value>(subscribe: (listener: () => void) => () => void, read: () => Value, build: (value: Value) => TreePanelConfig): TreePanelDefinition {
+  let built: { readonly value: Value; readonly config: TreePanelConfig } | null = null;
+  return {
+    subscribe,
+    resolveTree: () => {
+      const value = read();
+      if (built === null || built.value !== value) built = { value, config: build(value) };
+      return built.config;
+    },
+  };
+}
 
 /** @emoji 🌲️ Factory for a static {@link TreePanelDefinition}. */
 export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDefinition {
@@ -63,6 +81,12 @@ function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
     return tree.resolveTree();
   }
   return tree;
+}
+
+/** @emoji 📡️ One LIVE unit's config, re-read on every notification of its source. */
+function PanelLiveTreeUnit({ source, render }: { readonly source: TreePanelDefinition & { subscribe(listener: () => void): () => void }; readonly render: (config: TreePanelConfig) => React.ReactNode }) {
+  const config = reactHostPort.useSyncExternalStore(source.subscribe, source.resolveTree, source.resolveTree);
+  return <>{render(config)}</>;
 }
 
 /** @emoji 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
@@ -269,7 +293,6 @@ export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane
   return (
     <>
       {sortedUnits.map((unit, index) => {
-        const config = resolveTreePanelSource(unit.tree);
         const unitPrefix = `${unit.id}:`;
         const unitOpenStates = treeOpenStates
           ? Object.fromEntries(
@@ -280,28 +303,35 @@ export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane
           : undefined;
         const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
         const showUnitHeader = Boolean(unit.label || unit.icon) || sortedUnits.length > 1;
+        const renderTree = (config: TreePanelConfig) => (
+          <Tree
+            className={cn("min-w-0 w-full overflow-x-hidden", config.className)}
+            defaultSelectedIds={config.defaultSelectedIds}
+            dragAndDropController={config.dragAndDropController}
+            emptyState={config.emptyState}
+            highlightedIds={config.highlightedIds}
+            indentMultiplier={config.indentMultiplier}
+            onSelectionChange={config.onSelectionChange}
+            onSectionsReorder={config.onSectionsReorder}
+            sections={config.sections}
+            selectedIds={config.selectedIds}
+            selectionMode={config.selectionMode}
+            sortableSections={config.sortableSections ?? config.sections.length > 1}
+            direction={flow.block}
+            openStates={unitOpenStates}
+            onOpenStateChange={onUnitOpenStateChange}
+          />
+        );
         return (
           <React.Fragment key={unit.id}>
             {showUnitHeader ? (
               <PanelTreeUnitHeader anchor={anchor} tabId={tabId} unit={unit} index={index} unitDragActive={unitDragActive} />
             ) : null}
-            <Tree
-              className={cn("min-w-0 w-full overflow-x-hidden", config.className)}
-              defaultSelectedIds={config.defaultSelectedIds}
-              dragAndDropController={config.dragAndDropController}
-              emptyState={config.emptyState}
-              highlightedIds={config.highlightedIds}
-              indentMultiplier={config.indentMultiplier}
-              onSelectionChange={config.onSelectionChange}
-              onSectionsReorder={config.onSectionsReorder}
-              sections={config.sections}
-              selectedIds={config.selectedIds}
-              selectionMode={config.selectionMode}
-              sortableSections={config.sortableSections ?? config.sections.length > 1}
-              direction={flow.block}
-              openStates={unitOpenStates}
-              onOpenStateChange={onUnitOpenStateChange}
-            />
+            {"subscribe" in unit.tree && unit.tree.subscribe ? (
+              <PanelLiveTreeUnit source={unit.tree as TreePanelDefinition & { subscribe(listener: () => void): () => void }} render={renderTree} />
+            ) : (
+              renderTree(resolveTreePanelSource(unit.tree))
+            )}
           </React.Fragment>
         );
       })}

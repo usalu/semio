@@ -166,7 +166,7 @@
   ],
   "assets": {
     "orbit-dsm": {
-      "childId": "remodeling-asset-e343c47d5dab64bd",
+      "childId": "remodeling-asset-ecbf340dfac06d86",
       "target": {
         "artifactId": "orbit-dsm-image",
         "dialect": {
@@ -177,7 +177,7 @@
       }
     },
     "orbit-frame-00": {
-      "childId": "remodeling-asset-067b2f3bbc35f9dc",
+      "childId": "remodeling-asset-b5e857b335c98470",
       "target": {
         "artifactId": "orbit-frame-00-image",
         "dialect": {
@@ -276,7 +276,7 @@
       }
     },
     "orbit-frame-09": {
-      "childId": "remodeling-asset-e504dc15dc9b8978",
+      "childId": "remodeling-asset-013cae8e196405b2",
       "target": {
         "artifactId": "orbit-frame-09-image",
         "dialect": {
@@ -287,7 +287,7 @@
       }
     },
     "orbit-orphan": {
-      "childId": "remodeling-asset-20fa92c7e1b7c14b",
+      "childId": "remodeling-asset-92c03cc2233e34dc",
       "target": {
         "artifactId": "orbit-orphan-image",
         "dialect": {
@@ -299,6 +299,15 @@
     }
   },
   "durableArtifacts": {
+    "remodeling-asset-013cae8e196405b2": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDk="
+      ]
+    },
     "remodeling-asset-05c98ef601003277": {
       "kind": "image",
       "mime": "image/png",
@@ -306,24 +315,6 @@
       "height": 240,
       "chunks": [
         "b3JiaXQtZnJhbWUtMDU="
-      ]
-    },
-    "remodeling-asset-067b2f3bbc35f9dc": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        "b3JiaXQtZnJhbWUtMDA="
-      ]
-    },
-    "remodeling-asset-20fa92c7e1b7c14b": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        "b3JiaXQtY2FsaWJyYXRpb24tdGFyZ2V0"
       ]
     },
     "remodeling-asset-46a0165861c691ec": {
@@ -362,6 +353,24 @@
         "b3JiaXQtZnJhbWUtMDc="
       ]
     },
+    "remodeling-asset-92c03cc2233e34dc": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtY2FsaWJyYXRpb24tdGFyZ2V0"
+      ]
+    },
+    "remodeling-asset-b5e857b335c98470": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDA="
+      ]
+    },
     "remodeling-asset-c9ce5074a949b814": {
       "kind": "image",
       "mime": "image/png",
@@ -380,24 +389,6 @@
         "b3JiaXQtZnJhbWUtMDQ="
       ]
     },
-    "remodeling-asset-e343c47d5dab64bd": {
-      "kind": "image",
-      "mime": "image/tiff",
-      "width": 512,
-      "height": 512,
-      "chunks": [
-        "b3JiaXQtZHNtLXRpbGU="
-      ]
-    },
-    "remodeling-asset-e504dc15dc9b8978": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        "b3JiaXQtZnJhbWUtMDk="
-      ]
-    },
     "remodeling-asset-e6e19e89d3320aa7": {
       "kind": "image",
       "mime": "image/png",
@@ -405,6 +396,15 @@
       "height": 240,
       "chunks": [
         "b3JiaXQtZnJhbWUtMDI="
+      ]
+    },
+    "remodeling-asset-ecbf340dfac06d86": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 512,
+      "height": 512,
+      "chunks": [
+        "b3JiaXQtZHNtLXRpbGU="
       ]
     }
   },

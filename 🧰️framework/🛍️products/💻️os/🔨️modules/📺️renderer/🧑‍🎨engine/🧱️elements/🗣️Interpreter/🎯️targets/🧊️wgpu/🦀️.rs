@@ -1521,7 +1521,7 @@ fn merge_action_args(existing: Option<&semio_framework::DslValue>, patch: serde_
         None => serde_json::Map::new(),
     };
     base.extend(patch);
-    semio_framework::optional_json_to_dsl(Some(Value::Object(base)))
+    Some(semio_framework::DslValue::from(Value::Object(base)))
 }
 
 /// 📋️ Writes to the OS clipboard via `ui_wgpu::wgpu::host` — the one indirection this module's own tests

@@ -10082,7 +10082,8 @@
         "🛬️canvas-drag-over",
         "📥️canvas-drop",
         "🗿️artifact",
-        "💡️inference"
+        "💡️inference",
+        "🗃️apply-local-catalog-document"
       ],
       "source": "registry"
     },
@@ -10267,7 +10268,8 @@
         "🪟️Window",
         "🔲️WindowSilhouette",
         "🪵️Log",
-        "🌳️Tree"
+        "🌳️Tree",
+        "📊️ObservabilityPage"
       ],
       "source": "registry"
     },
@@ -10616,7 +10618,128 @@
         "🎲️solver-contracts",
         "🔀️topology-contracts",
         "🔍️decoding-and-graphs",
-        "🧩️mount-contract"
+        "🧩️mount-contract",
+        "🌐️directory-home-browser-process-v1",
+        "🎟️invite-redemption-transaction-v1",
+        "🎯️admin-intent-v1",
+        "🏘️space-administration-page-v1",
+        "🏛️public-space-detail-v1",
+        "🏛️retained-short-admin",
+        "📅️event-page-route-v1",
+        "📣️ordered-append-broadcast-v1",
+        "📸️artifact-checkpoint-projection",
+        "🔌️scoped-socket-revocation-v1",
+        "🔏️document-execution-target-lease-v1",
+        "🔐️share-issuance-atomicity",
+        "🔑️share-token-vectors",
+        "🚶️admin-live-journey-v1",
+        "🚻️space-journey-v1",
+        "🛡️command-authority-v1",
+        "🧾️command-receipt-v1",
+        "🔑️capability-v1",
+        "🔑️pbkdf2-sha256-vectors-v1",
+        "🕸️build-graph",
+        "🌐️http-owner-v1",
+        "📚️operation-v1",
+        "🧪️transaction-v1",
+        "🌍️gis-v1",
+        "🌿️vcs-v1",
+        "🪪️v1",
+        "⛓️linked-codec-ownership",
+        "🌐️browser-actor",
+        "🎯️descriptor-open-targets",
+        "👥️two-package",
+        "📤️publication",
+        "🔗️compiled-dependencies",
+        "🗂️surface-opens-kind",
+        "🛡️opened-root",
+        "🤝️gis-map-collaboration",
+        "🧊️codec-source",
+        "🧩️plugin-module",
+        "🧬️retained-gis-browser",
+        "🧬️stdio-gis-bootstrap",
+        "🧱️generation-stage",
+        "🪪️identity-roles",
+        "🏛️canonical-authority",
+        "🔌️authority-adapter",
+        "🧱️artifact-chunk-cas",
+        "⏳️idle-admission-v1",
+        "🎫️session-broker-v1",
+        "🚇️pipe-v1",
+        "🪪️credential-refusal-v1",
+        "🛟️lag-rebootstrap",
+        "🪢️canonical-pair",
+        "↩️gis-map-approval-undo-v1",
+        "⏸️gis-inference-checkpoint-control-v1",
+        "⚔️vigilant-concurrent-edit-v1",
+        "⛓️inference-wal-chain-v1",
+        "✅️inference-approval-v1",
+        "✉️inference-command-v1",
+        "🌐️directory-message-authority-v1",
+        "🎯️inference-catalog-selection-v1",
+        "🏛️admin-directory-authority-v1",
+        "👥️presence-lease-v1",
+        "💡️inference-relay-v1",
+        "📈️document-growth-v1",
+        "📊️observability-v1",
+        "🔐️browser-broker-proof-lifecycle-v1",
+        "🔑️directory-access-changed-v1",
+        "🖥️inference-server-identity-v1",
+        "🗳️gis-map-proposal-approval-v1",
+        "🗺️gis-inference-job-v1",
+        "🗺️gis-inference-retained-runtime-v1",
+        "🚧️hostile-input-v1",
+        "🚧️hub-boundaries",
+        "🛂️admin-presence-target-recovery-v1",
+        "🛂️inference-author-v1",
+        "🤝️two-author-shell-v1",
+        "🤝️two-client-document-v1",
+        "🧊️gis-map-frozen-binding-v1",
+        "🧭️inference-job-reconcile-v1",
+        "🧭️native-artifact-provider-frontier-v1",
+        "🧱️foundation-source",
+        "🧱️socket-grant-command-source",
+        "🧾️inference-wal-proof-v1",
+        "🪞️pair-content-v1",
+        "🪪️execution-target-relay-v1",
+        "🪪️presence-normalization-v1",
+        "🔐️canonical-checkpoint-resource",
+        "🔐️hub-live-catalog",
+        "🗺️gis-discovery",
+        "🤝️hub-edit-durability",
+        "🧠️conformance",
+        "🧬️selected-gis-byte-provenance-v1",
+        "✅️verdict",
+        "🌐️production-browser-artifacts",
+        "📇️folder",
+        "🧪️multi-shell-harness",
+        "🎯️goal-gate",
+        "🧮️source-census",
+        "🦀️inputs",
+        "📐️test-layout",
+        "🧬️mutation-fixtures",
+        "🧬️schema-invariants",
+        "🧭️contribution-directory-ownership",
+        "🧭️fixture-resolution",
+        "🧱️command-composition-source",
+        "🔍️resolution",
+        "🗄️store",
+        "🌳️plugin-root-ownership",
+        "🕸️rust-taxonomy-mounts",
+        "🧬️catalog-complete",
+        "🧬️surface-schema",
+        "🧬️trusted-stdio-catalog",
+        "🐳️docker-image-v1",
+        "👷️worker-freshness",
+        "🕸️media-projection",
+        "📤️unlists-the-studio-and-keeps-its-sibling",
+        "📥️lists-a-persisted-studio-beside-an-imported-one",
+        "✏️sets-named-layout",
+        "🟰️keeps-named-layout",
+        "🔁️lifecycle",
+        "🎒️zip-archive-cases",
+        "⏳️transient-apply-refusal-v1",
+        "🚦️rate-limit-refusal-v1"
       ],
       "source": "registry"
     },
@@ -10634,7 +10757,12 @@
         "hub"
       ],
       "memberNames": [
-        "📇️directory"
+        "📇️directory",
+        "📊️observability",
+        "🗄️stores",
+        "🗿️artifact-authority",
+        "🚧️refusal",
+        "🛰️lag-rebootstrap"
       ],
       "source": "registry"
     },
@@ -11022,7 +11150,9 @@
         "🩺️driversend",
         "🖥️native",
         "🕸️wasmpollster",
-        "📁️folder"
+        "📁️folder",
+        "📣️canonical-bootstrap-folder-mirror-v1",
+        "📐️schema"
       ],
       "source": "registry"
     },
@@ -11033,7 +11163,14 @@
       "memberNames": [
         "🌐️neo4j",
         "🐘️postgres",
-        "🪶️sqlite"
+        "🪶️sqlite",
+        "🌱️creation",
+        "📇️native-openable-provider",
+        "📌️check-in",
+        "🔌️adapters",
+        "🔏️trusted-catalog",
+        "🔒️file-fence",
+        "🧱️chunk-cas"
       ],
       "source": "registry"
     },
@@ -11226,7 +11363,8 @@
         "🧬️mutation-plan",
         "🧮️demo",
         "🔎️detail",
-        "🐙️github"
+        "🐙️github",
+        "🧩️pair"
       ],
       "source": "registry"
     },
@@ -11308,7 +11446,10 @@
         "🦑️repo-source-ownership",
         "🚨️breaches",
         "⏯️tool-run-trace",
-        "🏗️materialization"
+        "🏗️materialization",
+        "🔗️remote",
+        "🏃️execution",
+        "📋️orchestration"
       ],
       "source": "registry"
     },
@@ -11490,7 +11631,21 @@
         "👀️file-watcher",
         "🚪️native-io",
         "🚪️entrypoint",
-        "⏯️layout-run"
+        "⏯️layout-run",
+        "🐚️channel",
+        "💼️jobs",
+        "💬️prompts",
+        "📣️notify",
+        "🔐️owner-only",
+        "🖥️ui",
+        "🗿️artifact",
+        "🛰️rendezvous",
+        "🤖️agent-credential",
+        "🔖️channel-version",
+        "🔗️boot-query",
+        "🚀️local-hub",
+        "🎯️acceptance",
+        "🎒️zip"
       ],
       "source": "registry"
     },
@@ -11499,7 +11654,9 @@
         "members-of-operating-system"
       ],
       "memberNames": [
-        "🧪️fixtures"
+        "🧪️fixtures",
+        "🎠️activation",
+        "💾️persistence"
       ],
       "source": "registry"
     },
@@ -11733,7 +11890,8 @@
         "🧾️measurement-contracts",
         "🪐️space",
         "🪪️identity",
-        "📡️live"
+        "📡️live",
+        "🗜️deflate"
       ],
       "source": "registry"
     },
@@ -13491,7 +13649,23 @@
         "🚚️move-slot",
         "🚫️delete-rule",
         "🚫️mask-cell",
-        "🧱️create-tile"
+        "🧱️create-tile",
+        "✅️approval",
+        "📈️document-growth-v1",
+        "🔐️browser-broker-proof-lifecycle-v1",
+        "🛂️fixture-expectation",
+        "🤝️two-client-document-v1",
+        "🧱️foundation-source",
+        "🧱️socket-grant-command-source",
+        "✅️verdict",
+        "🧱️command-composition-source",
+        "🧬️catalog-complete",
+        "🧬️trusted-stdio-catalog",
+        "👷️worker-freshness",
+        "🕸️media-projection",
+        "📤️retire-local-document",
+        "📥️admit-local-document",
+        "🗂️set-named-layout"
       ],
       "source": "registry"
     },
@@ -14908,7 +15082,125 @@
         "🧩️outcome",
         "🧮️model-vectors",
         "🧱️adds-the-roof-tile",
-        "🧽️drops-the-unused-third-colour"
+        "🧽️drops-the-unused-third-colour",
+        "🔬️scope-schema-export-law-standalone",
+        "⛓️chain",
+        "🔬️standalone",
+        "🧾️ordered-append-broadcast",
+        "📋️native-law-plan",
+        "🧾️fixture-verification",
+        "🎯️admin-intent-v1",
+        "🔮️backend-corpus",
+        "🤖️agent-unit",
+        "🤝️live-sign-in",
+        "🧭️credential-source-order",
+        "🔬️dist-assets-bll2-7qi-unit",
+        "🕸️build-graph",
+        "🧹️environment",
+        "🔬️publication",
+        "📤️publication",
+        "🔬️admission",
+        "⛓️linked-codec-ownership",
+        "🌅️boot-watch",
+        "🌱️creation-progress",
+        "🎲️hostile-generative",
+        "🏷️build-freshness",
+        "💾️backup-restore",
+        "📈️document-growth",
+        "📊️observability",
+        "📌️document-check-in",
+        "📝️trace-record",
+        "🔏️trusted-catalog-profile",
+        "🔬️bin-unit",
+        "🗂️artifact-root",
+        "🚧️hostile-input",
+        "🛡️access-policy",
+        "🤝️integration",
+        "🤝️two-client-document",
+        "🧠️residency",
+        "🧱️foundation-source",
+        "🧱️socket-grant-command-source",
+        "🪞️pair-content",
+        "🔬️quick",
+        "⏱️compile-cancellation-law",
+        "🔬️long",
+        "⏱️binding-cancellation-law",
+        "💼️inference-service-law",
+        "🔬️inference-jobs",
+        "🔬️interactivity-mcp-http-transport",
+        "🌅️modern-era",
+        "🏛️legacy-conformance",
+        "💬️agent-reply",
+        "💬️capability-description",
+        "💼️inference-quartet",
+        "🔄️end-to-end",
+        "🔐️authenticated-hub-workspace",
+        "🔬️bin-quick",
+        "🚶️user-path",
+        "🛡️security",
+        "🤖️agent-credential",
+        "🤖️hub-agent-participant",
+        "🤖️live-agent-loop",
+        "🤝️hub-edit-durability",
+        "🧩️plugin-coverage",
+        "🧱️source-builders",
+        "🧱️source-builders-quick",
+        "🧷️untrusted-content",
+        "🧹️hygiene",
+        "🔬️tests-support",
+        "🔬️server",
+        "🌐️production-browser-artifacts",
+        "⏯️tool-run-matrix",
+        "⏱️interaction-latency",
+        "♨️hot-update",
+        "✅️parity-verdict",
+        "👥️two-human",
+        "💤️idle-budget",
+        "🔀️connection-budget",
+        "🔌️staging-root",
+        "🔖️channel-version",
+        "🗂️hub-document-sweep",
+        "🚀️local-hub",
+        "🚪️io-matrix",
+        "🧮️program-matrix",
+        "🧹️config",
+        "🎯️goal-gate",
+        "🏷️hub-freshness",
+        "🧮️source-census",
+        "🦀️inputs",
+        "⚡️exhaustive-cache-inputs",
+        "📐️test-layout",
+        "🖥️host-protocol-parity",
+        "🧬️schema-invariants",
+        "🧭️fixture-resolution",
+        "🧱️command-composition-source",
+        "✅️catalog-complete",
+        "🎬️host-activation",
+        "📖️generated-projection",
+        "📚️storybook-plugins",
+        "🔁️rebuild",
+        "🧬️surface-schema",
+        "🪪️plugin-identity",
+        "🐳️docker-image",
+        "🔀️forwarding-proxy",
+        "🔬️codec-abi-unit",
+        "🔬️host-unit",
+        "🔬️instance-unit",
+        "🔬️media-export-raster-wasip2",
+        "🔬️registry-unit",
+        "🔬️workflow-standalone",
+        "🔬️workflow-unit",
+        "🧩️component",
+        "📤️unlists-the-studio-and-keeps-its-sibling",
+        "📥️lists-a-persisted-studio-beside-an-imported-one",
+        "✏️sets-named-layout",
+        "🟰️keeps-named-layout",
+        "📇️mutate-os-config-local-catalog",
+        "🔁️lifecycle",
+        "🤝️hub-collaboration",
+        "🤖️agent-ceiling",
+        "🔬️media-export-raster-unit",
+        "🥾️boot-budget"
       ],
       "source": "registry"
     },
@@ -15316,6 +15608,153 @@
         "🧪️tests",
         "🪢️kernel-seam",
         "🪟️winit-app"
+      ],
+      "source": "registry"
+    },
+    "members-of-hub-inference": {
+      "ownerKindIds": [
+        "hub-inference"
+      ],
+      "memberNames": [
+        "✉️command",
+        "🌐️relay",
+        "🏃️runtime",
+        "📇️catalog",
+        "🛂️authorization",
+        "🧾️wal",
+        "🪶️sqlite"
+      ],
+      "source": "registry"
+    },
+    "members-of-hub-directory": {
+      "ownerKindIds": [
+        "hub-directory"
+      ],
+      "memberNames": [
+        "🌐️neo4j",
+        "🐘️postgres",
+        "🪶️sqlite"
+      ],
+      "source": "registry"
+    },
+    "members-of-hub-auth": {
+      "ownerKindIds": [
+        "hub-auth"
+      ],
+      "memberNames": [
+        "📤️command",
+        "🔑️password",
+        "🚦️rate-limit",
+        "🛡️access-policy",
+        "🤖️agent"
+      ],
+      "source": "registry"
+    },
+    "members-of-os-dev-activation": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🌿️virtual"
+      ],
+      "source": "registry"
+    },
+    "members-of-repo-test-parity": {
+      "ownerKindIds": [
+        "repo-test-parity"
+      ],
+      "memberNames": [
+        "✅️verdict"
+      ],
+      "source": "registry"
+    },
+    "members-of-dev-distribution-authority": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "⚙️inputs",
+        "📍️output",
+        "🔌️components"
+      ],
+      "source": "registry"
+    },
+    "members-of-discovery": {
+      "ownerKindIds": [
+        "discovery"
+      ],
+      "memberNames": [
+        "🎛️selection"
+      ],
+      "source": "registry"
+    },
+    "members-of-registry": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🌎️hub-source",
+        "🔁️rebuild",
+        "🧬️surface-schema"
+      ],
+      "source": "registry"
+    },
+    "members-of-os-registry-launch": {
+      "ownerKindIds": [
+        "os-registry-launch"
+      ],
+      "memberNames": [
+        "🏷️name-prefix"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-hub-directory": {
+      "ownerKindIds": [
+        "members-of-hub-directory"
+      ],
+      "memberNames": [
+        "🌱️creation-v1"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-tests": {
+      "ownerKindIds": [
+        "members-of-tests"
+      ],
+      "memberNames": [
+        "🧮️reducers"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-registry": {
+      "ownerKindIds": [
+        "members-of-registry"
+      ],
+      "memberNames": [
+        "👷️service-worker",
+        "🔍️resolution",
+        "🗄️store"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-members-of-hub": {
+      "ownerKindIds": [
+        "members-of-members-of-hub"
+      ],
+      "memberNames": [
+        "🌐️browser-actor",
+        "📤️command",
+        "🛡️opened-root",
+        "🧩️plugin-module"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-elements": {
+      "ownerKindIds": [
+        "members-of-elements"
+      ],
+      "memberNames": [
+        "🗂️local-catalog"
       ],
       "source": "registry"
     },

@@ -77,7 +77,7 @@
       }
     },
     "asset-spare": {
-      "childId": "remodeling-asset-84ec1bd76bb83a25",
+      "childId": "remodeling-asset-a6becb587255f206",
       "target": {
         "artifactId": "asset-spare-image",
         "dialect": {
@@ -98,15 +98,6 @@
         "ZnJhbWUtYQ=="
       ]
     },
-    "remodeling-asset-84ec1bd76bb83a25": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 64,
-      "height": 64,
-      "chunks": [
-        "c3BhcmUtcmFzdGVy"
-      ]
-    },
     "remodeling-asset-a462ec9257d3fccf": {
       "kind": "image",
       "mime": "image/tiff",
@@ -114,6 +105,15 @@
       "height": 128,
       "chunks": [
         "dG95LWRzbS10aWxl"
+      ]
+    },
+    "remodeling-asset-a6becb587255f206": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 64,
+      "height": 64,
+      "chunks": [
+        "c3BhcmUtcmFzdGVy"
       ]
     }
   },

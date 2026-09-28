@@ -431,17 +431,13 @@ impl World3dBuildContext {
 }
 //#endregion 📦️PreparedWorldResources
 
-use semio_framework::{optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::mem::MaybeUninit;
 use std::ops::{Index, IndexMut};
 use std::sync::{LazyLock, Mutex};
-
-fn action_args(value: serde_json::Value) -> Option<semio_framework::DslValue> {
-    optional_json_to_dsl(Some(value))
-}
 
 //#region SceneRecords
 
@@ -10841,7 +10837,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "translateSelection".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
@@ -10857,7 +10853,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "rotateSelection".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
@@ -10877,23 +10873,21 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
             _ => 1.0,
         };
         if (scale - 1.0).abs() > 1e-6 {
-            let mut args = json!({
+            let (sx, sy, sz) = match handle {
+                GumballHandle::ScaleX => (scale, 1.0, 1.0),
+                GumballHandle::ScaleY => (1.0, scale, 1.0),
+                _ => (1.0, 1.0, scale),
+            };
+            let args = semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
-                "sx": 1.0,
-                "sy": 1.0,
-                "sz": 1.0,
+                "sx": sx,
+                "sy": sy,
+                "sz": sz,
             });
-            if handle == GumballHandle::ScaleX {
-                args["sx"] = json!(scale);
-            } else if handle == GumballHandle::ScaleY {
-                args["sy"] = json!(scale);
-            } else {
-                args["sz"] = json!(scale);
-            }
-            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "scaleSelection".into(), args: action_args(args) });
+            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "scaleSelection".into(), args: Some(args) });
         }
     }
     None
@@ -11069,7 +11063,7 @@ pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "setCamera".into(),
-        args: action_args(json!({
+        args: Some(semio_framework::dsl_value!({
             "windowId": state.surface_id,
             "camera": {
                 "position": [
@@ -13383,7 +13377,7 @@ fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, down: b
                 return Some(ActionDescriptor {
                     controller_id: state.controller_id.clone(),
                     action: "paintAt".into(),
-                    args: action_args(json!({
+                    args: Some(semio_framework::dsl_value!({
                         "surfaceId": state.surface_id,
                         "objectId": object_id,
                         "u": u,
@@ -13421,7 +13415,7 @@ fn handle_world3d_paint_actions(state: &mut World3dState, x: f32, y: f32, down: 
         return vec![ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "paintAt".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "objectId": object_id,
                 "u": u,
@@ -13447,12 +13441,12 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
             }
             if state.interaction_mode == "paint" {
                 state.paint_stroke_active = true;
-                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: action_args(json!({ "surfaceId": state.surface_id })) });
+                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id })) });
             }
             if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
                     let merge = world_merge_mode(shift, ctrl).wire_label();
-                    return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
+                    return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
                 }
             } else if state.active_utility == "select" {
                 if !state.selected_ids.is_empty() {
@@ -13491,7 +13485,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "worldSurfacePlace".into(),
-                        args: action_args(json!({
+                        args: Some(semio_framework::dsl_value!({
                             "surfaceId": state.surface_id,
                             "pane": state.surface_id,
                             "objectId": object_id,
@@ -13512,7 +13506,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
     if button == 0 && state.interaction_mode == "paint" && state.paint_stroke_active {
         state.paint_stroke_active = false;
         let mut actions = Vec::new();
-        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeEnd".into(), args: action_args(json!({ "surfaceId": state.surface_id })) });
+        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeEnd".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id })) });
         return actions.first().cloned();
     }
     if button == 0 {
@@ -13521,7 +13515,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
                 return Some(ActionDescriptor {
                     controller_id: state.controller_id.clone(),
                     action: "worldSurfacePlace".into(),
-                    args: action_args(json!({
+                    args: Some(semio_framework::dsl_value!({
                         "surfaceId": state.surface_id,
                         "pane": state.surface_id,
                         "objectId": object_id,
@@ -13546,7 +13540,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "worldRelocate".into(),
-                        args: action_args(json!({
+                        args: Some(semio_framework::dsl_value!({
                             "surfaceId": state.surface_id,
                             "objectId": object_id,
                             "position": position,
@@ -13562,13 +13556,13 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "addBrushObject".into(),
-                        args: action_args(json!({
+                        args: Some(semio_framework::dsl_value!({
                             "targetVortexFullId": target,
                             "objectKindId": kind,
                             "sourceVortexIndex": index,
                             "origin": origin,
                             "orientation": preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                            "scale": preview.scale,
+                            "scale": preview.scale.as_ref().map(semio_framework::DslValue::from),
                         })),
                     });
                 }
@@ -13963,7 +13957,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
             return Some(ActionDescriptor {
                 controller_id: state.controller_id.clone(),
                 action: "worldSurfaceHover".into(),
-                args: action_args(json!({
+                args: Some(semio_framework::dsl_value!({
                     "surfaceId": state.surface_id,
                     "pane": state.surface_id,
                     "objectId": object_id,
@@ -13972,7 +13966,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
                 })),
             });
         }
-        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldSurfaceLeave".into(), args: action_args(json!({ "surfaceId": state.surface_id, "pane": state.surface_id })) });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldSurfaceLeave".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id, "pane": state.surface_id })) });
     }
     if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
         let hit = pick_vortex_at(state, x, y, inner);
@@ -13980,7 +13974,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
             return None;
         }
         state.hovered_vortex_id = hit.clone();
-        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexHover".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": hit })) });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexHover".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id, "fullId": hit })) });
     }
     if component_mode_active(state) {
         if let Some((mode, id, object_id)) = pick_component_at(state, x, y, inner) {
@@ -13994,7 +13988,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
             return Some(ActionDescriptor {
                 controller_id: state.controller_id.clone(),
                 action: "setHover".into(),
-                args: action_args(json!({
+                args: Some(semio_framework::dsl_value!({
                     "objectId": object_id,
                     "mode": mode,
                     "id": id_num,
@@ -14024,10 +14018,10 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
     // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`);
     // `domainId`/target id shape follow this surface's resolved (app-bound or `world`-fallback) domain.
     let targets = match &target {
-        Some((id, granularity)) => json!([{ "granularity": granularity, "id": resolved_item_id(state, id) }]),
-        None => json!([]),
+        Some((id, granularity)) => semio_framework::dsl_value!([{ "granularity": granularity, "id": resolved_item_id(state, id) }]),
+        None => semio_framework::dsl_value!([]),
     };
-    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
+    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
 }
 
 #[cfg(test)]
@@ -14044,7 +14038,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
             return Some(ActionDescriptor {
                 controller_id: state.controller_id.clone(),
                 action: "worldPick".into(),
-                args: action_args(json!({
+                args: Some(semio_framework::dsl_value!({
                     "surfaceId": state.surface_id,
                     "granularity": state.granularity,
                     "id": null,
@@ -14055,7 +14049,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "worldPick".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "granularity": granularity,
                 "id": id.parse::<u64>().ok(),
@@ -14069,7 +14063,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "worldPick".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "surfaceId": state.surface_id,
                 "granularity": "mesh",
                 "id": id,
@@ -14078,14 +14072,14 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         });
     }
     let hit = pick_instance_at(state, x, y, inner);
-    let targets: Vec<serde_json::Value> = hit
+    let targets: Vec<semio_framework::DslValue> = hit
         .into_iter()
-        .map(|id| json!({ "granularity": instance_interaction_granularity_id(state, &id), "id": resolved_item_id(state, instance_interaction_id(state, &id)) }))
+        .map(|id| semio_framework::dsl_value!({ "granularity": instance_interaction_granularity_id(state, &id), "id": resolved_item_id(state, instance_interaction_id(state, &id)) }))
         .collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),
-        args: action_args(json!({
+        args: Some(semio_framework::dsl_value!({
             "domainId": resolved_domain_id(state),
             "targets": targets,
             "merge": merge,
@@ -14170,7 +14164,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "setSelection".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "mode": state.granularity,
                 "ids": merged,
             })),
@@ -14180,18 +14174,18 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     // hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
     // the os-kernel `next_selection` machine's job, not this file's.
     let mut seen = HashSet::new();
-    let targets: Vec<serde_json::Value> = ids
+    let targets: Vec<semio_framework::DslValue> = ids
         .iter()
         .filter_map(|id| {
             let granularity = instance_interaction_granularity_id(state, id);
             let target_id = instance_interaction_id(state, id);
-            seen.insert((granularity.to_string(), target_id.to_string())).then(|| json!({ "granularity": granularity, "id": resolved_item_id(state, target_id) }))
+            seen.insert((granularity.to_string(), target_id.to_string())).then(|| semio_framework::dsl_value!({ "granularity": granularity, "id": resolved_item_id(state, target_id) }))
         })
         .collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),
-        args: action_args(json!({
+        args: Some(semio_framework::dsl_value!({
             "domainId": resolved_domain_id(state),
             "targets": targets,
             "merge": merge.wire_label(),
@@ -15863,13 +15857,11 @@ fn world_brush_mesh_payload(mesh: Mesh3dLease) -> Option<(Vec<u8>, usize)> {
     (bytes.len() == total_values * 4).then_some((bytes, position_values))
 }
 
-fn world_brush_mesh_args(surface_id: &str, extra: serde_json::Value) -> Option<semio_framework::DslValue> {
-    let mut args = json!({ "surfaceId": surface_id, "windowId": surface_id });
-    let (Some(object), Some(extra)) = (args.as_object_mut(), extra.as_object()) else { return None };
-    for (key, value) in extra {
-        object.insert(key.clone(), value.clone());
-    }
-    action_args(args)
+fn world_brush_mesh_args(surface_id: &str, extra: semio_framework::DslValue) -> Option<semio_framework::DslValue> {
+    let semio_framework::DslValue::Object(extra) = extra else { return None };
+    let mut entries = vec![("surfaceId".to_string(), semio_framework::DslValue::String(surface_id.to_string())), ("windowId".to_string(), semio_framework::DslValue::String(surface_id.to_string()))];
+    entries.extend(extra.into_iter().filter(|(key, _)| key != "surfaceId" && key != "windowId"));
+    Some(semio_framework::DslValue::Object(entries))
 }
 
 /// 🥽️ The next `registerBrushMesh` this world surface owes the guest, or `None` when every resident
@@ -15907,7 +15899,7 @@ pub fn step_world3d_brush_mesh_announce(state: &mut World3dState) -> Option<Acti
     let revision = world_brush_mesh_revision(&url);
     if let Some(digest) = with_world_brush_mesh_registry(|registry| registry.entries.get(&url).map(|entry| entry.digest.clone())).flatten() {
         state.brush_mesh_announced.insert(url.clone(), revision);
-        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, json!({ "url": url, "digest": digest })) });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, semio_framework::dsl_value!({ "url": url, "digest": digest })) });
     }
     let mesh = state.meshes.get(&mesh_key).copied()?;
     let Some((bytes, position_values)) = world_brush_mesh_payload(mesh) else {
@@ -15919,7 +15911,7 @@ pub fn step_world3d_brush_mesh_announce(state: &mut World3dState) -> Option<Acti
     if aliasable {
         with_world_brush_mesh_registry(|registry| registry.entries.insert(url.clone(), WorldBrushMeshEntry { digest: digest.clone(), paged: false }));
         state.brush_mesh_announced.insert(url.clone(), revision);
-        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, json!({ "url": url, "digest": digest })) });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, semio_framework::dsl_value!({ "url": url, "digest": digest })) });
     }
     let capacity = world_brush_mesh_page_capacity(&state.surface_id, &url, &digest);
     let total_values = bytes.len() / 4;
@@ -15942,13 +15934,13 @@ fn world_brush_mesh_next_page(state: &mut World3dState) -> Option<ActionDescript
     let end = (run.bytes.len() / 4).min(start.saturating_add(run.capacity));
     let positions = &run.bytes[start.min(run.position_values) * 4..end.min(run.position_values) * 4];
     let indices = &run.bytes[start.max(run.position_values) * 4..end.max(run.position_values) * 4];
-    let mut page = json!({ "url": run.url, "digest": run.digest, "page": run.page, "pageCount": run.page_count });
-    if let Some(object) = page.as_object_mut() {
+    let mut page = semio_framework::dsl_value!({ "url": run.url, "digest": run.digest, "page": run.page, "pageCount": run.page_count });
+    if let semio_framework::DslValue::Object(entries) = &mut page {
         if !positions.is_empty() {
-            object.insert("positionsB64".into(), json!(base64_codec::base64_standard_encode(positions)));
+            entries.push(("positionsB64".into(), semio_framework::DslValue::String(base64_codec::base64_standard_encode(positions))));
         }
         if !indices.is_empty() {
-            object.insert("indicesB64".into(), json!(base64_codec::base64_standard_encode(indices)));
+            entries.push(("indicesB64".into(), semio_framework::DslValue::String(base64_codec::base64_standard_encode(indices))));
         }
     }
     let action = ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, page) };

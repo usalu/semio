@@ -285,10 +285,10 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     assert!(committed[2] > 1.784_432_561_601_109_9, "a wheel-up zooms in from the fixture camera, got {}", committed[2]);
     assert_eq!(
         viewport.args,
-        semio_framework::optional_json_to_dsl(Some(json!({
+        Some(semio_framework::dsl_value!({
             "surfaceId": surface_id,
             "viewport": { "x": committed[0], "y": committed[1], "zoom": committed[2] },
-        }))),
+        })),
         "the published viewport is exactly the camera the host committed"
     );
     drop_engine_surface(surface_id);

@@ -62,7 +62,7 @@ fn test_shell_state() -> ShellState {
 fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let spec = ui_wgpu::wgpu::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: semio_framework::optional_json_to_dsl((!case["args"].is_null()).then(|| case["args"].clone())), ..Default::default() };
+        let spec = ui_wgpu::wgpu::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: (!case["args"].is_null()).then(|| semio_framework::DslValue::from(&case["args"])), ..Default::default() };
         let group = ui_wgpu::wgpu::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
         let mut items = vec![shell_context_menu_item_from_spec(group, "test", false)];
         scope_context_menu_items(&mut items, fixture["clickedWindowId"].as_str().unwrap());

@@ -51,8 +51,8 @@ pub fn lowpoly_action(action: &str, args: Option<semio_framework_plugin::UiValue
 }
 
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
-pub fn lowpoly_window_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub fn lowpoly_window_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🏷️ Admits resolved Lowpoly text into the semantic UI contract.
@@ -172,7 +172,7 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &serd
         ready: None,
         loading: None,
         disabled: None,
-        on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
+        on_change: lowpoly_window_action("setUtilityParam", Some(dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))]))),
         waiting: None,
     }
 }
@@ -192,7 +192,7 @@ pub fn paint_utility_params_group(utility: &str, params: &serde_json::Value, lab
         ready: None,
         loading: None,
         disabled: None,
-        on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
+        on_change: lowpoly_window_action("setUtilityParam", Some(dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))]))),
         waiting: None,
     };
     WindowMeasure::Group {
@@ -239,7 +239,7 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         disabled: None,
         action: Some(lowpoly_window_action(
             "setInteractionGranularity",
-            Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])).into()),
+            Some(dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])),
         )),
     };
     let gumball = |id: &str, icon: &str, label: LabelText, key: &str, pressed: bool| WindowEngagementOption {
@@ -249,7 +249,7 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         pressed: Some(pressed),
         disabled: None,
         // 🎛️ An engagement option carries no toggle value, so the press flips the flag it reads.
-        action: Some(lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string())), ("value".to_string(), dsl::DslValue::Bool(!pressed))])).into()))),
+        action: Some(lowpoly_window_action("setUtilityParam", Some(dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string())), ("value".to_string(), dsl::DslValue::Bool(!pressed))])))),
     };
     let status = if selected_components > 0 { format!("{active_utility} · {selected_components} {} {}", select.granularity, labels.selected.as_str()) } else { active_utility.to_string() };
     WindowEngagement {
@@ -1861,18 +1861,6 @@ impl ArtifactEditor for LowpolyPlayApp {
         })
     }
 
-    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
-    /// (`reset_document_effect`: mesh import, fixture import) — the trait default refuses the envelope,
-    /// which the host reported as `artifact-store.persisted-initializer-refused` on every import
-    /// (react playground, 2026-09-18). The note/fem shape over the bounded owners above.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, LOWPOLY_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
@@ -2006,6 +1994,7 @@ impl ArtifactEditor for LowpolyPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

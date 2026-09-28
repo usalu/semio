@@ -67,6 +67,37 @@ impl RateLimitClassV1 {
     }
 }
 
+/// 🏷️ `RateLimitRefusalV1.schema`.
+pub const RATE_LIMIT_REFUSAL_SCHEMA: &str = "semio.hub.rate-limit-refusal/v1";
+
+/// 🗣️ `RateLimitRefusalMessageV1`: the notice of a rate-limited request, en and de.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct RateLimitRefusalMessageV1 {
+    pub en: &'static str,
+    pub de: &'static str,
+}
+
+/// 🗣️ The one `RateLimitRefusalMessageV1` every refusal carries.
+pub const RATE_LIMIT_REFUSAL_MESSAGE: RateLimitRefusalMessageV1 = RateLimitRefusalMessageV1 { en: "Too many requests in a short time. Wait a moment, then try again.", de: "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen." };
+
+/// 🚦️ `RateLimitRefusalV1`: the body of the `429` a non-auth rate-limited route family answers when its bucket is empty — the
+/// class, the wait until one request is admitted again, the notice; the client resends the same request after the wait.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RateLimitRefusalV1 {
+    pub schema: &'static str,
+    pub code: &'static str,
+    pub class: &'static str,
+    pub retry_after_ms: u64,
+    pub message: RateLimitRefusalMessageV1,
+}
+
+impl RateLimitRefusalV1 {
+    pub fn new(class: RateLimitClassV1, retry_after_ms: u64) -> Self {
+        Self { schema: RATE_LIMIT_REFUSAL_SCHEMA, code: "rate-limited", class: class.as_str(), retry_after_ms: retry_after_ms.max(1), message: RATE_LIMIT_REFUSAL_MESSAGE }
+    }
+}
+
 /// 📐️ One class's admitted burst and sustained cost.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RateLimitPolicyV1 {

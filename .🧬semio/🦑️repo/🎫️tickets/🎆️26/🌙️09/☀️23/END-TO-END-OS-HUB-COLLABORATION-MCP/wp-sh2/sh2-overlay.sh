@@ -1,12 +1,12 @@
 #!/bin/zsh
 # 🧪️ SH2 overlay runs (session 14 rule 3 / session 13 rule 37): ONE overlay build fleet-wide via the `overlay` fleet mutex, inside the
 # scratch overlay with PRIVATE build/target dirs (never the shared build-dir), nice 15, incremental off.
-overlay="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-overlay"
+overlay="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay"
 out="/Users/ueli/Documents/semio/.tmp-ticket/wp-sh2/generated"
 tag="${SH2_TAG:-ov}"
 export CARGO_INCREMENTAL=0 RUST_MIN_STACK=33554432
-export CARGO_BUILD_BUILD_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-build"
-export CARGO_TARGET_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-target"
+export CARGO_BUILD_BUILD_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-build"
+export CARGO_TARGET_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-target"
 run() {
   local name="$1"; shift
   echo "START $name $(date '+%H:%M:%S')"
@@ -28,8 +28,13 @@ for job in $jobs; do
       echo "END items rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-items.txt" | sort | uniq -c | tr '\n' ' ' | cut -c1-600)" ;;
     b1)
       echo "START b1 $(date '+%H:%M:%S')"
-      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== config"; cargo test -p semio-framework-os-config --lib --no-fail-fast; echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4; echo "== kernel"; cargo test -p semio-framework-os-kernel --features sync,ureq --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-b1.txt" 2>&1
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== config"; cargo test -p semio-framework-os-config --lib --no-fail-fast; echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-b1.txt" 2>&1
       echo "END b1 rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-b1.txt" | tr '\n' ' ' | cut -c1-900)" ;;
+    b1-guest)
+      echo "START b1-guest $(date '+%H:%M:%S')"
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== home"; cargo test -p semio-s-artifact-space-home --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-b1-guest.txt" 2>&1
+      echo "END b1-guest rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-b1-guest.txt" | tr '\n' ' ' | cut -c1-900)" ;;
+    plugin-proofs) run plugin-proofs test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4 interactive_job_catalog ;;
     kernel-check) run kernel-check check -p semio-framework-os-kernel --features sync,ureq --lib --tests --message-format short ;;
     kernel) run kernel test -p semio-framework-os-kernel --features sync,ureq --lib --no-fail-fast -- --test-threads 4 ;;
   esac

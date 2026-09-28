@@ -283,13 +283,9 @@ pub fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<
 /// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
 /// `dag_content_child_handle`/`flow_content_child_handle`/`document_child_handle`.
 pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = jack_content_snapshot_from_working(nodes, edges);
     let content_json = pack::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("jack-content-{content_hash:016x}");
+    let child_id = store::content_id("jack-content", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -657,7 +653,7 @@ pub fn empty_trinity_graph_fixture() -> JackSnapshot {
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "graph.trinity".into(),
-        name: "Trinity Graph".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
         source_format: "trinity.graph".into(),
         component_kind: "trinity".into(),
         dimension: "graph".into(),

@@ -6,6 +6,45 @@ Durable data: `.🧬semio/🌐hub/s14-r10-*/`. Private cargo: `CARGO_TARGET_DIR=
 
 ## Session 14
 
+### Session 14c
+
+Successor agent (2026-09-28 21:0x, wave B at WINDOW 3 OPEN). Train T0 (taxonomy + launch) owner.
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| C1 | Pending wave-B relays into the window-3 input | DONE — program-matrix / interaction-latency / boot-budget reducers + Panel `🧩️component` (live dirs, refresh scope += ui Panel); S18 `🗂️set-named-layout`, SH2 route-B dirs, Z4 `🔁️lifecycle` (prepared-set dirs, simulation root); WG11 target + 8 checks HELD (verb lands in T3) | §14c log 21:0x |
+| C2 | T0 serial landing (taxonomy → discovery → targets → seed → render → plan) | DONE 21:30 — every step probe + boot green; registry check rc 0; launch laws 7/7; plan 63 checks, 66/66 targets declared; "T0 DONE" sent | landing rows 21:19–21:30 |
+| C3 | `three-mesh-bvh` behind the ui module (relay) | LANDED 21:46 (host TS) — ui re-export, r3f routed, policy owner row, census fixture; manifests → T4 via extended `three-manifests.py` | landing row 21:46 |
+| C4 | Held follow-ups | WG11 `hub-collaboration-acceptance` target + 8 plan checks after `wg11-harness-land.py` (T3); `st2-apply.py --part r10` (T2) and T5 codemods when L1 asks | — |
+
+#### Session 14c log
+
+- 21:0x read preamble 14 (+14b/14c), AGENTS.md, window3-plan (T0), fleet tail — WINDOW 3 was already OPEN (21:00).
+- 21:0x refresh (read-only kinds re-probe, scopes + `🖱️ui/🧱️elements/🖼️Panel`) against the candidate: remaining unresolved = the 4 known
+  non-registrations + dev `👷️worker-freshness` ×2, os host 11 (test/schema/fixture dirs, `🎠️activation`, `💾️persistence`), `🗜️deflate`,
+  Panel `🧩️component` → all registered by the next pass (`.🧬semio/🌐hub/s14-r10-logs/window3-refresh-s14c-1.txt`).
+- 21:0x **prepared-set directories proven before they exist** — `wp-r10/taxonomy-planned.py`: simulation root (scratchpad; fresh git
+  repo) = tracked + untracked files of the touched subtrees + taxonomy; S18's twin applied through its own script (`S18_PATCH_ROOT`,
+  96 changes / 0 problems), SH2 route B from its payload manifest (41 files), Z4 lifecycle copies + retirements; `taxonomy-kinds.ts
+  --root` over config / ShellHost / host tests / space home / containers; `--live` diff against the same scopes on the live tree
+  (146 pre-existing unresolved in both; the simulation reproduces them exactly) → **17 rows the sets introduce** (`generated/
+  tax-kinds-planned-1.json`, added to the taxonomy step's inputs). `🐳️containers/🔁️lifecycle` stays unresolved: its live ancestors
+  `⚡️caching/📦️artifacts/🐳️containers` are unresolved today (registering the bootstrap subtree = owner decision, not this pass).
+  FINDING: live unresolved in those scopes — config mutation leaves 62, ShellHost 40, host tests 18, space home 15, caching 9.
+- 21:0x `wp-r10/taxonomy-diff-check.py` (static: only additions, 0 new same-owner conflicts) + the chain's registry check added to the
+  taxonomy gate. Dry runs on the live tree: taxonomy 326 names / 14 kinds, validator 0; discovery applies + anchor once; targets 13 +
+  1 edit; seed 7 rows / 7 edits / 1 input / 1 text edit; plan valid. Verb audit: every target's `📜️script.ts` verb exists EXCEPT
+  renderer-wgpu `hub-collaboration-acceptance` (arrives with WG11's harness landing) → `hold` support in `window3-apply.ts`.
+- 21:07–21:30 **T0 landed serially** (logs `s14-r10-logs/window3-<step>-*.txt`): taxonomy (probe 644 ms, registry check 11 min rc 0,
+  boot 23 s) → discovery (launch laws 7/7, boot 34 s) → targets (boot 32 s) → seed (boot 51 s) → render (1 262 configurations, launch
+  laws 7/7 incl. byte-identical, boot 48 s) → plan (63 checks; `plan-targets-check` 66/66). "T0 DONE" sent to main 21:3x.
+- 21:3x–21:46 **`three-mesh-bvh` behind the ui module** (relay; last production importer = infinite r3f, collision BVH): ui React target
+  re-exports `MeshBVH` + `HitPointInfo` explicitly; r3f imports them from `@semio-tech/ui-react`; `DEPENDENCY_INTERFACE_OWNERS` +=
+  `three-mesh-bvh` (the census and the oracle-conflict rule pick it up); fixture cases updated/added. Proof: tsc 331 = 331 pre-existing
+  (0 in r3f/ui), source-census 26/26, `verify interface-owners` PASS (0 / 6 146, oracle agrees), dependency self-test clean, boot PASS,
+  matrix lowpoly + cad en 2/2. `three-manifests.py` (T4, L1) now also drops it from r3f and declares `^0.9.14` in the ui target (lock
+  blocks textual); scratch apply idempotent. fem already declares three / three-mesh-bvh / manifold as devDependencies (probes).
+
 ### Session 14b
 
 Successor agent (2026-09-28 12:0x). Guest freeze ON (chain launched 12:02:46); window 3 FROZEN — nothing kernel-derive lands before "WINDOW 3 OPEN".

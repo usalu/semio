@@ -15,7 +15,7 @@ pub const DEMO_STOCK_TEXT: &str = crate::examples::demo::PRIMARY_TEXT;
 /// handle is content-addressed from an empty stock (`catalog_child_handle(&[])`, same value
 /// `CurationSnapshot::default()` mints).
 pub const EMPTY_CURATION_TEXT: &str = r#"semio curation.curation.dsl v1
-catalog=child_id=catalog-7904dd65836c8ff4 target="catalog-7904dd65836c8ff4!s.stdio.semio@v1/kit" stock-extra=[ ]
+catalog=child_id=catalog-4f53cda18c2baa0c target="catalog-4f53cda18c2baa0c!s.stdio.semio@v1/kit" stock-extra=[ ]
 curated [object-id:REF count:UINT] {
 }
 "#;

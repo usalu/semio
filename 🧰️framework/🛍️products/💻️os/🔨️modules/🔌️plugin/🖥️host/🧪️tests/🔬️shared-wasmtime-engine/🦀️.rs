@@ -126,6 +126,22 @@ async fn compiled_component_round_trips_through_cache_for_a_deterministic_compon
     let _ = std::fs::remove_dir_all(&cache_dir);
 }
 
+/// 🧊️ The isolated compile process's body writes a `.cwasm` the host engine it was configured from loads
+/// as a cache hit, byte-identical to the engine's own precompiled serialization — the compile never
+/// publishes executable code, so the process has no unwind frame to tear down before it exits.
+#[semio_framework_async_macros::async_test]
+async fn an_isolated_compile_writes_the_precompiled_entry_its_host_engine_loads() {
+    let cfg = SharedEngineConfig { force_on_demand: true, ..SharedEngineConfig::default() };
+    let (engine, _pooling_active) = build_shared_engine(cfg).await.expect("engine builds");
+    let cache_dir = std::env::temp_dir().join(format!("semio-isolated-compile-test-{}", std::process::id()));
+    let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&cfg, false).await, &[4u8; 32]).await;
+    compile_component_isolated(&cfg.to_isolated_arg(), minimal_component_without_actor_world(), &cache_path).expect("isolated compile succeeds");
+    assert_eq!(std::fs::read(&cache_path).expect("cache entry written"), engine.precompile_component(minimal_component_without_actor_world()).expect("precompile"), "the entry is the engine's precompiled serialization");
+    assert!(!compiled_cache_scratch_path(&cache_path, std::process::id()).exists(), "no scratch file is left behind");
+    assert!(load_compiled_component(&engine, &cache_path).await.is_some(), "the host engine loads the entry");
+    let _ = std::fs::remove_dir_all(&cache_dir);
+}
+
 /// ⛽️ An unmetered engine is its own compiled-code namespace — a metered `.cwasm` never loads into it
 /// — the metered default keeps the namespace every existing cache entry already lives in, and a
 /// `Store` on it takes no fuel at all, so only its epoch deadline bounds a guest call.

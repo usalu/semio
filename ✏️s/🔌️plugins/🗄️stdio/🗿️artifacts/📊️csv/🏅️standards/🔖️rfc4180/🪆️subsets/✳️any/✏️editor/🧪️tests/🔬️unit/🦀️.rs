@@ -158,6 +158,29 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
     assert!(csv_emit(&CsvEditorCommand::SetCell { row: u32::MAX, column: 0, revision: revision.clone(), value: "x".into() }, &source).is_err());
     assert!(csv_emit(&CsvEditorCommand::SetCell { row: 0, column: u32::MAX, revision, value: "x".into() }, &source).is_err());
 }
+/// ⚖️ LAW (agent lane, ticket 26/09/23 G12 session 14c): an agent's `set-cell` without a `revision` is admitted against the
+/// document's revision — it previews the edit exactly as with the token the rendered cell carries, a stale token is still
+/// refused — while the shell lane keeps refusing the omission.
+#[semio_framework_async_macros::async_test]
+async fn an_agent_set_cell_without_a_revision_previews_against_the_document_revision_and_the_shell_lane_still_requires_it() {
+    let source = csv_example_snapshot(crate::examples::demo::ID);
+    let mut app = kit_fixture_holding(&source).await;
+    let definition = create_csv_editor();
+    let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
+    let address = |revision: Option<String>| {
+        dsl::DslValue::object(
+            [("row".to_string(), dsl::DslValue::Number(dsl::Number::UInt(0))), ("column".to_string(), dsl::DslValue::Number(dsl::Number::UInt(0))), ("value".to_string(), dsl::DslValue::String("Zeta".into()))]
+                .into_iter()
+                .chain(revision.map(|revision| ("revision".to_string(), dsl::DslValue::String(revision)))),
+        )
+    };
+    let omitted = semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(None)).await.expect("the agent lane admits an omitted revision");
+    let bound = semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some(revision))).await.expect("the rendered cell's revision");
+    assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
+    assert!(semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some("stale".into()))).await.is_err(), "a stale token is refused on the agent lane too");
+    assert!(dispatch_settled(&mut app, "set-cell", address(None)).await.is_err(), "the shell lane still requires the rendered cell's revision");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
 //#endregion 🪟️KitVerbLaws
 
 #[test]

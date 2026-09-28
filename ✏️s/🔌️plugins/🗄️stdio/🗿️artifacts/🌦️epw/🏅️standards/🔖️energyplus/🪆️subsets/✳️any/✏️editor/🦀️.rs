@@ -126,6 +126,9 @@ impl ArtifactEditor for EpwEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
     }
 
+    fn agent_target_revision(_action: &str, args: &dsl::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+        epw_agent_target_revision(doc.snapshot, args)
+    }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
@@ -183,6 +186,17 @@ impl ArtifactEditor for EpwEditor {
 
 pub(crate) fn epw_row_revision(record: &crate::standards::energyplus::subsets::any::schema::snapshot::EpwRecord) -> String {
     semio_framework_plugin::app::DocumentWindowKit::text_revision(&semio_s_artifact_stdio_contract::editing::snapshot_edit_source(record))
+}
+
+/// 🔐️ The token an agent's omitted `set-cell` revision is admitted against: the addressed record's row token, as its rendered
+/// binding carries it; a row out of range is refused exactly as the edit itself would refuse it.
+fn epw_agent_target_revision(snapshot: &EpwSnapshot, args: &dsl::DslValue) -> Result<Option<String>, Fault> {
+    let row = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "row")?;
+    let record = snapshot
+        .records
+        .get(row as usize)
+        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.row-range"), format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
+    Ok(Some(epw_row_revision(record)))
 }
 
 fn epw_set_cell_emit(snapshot: &EpwSnapshot, row: u32, column: &str, revision: &str, value: &str) -> Result<Emit<EpwMutation>, Fault> {

@@ -1089,5 +1089,254 @@
       "utf8": 4,
       "scalar": 2
     }
+  ],
+  "hostTyping": [
+    {
+      "id": "an-echo-of-own-typing-shows-nothing",
+      "note": "the window echoes the host's own run: the editor keeps its text and caret",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-lagging-echo-never-reverts-in-flight-typing",
+      "note": "an echo of an older run while a newer one is in flight changes nothing",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "local": "Hello there!",
+          "caret": 12
+        },
+        {
+          "send": {
+            "seq": 2,
+            "splice": {
+              "start": 11,
+              "deleted": "",
+              "insert": "!",
+              "before": "Hello there",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": [
+            2
+          ]
+        },
+        {
+          "scene": "Hello there!",
+          "applied": 2,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-collaborator-run-arrives-while-typing",
+      "note": "a collaborator's prefix arrives before the window applied the host's run: sent and unsent typing fold onto it, the caret follows",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "local": "Hello there you",
+          "caret": 15
+        },
+        {
+          "scene": "Oh. Hello",
+          "applied": 0,
+          "show": {
+            "text": "Oh. Hello there you",
+            "anchor": 19,
+            "caret": 19
+          },
+          "unapplied": [
+            1
+          ]
+        },
+        {
+          "scene": "Oh. Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "both-type-at-the-same-point",
+      "note": "the window took the collaborator's Y first and then the host's X at the same point: the host shows both, its caret stays after its own X",
+      "init": {
+        "buffer": "ab",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "abX",
+          "caret": 3
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 2,
+              "deleted": "",
+              "insert": "X",
+              "before": "ab",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abY",
+          "applied": 0,
+          "show": {
+            "text": "abXY",
+            "anchor": 3,
+            "caret": 3
+          },
+          "unapplied": [
+            1
+          ]
+        },
+        {
+          "scene": "abXY",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-refused-run-disappears",
+      "note": "the window refused the run: the editor shows the published text again",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "refuse": 1,
+          "show": {
+            "text": "Hello",
+            "anchor": 5,
+            "caret": 5
+          },
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-remounted-host-continues-the-window-sequence",
+      "note": "a host mounted on a window that applied splice 7 numbers its next run 8",
+      "init": {
+        "buffer": "abc",
+        "applied": 7
+      },
+      "events": [
+        {
+          "local": "abcd",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 8,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "d",
+              "before": "abc",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abcd",
+          "applied": 8,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    }
   ]
 }

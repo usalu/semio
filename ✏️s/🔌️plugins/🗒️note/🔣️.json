@@ -851,6 +851,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -1488,6 +1533,51 @@
                   }
                 ],
                 "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -5614,7 +5704,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -6743,7 +6879,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -6846,8 +6982,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "e650746ebbc14b492151cab66d1337e6cb14b90bf63130f6b0daada94dd8f0bd",
-    "coreWasmSha256": "a7e34ae7f3502a45604f639e86603d9b16eed2e11792f4649c7f55c184de9a78",
-    "descriptorSha256": "2680f8375bcca45e614b9e67a35e81a9416e35da13f4ca1b86bc8b70e3257e8f"
+    "wasmSha256": "6a13b4bd6e4c3fa942e2e04e648a0ca14c4459ba0f174e3a583284301ae0ec64",
+    "coreWasmSha256": "c3850bf1985dcdeef3b2edac05579ea03d9bb519be8378022dc7aafdff59afbd",
+    "descriptorSha256": "09c1a9dd27709e041235e78f9eb75883d23565638a1c8b9b5b0ecef04abcf6fe"
   }
 }

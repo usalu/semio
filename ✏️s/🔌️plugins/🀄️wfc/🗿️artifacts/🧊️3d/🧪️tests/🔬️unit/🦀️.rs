@@ -21,7 +21,7 @@ fn the_os_artifact_kind_is_the_dimension_namespace() {
     assert_eq!(kind.component_kind, "wfc3d");
     assert_eq!(kind.dimension, "3d");
     assert_eq!(kind.schema, WFC3D_DOCUMENT_SCHEMA);
-    assert_eq!(kind.name, "3D");
+    assert_eq!(kind.label, semio_framework_plugin::LocalizedLabel::native("3D", "3D"));
 }
 
 #[test]

@@ -1,0 +1,11 @@
+{
+  "title": "Unstage Ticket Folder Without Restart",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Unstaging .\\ud83e\\uddecsemio/\\ud83e\\uddb0\\ufe0frepo/\\ud83c\\udf9ftickets/\\ud83c\\udf86\\ufe0f26/\\ud83c\\udf19\\ufe0f09/\\u2600\\ufe0f23 in GitKraken restarts the Mac. The day tree is polluted, mostly by END-TO-END-OS-HUB-COLLABORATION-MCP: about 6.7GB, 33k staged files, a 4GB w3-backup of repo snapshots, debug binaries over 100MB, and node_modules symlinks. Remove that pollution and take those paths out of the index so unstaging the folder no longer crashes the machine. Keep ticket reports and small scripts.",
+  "summary": "Unstaged the 23 September ticket day and removed the staged 4GB w3-backup, debug binaries, generated dumps, and node_modules symlinks that made GitKraken restart the Mac. The day tree is 83MB with nothing staged. w3-backup is gitignored.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪1c6f686d5f3a45729472a208b6eb71c1"
+  ]
+}

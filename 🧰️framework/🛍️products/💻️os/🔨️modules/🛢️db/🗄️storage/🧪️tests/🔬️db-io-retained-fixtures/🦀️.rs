@@ -461,6 +461,39 @@ struct DeferredBackendCloseLawExecutor {
     terminal: bool,
 }
 
+struct CleanupFaultLawExecutor {
+    fail: Arc<std::sync::atomic::AtomicBool>,
+    terminal: bool,
+}
+
+impl DbIoTaskExecutor for CleanupFaultLawExecutor {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+    fn execute_step(&self, _operation: u64, _task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+        Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+    }
+    fn drive_async(self: Box<Self>, _operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {
+        Box::pin(async move {
+            let executor: Box<dyn DbIoTaskExecutor> = self;
+            (executor, task, Err(DbError::Internal("cleanup fault fixture has no async driver".to_string())))
+        })
+    }
+    fn close_operation_step(&self, _operation: u64, _task: &DbIoTask) -> Result<bool, DbError> {
+        if self.fail.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Io("injected operation cleanup fault".to_string()));
+        }
+        Ok(true)
+    }
+    fn close_backend_step(&mut self, _context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+        self.terminal = true;
+        Ok(true)
+    }
+    fn backend_terminal_is_empty(&self) -> bool {
+        self.terminal
+    }
+}
+
 struct DropRegisteredBackend(DbIoBackendControl);
 
 impl Drop for DropRegisteredBackend {
@@ -2619,3 +2652,29 @@ async fn db_io_forged_backend_kind_is_rejected_before_task_page_admission() {
     assert_eq!(pool.shutdown(), Ok(()));
 }
 
+/// 🧯️ An operation-cleanup fault stays with its backend: the close ring records it on the failing backend and moves on, so a
+/// healthy backend's operation finishes, drains and closes `Ok` beside it, while the failing backend's own waiter and close
+/// report the fault (its kind preserved) until its cleanup succeeds.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn a_backend_cleanup_fault_reaches_only_its_own_waiters_and_close() {
+    let _owner = fixture_owner();
+    let before = ledger_witness();
+    let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+    let fail = Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let faulty = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(CleanupFaultLawExecutor { fail: fail.clone(), terminal: false }), pool.clone()).unwrap();
+    let healthy = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
+    let injected = DbError::Io("injected operation cleanup fault".to_string());
+    let faulted = submit_db_io_task(DbIoTask::BackendOpen { backend: faulty, path: DbIoText::try_from_str("fixture://cleanup-fault").unwrap() }).unwrap_or_else(|(error, _)| panic!("{error}"));
+    assert_eq!(faulted.finish().await.err(), Some(injected.clone()), "the failing backend's own waiter reports its cleanup fault");
+    let neighbour = submit_db_io_task(DbIoTask::BackendOpen { backend: healthy, path: DbIoText::try_from_str("fixture://cleanup-fault-neighbour").unwrap() }).unwrap_or_else(|(error, _)| panic!("{error}"));
+    assert!(matches!(neighbour.finish().await, Ok(DbIoResult::Unit)), "a neighbour's operation never inherits another backend's cleanup fault");
+    drain_control_tasks(healthy).await;
+    close_db_io_backend(healthy).await.unwrap();
+    assert_eq!(close_db_io_backend(faulty).await, Err(injected), "the failing backend's close reports its own cleanup fault");
+    fail.store(false, std::sync::atomic::Ordering::Release);
+    drain_control_tasks(faulty).await;
+    close_db_io_backend(faulty).await.unwrap();
+    assert_eq!(pool.shutdown(), Ok(()));
+    assert_eq!(ledger_witness(), before);
+}

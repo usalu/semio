@@ -892,7 +892,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                         self.operation_index = 1;
                     } else if let Some(meta) = edit.mutation_meta.get(self.operation_index - 1) {
                         if let Some(id) = &meta.mutation_id {
-                            if id.0 != edit.id && runtime.seed_mutation(id.clone()).is_err() {
+                            if runtime.seed_edit_operation(&edit.id, id.clone()).is_err() {
                                 return Self::fault(cx, b"recursive-parent-mutation-seed-rejected");
                             }
                         }

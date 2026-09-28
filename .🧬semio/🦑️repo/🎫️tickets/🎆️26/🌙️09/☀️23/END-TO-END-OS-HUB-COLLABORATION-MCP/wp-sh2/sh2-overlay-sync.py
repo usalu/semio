@@ -7,10 +7,10 @@ import os, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = "/Users/ueli/Documents/semio"
-DEST = os.path.join(ROOT, ".🧬semio/🌐hub/s13-sh1-overlay")
+DEST = os.path.join(ROOT, ".🧬semio/🌐hub/s14-sh2-overlay")
 HERE = os.path.dirname(os.path.abspath(__file__))
 LISTED = os.path.join(HERE, "overlay-files.txt")
-GENERATED = os.path.join(ROOT, ".tmp-ticket/wp-sh1/generated/ignored-generated.txt")
+GENERATED = os.path.join(ROOT, ".🧬semio/🌐hub/s14-sh2-captures/ignored-generated.txt")
 PINNED = os.path.join(HERE, "overlay-pin-head.txt")
 DROPPED = os.path.join(HERE, "overlay-drop.txt")
 EXTRA = os.path.join(HERE, "overlay-extra-files.txt")

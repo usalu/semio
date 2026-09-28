@@ -32,15 +32,21 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 📇️ Proves Home projection persistence is document-complete and corruption-explicit. */
+/** 📇️ Proves the Home transient directory projection's wire is document-complete and corruption-explicit, and that the
+ * projection is never persisted in the config. */
 export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
-  const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/📇️projection-persistence-v1/🔣️.json"), "utf8"));
-  const module = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+  const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
+  const fixture = JSON.parse(readFileSync(join(base, "🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), "utf8"));
+  const module = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🔣️.json"), "utf8"));
+  const directory = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false, allErrors: true });
+  ajv.addSchema(directory);
   ajv.addSchema(module);
-  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/HomeProjectionPersistence` });
+  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/HomeDirectoryProjectionWire` });
   assert(validate(fixture), JSON.stringify(validate.errors));
+  const validateTransient = ajv.compile({ $ref: module.$id });
+  assert(validateTransient({ sessionBindingSha256: "", authorizationGeneration: 0, receiptSha256: "", directory: fixture.wire }), JSON.stringify(validateTransient.errors));
+  assert.equal(validateTransient({ sessionBindingSha256: "", authorizationGeneration: 0, receiptSha256: "", directory: { ...fixture.wire, cursor: -1 } }), false);
   const exactKeys = (value: unknown, keys: string[]): boolean => Boolean(value) && typeof value === "object" && !Array.isArray(value) && JSON.stringify(Object.keys(value as object).sort()) === JSON.stringify([...keys].sort());
   const decode = (text: string): unknown => {
     const wire = JSON.parse(text);
@@ -53,8 +59,7 @@ export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): numb
     }
     return wire;
   };
-  const canonical = JSON.stringify(fixture.wire);
-  assert.deepEqual(decode(canonical), fixture.wire);
+  assert.deepEqual(decode(JSON.stringify(fixture.wire)), fixture.wire);
   assert.deepEqual(Object.values(fixture.wire.spaces).flatMap((space: any) => space.documents.map((document: any) => document.documentId)), fixture.expectedDocumentIds);
   assert.deepEqual(Object.values(fixture.wire.spaces).flatMap((space: any) => space.indexedDocuments.map((document: any) => document.descriptor.documentId)), fixture.expectedIndexedDocumentIds);
   for (const malformed of fixture.malformed) assert.throws(() => decode(malformed));
@@ -64,25 +69,29 @@ export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): numb
   const missingIndexFixture = structuredClone(fixture);
   delete missingIndexFixture.wire.spaces["space-α"].indexedDocuments;
   assert.equal(validate(missingIndexFixture), false);
-  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
-  const exactSource = (text: string): boolean => text.includes("documents: Vec<store::os_directory::DocumentDescriptor>")
+  const source = readFileSync(join(base, "🫧️transient/🦀️.rs"), "utf8");
+  const config = readFileSync(join(base, "🎚️config/🦀️.rs"), "utf8");
+  const exactSource = (text: string, configText: string): boolean => text.includes("documents: Vec<store::os_directory::DocumentDescriptor>")
     && text.includes("indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>")
     && text.includes("documents: space.documents.clone()")
     && text.includes("indexed_documents: space.indexed_documents.clone()")
-    && text.includes("documents: space.documents")
-    && text.includes("indexed_documents: space.indexed_documents")
-    && text.includes("fn directory_from_json(json: &str) -> Result<store::os_directory::DirectoryReadModel, Fault>")
-    && !text.includes("pack::from_json_str(json).unwrap_or_default()")
-    && text.includes("pub fn directory(&self) -> Result<store::os_directory::DirectoryReadModel, Fault>");
-  assert(exactSource(source), "Home projection persistence still drops documents or defaults corruption");
-  for (const hostile of [
-    source.replace("documents: Vec<store::os_directory::DocumentDescriptor>", "documents_removed: Vec<store::os_directory::DocumentDescriptor>"),
-    source.replace("indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>", "indexed_documents_removed: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>"),
-    source.replace("documents: space.documents.clone()", "documents: Vec::new()"),
-    source.replace("documents: space.documents", "documents: Vec::new()"),
-    source.replace("-> Result<store::os_directory::DirectoryReadModel, Fault>", "-> store::os_directory::DirectoryReadModel"),
-  ]) assert.equal(exactSource(hostile), false);
-  return 11;
+    && text.includes("documents: space.documents,")
+    && text.includes("indexed_documents: space.indexed_documents }")
+    && text.includes("fn from_wire(wire: HomeTransientWire) -> Result<Self, protocol::ValueError>")
+    && text.includes("if !directory.resume_state_is_valid()")
+    && !text.includes("unwrap_or_default")
+    && !configText.includes("directory_json")
+    && !configText.includes("DirectoryReadModel");
+  assert(exactSource(source, config), "Home directory projection wire drops documents, defaults corruption, or is persisted in the config");
+  for (const [hostile, hostileConfig] of [
+    [source.replace("documents: Vec<store::os_directory::DocumentDescriptor>", "documents_removed: Vec<store::os_directory::DocumentDescriptor>"), config],
+    [source.replace("indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>", "indexed_documents_removed: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>"), config],
+    [source.replace("documents: space.documents.clone()", "documents: Vec::new()"), config],
+    [source.replace("if !directory.resume_state_is_valid()", "if false"), config],
+    [`${source}\nlet _ = malformed.unwrap_or_default();`, config],
+    [source, `${config}\npub directory_json: String,`],
+  ] as const) assert.equal(exactSource(hostile, hostileConfig), false);
+  return 13;
 }
 
 class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
@@ -96,7 +105,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
-          laws: ["editor::home::config::tests::directory_projection_round_trip_preserves_documents_and_rejects_corruption"],
+          laws: ["editor::home::transient::component::tests::the_projection_wire_round_trips_documents_and_rejects_corruption"],
         }],
         progress(event) { console.log(`home-directory-projection-persistence ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
@@ -106,7 +115,8 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   }
 }
 
-/** 📄️ Proves Home accepts one sealed directory page through one retained config replacement. */
+/** 📄️ Proves Home accepts one sealed directory page as one bounded, non-invertible TRANSIENT item through the page route
+ * both surfaces share — never a config (history) edit — and answers the typed receipt the host acknowledges it by. */
 export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json");
   const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json");
@@ -120,76 +130,74 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
   const configSchema = JSON.parse(readFileSync(join(base, "🎚️config/🧬️schema/🔣️.json"), "utf8"));
   const validateConfig = new Ajv({ strict: false, allErrors: true }).compile(configSchema);
-  const configVector = {
-    directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }),
-    directorySessionBindingSha256: "a".repeat(64), directoryAuthorizationGeneration: 7,
-    directoryReceiptSha256: fixture.expectedReceiptSha256,
-    retiredLocalStudioIds: ["studio-a", "studio-b"],
-  };
+  const configVector = { retiredLocalStudioIds: ["studio-a", "studio-b"] };
   assert(validateConfig(configVector), JSON.stringify(validateConfig.errors));
-  for (const field of ["directoryJson", "directorySessionBindingSha256", "directoryAuthorizationGeneration", "directoryReceiptSha256"]) {
-    const hostile = structuredClone(configVector) as Record<string, unknown>;
-    delete hostile[field];
-    assert.equal(validateConfig(hostile), false, `config schema accepted missing ${field}`);
-  }
+  assert.equal(validateConfig({ ...configVector, directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }) }), false, "the config schema admits a persisted directory projection");
   for (const [name, retiredLocalStudioIds] of [["duplicate", ["studio-a", "studio-a"]], ["empty-id", [""]], ["non-string", [7]], ["over-ceiling", Array.from({ length: 257 }, (_, index) => `studio-${index}`)]] as const) {
-    assert.equal(validateConfig({ ...configVector, retiredLocalStudioIds }), false, `config schema accepted a ${name} tombstone set`);
+    assert.equal(validateConfig({ retiredLocalStudioIds }), false, `config schema accepted a ${name} tombstone set`);
   }
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
   const directoryRoute = retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage");
   assert.equal(directoryRoute?.disposition, "Migrated");
-  assert.deepEqual(directoryRoute?.lanes, ["Config"]);
-  const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
-  const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
-  const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
-  const receiptFixture = JSON.parse(readFileSync(join(receiptRoot, "🔣️.json"), "utf8"));
+  assert.deepEqual(directoryRoute?.lanes, ["Transient"]);
+  const transientSchema = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🔣️.json"), "utf8"));
+  const receiptFixture = JSON.parse(readFileSync(join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt/🔣️.json"), "utf8"));
   const receiptAjv = new Ajv({ strict: true, allErrors: true });
   receiptAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-  const validateReceipt = receiptAjv.compile(configSchema.$defs.HomeDirectoryProjectionReceipt);
+  const validateReceipt = receiptAjv.compile(transientSchema.$defs.HomeDirectoryProjectionReceipt);
   assert(validateReceipt(receiptFixture.valid), JSON.stringify(validateReceipt.errors));
   for (const row of receiptFixture.hostile) {
     const hostile = { ...structuredClone(receiptFixture.valid), ...row.patch };
     assert.equal(validateReceipt(hostile), false, `receipt schema accepted ${row.id}`);
   }
-  const config = readFileSync(join(base, "🎚️config/🦀️.rs"), "utf8");
-  const editor = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const leaf = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🔣️.json"), "utf8"));
+  assert.equal(leaf.invertibility, "non-invertible", "a derived directory page is never undone");
+  const read = (relative: string): string => readFileSync(join(base, relative), "utf8");
+  const command = read("🎮️commands/📬️apply-directory-event-page/🦀️.rs");
+  const transient = read("🫧️transient/🦀️.rs");
+  const page = read("🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🦀️.rs");
+  const editor = read("🦀️.rs");
+  const viewer = readFileSync(join(base, "../👁️viewer/🦀️.rs"), "utf8");
   const crate = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs"), "utf8");
-  const exact = (commandSource: string, configSource: string, editorSource: string, crateSource: string): boolean =>
-    commandSource.includes("cfg.snapshot.directory_event_page_emit(&payload.page_json)")
+  const exact = (commandSource: string, transientSource: string, pageSource: string, editorSource: string, viewerSource: string): boolean =>
+    commandSource.includes("pub fn directory_page_answer")
+    && commandSource.includes("DirectoryEventPageV1::parse_canonical_json(page_json)")
+    && commandSource.includes("directory.admit_page(&page)?")
+    && commandSource.includes("ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral }")
+    && commandSource.includes("context.transient.directory()")
+    && commandSource.includes("Err(Fault::from(\"s.home.directory-event-page.requires-retained-job\"))")
     && !commandSource.includes("unwrap_or_default")
-    && configSource.includes("pub fn directory_event_page_emit")
-    && configSource.includes("DirectoryEventPageV1::parse_canonical_json")
-    && configSource.includes("self.apply_directory_event_page(&page)")
-    && configSource.includes("DirectoryProjectionReceiptV1::SCHEMA")
-    && configSource.includes("events: vec![event]")
-    && !configSource.includes("unwrap_or_default")
-    && configSource.includes("ReplaceDirectoryProjection")
-    && configSource.includes("page.after_seq_exclusive != current.cursor")
-    && configSource.includes("directory.cursor = page.through_seq_inclusive")
-    && configSource.includes("directory_session_binding_sha256")
-    && configSource.includes("directory_authorization_generation")
-    && configSource.includes("directory_receipt_sha256")
-    && configSource.includes("pub struct DirectoryProjectionReceiptV1")
-    && configSource.includes("pub fn directory_projection_receipt")
-    && editorSource.includes('"applyDirectoryEventPage"')
+    && transientSource.includes("pub fn admit_page")
+    && transientSource.includes("page.after_seq_exclusive != self.cursor")
+    && transientSource.includes("let folded = store::os_directory::fold(model, event);")
+    && transientSource.includes("next.cursor = page.through_seq_inclusive;")
+    && transientSource.includes("Arc::unwrap_or_clone(row)")
+    && transientSource.includes("pub struct DirectoryProjectionReceiptV1")
+    && pageSource.includes("fn inverse(&self, _base: &HomeTransient) -> Vec<HomeTransientMutation> {\n        Vec::new()")
+    && editorSource.includes("ArtifactToolPublicationContract { tool_id: \"applyDirectoryEventPage\", lanes: &[ArtifactToolPublicationLane::Transient] }")
     && editorSource.includes('.action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)')
-    && !editorSource.includes('str_field("pageJson").or_else(|| str_field("page_json"))')
-    && crateSource.includes("pub mod apply_directory_event_page;");
-  assert(exact(command, config, editor, crate), "Home directory event-page retained owner is incomplete");
-  assert.equal(exact(command.replaceAll("directory_event_page_emit", "directory_event_page_fold"), config, editor, crate), false);
-  assert.equal(exact(`${command}\nlet _ = malformed.unwrap_or_default();`, config, editor, crate), false);
+    && editorSource.includes("HomeDirectoryPageWork::<EditorApp<Self>>::new(tool_id, home_directory_page_json)")
+    && editorSource.includes("bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>()")
+    && viewerSource.includes("HomeDirectoryPageWork::<ViewerApp<Self>>::new(tool_id, home_view_page_json)")
+    && viewerSource.includes("lanes: &[ArtifactToolPublicationLane::Transient]")
+    && crate.includes("pub mod transient {")
+    && crate.includes("pub mod apply_directory_event_page;");
+  assert(exact(command, transient, page, editor, viewer), "Home directory event-page transient route is incomplete");
   for (const hostile of [
-    config.replaceAll("DirectoryEventPageV1::parse_canonical_json", "pack::from_json_str"),
-    config.replaceAll("self.apply_directory_event_page(&page)", "self.fold_directory_events(&page)"),
-    `${config}\nlet _ = malformed.unwrap_or_default();`,
-    config.replaceAll("directory.cursor = page.through_seq_inclusive", ""),
-  ]) assert.equal(exact(command, hostile, editor, crate), false);
-  for (const leaf of ["🦀️.rs", "🟦️.ts", "🔗️.graphql", "🔣️.json", "🛰️.proto"]) {
-    assert(readFileSync(join(base, `🎚️config/🧬️schema/${leaf}`), "utf8").includes("directory"), `config schema leaf ${leaf} lacks directory state`);
+    [command.replace("ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral }", "ArtifactCommandWorkStep::Complete(emit)"), transient, page, editor, viewer],
+    [`${command}\nlet _ = malformed.unwrap_or_default();`, transient, page, editor, viewer],
+    [command, transient.replace("page.after_seq_exclusive != self.cursor", "false"), page, editor, viewer],
+    [command, transient.replace("next.cursor = page.through_seq_inclusive;", ""), page, editor, viewer],
+    [command, transient, page.replace("Vec::new()", "vec![self.clone().into()]"), editor, viewer],
+    [command, transient, page, editor.replace("lanes: &[ArtifactToolPublicationLane::Transient] }", "lanes: &[ArtifactToolPublicationLane::Config] }"), viewer],
+    [command, transient, page, editor, viewer.replace("lanes: &[ArtifactToolPublicationLane::Transient]", "lanes: &[ArtifactToolPublicationLane::Config]")],
+  ] as const) assert.equal(exact(...hostile), false);
+  for (const leafName of ["🦀️.rs", "🟦️.ts", "🔗️.graphql", "🔣️.json", "🛰️.proto"]) {
+    assert(!readFileSync(join(base, `🎚️config/🧬️schema/${leafName}`), "utf8").includes("directory"), `config schema leaf ${leafName} still persists directory state`);
   }
-  return 27;
+  return 31;
 }
 
 class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
@@ -203,7 +211,12 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
-          laws: ["editor::home::commands::apply_directory_event_page::tests::sealed_page_replaces_projection_once_and_rejects_races"],
+          laws: [
+            "editor::home::commands::apply_directory_event_page::tests::sealed_page_replaces_projection_once_and_rejects_races",
+            "editor::home::transient::component::tests::a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bound",
+            "editor::home::transient::component::tests::a_dropped_transient_rebootstraps_from_the_origin_without_history",
+            "editor::home::component::tests::a_dispatched_page_publishes_one_transient_item_and_no_history_row",
+          ],
         }],
         progress(event) { console.log(`home-directory-event-page-owner ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });

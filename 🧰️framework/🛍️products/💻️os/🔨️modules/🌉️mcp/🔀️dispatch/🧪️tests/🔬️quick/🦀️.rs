@@ -174,6 +174,50 @@ fn an_action_that_edits_only_owned_children_commits_their_groups_byte_for_byte()
 ///
 /// Only a ReadHistory (a pure read) may have been sent after the staleness became detectable —
 /// no TransactionPrepare/TransactionCommit anywhere in the whole log.
+//#region 🔖️RevisionGuardLaws
+fn revision_bound_capability() -> CapabilityDefinition {
+    let mut capability = synthetic_capability("table.set-cell", &[], ApprovalMode::Never, false);
+    capability.input_schema = serde_json::json!({ "type": "object", "properties": { "row": { "type": "integer" }, "revision": { "type": "string", "x-semio-format": "documentRevision" } }, "required": ["row"] });
+    capability
+}
+
+/// 🔐️ A one-shot invoke that omits its revision argument and names no `expectedRevision` is refused by name before anything
+/// reaches the guest — no lane writes last-writer-wins (ticket 26/09/23, G12 session 14c).
+#[test]
+fn an_omitted_revision_without_a_document_guard_is_refused_by_name_and_nothing_is_sent() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let catalog = single_capability_catalog(revision_bound_capability());
+    let session = SessionHandle::new("sess_1");
+    let principal = principal(&[]);
+    let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("table.set-cell".into()), input: Some(serde_json::json!({ "row": 0 })), ..Default::default() }, 0, 0).unwrap_err();
+    assert_eq!(error.code, GatewayErrorCode::PreconditionFailed);
+    assert_eq!(error.details.get("faultCode").and_then(serde_json::Value::as_str), Some(REVISION_GUARD_REQUIRED_FAULT_CODE));
+    assert!(error.details.pointer("/remedy/de").and_then(serde_json::Value::as_str).is_some_and(|remedy| !remedy.is_empty()));
+    assert!(channel.frame_log().is_empty(), "nothing may reach the guest: {:?}", channel.frame_log());
+}
+
+/// 🔐️ Behind a passed document-level guard the omission is admitted — the prepared handle (its baseline re-checked at invoke)
+/// and an explicit `expectedRevision` — and a stale `expectedRevision` is a revision conflict with no mutation sent.
+#[test]
+fn an_omitted_revision_behind_a_passed_document_guard_commits_and_a_stale_guard_is_a_conflict() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let catalog = single_capability_catalog(revision_bound_capability());
+    let session = SessionHandle::new("sess_1");
+    let principal = principal(&[]);
+    let request = |expected_revision: Option<RevisionStamp>| InvokeRequest { capability_id: Some("table.set-cell".into()), input: Some(serde_json::json!({ "row": 0 })), expected_revision, ..Default::default() };
+    let prepared = adapter.prepare(&catalog, &principal, &session, "table.set-cell", serde_json::json!({ "row": 0 }), 0, 0).unwrap();
+    let via_handle = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap();
+    assert_eq!(via_handle.status, InvocationStatus::Succeeded);
+    let current = adapter.prepare(&catalog, &principal, &session, "table.set-cell", serde_json::json!({ "row": 0 }), 0, 2).unwrap().expected_revision.expect("a baseline");
+    let guarded = adapter.invoke(&catalog, &principal, &session, request(Some(current.clone())), 0, 3).unwrap();
+    assert_eq!(guarded.status, InvocationStatus::Succeeded);
+    let before_stale = channel.frame_log().len();
+    let error = adapter.invoke(&catalog, &principal, &session, request(Some(current)), 0, 4).unwrap_err();
+    assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
+    assert!(!channel.frame_log()[before_stale..].iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "a stale guard sent a mutation");
+}
+//#endregion 🔖️RevisionGuardLaws
+
 #[test]
 fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);

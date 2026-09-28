@@ -735,6 +735,42 @@ struct UndoRecord {
 }
 //#endregion 🔖️InternalRecords
 
+//#region 🔖️RevisionGuard
+/// 🏷️ The typed refusal of a one-shot invoke that omits a revision argument and names no `expectedRevision`.
+pub const REVISION_GUARD_REQUIRED_FAULT_CODE: &str = "revision.guard-required";
+
+/// 🔐️ The revision arguments `capability` declares (`x-semio-format` `documentRevision` / `targetRevision`) that `input` omits.
+/// The plugin's agent lane admits each against the token its rendered binding carries at admission — only behind a
+/// document-level stale-write guard: a prepared handle (its prepare-time baseline is re-checked at invoke) or an explicit
+/// `expectedRevision` (ticket 26/09/23, G12 session 14c).
+pub fn omitted_revision_arguments(capability: &crate::catalog::CapabilityDefinition, input: &serde_json::Value) -> Vec<String> {
+    capability
+        .input_schema
+        .get("properties")
+        .and_then(serde_json::Value::as_object)
+        .map(|properties| {
+            properties
+                .iter()
+                .filter(|(name, schema)| matches!(schema.get("x-semio-format").and_then(serde_json::Value::as_str), Some("documentRevision" | "targetRevision")) && input.get(name.as_str()).is_none())
+                .map(|(name, _)| name.clone())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// 🚫️ Nothing would guard such a write against a document that moved since the agent read it, so it is refused by name.
+fn revision_guard_required(capability_id: &str, omitted: &[String]) -> GatewayError {
+    GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("capability {capability_id} omits its revision argument(s) {} and names no expectedRevision — nothing would guard this write against a document that moved since it was read", omitted.join(", "))).with_details(serde_json::json!({
+        "faultCode": REVISION_GUARD_REQUIRED_FAULT_CODE,
+        "omitted": omitted,
+        "remedy": {
+            "en": "Prepare the action first (action_prepare, then action_invoke with its handle) or pass the document's expectedRevision.",
+            "de": "Bereite die Aktion zuerst vor (action_prepare, dann action_invoke mit ihrem Handle) oder gib die expectedRevision des Dokuments mit.",
+        },
+    }))
+}
+//#endregion 🔖️RevisionGuard
+
 //#region 🔖️PublicReports
 /// 📨️ `action.invoke`'s combined input — `preparedActionHandle` XOR `(capabilityId, input)`, an
 /// optional caller-asserted `expectedRevision` (defaults to the baseline `prepare` captured),
@@ -1112,6 +1148,14 @@ impl ActionAdapter {
         } else {
             let capability_id = request.capability_id.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::InputInvalid, "capabilityId or preparedActionHandle is required"))?;
             let input = request.input.clone().unwrap_or_else(|| serde_json::json!({}));
+            if request.expected_revision.is_none() {
+                let omitted = catalog.get(&capability_id).filter(|capability| self.policy.authorize_scopes(principal, capability).is_ok()).map(|capability| omitted_revision_arguments(capability, &input)).unwrap_or_default();
+                if !omitted.is_empty() {
+                    let error = revision_guard_required(&capability_id, &omitted);
+                    self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &capability_id, raw_input: &input }, AuditDecision::Denied { code: error.code }, None, None, "revision_guard_required", Some(error.clone()), None, now_ms);
+                    return Err(error);
+                }
+            }
             let prepared = self.prepare(catalog, principal, session, &capability_id, input, instance, now_ms)?;
             let resolved = self.handles.resolve(&prepared.prepared_handle, session, now_ms)?;
             let stored: PreparedActionRecord = serde_json::from_value(resolved.payload).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;

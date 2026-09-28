@@ -1,5 +1,5 @@
 #!/bin/zsh
-# 🧹 Disk guard: every 5 min; below 130 GiB free prune idle incremental sessions (> 60 min); below 80 GiB prune build units only when
+# 🧹 Disk guard: every 5 min; below 130 GiB free prune idle incremental sessions (> 60 min); below 80 GiB prune nx cache entries older than 12 h and build units only when
 # cargo holds no lock on them (`.lock` taken exclusively, non-blocking), their newest file is older than 12 h, and a newer unit of the same package exists.
 root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build"
 log="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-coord-logs/disk-guard.txt"
@@ -45,6 +45,12 @@ for profile_build in [os.path.join(root, "debug", "build")] + [os.path.join(root
                 os.close(fd)
 print(time.strftime("%F %T"), "unit prune removed", removed)
 PY
+    fi
+    if [ "$(free_gib)" -lt 80 ]; then
+      nxc="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/nx"
+      n=$(find "$nxc" -maxdepth 1 -mindepth 1 -name '[0-9]*' -mmin +720 2>/dev/null | wc -l | tr -d ' ')
+      find "$nxc" -maxdepth 1 -mindepth 1 -name '[0-9]*' -mmin +720 -exec rm -rf {} + 2>/dev/null
+      echo "$(date '+%F %T') nx cache prune removed $n entries older than 12 h" >> "$log"
     fi
     echo "$(date '+%F %T') free ${before} GiB -> $(free_gib) GiB" >> "$log"
   fi

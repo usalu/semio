@@ -27,6 +27,8 @@ import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContex
 import { hostLabel } from "../✏️TextEditor/🟦️.tsx";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️InkCanvasHost
@@ -202,6 +204,14 @@ export function screenToWorld(camera: InkCamera, screenX: number, screenY: numbe
 
 export function worldToScreen(camera: InkCamera, worldX: number, worldY: number): { readonly x: number; readonly y: number } {
   return { x: worldX * camera.zoom + camera.x, y: worldY * camera.zoom + camera.y };
+}
+
+/** 👕️ The ink camera (`screen = world · zoom + offset`) as the shared canvas presence camera (`canvasPointToScreen`:
+ * `screen = (world − centre) · zoom + size / 2`) — the world point at the viewport centre — so a peer's cursor and viewport
+ * land on the same ink position whatever either camera (row 3.x, C13: the ink host published and painted no presence).
+ * @see ../../../../../../../🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts */
+export function inkPresenceCanvasV1(camera: InkCamera, size: readonly [number, number]): InkCamera {
+  return { x: (size[0] / 2 - camera.x) / camera.zoom, y: (size[1] / 2 - camera.y) / camera.zoom, zoom: camera.zoom };
 }
 
 export function inkItemBounds(block: InkItem): InkBounds {
@@ -992,6 +1002,26 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     () => (scene?.interactionDomain?.id && scene.interactionDomain.granularityId ? { domainId: scene.interactionDomain.id, granularity: scene.interactionDomain.granularityId } : null),
     [scene?.interactionDomain],
   );
+  const presenceWindowId = windowInstanceId ?? node.surfaceId ?? "ink";
+  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const presencePointerRef = useRef<Vec2 | null>(null);
+  const presencePublishAtRef = useRef(0);
+  const publishInkPresenceView = useCallback(
+    (force: boolean) => {
+      const now = Date.now();
+      if (isNavigator || (!force && now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS)) return;
+      const root = rootRef.current;
+      const camera = docRef.current?.camera;
+      if (!root || !camera) return;
+      presencePublishAtRef.current = now;
+      const size: [number, number] = [root.clientWidth, root.clientHeight];
+      const pointer = presencePointerRef.current;
+      publishLocalPresenceWindowViewV1("local", presenceWindowId, { windowId: presenceWindowId, space: "canvas", kind: { kind: "canvas", ...inkPresenceCanvasV1(camera, size) }, size, ...(pointer ? { pointer: [pointer[0], pointer[1], 0] as const } : {}) });
+    },
+    [isNavigator, presenceWindowId],
+  );
+  useEffect(() => publishInkPresenceView(true), [publishInkPresenceView, doc?.camera.x, doc?.camera.y, doc?.camera.zoom]);
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
 
   useEffect(() => {
     if (!gestureActiveRef.current) setDraftDoc(null);
@@ -1251,6 +1281,8 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const rect = rootRef.current.getBoundingClientRect();
       const screenX = event.clientX - rect.left;
       const screenY = event.clientY - rect.top;
+      presencePointerRef.current = screenToWorld(camera, screenX, screenY);
+      publishInkPresenceView(false);
       const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: screenX, y: screenY });
       if (verdict.kind === "pinch") {
         const nextCamera = applyPinchToOffsetCamera(pinchCameraRef.current ?? camera, verdict.step, INK_CAMERA_ZOOM_BOUNDS);
@@ -1315,7 +1347,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         if (events.length) liveGesture(events);
       }
     },
-    [dispatch, doc, dragState, gestureRecognizer, interactive, liveGesture, publishInteractionHover],
+    [dispatch, doc, dragState, gestureRecognizer, interactive, liveGesture, publishInteractionHover, publishInkPresenceView],
   );
 
   /** @emoji 🤏️ Routes a lifted/cancelled contact through the shared recognizer: the LAST finger of a pinch
@@ -1632,6 +1664,10 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       onPointerDownCapture={handlePointerDownCapture}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
+      onPointerLeave={() => {
+        presencePointerRef.current = null;
+        publishInkPresenceView(true);
+      }}
       onPointerUp={(event) => {
         if (releaseContact(event.pointerId)) handlePointerUp();
       }}
@@ -1687,6 +1723,19 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
             );
           })()
         : null}
+      {isNavigator ? null : (
+        <CanvasPresenceOverlayV1
+          runtimeKey="local"
+          windowId={presenceWindowId}
+          space="canvas"
+          myActor={localPresenceActor ?? ""}
+          locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
+          localCanvas={inkPresenceCanvasV1(camera, [rootRef.current?.clientWidth ?? 0, rootRef.current?.clientHeight ?? 0])}
+          localSizePx={[rootRef.current?.clientWidth ?? 0, rootRef.current?.clientHeight ?? 0]}
+          domain={scene?.interactionDomain?.id}
+          scenePath={`ink/${presenceWindowId}`}
+        />
+      )}
       {marqueePoints.length >= 2 ? (
         <SelectionMarquee
           shape="rect"

@@ -13,5 +13,5 @@ use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 /// `DslValue: From<&serde_json::Value>` impl rather than widening `puzzle5d_action`'s signature —
 /// the identical bridge `☑️options/☀️sun` already carries.
 pub fn measure(runtime: &Puzzle5dRuntime) -> WindowMeasure {
-    world3d_projection_measures("puzzle5d", &runtime.camera3d.projection, |action, args| puzzle5d_action(action, args.map(|value| dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&value)))))
+    world3d_projection_measures("puzzle5d", &runtime.camera3d.projection, |action, args| puzzle5d_action(action, args.map(|value| dsl::os_pack::json::from_dsl_value(&value))))
 }

@@ -7,8 +7,9 @@ use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutati
 
 /// 🩹️ Renames the named nodes — or, when `node_ids` is empty, the nodes selected in the `ast`
 /// domain, which is what a rail press means. Every request that cannot move the document is refused
-/// by name (`mutation.target-missing`, `app.command.invalid-args`) instead of answering an empty emit:
-/// the silent empty emit read as an accepted edit that moved nothing (S15, session 11).
+/// by name instead of answering an empty emit (the silent empty emit read as an accepted edit that moved
+/// nothing, S15 session 11): `app.command.targets-required` when neither `nodeIds` nor a selection names a
+/// node — an agent has no selection and names them — `mutation.target-missing`, `app.command.invalid-args`.
 pub(crate) fn patch_nodes(snapshot: &JackSnapshot, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if field != "name" {
@@ -20,7 +21,7 @@ pub(crate) fn patch_nodes(snapshot: &JackSnapshot, node_ids: &[String], selectio
     }
     let targets = if node_ids.is_empty() { selection } else { node_ids };
     if targets.is_empty() {
-        return Err(invalid("patchNodes needs node ids or a node selection in the graph".into()));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.targets-required"), "patchNodes needs the nodes it renames: name them in nodeIds, or select them in the graph"));
     }
     let scene_nodes = snapshot.nodes();
     let missing: Vec<&str> = targets.iter().filter(|id| !scene_nodes.iter().any(|node| &node.id == *id)).map(String::as_str).collect();

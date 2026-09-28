@@ -362,6 +362,12 @@ impl TokioHostRuntime {
         TokioHostRuntime { scopes: ScopeTable::new(pool.clone()), pool }
     }
 
+    /// 🧵️ The worker pool this runtime schedules onto, for a service that submits its own maintenance
+    /// turns to the same threads (an [`HttpPool`]'s refill driver).
+    pub fn worker_pool(&self) -> &WorkerPool {
+        &self.pool
+    }
+
     pub fn open_scope_now(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
         self.scopes.open_scope_now(owner, parent)
     }
@@ -1585,13 +1591,11 @@ impl TokenBucket {
     }
 }
 
-/// 🐌️ How often [`HttpPool::spawn_refill_driver`] tops every tracked package's bucket back toward
-/// its `network_bytes_per_min` cap — the PRODUCTION `interval_ms` argument that fn's real caller (a
-/// process bootstrap, out of this packet's boundary — see the packet report's `## honest gaps`)
-/// passes; this crate's own tests pass a short interval instead, so nothing in THIS crate reads this
-/// const today.
-#[allow(dead_code)]
-const HTTP_BUCKET_REFILL_INTERVAL_MS: u64 = 60_000;
+/// 🐌️ How often [`HttpPool::spawn_refill_driver`] tops every tracked package's bucket back to its
+/// `network_bytes_per_min` cap in production: `NativeDirectoryTransport::with_new_http_pool_now` starts its
+/// pool's driver at this interval, so the budget is an allowance per minute, never a lifetime one. This
+/// crate's own tests pass a short interval instead.
+pub const HTTP_BUCKET_REFILL_INTERVAL_MS: u64 = 60_000;
 
 /// 🔓️ Releases one outstanding-request slot for `actor` when its exact
 /// [`HttpOutstandingCredit`] reaches terminal ownership.

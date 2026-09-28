@@ -202,12 +202,9 @@ pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectK
 /// JSON of the derived `SemioKitType` list so peers replaying the same stock converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
 pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
-    use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_stock(stock);
     let canonical = dsl::json::to_json_string(&catalog.types);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    canonical.hash(&mut hasher);
-    let child_id = format!("catalog-{:016x}", hasher.finish());
+    let child_id = store::content_id("catalog", canonical.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -270,7 +267,7 @@ pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "catalogue.sourcing".into(),
-        name: "Sourcing Curation".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Sourcing Curation", "Beschaffungskuratierung"),
         source_format: "sourcing.curation".into(),
         component_kind: "catalogue".into(),
         dimension: "data".into(),

@@ -1057,6 +1057,7 @@ impl ArtifactEditor for FormsPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1262,7 +1263,7 @@ pub fn create_forms_app() -> AppDefinition {
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),
-                name: "Form Dictionary".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
                 source_format: "form.dictionary".into(),
                 component_kind: "forms".into(),
                 dimension: "data".into(),

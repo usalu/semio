@@ -51,6 +51,7 @@ fn page_lists_text_vector_and_image() {
     assert!((image.width - 50.0).abs() < 0.01 && (image.height - 40.0).abs() < 0.01);
     let layers = canvas_layers(&snapshot, Some(&text.id));
     assert!(layers.contains("Hello"));
+    assert!(layers.contains(&format!("{}.selection", text.id)));
     assert!(layers.contains(&image.id));
     assert!(layers.contains(&vector.id));
     let hit = hit_test(&snapshot, text.x + 2.0, 300.0 - (text.y + text.font_size) + 2.0).expect("text hit");
@@ -254,4 +255,170 @@ fn mesh_move_shifts_the_decode_range() {
     assert_eq!(decode, &vec![2.0, 12.0, 3.0, 13.0]);
     assert_eq!(data, &vec![0]);
     assert_eq!(snapshot.shadings[0].bbox, Some([2.0, 3.0, 12.0, 13.0]));
+}
+
+#[test]
+fn conformance_form_identity_and_font_program_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFontKind, PdfFontProgram, PdfFormFieldKind, PdfOpenAction};
+    let mut snapshot = sample();
+    apply(&mut snapshot, edit_from_action("set-output-intent", Some(&args(vec![("object", dsl::DslValue::String("GTS_PDFA1".into())), ("text", dsl::DslValue::String("sRGB".into())), ("extra", dsl::DslValue::String("sRGB IEC61966".into()))]))).unwrap());
+    assert_eq!(snapshot.output_intents[0].condition_identifier, "sRGB");
+    assert_eq!(snapshot.output_intents[0].info.as_deref(), Some("sRGB IEC61966"));
+    apply(&mut snapshot, edit_from_action("set-form-field", Some(&args(vec![("object", dsl::DslValue::String("Name".into())), ("text", dsl::DslValue::String("Ada".into())), ("extra", dsl::DslValue::String("text".into()))]))).unwrap());
+    let form = snapshot.acro_form.as_ref().expect("form");
+    assert!(form.need_appearances);
+    let PdfFormFieldKind::Text { value, .. } = &form.fields[0].kind else { panic!("text field") };
+    assert_eq!(value.as_deref(), Some("Ada"));
+    apply(&mut snapshot, edit_from_action("set-open-action", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("uri".into())), ("text", dsl::DslValue::String("https://semio.example".into()))]))).unwrap());
+    let PdfOpenAction::Action { action } = snapshot.open_action.as_ref().expect("open") else { panic!("uri action") };
+    assert!(matches!(action.kind, crate::standards::v1_7::subsets::base::schema::snapshot::PdfActionKind::Uri { ref uri, .. } if uri == "https://semio.example"));
+    apply(&mut snapshot, edit_from_action("set-document-id", Some(&args(vec![("text", dsl::DslValue::String("abc".into())), ("extra", dsl::DslValue::String("def".into()))]))).unwrap());
+    assert_eq!(snapshot.document_id.as_ref().expect("id"), &[b"abc".to_vec(), b"def".to_vec()]);
+    apply(&mut snapshot, edit_from_action("set-font-program", Some(&args(vec![("object", dsl::DslValue::String("F1".into())), ("text", dsl::DslValue::String("truetype".into())), ("extra", dsl::DslValue::String("0001".into()))]))).unwrap());
+    let PdfFontKind::TrueType { program, .. } = &snapshot.fonts[0].kind else { panic!("truetype font") };
+    let Some(PdfFontProgram::TrueType { data }) = program else { panic!("program") };
+    assert_eq!(data, &vec![0, 1]);
+}
+
+#[test]
+fn resources_and_font_metrics_publish_onto_the_document() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfColorSpace, PdfFontKind, PdfObject, PdfPatternKind};
+    let mut snapshot = sample();
+    apply(&mut snapshot, edit_from_action("set-graphics-state", Some(&args(vec![("object", dsl::DslValue::String("GS1".into())), ("text", dsl::DslValue::String("Multiply".into())), ("x", dsl::DslValue::float(0.5)), ("y", dsl::DslValue::float(0.25))]))).unwrap());
+    assert_eq!(snapshot.ext_g_states[0].fill_alpha, Some(0.5));
+    assert_eq!(snapshot.ext_g_states[0].stroke_alpha, Some(0.25));
+    assert_eq!(snapshot.ext_g_states[0].blend_mode.as_deref(), Some(["Multiply".to_string()].as_slice()));
+    apply(&mut snapshot, edit_from_action("set-pattern", Some(&args(vec![("object", dsl::DslValue::String("P1".into())), ("x", dsl::DslValue::float(0.0)), ("y", dsl::DslValue::float(0.0)), ("width", dsl::DslValue::float(8.0)), ("height", dsl::DslValue::float(8.0))]))).unwrap());
+    let PdfPatternKind::Tiling { x_step, y_step, .. } = &snapshot.patterns[0].kind else { panic!("tiling") };
+    assert!((*x_step - 8.0).abs() < 0.01 && (*y_step - 8.0).abs() < 0.01);
+    apply(&mut snapshot, edit_from_action("set-color-space", Some(&args(vec![("object", dsl::DslValue::String("CS1".into())), ("text", dsl::DslValue::String("deviceCmyk".into()))]))).unwrap());
+    assert!(matches!(snapshot.color_spaces[0].color_space, PdfColorSpace::DeviceCmyk));
+    apply(&mut snapshot, edit_from_action("set-properties", Some(&args(vec![("object", dsl::DslValue::String("MC1".into())), ("text", dsl::DslValue::String("OC".into())), ("extra", dsl::DslValue::String("OC1".into()))]))).unwrap());
+    assert!(matches!(&snapshot.properties[0].entries[0].value, PdfObject::Name(name) if name == "OC1"));
+    apply(&mut snapshot, edit_from_action("set-font-metrics", Some(&args(vec![("object", dsl::DslValue::String("F1".into())), ("text", dsl::DslValue::String("macRoman".into())), ("extra", dsl::DslValue::String("500,600".into())), ("x", dsl::DslValue::float(32.0)), ("y", dsl::DslValue::float(720.0))]))).unwrap());
+    let PdfFontKind::Type1 { encoding, first_char, widths, descriptor, .. } = &snapshot.fonts[0].kind else { panic!("simple font") };
+    assert_eq!(encoding.base, Some(PdfBaseEncoding::MacRoman));
+    assert_eq!(*first_char, 32);
+    assert_eq!(widths, &vec![500.0, 600.0]);
+    assert!((descriptor.as_ref().expect("descriptor").ascent - 720.0).abs() < 0.01);
+}
+
+#[test]
+fn masks_forms_transitions_and_dictionary_entries_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfImageMask, PdfObject, PdfOp};
+    let mut snapshot = sample();
+    apply(&mut snapshot, edit_from_action("set-image-mask", Some(&args(vec![("object", dsl::DslValue::String("Im1".into())), ("text", dsl::DslValue::String("colorKey".into())), ("extra", dsl::DslValue::String("0,255".into()))]))).unwrap());
+    let PdfImageMask::ColorKey { ranges } = snapshot.images[0].mask.as_ref().expect("mask") else { panic!("color key") };
+    assert_eq!(ranges, &vec![0, 255]);
+    apply(&mut snapshot, edit_from_action("set-form-content", Some(&args(vec![("object", dsl::DslValue::String("Fm1".into())), ("text", dsl::DslValue::String("Inside".into())), ("x", dsl::DslValue::float(4.0)), ("y", dsl::DslValue::float(6.0)), ("width", dsl::DslValue::float(20.0)), ("height", dsl::DslValue::float(12.0))]))).unwrap());
+    assert!(snapshot.forms[0].content.iter().any(|op| matches!(op, PdfOp::ShowText { text: PdfTextString::Text { text } } if text == "Inside")));
+    apply(&mut snapshot, edit_from_action("set-page-transition", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("text", dsl::DslValue::String("Wipe".into())), ("extra", dsl::DslValue::String("None".into())), ("x", dsl::DslValue::float(2.0))]))).unwrap());
+    let transition = snapshot.pages[0].transition.as_ref().expect("transition");
+    assert!(matches!(&transition[0].value, PdfObject::Name(name) if name == "Wipe"));
+    assert_eq!(snapshot.pages[0].duration, Some(2.0));
+    apply(&mut snapshot, edit_from_action("set-catalog-entry", Some(&args(vec![("object", dsl::DslValue::String("Marker".into())), ("text", dsl::DslValue::String("Yes".into()))]))).unwrap());
+    assert!(matches!(&snapshot.catalog_extra[0].value, PdfObject::Name(name) if name == "Yes"));
+    apply(&mut snapshot, edit_from_action("set-trailer-entry", Some(&args(vec![("object", dsl::DslValue::String("Info".into())), ("text", dsl::DslValue::String("Kept".into()))]))).unwrap());
+    assert!(matches!(&snapshot.trailer[0].value, PdfObject::Name(name) if name == "Kept"));
+    apply(&mut snapshot, edit_from_action("set-catalog-entry", Some(&args(vec![("object", dsl::DslValue::String("Marker".into())), ("text", dsl::DslValue::String(String::new()))]))).unwrap());
+    assert!(snapshot.catalog_extra.is_empty());
+}
+
+#[test]
+fn appearances_glyphs_objects_and_mesh_bytes_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotation, PdfAnnotationKind, PdfAppearanceEntry, PdfColorSpace, PdfFontKind, PdfObject, PdfOp, PdfShading, PdfShadingKind, PdfSimpleEncoding};
+    let mut snapshot = sample();
+    snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
+    let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation");
+    apply(&mut snapshot, edit_from_action("set-annotation-appearance", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(annotation.id)), ("text", dsl::DslValue::String("Fm1".into()))]))).unwrap());
+    let PdfAppearanceEntry::Single { form } = &snapshot.pages[0].annotations[0].appearance.as_ref().expect("appearance").normal else { panic!("single appearance") };
+    assert_eq!(form, "Fm1");
+    snapshot.fonts[0].kind = PdfFontKind::Type3 { font_matrix: [0.001, 0.0, 0.0, 0.001, 0.0, 0.0], font_bbox: [0.0, 0.0, 1000.0, 1000.0], encoding: PdfSimpleEncoding::default(), first_char: 0, widths: Vec::new(), char_procs: Vec::new(), descriptor: None };
+    apply(&mut snapshot, edit_from_action("set-glyph", Some(&args(vec![("object", dsl::DslValue::String("F1".into())), ("text", dsl::DslValue::String("A".into())), ("x", dsl::DslValue::float(0.0)), ("y", dsl::DslValue::float(0.0)), ("width", dsl::DslValue::float(10.0)), ("height", dsl::DslValue::float(12.0))]))).unwrap());
+    let PdfFontKind::Type3 { char_procs, .. } = &snapshot.fonts[0].kind else { panic!("type 3") };
+    assert_eq!(char_procs[0].name, "A");
+    assert!(char_procs[0].content.iter().any(|op| matches!(op, PdfOp::Rectangle { width, height, .. } if (*width - 10.0).abs() < 0.01 && (*height - 12.0).abs() < 0.01)));
+    apply(&mut snapshot, edit_from_action("set-indirect-object", Some(&args(vec![("x", dsl::DslValue::float(7.0)), ("y", dsl::DslValue::float(0.0)), ("text", dsl::DslValue::String("Hello".into()))]))).unwrap());
+    assert!(matches!(&snapshot.objects[0].value, PdfObject::Name(name) if name == "Hello"));
+    assert_eq!(snapshot.objects[0].id.num, 7);
+    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 1.0, 0.0, 1.0], function: None, data: vec![0] }, background: None, bbox: None, anti_alias: false, extra: Vec::new() });
+    apply(&mut snapshot, edit_from_action("set-mesh-data", Some(&args(vec![("object", dsl::DslValue::String("ShM".into())), ("text", dsl::DslValue::String("0,10,0,10".into())), ("extra", dsl::DslValue::String("00ff".into()))]))).unwrap());
+    let PdfShadingKind::Mesh { data, decode, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
+    assert_eq!(data, &vec![0, 255]);
+    assert_eq!(decode, &vec![0.0, 10.0, 0.0, 10.0]);
+}
+
+#[test]
+fn pointer_down_selects_the_hit_object_and_clears_a_miss() {
+    let snapshot = sample();
+    let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
+    let x = text.x + 2.0;
+    let y = 300.0 - (text.y + text.font_size) + 2.0;
+    let edit = edit_from_action("canvasPointerDown", Some(&args(vec![("x", dsl::DslValue::float(x)), ("y", dsl::DslValue::float(y))]))).expect("pointer");
+    let emit = emit_page_edit(&snapshot, &edit.action, &edit.payload).expect("select");
+    assert!(emit.artifact_mutations.is_empty());
+    let semio_framework_plugin::Effect::DispatchAction { action, args: effect_args, .. } = &emit.effects[0] else { panic!("select effect") };
+    assert_eq!(action, "interactionSelect");
+    let value = serde_json::Value::from(effect_args.clone().expect("args"));
+    assert_eq!(value["domainId"], "objects");
+    assert_eq!(value["merge"], "replace");
+    assert!(value["targets"].as_str().expect("targets").contains(&text.id));
+    let miss = edit_from_action("canvasPointerDown", Some(&args(vec![("x", dsl::DslValue::float(1.0)), ("y", dsl::DslValue::float(1.0))]))).expect("miss");
+    let cleared = emit_page_edit(&snapshot, &miss.action, &miss.payload).expect("clear");
+    let semio_framework_plugin::Effect::DispatchAction { action, args: cleared_args, .. } = &cleared.effects[0] else { panic!("clear effect") };
+    assert_eq!(action, "clearSelection");
+    assert!(cleared_args.is_none());
+    let shifted = edit_from_action("canvasPointerDown", Some(&args(vec![("x", dsl::DslValue::float(x)), ("y", dsl::DslValue::float(y)), ("shift", dsl::DslValue::Bool(true))]))).expect("shift");
+    let toggled = emit_page_edit(&snapshot, &shifted.action, &shifted.payload).expect("invert");
+    let semio_framework_plugin::Effect::DispatchAction { args: effect_args, .. } = &toggled.effects[0] else { panic!("invert effect") };
+    let value = serde_json::Value::from(effect_args.clone().expect("args"));
+    assert_eq!(value["merge"], "invertive");
+    let moved = emit_page_edit(&snapshot, "canvasPointerMove", &edit.payload).expect("move");
+    assert!(moved.effects.is_empty() && moved.artifact_mutations.is_empty());
+}
+
+#[test]
+fn info_page_extras_annotation_style_and_viewer_details_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotation, PdfColorSpace, PdfPageMode};
+    let mut snapshot = sample();
+    snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
+    let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation");
+    apply(&mut snapshot, edit_from_action("set-info-field", Some(&args(vec![("object", dsl::DslValue::String("keywords".into())), ("text", dsl::DslValue::String("paper".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-info-field", Some(&args(vec![("object", dsl::DslValue::String("creationDate".into())), ("text", dsl::DslValue::String("D:20200102".into()))]))).unwrap());
+    assert_eq!(snapshot.info.keywords.as_deref(), Some("paper"));
+    assert_eq!(snapshot.info.creation_date.as_ref().expect("date").year, 2020);
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("thumbnail".into())), ("text", dsl::DslValue::String("Im1".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("metadata".into())), ("text", dsl::DslValue::String("<xmp/>".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("group".into())), ("text", dsl::DslValue::String("deviceRgb".into())), ("x", dsl::DslValue::float(1.0)), ("y", dsl::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("structParents".into())), ("x", dsl::DslValue::float(4.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String("action".into())), ("extra", dsl::DslValue::String("O".into())), ("text", dsl::DslValue::String("Next".into()))]))).unwrap());
+    assert_eq!(snapshot.pages[0].thumbnail.as_deref(), Some("Im1"));
+    assert_eq!(snapshot.pages[0].metadata.as_deref(), Some("<xmp/>"));
+    let group = snapshot.pages[0].group.as_ref().expect("group");
+    assert_eq!(group.color_space, Some(PdfColorSpace::DeviceRgb));
+    assert!(group.isolated && !group.knockout);
+    assert_eq!(snapshot.pages[0].struct_parents, Some(4));
+    assert_eq!(snapshot.pages[0].additional_actions[0].key, "O");
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(annotation.id.clone())), ("text", dsl::DslValue::String("color".into())), ("red", dsl::DslValue::float(1.0)), ("green", dsl::DslValue::float(0.0)), ("blue", dsl::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(annotation.id.clone())), ("text", dsl::DslValue::String("name".into())), ("extra", dsl::DslValue::String("Note".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(annotation.id)), ("text", dsl::DslValue::String("flags".into())), ("x", dsl::DslValue::float(4.0))]))).unwrap());
+    assert_eq!(snapshot.pages[0].annotations[0].color, vec![1.0, 0.0, 0.0]);
+    assert_eq!(snapshot.pages[0].annotations[0].name.as_deref(), Some("Note"));
+    assert_eq!(snapshot.pages[0].annotations[0].flags, 4);
+    apply(&mut snapshot, edit_from_action("set-viewer-preferences", Some(&args(vec![("object", dsl::DslValue::String("direction".into())), ("text", dsl::DslValue::String("R2L".into())), ("x", dsl::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-viewer-preferences", Some(&args(vec![("object", dsl::DslValue::String("nonFullScreenPageMode".into())), ("text", dsl::DslValue::String("useThumbs".into())), ("x", dsl::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-viewer-preferences", Some(&args(vec![("object", dsl::DslValue::String("printPageRange".into())), ("text", dsl::DslValue::String("1,3".into())), ("x", dsl::DslValue::float(0.0))]))).unwrap());
+    let preferences = snapshot.viewer_preferences.as_ref().expect("viewer");
+    assert_eq!(preferences.direction.as_deref(), Some("R2L"));
+    assert_eq!(preferences.non_full_screen_page_mode, Some(PdfPageMode::UseThumbs));
+    assert_eq!(preferences.print_page_range, vec![1, 3]);
+}
+
+#[test]
+fn page_window_declares_object_selection() {
+    let definition = crate::editor::pdf17::create_pdf17_editor();
+    assert!(definition.interactions.iter().any(|item| item.id == OBJECT_DOMAIN));
+    let window = definition.window_kinds.iter().find(|window| window.id == WINDOW_KIND_ID).expect("page window");
+    assert_eq!(window.interactions[0].as_str(), OBJECT_DOMAIN);
+    assert!(window.actions.iter().any(|action| action.id == "canvasPointerDown"));
 }

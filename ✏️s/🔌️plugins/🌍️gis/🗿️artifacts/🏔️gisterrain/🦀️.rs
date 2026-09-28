@@ -40,7 +40,7 @@ pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: GISTERRAIN_DIALECT.artifact_kind.into(),
-        name: "3D Terrain".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Terrain", "3D-Gelände"),
         source_format: GIS_3D_TERRAIN_SCHEMA.into(),
         component_kind: "gisterrain".into(),
         dimension: "3d".into(),
@@ -61,11 +61,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
 /// `cad_model_child_handle` (same `store::ArtifactChild::new` + `ArtifactDialect` shape).
 pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_key.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("gisterrain-mesh-{content_hash:016x}");
+    let child_id = store::content_id("gisterrain-mesh", content_key.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)

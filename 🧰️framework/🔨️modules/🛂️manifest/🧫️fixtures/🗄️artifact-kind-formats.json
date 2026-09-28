@@ -1,6 +1,6 @@
 {
   "id": "s.fixture.document",
-  "name": "Format Roundtrip",
+  "label": { "native": { "de": "Format-Rundlauf", "en": "Format Roundtrip" }, "reuse": { "de": "Format-Rundlauf", "en": "Format Roundtrip" } },
   "sourceFormat": "fixture.document",
   "componentKind": "hostSnapshot",
   "dimension": "2d",

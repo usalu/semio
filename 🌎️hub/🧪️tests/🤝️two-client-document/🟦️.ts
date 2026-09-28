@@ -183,12 +183,19 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const cmd = async (token: string, body: unknown) => {
           const id = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join("");
           const sealed = directoryCommandRequestJson(sealDirectoryCommandRequestV1(id, body as any));
-          const res = await fetchTimed(`${origin}/directory/commands`, {
-            method: "POST",
-            headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: "http://127.0.0.1:6066" },
-            body: sealed,
-          });
-          return { status: res.status, json: JSON.parse(await res.text()) };
+          for (let attempt = 1; ; attempt += 1) {
+            const res = await fetchTimed(`${origin}/directory/commands`, {
+              method: "POST",
+              headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: "http://127.0.0.1:6066" },
+              body: sealed,
+            });
+            if (res.status === 429 && attempt < 20) {
+              await new Promise((resolveDelay) => setTimeout(resolveDelay, Math.max(100, Number(res.headers.get("retry-after") ?? "1") * 1000)));
+              continue;
+            }
+            const text = await res.text();
+            return { status: res.status, json: text ? JSON.parse(text) : null };
+          }
         };
 
         let directoryTimings: { spaceListMs: number; directoryPageMs: number[] } = { spaceListMs: 0, directoryPageMs: [] };
@@ -720,6 +727,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         } finally {
           await finishLocalHub(run2);
         }
+      } catch (error) {
+        throw new Error(`${(error as Error).message}\n--- first hub output (last 12000 chars) ---\n${run.output().slice(-12000)}`, { cause: error });
       } finally {
         try { await finishLocalHub(run); } catch { /* done */ }
         rmSync(dataRoot, { recursive: true, force: true });

@@ -317,9 +317,9 @@ fn the_stdio_packages_ship_every_stdio_app_exactly_once() {{
     assert_eq!(owners.keys().filter(|id| id.ends_with("#viewer")).map(|id| id.trim_end_matches("#viewer").to_string()).collect::<BTreeSet<_>>(), expected.iter().map(|id| id.trim_end_matches("#editor").to_string()).collect::<BTreeSet<_>>(), "every catalogue dialect ships its viewer");
     for package in packages() {{
         for app in package.descriptor.manifest.apps.iter().filter(|app| app.role == AppRole::Editor) {{
-            assert!(app.window_kinds.iter().any(|window| window.id == fixture["detailsWindow"].as_str().unwrap()), "{{}} has no complete details window", app.id);
+            let details = app.window_kinds.iter().find(|window| window.id == fixture["detailsWindow"].as_str().unwrap()).unwrap_or_else(|| panic!("{{}} has no complete details window", app.id));
             for id in SNAPSHOT_EDIT_ACTION_IDS {{
-                assert!(app.actions.iter().any(|action| action.id == *id), "{{}} does not expose {{id}}", app.id);
+                assert!(details.actions.iter().any(|action| action.id == *id), "{{}} details window does not expose {{id}}", app.id);
             }}
         }}
     }}
@@ -351,7 +351,48 @@ fn every_stdio_kind_is_opened_by_exactly_one_package() {{
 
 def editor_catalog_rs(text):
     text = replace_once(text, "    println!(\"[DEBUG] editor={} native replay, retained edit/undo/redo, and artifact/source reopen passed\", definition.id);\n", "", "editor catalog: DEBUG line")
-    return remove_span(text, "#[test]\nfn assembled_plugin_exposes_every_editable_artifact() {\n", "\n}\n\n", "editor catalog: assembled plugin law")
+    return remove_span(editor_catalog_details_rs(text), "#[test]\nfn assembled_plugin_exposes_every_editable_artifact() {\n", "\n}\n\n", "editor catalog: assembled plugin law")
+
+
+def editor_catalog_details_rs(text):
+    """✏️ The SDK keeps actions a window kind explicitly owns out of the app roster, and the snapshot details window owns the six
+    snapshot edit actions, so the law reads them where they are declared."""
+    return replace_once(
+        text,
+        """    assert!(definition.window_kinds.iter().any(|kind| kind.id == details), "{} needs editable details", definition.id);
+    for row in fixture["actions"].as_array().unwrap() {
+        let id = row["id"].as_str().unwrap();
+        let action = definition.actions.iter().find(|action| action.id == id).unwrap_or_else(|| panic!("{} is missing {id}", definition.id));
+""",
+        """    let details_kind = definition.window_kinds.iter().find(|kind| kind.id == details).unwrap_or_else(|| panic!("{} needs editable details", definition.id));
+    for row in fixture["actions"].as_array().unwrap() {
+        let id = row["id"].as_str().unwrap();
+        let action = details_kind.actions.iter().find(|action| action.id == id).unwrap_or_else(|| panic!("{} details window is missing {id}", definition.id));
+""",
+        "editor catalog: the details window owns the snapshot edit actions",
+    )
+
+
+MIGRATED = "semio_framework_plugin::InteractiveJobClassification::Migrated"
+
+
+def wav_extra_actions_rs(text):
+    """🔊️ wav's appended Main-window table verbs are retained routes (bounded tool publication contracts for exactly these ids)
+    declared after the kit scaffold stamped its own rows, so they are stamped `Migrated` where they are declared."""
+    text = replace_once(text, "pub fn extra_actions() -> Vec<ActionDefinition> {\n    vec![\n", "pub fn extra_actions() -> Vec<ActionDefinition> {\n    [\n", "wav extra actions: head")
+    return replace_once(
+        text,
+        "            .in_palette(false),\n    ]\n}\n\nfn data_payload_len",
+        f"            .in_palette(false),\n    ]\n    .map(|mut action| {{\n        action.semantics.execution.interactive_job = {MIGRATED};\n        action\n    }})\n    .into()\n}}\n\nfn data_payload_len",
+        "wav extra actions: tail",
+    )
+
+
+def set_vertex_action_rs(text, label, tail):
+    """🔺️ semio mesh/brep `set-vertex` is a retained route (its own bounded tool work) declared both on the Main window and on
+    the app, so the one declaration is stamped `Migrated`."""
+    text = replace_once(text, "pub fn set_vertex_action() -> ActionDefinition {\n    ActionDefinition::bounded_catalog(\"set-vertex\"", "pub fn set_vertex_action() -> ActionDefinition {\n    let mut action = ActionDefinition::bounded_catalog(\"set-vertex\"", f"{label}: set_vertex_action head")
+    return replace_once(text, tail, tail[:-len("\n}\n")] + f";\n    action.semantics.execution.interactive_job = {MIGRATED};\n    action\n}}\n", f"{label}: set_vertex_action tail")
 
 
 def stdio_script_ts(text):
@@ -796,6 +837,9 @@ def build(root, part):
     plan.edit(WORKSPACE_CONTRACT, lambda text: workspace_contract_ts(text, plan_data))
     plan.edit(PLAY_RUNTIME, lambda text: play_runtime_json(text, plan_data))
     plan.edit(PLAY_COVERAGE, play_coverage_ts)
+    plan.edit(f"{STDIO}/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎮️commands/🔊️edit-audio/🦀️.rs", wav_extra_actions_rs)
+    plan.edit(f"{STDIO}/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs", lambda text: set_vertex_action_rs(text, "semio mesh", "        ActionArgDef::vec3(\"point\", LocalizedLabel::native(\"Target Point\", \"Zielpunkt\")).required(),\n    ])\n}\n"))
+    plan.edit(f"{STDIO}/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs", lambda text: set_vertex_action_rs(text, "semio brep", "ActionArgDef::vec3(\"point\", LocalizedLabel::native(\"Target Point\", \"Zielpunkt\")).required()])\n}\n"))
     plan.rename_dir(f"{STDIO}/🧩️composition", f"{STDIO}/🏘️composition", ["🏃️commands/🟦️.ts", "🏗️build/🟦️.ts"])
     for rel in COMPOSITION_REFERRERS:
         plan.edit(rel, lambda text, rel=rel: composition_referrer(text, rel))

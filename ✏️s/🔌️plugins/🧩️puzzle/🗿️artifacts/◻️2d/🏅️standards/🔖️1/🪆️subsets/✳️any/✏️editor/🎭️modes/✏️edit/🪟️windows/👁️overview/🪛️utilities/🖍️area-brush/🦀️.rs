@@ -29,7 +29,7 @@ pub fn extent_measures(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: puzzle2d_action("setAreaBrushSize", Some(json!({ "axis": axis }))),
+        on_change: puzzle2d_action("setAreaBrushSize", Some(semio_framework_plugin::dsl_value!({ "axis": axis }))),
     };
     vec![axis_slider("w", labels.width, runtime.area_brush_width), axis_slider("h", labels.height, runtime.area_brush_height)]
 }

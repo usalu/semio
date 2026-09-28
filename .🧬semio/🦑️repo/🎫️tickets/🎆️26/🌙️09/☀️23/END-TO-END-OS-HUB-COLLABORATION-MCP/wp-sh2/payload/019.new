@@ -555,11 +555,12 @@ impl HomeSpaceRow {
 /// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
 /// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
 /// `retired_local_studio_ids` (sorted) are the Home config's tombstones: a retired local studio keeps its catalog
-/// document and is simply not listed.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, user_id: &str, retired_local_studio_ids: &[String]) -> Vec<HomeSpaceRow> {
+/// document and is simply not listed. `hub_spaces` are the folded directory's rows in id order.
+pub async fn home_space_rows<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, user_id: &str, retired_local_studio_ids: &[String]) -> Vec<HomeSpaceRow> {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
-    for (id, space) in &directory.spaces {
+    for space in hub_spaces {
+        let id = &space.view.id;
         seen.insert(id.clone());
         rows.push(HomeSpaceRow {
             id: id.clone(),

@@ -670,6 +670,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -2964,7 +3009,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -4058,7 +4149,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio writer.writer.dsl v1\nschema=writer.document id=jack language-id=jack uri=\"writer://jack\" text=\"MATCH (a:Piece)-[r:Connection]->(b:Piece)\\nWHERE a.name = \\\"core\\\"\\nRETURN a.name, b.name\" document=child_id=document-926a496d334505c6 target=\"document-926a496d334505c6!s.stdio.semio@v1/document\"\n",
+        "artifactJson": "semio writer.writer.dsl v1\nschema=writer.document id=jack language-id=jack uri=\"writer://jack\" text=\"MATCH (a:Piece)-[r:Connection]->(b:Piece)\\nWHERE a.name = \\\"core\\\"\\nRETURN a.name, b.name\" document=child_id=document-1ce1990e85292c68 target=\"document-1ce1990e85292c68!s.stdio.semio@v1/document\"\n",
         "dialect": {
           "artifactKind": "s.writer.writer",
           "standard": "1",
@@ -4099,7 +4190,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -4240,8 +4331,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "221c8e708f52405a66464db73286cccc00f6aa4b0f32884913bf71198ce6009d",
-    "coreWasmSha256": "a8d1123ce0794a62a35964a1d78a7c1343dde3dcc62c8fe4f2c53ce2fb867603",
-    "descriptorSha256": "5a6d42e124ff483e8145f86fb8be6951986b46927da64080fc18bd4c42b824c2"
+    "wasmSha256": "006d74d4df8c8693269d0a581f5c172137e86398dfa2b301fe5c997cfd088759",
+    "coreWasmSha256": "352c71372bb9521ca0e7b4d06f848dabdb42f998496a06a5f90b87f794099914",
+    "descriptorSha256": "c256d7d03a0cc0e5be20b1ebea628d8194315b39183ac795a64065658d626262"
   }
 }

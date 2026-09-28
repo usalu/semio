@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { CHANNEL_VERSION_CONSUMERS, CHANNEL_VERSION_PIN_PATH, channelVersionCensus, channelVersionLiterals, writeChannelVersionConsumers } from "../../🔖️channel-version/🟦️.ts";
+import { CHANNEL_VERSION_CENSUS_ROOTS, CHANNEL_VERSION_CONSUMERS, CHANNEL_VERSION_PIN_PATH, channelVersionCensus, channelVersionLiterals, writeChannelVersionConsumers } from "../../🔖️channel-version/🟦️.ts";
 import { decodePackValue } from "../../../../🟦️.ts";
 
 /** 🧭️ The repository root above this law (the directory holding `.mcp.json`). */
@@ -34,6 +34,11 @@ function packF64Hex(value: number): string {
 }
 
 describe("channel version authority", () => {
+  it("the census reads the source files under the roots of the pin and every registered consumer", () => {
+    expect(CHANNEL_VERSION_CENSUS_ROOTS).toEqual([...new Set([CHANNEL_VERSION_PIN_PATH, ...CHANNEL_VERSION_CONSUMERS.map((consumer) => consumer.path)].map((path) => path.split("/")[0]))].sort());
+    expect(CHANNEL_VERSION_CENSUS_ROOTS).toEqual(["🌎️hub", "🧰️framework"]);
+  });
+
   it("the repository states the channel version only through registered consumers that equal the pin", () => {
     const { pin, findings } = channelVersionCensus(repositoryRoot());
     expect(pin).toBeGreaterThan(0);
@@ -79,8 +84,9 @@ describe("channel version authority", () => {
       const body = Array.from({ length: consumer.occurrences }, (_, index) => `"appChannelVersion": ${hostile !== undefined && index === 0 ? hostile : 20}`).join(",\n");
       write(consumer.path, `{\n${body}\n}\n`);
     }
-    write("unregistered/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
-    write("unregistered-pack/🔣️.json", `{ "hex": "11${Buffer.from("appChannelVersion").toString("hex")}05${packF64Hex(20)}" }\n`);
+    write("🌎️hub/unregistered/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
+    write("🧰️framework/unregistered-pack/🔣️.json", `{ "hex": "11${Buffer.from("appChannelVersion").toString("hex")}05${packF64Hex(20)}" }\n`);
+    write("♻️outside-the-roots/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
     expect(spawnSync("git", ["init", "-q"], { cwd: root }).status).toBe(0);
     const { written, refused } = writeChannelVersionConsumers(root, { guest: false });
     const rewritable = CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && !consumer.derived && !consumer.guest);
@@ -90,7 +96,7 @@ describe("channel version authority", () => {
       expect(readFileSync(join(root, consumer.path), "utf8")).toContain(`"appChannelVersion": ${consumer.hostileValues![0]}`);
     }
     const { findings } = channelVersionCensus(root);
-    expect(findings.filter((finding) => finding.problem === "unregistered").map((finding) => finding.path).sort()).toEqual(["unregistered-pack/🔣️.json", "unregistered/🟦️.ts"]);
+    expect(findings.filter((finding) => finding.problem === "unregistered").map((finding) => finding.path).sort()).toEqual(["🌎️hub/unregistered/🟦️.ts", "🧰️framework/unregistered-pack/🔣️.json"]);
     expect(findings.filter((finding) => finding.problem === "drift").map((finding) => finding.path).sort()).toEqual(
       CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && (consumer.derived || consumer.guest)).map((consumer) => consumer.path).sort(),
     );

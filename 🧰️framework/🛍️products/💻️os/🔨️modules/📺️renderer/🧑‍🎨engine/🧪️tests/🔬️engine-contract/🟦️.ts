@@ -55,6 +55,7 @@ import {
   tutorialInteractionSelectionActions,
   createBuiltNodeStoreCacheV1,
   publishBuiltNodesV1,
+  publishPanelBodiesV1,
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
@@ -3392,7 +3393,7 @@ describe("shell store reducer", () => {
     const state = baseState();
     expect(shellReducer(state, { type: "SET_SEARCH_OPEN", value: state.overlays.searchOpen })).toBe(state);
     expect(shellReducer(state, { type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID", value: (current) => current })).toBe(state);
-    expect(shellReducer(state, { type: "SET_PANEL_UI_BY_KEY", value: (current) => current })).toBe(state);
+    expect(shellReducer(state, { type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => current })).toBe(state);
     expect(shellReducer(state, { type: "SET_APP_LABELS_OVERLAY", value: (current) => current })).toBe(state);
     // ✏️ A real change still produces a new state and a new slice — and only that slice.
     const opened = shellReducer(state, { type: "SET_SEARCH_OPEN", value: !state.overlays.searchOpen });
@@ -4990,8 +4991,8 @@ describe("framework external slots", () => {
     const first = await resolveExternalSlots(slots[0], { ...context, ownerId: `${law.ownerId}:a` });
     const second = await resolveExternalSlots(slots[1], { ...context, ownerId: `${law.ownerId}:b` });
     expect(created).toEqual([law.appId, law.appId]);
-    expect(first.children[0].component.value).toBe(law.slots[0].props.paramsJson);
-    expect(second.children[0].component.value).toBe(law.slots[1].props.paramsJson);
+    expect(first.children[0].component).toMatchObject({ type: "text", value: law.slots[0].props.paramsJson });
+    expect(second.children[0].component).toMatchObject({ type: "text", value: law.slots[1].props.paramsJson });
     expect(first.key).toBe(slots[0].key);
     expect(requests.map(({ instanceId }) => instanceId)).toEqual([1, 2]);
     for (const { request } of requests) {
@@ -5005,7 +5006,7 @@ describe("framework external slots", () => {
     const current = await resolveExternalSlots(changed, { ...context, ownerId: `${law.ownerId}:a` });
     expect(created).toHaveLength(2);
     expect(requests.at(-1)?.instanceId).toBe(1);
-    expect(current.children[0].component.value).toBe(law.slots[1].props.paramsJson);
+    expect(current.children[0].component).toMatchObject({ type: "text", value: law.slots[1].props.paramsJson });
     await resolveExternalSlots(node("empty", { type: "text", value: "Empty", emphasize: null, dataAttributes: null }), { ...context, ownerId: `${law.ownerId}:a` });
     expect(destroyed).toEqual([1]);
     expect(context.contributorInstances.size).toBe(1);
@@ -6744,7 +6745,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("frames world instances onto the table centroid without a guest selection", () => {
-    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false, projectionFrame: "content" as const };
     const framed = world3dFrameCameraFromInstances([{ id: "seed-left-001", x: 2, y: -1, z: 0.4 }], camera);
     expect(framed.target[0]).toBeCloseTo(2);
     expect(framed.target[1]).toBeCloseTo(-1);
@@ -6756,7 +6757,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("frames a table-sized world AABB without leaving the current look direction", () => {
-    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false, projectionFrame: "content" as const };
     const framed = world3dFrameCameraFromBounds([0, 0, 0.4], 1.2, camera);
     expect(framed.target[0]).toBeCloseTo(0);
     expect(framed.target[1]).toBeCloseTo(0);
@@ -7044,9 +7045,10 @@ describe("framework renderer hosts", () => {
     expect(shouldReattachWorldViewportCamera(sceneCamera, sceneCamera)).toBe(false);
     expect(shouldReattachWorldViewportCamera(sceneCamera, '{"position":[9,9,9],"target":[0,0,0],"zoom":1}')).toBe(true);
     const merged = mergeWorldViewportCamera(
-      { position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: true, up: [0, 0, 1] },
+      { position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: true, projectionFrame: "preserveCamera", up: [0, 0, 1] },
       { position: [4, 5, 6], target: [1, 1, 1], zoom: 2, projection: "orthographic", up: [0, 1, 0] },
     );
+    expect(merged.projectionFrame).toBe("preserveCamera");
     expect(merged.position).toEqual([4, 5, 6]);
     expect(merged.target).toEqual([1, 1, 1]);
     expect(merged.zoom).toBe(2);
@@ -7155,7 +7157,7 @@ describe("framework renderer hosts", () => {
       ["sphere-box-fuse", [-1.2, -1.2, -1.2], [1.5, 1.5, 1.5]],
       ["sphere-cut-with-torus", [-2.2, -2.2, -2.2], [2.2, 2.2, 2.2]],
     ];
-    const seed = { position: [4, -4, 3] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    const seed = { position: [4, -4, 3] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false, projectionFrame: "content" as const };
     for (const [name, minimum, maximum] of examples) {
       for (const aspect of [1.7, 1.0, 0.7]) {
         const center: [number, number, number] = [(minimum[0] + maximum[0]) / 2, (minimum[1] + maximum[1]) / 2, (minimum[2] + maximum[2]) / 2];
@@ -7233,7 +7235,7 @@ describe("framework renderer hosts", () => {
 
   it("preserves projectionSpec.view from gizmo snaps instead of clobbering to top", () => {
     const merged = mergeWorldViewportCamera(
-      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } },
+      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionFrame: "content", projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } },
       { position: [0, -600, 0], target: [0, 0, 0], zoom: 50, projection: "orthographic", projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } },
     );
     expect(merged.projectionSpec).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } });
@@ -10636,7 +10638,9 @@ describe("registry-derived utilities and activation (P5)", () => {
         },
       ],
     });
-    const node = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": historyUiNode }, () => {}, 1, emptyAppLabelsOverlay);
+    const historyStore = new UiDocumentStore("panel:framework.panel.history");
+    historyStore.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", historyUiNode));
+    const node = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": historyStore }, () => {}, 1, emptyAppLabelsOverlay);
     expect(node.kind).toBe("leaf");
     if (node.kind !== "leaf") return;
     expect(node.id).toBe("framework.panel.history");
@@ -10650,7 +10654,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     // 🧭️ `ShellHost`'s `defaultDock` reads `session.app.panelTabs` for all four corners. It used to read
     // them for the two top corners only, so a `display`- or `settings`-group panel (puzzle3d's own settings
     // section, with its grid-spacing/chunk-size/proximity/overlap steppers) was rendered by the guest,
-    // cached in `panelUiByKey`, and then dropped before any dock node existed — unreachable in every anchor.
+    // cached as a panel body, and then dropped before any dock node existed — unreachable in every anchor.
     expect(panelAnchorForGroup("workbench")).toBe("top-left");
     expect(panelAnchorForGroup("document")).toBe("top-left");
     expect(panelAnchorForGroup("details")).toBe("top-right");
@@ -11250,6 +11254,48 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(paneRecord(top).activeUtility).toBe("fill");
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
     expect(world.leftoverWorldWindowOverlayV1(perspective)).toBeNull();
+  });
+
+  it("a republished equal leftover keeps every pane's overlay object and notifies nobody; one pane's hover changes only its own", async () => {
+    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const [a, b] = ["puzzle3d#perspective", "puzzle3d#top"];
+    const idle = { ids: ["seed-left-001"] as readonly string[], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: null };
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    world.publishLeftoverWorldSelectionV1(idle, { kind: "document" });
+    world.publishLeftoverWorldSelectionV1({ ...idle, hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" }, { kind: "window", windowId: a });
+    const documentBefore = world.leftoverWorldSelectionOverlayV1();
+    const aBefore = world.leftoverWorldWindowOverlayV1(a);
+    const bBefore = world.leftoverWorldWindowOverlayV1(b);
+    expect(world.leftoverWorldWindowOverlayV1(a), "a pane's overlay is one object between publications").toBe(aBefore);
+    let notified = 0;
+    const unsubscribe = world.subscribeLeftoverWorldSelectionV1(() => (notified += 1));
+    world.publishLeftoverWorldSelectionV1({ ...idle, ids: [...idle.ids], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" }, { kind: "window", windowId: a });
+    expect(notified, "an equal republication with a fresh ids array changes nothing").toBe(0);
+    expect(world.leftoverWorldSelectionOverlayV1()).toBe(documentBefore);
+    expect(world.leftoverWorldWindowOverlayV1(a)).toBe(aBefore);
+    expect(world.leftoverWorldWindowOverlayV1(b)).toBe(bBefore);
+    world.publishLeftoverWorldSelectionV1({ ...idle, hoveredId: null, hoveredDomain: null }, { kind: "window", windowId: a });
+    expect(notified, "the hover leaving pane a is one change").toBe(1);
+    expect(world.leftoverWorldWindowOverlayV1(a)?.hoveredId).toBeNull();
+    expect(world.leftoverWorldWindowOverlayV1(a)).not.toBe(aBefore);
+    expect(world.leftoverWorldWindowOverlayV1(b), "the sibling pane keeps its object, so it does not re-render").toBe(bBefore);
+    expect(world.leftoverWorldSelectionOverlayV1(), "nor do the document readers").toBe(documentBefore);
+    unsubscribe();
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+  });
+
+  it("the first leftover a pane publishes never lends its hover or utility to the document slot, so a sibling pane without its own overlay reads none", async () => {
+    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const [a, b] = ["puzzle3d#perspective", "puzzle3d#top"];
+    const hovered = { ids: [] as readonly string[], hoveredId: "seed-left-001", hoveredDomain: "object", gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    world.publishLeftoverWorldSelectionV1(hovered, { kind: "window", windowId: a });
+    expect(world.leftoverWorldWindowOverlayV1(a)).toMatchObject({ hoveredId: "seed-left-001", activeUtility: "brush" });
+    expect(world.leftoverWorldWindowOverlayV1(b), "the sibling pane paints no hover and no arm of pane a").toMatchObject({ hoveredId: null, hoveredDomain: null, activeUtility: null });
+    expect(world.leftoverWorldSelectionOverlayV1()?.hoveredId, "nor do the document readers").toBeNull();
+    world.publishLeftoverWorldSelectionV1({ ...hovered, hoveredId: null, hoveredDomain: null }, { kind: "window", windowId: a });
+    expect(world.leftoverWorldWindowOverlayV1(b)?.hoveredId, "the hover leaving pane a leaves nothing behind in pane b").toBeNull();
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
   });
 
   it("one arm authority publishes the armed pane's own overlay through explicit window scope", async () => {
@@ -13580,6 +13626,29 @@ describe("built-node store reloads", () => {
       view.unmount();
       consoleError.mockRestore();
     }
+  });
+
+  it("panel bodies publish into one store per panel key: a new body reloads it in place, the tab keeps its tree config, and the store answers its node", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const historyTab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: "History", group: "settings" as const, bodyKey: "framework.body.history", children: [] };
+    const overlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} };
+    const configs: Parameters<typeof panelTabDefinitionToNode>[9] = new Map();
+    const store = publishPanelBodiesV1(cache, [["framework.panel.history", contractNode("first")]])[0]![1];
+    const onAction = (): void => undefined;
+    const configOf = () => {
+      const tab = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": store }, onAction, 1, overlay, undefined, undefined, null, configs);
+      const tree = tab.kind === "leaf" ? tab.trees[0]!.tree : null;
+      return tree !== null && "resolveTree" in tree ? tree.resolveTree() : tree;
+    };
+    const before = configOf();
+    const second = contractNode("second");
+    expect(publishPanelBodiesV1(cache, [["framework.panel.history", second]])[0]![1], "one store per panel key").toBe(store);
+    expect(cache.nodeOf(store)).toBe(second);
+    expect(configOf(), "the tab's tree config survives the body change, so the mounted tree is never remounted").toBe(before);
+    expect(publishPanelBodiesV1(cache, [["framework.panel.history", undefined]])[0]![1]).toBe(store);
+    expect(cache.nodeOf(store), "a panel the refresh did not re-serialize keeps its body").toBe(second);
+    const pending = publishPanelBodiesV1(cache, [["framework.panel.inspection", undefined]])[0]![1];
+    expect(cache.nodeOf(pending)?.key, "a panel with no body yet starts on the pending body").toBe(pendingPanelUiNode().key);
   });
 });
 //#endregion 🥽️BuiltNodeStoreReload

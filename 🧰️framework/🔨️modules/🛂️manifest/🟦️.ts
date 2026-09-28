@@ -685,6 +685,14 @@ export const SET_INTERACTION_GRANULARITY_ACTION_ID = "setInteractionGranularity"
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
 export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
 
+/** 📤️ The framework-owned Export Document action id, shell-intercepted in every app — mirrors Rust
+ * `EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
+export const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID = "exportArtifactDocument";
+
+/** 📥️ The framework-owned Import Document action id, shell-intercepted in every app — mirrors Rust
+ * `IMPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
+export const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID = "importArtifactDocument";
+
 /** 🎓️ Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type IntroductionDefinition = GeneratedIntroductionDefinition;
 export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
@@ -1411,18 +1419,22 @@ function resolveNativeLabel(label: unknown): { readonly en: string; readonly de:
 
 /** 🗂️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
  * Every app across `manifests` whose `role` is in `roles` and whose `io.artifactSchema` is non-empty
- * contributes one choice per dialect coordinate. Deduped by dialect coordinate (first manifest/app
- * wins — callers pass owner manifests first so the owner's label wins over a later contributor's),
- * sorted by coordinate for determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
-export function artifactKindChoices(manifests: readonly { readonly apps: readonly unknown[] }[], roles: readonly AppRole[]): ArtifactKindChoice[] {
+ * contributes one choice per dialect coordinate, labelled with the KIND's own label (the app's, then
+ * the manifest's `artifactKinds` entry of that schema) — never its editor app's label, which every kind
+ * of a package would share. Deduped by dialect coordinate (first manifest/app wins — callers pass owner
+ * manifests first so the owner's label wins over a later contributor's), sorted by coordinate for
+ * determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
+export function artifactKindChoices(manifests: readonly { readonly apps: readonly unknown[]; readonly artifactKinds?: readonly unknown[] }[], roles: readonly AppRole[]): ArtifactKindChoice[] {
   const byCoordinate = new Map<string, ArtifactKindChoice>();
   for (const manifest of manifests) {
     for (const raw of manifest.apps) {
-      const app = raw as unknown as { readonly role: AppRole; readonly dialect: ArtifactDialect; readonly label: unknown; readonly io: { readonly artifactSchema: string } };
+      const app = raw as unknown as { readonly role: AppRole; readonly dialect: ArtifactDialect; readonly label: unknown; readonly io: { readonly artifactSchema: string }; readonly artifactKinds?: readonly unknown[] };
       if (!roles.includes(app.role) || app.io.artifactSchema === "") continue;
       const coordinate = `${app.dialect.artifactKind}@${app.dialect.standard}/${app.dialect.subset}`;
       if (byCoordinate.has(coordinate)) continue;
-      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.artifactSchema, dialect: app.dialect, label: resolveNativeLabel(app.label) });
+      const kinds = [...(app.artifactKinds ?? []), ...(manifest.artifactKinds ?? [])] as readonly { readonly schema?: string; readonly label?: unknown }[];
+      const kind = kinds.find((candidate) => candidate.schema === app.io.artifactSchema);
+      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.artifactSchema, dialect: app.dialect, label: resolveNativeLabel(kind === undefined ? app.label : kind.label) });
     }
   }
   return [...byCoordinate.keys()].sort().map((coordinate) => byCoordinate.get(coordinate)!);

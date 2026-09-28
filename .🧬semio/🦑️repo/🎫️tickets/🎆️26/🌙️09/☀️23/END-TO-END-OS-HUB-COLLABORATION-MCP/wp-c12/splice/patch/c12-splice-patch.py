@@ -20,6 +20,11 @@ TRANSIENT = ANY + "/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️ma
 IO_BIN = ANY + "/🚪️io/🧬️mutations/💾️binary/🦀️.rs"
 LEAF_ROOT = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text"
 
+TEXT_EDITOR = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx"
+
+MUTATE_WRITER = ANY + "/🧪️tests/✒️mutate-writer-1"
+SPLICE_CASE = "⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged"
+
 HUNKS = [
     (SCENE + "/📦️packages/🦀️rust/🦀️.rs",
      "pub use framing::{Canvas2dFraming, Canvas2dFrameCamera};\n",
@@ -44,6 +49,7 @@ HUNKS = [
      f"                            #[path = \"{LEAF_ROOT}/💾️binary/🦀️.rs\"]\n                            pub mod binary;\n"
      f"                            #[path = \"{LEAF_ROOT}/🔺️diff/🦀️.rs\"]\n                            pub mod diff;\n"
      f"                            #[path = \"{LEAF_ROOT}/↩️inverse/🦀️.rs\"]\n                            pub mod inverse;\n"
+     f"                            #[cfg(test)]\n                            #[path = \"{LEAF_ROOT}/🧪️tests/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🦀️.rs\"]\n                            mod tests_warns_that_an_already_removed_run_leaves_the_brief_unchanged;\n"
      f"                            #[path = \"{LEAF_ROOT}/📝️text/🦀️.rs\"]\n                            pub mod text;\n                        }}\n"),
     (WRITER + "/🦀️.rs",
      "            #[path = \"🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📝️text-edit/🦀️.rs\"]\n            pub mod text_edit;\n",
@@ -228,6 +234,191 @@ HUNKS = [
     (TRANSIENT + "/../📢️publication/🦀️.rs",
      "store::retirement::leaf((self.start, self.end))",
      "store::retirement::leaf((self.start, self.end, self.splice))"),
+    # ⌨️ React host splice mode: a scene whose settings declare `typing: {mode: "splice"}` gets one numbered `textSplice` per
+    # typed run; scenes rebase the unapplied splices + unsent typing (TS twin host state machine), refusals drop the run.
+    (TEXT_EDITOR,
+     'import { TEXT_EDITOR_SCENE_LANES, textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";\n',
+     'import { receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1 } from "@semio-tech/framework";\n'),
+    (TEXT_EDITOR,
+     "//#region WasmEditorSurface\n",
+     "/** @emoji 🔢️ A wasm editor session's selection in scalars of `text` (the session speaks UTF-8 bytes); the text's end without one. */\n"
+     "function textEditorSessionSelectionV1(session: FrameworkEditorSession | null, text: string): { readonly anchor: number; readonly caret: number } {\n"
+     "  const end = Array.from(text).length;\n"
+     "  return session === null ? { anchor: end, caret: end } : { anchor: scalarOfUtf8OffsetV1(text, session.anchor()), caret: scalarOfUtf8OffsetV1(text, session.caret()) };\n"
+     "}\n\n"
+     "/** @emoji 🖼️ Shows what splice typing answered (ticket 26/09/23 C12, `semio.ui.scene.text-splice.v1`): the text, then the selection in\n"
+     " * the session's UTF-8 bytes; nothing for `null` (the editor already shows it). */\n"
+     "function showTextEditorSpliceViewV1(session: FrameworkEditorSession | null, view: TextEditorSpliceViewV1): void {\n"
+     "  if (session === null || view === null) return;\n"
+     "  session.setText(view.text);\n"
+     "  session.setSelectionRange(utf8OffsetOfScalarV1(view.text, view.anchor), utf8OffsetOfScalarV1(view.text, view.caret));\n"
+     "}\n\n"
+     "//#region WasmEditorSurface\n"),
+    (TEXT_EDITOR,
+     "  const selectionUndeclaredRef = useRef(false);\n",
+     "  const selectionUndeclaredRef = useRef(false);\n"
+     "  const spliceHostRef = useRef<TextEditorSpliceHostV1 | null>(null);\n"
+     "  const spliceTyping = useMemo(() => textEditorTypingV1(scene.settingsJson) !== null, [scene.settingsJson]);\n"
+     "  const spliceTypingRef = useRef(false);\n"
+     "  spliceTypingRef.current = spliceTyping && !explicitDraft;\n"),
+    (TEXT_EDITOR,
+     "            onDraftChange?.(next.text);\n            return;\n          }\n          const echo = echoStateRef.current;\n",
+     "            onDraftChange?.(next.text);\n            return;\n          }\n"
+     "          const spliceHost = spliceHostRef.current;\n"
+     "          if (spliceTypingRef.current && spliceHost !== null) {\n"
+     "            const sent = readOnlyRef.current ? null : sendTextEditorSpliceV1(spliceHost, next.text);\n"
+     "            if (sent !== null) {\n"
+     "              spliceHostRef.current = sent.host;\n"
+     "              const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end } }));\n"
+     "              if (reason === null) return;\n"
+     "              if (TEXT_EDITOR_READ_ONLY_REFUSALS.has(reason)) {\n"
+     "                readOnlyRef.current = true;\n"
+     "                setReadOnly(true);\n"
+     "              }\n"
+     "              const session = sessionRef.current;\n"
+     "              const local = session?.text() ?? next.text;\n"
+     "              const refused = refuseTextEditorSpliceV1(spliceHostRef.current ?? sent.host, sent.seq, local, textEditorSessionSelectionV1(session, local));\n"
+     "              spliceHostRef.current = refused.host;\n"
+     "              showTextEditorSpliceViewV1(session, refused.show);\n"
+     "              return;\n"
+     "            }\n"
+     "            if (selectionUndeclaredRef.current) return;\n"
+     "            const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.select, args: { surfaceId, start: next.start, end: next.end, splice: spliceHost.seq } }));\n"
+     "            if (reason === \"undeclared-action\") selectionUndeclaredRef.current = true;\n"
+     "            return;\n"
+     "          }\n"
+     "          const echo = echoStateRef.current;\n"),
+    (TEXT_EDITOR,
+     "      if (renameActiveRef.current) return;\n      if (resync) {\n",
+     "      if (renameActiveRef.current) return;\n"
+     "      if (spliceTypingRef.current) {\n"
+     "        const session = sessionRef.current;\n"
+     "        let show: TextEditorSpliceViewV1 = null;\n"
+     "        if (resync || spliceHostRef.current === null) {\n"
+     "          spliceHostRef.current = textEditorSpliceHostV1(scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson));\n"
+     "          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };\n"
+     "        } else if (reconciledRef.current?.scene !== scene) {\n"
+     "          const local = session?.text() ?? scene.buffer;\n"
+     "          const received = receiveTextEditorSceneV1(spliceHostRef.current, scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson), local, textEditorSessionSelectionV1(session, local));\n"
+     "          spliceHostRef.current = received.host;\n"
+     "          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, false) };\n"
+     "          show = received.show;\n"
+     "        }\n"
+     "        const pack = reconciledRef.current.pack;\n"
+     "        if (session === null) return;\n"
+     "        if (resync || syncedRef.current?.session !== session || !sameScenePackV1(syncedRef.current.pack, pack)) {\n"
+     "          syncedRef.current = { session, pack };\n"
+     "          try {\n"
+     "            session.syncFromScenePack?.(pack);\n"
+     "          } catch {\n"
+     "            return;\n"
+     "          }\n"
+     "        }\n"
+     "        showTextEditorSpliceViewV1(session, show);\n"
+     "        return;\n"
+     "      }\n"
+     "      if (resync) {\n"),
+    # 🔮️ conformance: the splice-text vector in the oracle catalog + manifest, the Rust subject, the feature and the Python
+    # second implementation (its own locate/apply of `semio.ui.scene.text-splice.v1`, adjudicating the no-op vector).
+    (ANY + "/🔮️oracles/🔣️.json",
+     '              "directoryName": "🏷️renames-the-document-to-mission-brief"\n            }\n          ]\n        }\n      ],\n      "kinds": [\n',
+     '              "directoryName": "🏷️renames-the-document-to-mission-brief"\n            }\n          ]\n        },\n        {\n          "mutationId": "splice-text",\n          "sourceMutationDirectoryName": "✂️splice-text",\n          "mutationDirectoryName": "✂️splice-text",\n          "scenarios": [\n            {\n              "id": "warns-that-an-already-removed-run-leaves-the-brief-unchanged",\n              "directoryName": "⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged"\n            }\n          ]\n        }\n      ],\n      "kinds": [\n'),
+    (ANY + "/🔮️oracles/🔣️.json",
+     '            "variant": "RenameWriter"\n          },\n          "oracleRequirements": [\n            {\n              "capability": "writer-1-mutate",\n              "qualifyingKind": "verified-native-second-implementation"\n            }\n          ]\n        }\n      ]\n',
+     '            "variant": "RenameWriter"\n          },\n          "oracleRequirements": [\n            {\n              "capability": "writer-1-mutate",\n              "qualifyingKind": "verified-native-second-implementation"\n            }\n          ]\n        },\n        {\n          "id": "splice-text",\n          "capability": "writer-1-mutate",\n          "payloadSchema": "🧬️.schema.json",\n          "outcomes": [\n            "applied",\n            "no-op"\n          ],\n          "productionDispatch": {\n            "operation": "splice-text",\n            "bridgeVersion": 1,\n            "variant": "SpliceText"\n          },\n          "oracleRequirements": [\n            {\n              "capability": "writer-1-mutate",\n              "qualifyingKind": "verified-native-second-implementation"\n            }\n          ]\n        }\n      ]\n'),
+    (MUTATE_WRITER + "/🦀️.rs",
+     'const KINDS: &[&str] = &["rename-writer", "change-uri", "change-language", "edit-text"];\n',
+     'const KINDS: &[&str] = &["rename-writer", "change-uri", "change-language", "edit-text", "splice-text"];\n'),
+    (MUTATE_WRITER + "/🦀️.rs",
+     'const GUARD_VECTORS: &[&str] = &["edit-text"];\n',
+     'const GUARD_VECTORS: &[&str] = &["edit-text", "splice-text"];\n'),
+    (MUTATE_WRITER + "/🦀️.rs",
+     '        if kind == "edit-text" && current.document.child_id != base.document.child_id {\n',
+     '        if (kind == "edit-text" || kind == "splice-text") && current.document.child_id != base.document.child_id {\n'),
+    (MUTATE_WRITER + "/🥒️.feature",
+     "  second implementation of the `s.writer.writer` document and its four typed mutations, written in\n",
+     "  second implementation of the `s.writer.writer` document and its five typed mutations, written in\n"),
+    (MUTATE_WRITER + "/🥒️.feature",
+     "  from the four committed vectors. It imports nothing from this repository's Rust.\n",
+     "  from the five committed vectors. It imports nothing from this repository's Rust.\n"),
+    (MUTATE_WRITER + "/🥒️.feature",
+     "  change. Adding one such vector, plus the child-addressing rule, closes it.\n",
+     "  change. Adding one such vector, plus the child-addressing rule, closes it. The fifth, `splice-text`,\n"
+     "  is the range edit two humans type with at once (`semio.ui.scene.text-splice.v1`): its committed vector\n"
+     "  deletes a run a co-author already removed, so the splice relocates to nothing, deletes nothing and is\n"
+     "  the same warned no-op; the reference locates it with its own implementation of the five relocation\n"
+     "  steps and refuses a splice that really changes the body for the same child-addressing reason.\n"),
+    (MUTATE_WRITER + "/🥒️.feature",
+     "      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |\n\n  @id-inverse\n",
+     "      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |\n      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |\n\n  @id-inverse\n"),
+    (MUTATE_WRITER + "/🥒️.feature",
+     "      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |\n\n  @id-identity-round-trip\n",
+     "      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |\n      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |\n\n  @id-identity-round-trip\n"),
+    (MUTATE_WRITER + "/🐍️.py",
+     '"""✒️ An INDEPENDENT second implementation of the `s.writer.writer` document and its four typed\n',
+     '"""✒️ An INDEPENDENT second implementation of the `s.writer.writer` document and its five typed\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     'KINDS = ("rename-writer", "change-uri", "change-language", "edit-text")\n',
+     'KINDS = ("rename-writer", "change-uri", "change-language", "edit-text", "splice-text")\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     'TAGS = {kind: tag_of(kind) for kind in KINDS}\n# endregion 🔖️Vocabulary\n',
+     'TAGS = {kind: tag_of(kind) for kind in KINDS}\n\nBODY_KINDS = ("edit-text", "splice-text")\n"""📝️ The two kinds that reach the body; the committed vectors pin their no-op branch only."""\n# endregion 🔖️Vocabulary\n\n\n'
+     '# region 🔖️Splice\nSPLICE_CONTEXT = 32\n"""📏️ Context scalars a range edit carries on each side (`semio.ui.scene.text-splice.v1`)."""\n\nSPLICE_MIN_TWO_SIDED = 4\n"""🔗️ Shortest per-side context a two-sided search uses."""\n\n\n'
+     'def splice_locate(text, splice):\n'
+     '    """📍️ Where a range edit lands in `text`, written from the five steps `semio.ui.scene.text-splice.v1` states: the run with context on\n'
+     '    both sides (longest first, down to `SPLICE_MIN_TWO_SIDED`), the run with context on one side (down to one scalar, both sides\n'
+     '    competing), the run alone, then, for a run that is gone, the insertion point by the same context searches (`clamped`), and last the\n'
+     '    author\'s own `start`. Every search takes the match nearest `start`, ties to the lower position. Python strings index scalars."""\n'
+     '    before, deleted, after, start = splice["before"], splice["deleted"], splice["after"], splice["start"]\n\n'
+     '    def nearest(positions):\n'
+     '        return min(positions, key=lambda position: (abs(position - start), position), default=None)\n\n'
+     '    def found(pattern, shift):\n'
+     '        return [index + shift for index in range(len(text) - len(pattern) + 1) if text.startswith(pattern, index)]\n\n'
+     '    def anchored(run):\n'
+     '        longest = max(len(before), len(after))\n'
+     '        for size in range(longest, SPLICE_MIN_TWO_SIDED - 1, -1):\n'
+     '            head, tail = before[len(before) - min(size, len(before)):], after[:min(size, len(after))]\n'
+     '            if not head or not tail:\n'
+     '                break\n'
+     '            hit = nearest(found(head + run + tail, len(head)))\n'
+     '            if hit is not None:\n'
+     '                return hit\n'
+     '        for size in range(longest, 0, -1):\n'
+     '            head, tail = before[len(before) - min(size, len(before)):], after[:min(size, len(after))]\n'
+     '            hit = nearest((found(head + run, len(head)) if head else []) + (found(run + tail, 0) if tail else []))\n'
+     '            if hit is not None:\n'
+     '                return hit\n'
+     '        return None\n\n'
+     '    exact = anchored(deleted)\n'
+     '    if exact is None and deleted:\n'
+     '        exact = nearest(found(deleted, 0))\n'
+     '    if exact is not None:\n'
+     '        return exact, len(deleted), False\n'
+     '    insertion = anchored("") if deleted else None\n'
+     '    if insertion is not None:\n'
+     '        return insertion, 0, True\n'
+     '    return min(max(start, 0), len(text)), 0, bool(deleted or before or after)\n\n\n'
+     'def splice_apply(text, splice):\n'
+     '    """✂️ The text after a range edit and the edit that undoes it (the removed run back, context of the new text)."""\n'
+     '    at, length, _ = splice_locate(text, splice)\n'
+     '    result = text[:at] + splice["insert"] + text[at + length:]\n'
+     '    end = at + len(splice["insert"])\n'
+     '    return result, {"start": at, "deleted": splice["insert"], "insert": text[at:at + length], "before": result[max(0, at - SPLICE_CONTEXT):at], "after": result[end:end + SPLICE_CONTEXT]}\n'
+     '# endregion 🔖️Splice\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     '    if kind == "edit-text":\n        if payload["text"] != document["text"]:\n            raise AssertionError("mutate-edit-text: %s" % BODY_REASON)\n        return copy.deepcopy(document)\n',
+     '    if kind == "edit-text":\n        if payload["text"] != document["text"]:\n            raise AssertionError("mutate-edit-text: %s" % BODY_REASON)\n        return copy.deepcopy(document)\n'
+     '    if kind == "splice-text":\n        if splice_apply(document["text"], payload)[0] != document["text"]:\n            raise AssertionError("mutate-splice-text: %s" % BODY_REASON)\n        return copy.deepcopy(document)\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     '    if kind == "edit-text":\n        if payload["text"] != document["text"]:\n            raise AssertionError("inverse-edit-text: %s" % BODY_REASON)\n        return []\n',
+     '    if kind == "edit-text":\n        if payload["text"] != document["text"]:\n            raise AssertionError("inverse-edit-text: %s" % BODY_REASON)\n        return []\n'
+     '    if kind == "splice-text":\n        result, undo = splice_apply(document["text"], payload)\n        if result != document["text"]:\n            raise AssertionError("inverse-splice-text: %s" % BODY_REASON)\n        return [(kind, undo)]\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     '        expected = ["mutation.no-op"] if kind == "edit-text" else []\n',
+     '        expected = ["mutation.no-op"] if kind in BODY_KINDS else []\n'),
+    (MUTATE_WRITER + "/🐍️.py",
+     '        if kind == "edit-text":\n            restores(kind, applied, before)\n',
+     '        if kind in BODY_KINDS:\n            restores(kind, applied, before)\n'),
 ]
 
 

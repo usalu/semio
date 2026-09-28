@@ -8,5 +8,31 @@
     "not-a-digest",
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
   ],
-  "mtime": 1700000000
+  "mtime": 1700000000,
+  "replay": {
+    "ignored": ["receipts/", "catalog/", "runs.log", ".nx/", "node_modules"],
+    "source": "descriptors/🔣️.json",
+    "catalog": "catalog/🔣️.json",
+    "versions": ["{\"version\":1}\n", "{\"version\":2}\n"],
+    "producers": [
+      {
+        "name": "a producer cached on membership inputs replays a receipt older than the bytes it digests",
+        "cache": true,
+        "steps": [
+          { "edit": false, "runs": 1, "version": 0 },
+          { "edit": false, "runs": 1, "version": 0 },
+          { "edit": true, "runs": 1, "version": 0 }
+        ]
+      },
+      {
+        "name": "an uncached producer re-digests every run, so the cached consumer replays exactly while the bytes are unchanged",
+        "cache": false,
+        "steps": [
+          { "edit": false, "runs": 1, "version": 0 },
+          { "edit": false, "runs": 1, "version": 0 },
+          { "edit": true, "runs": 2, "version": 1 }
+        ]
+      }
+    ]
+  }
 }

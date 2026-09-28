@@ -1,0 +1,49 @@
+{
+  "schema": "semio.os.document-actor-recovery/v1",
+  "description": "What the store worker does when a document's mounted browser actor is lost without anyone asking for it — an action invocation whose outcome it cannot confirm, a child fault while it applies an inbound hub frame, or a failed render turn. The actor is closed, the document's in-flight batches go back to the front of its outbox in batch order (confirmed local edits are never dropped and never sent twice: the outbox is id-deduplicated and the hub settles what it already holds), the document socket ends with the browser close row `actorLost`, and the reconnect loop reopens AT ONCE along the ordinary open path: a new open plan, a new lease, a fresh actor seeded from the hub's canonical checkpoint pair plus the tail since (the last confirmed frontier). The unconfirmed input is refused `not-applied` (retryable, never replayed by the shell). A loss counts toward the bound unless the actor had been mounted for stableAfterMs or an action was applied since the previous loss; more than maxConsecutiveLosses consecutive losses end the recovery with the typed fault `document-actor.recovery-exhausted` instead of a reconnect storm.",
+  "maxConsecutiveLosses": 3,
+  "stableAfterMs": 30000,
+  "causes": ["action-unconfirmed", "inbound-frame", "turn-failed"],
+  "exhaustedFault": "document-actor.recovery-exhausted",
+  "cases": [
+    {
+      "name": "one unconfirmed invocation reopens at once, and the next applied action clears the count",
+      "events": [
+        { "kind": "lost", "cause": "action-unconfirmed", "atMs": 1000 },
+        { "kind": "mounted", "atMs": 4000 },
+        { "kind": "applied", "atMs": 5000 },
+        { "kind": "lost", "cause": "action-unconfirmed", "atMs": 6000 }
+      ],
+      "decisions": ["reopen-now", "none", "none", "reopen-now"],
+      "losses": [1, 1, 0, 1]
+    },
+    {
+      "name": "a loss during every reopen ends with the typed fault after the bound, never a storm",
+      "events": [
+        { "kind": "lost", "cause": "inbound-frame", "atMs": 0 },
+        { "kind": "mounted", "atMs": 2000 },
+        { "kind": "lost", "cause": "inbound-frame", "atMs": 2500 },
+        { "kind": "mounted", "atMs": 4000 },
+        { "kind": "lost", "cause": "turn-failed", "atMs": 4100 },
+        { "kind": "lost", "cause": "turn-failed", "atMs": 4200 },
+        { "kind": "lost", "cause": "turn-failed", "atMs": 4300 }
+      ],
+      "decisions": ["reopen-now", "none", "reopen-now", "none", "reopen-now", "exhausted", "exhausted"],
+      "losses": [1, 1, 2, 2, 3, 4, 4]
+    },
+    {
+      "name": "an actor that stayed mounted for the stable window starts a fresh count",
+      "events": [
+        { "kind": "lost", "cause": "action-unconfirmed", "atMs": 0 },
+        { "kind": "mounted", "atMs": 1000 },
+        { "kind": "lost", "cause": "action-unconfirmed", "atMs": 2000 },
+        { "kind": "mounted", "atMs": 3000 },
+        { "kind": "lost", "cause": "action-unconfirmed", "atMs": 4000 },
+        { "kind": "mounted", "atMs": 5000 },
+        { "kind": "lost", "cause": "inbound-frame", "atMs": 36000 }
+      ],
+      "decisions": ["reopen-now", "none", "reopen-now", "none", "reopen-now", "none", "reopen-now"],
+      "losses": [1, 1, 2, 2, 3, 3, 1]
+    }
+  ]
+}

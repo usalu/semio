@@ -24,6 +24,14 @@ semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
+[[test]]
+name = "details_arena_headroom"
+path = "../../🧪️tests/🎟️details-arena-headroom/🦀️.rs"
+
+[[test]]
+name = "table_arena_headroom"
+path = "../../🧪️tests/📊️table-arena-headroom/🦀️.rs"
+
 [dev-dependencies]
 base64 = "0.22.1"
 json-patch = "4.1.0"

@@ -126,6 +126,9 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
     }
 
+    fn agent_target_revision(_action: &str, args: &dsl::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+        crate::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_agent_target_revision(doc.snapshot, args)
+    }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {

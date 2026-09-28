@@ -198,6 +198,7 @@ def main():
             count = patched.count(old)
             patched = patched.replace(old, new)
             print(f"  workspace {old!r} → current(): {count}")
+        patched = patched.replace("Arc::clone(&self.catalog.current())", "Arc::clone(&self.catalog)")
         if patched.count(ANCHOR_BEFORE_ROUTING) != 1:
             problems.append(f"workspace WorkspaceCatalog anchor count {patched.count(ANCHOR_BEFORE_ROUTING)}")
         else:

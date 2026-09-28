@@ -32,6 +32,20 @@ Repo-default shared cargo cache (`.cargo/config.toml`: `build-dir`/`target-dir` 
 
 ## Status log
 
+- 17:45 DIN 4108 browser walk at http://127.0.0.1:6091/ recorded in 📓️e2e-din4108-walk.md. Open example, evaluate, n₅₀ 1.5→4.5 fail, apply remedy, evaluate pass, English and Deutsch. Goal can close.
+
+- 17:20 Fleet gate 9479e17d PASS. Summary [2.076s] 1 test run: 1 passed, 0 skipped. Blocking list read as None in 📓️verify-gate-fleet.md. E2E DIN 4108 browser walk is next. Goal not closed.
+
+- 17:05 DIN 4108 equality fixer 3dfd5e03 done: insulation nudge uses the check's own U′ and u≤1. Family Summary 97 passed, 0 skipped. Fleet gate rerun 9479e17d launched. Not closed until that Summary is green.
+
+- 16:58 EN 1994 annex verify 2f914da0 PASS. Blocking list read as None. Deflection limit L/250 vs L/300 on beam-B1. Family closed for annex. Full gate still waits on DIN 4108 equality.
+
+- 16:55 EN 1994 annex fixer 9e3116df done: DE γ_M1=1.1 and deflection L/300 vs EN L/250. Family Summary 78 passed, 0 skipped (was 76). Verifier 2f914da0 launched. Full gate waits on DIN 4108 equality fixer.
+
+- 16:46 Gate reverify 14a1dacf FAIL. Summary 1 test, 0 passed, 1 failed, 0 skipped. din4108-6.u-prime.wall-north remedy lands at printed u=1.0000 and stays Fail. en1994 DE vs EN annex limits/computed are identical. Fixers 3dfd5e03 (din4108 equality) and 9e3116df (en1994 annex) launched. Not closed.
+
+- 16:40 DIN 4108 fixer 87ff83f2 done: ulp-nudge tied U′ bounds and always emit. Family Summary 96 passed, 0 skipped. Verifier 14a1dacf launched to rerun the compliance gate. Not closed until that Summary is green.
+
 - 16:26 DIN 4108 reverify e17e80fb FAIL. Compliance gate still panics: din4108-6.u-prime.wall-north bare Fail on re-evaluate after zone-ht. length/area/insulation fallbacks attach nothing in that state. Fresh grok-4.7-high fixer 87ff83f2 launched. Full fleet gate not rerun as a close.
 
 - 16:18 EN 1994 gate reverify d798c2ac PASS. Blocking list read as None. LTB option 0 is a heavier HEB; crack spacing 0.98·s_limit. Cached 76/76, live nx not rerun (cargo locked). Family closed for this gate round. Full gate waits on DIN 4108 reverify.

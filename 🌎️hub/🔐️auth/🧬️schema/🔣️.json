@@ -1037,6 +1037,48 @@
           "type": "boolean"
         }
       }
+    },
+    "RateLimitRefusalMessageV1": {
+      "description": "The notice a rate-limited request carries, in English and German; the wait itself is `retryAfterMs`.",
+      "const": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    "RateLimitRefusalV1": {
+      "description": "The body of the `429` a rate-limited route family (every `AuthRateLimitClassV1` except `auth`, whose sign-in keeps `AuthErrorV1`) answers when its token bucket is empty: the class that refused, how long until one request is admitted again (also the `retry-after` header, rounded up to seconds), and the notice. Nothing was executed; the client resends the same request after the wait.",
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "code",
+        "class",
+        "retryAfterMs",
+        "message"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.rate-limit-refusal/v1"
+        },
+        "code": {
+          "const": "rate-limited"
+        },
+        "class": {
+          "$ref": "#/$defs/AuthRateLimitClassV1"
+        },
+        "retryAfterMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "message": {
+          "$ref": "#/$defs/RateLimitRefusalMessageV1"
+        }
+      }
     }
   }
 }

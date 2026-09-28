@@ -54,7 +54,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
+rusqlite = { version = "0.38.0", features = ["blob", "bundled"], optional = true }
 # 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its
 # own directory backend, so the workspace resolves one `sqlx` line, not two. `runtime-tokio`
 # selects sqlx's internal executor binding at ITS compile time — it does not require this crate to

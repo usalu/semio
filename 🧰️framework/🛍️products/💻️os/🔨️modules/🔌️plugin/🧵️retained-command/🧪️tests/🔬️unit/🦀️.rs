@@ -224,3 +224,15 @@ fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
     assert!(detail.starts_with("retained command reducer rejected operation: x "));
     assert_eq!(detail, String::from_utf8(detail.clone().into_bytes()).expect("a clipped detail stays valid utf-8"));
 }
+
+/// 🔎️ LAW: the reducer's own code and message come back out of the detail the job fault carried, exactly — the agent
+/// lane's preview answers with them — and a detail this module did not write reads as no reducer fault at all.
+#[test]
+fn a_reducer_fault_detail_reads_back_as_the_reducers_own_code_and_message() {
+    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.command.targets-required"), "patchNodes needs node ids or a node selection");
+    let back = super::reducer_fault_of_detail(&super::reducer_fault_detail(&fault)).expect("a reducer detail reads back");
+    assert_eq!((back.code.0.as_str(), back.message.as_str()), ("app.command.targets-required", "patchNodes needs node ids or a node selection"));
+    for foreign in ["puzzle command reducer rejected the admitted operation", "retained command reducer rejected operation: ", ""] {
+        assert!(super::reducer_fault_of_detail(foreign).is_none(), "{foreign:?} is not a reducer detail");
+    }
+}

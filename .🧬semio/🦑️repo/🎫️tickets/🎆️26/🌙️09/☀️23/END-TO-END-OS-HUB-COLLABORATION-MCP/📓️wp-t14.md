@@ -6,6 +6,114 @@ used). Inputs + captures `wp-t14/` (`generated/` expendable); durable data + ove
 only via the `native` lane (build-fleet-b, private target `wp-t14/target`); overlay builds only via the `overlay` lane with
 a private build-dir inside the overlay. Landing rows: `📓️landing.md` § Session 14.
 
+### Session 14c
+
+Successor T14 agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart). Chain relaunched 16:55:46 (pid 76013), GUEST
+FREEZE ON. Overlay `s14-t14-overlay` (+ `.t14-build` 13 GB) survived.
+
+| # | item | state | evidence |
+|---|------|-------|----------|
+| 0 | reconcile: live tree carries no T14 guest edit beyond the landed rule-22 plugin-test fix | **clean 17:03** — `git grep` finds no `dsl_value!`/`T14_F9_RECORD`/`authoring_seed`/`follow_derivable_children`/`child_member_retirements`/TS `contentId` (the two remodeling `content_id` methods are committed 09-25 code); `land-w3.py --check`: F9 33 files / 0 problems to apply, G12 refuses until F9, class fix + P8 orphan (4 files / 17 hunks) + H9-L (100 sites / 94 files, 13/13 hunks to apply, 0 applied) + 5b A+B1 (21 files) + item 6 (2 files) all unapplied; B2 refuses until A; plugin-tests fix = "nothing to do (applied)" | `wp-t14/generated/s14c-land-check-1.txt` |
+| 7 | (14b item 7, finished) LC F1 on the live tree | native hold n2 14:28–14:32: writer **ok**, vcs **ok**, jack **FAILED** — "one undo moves the whole run" (unchanged since session 13) → LC debt, not a T14 set | `s14-t14-logs/s14b-n2-F1.txt` |
+| 8 | P9's 2 SDK lib reds (rule 22, test-only) | **LANDED 17:08**, native `--lib --tests` check rc 0 17:16, **both laws ok** (bijection: `cancelTypedOperation` is served by the head-of-`dispatch_action` arm → directly-routed residue + pinned arm; childless surface: `TableScene` now has lanes → `IconRenderScene`) | landing row, `s14c-sdk-reds-1*.txt`, `wp-t14/sdk-reds/` |
+| 9 | class fix: genesis hooks for raster + note | **no hook — verified by source**: raster `assets` (`RasterOwnedMap<RasterAssetChild>`) and note `NoteTextChild { handle, paragraphs }` carry no `#[child(kind)]`, so `ArtifactCompositionFields::visit_child_refs` never visits them → `ChildRestoreProjection`, `seed_genesis_children` and `follow_derivable_children` never see them; their child content is EMBEDDED authority in the parent (raster `RasterAssetPackRow.content` = the child's canonical pack; note `paragraphs`), so no declared coordinate can name an unheld child (no orphan). Making them real members = a separate composition migration (declare the slot via a `ChildFieldRefs` impl, move content out of the parent pack, archive/restore), not a genesis hook | source: `🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs` 🧩️Composition, raster `📸️snapshot` PackRecord, `🗒️note/🦀️.rs:285`, schema derive `✨️derive/⚙️expansion` |
+| 11 | renderer `serde_json` (after 5b) | **census, not in this pass**: B2 already moves the renderer's literal action-arg builders (`scene_action` 29 callers, `block_list_action` 8, `canvas_addressed_action`) onto `DslValue` + `dsl_value!` (T13's "16 sites"); what remains is the renderer's OWN runtime serde_json debt — 16 files, `json!(` 256, `from_str` 167, `to_string` 61, `serde_json::Value` 60, `from_value` 24, `Map` 16, `to_value` 6, `DslValue::from(` 14 (Shell 125 lines, Scenes 104, EngineCanvas 55, renderer 32, Interpreter 23, ProgramBridge 16, HubSignIn 14, …); `serde_json = "1.0.140"` a runtime dep of `semio-framework-os-renderer-wgpu`. Replacing it = scene payloads through their `ToValue`/`FromValue` + `pack::json`, `json!`→`dsl_value!` (NOTE: `json!` maps sort keys, `dsl_value!` keeps written order → payload bytes + lane hashes change → fixtures), Value traversal → `DslValue` accessors: a compile-iterated work package of its own (window 3 or later), routed to main | `generated/s14c-renderer-serde-census-1.txt` |
+| 1 | F9 content ids + id map + carriers | **patch final** (33 files). Maps: map-1 (owners), map-2 (fast owners after MAP), map-3/4 (process3d exact old ids with nested brep ids reverted; map-4 = the clean rows of map-3). `apply-map.py` re-sorts id-keyed JSON maps. Live dry run: 1 049 carriers, 4 463 ids, 279 re-sorted maps, 33 uncovered (describe outputs of demonstrator/cad/process, fixture-only remodeling assets never re-minted). Owners after MAP: block-3d, note, din18599, gisterrain green; remodeling diffs fixed by the re-sort; process3d re-verification after map-4 is pending (h8) | `s14c-map-4-apply.txt`, `s14b-s14c-h5/h6/h7-*` |
+| 2 | G12 builder pass | applied in the overlay (129/129); compiled with the SDK and owners (green) | `s14c-a1-g12-apply.txt` |
+| 3 | class fix (derivable children follow their coordinate) | **script changed + overlay-proven**: close deadlock fixed (retiring-member lease disposer); boot settle in the law harness; SDK green; architect declared-verb law, orphan verdict 2/2 and orphan laws (reasoning/flow/architect) ok; process3d no longer aborts | `s14b-s14c-h6-ORPHAN-*.txt` |
+| 4 | P8 orphan | applied; verdict 2/2 + declared-verb laws ok (h6) | same |
+| 5 | H9-L labels | 100 sites / 94 files; hub/wfc3d laws ok; app-router label path fixed (21:2x); host law re-run with `os-host-full` pending | `s14b-s14c-h5-*-LAW.txt` |
+| 6 | 5b A + B1 + B2 | value law ok; B2 first compile found 5 bugs → fixed (live+A scratch: 55 files / 0 problems); N1 re-check pending (h8+) | `generated/s14c-b2-scratch-2.txt` |
+| 10 | full ordered pass in the overlay | **applied 17:18** (sync 666 files; F9 33 + recorder + G12 129 + class fix + orphan + H9-L 100/94 + 5b A 21 + B2 53 + item 6 2, landing order); preflight: every set "nothing to do (applied)" (B2 gained an applied sentinel — it writes all-or-nothing; orphan 16/17 + fixture checked directly: 29 cases vs live 28, one `composedChildOrphaned`), 0 duplicated use/mod/import/fn lines, 0 spliced labels (1 expected: two function-scoped `const ajv`); 305 changed files → 94 crates (+`semio-framework-os-infinite` via B2 → N1). Hold h1 queued 17:23 (4th in the overlay FIFO): KERNEL → SDK → OWNERS-1 (records the id map) → MAP → OWNERS-2 → laws (kernel, host, wfc3d, hub, value, orphan verdict + declared-verb laws, SDK reds, TS oracle) → N1–N3 → W1–W2 | `s14c-apply-1.txt`, `generated/s14c-preflight-2.txt`, `generated/s14b-overlay-changed-6.txt`, `s14c-run-h1.txt` |
+
+### Log 14c
+
+- 16:5x read preamble 14 (rules 1–23, 14b, 14c), AGENTS.md, fleet log tail, this report. Lanes 17:03: overlay free, native 2 slots
+  held, wasm = chain; load 69, 26 rustc, swap 4.9/6 GB, 84 GiB free.
+- 17:03 item 0 reconciled (table). 17:08 item 8 landed live + queued in the native lane (2 slots): check rc 0 17:16; the cargo
+  test step's summary was cut by my grep, so the two laws were re-run from the compiled test binary (no cargo): 2 passed.
+- 17:1x item 9 (raster/note hooks) settled by source (table). The schema derive now accepts `#[child(kind)]` on ANY field type
+  implementing `ChildFieldRefs` (raster's doc still claims it only recognizes bare `ArtifactChild`/`Vec` — stale).
+- 17:09–17:18 overlay sync (base 3b2f1181d27) + full pass in landing order (`overlay-apply.sh`, now with `follow` + `b2` by
+  default and the SDK-red fix verified); `overlay-preflight.py <n>` (new) = idempotency of every set + duplicate/splice scan +
+  the changed-file listing `land-w3.py` compares. `overlay-hold.sh` gains SDK (stop-red), ORPHAN-VERDICT, ORPHAN-LAWS,
+  SDK-REDS; state `s14c-state.txt`. Launcher waits for ≤ 14 rustc (rule 6), then the lane.
+- 18:33 hold h1: KERNEL ok; **SDK red (B2 bug, never compiled before)**: `semio-framework` root still re-exported
+  `action_bus::optional_json_to_dsl` (E0432) → B2 now also drops that re-export + action-bus's then-unused `use dsl::DslValue`.
+- 19:00 hold h2 (loop `overlay-loop.sh`, re-queues itself after every hold): semio-framework ok; **SDK red**: B2's two world-3d
+  measure-closure signatures used a bare `DslValue` (not in scope in `world3d_host`) → `{DV}` (= `semio_framework::DslValue`).
+  Both fixes applied to the overlay and the script; B2 live dry-run needs A first (anchors of the 2 new hunks verified 1× live).
+- 19:1x static review of the never-compiled class fix against the overlay SDK: registry/root helpers, field renames, retirement
+  registries (`ArtifactFixedRegistry` `can_insert`/`insert_admitted`), `graph_mut().remove_owns`, hook return types
+  (`step_framework_reserved_commit`/`advance_typed_operation_publication_one` → `Result<(), Fault>`), module privacy (`pub mod app`) —
+  no mismatch found. Hold policy: stop only on KERNEL/SDK/MAP red or an OWNERS compile red; law + N/W steps record and continue
+  (one hold shows every red). Loop restarted at h3 (19:10, 4th in FIFO).
+- 19:29 h3: **SDK green** (85 warnings = type-checked). OWNERS-1 recorded the id map (4 250 rows) — remodeling's lib tests alone
+  take 1 313 s, so the 28-min deadline cut curation; process3d's test binary aborted (panic in Drop during unwind).
+  Split: OWNERS-1C (curation), OWNERS-1P (process3d, skipping the aborting test), OWNERS-1X (writer, animate, playbook,
+  imperative — owners of carrier ids the first map did not cover), all appending to map-1; OWNERS-2 = the 9 fast owners;
+  OWNERS-2R = remodeling's failing tests only. Map dry run: 1 037 carriers, 4 353 ids, 49 uncovered (describe outputs of
+  demonstrator/cad/process + fixture-only asset ids never re-minted).
+- 19:59 h4: MAP applied; OWNERS-2 after MAP: block-3d 351/0 (was 18 red), note 401/0 (was 3), din18599/gisterrain/raster green;
+  architect 6 red, process3d aborted, remodeling 8 red. **Live-tree baselines (native lane)**: process3d's 7 reds all PASS
+  live, architect's 5 CSV/TSV round-trip reds FAIL live too (pre-existing peer drift: "unsupported register import:
+  audit_events") while its declared-verb law passes live.
+- 20:0x **class-fix defect found (my predecessor's never-compiled design)**: close stalls ("never reached its terminal-empty
+  witness"; architect declared-verb law: "child member is waiting for its required domain-owned bounded disposer"). Cause: a
+  followed child left `children` at once, but the previous content root still lends that member's snapshot; the root's
+  retirement needs the member LIVE to dispose the lease, and the member's retirement waits for the lease → deadlock (the
+  close ladder also returned the Blocked member step before ever reaching content retirements). Fix in `follow-children.py`
+  (live dry run 0 problems, applied to the overlay as a delta): `ChildContentRetirement::close_step` takes the member
+  retirement registry and finds a retiring member as the lease disposer (`child_snapshot_owner`); the member retirement step
+  waits (Blocked) while its member still lends a snapshot; the close ladder falls through to content retirements when the
+  member step is Blocked; the follow pass defers (and repeats) while the named child is still retiring (undo back to it).
+- 20:1x **carrier order**: 5 remodeling `produces_committed_diff` reds = the committed diff's `durableArtifacts` (a BTreeMap,
+  ascending keys) keeps the OLD order after the id swap. `apply-map.py` now re-sorts every id-keyed JSON map that was ascending
+  before the swap (only files that are the exact `indent=2` rendering): 279 maps on the live dry run. Overlay carriers
+  re-cloned from live (1 046) so h5's MAP re-applies with the re-sort. Never edit the hold/loop scripts while they run (zsh
+  re-reads them: h4 mixed old/new step lists, the loop died on a parse error; restarted as h5).
+- 20:15–20:43 h5: SDK green with the deadlock fix; OWNERS-1X + MAP (1 042 carriers, 4 369 ids, 279 maps re-sorted);
+  OWNERS-2: block-3d/note/din18599/gisterrain/raster green, process3d NO abort any more; remodeling 2R: only its 2 pre-existing
+  reds (live baseline fails them too); **laws ok**: kernel content-id + addressing 3/3, wfc3d kind 1/1, hub linked-kind 1/1,
+  value `dsl_value!` 1/1 (HOST-LAW ran 0 tests: needs `--features os-host-full`, fixed for h7).
+- 20:3x architect declared-verb law in the overlay: 8 View/Shell verbs "wrote the document" — the fixture boot loads the example
+  via `load_document_pack` (no follow hook), so the first verb's follow pass opened the example's derivable children. The law
+  harness (`declared_verb_fixture_app`) now settles derivable children after the boot load (what the runtime's next backbone
+  tick does) → h6: **architect declared-verb law ok**, only its 5 pre-existing CSV/TSV reds remain (fail live too).
+- 20:43–21:11 h6: **ORPHAN-VERDICT 2/2, ORPHAN-LAWS ok (architect 1, flow 2, reasoning 1), SDK-REDS 2/2, TS oracle ok** (re-run
+  explicitly: shared addressing + content id vs hashlib/node:crypto, `generated/s14c-ts-oracle-1.txt`). N1 **red** on B2 (first
+  compile of B2 outside the SDK): infinite world `scale: Option<serde_json::Value>` + 2 `Vec<serde_json::Value>` targets and 8
+  test uses of the deleted `action_args`; Shell `authors: Vec<Value>`; and H9-L wrote `semio_framework_plugin::LocalizedLabel`
+  into the plugin-host app-router test (that crate has no plugin-SDK dep). Fixed in `5b/dsl-value-b2.py` (5 hunks; path rule:
+  `semio_framework_plugin::` only when the file does not name `semio_framework::` AND its crate depends on the plugin SDK) and
+  `h9l/kind-label-patch.py`; B2 re-checked on a live clone + phase A (`s14-t14-scratch`): 55 files / 0 problems; the overlay
+  got the same bytes. process3d's remaining 18 reds: its `steps-flow` content embeds the tool brep ids, so the old id can only
+  be rebuilt from the content with the nested new brep ids reverted — the overlay-only recorder now does exactly that
+  (`record-instrument.py`: brep exact rows + in-process nested map; atomic line writes) → map-3 in h7.
+- 21:00 **WINDOW 3 OPEN** (L1 trains; T1 runs my `land-w3.py` SETS). 21:2x RELAY L1 sent: which scripts changed
+  (class fix, B2, H9-L, apply-map re-sort), maps 1+2 final, map-3 for process3d pending one overlay turn, N2/N3/W not proven.
+  Live baselines (native lane): sequence 2 and curation 12 reds fail on the live tree too (pre-existing, not T14).
+- 21:3x–21:53 h7: map-3 recorded with escaped tabs (my recorder literal was double-escaped) → map-4 = its 72 exact rows
+  (38 steps-flow incl. the rename-step pair); maps 1–4 on the overlay: 20 more files / 44 ids, 33 uncovered. Recorder fixed.
+  OWNERS-V after MAP2: architect 5 (pre-existing CSV), raster 1 NEW red `retained_image_export_completes_or_cancels_without_
+  mutating_history` ("media export job faulted"; not yet baselined live), sequence 2 / curation 12 (pre-existing).
+- 21:4x RELAY S19: no T14 set touches its symbols; `ChildContentRetirement::close_step` gains a `retiring` argument.
+- 22:3x S18 relay (kind picker shows "Editor" for every kind): Rust `artifact_kind_choices` already reads the kind label; the TS
+  twin `artifactKindChoices` (`🛂️manifest/🟦️.ts`, host TS, open) read the app label → now the kind label (app's
+  `artifactKinds`, then the manifest's, by schema) + law "every choice carries its kind's own label, no two share one" in
+  `🧪️hostresolvedargs/🟦️.ts`; framework `tsc` shows only 4 pre-existing errors (none in manifest); the vitest run did not match
+  the file filter (not run yet). The hub `artifact_creation_catalog` already resolves `kind.label` (Native, en + de). Source
+  scan: no two distinct kinds of one plugin share an en label; the current generated descriptors carry no kind `label` yet
+  (describe output predates H9-L) → regen below.
+- 23:5x **T1 hotfix (L1, authorized in-tree)**: T1 native + wasm32 reds from h9l — host `seed_builtin_artifact_kinds` 4×
+  `name:` → `label: LocalizedLabel::native(…)` (Parameter/Parameter, Workflow/Workflow, Space/Space, Collection/Sammlung);
+  semio-framework root now re-exports `LocalizedLabel` (+ `Locale`, `Terminology`) from its canonical home
+  `semio_framework_os_kernel` (was `ui_wgpu::wgpu`, a re-export of the kernel type); stdio `native_openable_provider` test
+  `"name"` mutation → `"label"` (+ fixture case `foreign-label`). Check `-p semio-framework-os -p semio-framework -p
+  semio-framework-plugin-host --lib --tests` **rc 0 00:00** (`s14c-hotfix-1.txt`); gate 2 (re-check with the kernel-home
+  re-export + the stdio test) queued with priority stamp (`s14c-hotfix-2.txt`). Descriptor regen = `bun nx run-many -t
+  describe --exclude @semio-tech/os-plugin-describe-rs --parallel=2` (describe → component-dev: wasm lane), when L1 frees it.
+
 ## Session 14b
 
 Successor T14 agent (2026-09-28 12:0x, after the usage cut + app restart). Guest freeze ON since 12:02:46 (chain pid 45604).

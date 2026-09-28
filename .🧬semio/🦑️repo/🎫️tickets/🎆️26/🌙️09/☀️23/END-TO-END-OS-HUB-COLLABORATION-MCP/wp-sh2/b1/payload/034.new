@@ -7,7 +7,7 @@
   "limits": {
     "rawBytes": 131072,
     "checkpointBytes": 512,
-    "configValueBytes": 1048712,
+    "configValueBytes": 4096,
     "configBaseBytes": 1048576,
     "commandStepBytes": 1048576,
     "storeStepBytes": 1048576,
@@ -19,7 +19,7 @@
       "id": "applyDirectoryEventPage",
       "disposition": "Migrated",
       "lanes": [
-        "Config"
+        "Transient"
       ],
       "blocker": ""
     },

@@ -71,6 +71,7 @@ import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { DEFAULT_PANEL_WIDTH_PX, mergeRecordPreservingIdentity } from "../🛠️ShellHelpers/🟦️.tsx";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
+import type { UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY, EMPTY_APP_CATALOGUE } from "../🛠️ShellHelpers/🟦️.tsx";
 import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
@@ -495,7 +496,10 @@ type WindowUiState = {
   readonly windowMeasuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>;
   /** 🛠️ Mode-level tool measures, keyed by TOOL id (never a window id) — see `DocumentApp::tool_measures`. */
   readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>;
-  readonly panelUiByKey: Readonly<Record<string, BuiltNode>>;
+  /** 🗂️ One body store per panel key (a spawned program's under its prefixed key). The record moves only when a panel
+   * gains its store; a body that changes is loaded into that store outside render and re-renders only the mounted
+   * panel tree (ticket 26/09/23 F3: writer's Inspection body re-rendered the whole shell on every keystroke). */
+  readonly panelBodyStoreByKey: Readonly<Record<string, UiDocumentStore>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
   /** 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once from the reserved
    * `framework.section.catalogue` retained surface and handed to every scene host through
@@ -736,7 +740,7 @@ export type ShellAction =
   | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
+  | { readonly type: "SET_PANEL_BODY_STORE_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiDocumentStore>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_APP_CATALOGUE"; readonly value: Updatable<AppCatalogue> }
   | { readonly type: "SET_SPAWNED_WINDOW_ACTIVITY"; readonly value: Updatable<Readonly<Record<string, BuiltNode["activity"]>>>; readonly fault?: WindowFault | null }
@@ -847,8 +851,8 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
       return withField(state, "windowMeasuresByWindowId", resolveUpdatable(action.value, state.windowMeasuresByWindowId));
     case "SET_TOOL_MEASURES_BY_TOOL_ID":
       return withField(state, "toolMeasuresByToolId", resolveUpdatable(action.value, state.toolMeasuresByToolId));
-    case "SET_PANEL_UI_BY_KEY":
-      return withField(state, "panelUiByKey", resolveUpdatable(action.value, state.panelUiByKey));
+    case "SET_PANEL_BODY_STORE_BY_KEY":
+      return withField(state, "panelBodyStoreByKey", resolveUpdatable(action.value, state.panelBodyStoreByKey));
     case "SET_APP_LABELS_OVERLAY":
       return withField(state, "appLabelsOverlay", resolveUpdatable(action.value, state.appLabelsOverlay));
     case "SET_APP_CATALOGUE":
@@ -1275,7 +1279,7 @@ export function initialShellState(_props: {
   });
   return {
     pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
-    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY, appCatalogue: EMPTY_APP_CATALOGUE },
+    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelBodyStoreByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY, appCatalogue: EMPTY_APP_CATALOGUE },
     spawnedWindow: { spawnedWindowActivityByWindowId: {}, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },

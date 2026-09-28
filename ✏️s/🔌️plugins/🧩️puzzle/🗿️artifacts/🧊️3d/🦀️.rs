@@ -695,7 +695,7 @@ pub struct Puzzle3dMeta {
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.puzzle".into(),
-        name: "3D Puzzle".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Puzzle", "3D-Puzzle"),
         source_format: "puzzle.3d".into(),
         component_kind: "puzzle3d".into(),
         dimension: "3d".into(),
@@ -726,7 +726,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "kit.catalog".into(),
-        name: "Kit Catalog".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
         source_format: "kit.catalog".into(),
         component_kind: "kit".into(),
         dimension: "3d".into(),

@@ -116,6 +116,56 @@ Log 14b:
 - 14:3x waiting for "WINDOW 3 OPEN" (chain still in rebuild-all components at 14:22). Ended the turn instead of polling;
   the coordinator resumes P9 at window 3.
 
+### Session 14c
+
+Resumed 2026-09-28 23:1x (WINDOW 3 OPEN since 21:00; reboot 22:42). Rule 24: L1 applies guest sets in trains; P9 keeps its set
+dry-run clean and relays L1. L1 had SKIPPED P9 in T1 (1 dry-run problem: hunk 12's anchor `("opBytes"…)]);\n Ok(result)\n }\n\n
+/// 👁️ … preview_retained_command` split by T14/G12's new `fn authoring_seed` between them). Nothing of P9 was written.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Re-anchor `p9-agent-lane.py` on the post-T1 tree (also vs S20 document-verbs + chunk-staging, C12 seed-history, G12 revision-binding) | **done 23:15**: dry run clean on the live tree **51 hunks / 24 files** (G12's revision-binding applied meanwhile — still clean); relayed to L1 |
+| 2 | jack-LSP module removal | **HELD** (human has not answered about the bundle AGENTS.md) |
+| 4 | G12 battery after the next publish | pending |
+
+**Window 3 set: p9-agent-lane** — `wp-p9/patches/p9-agent-lane.py --dry-run | --write`; revert = `wp-p9/p9-land.sh write` / `revert`
+(byte backup of the 24 files in `.🧬semio/🌐hub/s14-p9-land-backup`, created files removed) — **crates:** semio-framework (🎯️action-bus,
+🛂️manifest), semio-framework-graph (includes 🛂️manifest by `#[path]`), semio-framework-plugin, semio-s-artifact-trinity-jack,
+semio-s-artifact-trinity-rewriting, semio-s-artifact-puzzle-2d, -puzzle-3d, -puzzle-5d, semio-s-artifact-writer-writer. Laws (native,
+after the train is green): `cargo test -p <those 7 guest-side crates> --features semio-framework-plugin/artifact-app-testing,
+<6× …/component-app-assembly> --lib --no-fail-fast -- agent_lane entity_id_argument reducer_fault_detail patch_nodes an_agent_names`
++ AJV twin `bun 🔌️plugin/🧪️tests/🤖️agent-lane-preview/🟦️.ts`.
+
+Log 14c:
+
+- 23:10 dry run on the live tree: 1 problem (hunk 12, as L1 said). Stage drift: 8 staged files moved (T1 sets), every other
+  anchor still held. Live review of the preview path: T1 added `authoring_seed: self.authoring_seed(&meta.actor)` to the
+  `ArtifactOwnedToolJobRequest` built by `preview_retained_command` (outside my hunks, kept), S20's document-transfer refusal +
+  `import_staging.admit_args` in `dispatch_action` / the command path (not the preview), child-op checks + `last_emit_wire` in
+  the preview tail (kept; my hunks 10/11 still anchor). C12 seed-history: all 15 hunks present in the tree (in my base).
+- 23:1x `p9-rebase.py` hunk-12 rule generalized: re-applies the `jobSteps` row, the doc/signature/`verb` head and the keyed
+  lease as three sub-edits on the live span, keeping whatever a peer put between them verbatim (here `fn authoring_seed`).
+  Stage backup `.🧬semio/🌐hub/s14-p9-stage-backup-0928c`. Rebased all 8 drifted files (base := live).
+- 23:1x G12's revision-binding set (then pending) overlaps my hunk 9: its anchor ends at `let emit = self.preview_retained_command(`.
+  Simulated both landing orders on clone roots: G12→P9 failed on my merged hunk 9. `p9-hunks.py` now merges change regions only
+  ≤ 3 lines apart (`P9_MERGE`, was 6), splitting hunk 9 into "drop the proof lines" + "replace the `let emit` line": **G12→P9
+  applies cleanly** (51 hunks; composed preview = `fill_agent_revisions` → `admit_command_wire` → `preview_typed_command_job`).
+  P9→G12 still fails on G12's side (their anchor names the line I replace) → relayed G12 to end that anchor at the
+  `let command = …await?;` line. G12's set was applied in the tree at 23:1x; my dry run stays clean on it.
+- 23:1x `wp-p9/p9-fmtcheck.py` (new; the scratchpad copy died with the reboot): 527 added lines in 21 Rust files, **0
+  rustfmt-unstable**. API spot check on the live tree: every job/plugin/manifest item the set calls still exists
+  (`BatchJobSession::try_new/take_outcome/resume`, `payload_from_bytes`, `cancel_now`, `allocate_operation_id`, `begin_keyed`,
+  `admit_command_wire`, `AdmittedToolCommand`, `decode_typed_operation_fault_page`, declared-verb helpers, `ArgFormat::EntityId`).
+  Not compiled on the post-T1 tree (no overlay build: rule 23, L1's train proof compiles it).
+- 23:3x L1 wrote the set in T1. L1 relay: os tsc had 2 errors, both in my AJV twin (`kinds.framed(detail)` — AJV's
+  compiled validator is a type guard `data is unknown`, so the else arm narrowed `detail: string` to `never` → TS2339 `.slice`;
+  `message` came out `unknown` → TS18046). Fix (in-tree, rule 22): `schemaKind(schema)` wraps each compiled schema as a plain
+  `(value: unknown) => boolean`, so a match decides a branch without narrowing; assertions untouched. `bun` twin → 9 cases.
+  os tsc: run 1 (23:39) showed only 2 transient TS2300 `faultDisplayMessage` in `🏪️store/👷️worker/🟦️.ts` (a peer's edit landed
+  23:43 mid-run; the file has one import now); run 2 **rc 0, 0 errors 23:47** (`.🧬semio/🌐hub/s14-p9-logs/os-tsc-14c-2.txt`).
+  Relayed L1 + coordinator; landing row added.
+- 23:5x L1 ack: P9 stays in T1; L1 asks P9 for its 14 laws once T1's native + wasm32 proof is green (command above).
+
 ### Log
 
 - 18:5x started; read AGENTS.md, preambles 14/13/12, `📓️fleet-14-agents.md` (no "CHAIN LAUNCHED" line yet), audit row 4.8 +

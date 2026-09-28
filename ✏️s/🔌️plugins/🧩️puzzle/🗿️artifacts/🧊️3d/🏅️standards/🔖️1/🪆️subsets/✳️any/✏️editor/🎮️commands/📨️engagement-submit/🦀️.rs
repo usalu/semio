@@ -22,8 +22,8 @@ pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
         ctx.scene.active_utility = fill_tool::TOOL_ID.into();
         let count = rest.parse::<u32>().ok().unwrap_or(ctx.scene.runtime.fill_count);
         ctx.effects.push(set_fill_count::request(count));
-        let start = serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID });
-        ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_START_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(start)), delay_ms: 0 });
+        let start = semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID });
+        ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_START_ACTION_ID.into(), args: Some(start), delay_ms: 0 });
     } else {
         match raw.to_lowercase().as_str() {
             "brush" => {

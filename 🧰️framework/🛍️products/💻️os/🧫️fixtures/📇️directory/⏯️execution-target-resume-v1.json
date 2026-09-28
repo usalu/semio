@@ -173,8 +173,13 @@
       "resumes": false
     },
     {
-      "case": "write access granted since",
+      "case": "the editor role granted since",
       "patch": {
+        "surface": {
+          "surfaceId": "s.gis.gismap@1/*#editor",
+          "appId": "s.gis.gismap@1/*#editor",
+          "role": "editor"
+        },
         "grant": {
           "write": true
         }
@@ -189,6 +194,9 @@
         },
         "component": {
           "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "browserActor": {
+          "sourceComponentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         }
       },
       "resumes": false

@@ -264,7 +264,7 @@ fn chrome_hit(control_id: &str, kind: ui_wgpu::wgpu::HitKind, rect: Rect, event:
 }
 
 fn chrome_action(controller_id: &str, action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(args) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: args.map(semio_framework::DslValue::from) }
 }
 
 /// 🎯️ The registry row a probe aims with: the ABSOLUTE rect the chrome registered, the control id it

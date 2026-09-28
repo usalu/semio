@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
                 ActionArgDef::text("partPath", LocalizedLabel::native("Part path", "Teilpfad")).required(),
                 ActionArgDef::any("nodePath", LocalizedLabel::native("Node path", "Knotenpfad")).required(),
                 ActionArgDef::text("expectedName", LocalizedLabel::native("Expected element", "Erwartetes Element")).required(),
-                ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")).required(),
+                ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")),
             ],
         )
         .required()])

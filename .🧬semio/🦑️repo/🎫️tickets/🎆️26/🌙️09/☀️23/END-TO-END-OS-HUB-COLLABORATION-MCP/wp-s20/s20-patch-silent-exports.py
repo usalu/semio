@@ -56,7 +56,7 @@ def main() -> None:
     notes = []
     for path, name, old, new in HUNKS:
         text = texts[path]
-        if text.count(old) == 1:
+        if text.count(old) == 1 and new not in text:
             texts[path] = text.replace(old, new)
             notes.append(f"apply     {name}")
         elif new in text:

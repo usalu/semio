@@ -177,7 +177,7 @@ pub(crate) mod context {
         let targets = serde_json::to_string(&target_list).expect("targets json");
         let admitted = app
             .0
-            .handle_action("interactionSelect", semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" }))).as_ref(), &meta("test"))
+            .handle_action("interactionSelect", Some(semio_framework_plugin::dsl_value!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })).as_ref(), &meta("test"))
             .await
             .expect("interactionSelect");
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect admission settles");

@@ -3315,10 +3315,12 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
 //#region 🚪️ArchiveImportDoor
 /// 🚪️ A framework document archive of this editor loads into a FRESH instance through the shell's Import Document door
 /// (`createApp` → `loadDocumentArchive` → poll → acknowledge). Measured live 2026-09-28 (S20 io-matrix,
-/// `s14-s20-io/s20b-local-en-2`): the load never published — the initializer held no publication lease outside tests
-/// (`generation3d-publication.authority-missing`), which generation3d surfaced as a guest trap and generation2d as
-/// `document-archive-replacement.initializer-failed`. The initializer now grants itself the lease the host's replacement
-/// needs (ticket 26/09/23 slice S19).
+/// `s14-s20-io/s20b-local-en-2`): generation3d trapped the guest, generation2d faulted
+/// `document-archive-replacement.initializer-failed`. Two faults: the initializer held no publication lease outside tests
+/// (`generation3d-publication.authority-missing`) — it now grants itself the lease the host's replacement needs — and the kernel's
+/// retained hydration plain-dropped every replayed diff, whose `host_snapshot.layout` `OrderedMap` aborts on drop — it now
+/// retires them through `os_vcs::apply_mutation`. The source document is EDITED first so the archive carries history to
+/// replay (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {
     let _serial = crate::publication_authority::lock();
@@ -3348,3 +3350,24 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *source);
 }
 //#endregion 🚪️ArchiveImportDoor
+
+//#region 🌱️HubGenesis
+/// 🌱️ The hub creates a `generation3d` document through this plugin's `codec.genesis` export — the SDK's one producer
+/// `artifact_app_genesis_pair` — and the pair it prints must parse back to a live document. Measured on hub 7800
+/// (2026-09-28, W4 open-plan probe): creation failed `ordered-map root must be explicitly retired before drop`, the
+/// producer plain-dropped the initial snapshot whose `host_snapshot.layout` is an `OrderedMap` (ticket 26/09/23 slice S19).
+#[semio_framework_async_macros::async_test]
+async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
+    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
+    assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
+    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot, crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation>(&pair.pack, &pair.spr)
+        .await
+        .expect("the genesis pair parses back");
+    let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
+    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");
+    initial.retire_cold();
+    snapshot.retire_cold();
+}
+//#endregion 🌱️HubGenesis

@@ -45,7 +45,7 @@ mod tests {
 
         crate::registry::register_artifact_descriptor(&semio_framework::ArtifactKindSpec {
             id: TEST_KIND.to_string(),
-            name: "W1b Export Bug Proof".to_string(),
+            label: semio_framework_plugin::LocalizedLabel::native("W1b Export Bug Proof", "W1b-Exportfehlernachweis"),
             source_format: TEST_KIND.to_string(),
             component_kind: "__w1b_export_bug_proof".to_string(),
             dimension: "data".to_string(),

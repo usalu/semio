@@ -417,6 +417,9 @@ export interface ContextMenuFusionPanel {
   readonly items: readonly ContextMenuItem[];
 }
 
+/** @emoji 🫙 The fused columns of a closed menu: one object, so a closed menu handed fresh `items` measures nothing. */
+const CONTEXT_MENU_NO_FUSION_PANELS: readonly ContextMenuFusionPanel[] = [];
+
 /** @emoji 📂 Open submenu columns to render fused into the root menu chrome (one outline, no nested title chips). */
 export function contextMenuOpenFusionPanels(
   root: readonly ContextMenuItem[],
@@ -676,9 +679,11 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const seededRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
     if (!open) {
+      if (seededRef.current) {
+        setActivePath([]);
+        setSubmenuCollapsedAt(null);
+      }
       seededRef.current = false;
-      setActivePath([]);
-      setSubmenuCollapsedAt(null);
       previousHoverItemRef.current = undefined;
       return;
     }
@@ -818,7 +823,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       node.style.top = `${clampedTop}px`;
     }
   }, [open, position?.x, position?.y, items]);
-  const fusionPanels = reactHostPort.useMemo(() => contextMenuOpenFusionPanels(items, activePath, submenuCollapsedAt), [activePath, items, submenuCollapsedAt]);
+  const fusionPanels = reactHostPort.useMemo(() => (open ? contextMenuOpenFusionPanels(items, activePath, submenuCollapsedAt) : CONTEXT_MENU_NO_FUSION_PANELS), [open, activePath, items, submenuCollapsedAt]);
   reactHostPort.useLayoutEffect(() => {
     const body = fusionBodyRef.current;
     if (!open || !body || fusionPanels.length === 0) {

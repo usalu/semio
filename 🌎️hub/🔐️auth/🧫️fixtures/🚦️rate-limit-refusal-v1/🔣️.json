@@ -1,0 +1,107 @@
+{
+  "schema": "semio.hub.rate-limit-refusal-fixture/v1",
+  "description": "What a hub answers when a rate-limited route family's token bucket is empty (`RateLimitRefusalV1`, `🔐️auth/🧬️schema`): `valid` holds one body per non-auth class with the wait the limiter computes for an empty bucket of that class (its `costMs`); `invalid` are near misses a client must not accept as the typed refusal (Rust owned draft-07 validator and Ajv).",
+  "valid": [
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "directory-command",
+      "retryAfterMs": 100,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "invite-redemption",
+      "retryAfterMs": 6000,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "socket-grant",
+      "retryAfterMs": 200,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "agent-command",
+      "retryAfterMs": 250,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "directory-command",
+      "retryAfterMs": 0,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "uploads",
+      "retryAfterMs": 100,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "directory-command",
+      "retryAfterMs": 100,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "unavailable",
+      "class": "directory-command",
+      "retryAfterMs": 100,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "directory-command",
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      }
+    },
+    {
+      "schema": "semio.hub.rate-limit-refusal/v1",
+      "code": "rate-limited",
+      "class": "directory-command",
+      "retryAfterMs": 100,
+      "message": {
+        "en": "Too many requests in a short time. Wait a moment, then try again.",
+        "de": "Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten und es dann erneut versuchen."
+      },
+      "route": "/directory/commands"
+    }
+  ]
+}

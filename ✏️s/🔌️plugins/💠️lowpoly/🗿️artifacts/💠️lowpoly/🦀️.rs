@@ -119,11 +119,7 @@ impl LowpolyPaintLayer {
 /// (`⚙️engine::LowpolyDocument::sync_meshes_to_snapshot`, `add_primitive`), which both need the
 /// identical rule so the same geometry always resolves to the same handle.
 pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    mesh_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("mesh-{content_hash:016x}");
+    let child_id = store::content_id("mesh", mesh_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -353,7 +349,7 @@ pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.lowpoly".into(),
-        name: "3D Lowpoly".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
         source_format: "lowpoly.fixture".into(),
         component_kind: "lowpoly".into(),
         dimension: "3d".into(),

@@ -182,13 +182,9 @@ pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap
 /// identical `path`, a different pair once the content actually changes; mirrors `writer`'s
 /// `document_child_handle`/`flow`'s own `flow_content_child_handle`.
 pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_path(path);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("imperative-flow-{content_hash:016x}");
+    let child_id = store::content_id("imperative-flow", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -196,13 +192,9 @@ pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
 
 /// 🕸️ `seed`'s content-addressed CHILD handle, the `text`-side twin of [`procedure_flow_child_handle`].
 pub fn procedure_text_child_handle(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = text_content_snapshot_from_seed(seed);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("imperative-text-{content_hash:016x}");
+    let child_id = store::content_id("imperative-text", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -429,7 +421,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.procedure".into(),
-        name: "Procedure".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Procedure", "Prozedur"),
         source_format: "procedure.document".into(),
         component_kind: "procedure".into(),
         dimension: "graph".into(),

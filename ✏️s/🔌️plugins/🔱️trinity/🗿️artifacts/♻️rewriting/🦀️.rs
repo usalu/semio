@@ -134,7 +134,7 @@ pub const TRINITY_REWRITING_DIALECT: semio_framework_plugin::Dialect = semio_fra
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.rewriting".into(),
-        name: "Trinity Rewrite Rule".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
         source_format: REWRITE_RULE_SCHEMA.into(),
         component_kind: "trinity".into(),
         dimension: "text".into(),

@@ -1353,7 +1353,7 @@ export type ArtifactBootstrapWorkerEvent =
       readonly kind: "artifact-bootstrap-failed";
       readonly documentId: string;
       readonly clientInstanceId: string;
-      readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure";
+      readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure" | "recovery-exhausted";
       readonly message: string;
       readonly retryable: boolean;
       readonly scope?: DocumentScope;
@@ -3798,6 +3798,12 @@ export class AppChannelRequestSequence {
 }
 //#endregion 🏠️LocalQueryOwnership
 
+/** ⏳️ Resolves on the next macrotask — where a document-archive load waits between polls, so the page's timers, input
+ * and rendering (the Tasks window's Cancel) run while the guest works; a microtask-only re-poll starved them. */
+function nextArchivePollTurnV1(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 /**
  * 📡️ Typed facade over one plugin instance's app channel — encodes an {@link AppCommandValue}, queues
  * it via {@link PluginWasmHandle.enqueue}, and decodes every {@link AppFrameValue} the matching
@@ -4227,14 +4233,14 @@ export class AppChannelClient {
       const status = frame.DocumentArchiveLoad.status;
       progress?.(status);
       if (status.state === "pending" || status.state === "running") {
-        await Promise.resolve();
+        await nextArchivePollTurnV1();
         continue;
       }
       const acknowledgeSequence = this.nextSeq();
       const acknowledged = await this.sendCommand({ AcknowledgeDocumentArchiveLoad: { seq: acknowledgeSequence, operation } });
       const acknowledgeError = acknowledged.find((candidate): candidate is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in candidate);
       if (acknowledgeError && status.state === "cancelled") {
-        await Promise.resolve();
+        await nextArchivePollTurnV1();
         continue;
       }
       if (acknowledgeError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(acknowledgeError.Error.fault, decodePackValue)}`);

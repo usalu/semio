@@ -8593,10 +8593,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 }
 
 /// 📏️ The retained command route's own wire-admission band, widened off the shared 8 KiB/512 puzzle
-/// default to puzzle 3d's (`PUZZLE3D_IMPORT_RAW_BYTES`/`PUZZLE3D_IMPORT_DECODED_ITEMS`): a Nakagin-sized
-/// document's camera/grid/sun publications and the import/fixture routes both carry wire owners that the
-/// narrow band rejects before the job ever admits.
-const PUZZLE5D_RETAINED_RAW_BYTES: usize = 262_144;
+/// default to puzzle 3d's (`PUZZLE3D_IMPORT_RAW_BYTES`/`PUZZLE3D_IMPORT_DECODED_ITEMS`): one whole `importFixture`
+/// file, escaped, plus its envelope (`PUZZLE_IMPORT_RAW_BYTES`) — and a Nakagin-sized document's camera/grid/sun
+/// publications, which the narrow band rejects before the job ever admits.
+const PUZZLE5D_RETAINED_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
 const PUZZLE5D_RETAINED_DECODED_ITEMS: usize = 16_384;
 
 /// 🔢️ Mesh numbers one interactive step of a `registerBrushMesh` page transfers. A page is bounded by the
@@ -10110,7 +10110,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected parts by the given factor.", "Skaliert die ausgewählten Teile um den angegebenen Faktor."))
     .action_describe("exportFixture", LocalizedLabel::native("Writes the whole 5D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 5D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
     .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
-    .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 5D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.", "Ersetzt das gesamte 5D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."))
+    .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 5D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 5D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
     .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected parts.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Teile."))
     .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
     .action_describe("selectSameKindSelection", LocalizedLabel::native("Extends the selection to every piece of the same kind as the selected one.", "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."))
@@ -10193,6 +10193,10 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
+mod agent_lane_tests;
 
 /// 🧊️ The target-volume / Volume-Brush laws — a topic of its own so the one shared harness stays the
 /// only scaffold and this family's laws are readable as one block.

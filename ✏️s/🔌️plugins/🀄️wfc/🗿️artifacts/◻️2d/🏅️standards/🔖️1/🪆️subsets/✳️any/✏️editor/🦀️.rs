@@ -834,17 +834,6 @@ impl ArtifactEditor for Wfc2dEditor {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    /// 🗃️ The retained initialization authority a whole-document `Effect::LoadDocument` needs. Without
-    /// it the framework refuses every persisted replacement with
-    /// `artifact-store.persisted-initializer-refused`, which is what the example picker's own load is.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, WFC_2D_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
         fill::build_tool_run_job(request)
     }
@@ -956,6 +945,7 @@ impl ArtifactEditor for Wfc2dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(Wfc2dCommandWork::new(tool_id));
         let payload = ArtifactRetainedCommandPayload::try_new(

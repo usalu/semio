@@ -8,6 +8,83 @@ Scripts `wp-g12/`.
 
 ## Session 14
 
+### Session 14c
+
+Successor agent, 2026-09-28 21:1x (spawned at 7800 READY on `s14-w4-catalog-p24`, WINDOW 3 OPEN). Gateway under test = the chain's
+os-mcp build (20:59, 675 sources fresh at 21:12) copied to `.🧬semio/🌐hub/s14-g12-bin/semio-os-mcp-p24` (sha256 444125d1…), so
+window-3 trains cannot make the harnesses re-stage it. Serve `s` React dev 6530 joined to 7800 (`wp-g12/g12-serve.ts`).
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Battery on 7800/p24, chain gateway (`battery-p24-14c-1/summary.txt`) | quartet **19/19 PASS** · security **6/6 PASS** (S2 read audience now green) · durability **23/23 PASS** (own hub 8032, p24 binary + catalog) · user path en **9/9 PASS** (destructive approval, withdrawal) · user path de 6/9 (row 4 shell-instance race → host fix, item 4) · participant 17/19 (link backoff, item 3; 19/19 on re-run 3) · refused-relay probe correct · untrusted-content red (item 2) · hub coverage 0/36 (transport, item 3) |
+| 2 | Untrusted-content law: folder-lane csv create timed out at 240 s | **ROOT CAUSE (host)**: the isolated compile worker (`compile-component`) wrote stdio's 330 MB `.cwasm` in ~4.5 min, then sat > 15 min in `CodeMemory::drop` → macOS `__deregister_frame` (linear scan per frame = quadratic). Fix in-tree: `compile_component_isolated` uses `Engine::precompile_component` (never publishes executable code) + law `an_isolated_compile_writes_the_precompiled_entry_its_host_engine_loads`; plugin-host check rc 0, laws 10/10 (`gate-precompile-1.txt`). Plant (csv set-cell) still needs item 5 |
+| 3 | Hub-lane transport (coverage "cannot be matched…", participant link backoff) | H13's refill + my live catalog landed by L1 (mini-train 21:59); my live-catalog script left 1 os-mcp E0308 (generic borrow rewrite) → fixed in-tree 22:18 + script fixed; gate `p24b` queued (check + laws + gateway) → rerun coverage + participant |
+| 4 | User path de row 4: agent edit before the shell published the note's instance | **Host fix in-tree**: `🐚️channel` waits ≤ `SHELL_INSTANCE_WAIT_MS` (10 s) for the plugin's instance before refusing by name + law `a_command_waits_a_bounded_time_for_the_shell_to_publish_its_plugins_instance`; proof in gate `p24b` |
+| 5 | Revision-bound verbs unreachable for agents (coordinator decisions 21:5x/22:0x/22:4x) | **PREPARED + LANDED BY L1**: `wp-g12/g12-revision-binding.py` (36 files: schema-first `ArgFormat::DocumentRevision`/`TargetRevision` optional+hidden; SDK agent-lane `fill_agent_revisions` + `agent_target_revision` hooks; stdio declarations + zip/pdf/xlsx/epw target fills; gateway guard `revision.guard-required`; laws manifest/csv/zip×2/gateway×2). Scratch apply + re-run idempotent; live tree now "applied" (L1, T1). Compile proof = L1's T1 train |
+| 6 | Untrusted envelopes | **6/6 PASS** (gateway p24, `s14-g12-logs/untrusted-md-2.txt`): headless plant = md `textEdit` (csv set-cell is revision-bound and a blank csv has no cell), planting gateway auto-approves (landed, test-only) |
+| 7 | User path en/de | en **9/9 PASS** (p24b, private rendezvous `S_AGENT_BRIDGE_DIR`, `battery-p24b-4/`); de 6/9 3 runs out of 3: directory bootstrap FAULT ("Verzeichnisaktualisierung angehalten") in de → S18 (coordinator relayed). Cross-wiring root cause: a gateway's bridge offer reaches every live os session (item 8) |
+| 8 | Scoped bridge offers (security; coordinator 23:2x: G12 owns) | **LANDED 01:34, green** (os-mcp check rc 0, shell_channel 20/20, rendezvous 8/8, AgentBridge vitest 82/82, os tsc 0, boot Home):  rendezvous v2 — `BridgeOffer.scope` (`Hub{hubOrigin,spaceId}`/`Local`), `principal` = the adopted agent (offer published after the delegation exchange: `start_stdio_bridge` + `publish_stdio_bridge_offer`); dev server `liveAgentBridgeOfferFor(scope)` = `selectAgentBridgeOfferV1` (hub offer only for the shell on its hub+space whose human's own `GET /auth/agent-delegations` lists its agent; local offer any shell; newest); React `offerScope` (ShellHost: hub origin, open space, own delegations); schema def `AgentBridgeOfferRecordV2`; fixture `🛰️offer-answers` `select` (6 records, 9 cases incl. "another human's shell never receives it"); laws TS (Ajv oracle) + Rust record twin. os tsc: 0 in my files (2 foreign, 🏪️store/👷️worker 23:43); boot probe 6530 → Home, 0 faults. wgpu page → WG11 (relayed) |
+| 9 | User path row 4 on a fresh hub (8031, fresh users): both locales red — the delegated agent's edits took the attached shell's route, and nothing opens the note in the human's shell | **FIXED (host)**: `SessionChannelBinding::for_principal` — a delegated agent is its own headless hub participant (the shell still carries approvals/conversation/UI); law `a_delegated_agent_never_routes_artifact_verbs_through_the_attached_shell` PASS (gate `t1e`); live proof after the hub refresh |
+
+#### Session 14c Pids
+
+| pid | what | started | stopped |
+|---|---|---|---|
+| 16985 | `s` React dev serve 6530 → 7800 (`s14-g12-logs/serve-6530.log`) | 21:15 | |
+| 17157 | `g12-battery.sh … p24-14c-1` → `s14-g12-logs/battery-p24-14c-1/` | 21:15 | 21:51 done (coverage child killed by me 21:48: every open broken by the transport) |
+| 19983 | orphaned `semio-os-mcp-p24 compile-component` (stuck in `__deregister_frame`) | 21:21 | 21:57 killed by me |
+| 29000 | `g12-gate-host.sh precompile-1` (native lane) → `gate-precompile-1.txt` | 21:41 | 22:15 done (host green; os-mcp red = live-catalog E0308, copied binary stale → deleted) |
+| 54078 | `g12-gate-mcp.sh p24b …` (native lane, build first) → `gate-p24b.txt` | 22:19 | 22:42 reboot (build rc 0 22:32, os-mcp check rc 0 22:36, laws not reached) |
+| 16985 → | serve 6530 | 21:15 | 22:42 reboot |
+| 62814 | `g12-battery.sh … p24b-1` (participant, coverage, user path de/en; gateway p24b) | 22:33 | 22:42 reboot (participant done; coverage in its creation phase) |
+
+#### Session 14c Log
+
+- 21:1x read preamble 14/14b/14c + rule 24, fleet-14 tail (wave-B relays: set-cell/set-node need `revision`), this report. Nothing
+  in flight from 14b (g12-live-catalog.py stays prepared for L1's T4). Battery extended: `wp-g12/g12-refused-relay-probe.ts` (G11/H13
+  probe, credentials from env, note kind by dialect), untrusted-content law (real binary), durability on port 8032.
+- 21:16–21:51 battery `p24-14c-1` (gateway = chain build 20:59): participant 17/19 (rows 12/12b: "hub did not acknowledge … link
+  backoff (retry in 16000 ms)"), quartet 19/19, security 6/6, refused-relay probe: (a) read delegation → PERMISSION_DENIED
+  `viewer.read-only` + en/de remedy, hub head stays 0; (b0) edit delegation SUCCEEDED `relay:acknowledged` head 0→1; (b1) after
+  revoke (204) → PERMISSION_DENIED "hub session is unauthorized", head stays 1. Untrusted-content: beforeAll timed out (240 s) creating
+  the csv kind (item 2). Coverage-hub: 36 kinds offered, 34 created (2d/3d.generation: hub genesis trap "ordered-map root must be
+  explicitly retired before drop" — same in W4's open-plan probe → W4/S19), every open PLUGIN_UNAVAILABLE "cannot be matched to one of
+  this workspace's 23 registered plugins" → stopped at row 5 (transport, item 3). Durability 23/23. User path en 9/9 (17.2 s to an
+  approved agent edit), de 6/9 (item 4).
+- 21:25–21:34 participant re-runs with gateway stderr now captured (`S_OS_MCP_PARTICIPANT_OUT`, evidence in the record; row 8 shows the
+  link state): run 2 red again (same backoff), run 3 **19/19**. `wp-g12/g12-link-probe.ts` (env creds, participant argv): 3/3 green
+  (open 2 s, link live); the failing spaces had NO document-socket upgrade in 7800's capture → client-side failure before the hub =
+  the byte bucket (H13). Probe on the coverage space: open 23 s, link "backoff (retry in 8000 ms)".
+- 22:19–22:36 gate `p24b` (build first, early lane stamp): gateway build rc 0 22:32 → `semio-os-mcp-p24b`; os-mcp `check --lib --tests`
+  rc 0 22:36 (proves the 🐚️channel wait + the 1-line live-catalog fix). CAVEAT (measured from L1's `w3-backup/` stamps vs the SDK
+  unit's `invoked.timestamp` 22:26:27): p24b links T1a **plus L1's partial T1** (lb2-p6/p1/p7, t14-f9, f9-carriers, t14-g12 seed, class
+  fix written 22:19–22:26) — not a train-green state; rebuild after L1 reports T1 green.
+- 22:34 **participant 19/19 PASS** on p24b (`battery-p24b-1/participant.txt`; link live at open, relay acknowledged, 12b/12c green) =
+  the transport fix measured live. Coverage-hub was in its creation phase when the machine rebooted (~22:42).
+- 22:4x machine reboot → every process died (serve 6530, battery p24b-1, gate p24b laws). Torn-write check: my tree edits (🐚️channel,
+  plugin host, 1-line workspace fix, participant/untrusted/user-path TS) all compiled/ran after their last write; none torn.
+- 22:5x revision set finished (gateway guard + laws + stdio target fills) and relayed to L1; L1 applied it in T1 (dry run now "applied");
+  P9's note: the agent-lane anchor now ends at `command_from_action(…).await?;` (robust to P9's rewrite of the preview call).
+- 23:0x user path p24b: en 7/9 then 9/9 once the serve + gate share a private `S_AGENT_BRIDGE_DIR` (the default rendezvous offered my gateway
+  to 5 live os sessions of other slices; a foreign shell attached → "no open instance of `note`"); de 6/9 ×3 = directory FAULT in de (S18).
+  Harness: user path writes the MCP client's gateway stderr (`gateway-stderr-<locale>.txt`); tsc rc 0.
+- 23:4x–00:1x scoped offers written (item 8) + delegated-agent headless routing (item 9); os tsc 0 (00:0x, rc 0, 108 s) + boot probe
+  6530 → Home 0 faults; revoked/expired delegation scope law (`scopes` rows, `agentBridgeOfferScopeFromDelegationsV1`) added on the
+  coordinator's ask; hub-side revocation laws confirmed for WG11 (hub `an_agent_delegation_mints_a_session_that_works_until_it_is_revoked`,
+  `revoking_a_delegation_closes_the_agents_open_document_socket_and_roster_row`). Local folder coverage (p24) started 00:12: animate +
+  architect created + mutated, then the 00:31 panic killed it (not resumed: rule 25, hubs down).
+- 00:1x usage cut + kernel panics (22:42, 00:31, 00:41, 00:48) + 01:14 external sweep (rule 26: private target now
+  `.🧬semio/🌐hub/s14-g12-target`). 01:3x resume: every scoped-offer/routing edit intact (fixture 6 records / 9 cases / 3 scopes,
+  TS law, Rust record twin, `for_principal` + law); none of my queued proofs had run (gates t1c, vitest). Gate `t1d` (check → laws, no
+  build) launched 01:3x.
+- 01:28–01:34 gate `t1d`/`t1e` (native lane, target `.🧬semio/🌐hub/s14-g12-target`): check rc 0; `shell_channel` 20/20,
+  `rendezvous` 8/8; revision-guard law red at its own setup (raw scope name) → fixed, 2/2; guard now evaluated only for an authorized
+  caller. `descriptor_authority_generation` (my live-catalog law) RED on the tree = `🌍️gis/🔣️.json did not decode: missing field
+  label` — T1 renamed artifactKinds `name`→`label`, descriptor regen pending (L1/T14); re-run after regen. AgentBridge vitest 82/82
+  (`SEMIO_INCLUDE_AGENT_BRIDGE=1`).
+- 21:5x relays: L1/H13 transport refill = gate of the hub lane (coordinator: early mini-train, landed 21:59 with my live catalog);
+  LB2 revision-bound verbs → coordinator decision: G12 writes it (item 5).
+
 ### Session 14b
 
 Successor agent, 2026-09-28 12:0x (predecessor cut ~20:45 by the usage limit; app restart killed every process). Chain launched

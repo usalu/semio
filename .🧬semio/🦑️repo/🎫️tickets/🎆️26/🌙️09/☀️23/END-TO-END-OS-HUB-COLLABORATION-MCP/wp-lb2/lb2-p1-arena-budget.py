@@ -14,12 +14,13 @@ notes each surface whose render stopped short and renders it once more as soon a
 details `ui_args`/`pointer_argument` report arena refusals as `ui.fixed-capacity`; law `🧪️tests/🎟️details-arena-headroom`
 + fixture + schema; contract `[[test]] details_arena_headroom`.
 
-Usage: lb2-p1-arena-budget.py [--dry-run | --write] [--root <repo-or-overlay root>]  (default --dry-run on the live tree)"""
+Usage: lb2-p1-arena-budget.py [--dry-run | --write | --revert] [--root <repo-or-overlay root>]  (default --dry-run on the live tree)"""
 import sys
 from pathlib import Path
 
 ROOT = Path(sys.argv[sys.argv.index("--root") + 1]) if "--root" in sys.argv else Path("/Users/ueli/Documents/semio")
 WRITE = "--write" in sys.argv
+BACKUP = Path(__file__).resolve().parent / "generated" / "p1-backup"
 PAYLOAD = Path(__file__).resolve().parent / "payload" / "p1"
 SDK = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"
 DETAILS = "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🦀️.rs"
@@ -189,6 +190,22 @@ TURN_NOTE_NEW = """                        continue;
 """
 
 problems, changed = [], {}
+if "--revert" in sys.argv:
+    for backup in sorted(path for path in BACKUP.rglob("*") if path.is_file()):
+        rel = backup.relative_to(BACKUP)
+        if backup.name.endswith(".absent"):
+            target = ROOT / str(rel)[: -len(".absent")]
+            if target.exists():
+                target.unlink()
+                print("removed", target.relative_to(ROOT))
+                parent = target.parent
+                while parent != ROOT and not any(parent.iterdir()):
+                    parent.rmdir()
+                    parent = parent.parent
+        else:
+            (ROOT / rel).write_bytes(backup.read_bytes())
+            print("restored", rel)
+    sys.exit(0)
 
 
 def text(rel):
@@ -244,6 +261,9 @@ for rel in changed:
 if WRITE and not problems:
     for rel, content in changed.items():
         target = ROOT / rel
+        backup = BACKUP / (rel if target.exists() else rel + ".absent")
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        backup.write_bytes(target.read_bytes() if target.exists() else b"")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
     print("written")

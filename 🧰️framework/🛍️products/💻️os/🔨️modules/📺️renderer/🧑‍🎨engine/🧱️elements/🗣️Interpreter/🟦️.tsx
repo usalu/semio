@@ -716,6 +716,9 @@ export type UiInterpreterContext = {
    * accepted for a sink that has nothing to settle. */
   readonly onIntent: (intent: UiIntent) => void | Promise<void>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+  /** 🪪️ The DOM id of the row this subtree renders inside — a tree row or a table row. A node key is unique only among its
+   * siblings, so a row's inline controls and cells are addressed under their row ({@link uiNodeDomId}). */
+  readonly domScope?: string;
 };
 //#endregion UiInterpreterContext
 
@@ -1205,7 +1208,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   // introduction anchor, a scripted driver or assistive technology (ticket 26/09/02 wave B12).
   if (component.role === "section" || component.role === "group") {
     return (
-      <Section id={nodeDomId(store, record)} title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
+      <Section id={nodeDomId(store, record, context.domScope)} title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
         {describedBy}
         {children}
       </Section>
@@ -1213,7 +1216,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   }
   if (component.role === "field") {
     return (
-      <Field id={nodeDomId(store, record)} label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
+      <Field id={nodeDomId(store, record, context.domScope)} label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
         {describedBy}
         {children}
       </Field>
@@ -1225,7 +1228,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
       {...dataAttrs}
       {...aria}
       role={activateBinding ? "button" : role}
-      id={nodeDomId(store, record)}
+      id={nodeDomId(store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       data-activity={record.activity}
       className={cn(activityBorderClass(record), activateBinding && cn(borderElementClass, "border cursor-pointer rounded-md"), presence.selected && "ring-primary ring-1", presence.hovered && "outline-primary/50 outline-1")}
@@ -1253,7 +1256,7 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
   const component = record.component as Extract<Component, { type: "button" }>;
   return (
     <Button
-      id={nodeDomId(context.store, record)}
+      id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       text={component.label}
       icon={resolveControlIconNode(component.icon)}
@@ -1327,7 +1330,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   if (component.kind === "longText") {
     return (
       <Textarea
-        id={nodeDomId(context.store, record)}
+        id={nodeDomId(context.store, record, context.domScope)}
         data-ui-node-id={record.id} data-ui-node-key={record.key}
         aria-label={record.accessibility.label ?? undefined}
         disabled={record.disabled}
@@ -1343,7 +1346,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
   return (
     <Input
-      id={nodeDomId(context.store, record)}
+      id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
       disabled={record.disabled}
@@ -1365,8 +1368,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
 function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
   return (
-    <Select id={`${nodeDomId(context.store, record)}-select`} disabled={record.disabled} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
-      <SelectTrigger id={nodeDomId(context.store, record)} aria-label={record.accessibility.label ?? undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
+    <Select id={`${nodeDomId(context.store, record, context.domScope)}-select`} disabled={record.disabled} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+      <SelectTrigger id={nodeDomId(context.store, record, context.domScope)} aria-label={record.accessibility.label ?? undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
       <SelectContent>
@@ -1382,8 +1385,8 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
 
 function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  if (component.appearance === "checkbox") return <TreeCheckbox id={nodeDomId(context.store, record)} checked={component.on} disabled={record.disabled} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={record.disabled} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={nodeDomId(context.store, record, context.domScope)} checked={component.on} disabled={record.disabled} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
+  return <Toggle id={nodeDomId(context.store, record, context.domScope)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={record.disabled} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
@@ -1405,7 +1408,7 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
   const lane = useContinuousTriggerLane(context, record);
   const slider = (
     <Slider
-      id={nodeDomId(context.store, record)}
+      id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       className="w-full min-w-0"
       max={component.max}
@@ -1431,7 +1434,7 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
   const component = record.component as Extract<Component, { type: "numberStepper" }>;
   return (
     <Stepper
-      id={nodeDomId(context.store, record)}
+      id={nodeDomId(context.store, record, context.domScope)}
       step={component.step}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
@@ -1451,7 +1454,7 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
 
 function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "ring" }>;
-  return <Ring id={nodeDomId(context.store, record)} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+  return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
 }
 
 function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -1459,7 +1462,7 @@ function IconSelectView({ record, context }: { readonly record: UiNodeRecord; re
   return (
     <IconSelector
       classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
-      id={nodeDomId(context.store, record)}
+      id={nodeDomId(context.store, record, context.domScope)}
       onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
       uniform={component.uniform}
       value={component.value}
@@ -1501,15 +1504,18 @@ function collectTreeItemControls(state: UiDocumentState, ids: readonly UiNodeId[
  * different row after the next refresh — a scripted or assistive click keyed on `#5` silently targets
  * the wrong node. `key` is authored by the program (`procedural3d-play-generate.add-generation`) and
  * survives every refresh, and the surface prefix is what namespaces it per window, since two windows of
- * one app can render the same authored key. Falls back to the volatile id only for a keyless node
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export function uiNodeDomId(surface: SurfaceId, key: string, fallbackNodeId: UiNodeId): string {
-  return key ? `${surface}/${key}` : `node-${fallbackNodeId}`;
+ * one app can render the same authored key. A key is unique only among its siblings (the ui contract), so a node
+ * rendered inside a row — a tree row's inline controls, a table row's cells — is namespaced by that row's own DOM id
+ * (`scope`) instead: two rows' `edit` inputs or `cell-0` cells never share an id. Falls back to the volatile id only for
+ * a keyless node (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function uiNodeDomId(surface: SurfaceId, key: string, fallbackNodeId: UiNodeId, scope?: string): string {
+  return key ? `${scope ?? surface}/${key}` : `node-${fallbackNodeId}`;
 }
 
-/** 🪪️ {@link uiNodeDomId} for a record held by a live store — the surface comes off the store's own state. */
-function nodeDomId(store: UiDocumentStore, record: UiNodeRecord): string {
-  return uiNodeDomId(store.getState().surface, record.key, record.id);
+/** 🪪️ {@link uiNodeDomId} for a record held by a live store — the surface comes off the store's own state, the row scope
+ * off the rendering context. */
+function nodeDomId(store: UiDocumentStore, record: UiNodeRecord, scope?: string): string {
+  return uiNodeDomId(store.getState().surface, record.key, record.id, scope);
 }
 
 /** 🪪️ React reconciliation keys for a sibling run — the SAME authored identity {@link uiNodeDomId}
@@ -1650,7 +1656,16 @@ export function treeWindowViewportMetrics(viewport: HTMLElement): { readonly ori
   const owner = viewport.ownerDocument ?? null;
   if (viewport === owner?.scrollingElement || viewport === owner?.documentElement) return { originTop: 0, height: Math.max(0, owner?.defaultView?.innerHeight ?? viewport.clientHeight) };
   const rect = viewport.getBoundingClientRect();
-  return { originTop: rect.top + viewport.clientTop, height: Math.max(0, viewport.clientHeight || rect.height) };
+  const inset = treeWindowStickyInsetPx(viewport);
+  return { originTop: rect.top + viewport.clientTop + inset, height: Math.max(0, (viewport.clientHeight || rect.height) - inset) };
+}
+
+/** 📌️ The band a scroll viewport's own sticky header covers, as the viewport declares it (`scroll-padding-top`, which
+ * also keeps focus and `scrollIntoView` from parking a row under that header): rows beneath it are not visible, so the
+ * window rule must not spend the served window on them (the table's header row hid the first materialised row). */
+function treeWindowStickyInsetPx(viewport: HTMLElement): number {
+  const inset = Number.parseFloat(viewport.ownerDocument?.defaultView?.getComputedStyle(viewport).scrollPaddingTop ?? "");
+  return Number.isFinite(inset) && inset > 0 ? inset : 0;
 }
 
 /** 🪟️ Every windowed container under `root`, measured RELATIVE TO the viewport's content origin — i.e.
@@ -1897,9 +1912,11 @@ function reportDuplicateTreeWindowKeys(containers: readonly TreeWindowContainerM
  * the last report is what keeps a scroll gesture from firing one partial refresh per frame, and what
  * makes a SETTLED window silent: the answer is a function of the container geometry alone, and the
  * geometry a window's own answer produces is the geometry that asked for it. */
-function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, windows: TreeWindowContextValue | null, revision: unknown, store: unknown): void {
+function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, windows: TreeWindowContextValue | null, revision: unknown, store: unknown, onServed?: (memory: ReadonlyMap<string, TreeWindowServedMemoryV1>) => void): void {
   const windowsRef = useRef<TreeWindowContextValue | null>(windows);
   windowsRef.current = windows;
+  const onServedRef = useRef(onServed);
+  onServedRef.current = onServed;
   const lastReportRef = useRef<string>("");
   const duplicateKeysRef = useRef<Set<string>>(new Set());
   const servedRef = useRef<ReadonlyMap<string, TreeWindowServedMemoryV1>>(new Map());
@@ -1924,6 +1941,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
       const served = treeWindowServedRequestsV1(containers, viewportHeight, servedRef.current);
       servedRef.current = served.memory;
+      onServedRef.current?.(served.memory);
       const requests = [...served.requests.map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows })), ...tableColumnWindowRequestsUnder(live)];
       const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
@@ -2084,7 +2102,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     isHidden: props.dimmed ?? undefined,
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
-    control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), context)}</> : undefined,
+    control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), { ...context, domScope: domId })}</> : undefined,
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
@@ -2409,6 +2427,20 @@ export function tableWindowScrollTopForRowV1(index: number, rowPx: number, scrol
   return scrollTop;
 }
 
+/** 📊️ How many rows a windowed table's scroll viewport may show at most: the capacity the guest's short answers taught
+ * (`learned`, {@link treeWindowServedRequestsV1}), else the one it taught before (a new `total` forgets the capacity
+ * until the next short answer re-teaches it, and the viewport must not flash open meanwhile), while the list is longer
+ * than that, one row short of it (a viewport scrolled between rows shows a partial row at each edge, and the served
+ * window must cover both) — `null` = uncapped. A viewport taller than the rows the guest can materialise at once shows blank rows no
+ * scroll reaches: the whole list fits the viewport, so the scroll range is a row or two, the window never moves, and
+ * every row past the capacity stays unreachable by wheel, keyboard and screen reader alike (Home on hub 7800, 11 of 29
+ * spaces, ticket 26/09/23 S18 §14c / C12). Capped, the viewport scrolls over the list and the window follows it.
+ * Rows: `🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json` `tableViewportCaps`. */
+export function tableWindowViewportCapRowsV1(learned: number | null, previous: number | null, total: number): number | null {
+  const servable = learned ?? previous;
+  return servable !== null && servable > 0 && servable < total ? Math.max(1, servable - 1) : null;
+}
+
 /** 📊️ The shared column track of a table's header and rows: the first (name) column twice as wide as the
  * others, the actions column exactly as wide as the widest materialised action strip — header and rows
  * read the SAME string, so their columns line up however the rows stream. */
@@ -2469,9 +2501,14 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   const [active, setActive] = useState(0);
   const activeRow = active >= leading && active < leading + rows.length ? active : leading;
   const range = useLabel("ui.host.tableRowRange", { from: rows.length > 0 ? leading + 1 : 0, to: leading + rows.length, total });
+  const [servableRows, setServableRows] = useState<number | null>(null);
+  const viewportCapRows = tableWindowViewportCapRowsV1(null, servableRows, total);
   const rowRange = component.rowLabel ? `${component.rowLabel}: ${rows.length > 0 ? leading + 1 : 0}–${leading + rows.length} / ${total}` : range;
   const columnRange = `${component.columnLabel ? `${component.columnLabel}: ` : ""}${component.columns.length > 0 ? columnLeading + 1 : 0}–${columnLeading + component.columns.length} / ${columnTotal}`;
-  useTreeWindowObserver(rootRef, windows, revision, store);
+  useTreeWindowObserver(rootRef, windows, revision, store, (memory) => {
+    const learned = memory.get(record.key)?.capacity ?? null;
+    if (learned !== null) setServableRows((current) => (current === learned ? current : learned));
+  });
   useEffect(() => {
     const wanted = focusRowRef.current;
     if (wanted === null || wanted < leading || wanted >= leading + rows.length) return;
@@ -2494,7 +2531,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
     setActive(index);
     focusRowRef.current = index;
     const scroller = scrollRef.current;
-    if (scroller) scroller.scrollTop = tableWindowScrollTopForRowV1(index, rowPx, scroller.scrollTop, scroller.clientHeight);
+    if (scroller) scroller.scrollTop = tableWindowScrollTopForRowV1(index, rowPx, scroller.scrollTop, scroller.clientHeight - rowPx);
     const element = rootRef.current?.querySelector<HTMLElement>(`[data-table-row-index="${index}"]`);
     if (element) {
       focusRowRef.current = null;
@@ -2551,7 +2588,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
       }
       return;
     }
-    const page = Math.max(1, Math.floor((scrollRef.current?.clientHeight ?? rowPx) / rowPx));
+    const page = Math.max(1, Math.floor(((scrollRef.current?.clientHeight ?? 2 * rowPx) - rowPx) / rowPx));
     const next = tableWindowNextRowV1(event.key, index, total, page);
     if (next === null) return;
     event.preventDefault();
@@ -2561,7 +2598,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   return (
     <div
       ref={rootRef}
-      id={nodeDomId(store, record)}
+      id={nodeDomId(store, record, context.domScope)}
       data-ui-node-id={record.id}
       data-ui-node-key={record.key}
       role="grid"
@@ -2572,7 +2609,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
       className={cn("flex min-h-0 min-w-0 flex-1 flex-col", activityBorderClass(record))}
       style={layoutSpecStyle(record.layout)}
     >
-      <div ref={scrollRef} role="rowgroup" data-slot="table-window-scroll" className="min-h-0 min-w-0 flex-1 overflow-auto">
+      <div ref={scrollRef} role="rowgroup" data-slot="table-window-scroll" data-table-viewport-cap={viewportCapRows ?? undefined} className="min-h-0 min-w-0 flex-1 overflow-auto" style={{ scrollPaddingTop: rowPx, maxHeight: viewportCapRows === null ? undefined : (viewportCapRows + 1) * rowPx }}>
         <div
           {...(treeWindowDomAttributes(columnWindow, component.columns.length, `${record.key}.columns`) ?? {})}
           data-tree-window-axis={columnWindow ? "column" : undefined}
@@ -2603,10 +2640,12 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
               const props = row.component as Extract<Component, { type: "tableRow" }>;
               const cellNodes = (row.children ?? []).filter((id) => !store.getState().nodes.get(id)?.key.startsWith("row-action-"));
               const name = props.cells[0] ?? row.key;
+              const rowDomId = nodeDomId(store, row, context.domScope);
+              const cellContext: UiInterpreterContext = { ...context, domScope: rowDomId };
               return (
                 <div
                   key={row.key}
-                  id={nodeDomId(store, row)}
+                  id={rowDomId}
                   data-ui-node-id={row.id}
                   data-ui-node-key={row.key}
                   data-tree-window-row={index}
@@ -2637,7 +2676,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                     const logicalColumn = columnLeading + cell;
                     return (
                       <div key={logicalColumn} role="gridcell" aria-colindex={logicalColumn + 1} data-table-column-index={logicalColumn} className={cellClass} title={cellNodes[cell] ? undefined : (props.cells[cell] ?? "")}>
-                        {cellNodes[cell] ? <UiNodeView store={store} id={cellNodes[cell]!} context={context} /> : (props.cells[cell] ?? "")}
+                        {cellNodes[cell] ? <UiNodeView store={store} id={cellNodes[cell]!} context={cellContext} /> : (props.cells[cell] ?? "")}
                       </div>
                     );
                   })}
@@ -2775,7 +2814,7 @@ if (import.meta.vitest) {
   const { registerTests1: registerTableWindowTests } = await import("./🧪️tests/📊️table/🟦️.tsx");
   await registerTableWindowTests(
     import.meta.vitest,
-    { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, treeWindowRowHeightPx },
+    { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx },
     { url: import.meta.url },
   );
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");

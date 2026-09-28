@@ -1,0 +1,951 @@
+{
+ "about": "L1 window-3 train manifests (session 14c). Commands run by l1-train.py through `zsh -c` in the repo root; T = .tmp-ticket, L = .🧬semio/🌐hub. Every write runs inside l1-land.py (byte backup + change record under wp-l1/w3-backup/<set>/). {MAPS} = `--map <tsv>` for every L/s14-t14-logs/s14b-f9-map-*.tsv (as wp-t14/land-w3.py). {NATIVE} = native lane prefix with build-fleet-b + wp-l1/target.",
+ "sets": [
+  {
+   "id": "lb2-xml",
+   "train": "T1",
+   "owner": "LB2",
+   "dry": "",
+   "write": "{NATIVE} cargo test -p semio-s-artifact-stdio-xml --lib -- --ignored zzz_write_dsl_and_pack_fixtures",
+   "scope": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-xml"
+   ],
+   "laws": "LB2: xml lib --features component-app-assembly (4 reds → 0 after regen)"
+  },
+  {
+   "id": "lb2-p6",
+   "train": "T1",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p6-declared-catalogs.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p6-declared-catalogs.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-s-plugin-stdio"
+   ],
+   "laws": "LB2: shipped_fleet, json lib; describe watch plugin-assembly.declaration-schema|inference in 26 .artifact plugins"
+  },
+  {
+   "id": "lb2-p1",
+   "train": "T1",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p1-arena-budget.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p1-arena-budget.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-s-artifact-stdio-contract"
+   ],
+   "laws": "LB2: contract --test details_arena_headroom, contract lib -- details"
+  },
+  {
+   "id": "lb2-p7",
+   "train": "T1",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p7-table-arena.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p7-table-arena.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-contract",
+    "semio-s-artifact-stdio-csv",
+    "semio-s-artifact-stdio-tsv"
+   ],
+   "laws": "LB2: contract --test table_arena_headroom, csv/tsv lib (component-app-assembly)"
+  },
+  {
+   "id": "t14-f9",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/f9/content-id.py",
+   "write": "python3 T/wp-t14/f9/content-id.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel",
+    "semio-framework",
+    "…33 files"
+   ],
+   "laws": "T14: kernel content-id/addressing laws, TS content-id oracle"
+  },
+  {
+   "id": "t14-f9-carriers",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/f9/apply-map.py {MAPS}",
+   "write": "python3 T/wp-t14/f9/apply-map.py {MAPS} --write",
+   "revert": "l1-land",
+   "crates": [
+    "fixtures/assets of ~15 artifacts (architect, remodeling, note, block3d, process3d, …)"
+   ],
+   "laws": "T14: owners' lib tests (block-3d, note, remodeling, process3d, architect, din18599, …)"
+  },
+  {
+   "id": "t14-g12",
+   "train": "T1",
+   "owner": "G12/T14",
+   "dry": "python3 T/wp-g12/g12-authoring-seed.py --dry-run",
+   "write": "python3 T/wp-g12/g12-authoring-seed.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "SDK + 129 literal files (+ stdio-contract, playbook-procedural)"
+   ],
+   "laws": "G12/T14: in T14's hold"
+  },
+  {
+   "id": "t14-class-fix",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/p8class/follow-children.py",
+   "write": "python3 T/wp-t14/p8class/follow-children.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin"
+   ],
+   "laws": "T14: orphan verdict + declared-verb laws (reasoning/flow/architect)"
+  },
+  {
+   "id": "t14-p8-orphan",
+   "train": "T1",
+   "owner": "T14 (LC P8)",
+   "dry": "python3 T/wp-p8/patches/p8-orphan.py --dry-run",
+   "write": "python3 T/wp-p8/patches/p8-orphan.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin (+ TS twin)"
+   ],
+   "laws": "T14: ORPHAN-VERDICT + AJV twin"
+  },
+  {
+   "id": "t14-h9l",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/h9l/kind-label-patch.py",
+   "write": "python3 T/wp-t14/h9l/kind-label-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "100 sites / 94 files (every plugin kind spec)"
+   ],
+   "laws": "T14: host registry, wfc3d kind, hub linked-kind laws"
+  },
+  {
+   "id": "t14-5b",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/5b/dsl-value.py",
+   "write": "python3 T/wp-t14/5b/dsl-value.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework (value), 21 files"
+   ],
+   "laws": "T14: value law vs serde_json"
+  },
+  {
+   "id": "t14-5b-b2",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/5b/dsl-value-b2.py",
+   "write": "python3 T/wp-t14/5b/dsl-value-b2.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "53 files: SDK world3d, apps, renderer-wgpu (wasm32-unknown-unknown)"
+   ],
+   "laws": "T14: SDK/renderer lib"
+  },
+  {
+   "id": "t14-item6",
+   "train": "T1",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/item6/fallback-wrappers.py",
+   "write": "python3 T/wp-t14/item6/fallback-wrappers.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-puzzle-2d",
+    "semio-framework-plugin (doc)"
+   ],
+   "laws": "-"
+  },
+  {
+   "id": "s19-gen-archive-load",
+   "train": "T1",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-stage.py apply gen-archive-load",
+   "write": "python3 T/wp-s19/s19-stage.py apply gen-archive-load --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel",
+    "semio-framework-plugin",
+    "semio-s-artifact-procedural-generation2d",
+    "semio-s-artifact-procedural-generation3d"
+   ],
+   "laws": "S19: kernel lib; gen2d/gen3d a_document_archive_loads_into_a_fresh_instance_through_the_import_door; wasm32 kernel/procedural/demonstrator",
+   "notes": "coordinator 21:4x: SDK/kernel genesis retire fix (artifact_app_genesis_pair + ArtifactEnvelope::retire_unadopted), 10 files, after T14 sets (3-way merge)"
+  },
+  {
+   "id": "p9",
+   "train": "T1",
+   "owner": "P9",
+   "dry": "cd T/wp-p9/patches && python3 p9-agent-lane.py --dry-run",
+   "write": "zsh T/wp-p9/p9-land.sh write",
+   "revert": "own p9-land.sh revert + l1-land",
+   "crates": [
+    "semio-framework",
+    "semio-framework-plugin",
+    "semio-s-artifact-puzzle-2d",
+    "semio-s-artifact-puzzle-3d",
+    "semio-s-artifact-puzzle-5d",
+    "semio-s-artifact-trinity-jack",
+    "semio-s-artifact-trinity-rewriting",
+    "semio-s-artifact-writer-writer"
+   ],
+   "laws": "P9: 14 laws (p9-native-cargo.sh), AJV twin 9/9"
+  },
+  {
+   "id": "s20-initializer",
+   "train": "T1",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-initializer.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-initializer.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin + 69 plugin editor files"
+   ],
+   "laws": "S20: io-matrix rerun (expect 71/75)"
+  },
+  {
+   "id": "s20-poll-yield",
+   "train": "T1",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-archive-poll-yield.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-archive-poll-yield.py",
+   "revert": "l1-land",
+   "crates": [],
+   "ts": [
+    "os (host)"
+   ],
+   "laws": "S20: tsc + boot"
+  },
+  {
+   "id": "s20-document-verbs",
+   "train": "T1",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-document-verbs.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-document-verbs.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-framework-os-mcp",
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "ts": [
+    "os (ShellHost, manifest TS)"
+   ],
+   "laws": "S20: io-matrix document rows"
+  },
+  {
+   "id": "s20-chunk-staging",
+   "train": "T1",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-chunk-staging.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-chunk-staging.py && python3 T/wp-s20/s20-patch-chunk-staging-2.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework",
+    "semio-framework-os-kernel",
+    "semio-framework-plugin",
+    "semio-s-artifact-procedural-generation3d",
+    "semio-s-artifact-puzzle-2d",
+    "semio-s-artifact-puzzle-3d",
+    "semio-s-artifact-puzzle-5d",
+    "semio-s-artifact-architect-program"
+   ],
+   "ts": [
+    "os (dispatchOpenedFiles)"
+   ],
+   "laws": "S20: kernel file_open_import ×3, gen3d import-document, puzzle-3d ×4, puzzle-5d ×5, architect declared-verbs 23 + CSV request",
+   "notes": "phase 1 + phase 2 in ONE step (S20 21:5x); phase 2 dry-run after phase 1 inside the write (CONFLICT → no write)"
+  },
+  {
+   "id": "s20-retire-load-request",
+   "train": "T1",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-retire-load-request.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-retire-load-request.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-note-note",
+    "semio-s-artifact-shooting-shooting"
+   ],
+   "laws": "S20: note cohort + shooting retained-command-limits fixtures"
+  },
+  {
+   "id": "c12-seed-history",
+   "train": "T1",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/seed/c12-seed-history-patch.py",
+   "write": "python3 T/wp-c12/seed/c12-seed-history-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel (store runtime)",
+    "semio-framework-plugin",
+    "gismap",
+    "trinity-jack",
+    "draw",
+    "raster",
+    "generation2d",
+    "generation3d",
+    "process3d",
+    "writer"
+   ],
+   "laws": "C12: 17-envelope tail folded → pack → writer initializer law",
+   "notes": "coordinator 22:5x: after s19-gen-archive-load; dry 15 planned / 0 problems"
+  },
+  {
+   "id": "c12-seed-history-amend",
+   "train": "T1",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/seed/c12-seed-history-amend.py --dry-run",
+   "write": "python3 T/wp-c12/seed/c12-seed-history-amend.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-writer-writer (test)"
+   ],
+   "laws": "C12 law (local/remote mixed shape)",
+   "notes": "C12 00:1x: in-place delta inside the HubTailInitialization region (modify doc + body, no insert)"
+  },
+  {
+   "id": "g12-revision-binding",
+   "train": "T1",
+   "owner": "G12",
+   "dry": "python3 T/wp-g12/g12-revision-binding.py --dry-run",
+   "write": "python3 T/wp-g12/g12-revision-binding.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework",
+    "semio-framework-schema",
+    "semio-framework-plugin",
+    "semio-framework-os-mcp",
+    "stdio contract/csv/zip/pdf/xlsx/epw/wav/docx"
+   ],
+   "laws": "G12: manifest revision_arguments_*, csv an_agent_set_cell_without_a_revision_*, zip *_agent_rename_is_admitted_*, os-mcp an_omitted_revision_*",
+   "notes": "coordinator 23:0x: END of T1"
+  },
+  {
+   "id": "st2-code",
+   "train": "T2",
+   "owner": "ST2",
+   "pre": "python3 T/wp-st2/st2-gen.py",
+   "dry": "python3 T/wp-st2/st2-apply.py --dry-run --part code",
+   "write": "python3 T/wp-st2/st2-apply.py --write --part code",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-plugin-stdio",
+    "semio-s-plugin-stdio-{image,media,cad,bim,mesh,pdf,office,semio,binary}",
+    "semio-s-artifact-stdio-wav",
+    "semio-s-artifact-stdio-semio",
+    "semio-framework-plugin"
+   ],
+   "laws": "ST2: shipped_fleet + editor_catalog; wasm32 10 packages; stdio-plugin:editor-component-check"
+  },
+  {
+   "id": "st2-r10",
+   "train": "T2",
+   "owner": "R10",
+   "dry": "python3 T/wp-st2/st2-apply.py --dry-run --part r10",
+   "write": "python3 T/wp-st2/st2-apply.py --write --part r10",
+   "revert": "l1-land",
+   "crates": [],
+   "ts": [
+    "taxonomy, project.json ×10, launch seed"
+   ],
+   "laws": "R10: refresh + taxonomy + render (158 stdio rows), taxonomy-load probe + boot"
+  },
+  {
+   "id": "cx1",
+   "train": "T2",
+   "owner": "ST2 (CX1)",
+   "dry": "python3 T/wp-st2/cx1-apply.py --dry-run",
+   "write": "python3 T/wp-st2/cx1-apply.py --write && bun T/wp-h14/h14-bootstrap-generation.ts --write 19",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-plugin-stdio",
+    "semio-s-artifact-stdio-{txt,tsv,html}",
+    "semio-framework-plugin",
+    "semio-hub"
+   ],
+   "ts": [
+    "os-hub-ts",
+    "stdio-js"
+   ],
+   "laws": "ST2: trusted-stdio-gis-bundle-check --source; stdio native_openable_provider; txt/tsv/html lib; semio-hub lib fence/provider"
+  },
+  {
+   "id": "nx1b-rebuild",
+   "train": "T2",
+   "owner": "ST2",
+   "dry": "python3 T/wp-st2/nx1b-apply.py --dry-run --part rebuild",
+   "write": "python3 T/wp-st2/nx1b-apply.py --write --part rebuild",
+   "revert": "l1-land",
+   "crates": [],
+   "laws": "ST2: bun wp-st2/nx1b-law.ts"
+  },
+  {
+   "id": "lb2-p5",
+   "train": "T2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p5-docx-xlsx-opc-reds.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p5-docx-xlsx-opc-reds.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-docx",
+    "semio-s-artifact-stdio-xlsx"
+   ],
+   "laws": "LB2: fixture writers (xlsx zzz_write_demo_fixtures, docx zzz_write_native_docx_fixture) → docx/xlsx lib (11 reds → 0)"
+  },
+  {
+   "id": "lb2-p5-fixtures",
+   "train": "T2",
+   "owner": "LB2",
+   "dry": "",
+   "write": "{NATIVE} zsh -c 'cargo test -p semio-s-artifact-stdio-xlsx --lib -- --ignored zzz_write_demo_fixtures && cargo test -p semio-s-artifact-stdio-docx --lib -- --ignored zzz_write_native_docx_fixture'",
+   "scope": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-docx",
+    "semio-s-artifact-stdio-xlsx"
+   ],
+   "laws": "LB2: docx/xlsx lib"
+  },
+  {
+   "id": "lb2-p3-wg11",
+   "train": "T2",
+   "owner": "LB2 + WG11",
+   "dry": "python3 T/wp-lb2/lb2-p3-row-actions.py --dry-run && python3 T/wp-wg11/wg11-table-row-painter-patch.py",
+   "write": "python3 T/wp-lb2/lb2-p3-row-actions.py --write && python3 T/wp-wg11/wg11-table-row-painter-patch.py --apply",
+   "revert": "l1-land (+ WG11 --revert)",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-framework-ui (wgpu-engine)"
+   ],
+   "ts": [
+    "@semio-tech/framework-renderer-react (Interpreter)"
+   ],
+   "laws": "LB2: SDK table laws; WG11: ui table_row_grid/reconcile/flex/accessibility; renderer-react typecheck + Interpreter vitest; Home boot"
+  },
+  {
+   "id": "c13-p1",
+   "train": "T3",
+   "owner": "C13",
+   "dry": "python3 T/wp-c13/p1-foreign-transition-refused.py --dry-run",
+   "write": "python3 T/wp-c13/p1-foreign-transition-refused.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-replication",
+    "semio-framework-os"
+   ],
+   "ts": [
+    "@semio-tech/framework-replication"
+   ],
+   "laws": "C13: replication lib -- transition; os check; replication vitest"
+  },
+  {
+   "id": "c13-p2",
+   "train": "T3",
+   "owner": "C13",
+   "dry": "python3 T/wp-c13/p2-viewer-manifest-no-rejected-verbs.py --dry-run",
+   "write": "python3 T/wp-c13/p2-viewer-manifest-no-rejected-verbs.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-os"
+   ],
+   "ts": [
+    "manifest TS (doc)"
+   ],
+   "laws": "C13: semio-framework-os --lib -- app_builder_tests",
+   "notes": "coordinator 23:3x: FRONT of T3 with c13-p1 (live-proven security defect)"
+  },
+  {
+   "id": "sh2-space-home",
+   "train": "T3",
+   "owner": "SH2",
+   "dry": "python3 T/wp-sh2/sh2-apply.py",
+   "write": "python3 T/wp-sh2/sh2-apply.py --write",
+   "revert": "l1-land (+ SH2 backup dir)",
+   "crates": [
+    "semio-s-artifact-space-home",
+    "semio-s-plugin-space",
+    "semio-framework-os",
+    "semio-s-artifact-norm-en1993"
+   ],
+   "ts": [
+    "os",
+    "space-js"
+   ],
+   "laws": "SH2: space-home lib (+component-app-assembly), plugin-space lib, os-config lib"
+  },
+  {
+   "id": "sh2-b1",
+   "train": "T3",
+   "owner": "SH2",
+   "dry": "python3 T/wp-sh2/b1/b1-apply.py",
+   "write": "python3 T/wp-sh2/b1/b1-apply.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-config",
+    "semio-framework-plugin-host",
+    "semio-s-artifact-space-home"
+   ],
+   "ts": [
+    "os (ShellHost, local-catalog, worker)",
+    "os-dev"
+   ],
+   "laws": "SH2: case 📇️mutate-os-config-local-catalog (rust+ts); space describe regen (wasm); sh2-verify-home.sh en/de"
+  },
+  {
+   "id": "s18-twin",
+   "train": "T3",
+   "owner": "S18",
+   "dry": "python3 T/wp-s18/s18-named-layout-rust-twin.py --dry-run",
+   "write": "python3 T/wp-s18/s18-named-layout-rust-twin.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-config",
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "laws": "S18: os-config lib 152/152; renderer-wgpu preference/layout laws 27/27; wasm32 shell"
+  },
+  {
+   "id": "wg11-reseed",
+   "train": "T3",
+   "owner": "WG11 (WG10)",
+   "dry": "python3 T/wp-wg10/patch-rebootstrap-reseed.py",
+   "write": "python3 T/wp-wg10/patch-rebootstrap-reseed.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-renderer-wgpu",
+    "semio-framework-os-kernel?"
+   ],
+   "laws": "WG11: native laws (wg11-native-*.sh)"
+  },
+  {
+   "id": "wg11-board",
+   "train": "T3",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-board-presence-pointer-patch.py",
+   "write": "python3 T/wp-wg11/wg11-board-presence-pointer-patch.py --apply",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "laws": "WG11"
+  },
+  {
+   "id": "wg11-a11y",
+   "train": "T3",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-text-accessible-name-patch.py",
+   "write": "python3 T/wp-wg11/wg11-text-accessible-name-patch.py --apply",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-ui?"
+   ],
+   "laws": "WG11"
+  },
+  {
+   "id": "wg11-harness",
+   "train": "T3",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-harness-land.py",
+   "write": "python3 T/wp-wg11/wg11-harness-land.py --apply",
+   "revert": "l1-land",
+   "crates": [],
+   "ts": [
+    "@semio-tech/framework-renderer-wgpu (script.ts + 🤝️hub-collaboration)"
+   ],
+   "laws": "WG11: tsc harness; R10 taxonomy of 🤝️hub-collaboration"
+  },
+  {
+   "id": "wg11-replay-routes",
+   "train": "T3",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-replay-routes-patch.py",
+   "write": "python3 T/wp-wg11/wg11-replay-routes-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-os-renderer-wgpu (native + wasm32)"
+   ],
+   "ts": [
+    "os (ShellHost 📣️replay-refusal)",
+    "engine-contract vitest"
+   ],
+   "laws": "WG11: the_shared_replay_refusal_vocabulary…, an_unserved_guest_replay_is_refused_out_loud…, a_space_artifact_creation_replay_names_exactly_one_offered_kind; engine-contract replay refusal block; boot",
+   "notes": "WG11 23:5x"
+  },
+  {
+   "id": "wg11-offer-scope",
+   "train": "T3",
+   "owner": "WG11 + G12",
+   "dry": "python3 T/wp-wg11/wg11-offer-scope-patch.py",
+   "write": "python3 T/wp-wg11/wg11-offer-scope-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-os-kernel (directory client 🤖️agent-delegations, NEW dir → R10 taxonomy)",
+    "semio-framework-os-renderer-wgpu (native + wasm32)"
+   ],
+   "ts": [
+    "os: AgentBridge 🛰️offer, transport, frame worker, browser-boot, renderer-boot + 2 vitest"
+   ],
+   "laws": "WG11: live_agent_principals_answer_the_shared_delegation_list_vectors, the_agent_bridge_offer_scope_follows_sign_in_space_and_revocation, vitest 'asks with the shell's scope…', 'agent delegation list vectors'; tsc + boot",
+   "notes": "WG11 00:0x, coordinator-approved"
+  },
+  {
+   "id": "wg11-shell-turn",
+   "train": "T3",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-shell-turn-patch.py",
+   "write": "python3 T/wp-wg11/wg11-shell-turn-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "laws": "WG11: stack frames (wg11-stack-frames.sh)",
+   "notes": "WG11 00:1x: AFTER replay-routes + offer-scope (reboxes handle_replay_shell_command, their anchor)"
+  },
+  {
+   "id": "c12-splice",
+   "train": "T3",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/splice/patch/c12-splice-patch.py",
+   "write": "python3 T/wp-c12/splice/patch/c12-splice-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-ui-scene",
+    "semio-framework-ui",
+    "semio-s-artifact-writer-writer"
+   ],
+   "ts": [
+    "os (TextEditor)",
+    "ui scene TS"
+   ],
+   "laws": "C12: ui-scene text_splice; writer lib (quintet, concurrent typing); bun test ✂️text-splice; mutate-writer-1; tsc os + boot"
+  },
+  {
+   "id": "av2",
+   "train": "T3",
+   "owner": "AV2",
+   "dry": "python3 T/wp-av2/av2-apply.py",
+   "write": "python3 T/wp-av2/av2-apply.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework",
+    "semio-framework-raster",
+    "semio-framework-plugin",
+    "semio-framework-plugin-host",
+    "semio-s-artifact-animate-presentation",
+    "semio-s-plugin-animate"
+   ],
+   "ts": [
+    "os (VideoRenderHost, TaskManager, ShellHost)",
+    "kernel TS"
+   ],
+   "laws": "AV2: av2-land.sh test block (kernel video_render, raster video, plugin wire, animate), av2-laws.ts, tsc-live; boot"
+  },
+  {
+   "id": "en2",
+   "train": "T3",
+   "owner": "EN2",
+   "dry": "zsh T/wp-en2/en2-land.sh dry",
+   "write": "zsh T/wp-en2/en2-land.sh write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-energy-model",
+    "semio-s-plugin-draw",
+    "semio-s-artifact-stdio-gltf",
+    "repo test crate (manifest-path)"
+   ],
+   "laws": "EN2: en2-land.sh native; draw describe regen"
+  },
+  {
+   "id": "s19-norm-examples",
+   "train": "T3",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-stage.py apply norm-examples",
+   "write": "python3 T/wp-s19/s19-stage.py apply norm-examples --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-plugin-norm",
+    "semio-s-artifact-norm-*"
+   ],
+   "laws": "S19: norm plugin + en1998 lib"
+  },
+  {
+   "id": "s19-norm-args",
+   "train": "T3",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-stage.py apply norm-args",
+   "write": "python3 T/wp-s19/s19-stage.py apply norm-args --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-norm-* ×13",
+    "semio-s-plugin-norm"
+   ],
+   "laws": "S19: law 15/15"
+  },
+  {
+   "id": "s19-norm-cleanup",
+   "train": "T3",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-stage.py apply norm-cleanup",
+   "write": "python3 T/wp-s19/s19-stage.py apply norm-cleanup --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-norm-en1994 (TS alias)"
+   ],
+   "laws": "-"
+  },
+  {
+   "id": "s19-norm-assets",
+   "train": "T3",
+   "owner": "S19",
+   "dry": "",
+   "write": "python3 T/wp-s19/s19-norm-assets.py /Users/ueli/Documents/semio T/wp-s19/payload-assets en1998",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-norm-en1998"
+   ],
+   "laws": "S19: norm-fixtures procedure (s19-norm-fixtures.sh → 15/15)"
+  },
+  {
+   "id": "s19-flow-extensions",
+   "train": "T3",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-stage.py apply flow-extensions",
+   "write": "python3 T/wp-s19/s19-stage.py apply flow-extensions --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-flow-flow",
+    "semio-framework-os-kernel",
+    "semio-framework",
+    "semio-s-plugin-procedural",
+    "semio-s-plugin-demonstrator"
+   ],
+   "ts": [
+    "os",
+    "kernel TS",
+    "renderer-wgpu"
+   ],
+   "laws": "S19: registry regen, tsc, s19-lane-vitest.sh, flow --lib, wasm32 flow/procedural/demonstrator"
+  },
+  {
+   "id": "s20-cad-solids",
+   "train": "T3",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-cad-solids.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-cad-solids.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-cad-cad"
+   ],
+   "laws": "S20: current_pane_exports_its_real_solids"
+  },
+  {
+   "id": "s20-process-formats",
+   "train": "T3",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-process-formats.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-process-formats.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-process-process3d"
+   ],
+   "laws": "S20"
+  },
+  {
+   "id": "s20-silent-exports",
+   "train": "T3",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-patch-silent-exports.py --dry-run",
+   "write": "python3 T/wp-s20/s20-patch-silent-exports.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-remodel-remodeling",
+    "semio-s-artifact-shooting-shooting"
+   ],
+   "laws": "S20"
+  },
+  {
+   "id": "w4-kind-specs",
+   "train": "T3",
+   "owner": "W4",
+   "dry": "python3 T/wp-w4/w4-kind-spec-identity.py --dry-run",
+   "write": "python3 T/wp-w4/w4-kind-spec-identity.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-flow-flow",
+    "semio-s-artifact-mathematical-equation",
+    "semio-s-artifact-shooting-shooting",
+    "semio-s-artifact-lowpoly-lowpoly",
+    "semio-s-artifact-forms-forms",
+    "semio-s-artifact-imperative-procedure",
+    "semio-s-artifact-sourcing-curation",
+    "semio-s-artifact-norm-contract",
+    "semio-s-artifact-norm-* ×15",
+    "semio-s-artifact-fem-2d",
+    "semio-s-artifact-fem-3d",
+    "semio-s-artifact-trinity-rewriting",
+    "semio-s-plugin-fem"
+   ],
+   "laws": "W4: artifact_kind_names_the_store_schema laws, norm app-surface, shooting io; next chain describe gate + w4-codec-probe.py 0 NO-CODEC",
+   "notes": "42 edits (W4 22:0x)"
+  },
+  {
+   "id": "w4-codec-gate",
+   "train": "T3",
+   "owner": "W4",
+   "dry": "python3 T/wp-w4/w4-kind-identity-gate.py --dry-run",
+   "write": "python3 T/wp-w4/w4-kind-identity-gate.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-plugin-describe"
+   ],
+   "laws": "W4: kind_identity_law_matches_the_fixture",
+   "notes": "8 edits + fixture; after w4-kind-specs"
+  },
+  {
+   "id": "h13-refill",
+   "train": "T4",
+   "owner": "H13",
+   "dry": "python3 T/wp-h13/h13-transport-refill-patch.py --dry-run",
+   "write": "python3 T/wp-h13/h13-transport-refill-patch.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-services",
+    "semio-framework-os-kernel",
+    "semio-framework-os-mcp"
+   ],
+   "ts": [
+    "os-mcp authenticated-hub-workspace TS"
+   ],
+   "laws": "H13: kernel byte-budget refill law; os-mcp hub-unavailable laws; Ajv oracle"
+  },
+  {
+   "id": "h14-codec-origin",
+   "train": "T4",
+   "owner": "H14",
+   "dry": "python3 T/wp-h14/h14-codec-origin.py",
+   "write": "python3 T/wp-h14/h14-codec-origin.py --write",
+   "revert": "l1-land (+ H14 backup dir)",
+   "crates": [
+    "semio-framework-plugin-host",
+    "semio-hub"
+   ],
+   "laws": "H14: owned-instance-open laws (codec_calls_answer…), hub residency law"
+  },
+  {
+   "id": "g12-live-catalog",
+   "train": "T4",
+   "owner": "G12",
+   "dry": "python3 T/wp-g12/g12-live-catalog.py --dry-run",
+   "write": "python3 T/wp-g12/g12-live-catalog.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-mcp"
+   ],
+   "laws": "G12: g12-gate.sh live-catalog-1 (check + quick + gateway build)"
+  },
+  {
+   "id": "z4-b123",
+   "train": "T4",
+   "owner": "Z4 (via R10)",
+   "dry": "python3 T/wp-z4/b123-fresh-clone.py /Users/ueli/Documents/semio",
+   "write": "python3 T/wp-z4/b123-fresh-clone.py /Users/ueli/Documents/semio --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-infinite",
+    "semio-framework-plugin-host"
+   ],
+   "ts": [
+    "repo-lib",
+    "assets",
+    "os",
+    "renderer-wgpu"
+   ],
+   "laws": "Z4: validateTaxonomy 0, generator contracts 0, fresh-clone law; R10 taxonomy after"
+  },
+  {
+   "id": "z4-lifecycle",
+   "train": "T4",
+   "owner": "Z4 (via R10)",
+   "dry": "python3 T/wp-z4/devcontainer-lifecycle/apply.py /Users/ueli/Documents/semio",
+   "write": "python3 T/wp-z4/devcontainer-lifecycle/apply.py /Users/ueli/Documents/semio --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-repo-cli (Go/TS side)"
+   ],
+   "ts": [
+    "repo-lib",
+    "repo-client",
+    "framework"
+   ],
+   "laws": "Z4: lifecycle law + mutants; R10 refresh + taxonomy for 🐳️containers/*/🔁️lifecycle"
+  },
+  {
+   "id": "r10-png",
+   "train": "T4",
+   "owner": "R10",
+   "dry": "python3 T/wp-r10/owned-png-host.py",
+   "write": "python3 T/wp-r10/owned-png-host.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os"
+   ],
+   "laws": "R10: host raster law 🔬️media-export-raster-unit"
+  },
+  {
+   "id": "r10-zip",
+   "train": "T4",
+   "owner": "R10",
+   "dry": "python3 T/wp-r10/owned-zip.py",
+   "write": "python3 T/wp-r10/owned-zip.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-deflate",
+    "semio-framework-os-kernel",
+    "semio-framework-os"
+   ],
+   "laws": "R10: deflate zip_archive tests"
+  },
+  {
+   "id": "r10-image",
+   "train": "T4",
+   "owner": "R10",
+   "dry": "python3 T/wp-r10/surface-image-error.py",
+   "write": "python3 T/wp-r10/surface-image-error.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-surface"
+   ],
+   "laws": "R10: surface unit tests"
+  },
+  {
+   "id": "r10-three",
+   "train": "T4",
+   "owner": "R10",
+   "dry": "python3 T/wp-r10/three-manifests.py",
+   "write": "python3 T/wp-r10/three-manifests.py --apply",
+   "revert": "l1-land",
+   "crates": [],
+   "ts": [
+    "renderer-react",
+    "infinite-world-r3f",
+    "bun.lock"
+   ],
+   "laws": "R10: bun install --frozen-lockfile --dry-run; verify dependencies literal-external"
+  }
+ ]
+}

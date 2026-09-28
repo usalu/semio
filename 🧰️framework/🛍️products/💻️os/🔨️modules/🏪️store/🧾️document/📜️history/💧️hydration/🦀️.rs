@@ -5,7 +5,7 @@ use crate::os_io::ArtifactRef;
 use crate::os_store::{
     ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, OwnerRef,
 };
-use crate::{CompositionPin, Edit, FromValue, Mutation, MutationDiff, OpBinary, OpText, ToValue};
+use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
 
@@ -405,7 +405,7 @@ where
                     };
                     let edit_id = self.pending_edit.as_ref().expect("pending typed edit remains retained").id.as_str();
                     if let Some(id) = &meta.mutation_id {
-                        if id.0 != edit_id && self.runtime.as_mut().expect("hydration runtime remains retained").seed_mutation(id.clone()).is_err() {
+                        if self.runtime.as_mut().expect("hydration runtime remains retained").seed_edit_operation(edit_id, id.clone()).is_err() {
                             return self.reject(MemberOpenDiagnostic::Replay);
                         }
                     }
@@ -563,8 +563,8 @@ where
                 if let Some(edit) = envelope.vcs.edits.get(self.record_index) {
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let validation = self.validation.as_mut().expect("validation projection remains retained");
-                        let next = match MutationDiff::apply(operation.diff(validation).diff(), validation) {
-                            Ok(next) => next,
+                        let next = match crate::os_vcs::apply_mutation(validation, operation) {
+                            Ok((next, _)) => next,
                             Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(validation, next);
@@ -596,8 +596,8 @@ where
                     let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return self.reject(MemberOpenDiagnostic::Replay) };
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("hydrated current remains retained");
-                        let next = match MutationDiff::apply(operation.diff(current).diff(), current) {
-                            Ok(next) => next,
+                        let next = match crate::os_vcs::apply_mutation(current, operation) {
+                            Ok((next, _)) => next,
                             Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(current, next);

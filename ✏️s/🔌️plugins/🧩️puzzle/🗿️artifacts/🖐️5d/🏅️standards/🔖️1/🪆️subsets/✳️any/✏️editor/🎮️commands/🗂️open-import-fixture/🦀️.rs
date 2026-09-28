@@ -7,8 +7,8 @@ use semio_framework_plugin::kernel::Effect;
 /// 2d's (122), so three editors mounted in one shell never collide on one open request.
 pub const PUZZLE5D_OPEN_IMPORT_REQUEST: u64 = 123;
 
-/// 🗂 Opens a file picker that re-dispatches `importFixture` once per
-/// `semio_framework::kernel::IMPORT_CHUNK_BYTES` page of the picked text.
+/// 🗂 Opens a file picker whose picked text the shell dispatches to `importFixture` in
+/// `semio_framework::kernel::IMPORT_CHUNK_BYTES` pages, reassembled by the framework before the action runs.
 pub fn open_import_fixture(ctx: &mut Puzzle5dActionCtx<'_>) {
     ctx.effects.push(Effect::RequestFileOpen {
         req: semio_framework_plugin::RequestId(PUZZLE5D_OPEN_IMPORT_REQUEST),

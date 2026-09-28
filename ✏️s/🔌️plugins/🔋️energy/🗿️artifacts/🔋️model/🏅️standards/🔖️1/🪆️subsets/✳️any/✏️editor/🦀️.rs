@@ -2136,6 +2136,7 @@ impl ArtifactEditor for EnergyModelEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -2159,18 +2160,6 @@ impl ArtifactEditor for EnergyModelEditor {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// 🌱️ The bounded initialization twin of the bounded owners above (same pairing as fem/sourcing).
-    /// Without it `begin_persisted_document_store_replacement` refuses every whole-document load with
-    /// `artifact-store.persisted-initializer-refused` — which is exactly how `setActiveExample`
-    /// (`Effect::LoadDocument` → the host's `loadDocumentArchive`) failed in the react shell.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, ENERGY_MODEL_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

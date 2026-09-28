@@ -1,6 +1,6 @@
 {
   "schema": "semio.hub.transient-apply-refusal-fixture/v1",
-  "description": "What a hub answers on a document socket when it refuses a Commands batch for a TRANSIENT reason: `ApplyOutcome::Rejected` whose `messages` hold exactly `answer` (a `HubTransientApplyRefusalMessageV1`, `🚧️refusal/🧬️schema`), so the client keeps the batch and resends it. `causes` are the transient refusals the hub has (the db engine could not admit the batch now; the document socket's command budget is empty until it refills; the sender's agent command rate is paced out), each with the reason the hub reports. `permanentCauses` are refusals that carry NO transient message (resending cannot help). `invalidMessages` are near misses a client must not treat as the transient refusal (Ajv oracle).",
+  "description": "What a hub answers on a document socket when it refuses a Commands batch for a TRANSIENT reason: `ApplyOutcome::Rejected` whose `messages` hold exactly `answer` (a `HubTransientApplyRefusalMessageV1`, `🚧️refusal/🧬️schema`), so the client keeps the batch and resends it. `causes` are the transient refusals the hub has (the db engine could not admit the batch now; the document socket's command budget is empty until it refills; the sender's agent command rate is paced out), each with the reason the hub reports. `permanentCauses` are refusals that carry NO transient message (resending cannot help). `invalidMessages` are near misses a client must not treat as the transient refusal (Ajv oracle). A batch the hub can NEVER admit carries instead exactly `batchLimitAnswer` (a `HubBatchLimitRefusalMessageV1`, code `hub.batch-limit`, level error) with the cause's reason: `batchLimitCauses` are the batch-size refusals (a batch beyond the document backbone's declaration; a db engine `LimitExceeded`), `batchLimitInvalidMessages` near misses (a warning level, the transient code, an empty message, an operation index).",
   "causes": [
     {
       "cause": "db-unavailable",
@@ -60,6 +60,47 @@
     {
       "level": "warning",
       "code": "hub.unavailable"
+    }
+  ],
+  "batchLimitCauses": [
+    {
+      "cause": "undeclared-batch",
+      "reason": "batch exceeds the document backbone's declaration: limit exceeded: envelopes"
+    },
+    {
+      "cause": "undeclared-batch",
+      "reason": "batch exceeds the document backbone's declaration: limit exceeded: batch-bytes"
+    },
+    {
+      "cause": "db-limit-exceeded",
+      "reason": "limit exceeded: artifact submit batch item credit"
+    }
+  ],
+  "batchLimitAnswer": {
+    "level": "error",
+    "code": "hub.batch-limit"
+  },
+  "batchLimitInvalidMessages": [
+    {
+      "level": "warning",
+      "code": "hub.batch-limit",
+      "message": "limit exceeded: envelopes"
+    },
+    {
+      "level": "error",
+      "code": "hub.unavailable",
+      "message": "limit exceeded: envelopes"
+    },
+    {
+      "level": "error",
+      "code": "hub.batch-limit",
+      "message": ""
+    },
+    {
+      "level": "error",
+      "code": "hub.batch-limit",
+      "message": "limit exceeded: envelopes",
+      "opIndex": 0
     }
   ]
 }

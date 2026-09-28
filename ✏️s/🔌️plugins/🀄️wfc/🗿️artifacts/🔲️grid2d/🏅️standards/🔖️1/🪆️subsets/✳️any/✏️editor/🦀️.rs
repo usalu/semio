@@ -699,6 +699,7 @@ impl ArtifactEditor for Grid2dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             ArtifactRetainedCommandInputs {
@@ -792,18 +793,6 @@ impl ArtifactEditor for Grid2dEditor {
             preview::BODY_KEY => preview::render(doc.snapshot, &config, doc.tool_run()).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
-    /// (`reset_document_effect`: the example switcher) through the host's persisted-envelope
-    /// replacement — the trait default REFUSES the envelope, which faults every document swap at
-    /// the archive-load boundary instead of loading the picked example.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, WFC_GRID2D_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

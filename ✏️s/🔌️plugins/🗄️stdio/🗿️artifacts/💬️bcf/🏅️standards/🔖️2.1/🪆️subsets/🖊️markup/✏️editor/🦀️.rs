@@ -266,6 +266,7 @@ impl ArtifactEditor for BcfAnyEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             ArtifactRetainedCommandInputs {
@@ -329,14 +330,6 @@ impl ArtifactEditor for BcfAnyEditor {
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
-    }
-
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, BCF_ANY_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn command_id(command: &Self::Command) -> &'static str {

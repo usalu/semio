@@ -6,32 +6,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "directoryJson",
-    "directorySessionBindingSha256",
-    "directoryAuthorizationGeneration",
-    "directoryReceiptSha256",
     "retiredLocalStudioIds"
   ],
   "properties": {
-    "directoryJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "directorySessionBindingSha256": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "directoryAuthorizationGeneration": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0,
-      "maximum": 9007199254740991,
-      "x-semio-state": "config"
-    },
-    "directoryReceiptSha256": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "retiredLocalStudioIds": {
       "type": "array",
       "items": {

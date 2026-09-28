@@ -312,10 +312,10 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
     let viewport = actions.iter().rev().find(|action| action.action == "nodeGraphViewport").expect("the moved camera is published");
     assert_eq!(
         viewport.args,
-        semio_framework::optional_json_to_dsl(Some(json!({
+        Some(semio_framework::dsl_value!({
             "surfaceId": surface_id,
             "viewport": { "x": after[0], "y": after[1], "zoom": ENGINE_SURFACES.with(|cell| { let map = cell.borrow(); let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") }; host.dag.host_snapshot.camera.zoom }) },
-        }))),
+        })),
         "the published viewport is exactly the camera the minimap committed"
     );
     drop_engine_surface(surface_id);

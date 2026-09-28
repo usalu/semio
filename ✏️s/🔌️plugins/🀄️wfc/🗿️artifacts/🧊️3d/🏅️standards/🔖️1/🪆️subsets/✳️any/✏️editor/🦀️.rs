@@ -471,18 +471,6 @@ impl ArtifactEditor for Wfc3dEditor {
         Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
-    /// 🏗️ Admits the whole-document replacement `setActiveExample`'s [`Effect::LoadDocument`] drives
-    /// through the host's persisted-envelope replacement. The trait default REFUSES the envelope, so
-    /// without this every example switch faults at the archive-load boundary instead of swapping the
-    /// document.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, WFC3D_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     /// 📬️ The document lane's one-item retained preparation. Without one, EVERY route declaring
     /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract
     /// and stays dispatch-dead however it is classified.
@@ -533,6 +521,7 @@ impl ArtifactEditor for Wfc3dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(Wfc3dCommandWork::new(tool_id));
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(

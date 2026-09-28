@@ -56,7 +56,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.csv".into(),
-        name: "Csv".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Csv", "Csv"),
         source_format: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

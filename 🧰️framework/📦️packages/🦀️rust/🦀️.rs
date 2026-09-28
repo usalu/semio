@@ -6,7 +6,7 @@ extern crate semio_framework_os_kernel as protocol_core;
 extern crate semio_framework_os_kernel as store;
 
 pub use ui_wgpu::wgpu::IconName;
-pub use ui_wgpu::wgpu::{Locale, Terminology};
+pub use semio_framework_os_kernel::{Locale, LocalizedLabel, Terminology};
 
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]
@@ -53,10 +53,10 @@ pub mod interaction {
 
 
 pub use action_bus::{
-    optional_json_to_dsl, ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
     ToolPayload, ToolRegistrationError, ToolWireAdmission,
 };
-pub use dsl::{from_dsl_value, to_dsl_value, DslValue};
+pub use dsl::{dsl_value, from_dsl_value, to_dsl_value, DslValue};
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity, TextError, TextSpan};
 
 // 🛂️ The declarative component model (layout/utilities/UiNode) lives in `ui_wgpu` now — re-import

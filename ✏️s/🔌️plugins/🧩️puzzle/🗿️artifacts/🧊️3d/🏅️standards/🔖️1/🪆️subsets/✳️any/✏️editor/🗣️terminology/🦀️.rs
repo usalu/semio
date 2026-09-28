@@ -42,7 +42,6 @@ semio_framework_plugin::app_labels! {
         target_volume_origin_required: native_en "Point at the ground plane to place a target volume", native_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren", reuse_en "Point at the ground plane to place a target volume", reuse_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren";
         import_invalid: native_en "That file is not a puzzle 3D artifact", native_de "Diese Datei ist kein Puzzle-3D-Artefakt", reuse_en "That file is not a puzzle 3D artifact", reuse_de "Diese Datei ist kein Puzzle-3D-Artefakt";
         import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
-        import_incomplete: native_en "That import arrived incomplete", native_de "Dieser Import ist unvollständig angekommen", reuse_en "That import arrived incomplete", reuse_de "Dieser Import ist unvollständig angekommen";
         export_fixture: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
         import_fixture: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";

@@ -1,0 +1,133 @@
+{
+  "ExampleRefusalCodeV1": {
+    "description": "📚️ The frozen fault codes of a refused example switch (`setActiveExample`): the id names no example the surface declares (`example.unknown`), the declared example's authored asset does not decode into the artifact's document (`example.undecodable`), or it decodes into the genesis document (`example.empty`). Rust `ExampleRefusalKind::code`, TypeScript `EXAMPLE_REFUSAL_CODES_V1`.",
+    "enum": [
+      "example.unknown",
+      "example.undecodable",
+      "example.empty"
+    ]
+  },
+  "ExampleRefusalMessagesV1": {
+    "description": "🗣️ The notice a shell shows for each example refusal, in English and German — Rust `ExampleRefusalKind::label`, TypeScript `EXAMPLE_REFUSAL_MESSAGES_V1`.",
+    "const": {
+      "example.unknown": {
+        "en": "This app has no example with that name.",
+        "de": "Diese App hat kein Beispiel mit diesem Namen."
+      },
+      "example.undecodable": {
+        "en": "The example could not be read: its file is outdated or damaged.",
+        "de": "Das Beispiel konnte nicht gelesen werden: Seine Datei ist veraltet oder beschädigt."
+      },
+      "example.empty": {
+        "en": "The example file is empty, so nothing was loaded.",
+        "de": "Die Beispieldatei ist leer, daher wurde nichts geladen."
+      }
+    }
+  },
+  "ExampleRefusalV1": {
+    "description": "🙅️ One refused example switch as it crosses a boundary: the frozen code, the example id the switch named, and the decoder's own detail (empty for `example.unknown` and `example.empty`). It travels as a `Fault` whose `code` is `code`, severity `warning`, never retryable, with `detail` as its one cause.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "code",
+      "exampleId",
+      "detail"
+    ],
+    "properties": {
+      "code": {
+        "$ref": "#/$defs/ExampleRefusalCodeV1"
+      },
+      "exampleId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "detail": {
+        "type": "string"
+      }
+    }
+  },
+  "ExampleRefusalFixture": {
+    "description": "📚️ THE example-seat predicate, language-agnostically: the empty id seats the app's own genesis document, an undeclared id is refused as `example.unknown` before anything decodes, and a declared example seats unless its asset is `undecodable` (`example.undecodable`) or decodes into the `genesis` document (`example.empty`). Answered by Rust `example_seat` + `example_decoded` (🛂️manifest/🦀️.rs) and TypeScript `exampleSeatOutcomeV1` (🛂️manifest/🟦️.ts).",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "messages",
+      "cases"
+    ],
+    "properties": {
+      "messages": {
+        "$ref": "#/$defs/ExampleRefusalMessagesV1"
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "exampleId",
+            "declared",
+            "decode",
+            "expected"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "exampleId": {
+              "type": "string"
+            },
+            "declared": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "decode": {
+              "enum": [
+                "document",
+                "genesis",
+                "undecodable"
+              ]
+            },
+            "expected": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "seat"
+                  ],
+                  "properties": {
+                    "seat": {
+                      "enum": [
+                        "genesis",
+                        "example"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "refusal"
+                  ],
+                  "properties": {
+                    "refusal": {
+                      "$ref": "#/$defs/ExampleRefusalCodeV1"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

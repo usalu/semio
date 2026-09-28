@@ -338,16 +338,96 @@ pub fn generation2d_admit_publication_authority(
         .map_err(|_| "generation2d-publication.saturated")
 }
 
+/// 🔐️ The ONE lease the app grants ITSELF for a replacement the host began (`loadDocumentArchive`, a whole-document load
+/// → `build_document_store_initialization_job`): base, parent and live revision are all the generation the host started
+/// the replacement on — the only publication that commit can accept — with the domain's own credits. A holder that
+/// admitted a HOST lease for the same operation first keeps it (`Err`). The twin of `process3d_app_publication_lease`.
+///
+/// A self-grant is NOT a host publication and does not live in the host's fixed direct-mapped table, where it would refuse
+/// an unrelated host publication mapping to the same slot. The host drives one replacement per instance at a time, so this
+/// authority holds exactly one lease and a new self-grant supersedes the load the host already abandoned; it is released
+/// through `generation2d_release_app_publication_authority` at validation, cancellation, fault and initializer close.
+fn generation2d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation2dPublicationLease)>> {
+    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation2dPublicationLease)>>> = std::sync::OnceLock::new();
+    LEASE.get_or_init(|| std::sync::Mutex::new(None))
+}
+
+/// 🔎️ One lease by its exact key, from the host table first and the app self-grant second.
+fn generation2d_publication_lease_by_key(key: semio_framework_job::FixedOperationKey) -> Result<Option<Generation2dPublicationLease>, &'static str> {
+    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    if let Some(lease) = leases.get(key) {
+        return Ok(Some(*lease));
+    }
+    drop(leases);
+    let app = generation2d_app_publication_lease().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    Ok(app.as_ref().filter(|(held, _)| *held == key).map(|(_, lease)| *lease))
+}
+
+/// 🔎️ One lease by operation, from the host table first and the app self-grant second.
+fn generation2d_publication_lease_by_operation(operation: semio_framework_job::OperationId) -> Result<Option<Generation2dPublicationLease>, &'static str> {
+    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    if let Some((_, lease)) = leases.get_operation(operation) {
+        return Ok(Some(*lease));
+    }
+    drop(leases);
+    let app = generation2d_app_publication_lease().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    Ok(app.as_ref().filter(|(_, lease)| lease.operation == operation.0).map(|(_, lease)| *lease))
+}
+
+/// 🔐️ Grants the app's own lease for `operation` — see [`generation2d_app_publication_lease`].
+pub fn generation2d_admit_app_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(), &'static str> {
+    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    if leases.get_operation(operation).is_some() {
+        return Err("generation2d-publication.operation-duplicate");
+    }
+    drop(leases);
+    let mut app = generation2d_app_publication_lease().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    if app.as_ref().is_some_and(|(_, lease)| lease.operation == operation.0) {
+        return Err("generation2d-publication.operation-duplicate");
+    }
+    *app = Some((
+        generation2d_publication_key(operation, generation),
+        Generation2dPublicationLease {
+            operation: operation.0,
+            generation: generation.0,
+            base_revision: generation.0,
+            parent_revision: generation.0,
+            live_revision: generation.0,
+            maximum_items: GENERATION2D_MAXIMUM_DOMAIN_ITEMS,
+            maximum_output_pages: GENERATION2D_MOUNTED_OUTPUT_CHANNELS,
+            maximum_controls: GENERATION2D_MOUNTED_CONTROL_CREDITS,
+            closing: false,
+            terminal: false,
+        },
+    ));
+    Ok(())
+}
+
+/// 🔐️ Releases the app-admitted lease of `operation` (a host-admitted one is the host's to release).
+pub fn generation2d_release_app_publication_authority(operation: semio_framework_job::OperationId) -> bool {
+    let Ok(mut app) = generation2d_app_publication_lease().try_lock() else { return false };
+    if app.as_ref().is_none_or(|(_, lease)| lease.operation != operation.0) {
+        return false;
+    }
+    app.take().is_some()
+}
+
 pub fn generation2d_refresh_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_revision: u64) -> Result<(), &'static str> {
+    let key = generation2d_publication_key(operation, generation);
     let mut leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
-    let lease = leases.get_mut(generation2d_publication_key(operation, generation)).ok_or("generation2d-publication.stale-authority")?;
+    if let Some(lease) = leases.get_mut(key) {
+        lease.live_revision = live_revision;
+        return Ok(());
+    }
+    drop(leases);
+    let mut app = generation2d_app_publication_lease().try_lock().map_err(|_| "generation2d-publication.contended")?;
+    let Some((_, lease)) = app.as_mut().filter(|(held, _)| *held == key) else { return Err("generation2d-publication.stale-authority") };
     lease.live_revision = live_revision;
     Ok(())
 }
 
 pub fn generation2d_validate_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(u64, u64), &'static str> {
-    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
-    let lease = leases.get(generation2d_publication_key(operation, generation)).ok_or("generation2d-publication.stale-authority")?;
+    let lease = generation2d_publication_lease_by_key(generation2d_publication_key(operation, generation))?.ok_or("generation2d-publication.stale-authority")?;
     if lease.generation != generation.0 || lease.live_revision != generation.0 || lease.base_revision != lease.live_revision || lease.parent_revision != lease.base_revision {
         return Err("generation2d-publication.stale-aba-parent");
     }
@@ -375,8 +455,7 @@ fn generation2d_validate_atomic_lease(lease: Generation2dPublicationLease, opera
 
 /// 🔐️ Fail-closed Generation2d authority used by the shared atomic replacement branch.
 pub fn generation2d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
-    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
-    let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("generation2d-publication.authority-missing")?;
+    let lease = generation2d_publication_lease_by_operation(operation)?.ok_or("generation2d-publication.authority-missing")?;
     #[cfg(test)]
     let lease = {
         let mut lease = lease;
@@ -403,8 +482,7 @@ pub fn generation2d_validate_atomic_publication_authority(operation: semio_frame
 }
 
 pub fn generation2d_publication_item_credit(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<usize, &'static str> {
-    let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
-    let lease = leases.get(generation2d_publication_key(operation, generation)).ok_or("generation2d-publication.stale-authority")?;
+    let lease = generation2d_publication_lease_by_key(generation2d_publication_key(operation, generation))?.ok_or("generation2d-publication.stale-authority")?;
     if lease.maximum_output_pages != GENERATION2D_MOUNTED_OUTPUT_CHANNELS || lease.maximum_controls != GENERATION2D_MOUNTED_CONTROL_CREDITS {
         return Err("generation2d-publication.domain-credits-lost");
     }
@@ -3146,6 +3224,9 @@ struct Generation2dStoreInitializationAuthority {
 
 impl Generation2dStoreInitializationAuthority {
     fn new(envelope: store::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+        if generation2d_validate_publication_authority(operation, generation).is_err() {
+            let _ = generation2d_admit_app_publication_authority(operation, generation);
+        }
         let (base_revision, parent_revision) = generation2d_validate_publication_authority(operation, generation).unwrap_or((u64::MAX, u64::MAX));
         Self {
             operation,
@@ -3385,7 +3466,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                             .mutation_meta
                             .get(index)
                             .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(generation2d_copy_string(&id.0).unwrap_or_default()));
-                        match runtime.seed_mutation(id) {
+                        match runtime.seed_edit_operation(&entry.id, id) {
                             Ok(()) => self.phase = Generation2dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
                                 self.fault = Some(error.into_bytes());
@@ -3536,6 +3617,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
             Generation2dStoreInitializationPhase::RetireCancelled | Generation2dStoreInitializationPhase::RetireFault => match self.pump_retirement(GENERATION2D_OWNER_BYTES) {
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
+                    generation2d_release_app_publication_authority(self.operation);
                     *self.initial_digest = None;
                     *self.edit_digest = None;
                     self.terminal_handoff = true;
@@ -3599,6 +3681,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
         match self.pump_retirement(maximum_bytes.min(GENERATION2D_OWNER_BYTES)) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
+                generation2d_release_app_publication_authority(self.operation);
                 *self.initial_digest = None;
                 *self.edit_digest = None;
                 self.terminal_handoff = true;

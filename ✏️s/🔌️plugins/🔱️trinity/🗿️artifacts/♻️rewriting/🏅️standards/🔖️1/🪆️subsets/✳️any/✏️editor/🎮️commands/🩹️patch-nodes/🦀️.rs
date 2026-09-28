@@ -26,9 +26,10 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
 
 /// 🩹️ Patches `name` or `kind` of the named nodes of the rule's working (before) graph — or, when
 /// `node_ids` is empty, of the nodes selected in the `graph` domain, which is what a rail press means.
-/// Every request that cannot move the document is refused by name (`mutation.target-missing`,
-/// `app.command.invalid-args`) instead of answering an empty emit: the silent empty emit read as an
-/// accepted edit that moved nothing (S15, session 11).
+/// Every request that cannot move the document is refused by name instead of answering an empty emit (the
+/// silent empty emit read as an accepted edit that moved nothing, S15 session 11): `app.command.targets-required`
+/// when neither `nodeIds` nor a selection names a node — an agent has no selection and names them —
+/// `mutation.target-missing`, `app.command.invalid-args`.
 pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if !matches!(field, "name" | "kind") {
@@ -40,7 +41,7 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], select
     }
     let targets = if node_ids.is_empty() { selection } else { node_ids };
     if targets.is_empty() {
-        return Err(invalid("patchNodes needs node ids or a node selection in the graph".into()));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.targets-required"), "patchNodes needs the nodes it patches: name them in nodeIds, or select them in the graph"));
     }
     let fixture = JackSnapshot::from_json(&state.before_fixture_json).map_err(|error| invalid(format!("the working graph does not decode: {error}")))?;
     let nodes = fixture.nodes();

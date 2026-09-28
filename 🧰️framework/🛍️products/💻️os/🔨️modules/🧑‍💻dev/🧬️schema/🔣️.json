@@ -780,6 +780,889 @@
           "minLength": 1
         }
       }
+    },
+    "ProgramMatrixRenderedEditV1": {
+      "description": "A program-matrix verb driven through the program's own rendered editor instead of the Actions rail: a revision-bound verb (`set-cell`, `set-node`) needs the document revision the render stamped into the control's binding, which no staged rail argument can know. The harness types `value` into the inline commit-on-blur input `control` (a selector inside the window body) and commits it with Enter, as a user does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "control",
+        "value"
+      ],
+      "properties": {
+        "control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "ProgramMatrixPinsV1": {
+      "description": "The program matrix's pins (`🧫️fixtures/🧮️program-matrix.json`): the verb each plugin / kind (`<plugin>/<kind>[/<subset>]`) is driven with, its staged rail arguments or its rendered edit (keyed `<plugin|kind>.<verb>`), pre-verbs (`!` = staged and submitted), the origin plugin of re-hosted kinds, and the hub sweep's kind verbs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "liveId",
+        "excludedKinds",
+        "pluginVerbs",
+        "pluginArgs",
+        "kindVerbs",
+        "kindPre",
+        "kindArgs",
+        "pluginEdits",
+        "kindEdits",
+        "kindOrigin",
+        "hubKindVerbs",
+        "hubKindPre"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os-dev.program-matrix-pins/v1"
+        },
+        "liveId": {
+          "type": "string",
+          "pattern": "^@"
+        },
+        "excludedKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "pluginVerbs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "pluginArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(/[a-z0-9-]+)*\\.[A-Za-z][A-Za-z0-9-]*$"
+          }
+        },
+        "kindVerbs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "kindPre": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9-]*!?$"
+          }
+        },
+        "kindArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(/[a-z0-9-]+)*\\.[A-Za-z][A-Za-z0-9-]*$"
+          }
+        },
+        "pluginEdits": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(/[a-z0-9-]+)*\\.[A-Za-z][A-Za-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/ProgramMatrixRenderedEditV1"
+          }
+        },
+        "kindEdits": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(/[a-z0-9-]+)*\\.[A-Za-z][A-Za-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/ProgramMatrixRenderedEditV1"
+          }
+        },
+        "kindOrigin": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "hubKindVerbs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "hubKindPre": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "InteractionLatencyScenarioV1": {
+      "description": "One interaction the latency gate (`verify latency`) drives in the served s shell: the program it opens from Home, the window (id suffix, empty = the first window the program opened) and the target inside its body, the gesture (`type`: keys; `drag`: a pressed pointer; `hover`: the pointer alternately onto a point whose hover the target paints into `hoverAttribute`, and off it), and the bounds: paints and React commits per input always judged, p95 input → frame only under the load ceiling.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pluginId",
+        "appId",
+        "window",
+        "target",
+        "action",
+        "inputs",
+        "intervalMs",
+        "maxP95Ms",
+        "maxPaintsPerInput"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "pattern": "^s\\.[^.]+\\.[^@]+@"
+        },
+        "window": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "enum": [
+            "type",
+            "drag",
+            "hover"
+          ]
+        },
+        "hoverAttribute": {
+          "type": "string",
+          "pattern": "^data-"
+        },
+        "inputs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "intervalMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxP95Ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxPaintsPerInput": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxCommitsPerInput": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "if": {
+        "properties": {
+          "action": {
+            "const": "hover"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "hoverAttribute"
+        ]
+      }
+    },
+    "InteractionLatencyScenariosV1": {
+      "description": "The latency gate's scenarios (`🧫️fixtures/⏱️interaction-latency.json`) and the per-core load ceiling above which timings are not judged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "loadCeilingPerCore",
+        "scenarios"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os-dev.interaction-latency-scenarios/v1"
+        },
+        "description": {
+          "type": "string"
+        },
+        "loadCeilingPerCore": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/InteractionLatencyScenarioV1"
+          }
+        }
+      }
+    },
+    "BootPayloadByKindV1": {
+      "description": "Count, transferred and decoded megabytes per boot resource kind (every kind present).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "json",
+        "font",
+        "style",
+        "wasm",
+        "other"
+      ],
+      "properties": {
+        "module": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "font": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "style": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "wasm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "other": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "transferMB",
+            "decodedMB"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transferMB": {
+              "type": "number",
+              "minimum": 0
+            },
+            "decodedMB": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "BootBudgetFixtureV1": {
+      "description": "The boot budget of the served s shell (`verify boot`, `🧫️fixtures/🥾️boot-budget.json`): the bounds — payload per resource kind and the warm reload's transfer always judged, timings only under the per-core load ceiling — and the law vectors whose expected kinds, payload and verdict an independent implementation computed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "budget",
+        "vectors"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os-dev.boot-budget/v1"
+        },
+        "description": {
+          "type": "string"
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "loadCeilingPerCore",
+            "serve",
+            "cold",
+            "warm",
+            "payload"
+          ],
+          "properties": {
+            "loadCeilingPerCore": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "serve": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maxReadyMs"
+              ],
+              "properties": {
+                "maxReadyMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "cold": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maxFcpMs",
+                "maxReadyMs",
+                "maxPluginsLoadedMs",
+                "maxLongTaskMs"
+              ],
+              "properties": {
+                "maxFcpMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "maxReadyMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "maxPluginsLoadedMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "maxLongTaskMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "warm": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maxReadyMs",
+                "maxTransferMB"
+              ],
+              "properties": {
+                "maxReadyMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "maxTransferMB": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "module",
+                "json",
+                "font",
+                "style",
+                "wasm",
+                "other"
+              ],
+              "properties": {
+                "module": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "json": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "font": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "style": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "wasm": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "other": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxCount",
+                    "maxDecodedMB"
+                  ],
+                  "properties": {
+                    "maxCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxDecodedMB": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "resources",
+              "expectedKinds",
+              "expectedPayload",
+              "measurement",
+              "expectedVerdict"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "url",
+                    "initiatorType",
+                    "transferSize",
+                    "decodedBodySize"
+                  ],
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "initiatorType": {
+                      "type": "string"
+                    },
+                    "transferSize": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "decodedBodySize": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "expectedKinds": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "module",
+                    "json",
+                    "font",
+                    "style",
+                    "wasm",
+                    "other"
+                  ]
+                }
+              },
+              "expectedPayload": {
+                "$ref": "#/$defs/BootPayloadByKindV1"
+              },
+              "measurement": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "load",
+                  "cores",
+                  "serveReadyMs",
+                  "cold",
+                  "warm"
+                ],
+                "properties": {
+                  "load": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "cores": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "serveReadyMs": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "cold": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "ttfbMs",
+                      "fcpMs",
+                      "readyMs",
+                      "pluginsLoadedMs",
+                      "plugins",
+                      "longTaskMs",
+                      "longTasks",
+                      "payload"
+                    ],
+                    "properties": {
+                      "ttfbMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "fcpMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "readyMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "pluginsLoadedMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "plugins": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "total",
+                          "loaded"
+                        ],
+                        "properties": {
+                          "total": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "loaded": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      },
+                      "longTaskMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "longTasks": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "payload": {
+                        "$ref": "#/$defs/BootPayloadByKindV1"
+                      }
+                    }
+                  },
+                  "warm": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "ttfbMs",
+                      "fcpMs",
+                      "readyMs",
+                      "pluginsLoadedMs",
+                      "plugins",
+                      "longTaskMs",
+                      "longTasks",
+                      "payload"
+                    ],
+                    "properties": {
+                      "ttfbMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "fcpMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "readyMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "pluginsLoadedMs": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "plugins": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "total",
+                          "loaded"
+                        ],
+                        "properties": {
+                          "total": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "loaded": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      },
+                      "longTaskMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "longTasks": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "payload": {
+                        "$ref": "#/$defs/BootPayloadByKindV1"
+                      }
+                    }
+                  }
+                }
+              },
+              "expectedVerdict": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "status",
+                  "timingJudged",
+                  "violations"
+                ],
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "pass",
+                      "fail",
+                      "blocked"
+                    ]
+                  },
+                  "timingJudged": {
+                    "type": "boolean"
+                  },
+                  "violations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

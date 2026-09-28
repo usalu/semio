@@ -31,7 +31,7 @@ pub mod import_registers_csv {
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-registers-csv")]
     pub struct ImportRegistersCsv {
-        pub csv: String,
+        pub payload: String,
         pub strategy: String,
     }
 
@@ -43,8 +43,35 @@ pub mod import_registers_csv {
             other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("architect.import-strategy-unknown"), format!("importRegistersCsv has no merge strategy \"{other}\""))),
         };
         let mut next_program = doc.snapshot.clone();
-        import_registers_csv(&mut next_program, &payload.csv, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.csv.chars().take(48).collect::<String>())))?;
+        import_registers_csv(&mut next_program, &payload.payload, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
         Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
+    }
+}
+
+pub mod import_registers_csv_request {
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
+    use dsl::{FromValue, ToValue};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+
+    /// 🪪️ This app's CSV file-open request id — distinct from its program picker (110) and every other plugin's.
+    pub const ARCHITECT_IMPORT_CSV_REQUEST_ID: u64 = 132;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[dsl(keyword = "import-registers-csv-request")]
+    pub struct ImportRegistersCsvRequest {}
+
+    /// 📂️ Asks the shell for one CSV file; the framework reassembles the picked file and `importRegistersCsv`
+    /// receives it whole as its `payload` (merge strategy `upsert`).
+    pub fn handle(_payload: &ImportRegistersCsvRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+        Ok(Emit::effect(Effect::RequestFileOpen {
+            req: semio_framework_plugin::RequestId(ARCHITECT_IMPORT_CSV_REQUEST_ID),
+            accept: ".csv,text/csv".into(),
+            read_as: Some("text".into()),
+            import_action: "importRegistersCsv".into(),
+            multiple: false,
+        }))
     }
 }
 

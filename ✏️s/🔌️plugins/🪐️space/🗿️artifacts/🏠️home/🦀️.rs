@@ -33,7 +33,7 @@ pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_p
 pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.shome".into(),
-        name: "S Home".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("S Home", "S-Start"),
         source_format: S_HOME_DOCUMENT_SCHEMA.into(),
         component_kind: "home".into(),
         dimension: "data".into(),

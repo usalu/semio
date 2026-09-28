@@ -12,11 +12,15 @@ serves 6510–6519. Private cargo target: `.tmp-ticket/wp-h13/target` (build-dir
 |---|------|--------|
 | 1 | H11's P0 agent ceiling + agent roles + check-in cause + interpreter cancellation: semio-hub `--all-features --lib --tests`, os-hub bin, os-mcp green on the current tree; new laws run | **DONE (14b):** semio-hub compiles on today's tree (H14 check 13:16; my bin/lib suites below); os-mcp check EXIT 0 12:40 + gateway 12:41; P0 bin laws 8/8, lib laws 7/7, os-mcp laws 8/8 (`hold4b-*.txt`) |
 | 2 | Live P0 proof: `wp-g11/g11-refused-relay-probe.ts` against my own current-tree hub (fresh root) | Hub side proven 19:2x (16/16 vs 5/16 pre-P0). **14b MCP leg LIVE 12:15:** read agent binds with the 🔗️remote fix; edit agent relay-acknowledged; revoke → PERMISSION_DENIED; read agent's edit never reaches the hub, but the gateway answers SUCCEEDED on a local `plugin:note` session → G12. `agent-ceiling-check` on a current-tree hub **waits for ALL** (a channel-19 hub refuses the channel-18 B3 catalog) |
-| 3 | Hub suite on the current tree (`os-hub:test`, `os-hub:test-all-features`; rows 2.1–2.3) | **os-hub:test-all-features EXIT 0 14:09** (lib 247 pass / 19 ignored, bin 176 pass; `hold4b-all-features.txt`); default-feature suite = hold 5 |
-| 4 | C11/C12 routed defect: Check In refused `codec-refused` → root cause + fix | Fix landed 19:15; kernel laws **2/2 PASS 20:11**; guest law red once on its own non-server-minted genesis id (fixed 20:3x), re-run blocked by peers' plugin lib-test compile errors (6) → window 3. Docstring misplacement → prepared patch `h13-docstring-restore.py` (window 3). Live re-proof = 7800 on ALL (C12 STEP 6) |
+| 3 | Hub suite on the current tree (`os-hub:test`, `os-hub:test-all-features`; rows 2.1–2.3) | **DONE:** all-features EXIT 0 14:09 (lib 247 / 19 ignored, bin 176; `hold4b-all-features.txt`); **default features EXIT 0 14:35** (lib 247, bin 164; `hold5-hub-default.txt`) |
+| 4 | C11/C12 routed defect: Check In refused `codec-refused` → root cause + fix | Fix landed 19:15; kernel laws 2/2 PASS 20:11; docstring restored 13:1x (rule 22); **guest law + restored viewer law 2/2 PASS 14:32** (`hold5-plugin-codec-law.txt`). Live re-proof = 7800 on ALL (C12 STEP 6) |
 | 5 | pg/neo4j live gates (row 2.4): backend-up → two-client-e2e + document-growth-e2e pg/neo4j → backend-down | blocked until ALL: needs a channel-19 catalog (B3 refused by today's binary); all-driver binary ready (`s14-h13-bin/os-hub-all-drivers-1404`) |
-| 6 | DB1 greeting-storm / storm-ratio (row 2.6) + permanent hostile-input/fuzz harness (row 2.13) | hostile-input-check (fixture seeds + 100..109) + reopen-storm-check all = hold 5 (queued) |
+| 6 | DB1 greeting-storm / storm-ratio (row 2.6) + permanent hostile-input/fuzz harness (row 2.13) | hold 5: every hostile law green in cargo (3 enumerated + 13 generative seeds, 0 findings) but both verbs published false `fail` (chunk-split line reader) → **harness fixed 17:0x** (`runLawProcess`), re-run = hold 6; storm: unit + fs green (fs storm/serial 0.39), **sqlite RED 0.64 > 0.5** (real) → see 14c log |
 | 7 | C12 P1 (coordinator 20:0x): writers' post-cut batch refused `DB I/O aggregate admission exhausted` → all typing lost | (b) **DONE**: bin law + unit law PASS (hold 4b); live proof waits for ALL. (a) H14. G12 relay (transport wedge) root-caused → prepared patch `h13-transport-refill-patch.py` (window 3) |
+| 8 | 14c: SQLite backend serializes every DB I/O step on one connection and writes (stage + WAL sync) for every read | **LANDED 17:31** WAL reader connections; law reads-beside-a-held-write-lock-and-never-write PASS; kernel-db lib 734/736 (reds = wall-ratio timing only); `os-hub:test-all-features` EXIT 0 18:18; storm turns ~700 → 513; wall ratio needs an idle machine |
+| 9 | 14c: db shutdown hang (`PoolUse` deadline, stranded retirement cursor) | **LANDED 17:44** root fix `enter_terminal` wakes the retirement; law PASS, mutant reproduces the hang |
+| 10 | 14c: close ring hands a backend's cleanup fault to unrelated callers | **LANDED 18:04** per-backend routing; law PASS 18:08; hub suite EXIT 0 18:18 |
+| 11 | 14c: hostile-input / reopen-storm verbs misread chunk-split output | **LANDED 17:04** shared `runLawProcess`; hostile-input-check PASS 17:20 (row 2.13 green) |
 
 ### Session 14 log
 
@@ -195,3 +199,169 @@ Successor agent (2026-09-28 12:0x, after the usage cut + app restart; guest free
   (log `s14-h13-hub-8010-b-8010-1.log`; process exited, nothing left running). ⇒ `agent-ceiling-check`, the transient-refusal live proof
   and the pg/neo4j e2e gates run against a clone of the chain's ALL catalog after `final-publish.rc`.
 - 14:0x T14: plugin lib tests compile again → the guest codec law + os-mcp lease readers are the first steps of hold 5 (queued 13:3x).
+
+### Session 14c
+
+Successor agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart; chain relaunched 16:55:46, guest freeze ON).
+
+- 17:0x **reconcile.** No half-applied hunk: `git status` clean for `🌎️hub` and os-mcp `🌉️mcp`, everything auto-committed
+  (`dfe2687f7db` 16:29); newest hub files 13:52–13:58 (lease corpus re-seal, H14's trusted-catalog/two-author fixtures, hub
+  script). The predecessor's hold 5 (`h13-hold-5.sh`, native lane) had **finished 14:35:39 rc 0** before the cut; results
+  (captures `s14-h13-logs/hold5-*.txt`):
+  - guest codec law `the_codec_table_mirrors_and_passes_through_a_populated_pair_without_aborting` + the restored
+    `viewer_rejects_every_contract_mutating_verb` **2/2 PASS** (EXIT 0 14:32) → Check In fix proven on the guest twin.
+  - os-mcp `authenticated_hub*` lease readers **9/9 PASS** (EXIT 0 14:33; lease corpus at channel 19).
+  - `os-hub:test` (default features) **EXIT 0 14:35**: lib 247 pass, bin 164 pass.
+  - `hostile-input-check` (fixture seeds) and `--seed-range 100..109 --locale de`: **every cargo law run printed
+    `test result: ok. 1 passed`** (13/13 in the fuzz capture; each generative seed `396 requests, 8 socket sequences,
+    0 findings`), yet the verb published `FAIL` ("enumerated laws 2/3", "792 requests" for 3 seeds; fuzz "findings at
+    seeds 103, 108" with no finding printed). **Harness defect:** the law runner split every output CHUNK on `\n`, so a
+    line cut between two pipe chunks (or interleaved with stderr) never matched the verdict / count regexes.
+  - `reopen-storm-check all`: unit PASS (24 grown docs, storm 258 ms, welcome max 217 ms); fs **PASS in cargo** (storm/serial
+    0.39) but published failing — same chunk-split reader in the os kernel verb; **sqlite RED for real**: `24 greetings at
+    once took 680 ms, one after another 1061 ms: the storm serializes` (ratio 0.64, bound `stormToSerialRatioMax` 0.5;
+    storm census 456 tasks / 726 turns vs serial 456 / 465; IndexRead turns 243 vs fs 84, IndexList 152 vs 96).
+- 17:0x **harness fix (TS only, hub + os-kernel script + acceptance module; not guest-linked):** one shared law runner
+  `runLawProcess(command, args, {cwd, env}, onInterrupt?)` in the acceptance orchestration module (UTF-8 decoding per stream
+  across chunk boundaries, per-stream unfinished tail, SIGINT forwarding) replaces both hand-rolled collectors
+  (`HostileInputCheckScript` in `🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `ReopenStormCheckScript` in the os kernel
+  `📜️script.ts`). tsc: os-hub-ts project **0 errors** (`tsc-os-hub-ts-6.txt`, covers the hub script + the acceptance module);
+  os kernel script scoped (`wp-h13/tsc/tsconfig-os-kernel-script.json`) 54 pre-existing errors (53 TS18046 + 1 TS7016 in a
+  pack test), none in the edited region (`tsc-os-kernel-script-1.txt`). Transport-refill patch **dry-run clean 17:02**
+  (21 pending, 0 problems).
+- 17:06 hold 6 (`h13-hold-6.sh`, native lane, pid 84058): hostile-input-check fixture seeds, reopen-storm fs+sqlite, sqlite ×2.
+- 17:20–17:23 **hold 6 results** (`hold6-*.txt`, load 47–52 with the chain's hub-prewarm): `hostile-input-check` **PASS**
+  (oracle, enumerated 3/3, generative 3/3 seeds, 1188 requests / 24 socket sequences — the fixed reader now counts all 3 seeds)
+  → row 2.13 green on today's tree. Storm laws RED under load for BOTH backends: fs storm/serial **0.88** (was 0.39 at 14:34),
+  sqlite 0.78 and **1.41** → the ratio is not load-independent: with every core taken by the chain a storm gains no
+  parallelism; no verdict on row 2.6 until an idle machine. Structural sqlite serialization regardless of load
+  (`🛢️db/🗄️storage/🪶️sqlite/🦀️.rs`): ONE `Connection` behind a `Mutex` serves every DB I/O step of every worker, and every
+  read (WAL/snapshot/index/payload) stages through `db_io_stage` = an INSERT + DELETE write per read (WAL `synchronous=FULL`
+  → a WAL sync per read). Proposed (asked main 17:2x, kernel-db is hub-closure-only): WAL reader connections — single-statement
+  reads on any free reader, multi-step blob reads pinned to one reader inside one read transaction (one snapshot, no staging
+  write), writes + catalog stay on the writer; in-memory databases unchanged.
+- **NEW db defect (routed H14 via main 17:2x):** sqlite run 3 died in the throughput law's post-serial `database.shutdown` —
+  `database shutdown deadline elapsed in phase Some(PoolUse): … retained pool-use owners 2 … artifact_retirement: 1` after
+  120 s (`hold6-reopen-storm-sqlite-3.txt`, `⏱️throughput/🦀️.rs:245`); 1 in 4 sqlite runs today.
+- 17:3x **coordinator GO** for the SQLite readers (kernel-db is hub-closure-only; land now, green before `final-publish.rc`, else
+  revert + window 3) and **H13 owns the shutdown hang** (H14 wave B).
+- 17:31 **SQLite WAL readers LANDED** (`wp-h13/h13-sqlite-readers-patch.py`, idempotent; chain hub-prewarm had ended 17:13):
+  `🛢️db/🗄️storage/🪶️sqlite/🦀️.rs` — `SQLITE_READERS` = 16 read-only WAL connections (lazy, `cache_size` 1 MiB); one-statement and
+  listing reads (`query_step`, shared with the writer path) on any free reader; blob reads (WAL range, snapshot, index run,
+  payload) pinned to one reader inside one read transaction, page by page with SQLite incremental blob I/O on the located rowid
+  (`snapshot_blob_step`/`blob_page_step`: no `db_io_stage` write, no WAL sync, one snapshot); a read that already progressed on
+  the writer stays there; every reader held → the writer's staged path; catalog root + leases + in-memory databases unchanged;
+  operation close ends/rolls back a pinned read; backend close drops the readers. rusqlite `blob` feature (kernel-db
+  `Cargo.toml`, features only — no lock change). Law `file_reads_run_on_wal_readers_beside_a_held_write_lock_and_never_write`
+  (page-lifecycle lengths; an independent rusqlite connection holds `BEGIN IMMEDIATE` while 12 concurrent reads run; bytes equal
+  the oracle's own reads; oracle `data_version` + `-wal` length unchanged).
+  - hold 7: `check -p kernel-db --features sqlite --lib --tests` **EXIT 0 17:32** (warnings = type-checked). sqlite laws **3/8**:
+    every failure `database is locked` — **root cause:** operation cleanup (`close_operation_step`) ALWAYS ran
+    `DELETE FROM db_io_stage` on the writer, so even a read that never staged took the write lock at close and waited behind the
+    oracle's lock (5 s busy timeout ×N → 405 s); and the lane's process-global `db_io_maintenance_step` (close ring) returned that
+    foreign backend's cleanup error to UNRELATED in-memory tests' `close()`/`len()` (see finding below). **Fix 17:42:** cleanup
+    deletes only when a stage row exists (`SELECT EXISTS` first — a read on the writer, no lock).
+  - **Finding (lane isolation, db storage, not fixed — route H14):** `db_io_maintenance_step()` (`🗄️storage/🦀️.rs:5353`) drives
+    the global close ring; `close_db_io_backend` (3519) and `db_io_wait_task_retirement` (5328) return ANY backend's cleanup error
+    to their unrelated caller (observed: in-memory storage `close()` → `Io("database is locked")` of another file backend).
+- 17:44 **shutdown hang ROOT CAUSE + fix LANDED** (`wp-h13/h13-retirement-wake-patch.py`): the census (`runner_handoff: 0`,
+  `artifact_retirement: 1`) says the runner HAD gone terminal (the handoff's pool use is surrendered only in the terminal
+  transition) while its retirement cursor still held a `WorkerPoolUse`. Sequence: the retirement hook's turn ran `close_one`
+  while a normal turn was `Polling` → not terminal → `Idle`; that normal turn then completed the close inside
+  `ArtifactRunner::finish`, whose terminal transition stored `Terminal` without requesting the hook, and the turn guard returns on
+  `Terminal` without a wake → cursor stranded, shutdown spins in `PoolUse` to its 120 s deadline. Fix: the transition moved into
+  `ArtifactRunnerHandoff::enter_terminal` (surrender pool use → publish `Terminal` → `request_retirement_maintenance`). Law
+  `a_runner_that_turns_terminal_after_its_retirement_went_idle_wakes_the_retirement` (commits a real retirement cursor on a
+  2-worker pool, waits until its first turn went idle, calls `enter_terminal`, requires the slot + pool use released within 30 s;
+  red without the wake by construction).
+- 17:48–17:53 **results.** hold 7: semio-hub `--all-features --lib --bins --tests` check EXIT 0 17:47 (may predate the two
+  later edits → re-run in hold 8); sqlite storm law (load 40): storm/serial **0.52** (was 0.78 / 1.41 under the same load
+  before), storm turns 513 (was 682–726; IndexRead turns 110 vs 243, WalRead 81 vs 163) — but the law failed earlier on
+  `late commits ack p50 364.1 ms vs early 134.9 ms` (write-side timing, load-bound); kernel-db full lib **734/735** (EXIT 101
+  only on the sqlite throughput timing law; every sqlite storage law incl. the new one PASS, the new retirement law PASS)
+  (`hold7-db-lib.txt`). hold 8: retirement law **mutant FAILS** (`driver=9 terminal=true turns=1 maintenance=true`, the exact
+  hang) → restored → **PASS**, reader law PASS (`hold8-retirement-law*.txt`). Timing laws (storm/serial, late/early) need an
+  idle machine: re-run after the chain.
+- 17:55 hold 8: semio-hub `--all-features --lib --bins --tests` check **EXIT 0 17:55** after every db edit (`hold8-check-hub.txt`);
+  full `os-hub:test-all-features` on the reader path running.
+- 17:56 **coordinator: the close-ring finding is mine** (H14 wave B). 18:04 **LANDED** (`wp-h13/h13-cleanup-fault-routing-patch.py`,
+  applied after hold 8's kernel-db compile had finished): root cause — `db_io_task_close_step` (maintenance class 5, the
+  process-global close ring) returned a backend's operation-cleanup error (`close_operation_step`, `db_io_backend_return_operation`)
+  to whichever caller drove the maintenance step AND left the failing task at the ring head, so every other backend's
+  `DbIoTaskOperation::finish` (task-retirement wait) and `close_db_io_backend` failed with the foreign fault and could not retire
+  behind it. Now: the ring records the fault on the failing backend's registry slot (`cleanup_fault: Option<DbIoFault>`, fixed
+  authority, kind preserved via `db_io_task_fault`/`into_db_error`), rotates the task and retries it; a successful cleanup of that
+  backend clears it; only that backend's task waiters (`db_io_wait_task_retirement` via the task's `backend`) and its
+  `close_db_io_backend` take and report it (`db_io_note_backend_cleanup` / `db_io_take_backend_cleanup_fault`). Law
+  `a_backend_cleanup_fault_reaches_only_its_own_waiters_and_close` (`🗄️storage/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs`, fixture
+  executor `CleanupFaultLawExecutor`): faulty + healthy backend on one pool; the faulty op's own `finish` = the injected `Io`;
+  the neighbour's `finish` = `Ok(Unit)`, drain + close `Ok`; the faulty close = the injected `Io`; after the fault clears its drain +
+  close `Ok`; ledger witness unchanged (red on the old ring by construction: the stuck head hands the neighbour's retirement wait
+  the foreign error). kernel-db `--features sqlite --lib --tests` check **EXIT 0 18:05** (`hold9pre-check-db.txt`, lane slot 2,
+  private throwaway target deleted after). Hold 9 (queued behind hold 8): routing law, full kernel-db lib, semio-hub check.
+- 18:07 hold 8: **`os-hub:test-all-features` EXIT 0 18:07** on the SQLite readers + retirement wake (lib 247 / 19 ignored, bin 176;
+  `hold8-hub-all-features.txt`). hold 9: kernel-db check EXIT 0, **routing law PASS 18:08**, full kernel-db lib 734/736, semio-hub
+  all-features check **EXIT 0 18:10**. hold 10 (`hold10-reopen-storm-fs-sqlite.txt`, load 43): the 2 reds are the WALL-clock
+  storm/serial ratio only — fs 0.83, sqlite 0.91 (fs was 0.88 at 17:21 before any db edit); every census bound before it holds
+  (late/early, ack/durable, storm tasks = serial tasks 456). ⇒ functional db suite green; the wall ratio is load-bound by design
+  (with every core taken a storm cannot overlap) — **recommendation:** bound the storm by a load-free measure (census turns on the
+  storm's critical path / peak concurrent DB I/O steps) and keep wall time as a report; until then judge row 2.6 on an idle machine.
+- 18:18 hold 11: **`os-hub:test-all-features` EXIT 0 18:18 on the final kernel-db** (readers + retirement wake + routing; lib 247 /
+  19 ignored, bin 176; `hold11-hub-all-features.txt`). 18:25 hold 12: all-driver `os-hub` (sqlite + postgres + neo4j) from today's
+  tree **EXIT 0** → `.🧬semio/🌐hub/s14-h13-bin/os-hub-all-drivers-1818` (rm + cp + codesign) — the binary for the live gates.
+- **State at 18:3x / next:** every H13 edit is landed and compile/test-green (landing rows 17:04, 17:31–17:42, 17:44, 18:04); no H13
+  process running; transport-refill patch dry-run clean (window 3). Blocked on the chain: after `final-publish.rc` = 0, clone the ALL
+  catalog (path from W4/main) → hub 8010 on `os-hub-all-drivers-1818` → `agent-ceiling-check` (en + de), transient-refusal live proof
+  (C12 writers' cut), `two-client-e2e` + `document-growth-e2e` on **sqlite** (`OS_HUB_STORAGE_BACKEND=sqlite` = the new reader path
+  live), then pg + neo4j (`backend-up` / `backend-down`); storm law on an idle machine.
+- 21:10 **LIVE PROOFS on p24 (WINDOW 3 open).** Hub 8010 = clone of `s14-w4-catalog-p24` (generation d1099ba9…) on
+  `os-hub-all-drivers-1818` (root `s14-h13-hub-8010-p24`, ready 13.5 s). **`agent-ceiling-check` 16/16 PASS en + de**
+  (`agent-ceiling-8010-p24-{en,de}.txt`, `s.note.note`).
+- 21:12 **transient refusal live** (new probe `wp-h13/h13-transient-probe.ts`: one writer socket sends its outbox as ONE `Commands`
+  batch per round, resends on `hub.unavailable`, an observer socket must receive every envelope): run 1 (600-envelope batches) →
+  **P1 FOUND:** refused `unavailable: limit exceeded: artifact submit batch item credit` + `hub.unavailable` — the engine capped a
+  submit at 256 envelopes (the wire declares 8 192 / 256 KiB) and `SubmitFuture::submit` wrapped that size-permanent refusal as
+  `Unavailable`, so the client resends forever (C12's lost typing, second half). Run 2 (256-envelope batches, debug build): 23
+  batches commit, 1.0 → 4.3 s each as the doc grows; batch 24 committed (head 6 144) but its Ack never came within 60 s → H14
+  (fsync barriers per index-run replacement; 30 s socket frame deadline drops the Ack — H14 fixing).
+- 21:24 **P1 root fix LANDED** (coordinator GO; landing row): declared credits, kind-preserving admission error, permanent typed
+  `hub.batch-limit` refusal (schema-first) for undeclared batches and every engine `LimitExceeded`. Hold 13: checks EXIT 0,
+  hub/refusal laws PASS, `os-hub:test-all-features` **EXIT 0 21:55** (lib 248 / 19 ignored, bin 178), TS oracle 7/7; engine law's
+  first run hit the TEST profile's 64-command cap (`LimitExceeded("db_artifact::batch_commands")`) → law now opens the hub's
+  `Profile::Prod`; isolated re-run queued. Binary `os-hub-all-drivers-2155`.
+- 22:06 **P1 proven live** (hub 8010 on a fresh p24 clone + binary 2155, `transient-probe-8010-3.txt`): 12 batches × 1 100 envelopes
+  all commit (~300 ms each); from batch 7 the socket budget is empty → `hub.unavailable` ("dos budget exceeded"), resent every 2 s,
+  commits on attempt 5/10 — nothing lost; an over-declared 1 400-envelope batch → **permanent `hub.batch-limit`** (batch-bytes).
+  **NEW P1 → H14:** reopening that 13 201-edit document fails `limit exceeded: database sync hello cumulative envelope backing`
+  (🔄️sync hello decodes the whole tail since the last snapshot, ≤ 65 536 items ≈ 8–9k envelopes).
+- 21:17 two-client e2e sqlite (binary 1818): 1/2 — the directory-page step got an empty body (`JSON Parse error`, test line 207);
+  a 60-space burst on a sqlite hub is clean (`h13-space-burst.ts`, 0 refused, 2.0 s) → re-run pending on binary 2155.
+- 22:10–22:29 **e2e on sqlite (binary 2155):** `two-client-e2e sqlite` red ×3 on the SAME cause — the hub's directory-command rate
+  limit (burst 60, 10/s) refused the fixture's 100-space burst with a body-less 429 and the test JSON-parsed the empty body (found
+  by making the test print the hub output on failure) → harness honors 429 + Retry-After (landing row) → **2/2 PASS 22:13**.
+  `document-growth-e2e sqlite` **2/2 PASS 22:29** (5.5 min). (Both run the SQLite WAL reader path.)
+- 22:13 hub 8010 for C12's STEP 15: W4 hold (`wp-w4/w4-hub-hold.ts`) on a fresh p24 clone + binary 2155, state
+  `.🧬semio/🌐hub/s14-h13-state-8010/` (admin capability there), ready + admin issued 22:19.
+- 22:22 **STEP 8 duplicate-id (C12 relay):** read-only capture of 7800's artifact-6e93e221… (`generated/c12-step8-bootstrap-7800.json`):
+  bootstrap "Tail", 17 envelopes (4 edits → Check In transition → 11 two-author edits with `observed` → 2nd check-in transition),
+  no id repeated or delivered twice by the hub. Transition payloads name committed ops by their mutation ids WITH the op suffix
+  (`edit-…#0`); writer's SeedHistory seeds entry ids AND forward mutation ids → a client fold that records a transition's committed
+  ops as forwards seeds `…#0` twice. Relayed to C12 with a reproduction recipe (base → Check In → two-author typing → hard reload).
+- 22:2x transport-refill set (L1 T1a GREEN 22:18): os-mcp TS oracle **5/5 PASS** (`vitest-mcp-refill-1.txt`); Rust laws = hold 14
+  (queued in the native lane).
+- 22:42 **machine rebooted** (every process died: hub 8010 hold, lane waiters incl. hold 14). 22:46 reconcile: all five H13 patch
+  scripts dry-run "0 pending", refusal schema + fixture parse, file tails intact (no torn write); my landing rows present.
+- 22:50 hub 8010 restarted after the reboot (same root + binary 2155, W4 hold, state `s14-h13-state-8010/`, admin issued 22:50) → C12.
+- 22:4x **typed 429 body LANDED** (coordinator item; `wp-h13/h13-rate-limit-refusal-patch.py`): schema-first `RateLimitRefusalV1` +
+  `RateLimitRefusalMessageV1` in `🔐️auth/🧬️schema` (schema, code `rate-limited`, the class, `retryAfterMs` ≥ 1, en + de notice), Rust
+  twin + `RateLimitRefusalV1::new` in `🔐️auth/🚦️rate-limit`, the rate-limit middleware answers every non-auth family's 429 with it
+  (+ `no-store`, `retry-after`; sign-in keeps `AuthErrorV1`); fixture `🔐️auth/🧫️fixtures/🚦️rate-limit-refusal-v1` (4 valid, 6 near
+  misses) registered in the taxonomy (`members-of-fixtures`); laws: auth unit `the_rate_limit_refusal_is_the_declared_schema_body`
+  (owned draft-07 validator + fixture), bin `a_directory_command_burst_is_refused_with_a_typed_rate_limit_body`, TS Ajv oracle case
+  → **8/8 PASS** (`vitest-rate-limit-1.txt`). Rust = hold 15 (queued with hold 14's laws, which died in the reboot).
+- 23:1x **STEP 8 root cause (guest):** `🏪️store` `edit_from_operation_envelope` names a remote edit after its op's wire id AND puts the
+  same id in `mutation_meta[0]`; the plugin initializers' SeedHistory seeded lane 0 (`entry.id`) and lane 1 (each op id) → the id
+  twice → `MutationDagError::Duplicate` (only with foreign edits in the restored history = two-author sessions). Relayed to C12/L1;
+  coordinator: C12's `wp-c12/seed/c12-seed-history-patch.py` (one store rule `seed_edit_operation`, 9 initializers + 2 hydrations)
+  is the set — I reviewed it (approve; amendment: the law should initialize the MIXED shape — local + remote edits + transitions)
+  and wrote no competing patch.

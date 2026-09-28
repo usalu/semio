@@ -13,6 +13,8 @@ mod tests {
         assert_eq!(projected.import_stdio_kinds, spec.import_stdio_kinds);
         assert_eq!(projected.schema, spec.schema);
         assert_eq!(projected.media_type, spec.media_type);
+        assert_eq!(projected.label, spec.label, "the host descriptor presents the kind's own label");
+        assert_eq!(projected.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::De), "Format-Rundlauf");
     }
 
     #[test]

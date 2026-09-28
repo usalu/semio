@@ -88,8 +88,61 @@ describe("agent-bridge offer answers", () => {
   });
 });
 
+/** 🔐️ LAW over the language-neutral `select` rows (scoped offers, ticket 26/09/23 G12 session 14c): a hub gateway's offer
+ * reaches only the shell open on its hub and space whose own human's delegation list names its agent — a second human's
+ * shell on the same machine never receives it — a local offer any shell, newest first. Every record is a schema record
+ * (Ajv, third-party oracle), parses exactly, and the request a shell sends round-trips its scope. The Rust twin
+ * (`🌉️mcp/🛰️rendezvous` quick law) decodes and re-encodes the same records. */
+describe("agent-bridge offer selection", () => {
+  it("serves every fixture request exactly the expected offer", async () => {
+    const { agentBridgeOfferPathV1, agentBridgeOfferScopeFromDelegationsV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1 } = await import("../../🛰️offer/🟦️.ts");
+    const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🔣️.json"), "utf8")) as {
+      readonly select: {
+        readonly records: readonly unknown[];
+        readonly cases: readonly { readonly id: string; readonly request: string; readonly live: readonly number[]; readonly expectedPid: number | null }[];
+        readonly scopes: readonly { readonly id: string; readonly hubOrigin: string; readonly spaceId: string; readonly nowMs: number; readonly delegations: readonly { readonly agentPrincipalId: string; readonly revoked: boolean; readonly expiresAtMs: number }[]; readonly expectedAgents: readonly string[]; readonly expectedPid: number | null }[];
+      };
+    };
+    const ajv = new Ajv({ strict: true });
+    ajv.addSchema(JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🧬️schema.json"), "utf8")) as object);
+    const validRecord = ajv.getSchema("semio.os.agent-bridge-offer/v1#/definitions/AgentBridgeOfferRecordV2")!;
+    const records = fixture.select.records.map((record) => {
+      expect(validRecord(record), JSON.stringify(validRecord.errors)).toBe(true);
+      const parsed = parseAgentBridgeOfferRecordV2(record);
+      expect(parsed, JSON.stringify(record)).toEqual(record);
+      return parsed!;
+    });
+    expect(parseAgentBridgeOfferRecordV2({ ...(fixture.select.records[0] as object), schemaVersion: 1 })).toBeNull();
+    expect(parseAgentBridgeOfferRecordV2({ ...(fixture.select.records[0] as object), scope: { kind: "hub", hubOrigin: "http://127.0.0.1:7800" } })).toBeNull();
+    expect(fixture.select.cases.length).toBeGreaterThanOrEqual(8);
+    for (const row of fixture.select.cases) {
+      const scope = parseAgentBridgeOfferScopeV1(row.request);
+      if (scope !== null && scope.agentPrincipalIds.length > 0) expect(agentBridgeOfferPathV1(AGENT_BRIDGE_OFFER_ENDPOINT, scope), row.id).toBe(row.request);
+      const served = selectAgentBridgeOfferV1(records.filter((record) => row.live.includes(record.pid)), scope);
+      expect(served?.pid ?? null, row.id).toBe(row.expectedPid);
+    }
+    expect(fixture.select.scopes.length).toBeGreaterThanOrEqual(3);
+    for (const row of fixture.select.scopes) {
+      const scope = agentBridgeOfferScopeFromDelegationsV1(row.hubOrigin, row.spaceId, row.delegations, row.nowMs);
+      expect(scope?.agentPrincipalIds, row.id).toEqual(row.expectedAgents);
+      expect(selectAgentBridgeOfferV1(records, scope)?.pid ?? null, row.id).toBe(row.expectedPid);
+    }
+  });
+});
+
 describe("fetchAgentBridgeConfig", () => {
   const offerFetch = (status: number, body: unknown): BridgeOfferFetch => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+
+  it("asks with the shell's scope and without one when the shell is in no hub space", async () => {
+    const asked: string[] = [];
+    const recording: BridgeOfferFetch = async (input) => {
+      asked.push(input);
+      return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
+    };
+    await fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, recording, undefined, { hubOrigin: "http://127.0.0.1:7800", spaceId: "space-a", agentPrincipalIds: ["agent:alice-agent"] });
+    await fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, recording);
+    expect(asked).toEqual(["/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Aalice-agent", "/__semio/agent-bridge"]);
+  });
 
   it("reads a live offer off the supervisor endpoint", async () => {
     await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(200, agentBridgeOfferAnswerV1({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" })))).resolves.toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" });

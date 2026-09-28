@@ -1,0 +1,12 @@
+{
+  "schema": "semio.stdio.details-arena-headroom/v2",
+  "section": "stdio-snapshot-details-fields",
+  "controller": "s.stdio.csv@rfc4180/*#editor",
+  "cases": [
+    { "id": "typed-whole-with-one-row-of-slack", "records": 3, "fields": 2, "typed": true, "headroom": "complete-plus-one-row", "expect": "complete" },
+    { "id": "no-headroom-renders-empty-sections", "records": 3, "fields": 2, "typed": false, "headroom": "none", "expect": "shortened" },
+    { "id": "untyped-half-headroom-shortens", "records": 3, "fields": 2, "typed": false, "headroom": "half", "expect": "shortened" },
+    { "id": "untyped-whole-with-one-row-of-slack", "records": 3, "fields": 2, "typed": false, "headroom": "complete-plus-one-row", "expect": "complete" },
+    { "id": "typed-large-table-under-a-held-generation", "records": 40, "fields": 5, "typed": true, "headroom": "third", "expect": "shortened" }
+  ]
+}

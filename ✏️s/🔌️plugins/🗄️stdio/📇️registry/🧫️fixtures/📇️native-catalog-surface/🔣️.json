@@ -10,7 +10,7 @@
     { "id": "duplicate-kind", "mutation": "duplicate", "accepted": false },
     { "id": "foreign-kind", "mutation": "identity", "accepted": false },
     { "id": "foreign-schema", "mutation": "schema", "accepted": false },
-    { "id": "foreign-label", "mutation": "name", "accepted": false },
+    { "id": "foreign-label", "mutation": "label", "accepted": false },
     { "id": "foreign-source-format", "mutation": "source-format", "accepted": false }
   ]
 }

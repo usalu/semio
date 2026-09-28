@@ -85,6 +85,39 @@ async fn the_example_switch_joins_its_exact_retained_factory() {
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
+/// ⚖️ LAW: the natural-source draft applies what it shows. The curated catalog's rendered source (declaration, DOCTYPE,
+/// comment, processing instruction, escaped text, CDATA) is a no-op through the root `set-node` when unchanged, and a text
+/// change is exactly one whole-document mutation whose document quick-xml reads back with the edited text. (S18's served
+/// matrix saw every source apply refused on a build whose demo asset no longer decoded — the editor had opened an empty
+/// document.)
+#[test]
+fn the_natural_source_draft_applies_what_it_shows() {
+    use quick_xml::events::Event;
+    let snapshot = crate::schema::demo_xml_snapshot();
+    let source = crate::schema::snapshot::xml_document_to_text_checked(&snapshot.doc).expect("the curated catalog prints");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let apply = |value: String| xml_any_emit(&XmlAnyEditorCommand::SetNode { node_id: main::XML_ROOT_NODE_ID.into(), revision: revision.clone(), value }, &snapshot, None);
+    assert!(apply(source.clone()).expect("the unchanged source applies").artifact_mutations.is_empty(), "the unchanged source is a no-op");
+    let edited = source.replacen("Tom", "Tim", 1);
+    assert_ne!(edited, source, "the curated catalog carries the text the law edits");
+    let emit = apply(edited).expect("a text change applies");
+    let [XmlMutation::SetSnapshot(set)] = emit.artifact_mutations.as_slice() else { panic!("a source apply is one whole-document mutation") };
+    let printed = crate::schema::snapshot::xml_document_to_text_checked(&set.snapshot.doc).expect("the applied document prints");
+    let mut reader = quick_xml::reader::Reader::from_str(&printed);
+    let (mut inside, mut item) = (false, String::new());
+    loop {
+        match reader.read_event().expect("quick-xml reads the applied document") {
+            Event::Start(start) if start.local_name().as_ref() == b"item" => inside = true,
+            Event::End(end) if end.local_name().as_ref() == b"item" => inside = false,
+            Event::Text(text) if inside => item.push_str(std::str::from_utf8(&text).expect("utf-8 text")),
+            Event::GeneralRef(reference) if inside => item.push_str(quick_xml::escape::resolve_xml_entity(std::str::from_utf8(&reference).expect("utf-8 reference")).expect("a predefined entity")),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    assert_eq!(item, "Tim & Jerry", "quick-xml reads the edited text node in the applied document");
+}
+
 /// ⚖️ LAW: the curated example parses into a document that differs from the genesis one, and an
 /// unknown or empty id falls back to the genesis document.
 #[semio_framework_async_macros::async_test]

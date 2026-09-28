@@ -3,7 +3,7 @@
  *
  * One row per editor program the shell's own catalog probe lists (`window.__semioOsCatalogProbe.programs`), opened from the
  * Home landing through the command palette, its first non-empty example seated from the navbar. Every row drives the
- * framework's document pair from the palette — Export Document, Import Document through the host file picker (a new window
+ * framework's document pair from its Actions rail rows — Export Document, Import Document through the host file picker (a new window
  * of the same program), Export Document again from that window — and the canonical archive must come back byte for byte.
  * Per program with pins (`🧑‍💻dev/🧫️fixtures/🚪️io-matrix.json`, the kind's own formats): every pinned export is pressed in
  * the Actions rail and must hand the browser at least one downloaded file that a third-party parser accepts (Chromium's
@@ -27,10 +27,11 @@ import { join, resolve } from "node:path";
 import type { Download, FileChooser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram } from "../🧮️program-matrix/🟦️.ts";
+import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, driveRenderedEdit, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram, type MatrixRenderedEdit } from "../🧮️program-matrix/🟦️.ts";
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️hub-document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 import { decodeDocumentArchiveBytes } from "../../../../🟦️.ts";
+import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 //#region 🔖️Pins
 /** 🧾️ A file format a third-party parser must accept; `any` sniffs the format from the downloaded file's name. */
@@ -66,13 +67,18 @@ export function readIoMatrixPins(): IoMatrixPins {
   return pins;
 }
 
-/** 🗺️ The matrix verb that moves a program's document between its export and its import (the program matrix's own pin). */
-function matrixVerbOf(pins: MatrixPins, key: string, pluginId: string): { verb: string | null; args: Readonly<Record<string, string>> } {
+/** 🗺️ The program matrix's own move between a program's export and its import: the verb, its staged rail arguments, and —
+ * for a revision-bound verb (`set-cell`, `set-node`) — the rendered edit that drives it through the program's own editor,
+ * resolved like the matrix does (`<key>` beats `<base>` beats the origin plugin's pin). */
+type MatrixMove = Readonly<{ verb: string | null; args: Readonly<Record<string, string>>; edit: MatrixRenderedEdit | undefined }>;
+
+function matrixVerbOf(pins: MatrixPins, key: string, pluginId: string): MatrixMove {
   const base = key.split("/").slice(0, 2).join("/");
   const origin = pins.kindOrigin[base] ?? pluginId;
   const verb = pins.kindVerbs[key] ?? pins.kindVerbs[base] ?? pins.pluginVerbs[origin] ?? null;
-  if (verb === null) return { verb, args: {} };
-  return { verb, args: pins.kindArgs[`${key}.${verb}`] ?? pins.kindArgs[`${base}.${verb}`] ?? pins.pluginArgs[`${origin}.${verb}`] ?? {} };
+  if (verb === null) return { verb, args: {}, edit: undefined };
+  const args = pins.kindArgs[`${key}.${verb}`] ?? pins.kindArgs[`${base}.${verb}`] ?? pins.pluginArgs[`${origin}.${verb}`] ?? {};
+  return { verb, args, edit: pins.kindEdits[`${key}.${verb}`] ?? pins.kindEdits[`${base}.${verb}`] ?? pins.pluginEdits[`${origin}.${verb}`] };
 }
 //#endregion 🔖️Pins
 
@@ -369,6 +375,16 @@ async function pressVerb(page: Page, recorders: Recorders, verb: string, args: R
   return { verb, row, filled, submit, refusals: recorders.refusals.slice(refusalCursor), notices: (await recorders.notices()).slice(noticeCursor) };
 }
 
+/** ✍️ Moves the document through the program's own rendered editor (a revision-bound verb no rail argument can stage);
+ * refusals and notices the edit caused are part of the answer, exactly as for {@link pressVerb}. */
+async function driveMove(page: Page, recorders: Recorders, verb: string, edit: MatrixRenderedEdit, settleMs = 2_500): Promise<Press> {
+  const refusalCursor = recorders.refusals.length;
+  const noticeCursor = (await recorders.notices()).length;
+  const submit = await driveRenderedEdit(page, edit);
+  await page.waitForTimeout(settleMs);
+  return { verb, row: "rendered", filled: [], submit, refusals: recorders.refusals.slice(refusalCursor), notices: (await recorders.notices()).slice(noticeCursor) };
+}
+
 /** 📥️ Waits for the downloads a press started: the first within `firstMs`, then any sibling files within `quietMs`. */
 async function takeDownloads(page: Page, recorders: Recorders, cursor: number, firstMs: number, quietMs: number): Promise<Download[]> {
   const firstDeadline = Date.now() + firstMs;
@@ -414,9 +430,9 @@ async function runExport(page: Page, recorders: Recorders, pin: IoExportPin, liv
 
 /** 🔁️ One import control against the file its export wrote: the program's matrix verb moves the document first, then the
  * file is read back through the picker (or the staged argument) and the export is pressed again. */
-async function runImport(page: Page, recorders: Recorders, pin: IoImportPin, exportPin: IoExportPin, first: SavedFile | undefined, move: { verb: string | null; args: Readonly<Record<string, string>> }, liveId: string, dir: string) {
+async function runImport(page: Page, recorders: Recorders, pin: IoImportPin, exportPin: IoExportPin, first: SavedFile | undefined, move: MatrixMove, liveId: string, dir: string) {
   if (first === undefined) return { id: pin.id, ok: false, detail: `export ${pin.from} wrote no file to read back` };
-  const moved = move.verb === null ? null : await pressVerb(page, recorders, move.verb, move.args, liveId);
+  const moved = move.verb === null ? null : move.edit === undefined ? await pressVerb(page, recorders, move.verb, move.args, liveId) : await driveMove(page, recorders, move.verb, move.edit);
   const divergedExport = await runExport(page, recorders, exportPin, liveId, dir, `${pin.id}-moved`);
   const diverged = divergedExport.files[0] === undefined ? null : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(divergedExport.files[0].path))).verdict !== "identical";
   const before = witness(await readShell(page));
@@ -463,34 +479,11 @@ async function runReach(page: Page, recorders: Recorders, verb: string, liveId: 
   return { verb, press, dispatched: press.row === "ok" && dead === null, dead };
 }
 
-/** 📤️ The framework's Export/Import Document pair as the palette lists it in every editor (`os.exportDocument` /
- * `os.importDocument`, region 📤️DocumentTransfer of `🛠️ShellHelpers`); the query is the command's own label.
- * @see ../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx — `ui.command.exportDocument` / `ui.command.importDocument` */
-const DOCUMENT_TRANSFER_COMMANDS = {
-  export: { item: "command.os.os.exportDocument", query: { en: "Export Document", de: "Dokument exportieren" } },
-  import: { item: "command.os.os.importDocument", query: { en: "Import Document", de: "Dokument importieren" } },
-} as const;
-
-/** 🎛️ Presses one os command from the palette as a person does: types its label, clicks its row. */
-async function pressPaletteCommand(page: Page, item: string, query: string): Promise<string> {
-  const input = await openPalette(page);
-  if ((await input.count()) === 0) return "command palette never opened";
-  await input.fill(query);
-  const row = page.locator(`[data-slot="command-item"][data-command-item-id="${item}"]`).first();
-  await row.waitFor({ state: "visible", timeout: 8_000 }).catch(() => undefined);
-  if ((await row.count()) === 0) {
-    await page.keyboard.press("Escape");
-    return `no ${item} palette row`;
-  }
-  await row.click({ timeout: 8_000 }).catch(() => row.click({ force: true }).catch(() => undefined));
-  return "ok";
-}
-
-/** 📤️ Export Document from the palette: the focused program's archive must download and decode. */
-async function exportDocumentArchive(page: Page, recorders: Recorders, locale: "en" | "de", dir: string, prefix: string) {
+/** 📤️ Export Document from its rail row: the focused program's archive must download and decode. */
+async function exportDocumentArchive(page: Page, recorders: Recorders, dir: string, prefix: string) {
   const cursor = recorders.downloads.length;
   const noticeCursor = (await recorders.notices()).length;
-  const pressed = await pressPaletteCommand(page, DOCUMENT_TRANSFER_COMMANDS.export.item, DOCUMENT_TRANSFER_COMMANDS.export.query[locale]);
+  const pressed = (await pressVerb(page, recorders, EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, {}, "", 500)).row;
   const files = pressed === "ok" ? await saveDownloads(page, await takeDownloads(page, recorders, cursor, 30_000, 1_500), dir, prefix, "archive") : [];
   return { pressed, files, notices: (await recorders.notices()).slice(noticeCursor).slice(0, 3), ok: files.length === 1 && files[0]!.verdict.ok };
 }
@@ -498,15 +491,15 @@ async function exportDocumentArchive(page: Page, recorders: Recorders, locale: "
 /** 🔁️ The framework document round trip every editor offers: Export Document, Import Document through the host file
  * picker (a NEW window of the same program, loaded as a cancellable task), Export Document again from that window — the
  * canonical archive must come back byte for byte. The imported window is closed again. */
-async function runDocumentTransfer(page: Page, recorders: Recorders, locale: "en" | "de", dir: string) {
-  const exported = await exportDocumentArchive(page, recorders, locale, dir, "document");
+async function runDocumentTransfer(page: Page, recorders: Recorders, dir: string) {
+  const exported = await exportDocumentArchive(page, recorders, dir, "document");
   const first = exported.files[0];
   if (!exported.ok || first === undefined) return { export: exported, import: null, ok: false };
   const before = await windowIds(page);
   const chooserCursor = recorders.chooser.log.length;
   const noticeCursor = (await recorders.notices()).length;
   recorders.chooser.pending = first.path;
-  const pressed = await pressPaletteCommand(page, DOCUMENT_TRANSFER_COMMANDS.import.item, DOCUMENT_TRANSFER_COMMANDS.import.query[locale]);
+  const pressed = (await pressVerb(page, recorders, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, {}, "", 500)).row;
   const began = Date.now();
   let outcome: string | null = null;
   while (pressed === "ok" && outcome === null && Date.now() - began < 180_000) {
@@ -516,7 +509,7 @@ async function runDocumentTransfer(page: Page, recorders: Recorders, locale: "en
   recorders.chooser.pending = null;
   await page.waitForTimeout(2_500);
   const opened = (await windowIds(page)).filter((id) => !before.includes(id));
-  const second = outcome === "imported" ? await exportDocumentArchive(page, recorders, locale, dir, "document-reimported") : null;
+  const second = outcome === "imported" ? await exportDocumentArchive(page, recorders, dir, "document-reimported") : null;
   const roundTrip = second?.files[0] === undefined ? null : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(second.files[0].path)));
   await closeWindows(page, opened);
   const imported = { pressed, chooser: recorders.chooser.log.slice(chooserCursor), outcome: outcome ?? "no outcome within 180 s", loadMs: Date.now() - began, openedWindows: opened, reexport: second, roundTrip };
@@ -636,7 +629,7 @@ export function hubKindKey(kind: Readonly<{ kindId: string; plugin: string; valu
 }
 
 /** 🚪️ Drives one opened program's pins, then the framework document round trip, and returns its row fields. */
-async function driveProgram(page: Page, recorders: Recorders, key: string, pluginId: string, pins: IoProgramPins, matrixPins: MatrixPins, locale: "en" | "de", dir: string) {
+async function driveProgram(page: Page, recorders: Recorders, key: string, pluginId: string, pins: IoProgramPins, matrixPins: MatrixPins, dir: string) {
   const liveId = matrixPins.liveId;
   const example = await seatFirstExample(page);
   const railToggles = await unfoldActionsRail(page);
@@ -651,7 +644,7 @@ async function driveProgram(page: Page, recorders: Recorders, key: string, plugi
     const exportPin = pins.exports.find((candidate) => candidate.id === pin.from)!;
     imports.push(await runImport(page, recorders, pin, exportPin, exports.find((entry) => entry.id === pin.from)?.files[0], move, liveId, dir));
   }
-  const document = await runDocumentTransfer(page, recorders, locale, dir);
+  const document = await runDocumentTransfer(page, recorders, dir);
   return {
     example,
     railToggles,
@@ -732,7 +725,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
         const opened = await openProgram(page, program, programs.find((entry) => entry.pluginId === program.pluginId)?.appId === program.appId);
         const row: IoMatrixRow = { key, appId: program.appId, pinned: programPins !== undefined, pass: false, reach: [], windowIds: opened.windowIds, detail: opened.detail };
         if (opened.windowIds.length > 0) {
-          const driven = await driveProgram(page, recorders, key, program.pluginId, programPins ?? NO_KIND_PINS, matrixPins, options.locale === "de" ? "de" : "en", join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
+          const driven = await driveProgram(page, recorders, key, program.pluginId, programPins ?? NO_KIND_PINS, matrixPins, join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
           Object.assign(row, driven);
           row.pass = !("error" in driven) && driven.document.ok && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
           await page.screenshot({ path: join(outDir, `${key.replace(/[^A-Za-z0-9]+/gu, "-")}.png`) }).catch(() => undefined);
@@ -779,7 +772,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
           if (opened.length === 0) row.detail = "the created document never opened";
           else {
             await page.waitForTimeout(4_000);
-            const driven = await driveProgram(page, recorders, key, kind.plugin, programPins ?? NO_KIND_PINS, matrixPins, options.locale === "de" ? "de" : "en", join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
+            const driven = await driveProgram(page, recorders, key, kind.plugin, programPins ?? NO_KIND_PINS, matrixPins, join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
             Object.assign(row, driven);
             row.pass = !("error" in driven) && driven.document.ok && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
           }

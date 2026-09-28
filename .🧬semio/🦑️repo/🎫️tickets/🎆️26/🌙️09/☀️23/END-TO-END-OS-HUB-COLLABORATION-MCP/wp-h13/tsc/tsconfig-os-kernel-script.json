@@ -1,0 +1,13 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "/Users/ueli/Documents/semio/.tmp-ticket/wp-h13/generated/tsc-os-kernel-script.tsbuildinfo",
+    "incremental": true,
+    "noEmit": true
+  },
+  "include": [],
+  "files": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📐️ambient.d.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts"
+  ]
+}

@@ -847,13 +847,15 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// normalization now knows this peer is an agent principal, not the delegating human.
 ///
 /// 🐚️ Both routes are built; `SessionChannelBinding` picks one per session at `context_resolve`
-/// time and `ContextSummary.channel` reports which. With no shell attached this behaves exactly
-/// as the pre-LB1 gateway did — the headless workspace, unchanged.
+/// time and `ContextSummary.channel` reports which — a delegated agent always its own headless hub route
+/// (`SessionChannelBinding::for_principal`). With no shell attached this behaves exactly as the pre-LB1 gateway
+/// did — the headless workspace, unchanged. Answers the server and the principal it acts as (the delegated agent's
+/// `agent:<delegation id>` once the credential was exchanged) — the principal a stdio gateway's bridge offer names.
 ///
 /// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
 /// inside the workspace; publishing the binding there is what keeps a `shell` session from having
 /// two document owners (`📓️lb1…` §7.3 step 1).
-fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime) -> Result<McpServer, GatewayError> {
+fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
@@ -886,15 +888,17 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
         }
         std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal)?)
     } else {
-        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime));
+        let principal_id = principal.id.clone();
+        return Ok((build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime), principal_id));
     };
     eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
-    let binding = std::sync::Arc::new(crate::shell_channel::SessionChannelBinding::new(runtime.bridge.clone()));
+    let binding = std::sync::Arc::new(crate::shell_channel::SessionChannelBinding::for_principal(&principal, runtime.bridge.clone()));
     runtime.channel_binding = Some(std::sync::Arc::clone(&binding));
     let catalog = std::sync::Arc::new(build_catalog());
     workspace.bind_shell_route(std::sync::Arc::clone(&binding), std::sync::Arc::clone(&catalog));
     let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Shell(crate::workspace::ShellRoutedArtifactChannel::new(binding, catalog, workspace.open_routing_channel())));
-    Ok(build_server_with_workspace(principal, audit, workspace, channel, runtime))
+    let principal_id = principal.id.clone();
+    Ok((build_server_with_workspace(principal, audit, workspace, channel, runtime), principal_id))
 }
 //#endregion 🔖️WorkspaceOptions
 
@@ -915,42 +919,59 @@ pub struct StdioOptions {
     pub no_bridge: bool,
 }
 
-/// 🌉️ Starts the loopback `/bridge` listener a stdio gateway attaches a live os session through, and
-/// publishes its address as a `🛰️rendezvous` offer — whether or not a session is live yet. A shell
-/// polls for offers (`useDiscoveredAgentBridgeConfig`), so a `dev s` started after the client launched
-/// this gateway still dials it: the order in which a person opens their MCP client and their shell is
-/// never a manual step. Returns `None` only when the user opted out (`--no-bridge`) or when nothing
-/// can be bound or published; every bridge-dependent tool then answers the typed
-/// `bridge_not_running_error`, and with a bridge but no shell yet, `no_shell_attached_error`.
+/// 🌉️ Starts the loopback `/bridge` listener a stdio gateway attaches a live os session through. Its `🛰️rendezvous` offer is
+/// published once the workspace is open ([`publish_stdio_bridge_offer`]), because only then is the principal it offers
+/// known — a delegated agent's `agent:<delegation id>`, the key a shell's human-owned delegation list is matched on. A shell
+/// polls for offers (`useDiscoveredAgentBridgeConfig`), so a `dev s` started after the client launched this gateway still
+/// dials it: the order in which a person opens their MCP client and their shell is never a manual step. Returns `None`
+/// only when the user opted out (`--no-bridge`) or when nothing can be bound; every bridge-dependent tool then answers the
+/// typed `bridge_not_running_error`, and with a bridge but no shell yet, `no_shell_attached_error`.
 ///
 /// The listener is bridge-ONLY: this process's MCP surface is stdin/stdout, so `/mcp` on that socket
 /// is genuinely absent (404). Admission is a per-process proof published only through the owner-only
 /// offer file — a stdio gateway inherits no hub fd-3 credential and must never fabricate one.
-fn attach_stdio_bridge(options: &StdioOptions, principal: &AgentPrincipal, bridge_slot: &BridgeSlot) -> Option<StdioBridgeAttachment> {
+fn start_stdio_bridge(options: &StdioOptions, bridge_slot: &BridgeSlot) -> Option<StdioBridgeListener> {
     if options.no_bridge {
         return None;
     }
-    let sessions = crate::rendezvous::live_os_sessions();
     let proof = crate::rendezvous::mint_admission_proof();
     let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof)).publishing_bridge_into(bridge_slot.clone());
-    let run = match transport.start_bridge_only() {
-        Ok(run) => run,
+    match transport.start_bridge_only() {
+        Ok(run) => Some(StdioBridgeListener { run, proof }),
         Err(error) => {
             eprintln!("[semio-os-mcp] the loopback bridge listener could not bind ({}) — continuing over stdio with no live-shell surface", error.message);
-            return None;
+            None
         }
+    }
+}
+
+/// 🌉️ A started, not yet offered bridge listener.
+struct StdioBridgeListener {
+    run: HttpTransportRun,
+    proof: String,
+}
+
+/// 📤️ Publishes `listener`'s offer for exactly the shells `scope` admits, as `principal_id` (ticket 26/09/23, G12 session
+/// 14c: an unscoped offer reached every live os session of the machine and another person's shell attached to a hub
+/// agent's gateway). A publication that fails cancels the listener rather than leaving an unreachable socket open.
+fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: String, scope: crate::rendezvous::BridgeOfferScope) -> Option<StdioBridgeAttachment> {
+    let StdioBridgeListener { run, proof } = listener;
+    let offered_to = match &scope {
+        crate::rendezvous::BridgeOfferScope::Hub { hub_origin, space_id } => format!("the shell of the human who delegated {principal_id} on {hub_origin} space {space_id}"),
+        crate::rendezvous::BridgeOfferScope::Local => format!("this user's local os sessions ({} live)", crate::rendezvous::live_os_sessions().len()),
     };
     let offer = crate::rendezvous::BridgeOffer {
         schema_version: crate::rendezvous::RENDEZVOUS_SCHEMA_VERSION,
         url: format!("ws://{}/bridge", run.local_addr()),
         admission_proof: proof,
-        principal: principal.id.clone(),
+        principal: principal_id,
         pid: std::process::id(),
         published_at_ms: now_ms(),
+        scope,
     };
     match crate::rendezvous::publish_offer(offer) {
         Ok(published) => {
-            eprintln!("[semio-os-mcp] bridge listening on ws://{}/bridge — offered to {} live os session(s) via {}", run.local_addr(), sessions.len(), published.path().display());
+            eprintln!("[semio-os-mcp] bridge listening on ws://{}/bridge — offered to {offered_to} via {}", run.local_addr(), published.path().display());
             let offer = std::sync::Arc::new(std::sync::Mutex::new(Some(published)));
             let withdrawn = std::sync::Arc::clone(&offer);
             let completion = run.completion();
@@ -1009,9 +1030,11 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(default_audit_dir())?));
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let elicitation: ElicitationSlot = std::sync::Arc::new(std::sync::OnceLock::new());
-    let attachment = attach_stdio_bridge(&options, &principal, &bridge_slot);
-    let runtime = GatewayRuntime { bridge: attachment.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let listener = start_stdio_bridge(&options, &bridge_slot);
+    let runtime = GatewayRuntime { bridge: listener.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
+    let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let scope = options.hub.as_ref().map_or(crate::rendezvous::BridgeOfferScope::Local, |hub| crate::rendezvous::BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
+    let attachment = listener.and_then(|listener| publish_stdio_bridge_offer(listener, principal_id, scope));
     let features = server.client_features();
     let notifications = crate::notify::notification_slot();
     let server = server.publishing_notifications_into(notifications.clone());
@@ -1054,7 +1077,7 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let runtime = GatewayRuntime { bridge: Some(bridge_slot.clone()), elicitation: None, auto_approve: options.auto_approve, channel_binding: None };
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
     let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;

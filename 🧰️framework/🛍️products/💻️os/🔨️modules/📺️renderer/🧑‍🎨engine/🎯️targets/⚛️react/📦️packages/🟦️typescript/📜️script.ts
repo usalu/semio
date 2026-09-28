@@ -371,7 +371,7 @@ export function scopedPresenceOracle(repoRoot: string): number {
   assert(worker.includes('emitEvent(state, { kind: "presence", peers: [] })'));
   assert(worker.includes("const scope = artifactScope(state)"));
   assert(wire.includes("workerWireScopeV1") && wire.includes('event: { kind: "presence", peers: [] }'));
-  assert(projection.includes("peer.surface === message.verifiedSurfaceId"));
+  assert(projection.includes("message.verifiedSurfaceId !== expectedSurfaceId") && !projection.includes("peer.surface ==="));
   assert(projection.includes('role === "owner" || role === "member"') && projection.includes('role === "viewer"'));
   assert(browser.includes('new Worker(config.workerUrl, { type: "module" })'));
   assert(browser.includes("new MessageChannel()") && browser.includes("for (const row of config.cases)"));

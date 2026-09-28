@@ -3083,6 +3083,58 @@ impl HubPluginComponents {
     }
 }
 
+/// 🗂️ The capability catalog a workspace routes, prepares and searches by. A folder workspace's is the one it opened
+/// with; a hub workspace's follows the hub's descriptor authority — recompiled whenever the set of selected package
+/// descriptors changes (a package installed, removed or upgraded on the hub), reused while that set is unchanged.
+pub struct WorkspaceCatalog {
+    hub: Option<Arc<HubRemoteBinding>>,
+    compiled: std::sync::RwLock<(String, Arc<Catalog>)>,
+}
+
+impl WorkspaceCatalog {
+    pub fn fixed(catalog: Arc<Catalog>) -> Self {
+        Self { hub: None, compiled: std::sync::RwLock::new((String::new(), catalog)) }
+    }
+
+    /// 🌎️ The catalog of `hub`'s live descriptor authority, compiled from its selected packages now.
+    pub fn following(hub: Arc<HubRemoteBinding>) -> Result<Self, GatewayError> {
+        let snapshot = hub.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
+        let compiled = (selected_package_key(&snapshot), Arc::new(crate::catalog_from_descriptors(snapshot.selections.iter().map(|selection| selection.descriptor.clone()).collect())?));
+        Ok(Self { hub: Some(hub), compiled: std::sync::RwLock::new(compiled) })
+    }
+
+    /// 🔒️ The catalog of the live authority, or its unavailability while it refreshes or after it was revoked — never a
+    /// set the hub no longer selects. What discovery lists.
+    pub fn authoritative(&self) -> Result<Arc<Catalog>, GatewayError> {
+        let Some(hub) = &self.hub else { return Ok(Arc::clone(&self.compiled.read().unwrap_or_else(std::sync::PoisonError::into_inner).1)) };
+        let snapshot = hub.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
+        let key = selected_package_key(&snapshot);
+        let cached = {
+            let compiled = self.compiled.read().unwrap_or_else(std::sync::PoisonError::into_inner);
+            (compiled.0 == key).then(|| Arc::clone(&compiled.1))
+        };
+        if let Some(catalog) = cached {
+            return Ok(catalog);
+        }
+        let catalog = Arc::new(crate::catalog_from_descriptors(snapshot.selections.iter().map(|selection| selection.descriptor.clone()).collect())?);
+        *self.compiled.write().unwrap_or_else(std::sync::PoisonError::into_inner) = (key, Arc::clone(&catalog));
+        Ok(catalog)
+    }
+
+    /// 🧭️ The catalog a command routes by: the live authority's, or the last compiled one while it refreshes.
+    pub fn current(&self) -> Arc<Catalog> {
+        self.authoritative().unwrap_or_else(|_| Arc::clone(&self.compiled.read().unwrap_or_else(std::sync::PoisonError::into_inner).1))
+    }
+}
+
+/// 🔑️ Which package descriptors a catalog snapshot selects, order-free: each plugin with the byte hash of its descriptor.
+fn selected_package_key(snapshot: &AuthorizedCatalogSnapshot) -> String {
+    let mut packages: Vec<String> = snapshot.selections.iter().map(|selection| format!("{}@{}", selection.lease.package.plugin_id, selection.lease.package.descriptor_byte_sha256)).collect();
+    packages.sort_unstable();
+    packages.dedup();
+    packages.join(",")
+}
+
 /// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of
 /// pinning one for the whole process — replaces the deleted `resolve_default_plugin_id`'s "exactly
 /// one plugin or bust" (`📓️w8-capability-routing.md`). A `PureCommand{capability_id,..}` names its
@@ -3096,7 +3148,7 @@ impl HubPluginComponents {
 /// `open_probes`/`action_adapter`'s mutexes, which this struct never touches).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
-    catalog: Arc<Catalog>,
+    catalog: Arc<WorkspaceCatalog>,
     components: Option<PluginComponentSource>,
     actor_label: String,
     /// 🗝️ Keyed by the RESOLVED route (`app_id` always `Some`), so a plugin-scope capability and the
@@ -3115,7 +3167,7 @@ pub struct RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<Catalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>) -> Self {
+    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>) -> Self {
         Self { catalog, components, actor_label, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
     }
 
@@ -3283,19 +3335,20 @@ impl RoutingArtifactChannel {
     /// (the declared row's contributor) — so it routes directly, never through the
     /// `instance` slot encoding `prepare_action` mints for the mutation protocol.
     fn route_for(&self, instance: u32, commands: &[AppCommand]) -> Result<AppRoute, Fault> {
+        let catalog = self.catalog.current();
         for command in commands {
             match command {
-                AppCommand::PureCommand { capability_id, .. } => return resolve_route_for_capability_in(&self.catalog, capability_id).map_err(routing_fault),
+                AppCommand::PureCommand { capability_id, .. } => return resolve_route_for_capability_in(&catalog, capability_id).map_err(routing_fault),
                 AppCommand::Infer(infer) if !infer.plugin_id.is_empty() => return Ok(AppRoute { plugin_id: infer.plugin_id.clone(), app_id: None }),
                 _ => {}
             }
         }
-        route_for_slot(&self.catalog, instance).ok_or_else(|| {
+        route_for_slot(&catalog, instance).ok_or_else(|| {
             Fault {
                 code: "plugin.unavailable".to_string(),
                 message: format!(
                     "instance {instance} names no plugin — this workspace's catalog owns {} plugin(s); route a PureCommand for a specific capability on this instance first",
-                    distinct_plugin_ids(&self.catalog).len()
+                    distinct_plugin_ids(&catalog).len()
                 ),
             }
         })
@@ -3497,7 +3550,8 @@ pub struct HeadlessWorkspace {
     session_id: String,
     scopes: Vec<String>,
     repo_root: Option<PathBuf>,
-    catalog: Arc<Catalog>,
+    /// 🗂️ See [`WorkspaceCatalog`]: fixed for a folder, following the hub's descriptor authority for a hub.
+    catalog: Arc<WorkspaceCatalog>,
     /// 🧵️ Every document this workspace has opened a live `ProbeStore`/backbone attachment for —
     /// `artifact_open`/`ensure_probe_artifact` populate this; `resolve_context`/`read_resource` read
     /// through it first before falling back to a cold `FolderEventLogStorage` read.
@@ -3920,7 +3974,7 @@ impl HeadlessWorkspace {
             session_id,
             scopes,
             repo_root: find_repo_root().ok(),
-            catalog,
+            catalog: Arc::new(WorkspaceCatalog::fixed(catalog)),
             open_probes: Mutex::new(HashMap::new()),
             action_adapter: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
@@ -3959,10 +4013,10 @@ impl HeadlessWorkspace {
         {
             let (binding, driver, grant_source) = NativeHubBindingDriver::connect(credential.clone(), &base_url, &space_id)?;
             binding.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
-            let descriptors = binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?.selections.iter().map(|selection| selection.descriptor.clone()).collect();
-            let catalog = Arc::new(crate::catalog_from_descriptors(descriptors)?);
+            let catalog = WorkspaceCatalog::following(Arc::clone(&binding))?;
             let driver = Arc::new(driver);
-            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog);
+            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog.current());
+            workspace.catalog = Arc::new(catalog);
             workspace.repo_root = None;
             workspace.plugin_components = Some(PluginComponentSource::Hub(Arc::new(HubPluginComponents::new(Arc::clone(&binding), Arc::clone(&driver)))));
             workspace.artifact_host.set_local_hub_credential(credential);
@@ -4019,8 +4073,8 @@ impl HeadlessWorkspace {
     /// refreshing Hub authority returns unavailable and never consults a local registry.
     pub fn discovery_catalog(&self) -> Result<Arc<Catalog>, GatewayError> {
         match &self.origin {
-            WorkspaceOrigin::Hub { .. } => Ok(Arc::new(crate::catalog_from_descriptors(self.discovery_descriptors()?)?)),
-            WorkspaceOrigin::Folder { .. } => Ok(self.catalog.clone()),
+            WorkspaceOrigin::Hub { .. } => self.catalog.authoritative(),
+            WorkspaceOrigin::Folder { .. } => Ok(self.catalog.current()),
         }
     }
 
@@ -4324,7 +4378,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     fn read_live_session_artifact_bytes(&self, plugin_id: &str, app_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         let Some(actions) = self.root_actions.get() else { return Ok(None) };
-        let Some(instance) = app_instance_slot(&self.catalog, plugin_id, app_id) else { return Ok(None) };
+        let Some(instance) = app_instance_slot(&self.catalog.current(), plugin_id, app_id) else { return Ok(None) };
         actions.read_session_artifact(instance).map(Some)
     }
 
@@ -4336,7 +4390,7 @@ impl HeadlessWorkspace {
     pub fn bind_artifact_document(&self, artifact_id: &str, scope: &ActivationScope) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
             let shell_owned = self.shell_route.get().is_some_and(|(route, _)| route.resolve() == crate::shell_channel::ChannelKind::Shell);
-            if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), app_instance_slot(&self.catalog, &binding.plugin_id, &binding.app_id)) {
+            if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), app_instance_slot(&self.catalog.current(), &binding.plugin_id, &binding.app_id)) {
                 actions.activate_session(instance, scope)?;
             }
         }
@@ -4364,7 +4418,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn activate_plugin_session_cancellably(self: &Arc<Self>, plugin_id: &str, scope: ActivationScope) -> Result<(), GatewayError> {
         let actions = self.root_actions.get().cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "no action adapter is bound to this workspace yet").retryable())?;
-        let instance = plugin_instance_slot(&self.catalog, plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` owns no instance slot in this workspace's catalog")))?;
+        let instance = plugin_instance_slot(&self.catalog.current(), plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` owns no instance slot in this workspace's catalog")))?;
         self.run_activation_job(scope, move |_, scope| actions.activate_session(instance, scope))
     }
 
@@ -4716,7 +4770,7 @@ impl HeadlessWorkspace {
     /// ambiguous — each capability id routes to exactly the plugin its own catalog entry names.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn resolve_plugin_for_capability(&self, capability_id: &str) -> Result<String, GatewayError> {
-        resolve_plugin_for_capability_in(&self.catalog, capability_id)
+        resolve_plugin_for_capability_in(&self.catalog.current(), capability_id)
     }
 
     /// 📇️ Every distinct plugin id this workspace's own catalog names — real callers are facets
@@ -4724,7 +4778,7 @@ impl HeadlessWorkspace {
     /// catalog scan `resolve_plugin_for_capability`/`RoutingArtifactChannel` already do.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn catalog_plugin_ids(&self) -> Vec<String> {
-        distinct_plugin_ids(&self.catalog)
+        distinct_plugin_ids(&self.catalog.current())
     }
 
     /// 🚦️ Builds this workspace's own `RoutingArtifactChannel` — the one `crate::actions::ArtifactChannel`
@@ -4733,7 +4787,7 @@ impl HeadlessWorkspace {
     /// its ONLY call site that names this method).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_routing_channel(&self) -> RoutingArtifactChannel {
-        RoutingArtifactChannel::new(self.catalog.clone(), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts), self.hub_binding.clone())
+        RoutingArtifactChannel::new(Arc::clone(&self.catalog), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts), self.hub_binding.clone())
     }
 
     /// 🎬️ Lazily builds (and caches) the real `ActionAdapter` `prepare_action`/`invoke_action`
@@ -4770,17 +4824,18 @@ impl HeadlessWorkspace {
 impl GatewayBackend for HeadlessWorkspace {
     fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError> {
         let active_artifact_id = self.workspace_artifact_ids()?.into_iter().next();
-        Ok(crate::resolve_context(&self.catalog, self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
+        Ok(crate::resolve_context(&self.catalog.current(), self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
     }
 
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
         let filters = SearchFilters { kind: Vec::new(), owner: None, artifact_kind: None, requires_scope: None, audience: Vec::new() };
-        let hits = crate::search(&self.catalog, query, &filters);
-        Ok(hits.into_iter().filter_map(|hit| self.catalog.get(&hit.capability_id).map(|capability| crate::to_schema_search_hit(capability, hit.score))).collect())
+        let catalog = self.catalog.current();
+        let hits = crate::search(&catalog, query, &filters);
+        Ok(hits.into_iter().filter_map(|hit| catalog.get(&hit.capability_id).map(|capability| crate::to_schema_search_hit(capability, hit.score))).collect())
     }
 
     fn describe_capabilities(&self, capability_id: &str) -> Result<serde_json::Value, GatewayError> {
-        self.catalog.get(capability_id).map(|capability| serde_json::to_value(capability).unwrap_or(serde_json::Value::Null)).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such capability: {capability_id}")))
+        self.catalog.current().get(capability_id).map(|capability| serde_json::to_value(capability).unwrap_or(serde_json::Value::Null)).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such capability: {capability_id}")))
     }
 
     /// 🎬️ `action.prepare`/`action.invoke`'s real 2-phase mutation protocol (revision checks, undo
@@ -4810,8 +4865,9 @@ impl GatewayBackend for HeadlessWorkspace {
     /// `invoke_action` — matches `ActionAdapter::invoke_uncached`'s own revision-conflict shape.
     fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
         self.resolve_plugin_for_capability(capability_id)?;
-        let instance = capability_instance_slot(&self.catalog, capability_id).expect("a plugin capability of this workspace's own catalog always names a route of that catalog's own enumeration");
-        let report = self.action_adapter()?.prepare(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), capability_id, input, instance, now_ms())?;
+        let catalog = self.catalog.current();
+        let instance = capability_instance_slot(&catalog, capability_id).expect("a plugin capability of this workspace's own catalog always names a route of that catalog's own enumeration");
+        let report = self.action_adapter()?.prepare(&catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), capability_id, input, instance, now_ms())?;
         if let Some(expected) = expected_revision {
             if report.expected_revision.as_ref() != Some(&expected) {
                 let actual = report.expected_revision.clone();
@@ -4830,7 +4886,7 @@ impl GatewayBackend for HeadlessWorkspace {
     /// correct plugin routing already travels with the handle, not through this parameter.
     fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
         let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None };
-        self.action_adapter()?.invoke(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())
+        self.action_adapter()?.invoke(&self.catalog.current(), &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())
     }
 
     fn read_resource(&self, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {

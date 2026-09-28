@@ -49,7 +49,7 @@ fn drive_pixel_region(command: &PngEditCommand, snapshot: &PngSnapshot) -> Vec<P
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
     let mut work = patch_pixel_region::PatchPixelRegionWork::default();
     assert!(work.extent(command, snapshot, &interaction, None).is_some());
     for _ in 0..patch_pixel_region::CAPACITY.invertible_items() + 3 {
@@ -112,7 +112,7 @@ fn pixel_region_rejects_invalid_bounds_and_cancellation_discards_unpublished_pat
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
     let mut work = patch_pixel_region::PatchPixelRegionWork::default();
     let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     assert!(matches!(work.step(&input).expect("prepare"), ArtifactCommandWorkStep::Progress { .. }));

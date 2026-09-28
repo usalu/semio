@@ -408,24 +408,6 @@
       },
       "additionalProperties": false
     },
-    "ShootingLoadRequestPublication": {
-      "type": "object",
-      "required": [
-        "toolId",
-        "lanes"
-      ],
-      "properties": {
-        "toolId": {
-          "const": "loadRequest"
-        },
-        "lanes": {
-          "const": [
-            "HostOnly"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
     "ShootingImportAssetRequestPublication": {
       "type": "object",
       "required": [
@@ -485,15 +467,12 @@
           "type": "array",
           "items": [
             {
-              "$ref": "#/$defs/ShootingLoadRequestPublication"
-            },
-            {
               "$ref": "#/$defs/ShootingImportAssetRequestPublication"
             }
           ],
           "additionalItems": false,
-          "minItems": 2,
-          "maxItems": 2
+          "minItems": 1,
+          "maxItems": 1
         },
         "routes": {
           "allOf": [
@@ -502,8 +481,8 @@
             },
             {
               "type": "array",
-              "minItems": 38,
-              "maxItems": 38,
+              "minItems": 37,
+              "maxItems": 37,
               "items": {
                 "type": "object",
                 "required": [

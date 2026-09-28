@@ -146,12 +146,7 @@ pub fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, buildin
 /// `🚪️io/🦀️.rs`'s own comments already document, since minting the actual store entry
 /// needs `ChildStoreFactory`/`CompositionCoordinator`, out of a pure function's reach.
 pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let slug = cad_model_child_pane_slug(pane);
-    let child_id = format!("{slug}-model-{content_hash:016x}");
+    let child_id = store::content_id(&format!("{}-model", cad_model_child_pane_slug(pane)), content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -463,7 +458,7 @@ pub use crate::schema::snapshot::CadSnapshot;
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.cad".into(),
-        name: "3D CAD".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D CAD", "3D-CAD"),
         source_format: "cad.scene".into(),
         component_kind: "cad".into(),
         dimension: "3d".into(),

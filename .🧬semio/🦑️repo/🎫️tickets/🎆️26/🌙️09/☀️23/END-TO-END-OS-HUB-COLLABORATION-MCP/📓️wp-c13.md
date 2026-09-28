@@ -7,6 +7,61 @@ Handovers: `📓️wp-c10.md` (c10perm1), `📓️wp-c11.md` (item 4 roles probe
 
 ## Session 14
 
+### Session 14c
+
+Successor agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart). Rules: `📓️session-14-preamble.md` incl. "Session 14c".
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Reconcile predecessor (cut ~14:37) | **done 17:0x** — nothing half-applied: every C13 edit is in HEAD `dfe2687f7db` (16:29 auto-commit), 0 working-tree diffs in C13 files, `git grep '[DEBUG] c13'` 0 hits; the "last step" (combined native-lane job) had finished 14:23 (recorded in 14b); the P1 overlay hold was cut mid-compile (coordinator deleted `.c13-build`). Narrow tsc **0 errors** (`generated/tsc-c13-11.txt`, 17:07); rule-20 boot 6670 (local, no hub) → Home 13.6 s, **0 pageerrors, 0 console errors** (`generated/boot-6670-6.txt`); serve stopped |
+| 1 | Combined native-lane job (worker laws + pairing law + opening law) | **GREEN except one load-timed law, 17:25** (`generated/native-host-laws-3.txt`, after C12's 17:1x fix): pairing **20/20**, opening **6/6**, worker **133/134**. The one red, "bounds retained document backbone bytes until terminal Ack …", timed out (6.4 s against the 5 s default). Run alone with `--testTimeout=30000` it **passes** (7.3 s at load 39, `generated/native-retention-law-1.txt`), so the red is timing, not behaviour. Explicit timeout left to C12 (owner). 17:03 run (`-2.txt`): 132/134 incl. C12's `settleCommittedEnvelopes` law-state red → C12 fixed it (one `newArtifactState` constructor) |
+| 2 | Row 3.11 fold patch P1 + two-peer harness | P1 dry-run on the live tree **0 problems** (6 files: fold, its unit laws, fixture, schema, TS twin, store retire; every `HistoryFold` destructuring in `semio-framework-os` uses `..`, the exhaustive retire is patched) → below rule 23's overlay threshold, Rust proof in window 3. **Language-agnostic half proven in the overlay (no cargo), 17:24** (`generated/overlay-ts-p1-2.txt`): replication package **12/12** with P1's twin + fixture + schema; **mutant** = live tree's pre-P1 twin against P1's fixture → **fails** at step `b-cannot-undo-a` (B's crafted revert withdrew A's `a1`: got `[b1,a2,b2]`, expected `[a1,b1,a2,b2]`), overlay restored. Harness journey `cross-undo` (12 checks) in `verify two-human`; targets `two-human-viewer`/`two-human-cross-undo` + goal-gate checks are in R10's `wp-r10/window3-spec.json` |
+| 3 | Live runs on 7800/p24 (viewer en + de, cross-undo en), records published | **viewer: 9/10 checks on block, note, writer; 8/10 on draw — 0/4 kinds pass** (en `c13p24-viewer-en-2` 22:30, de `c13p24-viewer-de` 22:20; records `.🧬semio/🌐hub/s14-c13-acceptance/c13p24-viewer-en-2.json`). Every kind: B opens the **viewer** surface, sees A's edit live, presence 2/2 (after H1), is told why in en/de, every attempt changes nothing, the hub refuses B's crafted write. The one red on every kind is "viewer offers no edit control" (Undo/Redo pressable) → **P2** (guest, below). Draw's extra red: the pinned `addLayer` changes nothing A or B can read (see row 6). **cross-undo** (`c13p24-undo-en`, 21:42, before the harness fix): note 9/12, writer 10/12, draw 6/12. Undo/redo per author works on note and writer. Reds: (a) the crafted foreign undo of A's note edit was ACCEPTED and withdrew A's block on both views = the defect **P1** fixes, now live-proven; (b) B's second undo committed a transition with no visible change (head 3→4) — harness over-constraint, fixed; (c) note: A-only and B-only states render identically (two default text blocks) — harness fixed (B adds a table); (d) writer's crafted socket got no Ack (`missing Ack 1`); (e) draw: see row 6. Rerun `c13p24-undo-en-2` was cut by the **22:42 reboot** after draw |
+| 4 | H1 host fix: presence roster document-wide (row 3.4) | **LANDED 21:4x** — see landing row; before: each human's roster showed only itself on a viewer/editor pair (A 1 peer, B 1 peer); after: 2/2 on all 4 kinds (de run) |
+| 5 | P2 guest set: a viewer's manifest declares no verb its guard rejects | **prepared** `wp-c13/p2-viewer-manifest-no-rejected-verbs.py` (`--dry-run | --write | --revert`, byte backups `wp-c13/w3-backup/c13-p2/`): builder parses the role once, drops `VIEWER_REJECTED_ACTION_IDS` from the framework verbs a viewer app receives (read cursor + copy stay), guard doc, builder law `build_definition_offers_a_viewer_no_verb_its_guard_rejects`, TS mirror doc. Dry run on the live tree 0 problems / 3 files; write → dry-run (all applied) → revert byte-identical on a scratch copy. Not compiled (6 hunks, rule 23: L1's T3 train compiles it) |
+| 6 | Coordinator 23:3x: (1) puzzle2d board session factory, (2) peer selection draw/puzzle3d, (3) note cursor probe | **(1) root-caused + fixed + live-proven**: host key drift — a hub document's program id is `<plugin>@<bundle sha256>`, the board factories are keyed by plugin id; S18 fixed `resolveAppSurfaceSessionFactory` in the tree at 23:10 (`parseHubProgramIdV1`, 2 fixture scopes in `🔣️session-factory.json`) while C13 was assigned the same item; live `c13presence1` 23:5x: puzzle2d mounts for both, no factory fault, A's pointer moves in B's view. **(3) both**: C12's probe needs a `<canvas>` and the ink host renders DOM/SVG (harness bug), AND the ink host published and painted no presence at all (real gap) → host fix **LANDED** (landing row); live: note pointer **PASS**. **(2) open**: draw — `Canvas2dHost` paints no peer selection at all (its overlay gets no interaction domain; `Canvas2dScene` carries no `domainId`, unlike Board2d/World3d), and the pinned `addLayer` (default kind `path`) adds an invisible empty layer (the matrix sees it only as a history entry) → nothing selectable; puzzle3d — pointer PASS, but the probe's `addNode` never applied, so nothing to select. The selection leg also FAILS on note and puzzle2d in `c13presence1` → a shared cause (peer `interaction` selection not reaching the overlay, or Mod+A selecting nothing) — next: read B's roster `interaction` for A after an explicit click-select |
+
+Log 14c:
+- 16:5x read preamble 14 (+14b/14c), AGENTS.md, fleet-14 tail, this report. Reconcile (row 0). `serve-hold.sh` hub argument made
+  optional (local boot without a hub).
+- 17:03 combined native-lane job (row 1); relayed the 2 reds to C12 via main. 17:1x C12 (relay): red (a) fixed. 17:25 re-run → 133/134;
+  retention law alone with a 30 s timeout passes (timing only).
+- 17:11–17:24 P1 TS half in the overlay + pre-P1 mutant (row 2; `overlay-ts-p1.sh`, native lane, waited ~10 min in the queue). Deleted my
+  overlay's leftover `.c13-target` (4 KiB; `.c13-build` was already deleted by the coordinator); overlay sources kept.
+- Infra now: nothing running (serve 6670 stopped 17:09; no hub, no browser).
+- 21:10 coordinator: 7800 READY on p24. 21:1x serve-hold 6670 → 7800; boot to Home 13.8 s. 21:11 viewer en `c13p24-viewer-en` 0/4 kinds
+  (presence 1/2 each side, surface check read a DOM attribute that never carried `#viewer`, Undo/Redo offered, told-why missing;
+  block/note/writer see A's edit live, hub refuses B's crafted write). 21:29 cross-undo en (row 3). 21:4x H1 presence roster
+  (landing row), harness surface/told-why fixes, tsc 0, boot OK. 22:12 viewer de 9/10 on block/note/writer (only Undo/Redo), 8/10 draw.
+  22:1x cross-undo harness fixes. 22:2x P2 prepared. 22:30 viewer en-2: same as de. Records published to
+  `.🧬semio/🌐hub/s14-c13-acceptance/` (`SEMIO_ACCEPTANCE_RESULT` in `run-two-human.sh`).
+- 22:42 machine reboot: cut `c13p24-undo-en-2` after draw and `c13p24-viewer-de-2` (never started) and the serve; every C13 edit
+  checked intact after the reboot (parses; markers present).
+- 23:3x coordinator item 6 (row 6). 23:4x InkCanvasHost presence (landing row); `probe-c13-presence.mjs` (reuses C12's session
+  helpers via import, own recorder; credentials only from `../wp-c12/env.sh`). 23:5x `c13presence1`. 23:59 `c13p24-undo-en-3`
+  (note, writer) with the harness fixes: **11/12 on both** — every per-author undo/redo check PASS (B's undo withdraws only B's,
+  B's second undo leaves A's, B's redo, A's undo under B's later edit keeps B's — note additive with the table block, writer SET —,
+  A's redo). The one red on both: the crafted-transition leg's probe socket got **no Ack** (`missing Ack 1`) — at 21:42 (before
+  the reboot) the same leg was Acked (Accepted) on note. 7800 was restarted after the 22:42 reboot → relayed (hub/probe
+  protocol, H13). Records: `.🧬semio/🌐hub/s14-c13-acceptance/c13p24-{viewer-en-2,undo-en-3}.json` (both `fail`, honest).
+- 00:06 serve 6670 stopped. Still queued (detached, survives the turn): native-lane `native-presence-law-2.txt` (scoped-presence
+  law file incl. the ink-camera and document-wide roster cases; stamp 20260928234051). No hub, no browser of mine running.
+
+**Next (C13):** (a) T3: L1 lands `c13-p1` + `c13-p2`; after the next chain rerun viewer en/de (expect 10/10 on block/note/writer)
+and cross-undo (crafted leg: refused); (b) draw selection = scene contract `Canvas2dScene.domainId` (guest, like Board2d/World3d)
++ `Canvas2dHost` overlay `domain` + a visible draw pin (`addLayer` kind `shape:rect`, docText cannot see an empty path layer);
+(c) selection leg on note/puzzle2d: prove A actually holds a selection before judging B (explicit click on the added block), then
+read B's roster `interaction` for A.
+
+**Window-3 runbook (C13, after WINDOW 3 OPEN):**
+1. `python3 wp-c13/p1-foreign-transition-refused.py --dry-run` (expect 0 problems) → `--apply`.
+2. Native lane: `cargo test -p semio-framework-replication --lib --no-fail-fast -- transition` (fold laws incl. the new foreign
+   revert/reinstate/mixed steps) + `cargo check -p semio-framework-os --lib --tests` (store retire); replication TS package vitest.
+3. wasm32 lane: `semio-framework-os` guest check (the fold and the store retire are guest-linked). Landing row.
+4. Live (needs 7800 on ALL AND hub + guests rebuilt with P1 for the crafted-transition check; checks 1–11 need only ALL):
+   serve-hold 6670 → 7800, then `zsh wp-c13/run-window3.sh c13w3 http://127.0.0.1:7800 "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-state-7800/admin-capability.json"` (absolute path; the harness flag is `--admin-capability`, run-two-human.sh passes it)
+   (viewer en + de over block/note/writer/draw, cross-undo en over note/writer/draw), stop the serve.
+
 ### Session 14b
 
 | # | Item | Status |

@@ -516,18 +516,6 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
-
-    /// 🏗️ Admits the whole-document replacement `reset_wires_document_effect` emits for every
-    /// example switch. The trait default refuses the envelope, so the host answered every
-    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load
-    /// boundary and the picked example never reached the canvas.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::MINDMAP_WIRES_SCHEMA, operation, generation))
-    }
     /// 🧾️ Publishes every artifact-lane mutation kind through the framework's generic bounded
     /// one-item cursor (the `dag`/`trinity` shape). The bespoke `🧵️retained` cursor admitted only
     /// `MoveNode`, so `addNode`, `addRelationship`, `deleteSelection` and `setActiveExample` all
@@ -613,6 +601,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

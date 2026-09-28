@@ -145,7 +145,7 @@ pub(crate) mod context {
     pub async fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
-        let args = semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })));
+        let args = Some(semio_framework_plugin::dsl_value!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" }));
         let result = app.handle_action("interactionSelect", args.as_ref(), &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE))).await;
         settle(app, 1, result).await.expect("interactionSelect");
     }
@@ -179,7 +179,7 @@ async fn command_ids_are_unique_across_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 34, "every NoteCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 33, "every NoteCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -226,7 +226,6 @@ pub(super) fn every_command() -> Vec<NoteCommand> {
         NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Renaming…".into() }),
         NoteCommand::NavigatorEngagementInput(navigator_engagement_input::NavigatorEngagementInput {}),
         NoteCommand::SaveDownload(save_download::SaveDownload {}),
-        NoteCommand::LoadRequest(load_request::LoadRequest {}),
     ]
 }
 

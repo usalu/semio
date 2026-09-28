@@ -1,7 +1,3 @@
 type HomeConfig {
-  directoryJson: String! @state(class: CONFIG)
-  directorySessionBindingSha256: String! @state(class: CONFIG)
-  directoryAuthorizationGeneration: Long! @state(class: CONFIG)
-  directoryReceiptSha256: String! @state(class: CONFIG)
   retiredLocalStudioIds: [String!]! @state(class: CONFIG)
 }

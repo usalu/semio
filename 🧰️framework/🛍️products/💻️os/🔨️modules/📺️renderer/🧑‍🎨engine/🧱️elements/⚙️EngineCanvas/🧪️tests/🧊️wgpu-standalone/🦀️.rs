@@ -342,7 +342,7 @@ pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect,
 
 #[cfg(test)]
 pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: Some(semio_framework::DslValue::from(args)) }
 }
 
 #[cfg(test)]
@@ -489,7 +489,7 @@ pub fn coalesce_board2d_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
 
 #[cfg(test)]
 pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: Some(semio_framework::DslValue::from(args)) }
 }
 
 #[cfg(test)]

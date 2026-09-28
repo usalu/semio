@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """🎨️ S19 one-off codemod (set `norm-examples`): every norm family whose `setActiveExample` kept a hand-written id match
-(en1992, en1994, en1997, en1998, iso16757, din4108) resolves the example through its editor's OWN picker roster via the
-shared `app_surface::roster_example_snapshot`; en1997 and din4108 rosters gain the example modules they had on disk but
-hid from the picker; the norm surface suite gains the roster law (every roster example loads, roster == `📚️examples/*`).
+(en1992, en1994, en1997, en1998, iso16757, din4108; session 14c: din16798 — its match missed `residential-method3`, the
+roster law's red — and the same hand-kept tables of en1991, en1993, en1996, en1999, vdi3805 and en1995's private parse)
+resolves the example through its editor's OWN picker roster via the shared `app_surface::roster_example_snapshot`; en1997
+and din4108 rosters gain the example modules they had on disk but hid from the picker; the norm surface suite gains the
+roster law (every roster example loads, roster == `📚️examples/*`). en1990 and din18599 keep their text-based
+`setSnapshot` route (complete tables, law-guarded).
 Idempotent. usage: s19-norm-examples.py <root>
 """
 import os
@@ -13,7 +16,8 @@ root = sys.argv[1]
 A = "✏️s/🔌️plugins/📕️norm/🗿️artifacts"
 H = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"
 E = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
-FAMILIES = {"🏛️en1992": ("en1992", "En1992"), "🧩️en1994": ("en1994", "En1994"), "🌍️en1997": ("en1997", "En1997"), "🫨️en1998": ("en1998", "En1998"), "📇️iso16757": ("iso16757", "Iso16757"), "🧱️din4108": ("din4108", "Din4108")}
+FAMILIES = {"🏛️en1992": ("en1992", "En1992"), "🧩️en1994": ("en1994", "En1994"), "🌍️en1997": ("en1997", "En1997"), "🫨️en1998": ("en1998", "En1998"), "📇️iso16757": ("iso16757", "Iso16757"), "🧱️din4108": ("din4108", "Din4108"), "🌬️din16798": ("din16798", "Din16798"), "🏋️en1991": ("en1991", "En1991"), "🔩️en1993": ("en1993", "En1993"), "🪨️en1996": ("en1996", "En1996"), "🪶️en1999": ("en1999", "En1999"), "🏭️vdi3805": ("vdi3805", "Vdi3805"), "🪵️en1995": ("en1995", "En1995")}
+ROSTER_DOC = "/// 🎨️ Replaces the live document with the named roster example, or clears it when the id is empty.\n"
 
 
 def edit(rel, change):
@@ -76,9 +80,11 @@ def handler(module, ty):
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot {{ snapshot }}, doc, cfg)
 }}
 '''
-        if not has_doc:
-            body = "/// 🎨️ Replaces the live document with the named roster example, or clears it when the id is empty.\n" + body
+        if has_doc:
+            start = doc_start
+        body = ROSTER_DOC + body
         text = text[:start] + body + text[end:]
+        text = re.sub(r"fn example_primary_text\(id: &str\) -> Option<&'static str> \{\n.*?\n}\n\n", "", text, flags=re.S)
         text = text.replace("use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};", "use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};")
         text = text.replace("use crate::standards::v1::subsets::any::schema::snapshot::{decode_en1997_dsl, compliant_demo, noncompliant_demo};\n", "")
         text = re.sub(r"\nfn from_primary\(.*?\n}\n\n", "\n", text, flags=re.S)
@@ -168,3 +174,30 @@ def law(text):
 
 
 edit("✏️s/🔌️plugins/📕️norm/🧪️tests/🔬️surface/🦀️.rs", law)
+
+EN1998_LAW = '''
+/// 🖼️ Every en1998 example asset (what the picker, the descriptor and `setActiveExample` load) decodes to exactly its
+/// code-built snapshot (what the compliance gate evaluates) — the August flat-format assets stopped parsing when the
+/// snapshot moved to `layout = "lines"`, and the old hand-kept `setActiveExample` arms hid it by loading the constructors.
+#[semio_framework_async_macros::async_test]
+async fn every_example_asset_decodes_to_its_code_built_snapshot() {
+    for (id, text, snapshot) in [
+        (crate::seismic_rc_frame::ID, crate::seismic_rc_frame::PRIMARY_TEXT, crate::seismic_rc_frame::snapshot()),
+        (crate::seismic_rc_frame_fail::ID, crate::seismic_rc_frame_fail::PRIMARY_TEXT, crate::seismic_rc_frame_fail::snapshot()),
+        (crate::seismic_multipart::ID, crate::seismic_multipart::PRIMARY_TEXT, crate::seismic_multipart::snapshot()),
+        (crate::seismic_multipart_fail::ID, crate::seismic_multipart_fail::PRIMARY_TEXT, crate::seismic_multipart_fail::snapshot()),
+    ] {
+        let decoded = crate::standards::v1::subsets::any::schema::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
+        assert!(decoded == snapshot, "{id}: the committed asset must be the code-built snapshot");
+    }
+}
+'''
+
+
+def en1998_law(text):
+    if "fn every_example_asset_decodes_to_its_code_built_snapshot" in text:
+        return text
+    return text.rstrip("\n") + "\n" + EN1998_LAW
+
+
+edit(f"{A}/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️seismic-rc-frame/🧪️tests/🧩️example/🦀️.rs", en1998_law)

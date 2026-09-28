@@ -36,7 +36,7 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
             ctx.effects.push(Effect::DispatchAction {
                 req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
                 action: TOOL_RUN_START_ACTION_ID.into(),
-                args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID }))),
+                args: Some(semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID })),
                 delay_ms: 0,
             });
         }

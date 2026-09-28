@@ -314,11 +314,7 @@ pub struct Din18599ClimateWorkingData {
 }
 
 fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
-    use std::hash::{Hash, Hasher};
-    let content_json = pack::json::to_json_string(climate);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("din18599-climate-{:016x}", hasher.finish())
+    store::content_id("din18599-climate", pack::json::to_json_string(climate).as_bytes())
 }
 
 fn din18599_climate_target(child_id: &str) -> store::os_io::ArtifactRef {

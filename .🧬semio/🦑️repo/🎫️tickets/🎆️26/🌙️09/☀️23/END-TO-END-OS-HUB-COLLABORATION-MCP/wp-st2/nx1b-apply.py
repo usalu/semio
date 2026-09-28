@@ -8,7 +8,8 @@ Fix: the producer re-digests on every run (uncached, dropped from `cachedExact`)
 through `dependentTasksOutputFiles`; the registry `check` gate now does too; the rebuild chain drops `--skip-nx-cache`.
 Law: `⚡️caching/🔏️inputs/🧪️tests/🔏️receipt` gains an Nx replay oracle (throwaway git + Nx workspaces, fixture `replay`).
 
-usage: python3 nx1b-apply.py [--dry-run | --write] [--root <repo root>]   (anchored, all-or-nothing, idempotent refusal)
+usage: python3 nx1b-apply.py [--dry-run | --write] [--root <repo root>] [--part all|now|rebuild]   (anchored, all-or-nothing,
+idempotent refusal; `now` = everything but the rebuild chain's `--skip-nx-cache` drop, `rebuild` = only that drop, window 3)
 """
 import argparse
 import hashlib
@@ -115,6 +116,10 @@ EDITS = [
     },
 '''),
 ]
+EDITS.append((f"{CACHING}/🧪️tests/⚡️cache-contracts/🟦️.ts",
+     "assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, true);",
+     "assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false, `${id} discovery receipt producer re-digests on every run: its receipt digests bytes its own cache key cannot name`);"))
+EDITS += [(f"{CACHING}/🧪️tests/⚡️cache-contracts/🟦️.ts", f'for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal({owner}.cache, true, name);', f'for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal({owner}.cache, true, name);') for owner in ("authoredWorkspace.targets[name]", "workspace.targets[name]?")]
 REBUILD = f"{REGISTRY}/🔁️rebuild/🔣️.json"
 REBUILD_EDITS = [
     ('"@semio-tech/plugin-registry:generate", "--skip-nx-cache"]', '"@semio-tech/plugin-registry:generate"]'),
@@ -122,10 +127,10 @@ REBUILD_EDITS = [
     ('"@semio-tech/framework-os-dev:activate-s-react-dev", "--skip-nx-cache"]', '"@semio-tech/framework-os-dev:activate-s-react-dev"]'),
     ('"--variant", "s", "--skip-nx-cache"]', '"--variant", "s"]'),
 ]
-EDITS += [(REBUILD, old, new) for old, new in REBUILD_EDITS]
+REBUILD_EDIT_ROWS = [(REBUILD, old, new) for old, new in REBUILD_EDITS]
 REPLACEMENTS = [
     (f"{CACHING}/🔏️inputs/🧫️fixtures/🔏️receipt/🔣️.json", "38fc25ce21a6ded7f99d9427fb04509c261925d2a558055e8fc6e6c6371956c7", "receipt-fixture.json"),
-    (f"{CACHING}/🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts", "cdaa7513f5f0157299afe26a5db2c46fe89163b4ed2af8cbde169c80794f945f", "receipt-test.ts"),
+    (f"{CACHING}/🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts", "5dd1a74ec2906b5b763fed519635726547fe70b50e49c9fcf59282db947d9548", "receipt-test.ts"),
 ]
 
 
@@ -135,9 +140,12 @@ def main():
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--write", action="store_true")
     parser.add_argument("--root", default="/Users/ueli/Documents/semio")
+    parser.add_argument("--part", choices=["all", "now", "rebuild"], default="all")
     args = parser.parse_args()
+    edits = (EDITS if args.part != "rebuild" else []) + (REBUILD_EDIT_ROWS if args.part != "now" else [])
+    replacements = REPLACEMENTS if args.part != "rebuild" else []
     texts, problems = {}, []
-    for rel, old, new in EDITS:
+    for rel, old, new in edits:
         path = os.path.join(args.root, rel)
         text = texts.get(rel) or open(path, encoding="utf-8").read()
         count = text.count(old)
@@ -145,7 +153,7 @@ def main():
             problems.append(f"{rel}: anchor found {count}x: {old.splitlines()[0][:100]!r}")
             continue
         texts[rel] = text.replace(old, new, 1)
-    for rel, sha, payload in REPLACEMENTS:
+    for rel, sha, payload in replacements:
         current = open(os.path.join(args.root, rel), "rb").read()
         if hashlib.sha256(current).hexdigest() != sha:
             problems.append(f"{rel}: content differs from the reviewed base (sha256 {hashlib.sha256(current).hexdigest()})")
@@ -159,7 +167,7 @@ def main():
                 problems.append(f"{rel}: result is not JSON: {error}")
     for rel in sorted(texts):
         print(f"edit  {rel}")
-    print(f"nx1b-apply: {len(texts)} files, {len(problems)} problems, root={args.root}")
+    print(f"nx1b-apply: part {args.part}: {len(texts)} files, {len(problems)} problems, root={args.root}")
     for problem in problems:
         print(f"PROBLEM {problem}")
     if problems:
@@ -168,8 +176,10 @@ def main():
         print("dry run: nothing written")
         return
     for rel, text in texts.items():
-        with open(os.path.join(args.root, rel), "w", encoding="utf-8") as handle:
+        path = os.path.join(args.root, rel)
+        with open(path + ".nx1b-tmp", "w", encoding="utf-8") as handle:
             handle.write(text)
+        os.replace(path + ".nx1b-tmp", path)
     print("nx1b-apply: WRITTEN")
 
 

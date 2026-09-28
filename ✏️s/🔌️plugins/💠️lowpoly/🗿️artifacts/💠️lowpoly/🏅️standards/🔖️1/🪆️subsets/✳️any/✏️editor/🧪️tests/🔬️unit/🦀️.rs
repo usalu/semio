@@ -195,7 +195,7 @@ use crate::editor::lowpoly::unit_tests::context::{app, app_with_registry, dispat
 use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
 fn retained_operation() -> AppOperationContext {
-    AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32] }
+    AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into() }
 }
 
 fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> std::sync::Arc<ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>> {

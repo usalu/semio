@@ -425,7 +425,7 @@ pub fn equation_snapshot_from_host_snapshot(fixture: EquationFixture) -> Equatio
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.equation".into(),
-        name: "Equation".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Equation", "Gleichung"),
         source_format: MATH_DOCUMENT_SCHEMA.into(),
         component_kind: "equation".into(),
         dimension: "graph".into(),

@@ -11,6 +11,8 @@
 #        Compile steps retry until green (w4-green.zsh): hub-build/mcp-build here, rebuild-all/publication in the hold.
 # Logs, catalog, data root and binary dir (s14-w4-bin/<root>) live under .🧬semio/🌐hub/s14-w4-*; the hold state stays the canonical
 # s13-w3-state-7800 (w4-restart-7800.sh, hold w4-hub-hold.ts with a rolling capture); the chain uses the DEFAULT build-dir (warm wasm units).
+# Readiness is read from the hold's append-only hold.txt: status.txt holds only the LATEST event, and the hold overwrites
+# `HOLD` with `ADMIN issued` 4 ms later (14c: a status.txt poll never saw readiness).
 setopt no_bg_nice
 set -u
 PHASE="${1:?usage: w4-chain.sh final}"
@@ -21,6 +23,8 @@ W="${W3_DIR:-/Users/ueli/Documents/semio/.tmp-ticket/wp-w3}"
 W4="${W4_DIR:-/Users/ueli/Documents/semio/.tmp-ticket/wp-w4}"
 MUTEX=(${W3_MUTEX:-/Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh})
 HUB_DEV=(/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/dist/build-dev)
+CAT="${W4_CATALOG:-s14-w4-catalog-all}"
+ROOT="${W4_ROOT:-s14-w4-hub-7800-all}"
 unset CARGO_TARGET_DIR CARGO_BUILD_TARGET_DIR CARGO_BUILD_BUILD_DIR
 export CARGO_INCREMENTAL=0 NX_DAEMON=false
 mkdir -p "$OUT"
@@ -45,7 +49,7 @@ move_7800() {
   local old=$(sed -n 's/^hold=//p' "$oldstate/pids.txt" 2>/dev/null)
   step restart env OLDSTATE="$oldstate" zsh "$W4/w4-restart-7800.sh" "$catalog" "$HUB_DEV[1]" "$name" "${old:--}" || return 1
   local state="$H/s13-w3-state-7800" started=$(date +%s)
-  until /usr/bin/grep -qE 'HOLD |HOLD_END|WAIT_FAIL' "$state/status.txt" 2>/dev/null || [ $(( $(date +%s) - started )) -gt 7200 ]; do sleep 15; done
+  until /usr/bin/grep -qE 'HOLD |HOLD_END|WAIT_FAIL' "$state/hold.txt" 2>/dev/null || [ $(( $(date +%s) - started )) -gt 7200 ]; do sleep 15; done
   /usr/bin/grep -q 'HOLD ' "$state/hold.txt" || { log "7800 NOT READY after $(( $(date +%s) - started ))s: $(cat "$state/status.txt" 2>/dev/null)"; return 1; }
   log "READY boot=$(( $(date +%s) - started ))s $(/usr/bin/grep 'HOLD ' "$state/hold.txt" | tail -1)"
   curl -s -m 20 http://127.0.0.1:7800/readyz > "$OUT/$PHASE-readyz-7800.json"
@@ -61,15 +65,16 @@ move_7800() {
 
 case "$PHASE" in
   final)
-    test -e "$H/s14-w4-hub-7800-all" && { log "REFUSED: $H/s14-w4-hub-7800-all exists"; exit 1; }
-    test -e "$H/s14-w4-catalog-all/trusted-catalog/current.json" && { log "REFUSED: $H/s14-w4-catalog-all already carries a publication"; exit 1; }
+    test -e "$H/$ROOT" && { log "REFUSED: $H/$ROOT exists"; exit 1; }
+    test -e "$H/$CAT/trusted-catalog/current.json" && { log "REFUSED: $H/$CAT already carries a publication"; exit 1; }
+    log "catalog $CAT packages ${W4_PACKAGES:-all} root $ROOT rebuild-from ${W4_REBUILD_FROM:-start}"
     rm -f "$OUT/final-hub-prewarm.done" "$OUT/final-publish.rc"
     ( step hub-prewarm hub_build; touch "$OUT/final-hub-prewarm.done" ) &
     wasm_hold || { wait; exit 1; }
     w4_retry hub-build native strict - -- hub_build || exit 1
     w4_retry mcp-build native strict - -- bun nx run @semio-tech/framework-os-mcp-rs:build --skip-nx-cache --outputStyle=stream
-    move_7800 "$H/s14-w4-catalog-all" s14-w4-hub-7800-all "$H/s13-w3-state-7800" || exit 1
-    log "ALL SERVED on 7800; waiting for the wasm hold (renderer, release plugin-module root)"
+    move_7800 "$H/$CAT" "$ROOT" "$H/s13-w3-state-7800" || exit 1
+    log "$CAT SERVED on 7800; waiting for the wasm hold (renderer, release plugin-module root)"
     wait
     /usr/bin/grep -E 'release-(support|modules|root-check)|release root' "$OUT/final-wasm-hold.txt" | /usr/bin/grep -v '^  |'
     ;;

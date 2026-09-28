@@ -35,7 +35,7 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
+                on_change: puzzle2d_action("setBrushKindWeights", Some(semio_framework_plugin::dsl_value!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
             }
         })
         .collect()

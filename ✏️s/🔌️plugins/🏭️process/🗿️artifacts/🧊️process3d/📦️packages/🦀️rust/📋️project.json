@@ -44,7 +44,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib --filter-expr 'test(schema::diff::component::tests::)' --ignore-default-filter",
+        "command": "bun ./📜️script.ts test --lib --filter-expr \"test(schema::diff::component::tests::)\" --ignore-default-filter",
         "forwardAllArgs": true
       },
       "cache": false

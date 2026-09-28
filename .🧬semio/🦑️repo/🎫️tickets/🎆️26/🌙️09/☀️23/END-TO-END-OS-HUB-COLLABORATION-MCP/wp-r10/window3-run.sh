@@ -9,7 +9,7 @@ if [ "$step" = "refresh" ]; then
   cd /Users/ueli/Documents/semio/.tmp-ticket/wp-r10 || exit 2
   bun window3-apply.ts taxonomy > generated/window3-refresh-candidate.txt 2>&1 || exit 1
   candidate="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-r10/generated/taxonomy.window3.json"
-  bun taxonomy-kinds.ts --taxonomy "$candidate" --json generated/tax-kinds-window3.json "🌎️hub" "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp" "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev" "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test" "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry" "🧰️framework/🔨️modules/🗜️deflate" "🧰️framework/🛍️products/💻️os/🖥️host" "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests"
+  bun taxonomy-kinds.ts --taxonomy "$candidate" --json generated/tax-kinds-window3.json "🌎️hub" "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp" "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev" "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test" "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry" "🧰️framework/🔨️modules/🗜️deflate" "🧰️framework/🛍️products/💻️os/🖥️host" "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests" "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel"
   exit $?
 fi
 here="/Users/ueli/Documents/semio/.tmp-ticket/wp-r10"
@@ -24,6 +24,11 @@ mkdir -p "$logs"
   [ -z "$mode" ] && { echo "[window3-run] dry run only"; exit 0; }
   echo "[window3-run] taxonomy load probe"
   (cd "$here/../wp-coord" && bun taxonomy-load-probe.ts) || { echo "[window3-run] TAXONOMY INVALID — revert this step"; exit 2; }
+  if [ "$step" = "taxonomy" ]; then
+    echo "[window3-run] static candidate diff + chain registry check"
+    python3 "$here/taxonomy-diff-check.py" "$here/generated/window3-backups/$(ls "$here/generated/window3-backups" | /usr/bin/grep '^taxonomy-' | sort | tail -1)/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" || { echo "[window3-run] TAXONOMY DIFF NOT ADDITIVE — revert this step"; exit 2; }
+    (cd /Users/ueli/Documents/semio && NX_DAEMON=false bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/plugin-registry:check --skip-nx-cache --outputStyle=stream) || { echo "[window3-run] REGISTRY CHECK RED — revert this step"; exit 4; }
+  fi
   if [ "$step" = "discovery" ] || [ "$step" = "render" ]; then
     echo "[window3-run] registry launch laws"
     (cd "$registry" && bun /Users/ueli/Documents/semio/node_modules/vitest/vitest.mjs run --config "🧪️tests/🎚️config/🟦️.ts" --testTimeout 900000 --hookTimeout 900000 "🧪️tests/🚀️launch/🟦️.ts" -t "launch configuration identity|declared project targets") || echo "[window3-run] LAUNCH LAWS RED"

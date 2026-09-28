@@ -88,8 +88,24 @@ pub const HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS: usize = 1024;
 
 /// ✂️ The hub's reason as a `HubTransientApplyRefusalMessageV1.message`: non-empty and within its declared bound.
 pub fn hub_transient_apply_refusal_message(reason: &str) -> String {
-    let bounded: String = reason.chars().take(HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS).collect();
-    if bounded.is_empty() { HUB_TRANSIENT_APPLY_REFUSAL_CODE.to_string() } else { bounded }
+    bounded_apply_refusal_message(reason, HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS, HUB_TRANSIENT_APPLY_REFUSAL_CODE)
+}
+
+/// 📏️ `HubBatchLimitRefusalCodeV1`: the `code` of the one message a document batch carries when it exceeds what the document
+/// backbone declares legal or what one database operation can ever hold — permanent: the client never resends it unchanged.
+pub const HUB_BATCH_LIMIT_REFUSAL_CODE: &str = "hub.batch-limit";
+
+/// 📏️ `HubBatchLimitRefusalMessageV1.message`'s bound in characters.
+pub const HUB_BATCH_LIMIT_REFUSAL_MESSAGE_MAX_CHARS: usize = 1024;
+
+/// ✂️ The hub's reason as a `HubBatchLimitRefusalMessageV1.message`: non-empty and within its declared bound.
+pub fn hub_batch_limit_refusal_message(reason: &str) -> String {
+    bounded_apply_refusal_message(reason, HUB_BATCH_LIMIT_REFUSAL_MESSAGE_MAX_CHARS, HUB_BATCH_LIMIT_REFUSAL_CODE)
+}
+
+fn bounded_apply_refusal_message(reason: &str, maximum_chars: usize, empty: &str) -> String {
+    let bounded: String = reason.chars().take(maximum_chars).collect();
+    if bounded.is_empty() { empty.to_string() } else { bounded }
 }
 
 #[cfg(test)]

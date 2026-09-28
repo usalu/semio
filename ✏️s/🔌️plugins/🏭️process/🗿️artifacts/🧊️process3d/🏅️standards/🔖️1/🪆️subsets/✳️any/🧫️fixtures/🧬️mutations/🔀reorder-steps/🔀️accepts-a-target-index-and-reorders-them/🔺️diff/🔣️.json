@@ -7,9 +7,9 @@
   "stockPayload": null,
   "stockSolid": null,
   "steps": {
-    "childId": "steps-flow-34a6082d5a5c21d6",
+    "childId": "steps-flow-f5f284ceb16ddaf1",
     "target": {
-      "artifactId": "steps-flow-34a6082d5a5c21d6",
+      "artifactId": "steps-flow-f5f284ceb16ddaf1",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -80,9 +80,9 @@
   "toolSolids": {
     "values": [
       {
-        "childId": "tool-step-1-brep-0b3bc21b80751c64",
+        "childId": "tool-step-1-brep-6195cae6ebec0800",
         "target": {
-          "artifactId": "tool-step-1-brep-0b3bc21b80751c64",
+          "artifactId": "tool-step-1-brep-6195cae6ebec0800",
           "dialect": {
             "artifactKind": "s.stdio.semio",
             "standard": "v1",

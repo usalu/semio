@@ -11,7 +11,8 @@
  * Configuration by environment (the siblings' names): `OS_MCP_HUB_ORIGIN` (default `http://127.0.0.1:8787`),
  * `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` (required: the human; `blocked` without them), `S_OS_MCP_LIVE_SHELL_URL` (default
  * `http://127.0.0.1:6080`, a serve joined to that hub), `S_OS_MCP_LIVE_LOCALE` (`en` | `de`), `S_OS_MCP_USER_PATH_OUT`
- * (captures, default `🌉️mcp/🤖️generated/🚶️user-path`). Promoted from the ticket harness `wp-g10/g10-user-path.ts` →
+ * (captures, default `🌉️mcp/🤖️generated/🚶️user-path`; the MCP client's gateway stderr lands there too). The hub gateway's bridge
+ * offer is scoped to this human's shell on this space, so other os sessions on the machine never attach to it. Promoted from the ticket harness `wp-g10/g10-user-path.ts` →
  * `wp-g11/g11-user-path.ts` (ticket 26/09/23, G10/G11 S4).
  */
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
@@ -118,6 +119,7 @@ if (documentId.length > 0) {
   const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: LOCALE === "de" ? "de-DE" : "en-US" });
   const page = await context.newPage();
   const lines: string[] = [];
+  const gatewayStderr: string[] = [];
   page.on("console", (message) => lines.push(`${message.type()} ${message.text().slice(0, 400)}`));
   let client: Client | undefined;
   try {
@@ -147,7 +149,9 @@ if (documentId.length > 0) {
 
     const connectStarted = Date.now();
     client = new Client({ name: "semio-user-path", version: "1" }, { capabilities: {} });
-    await client.connect(new StdioClientTransport({ command: entry.command, args: entry.args, env: { ...process.env } as Record<string, string>, stderr: "pipe" }), { timeout: 900_000 });
+    const transport = new StdioClientTransport({ command: entry.command, args: entry.args, env: { ...process.env } as Record<string, string>, stderr: "pipe" });
+    transport.stderr?.on("data", (chunk: Buffer) => gatewayStderr.push(chunk.toString("utf8")));
+    await client.connect(transport, { timeout: 900_000 });
     const tools = await client.listTools(undefined, { timeout: 120_000 });
     const resolved: any = await client.callTool({ name: "context_resolve", arguments: {} }, undefined, { timeout: 120_000 });
     const principal = String(resolved.structuredContent?.principal ?? "");
@@ -217,6 +221,7 @@ if (documentId.length > 0) {
   } finally {
     await client?.close().catch(() => undefined);
     writeFileSync(join(OUT, `console-${LOCALE}.txt`), lines.slice(-400).join("\n"));
+    writeFileSync(join(OUT, `gateway-stderr-${LOCALE}.txt`), gatewayStderr.join(""));
     writeFileSync(join(OUT, `rows-${LOCALE}.json`), JSON.stringify(rows, null, 1));
     await browser.close();
   }
@@ -235,7 +240,7 @@ publishAcceptanceCheckResult(
       en: `${green}/${rows.length} user-path rows green in ${LOCALE}${red.length ? `; red: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}`,
       de: `${green}/${rows.length} Zeilen des Nutzerwegs grün in ${LOCALE}${red.length ? `; rot: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}`,
     },
-    evidence: [join(OUT, `rows-${LOCALE}.json`), join(OUT, `console-${LOCALE}.txt`)],
+    evidence: [join(OUT, `rows-${LOCALE}.json`), join(OUT, `console-${LOCALE}.txt`), join(OUT, `gateway-stderr-${LOCALE}.txt`)],
   }),
 );
 process.exit(red.length === 0 ? 0 : 1);

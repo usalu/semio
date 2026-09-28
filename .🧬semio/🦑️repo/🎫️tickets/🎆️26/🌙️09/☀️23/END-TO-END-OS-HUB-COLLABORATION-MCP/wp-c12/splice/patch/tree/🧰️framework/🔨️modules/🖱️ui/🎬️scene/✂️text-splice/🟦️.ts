@@ -173,4 +173,58 @@ export function textEditorAppliedSpliceV1(selectionJson: string | undefined): nu
     return 0;
   }
 }
+
+/** @emoji 🧾️ One splice-typing host's knowledge of one window (the Jupiter client model, no CRDT): `remote` — the text the
+ * window last published, `base` — the text the window holds once it applied every splice this host sent (the text the next
+ * splice is computed against), `seq` — the last splice sent, `unapplied` — the sent splices no scene acknowledged yet, oldest
+ * first. */
+export type TextEditorSpliceHostV1 = {
+  readonly remote: string;
+  readonly base: string;
+  readonly seq: number;
+  readonly unapplied: readonly { readonly seq: number; readonly splice: TextSpliceV1 }[];
+};
+
+/** @emoji 🖼️ What a host's editor shows after a scene: the text and the scalar selection, or `null` when it already shows it. */
+export type TextEditorSpliceViewV1 = { readonly text: string; readonly anchor: number; readonly caret: number } | null;
+
+/** @emoji 🌱️ A host that shows `buffer` of a window that applied splice `applied`: its numbers continue after `applied`, so a
+ * remounted host never reuses a `seq` the window already took. */
+export function textEditorSpliceHostV1(buffer: string, applied: number): TextEditorSpliceHostV1 {
+  return { remote: buffer, base: buffer, seq: applied, unapplied: [] };
+}
+
+/** @emoji ⌨️ The host's editor now shows `local`: the ONE splice to send (numbered `seq`) and the host after it, or `null` when
+ * the window will already hold `local`. */
+export function sendTextEditorSpliceV1(host: TextEditorSpliceHostV1, local: string): { readonly host: TextEditorSpliceHostV1; readonly splice: TextSpliceV1; readonly seq: number } | null {
+  const splice = textSpliceFromEditV1(host.base, local);
+  if (splice === null) return null;
+  const seq = host.seq + 1;
+  return { host: { ...host, base: local, seq, unapplied: [...host.unapplied, { seq, splice }] }, splice, seq };
+}
+
+function textEditorSpliceShowV1(host: TextEditorSpliceHostV1, remote: string, unapplied: TextEditorSpliceHostV1["unapplied"], local: string, selection: { readonly anchor: number; readonly caret: number }, undelivered: TextSpliceV1 | null): { readonly host: TextEditorSpliceHostV1; readonly show: TextEditorSpliceViewV1 } {
+  const base = unapplied.reduce((text, entry) => applyTextSpliceV1(text, entry.splice).text, remote);
+  const view = rebaseTextEditsV1(remote, undelivered === null ? unapplied.map((entry) => entry.splice) : [...unapplied.map((entry) => entry.splice), undelivered], local, selection);
+  return { host: { remote, base, seq: host.seq, unapplied }, show: view.text === local ? null : view };
+}
+
+/** @emoji 🔁️ The window published `remote` having applied this host's splices up to `applied`, while the editor shows `local` with
+ * the scalar `selection`: the editor shows `remote` with every still-unapplied splice and the not-yet-sent local change folded
+ * on, the selection carried along by its context — nothing when that is what it shows already (an echo of its own typing),
+ * so neither a lagging echo nor a collaborator's run ever reverts or scrambles what this host typed. */
+export function receiveTextEditorSceneV1(host: TextEditorSpliceHostV1, remote: string, applied: number, local: string, selection: { readonly anchor: number; readonly caret: number }): { readonly host: TextEditorSpliceHostV1; readonly show: TextEditorSpliceViewV1 } {
+  return textEditorSpliceShowV1({ ...host, seq: Math.max(host.seq, applied) }, remote, host.unapplied.filter((entry) => entry.seq > applied), local, selection, textSpliceFromEditV1(host.base, local));
+}
+
+/** @emoji 🚫️ The window refused splice `seq`: it leaves the unapplied set and the editor shows the last published text with the
+ * remaining unapplied splices — the refused run, and what was typed after it and not sent yet, disappear instead of looking
+ * saved; the caret collapses where the refused run was (located by the run's own context, which is still there). */
+export function refuseTextEditorSpliceV1(host: TextEditorSpliceHostV1, seq: number, local: string, selection: { readonly anchor: number; readonly caret: number }): { readonly host: TextEditorSpliceHostV1; readonly show: TextEditorSpliceViewV1 } {
+  const refused = host.unapplied.find((entry) => entry.seq === seq);
+  const shown = textEditorSpliceShowV1(host, host.remote, host.unapplied.filter((entry) => entry.seq !== seq), local, selection, null);
+  if (refused === undefined || shown.show === null) return shown;
+  const at = locateTextSpliceV1(shown.show.text, { ...refused.splice, deleted: "", insert: "" }).start;
+  return { host: shown.host, show: { text: shown.show.text, anchor: at, caret: at } };
+}
 //#endregion ⌨️TextEditorTyping

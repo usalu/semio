@@ -1,6 +1,6 @@
 use super::password::{PasswordCredentialError, PasswordCredentialV1};
 use semio_framework_hash::{hmac_sha256, pbkdf2_sha256};
-use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitSubjectV1, RATE_LIMIT_CLASSES};
+use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, RATE_LIMIT_CLASSES, RATE_LIMIT_REFUSAL_MESSAGE};
 use super::*;
 
 /// 🕰️ A hand-stepped clock: every rate-limit law below reads exactly the milliseconds it sets.
@@ -270,6 +270,30 @@ fn every_rate_limit_class_is_a_schema_member_and_its_policy_validates() {
         let policy = class.policy();
         let row = serde_json::json!({ "class": class.as_str(), "burst": policy.burst, "costMs": policy.cost_ms });
         assert!(validator.is_valid_json(&row.to_string()), "{} policy {row} validates against AuthRateLimitPolicyV1", class.as_str());
+    }
+}
+
+/// 🚦️ The Rust rate-limit refusal is exactly `RateLimitRefusalV1`: every non-auth class's body validates against the declared
+/// schema (owned draft-07 validator), its notice is the declared en + de const, and the fixture's valid bodies validate while
+/// every near miss (no wait, an unknown class, a missing language, another code, no `retryAfterMs`, an extra field) does not.
+#[test]
+fn the_rate_limit_refusal_is_the_declared_schema_body() {
+    let document: serde_json::Value = serde_json::from_str(SCHEMA_MODULE).expect("hub.auth schema module");
+    let validator = structural("RateLimitRefusalV1");
+    assert_eq!(serde_json::to_value(RATE_LIMIT_REFUSAL_MESSAGE).unwrap(), document["$defs"]["RateLimitRefusalMessageV1"]["const"]);
+    for class in RATE_LIMIT_CLASSES.into_iter().filter(|class| *class != RateLimitClassV1::Auth) {
+        let body = serde_json::to_value(RateLimitRefusalV1::new(class, u64::from(class.policy().cost_ms))).unwrap();
+        assert!(validator.is_valid_json(&body.to_string()), "{} refusal {body} validates", class.as_str());
+    }
+    assert_eq!(RateLimitRefusalV1::new(RateLimitClassV1::DirectoryCommand, 0).retry_after_ms, 1, "a refusal always names a positive wait");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️rate-limit-refusal-v1/🔣️.json")).unwrap();
+    for body in fixture["valid"].as_array().unwrap() {
+        assert!(validator.is_valid_json(&body.to_string()), "valid fixture body {body}");
+        let class = RATE_LIMIT_CLASSES.into_iter().find(|class| class.as_str() == body["class"].as_str().unwrap()).unwrap();
+        assert_eq!(&serde_json::to_value(RateLimitRefusalV1::new(class, u64::from(class.policy().cost_ms))).unwrap(), body, "the Rust body for {} is the fixture's", class.as_str());
+    }
+    for body in fixture["invalid"].as_array().unwrap() {
+        assert!(!validator.is_valid_json(&body.to_string()), "near miss {body} must not validate");
     }
 }
 

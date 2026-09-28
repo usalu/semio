@@ -7381,11 +7381,12 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "shared-artifact-addressing") {
-      const { testSharedArtifactAddressingOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️artifact-addressing/🟦️.ts");
+      const { testContentIdOracle, testSharedArtifactAddressingOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️artifact-addressing/🟦️.ts");
       testSharedArtifactAddressingOracle();
+      testContentIdOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "shared_artifact_addressing", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_addressing", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "wires-window-transient") {

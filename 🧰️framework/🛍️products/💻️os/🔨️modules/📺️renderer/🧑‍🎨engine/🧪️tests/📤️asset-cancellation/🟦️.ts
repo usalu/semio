@@ -19,7 +19,7 @@ describe("🛑️ Exact asset request cancellation", () => {
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();
-      const observed = await page.evaluate((stages) => stages.map((stage: string) => {
+      const observed = await page.evaluate((stages: readonly string[]) => stages.map((stage) => {
         const first = new AbortController();
         const unrelated = new AbortController();
         let notifications = 0;

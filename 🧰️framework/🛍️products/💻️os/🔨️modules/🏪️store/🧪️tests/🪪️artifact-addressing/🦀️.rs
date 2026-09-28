@@ -44,3 +44,17 @@ fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreig
     }
     eprintln!("[DEBUG] shared link identity preserved three pin variants and rejected nine foreign or malformed records");
 }
+
+/// 🆔️ `content_id` is `<prefix>-` + the first 16 hex digits of SHA-256: equal to Python `hashlib`'s answer for every
+/// committed vector (`contentIds`), admitted by the child schema's `ContentId`, and independent of the process that
+/// computes it.
+#[test]
+fn content_id_is_the_specified_sha256_prefix() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
+    for row in fixture["contentIds"].as_array().unwrap() {
+        let (prefix, text) = (row["prefix"].as_str().unwrap(), row["text"].as_str().unwrap());
+        let id = content_id(prefix, text.as_bytes());
+        assert_eq!(id, row["id"].as_str().unwrap());
+        assert_eq!(id, content_id(prefix, text.as_bytes()));
+    }
+}

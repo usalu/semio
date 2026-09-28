@@ -31,8 +31,8 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
   🚧️ THREE KINDS THE REFERENCE REFUSES BY CLAUSE, and reports rather than works around.
   `create-vortex-kind`, `delete-vortex-kind` and `rename-vortex-kind` all rewrite `catalog`, which a
   committed snapshot carries as a COMPOSED CHILD HANDLE `{childId, target}`. Their committed
-  after-snapshots carry a NEW `childId` — `catalog-69f2059178f5dfa4`, `catalog-9dc5de0f33c9568d`,
-  `catalog-e76534bc13e6b5a6` — which is a content address of the child `s.stdio.semio@v1/kit`
+  after-snapshots carry a NEW `childId` — `catalog-5ce9c1bc68fe0136`, `catalog-8d421fac84ff7c6c`,
+  `catalog-f4edbb0f2f89853d` — which is a content address of the child `s.stdio.semio@v1/kit`
   document after the vocabulary moved, and no document in this repository states the addressing
   function or the child's canonical encoding. The LOCAL `vortexKindExtra` half of those kinds is
   implemented; the catalogue half is not, and the reference declines to guess rather than hard-code

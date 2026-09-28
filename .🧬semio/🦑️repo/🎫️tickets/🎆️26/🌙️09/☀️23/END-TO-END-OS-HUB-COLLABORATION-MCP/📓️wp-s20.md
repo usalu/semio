@@ -14,6 +14,78 @@ Private cargo: `CARGO_TARGET_DIR=.tmp-ticket/wp-s20/target` (native lane, build-
 | 4 | Unowned guest reds (note/shooting import args, architect CSV picker, process format registration, puzzle2d/5d budget, remodel/shooting silent exports, forms description) + cad solid export seam | prepared patches in progress | §log |
 | 2 | Export/import through the `s` UI per kind: harness (`📜️script.ts` verb + nx target + launch row), run local + 7800, route reds | **harness written + type-checked + smoke-run** (`verify io`, os-dev); nx target + launch rows relayed to R10 (rule 17); full local run in flight; 7800 run next | §log, `.🧬semio/🌐hub/s14-s20-io/` |
 
+### Session 14c
+
+Successor agent (28 21:1x, WINDOW 3 OPEN; L1 applies guest sets in trains, rule 24). All 8 prepared sets re-dry-run clean on the live
+tree 21:2x (initializer 69 files, poll-yield, document-verbs 10, chunk-staging 6, retire-load-request 13, cad-solids, process-formats,
+silent-exports).
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| 1 | chunk staging PHASE 2 (generation3d + puzzle3d drop private stagings, architect CSV picker, puzzle2d/5d import limits) — lands with phase 1 in T1 | **prepared, dry-run clean 21:5x (27 files), relayed to L1** (script + crates + laws); compile/laws = L1's T1 proof (overlay skipped: rule 23 disk, 107 GiB) | `wp-s20/s20-patch-chunk-staging-2.py`, `wp-s20/s20-chunk-staging-2/{old,new}/` |
+| 2 | raster Import Document hang → native root cause + prepared guest fix | open | |
+| 3 | io-matrix `matrixVerbOf` → rendered edits (`driveRenderedEdit`, `pluginEdits`/`kindEdits`) | **landed 21:3x** (host TS dev harness), tsc rc 0 | `generated/tsc-io-3.txt`, landing row |
+| 4 | `verify io` on hub 7800 (p24) en + de, publish records, route reds | open (load 62, swap 14/15 GB at 21:32 — after phase 2) | |
+
+#### Session 14c log
+
+- 21:1x read preamble 14 (+14b/14c, rules 1–24), window-3 plan, fleet tail (pending relay: matrixVerbOf), L1 report (T1 holds
+  `s20-chunk-staging` until phase 2 exists). Dry runs of all 8 sets clean.
+- 21:3x item 3 landed: `🧑‍💻dev/🧪️tests/🚪️io-matrix/🟦️.ts` — `matrixVerbOf` returns `{verb, args, edit}` (edit from
+  `kindEdits[<key>.<verb>]` → `kindEdits[<base>.<verb>]` → `pluginEdits[<origin>.<verb>]`), `runImport` moves the document through
+  `driveRenderedEdit` when an edit is pinned (new `driveMove`, refusals + notices captured). tsc rc 0 (`generated/tsc-io-3.txt`).
+- 21:3x–21:5x item 1 PHASE 2 prepared: `wp-s20/s20-patch-chunk-staging-2.py` (dry-run clean, 27 files; whole-file swaps guarded by
+  sha256, spans kept verbatim in `s20-chunk-staging-2/old/`). Findings that shaped it: (a) generation3d's private chunk extent was
+  `PUBLIC_INVOCATION_STRING_BYTES` = 4 096 B while the host slices 32 KiB — every generation3d pick above 4 KiB was refused
+  `generation3d-import-chunk` live; (b) phase 1 alone would REGRESS puzzle3d (the SDK hands its import a whole 145 KB payload that its
+  own 32 KiB chunk check refuses) → phases land together; (c) the puzzle stagings were process-global statics (cross-document leakage);
+  (d) the typed-command pipeline is contiguous by construction (`encode_op` → `Vec<u8>`, `begin_exact_wire` reserves
+  `Vec<ToolWirePage>` of the payload size), so a reassembled import is one contiguous block like a document-archive load
+  (`parent_spr`); the paged puzzle parsers bought nothing once the payload is whole → deleted. Set content: generation3d
+  (`ImportDocument {name, payload}`, one size rule `generation3d-import-capacity` = one Artifact-lane edit, owner/route/decoder/
+  description, surface fixture + TS twin lose the chunk ledger, laws incl. the placeholder `📥️import-document` test file now real);
+  puzzle 2d/3d/5d (whole-payload decode, `Capacity`/`Payload` localized notices, 2d `import_too_large` en/de added, 3d/5d dead
+  `import_incomplete` removed, shared `PUZZLE_IMPORT_TOTAL_BYTES`/`PUZZLE_IMPORT_RAW_BYTES` = 2×256 KiB + 8 KiB in the retained routes
+  and their proofs, SDK-lane laws: chunks through `handle_action` → one applied edit, gap = typed `file-import.gap`); architect CSV
+  picker `importRegistersCsvRequest` (RequestId 132, `.csv,text/csv`, text) → `importRegistersCsv {payload, strategy=upsert}` (the
+  `csv` single-line field renamed to the framework's `payload`), appended as the LAST command variant (wire hex pins unchanged),
+  catalogue shortcut, declared-verbs 22 → 23, law `import_registers_csv_request_opens_a_csv_file_picker`; io-matrix CSV pin → picker;
+  kernel doc on `import_chunk_arguments`. Relayed to L1 21:5x (apply right after phase 1 in T1).
+- 21:5x item 2: repro law `a_demo_edit_archive_loads_back_through_the_document_archive_door` appended to raster
+  `✏️editor/🧪️tests/🔬️unit/🦀️.rs` (test-only, rule 22; pre-image `wp-s20/s20-raster-archive/unit-before.rs`): seat demo → read the
+  document archive → (1) drive `raster_document_store_initialization_job` over the parsed pack/spr envelope, bounded 400 000 steps;
+  (2) the whole archive door (begin/poll/maintenance, 240 s wall bound) → Ready + emblem present. Queued in the native lane 21:58
+  (`generated/raster-archive-law-1.txt`, runner `wp-s20/s20-raster-archive/run-law.sh`).
+- 21:58 item 4: root `📜️script.ts verify io` is NOT the harness (it fell through to the repo verify gate, which died in
+  dependency-cruiser ENAMETOOLONG on `🌎️hub/…/🗑️generated/test-artifacts/linked-ancestor-publication-owner-*` recursion — a peer's
+  test artifacts; nothing ran). Runner `wp-s20/s20-io-hub.sh <en|de> <tag> [hub]` = os-dev `bun ./📜️script.ts verify io --serve
+  :6640 --hub … --out .🧬semio/🌐hub/s14-s20-io` (creds from the hub recipe into env only).
+- 22:1x hub smoke `s20c-hub7800-smoke-2` (draw, note on 7800/p24): census creatable 17+ kinds (the 09-27 run saw 0); framework
+  document round trip 2/2 byte-identical over hub documents (623 B / 528 B); own formats 0/2: on a HUB document `setActiveExample`
+  is refused `action-guest-refused`, the next press `action-state-unconfirmed`, and every later action `action-owner-mismatch`
+  ("The document owner changed — try again.") — the shell's action owner never recovers after one guest refusal on a hub doc; plus
+  React `Cannot update a component while rendering a different component` in `FrameworkOsShellInner`. Full en run launched 22:15
+  (`s20c-hub7800-en-1.log`).
+- 23:3x **hub-document action cascade (routed to S18 by the coordinator) — evidence**, all under `.🧬semio/🌐hub/s14-s20-io/`:
+  first refusal = row `draw/drawing` right after the navbar seats example `demo` on a freshly created hub document:
+  `s20c-hub7800-en-2/draw-drawing.console.txt` line 10 (`21:24:13.912 input #10 setActiveExample refused: dispatch-failed … —
+  action-guest-refused`), then line 12 (`input #11 exportDocument … action-state-unconfirmed`), then line 13 onward every action
+  `action-owner-mismatch`; screenshot `s20c-hub7800-en-2/draw-drawing.png`; same sequence in `s20c-hub7800-en-1/draw-drawing.console.txt`
+  (20:17:51 / 20:18:05 / 20:19:08 …, + `Cannot update a component while rendering a different component … FrameworkOsShellInner`
+  at 20:20:16) and `s20c-hub7800-smoke-2/draw-drawing.console.txt` (20:10:55 …). Mechanism (host, `🏪️store/👷️worker/🟦️.ts`
+  ~l.2465–2475): a typed-operation page on the FAULT lane only increments `publication.refusals` (`typedOperationPageAnswerV1`
+  returns `refused: boolean`, `🎭️actor/🖼️wire-turn/🟦️.ts`) → `action-guest-refused` WITHOUT the guest's fault code/message (it is
+  dropped — no console line, no notice); the next action's failure after `invoked` is not an explicit refusal → `this.close()` closes
+  the document browser actor → every later action fails the owner guard (`documentBinding`/child gone) as `action-owner-mismatch`.
+  Why `setActiveExample` refuses: not observable from the page (the fault text is dropped). The guest verb is draw's
+  `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/…/✏️editor/🎮️commands/🖼️set-active-example/🦀️.rs`, which answers with ONE
+  `Effect::LoadDocument` (`drawing_reset_document_effect`, a whole-document replace) instead of event-sourced mutations — on a shared
+  hub document executed by the browser actor that is the likely refused shape (same verb seats `demo` fine on a local document,
+  `s20b-local-en-2`). Owners: S18 (cascade: surface the fault-lane payload + don't close the actor on a guest fault), U7 (example
+  loaders that replace via `LoadDocument` — draw drawing is one).
+- 23:3x 7800 document column = **expected red until the next chain (pre-T1 guests)**: since T1 landed `s20-document-verbs` the
+  harness presses the SDK-reserved Export/Import Artifact Document rail rows, which the p24 guests do not declare (`pressed: absent`).
+
 ### Session 14b
 
 Successor agent (28 12:1x). Guest freeze ON (chain 12:02). Serve: S18's 6540 reused through `ensureDevServe` (never stopped by me);

@@ -36,8 +36,8 @@ pub const GENERATION3D_VIEW_APP_ID: &str = "procedural3d-view";
 
 /// 🎯️ An `ActionDescriptor` addressed at this viewer — the single factory every chrome measure
 /// builds its `on_change` with.
-pub fn generation3d_view_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: GENERATION3D_VIEW_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub fn generation3d_view_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GENERATION3D_VIEW_APP_ID.into(), action: action.into(), args }
 }
 
 /// 🪟️ The window kinds this surface's `flowEvalTick` chain may be addressed to — this viewer has
@@ -1342,6 +1342,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

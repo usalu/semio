@@ -10,7 +10,9 @@ import {
   type DocumentScope,
   type GisMapInferencePortStatusV1,
 } from "@semio-tech/framework-os";
+import { canvasPointToScreen } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "../../🧱️elements/🏛️ShellHost/👥️presence-scope/🟦️.ts";
+import { inkPresenceCanvasV1, worldToScreen } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
 import {
   InferencePortPanel,
   inferencePortStatusRuntimeKeyV1,
@@ -76,14 +78,48 @@ describe("scope-safe Shell presence", () => {
 
   it("keeps equal document ids isolated by verified scope and surface", () => {
     const [a, b] = fixture.cases;
-    expect(scopedPresencePeersV1(event(a), a.scope)).toEqual([
+    expect(scopedPresencePeersV1(event(a), a.scope, a.surface)).toEqual([
       { actor: "actor-a", userId: "user-a", label: "Ada", role: "author", connectedAtMs: 101, color: 2 },
     ]);
-    expect(scopedPresencePeersV1(event(b), b.scope)).toEqual([
+    expect(scopedPresencePeersV1(event(b), b.scope, b.surface)).toEqual([
       { actor: "actor-b", userId: "user-b", label: "Berta", role: "spectator", connectedAtMs: 202, color: 5 },
     ]);
-    expect(scopedPresencePeersV1(event(a), b.scope)).toEqual([]);
-    expect(scopedPresencePeersV1({ ...event(a), verifiedSurfaceId: "map@1/*#viewer" }, a.scope)).toEqual([]);
+    expect(scopedPresencePeersV1(event(a), b.scope, a.surface)).toEqual([]);
+    expect(scopedPresencePeersV1({ ...event(a), verifiedSurfaceId: "map@1/*#viewer" }, a.scope, a.surface)).toEqual([]);
+    expect(scopedPresencePeersV1(event(a), a.scope, null)).toEqual([]);
+  });
+
+  // 👁️ Row 3.4 (C13, measured on hub 7800 p24): the roster is document-wide (contract §C7.0) — a Spectator on the viewer
+  // surface and an author on the editor surface of ONE document see each other; only the message's own verified surface must
+  // be the one the session was admitted on.
+  it("projects every peer of the document whatever surface it runs, for the editor and the viewer alike", () => {
+    const [a, b] = fixture.cases;
+    const both = (surface: string) => ({ ...event(a), verifiedSurfaceId: surface, event: { kind: "presence" as const, peers: [a.peer, { ...b.peer, surface: b.surface }] } });
+    const roster = [
+      { actor: "actor-a", userId: "user-a", label: "Ada", role: "author", connectedAtMs: 101, color: 2 },
+      { actor: "actor-b", userId: "user-b", label: "Berta", role: "spectator", connectedAtMs: 202, color: 5 },
+    ];
+    expect(scopedPresencePeersV1(both(a.surface), a.scope, a.surface), "the author sees the spectator").toEqual(roster);
+    expect(scopedPresencePeersV1(both(b.surface), a.scope, b.surface), "the spectator sees the author").toEqual(roster);
+    expect(scopedPresencePeersV1(both(b.surface), a.scope, a.surface), "a message verified on another surface than the session's").toEqual([]);
+  });
+
+  // 👕️ C13 (note on hub 7800 p24): the ink host publishes and paints presence through the shared canvas camera, so the same
+  // ink point lands on the same pixel of the local ink view whatever the camera (offset, zoom, viewport size).
+  it("maps the ink camera onto the shared canvas presence camera exactly", () => {
+    const cases: readonly (readonly [{ x: number; y: number; zoom: number }, readonly [number, number], readonly [number, number]])[] = [
+      [{ x: 0, y: 0, zoom: 1 }, [800, 600], [0, 0]],
+      [{ x: 120, y: -40, zoom: 1 }, [800, 600], [37.5, 12]],
+      [{ x: -310.25, y: 88, zoom: 2.5 }, [1280, 720], [-14, 403.75]],
+      [{ x: 17, y: 3, zoom: 0.1 }, [375, 812], [9000, -1234.5]],
+      [{ x: 640, y: 360, zoom: 8 }, [1, 1], [-0.125, 0.0625]],
+    ];
+    for (const [camera, size, world] of cases) {
+      const ink = worldToScreen(camera, world[0], world[1]);
+      const shared = canvasPointToScreen(inkPresenceCanvasV1(camera, size), size, world);
+      expect(shared[0], JSON.stringify({ camera, size, world })).toBeCloseTo(ink.x, 9);
+      expect(shared[1], JSON.stringify({ camera, size, world })).toBeCloseTo(ink.y, 9);
+    }
   });
 
   // 🤖️ Outcome 3 × 4: an AI agent acting under a delegated credential is its own principal, and a
@@ -93,7 +129,7 @@ describe("scope-safe Shell presence", () => {
     const [a] = fixture.cases;
     const agentPeer = { ...a.peer, actor: "actor-agent", userId: "user-a", label: "Drafting agent", principalKind: "agent" as const };
     const withAgent = { ...event(a), event: { kind: "presence" as const, peers: [a.peer, agentPeer] } };
-    const projected = scopedPresencePeersV1(withAgent, a.scope);
+    const projected = scopedPresencePeersV1(withAgent, a.scope, a.surface);
 
     expect(projected).toHaveLength(2);
     expect(projected[0]?.isAgent).toBeUndefined();
@@ -102,7 +138,7 @@ describe("scope-safe Shell presence", () => {
 
     // 🛡️ Absent and "human" are the same thing — a client cannot promote itself by omitting it.
     const claimedHuman = { ...event(a), event: { kind: "presence" as const, peers: [{ ...agentPeer, principalKind: "human" as const }] } };
-    expect(scopedPresencePeersV1(claimedHuman, a.scope)[0]?.isAgent).toBeUndefined();
+    expect(scopedPresencePeersV1(claimedHuman, a.scope, a.surface)[0]?.isAgent).toBeUndefined();
   });
 
   it("renders the agent badge inside the accessible name, in en and de", async () => {
@@ -168,7 +204,7 @@ describe("scope-safe Shell presence", () => {
       expect(decoded.kind).toBe("event");
       if (decoded.kind === "event") {
         expect(decoded.event).toEqual({ kind: "presence", peers: [] });
-        expect(scopedPresencePeersV1(decoded, a.scope)).toEqual([]);
+        expect(scopedPresencePeersV1(decoded, a.scope, a.surface)).toEqual([]);
       }
     }
   });

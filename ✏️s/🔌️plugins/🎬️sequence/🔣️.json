@@ -5588,7 +5588,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio sequence.sequence.dsl v1\nschema=sequence.sequence content=child_id=sequence-content-5a292c39ad916e7c target=\"sequence-content-5a292c39ad916e7c!s.stdio.semio@v1/flow\"\n",
+        "artifactJson": "semio sequence.sequence.dsl v1\nschema=sequence.sequence content=child_id=sequence-content-13e3545f6a91fe1f target=\"sequence-content-13e3545f6a91fe1f!s.stdio.semio@v1/flow\"\n",
         "dialect": {
           "artifactKind": "s.sequence.sequence",
           "standard": "1",

@@ -12,7 +12,7 @@ pub fn request(count: u32) -> Effect {
     Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: "setFillCount".into(),
-        args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "value": count }))),
+        args: Some(semio_framework_plugin::dsl_value!({ "value": count })),
         delay_ms: 0,
     }
 }

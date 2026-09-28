@@ -10618,7 +10618,7 @@ impl ShellState {
             return;
         }
         self.checkpoint_dispatched = true;
-        let authors: Vec<Value> = self.identity.as_ref().map(|identity| vec![serde_json::json!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
+        let authors: Vec<semio_framework::DslValue> = self.identity.as_ref().map(|identity| vec![semio_framework::dsl_value!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
         let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": message, "authors": authors }) };
         // 🧱️ `Box::pin` breaks a real call-graph cycle (`dispatch_action` → `handle_sync_action` →
         // `attach_sync_backbone` → `checkpoint_before_detach` → here → `dispatch_action` again) that
@@ -11069,7 +11069,7 @@ impl ShellState {
     fn schedule_sync_path_pick(&mut self, pick: impl std::future::Future<Output = Option<String>> + Send + 'static) {
         self.submit_shell_io_future(async move {
             let Some(path) = pick.await else { return ShellIoCompletion::Finished };
-            ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "path": path }))) }])
+            ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: Some(semio_framework::dsl_value!({ "path": path })) }])
         });
     }
 
@@ -13484,7 +13484,7 @@ impl ShellState {
                                 if let Some(obj) = args.as_object_mut() {
                                     obj.insert("folderPath".into(), serde_json::json!(folder_path));
                                 }
-                                ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: session.app.controller_id, action: import_action, args: semio_framework::optional_json_to_dsl(Some(args)) }])
+                                ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: session.app.controller_id, action: import_action, args: Some(semio_framework::DslValue::from(args)) }])
                             });
                         }
                     }
@@ -15738,7 +15738,7 @@ impl ShellState {
                     Self::debug_log(&format!("[DEBUG] shell world3d cancel {}", serde_json::json!({ "host": host_id, "surface": surface_id, "action": action.cancel_action })));
                     let mut args = action.cancel_args;
                     args.insert("surfaceId".to_string(), Value::String(surface_id));
-                    self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }).await?;
+                    self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: Some(semio_framework::DslValue::from(Value::Object(args))) }).await?;
                 }
                 return Ok(true);
             }
@@ -16390,7 +16390,7 @@ impl ShellState {
             ));
             let mut args = status.cancel_args;
             args.insert("surfaceId".to_string(), Value::String(surface_id));
-            let descriptor = ActionDescriptor { controller_id, action: status.cancel_action, args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) };
+            let descriptor = ActionDescriptor { controller_id, action: status.cancel_action, args: Some(semio_framework::DslValue::from(Value::Object(args))) };
             if let Err(error) = self.dispatch_action(descriptor).await {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump terminal drive failed: {error}"));
             }
@@ -20751,7 +20751,7 @@ const WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID: &str = "ui.windowSearch.suggestions"
 /// 🚦️ React's `FRAMEWORK_RESERVED_ACTION_IDS` (`🛠️ShellHelpers/🟦️.tsx:308`) — the framework's OWN
 /// verbs, which an armed utility never gates: their chords keep firing while a brush owns the
 /// pointer, so a pane row that refused them at the same moment would contradict its own keybinding.
-const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 17] = [
+const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 19] = [
     "undo",
     "redo",
     "commitCheckpoint",
@@ -20769,6 +20769,8 @@ const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 17] = [
     "startTutorial",
     "setActiveUtility",
     "setActiveTool",
+    semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+    semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
 ];
 
 /// 🗂️ React's `actionCategoryId` (`🛠️ShellHelpers/🟦️.tsx`): the declared category, else `history` for
@@ -22116,7 +22118,7 @@ impl ShellState {
         let Some(effective) = Self::resolved_execute_args(&action.args, &staged) else {
             return Ok(());
         };
-        let args = semio_framework::optional_json_to_dsl(if effective.is_empty() { None } else { Some(Value::Object(effective)) });
+        let args = (!effective.is_empty()).then(|| semio_framework::DslValue::from(Value::Object(effective)));
         self.dispatch_action(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id.to_string(), args }).await
     }
     // #endregion
@@ -22406,7 +22408,7 @@ impl ShellState {
         if let Some(detail) = detail {
             args["detail"] = detail;
         }
-        ActionDescriptor { controller_id: controller_id.to_string(), action: "noteShellCommand".into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+        ActionDescriptor { controller_id: controller_id.to_string(), action: "noteShellCommand".into(), args: Some(semio_framework::DslValue::from(args)) }
     }
 
     /// 🕒️ The `dispatch_action`-recursion delivery path (mechanism (a) — a `noteShellCommand`'s
@@ -24732,7 +24734,7 @@ impl ShellState {
                 }
                 TutorialPendingDocOp::HistoryAction { action_id, args } => {
                     if let Some(session) = self.session.clone() {
-                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: semio_framework::optional_json_to_dsl(args) };
+                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: args.map(semio_framework::DslValue::from) };
                         if let Err(err) = self.dispatch_action(descriptor).await {
                             Self::debug_log(&format!("[DEBUG] tutorial history action failed: {err}"));
                         }
@@ -31171,7 +31173,7 @@ fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes:
         obj.insert("payload".into(), Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))));
         obj.insert("name".into(), Value::String(name.to_string()));
     }
-    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: Some(semio_framework::DslValue::from(args)) }
 }
 
 /// 🧮️ Pure `ffmpeg` argument computation for D5 frame extraction (precedent: `animate/video/rs/lib.rs`'s
@@ -31285,7 +31287,7 @@ async fn request_media_frames(
             obj.insert("index".into(), serde_json::json!(index));
             obj.insert("total".into(), serde_json::json!(total));
         }
-        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(frame_args)) });
+        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: Some(semio_framework::DslValue::from(frame_args)) });
     }
     let mut done_args = base_args;
     if let Some(obj) = done_args.as_object_mut() {
@@ -31293,7 +31295,7 @@ async fn request_media_frames(
         obj.insert("frameCount".into(), serde_json::json!(total));
         obj.insert("sampledCount".into(), serde_json::json!(total));
     }
-    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(done_args)) });
+    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: Some(semio_framework::DslValue::from(done_args)) });
     let _ = system_fs::remove_dir_all(&scratch_dir);
     actions
 }

@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   // 📍️ Every fixture below is spelled relative to `💻️os/🟦️.ts` (the worker lived beside it as `🧵️backbone-worker.ts`
   // until 2026-09-12); the worker now registers from `🔨️modules/🏪️store/👷️worker/🟦️.ts`, so rebase its URL.
   const source: TestSource = decodeURIComponent(registrar.url).endsWith("/👷️worker/🟦️.ts") ? { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href } : registrar;
-  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
+  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, newArtifactState, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
   const { testSeams } = dependencies;
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
@@ -904,6 +904,119 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     await Promise.resolve();
   }
 
+  describe("🚑️ document actor recovery (worker)", () => {
+    it("returns in-flight batches to the outbox front in batch order, never twice, retires the child as actor-lost and reconnects at once; past the bound it posts the typed exhausted fault", () => {
+      const requestRecovery = dependencies.requestDocumentActorRecoveryV1;
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
+      const envelope = (id: string) => ({ id }) as unknown as MutationEnvelope;
+      const mount = () => {
+        state.browserActorReservation = { close() {} } as unknown as ArtifactState["browserActorReservation"];
+      };
+      const priorSink = testSeams.workerPostTestSink;
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        state.pendingBatches.set(2, [envelope("c")]);
+        state.pendingBatches.set(1, [envelope("a"), envelope("b")]);
+        state.outbox = [envelope("d"), envelope("a"), envelope("e")];
+        mount();
+        requestRecovery(state, "action-unconfirmed");
+        expect(state.outbox.map((entry) => entry.id)).toEqual(["a", "b", "c", "d", "e"]);
+        expect(state.pendingBatches.size).toBe(0);
+        expect(state.actorRecoveryRequested).toBe(true);
+        expect(posted.map((message) => `${message.kind}:${"message" in message ? message.message : ""}`)).toEqual(["artifact-rebootstrap-required:actor-lost"]);
+        for (let loss = 2; loss <= 3; loss += 1) {
+          mount();
+          state.actorRecoveryRequested = false;
+          requestRecovery(state, "inbound-frame");
+          expect(state.actorRecoveryRequested, `loss ${loss}`).toBe(true);
+        }
+        mount();
+        state.actorRecoveryRequested = false;
+        posted.length = 0;
+        requestRecovery(state, "turn-failed");
+        expect(state.actorRecovery.exhausted).toBe(true);
+        expect(state.actorRecoveryRequested).toBe(false);
+        expect(posted.map((message) => `${message.kind}:${"code" in message ? message.code : ""}`)).toEqual(["artifact-bootstrap-failed:recovery-exhausted"]);
+        expect(state.outbox.map((entry) => entry.id)).toEqual(["a", "b", "c", "d", "e"]);
+      } finally {
+        testSeams.workerPostTestSink = priorSink;
+      }
+    });
+
+    it("recovers a child that refuses an inbound hub frame: actor-lost reopen, frontier kept, never a malformed-frame rebuild", async () => {
+      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105", "hex"));
+      const serverFrame = Uint8Array.from([0, 3, ...batch, 6, ...new TextEncoder().encode("remote"), 1, 100, 0, 1, 101, 0, ...new Array(32).fill(0)]);
+      const decoded = decodeServerFrame(serverFrame).frame;
+      const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
+      if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
+      const confirmed = { document_id: "d", head_edit_ordinal: 4, head_edit_id: "edit-4", last_commit_seq: 4, chain_hash: new Array(32).fill(4) };
+      state.frontier = confirmed;
+      state.pendingBatches.set(0, [{ id: "in-flight" } as unknown as MutationEnvelope]);
+      let refused = 0;
+      state.browserActorReservation = { close() {}, receiveBackbone: async () => { refused += 1; throw new Error("browser actor child: invocation rejected: invoke reactor/poll: guest fault"); } } as unknown as ArtifactState["browserActorReservation"];
+      const priorSink = testSeams.workerPostTestSink;
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        await handleHubFrame(state, decoded, null, null, exactBatch);
+      } finally {
+        testSeams.workerPostTestSink = priorSink;
+      }
+      expect(refused, "the child saw the frame once").toBe(1);
+      expect(state.actorRecoveryRequested, "the lost actor reopens").toBe(true);
+      expect(posted.map((message) => `${message.kind}:${"message" in message ? message.message : ""}`)).toEqual(["artifact-rebootstrap-required:actor-lost"]);
+      expect(state.frontier, "a frame the child never applied does not advance the frontier").toEqual(confirmed);
+      expect(state.outbox.map((entry) => entry.id), "the in-flight batch waits at the outbox front").toEqual(["in-flight"]);
+      expect(state.artifactRebootstrapRequired, "no authoritative rebuild").toBe(false);
+    });
+  });
+
+  describe("🚑️ document actor recovery (worker)", () => {
+    it("returns in-flight batches to the outbox front in batch order, never twice, retires the child as actor-lost and reconnects at once; past the bound it posts the typed exhausted fault", () => {
+      const requestRecovery = dependencies.requestDocumentActorRecoveryV1;
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
+      const envelope = (id: string) => ({ id }) as unknown as MutationEnvelope;
+      const mount = () => {
+        state.browserActorReservation = { close() {} } as unknown as ArtifactState["browserActorReservation"];
+      };
+      const priorSink = testSeams.workerPostTestSink;
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        state.pendingBatches.set(2, [envelope("c")]);
+        state.pendingBatches.set(1, [envelope("a"), envelope("b")]);
+        state.outbox = [envelope("d"), envelope("a"), envelope("e")];
+        mount();
+        requestRecovery(state, "action-unconfirmed");
+        expect(state.outbox.map((entry) => entry.id)).toEqual(["a", "b", "c", "d", "e"]);
+        expect(state.pendingBatches.size).toBe(0);
+        expect(state.actorRecoveryRequested).toBe(true);
+        expect(posted.map((message) => `${message.kind}:${"message" in message ? message.message : ""}`)).toEqual(["artifact-rebootstrap-required:actor-lost"]);
+        for (let loss = 2; loss <= 3; loss += 1) {
+          mount();
+          state.actorRecoveryRequested = false;
+          requestRecovery(state, "inbound-frame");
+          expect(state.actorRecoveryRequested, `loss ${loss}`).toBe(true);
+        }
+        mount();
+        state.actorRecoveryRequested = false;
+        posted.length = 0;
+        requestRecovery(state, "turn-failed");
+        expect(state.actorRecovery.exhausted).toBe(true);
+        expect(state.actorRecoveryRequested).toBe(false);
+        expect(posted.map((message) => `${message.kind}:${"code" in message ? message.code : ""}`)).toEqual(["artifact-bootstrap-failed:recovery-exhausted"]);
+        expect(state.outbox.map((entry) => entry.id)).toEqual(["a", "b", "c", "d", "e"]);
+      } finally {
+        testSeams.workerPostTestSink = priorSink;
+      }
+    });
+  });
+
   describe("backbone-worker wire bridge", () => {
     it("round-trips an MutationEnvelope through toWireEnvelope/fromWireEnvelope", () => {
       const envelope = sampleEnvelope();
@@ -939,7 +1052,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
       const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
-      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, artifactRebootstrapRequired: false, frontier: null, requiredTailFrontier: null, executionTargetLease: null, pendingMutations: [], browserActorReservation: null, ingestedMutationIds: new Set<string>() } as unknown as ArtifactState;
+      const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
       const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
@@ -6163,7 +6276,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
       }
-    });
+    }, 30_000);
 
     it("rebootstraps a browser actor whose batch the hub refused or transformed, never handing its correction to the Shell", async () => {
       const originalWebSocket = globalThis.WebSocket;

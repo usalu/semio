@@ -3783,7 +3783,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     1 if index < entry.forwards.len() => {
                         let id =
                             entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
-                        match runtime.seed_mutation(id) {
+                        match runtime.seed_edit_operation(&entry.id, id) {
                             Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
                                 self.fault = Some(error.into_bytes());

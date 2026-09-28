@@ -32,11 +32,10 @@ fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
     assert_eq!(settings["editArguments"]["nodeId"], "$");
     assert_eq!(settings["editArguments"]["revision"], "revision");
     assert_eq!(settings["commit"], "explicit");
-    assert_eq!(settings["applyLabel"], "Apply");
-    assert_eq!(settings["discardLabel"], "Discard");
+    assert_eq!(settings["applyLabel"], "Anwenden");
+    assert_eq!(settings["discardLabel"], "Verwerfen");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
-    assert!(json.contains("Grüße\\n%20"), "natural JSON text remains in the draft: {json}");
-    assert!(json.contains("Anwenden") && json.contains("Verwerfen"), "draft controls follow the active locale: {json}");
+    assert!(json.contains(r#"Grüße\\n%20"#), "the natural JSON source (its own `\\n` escape, JSON-encoded once more by the projection) remains in the draft: {json}");
 }
 
 //#region 🪟️WindowLaws

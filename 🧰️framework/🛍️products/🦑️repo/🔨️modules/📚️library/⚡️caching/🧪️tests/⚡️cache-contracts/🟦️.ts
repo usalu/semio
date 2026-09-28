@@ -662,7 +662,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const target = authoredWorkspace.targets[name];
       if (target?.parallelism !== undefined) assert.equal(target.parallelism, false, name);
     }
-    for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
+    for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
     for (const name of ["format", "setup", "publish", "dev"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
     assert.equal(Object.keys(JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {}).length, 0, "Native Nx defaults override custom project metadata; apply defaults inside the repository plugin");
@@ -950,7 +950,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const guard = owner!.targets[fingerprint.target.slice(separator + 1)];
         assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === fingerprint.output), `${id} must hash the discovered input receipt`);
         assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")), `${id} must not repeat discovery inside the hasher`);
-        assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, true);
+        assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false, `${id} discovery receipt producer re-digests on every run: its receipt digests bytes its own cache key cannot name`);
         assert.deepEqual(guard.outputs, [`{workspaceRoot}/${fingerprint.output}`]);
       }
       if (authority.checkTarget) {
@@ -972,7 +972,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(workspace.targets.setup.dependsOn, vectors.lifecycle.setupDependencies);
     assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
-    for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
+    for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
     assert.equal(workspace.targets.dev.cache, false);
     assert.equal(workspace.targets.dev.continuous, true);
     assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");

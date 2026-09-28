@@ -49,6 +49,28 @@ fn de_bridge_gamma_mf_stricter_than_en() {
 }
 
 #[test]
+fn de_gamma_m1_stricter_than_en() {
+    // EN 1994-1-1 §2.4.1.2 → EN 1993-1-1; DIN EN 1993-1-1/NA γ_M1 = 1,10 vs EN recommended 1,00.
+    assert!((AnnexParams::en().gamma_m1 - 1.0).abs() < 1e-9);
+    assert!((AnnexParams::de().gamma_m1 - 1.1).abs() < 1e-9);
+    let beam = sample_beam();
+    let m_en = part_1_1::ltb_moment_resistance_nm(&beam, 355e6, AnnexChoice::En);
+    let m_de = part_1_1::ltb_moment_resistance_nm(&beam, 355e6, AnnexChoice::De);
+    assert!(m_de < m_en);
+    assert!((m_en / m_de - 1.1).abs() < 1e-9);
+}
+
+#[test]
+fn de_deflection_limit_tighter_than_en() {
+    // EN 1990 Table A1.4 floor w_max = L/250; DIN EN 1990/NA frequent appearance uses L/300.
+    let lim_en = part_1_1::deflection_limit_m(8.0, AnnexChoice::En);
+    let lim_de = part_1_1::deflection_limit_m(8.0, AnnexChoice::De);
+    assert!((lim_en - 8.0 / 250.0).abs() < 1e-12);
+    assert!((lim_de - 8.0 / 300.0).abs() < 1e-12);
+    assert!(lim_de < lim_en);
+}
+
+#[test]
 fn bridge_fatigue_uses_detail_as_strength_not_as_mpa_limit() {
     let limit = part_2::steel_fatigue_resistance_pa("stud_welded", 2.0e6, AnnexChoice::En);
     // Δσ_c = 80 MPa / γ_Mf(1.15) at N_ref (EN 1993-1-9 detail category via EN 1994-2 §6.8.2)

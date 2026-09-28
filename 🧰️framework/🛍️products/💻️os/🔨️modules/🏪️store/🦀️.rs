@@ -2804,16 +2804,25 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     /// carry their own terminal-empty `Drop` witness, so dropping a POPULATED candidate aborts the
     /// process on that witness instead of surfacing the refusal. Every entry is popped here, in the
     /// same tail-first order {@link ArtifactStore::close_take_final_envelope_retirement} leaves the
-    /// ledgers in, and nothing else about the refusal changes.
-    pub fn retire_unadopted(self) {
+    /// ledgers in, and nothing else about the refusal changes. The initial snapshot and every popped
+    /// edit are retired through the technology's own vocabulary, never dropped: a procedural
+    /// snapshot's `OrderedMap` layout and its operations' roots abort the guest on a bare drop (hub
+    /// genesis of `3d.generation`, 2026-09-28, ticket 26/09/23 slice S19).
+    pub fn retire_unadopted(self)
+    where
+        Mutation: self::Mutation<P>,
+    {
         let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, mut edit_messages, conflicts, transitions } = self.into_owners();
         let ArtifactVcs { initial_snapshot, mut edits, mut changes, mut checkpoints, mut alternatives } = vcs;
-        while edits.pop().is_some() {}
+        while let Some(edit) = edits.pop() {
+            retire_scratch_edits::<P, Mutation>([edit]);
+        }
         while changes.pop().is_some() {}
         while checkpoints.pop().is_some() {}
         while alternatives.pop().is_some() {}
         while edit_messages.pop().is_some() {}
-        drop((schema, id, initial_snapshot, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions));
+        drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions));
+        retire_replayed_projection::<P, Mutation>(initial_snapshot);
     }
 
     /// @emoji 🌱️ Moves the sole snapshot from a decoder-proven fresh envelope. Rejection
@@ -3054,6 +3063,14 @@ impl std::fmt::Display for ArtifactChildMaterializationError {
 }
 
 impl std::error::Error for ArtifactChildMaterializationError {}
+
+/// 🆔️ The content-addressed id of a composed child or persisted scene: `<prefix>-` + the first 16 lowercase hex digits
+/// of SHA-256 over `bytes` (the child schema's `ContentId`). Specified, stable across processes, platforms and
+/// toolchains, and reproducible by any implementation — unlike a `std` hasher, whose algorithm Rust leaves unspecified.
+/// A site that addresses several fields joins them with U+001F. TypeScript twin: `contentId` (`🪆️child/🧬️schema/🟦️.ts`).
+pub fn content_id(prefix: &str, bytes: &[u8]) -> String {
+    format!("{prefix}-{}", semio_framework_hash::hex_lower(&semio_framework_hash::Sha256::digest(bytes)[..8]))
+}
 
 pub struct ArtifactChild<S> {
     pub child_id: String,
@@ -13977,6 +13994,16 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
 
     pub fn push_redo_edit<Mutation: ToValue>(&mut self, edit: &Edit<Mutation>) -> Result<(), String> {
         self.push_redo(edit.id.clone(), CursorRevisionAccumulator::edit_digest(edit))
+    }
+
+    /// @emoji 🌱️ Seeds operation `id` of history entry `entry_id` into the causal owner. An edit a replica folded from a peer is
+    /// named after its only operation (`edit_from_operation_envelope`), so an operation id equal to its own entry id is the node
+    /// the entry already seeded — one node, never two; a repeat across entries still refuses as a duplicate.
+    pub fn seed_edit_operation(&mut self, entry_id: &str, id: MutationId) -> Result<(), String> {
+        if id.0 == entry_id {
+            return Ok(());
+        }
+        self.seed_mutation(id)
     }
 
     pub fn seed_mutation(&mut self, id: MutationId) -> Result<(), String> {

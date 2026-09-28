@@ -2,11 +2,11 @@
  * twice; B opens it only then (late joiner) and must show A's whole history; both presence rosters must show 2 peers; A's
  * pointer (canvas kinds) or caret (text kinds) must appear AND move in B's view; A selects everything and B must paint A's
  * selection marks; finally B edits and A must see it.
- * usage: source env.sh; bun probe-c12-latejoin.mjs <tag> <urlA> <urlB> <spaceId> [kinds=text.document,2d.drawing,2d.puzzle,3d.puzzle,note] */
-import { boot, openSessions, read, recorder, shot, signIn } from "./c12-lib.mjs";
+ * usage: source env.sh; bun probe-c12-latejoin.mjs <tag> <urlA> <urlB> <spaceId|new> [kinds=text.document,2d.drawing,2d.puzzle,3d.puzzle,note] */
+import { boot, createSharedSpace, openSessions, read, recorder, shot, signIn } from "./c12-lib.mjs";
 import { PLUGIN_BY_KIND, awaitMounted, awaitText, createArtifact, creatableKinds, docText, edit, hubHead, openRow, openSpace, pause, short, until } from "./c12-journey.mjs";
 
-const [tag = "c12latejoin", urlA, urlB, spaceId, kindList = "text.document,2d.drawing,2d.puzzle,3d.puzzle,note"] = process.argv.slice(2);
+let [tag = "c12latejoin", urlA, urlB, spaceId, kindList = "text.document,2d.drawing,2d.puzzle,3d.puzzle,note"] = process.argv.slice(2);
 const { browser, sessions } = await openSessions([urlA, urlB]);
 const [A, B] = sessions;
 const { record, save } = recorder(tag, sessions);
@@ -57,6 +57,10 @@ async function selectionLeg(textKind) {
 
 try {
   await boot(A); await boot(B); await signIn(A); await signIn(B); await pause(A, 10_000);
+  if (spaceId === "new") {
+    spaceId = await createSharedSpace(A, B, `Late join ${tag} ${Date.now() % 100000}`);
+    record("shared space", true, { spaceId });
+  }
   await openSpace(A, spaceId); await openSpace(B, spaceId);
   const offered = await creatableKinds(A);
   for (const wanted of kindList.split(",")) {

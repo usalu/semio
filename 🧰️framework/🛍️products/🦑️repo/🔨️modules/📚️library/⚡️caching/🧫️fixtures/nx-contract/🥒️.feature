@@ -31,10 +31,11 @@ Feature: Correct Nx cache contracts
     Then deterministic targets remain cached
     And format, setup, publish, and live servers stay uncached
 
-  Scenario: Generator discovery fingerprint is cacheable
-    Given generator-inputs or a required checkTarget freshness guard
+  Scenario: Generator discovery fingerprint re-digests on every run
+    Given generator-inputs, whose receipt digests bytes its own cache key cannot name
     When Nx resolves the project
-    Then generator-inputs stays cacheable with declared catalog inputs
+    Then no policy classifies generator-inputs and its authored cache false keeps it uncached
+    And every consumer keys on the receipt through dependentTasksOutputFiles
 
   Scenario: Continuous tasks own a live process
     Given a development or watch target

@@ -41,3 +41,4 @@
 ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs
 ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json
 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts
+✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs

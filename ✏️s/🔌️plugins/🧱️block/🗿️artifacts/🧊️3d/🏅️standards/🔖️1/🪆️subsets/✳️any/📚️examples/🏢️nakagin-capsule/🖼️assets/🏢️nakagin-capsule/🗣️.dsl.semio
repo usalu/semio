@@ -3,7 +3,7 @@ schema=block.3d
 object-kind {
   id="Capsule J" name="Capsule J" label="Capsule J" description=""
 }
-catalog=child_id=catalog-9dc5de0f33c9568d target="catalog-9dc5de0f33c9568d!s.stdio.semio@v1/kit"
+catalog=child_id=catalog-8d421fac84ff7c6c target="catalog-8d421fac84ff7c6c!s.stdio.semio@v1/kit"
 camera3d {
   position=@10,-10,6 target=@0,0,1 zoom=1
 }

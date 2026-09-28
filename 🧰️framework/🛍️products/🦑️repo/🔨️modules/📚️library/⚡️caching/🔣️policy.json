@@ -48,7 +48,6 @@
     "deps-tex"
   ],
   "cachedExact": [
-    "generator-inputs",
     "hub-live-catalog-check",
     "hub-live-catalog-native-check",
     "hub-live-catalog-oracle"

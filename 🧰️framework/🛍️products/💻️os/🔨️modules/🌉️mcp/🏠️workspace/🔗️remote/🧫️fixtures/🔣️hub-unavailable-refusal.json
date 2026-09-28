@@ -1,0 +1,141 @@
+{
+  "schema": "semio.os-mcp.hub-unavailable-refusal-corpus/v1",
+  "detailMaxChars": 512,
+  "cases": [
+    {
+      "id": "exhausted-byte-budget",
+      "fault": {
+        "kind": "transport",
+        "io": "package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (transport: package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget)",
+        "details": {
+          "cause": {
+            "kind": "transport",
+            "detail": "package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget"
+          },
+          "summary": {
+            "en": "The hub could not be reached (package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget); the request is retried once the connection recovers.",
+            "de": "Der Hub war nicht erreichbar (package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "id": "refused-connection",
+      "fault": {
+        "kind": "transport",
+        "io": "Connection Failed: Connect error: Connection refused (os error 61)"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (transport: Connection Failed: Connect error: Connection refused (os error 61))",
+        "details": {
+          "cause": {
+            "kind": "transport",
+            "detail": "Connection Failed: Connect error: Connection refused (os error 61)"
+          },
+          "summary": {
+            "en": "The hub could not be reached (Connection Failed: Connect error: Connection refused (os error 61)); the request is retried once the connection recovers.",
+            "de": "Der Hub war nicht erreichbar (Connection Failed: Connect error: Connection refused (os error 61)); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "id": "overlong-transport-detail",
+      "fault": {
+        "kind": "transport",
+        "io": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (transport: éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé)",
+        "details": {
+          "cause": {
+            "kind": "transport",
+            "detail": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+          },
+          "summary": {
+            "en": "The hub could not be reached (éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé); the request is retried once the connection recovers.",
+            "de": "Der Hub war nicht erreichbar (éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "id": "busy-hub-typed-503",
+      "fault": {
+        "kind": "http",
+        "status": 503,
+        "body": "{\"schema\":\"semio.hub.error/v1\",\"code\":\"deadline-exceeded\"}"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (HTTP 503 deadline-exceeded)",
+        "details": {
+          "cause": {
+            "kind": "http",
+            "status": 503,
+            "code": "deadline-exceeded"
+          },
+          "summary": {
+            "en": "The hub answered HTTP 503 (deadline-exceeded); the request is retried once the hub recovers.",
+            "de": "Der Hub antwortete mit HTTP 503 (deadline-exceeded); die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "id": "gateway-502-without-typed-code",
+      "fault": {
+        "kind": "http",
+        "status": 502,
+        "body": "bad gateway"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (HTTP 502)",
+        "details": {
+          "cause": {
+            "kind": "http",
+            "status": 502,
+            "code": null
+          },
+          "summary": {
+            "en": "The hub answered HTTP 502; the request is retried once the hub recovers.",
+            "de": "Der Hub antwortete mit HTTP 502; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "id": "undecodable-page",
+      "fault": {
+        "kind": "decode",
+        "decode": "expected value at line 1 column 1"
+      },
+      "expected": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "hub directory is temporarily unavailable (undecodable response)",
+        "details": {
+          "cause": {
+            "kind": "undecodable-response"
+          },
+          "summary": {
+            "en": "The hub's answer could not be read; the request is retried once the hub recovers.",
+            "de": "Die Antwort des Hubs war nicht lesbar; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."
+          }
+        },
+        "retryable": true
+      }
+    }
+  ]
+}

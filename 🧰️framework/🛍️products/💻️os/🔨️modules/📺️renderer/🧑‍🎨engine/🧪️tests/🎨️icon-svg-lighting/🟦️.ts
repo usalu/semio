@@ -76,13 +76,13 @@ describe("🎨️ Icon SVG face lighting", () => {
                 { shaderLocation: 0, offset: 0, format: "float32x3" }, { shaderLocation: 1, offset: 12, format: "float32x3" },
                 { shaderLocation: 2, offset: 24, format: "float32x4" }, { shaderLocation: 9, offset: 40, format: "float32x2" },
               ] },
-              { arrayStride: 96, stepMode: "instance", attributes: Array.from({ length: 6 }, (_, index) => ({ shaderLocation: index + 3, offset: index * 16, format: "float32x4" as const })) },
+              { arrayStride: 112, stepMode: "instance", attributes: [...Array.from({ length: 6 }, (_, index) => ({ shaderLocation: index + 3, offset: index * 16, format: "float32x4" as const })), { shaderLocation: 10, offset: 96, format: "float32x4" as const }] },
             ],
           },
           fragment: { module, entryPoint: "fs_main", targets: [{ format: "rgba8unorm" }] },
           primitive: { topology: "triangle-list", cullMode: "none" },
         });
-        const buffer = (size: number, usage: number, values?: Float32Array) => {
+        const buffer = (size: number, usage: number, values?: Float32Array<ArrayBuffer>) => {
           const result = device.createBuffer({ size, usage: usage | GPUBufferUsage.COPY_DST });
           if (values) device.queue.writeBuffer(result, 0, values);
           return result;
@@ -93,7 +93,7 @@ describe("🎨️ Icon SVG face lighting", () => {
           0, 0.75, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
         ]));
         const globals = buffer(256, GPUBufferUsage.UNIFORM);
-        const instance = buffer(96, GPUBufferUsage.VERTEX);
+        const instance = buffer(112, GPUBufferUsage.VERTEX);
         const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
         const shadow = device.createTexture({ size: [1, 1], format: "depth32float", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT });
         const groups = [
@@ -110,7 +110,7 @@ describe("🎨️ Icon SVG face lighting", () => {
         for (const record of cases) {
           for (const profile of ["svgFlatLit", "rasterPbr"]) {
             const material = linear(record.material.color), emissive = linear(record.material.emissive);
-            const packed = new Float32Array([...identity, ...material, 1, 0, 0, record.material.metalness, record.material.roughness]);
+            const packed = new Float32Array([...identity, ...material, 1, 0, 0, record.material.metalness, record.material.roughness, 0, 0, 0, -1]);
             device.queue.writeBuffer(instance, 0, packed);
             const values = new Float32Array([
               ...identity, ...identity, 0, 0, 5, 0, ...record.lightDirection, 0,

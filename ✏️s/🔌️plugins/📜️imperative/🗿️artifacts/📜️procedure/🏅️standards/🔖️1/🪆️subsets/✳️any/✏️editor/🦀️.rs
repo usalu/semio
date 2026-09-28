@@ -456,6 +456,7 @@ impl ArtifactEditor for ImperativePlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -479,18 +480,6 @@ impl ArtifactEditor for ImperativePlayApp {
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
-    }
-
-    /// 🏗️ Admits the whole-document replacement `reset_procedure_document_effect` emits for every
-    /// example switch. The trait default refuses the envelope, so the host answers every
-    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load
-    /// boundary.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PROCEDURE_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {

@@ -50,11 +50,11 @@ rules {
   min quantity=height parameter=screwLength margin=0m
 }
 cylinder-attach radius=screwRadius length=screwLength ] ] stock-pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad stock-payload=id=beam label="Timber Beam" pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad
-box width=3m depth=0.2m height=0.3m stock-solid=child_id=stock-brep-0c4c215253b06a43 target="stock-brep-0c4c215253b06a43!s.stdio.semio@v1/brep" steps=child_id=steps-flow-29a6d3b32632bf1a target="steps-flow-29a6d3b32632bf1a!s.stdio.semio@v1/flow" step-payloads=[ id=crosscut label="Crosscut To Length" enabled=true origin=machine-id=circularSaw capability-id=crosscut
+box width=3m depth=0.2m height=0.3m stock-solid=child_id=stock-brep-65db27c3b8e17c85 target="stock-brep-65db27c3b8e17c85!s.stdio.semio@v1/brep" steps=child_id=steps-flow-49e2ee4b04a4a2a0 target="steps-flow-49e2ee4b04a4a2a0!s.stdio.semio@v1/flow" step-payloads=[ id=crosscut label="Crosscut To Length" enabled=true origin=machine-id=circularSaw capability-id=crosscut
 cut pose=position=@1.35,0,0.15 axis=^0,0,1 angle=0rad
 box width=0.02m depth=0.3m height=0.4m id=lap-joint-cut label="Cut Lap Joint" enabled=true origin=machine-id=cncRouter capability-id=pocket
 cut pose=position=@0.6,0,0.26 axis=^0,0,1 angle=0rad
 box width=0.3m depth=0.2m height=0.08m id=dowel-drill label="Drill Dowel Hole" enabled=true origin=machine-id=drillPress capability-id=bore
 drill radius=0.004m depth=0.08m pose=position=@0.6,0.05,0.19999999999999998 axis=^0,0,1 angle=0rad id=dowel-attach label="Insert Dowel" enabled=true origin=machine-id=dowelJig capability-id=dowel
 attach pose=position=@0.6,0.05,0.21999999999999997 axis=^0,0,1 angle=0rad
-cylinder radius=0.004m height=0.12m ] tool-solids=[ child_id=tool-crosscut-brep-e8a61f1cf26b4e05 target="tool-crosscut-brep-e8a61f1cf26b4e05!s.stdio.semio@v1/brep" child_id=tool-lap-joint-cut-brep-07f7a4e1d97983d2 target="tool-lap-joint-cut-brep-07f7a4e1d97983d2!s.stdio.semio@v1/brep" child_id=tool-dowel-attach-brep-32b189bc62ef8dd2 target="tool-dowel-attach-brep-32b189bc62ef8dd2!s.stdio.semio@v1/brep" ]
+cylinder radius=0.004m height=0.12m ] tool-solids=[ child_id=tool-crosscut-brep-afa665580fd19d22 target="tool-crosscut-brep-afa665580fd19d22!s.stdio.semio@v1/brep" child_id=tool-lap-joint-cut-brep-3d69fc1a8e58dce7 target="tool-lap-joint-cut-brep-3d69fc1a8e58dce7!s.stdio.semio@v1/brep" child_id=tool-dowel-attach-brep-270d2a32adce6225 target="tool-dowel-attach-brep-270d2a32adce6225!s.stdio.semio@v1/brep" ]

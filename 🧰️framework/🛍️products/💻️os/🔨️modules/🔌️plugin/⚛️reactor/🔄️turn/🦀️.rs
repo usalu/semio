@@ -370,6 +370,53 @@ fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, dirty
     Ok(taken)
 }
 
+/// 🎟️ Surfaces whose last render stopped short for want of `UiValue` arena credit, each with the rows it left unbuilt
+/// ([`crate::app::take_arena_unbuilt_rows`]). The arena is ONE page shared by every panel and by the generations the
+/// close ladder is still retiring, so a quick edit → undo → redo renders against whatever is left; its windows then
+/// stamp their full extent with a shorter run, and the host — whose window request depends on geometry only — never
+/// asks again. [`redirty_arena_starved_surfaces`] renders such a surface once more as soon as the arena can price the
+/// rows it is missing, so the rows arrive with the returned credit and no surface re-renders while it cannot gain.
+struct ArenaStarvedSurfaces {
+    slots: [Option<(u32, ui_contract::SurfaceId, usize)>; DIRTY_RENDER_CAPACITY],
+}
+
+impl ArenaStarvedSurfaces {
+    /// 🎟️ Records `surface`'s latest render: short by `unbuilt` rows, or complete (`0`) — which forgets it.
+    fn note(&mut self, instance: u32, surface: &str, unbuilt: usize) {
+        let Ok(surface) = ui_contract::SurfaceId::try_from(surface) else { return };
+        for slot in &mut self.slots {
+            if slot.as_ref().is_some_and(|(owner, starved, _)| *owner == instance && *starved == surface) {
+                *slot = None;
+            }
+        }
+        if unbuilt == 0 {
+            return;
+        }
+        if let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) {
+            *slot = Some((instance, surface, unbuilt));
+        }
+    }
+}
+
+thread_local! {
+    /// 🎟️ This actor's [`ArenaStarvedSurfaces`].
+    static ARENA_STARVED: RefCell<ArenaStarvedSurfaces> = RefCell::new(ArenaStarvedSurfaces { slots: [const { None }; DIRTY_RENDER_CAPACITY] });
+}
+
+/// 🎟️ Re-dirties every arena-starved surface whose missing rows the `UiValue` arena can price again, and answers how many.
+fn redirty_arena_starved_surfaces(dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
+    let rows = ui_contract::ui_value_headroom().rows();
+    ARENA_STARVED.with(|starved| {
+        let mut taken = 0usize;
+        for slot in starved.borrow_mut().slots.iter_mut() {
+            let Some((instance, surface, _)) = slot.take_if(|(_, _, unbuilt)| *unbuilt <= rows) else { continue };
+            dirty.try_surface(instance, surface).map_err(|_| reactor_close_fault("fixed dirty surface authority saturated"))?;
+            taken += 1;
+        }
+        Ok(taken)
+    })
+}
+
 impl DirtyPollOwners {
     fn new() -> Self {
         Self { surfaces: ui_contract::UiFixedList::default(), intents: ui_contract::UiFixedList::default() }
@@ -650,6 +697,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty))?;
+    redirty_arena_starved_surfaces(&mut dirty)?;
     for event in events {
         match event {
             Event::InstanceOpen { request, app_id, actor, quotas, .. } => {
@@ -1266,6 +1314,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             continue;
         }
         let surface_key = surface.as_ref().to_owned();
+        let _ = crate::app::take_arena_unbuilt_rows();
         let mounted = match native_close_key(runtime, instance) {
             Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
             Err(_) => Err(surface),
@@ -1292,6 +1341,8 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         ));
                         continue;
                     }
+                    let unbuilt = crate::app::take_arena_unbuilt_rows();
+                    ARENA_STARVED.with(|starved| starved.borrow_mut().note(instance, surface_key.as_str(), unbuilt));
                     for update in presence {
                         PRESENCE.with(|hub| {
                             let mut hub = hub.borrow_mut();

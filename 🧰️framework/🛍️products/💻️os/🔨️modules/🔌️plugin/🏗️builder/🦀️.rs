@@ -675,6 +675,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
         crate::app::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        runtime.publish_declared_catalogs()?;
 
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
         plugin.manifest.dependencies = dependencies;

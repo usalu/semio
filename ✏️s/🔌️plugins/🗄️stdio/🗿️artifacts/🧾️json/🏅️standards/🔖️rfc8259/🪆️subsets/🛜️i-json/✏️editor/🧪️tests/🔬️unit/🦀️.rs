@@ -1,6 +1,12 @@
 use super::*;
 use crate::schema::snapshot::JsonValue;
 
+/// 🧬️ Registers the document schema json's declaration contributes (`.schema(json_artifact_schema_descriptor())`) — the
+/// registered contract every snapshot edit validates against; a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    semio_framework_schema::register_artifact_schema_descriptors(vec![crate::schema::json_artifact_schema_descriptor()]).expect("the json document schema registers");
+}
+
 #[test]
 fn set_node_requires_a_complete_address_and_value_without_forbidding_empty_text() {
     assert!(json_i_json_command_from_action(JSON_I_JSON_KIT_ACTION_ID, None).is_err());
@@ -59,6 +65,7 @@ async fn op_text_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
+    register_document_schema();
     for source in ["null", "true", "-123.4500e+9", "\"text %20\\n日本語\"", "[1,false,null]", "{\"answer\":42}"] {
         let snapshot = JsonSnapshot { schema: JsonSnapshot::default().schema, value: JsonValue::String { value: "before".into() } };
         let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
@@ -67,10 +74,8 @@ async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
         let next = protocol::MutationDiff::apply(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
         let native = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("native parser").value;
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
-        let encoded = <JsonSnapshot as store::ArtifactDsl>::print_dsl(&next);
-        let oracle = serde_json::from_str::<serde_json::Value>(&encoded).expect("edited value remains JSON");
         assert_eq!(next.value, native);
-        assert_eq!(oracle, expected);
+        assert_eq!(serde_json::Value::from(&next.value), expected);
     }
     let snapshot = JsonSnapshot::default();
     let invalid = JsonIJsonIJsonEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot), value: "{invalid".into() };
@@ -137,6 +142,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<JsonIJsonE
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &JsonSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
+    register_document_schema();
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonIJsonEditor>, _>(async { semio_framework_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");

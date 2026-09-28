@@ -248,6 +248,7 @@ fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Bin
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {

@@ -400,7 +400,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
             actions.extend(ink_hover_move(scene, inner, x, y));
         }
         SurfaceKind::Canvas2d if down => {
-            actions.push(scene_action(scene, "canvasPointerMove", canvas_world_pointer_json(scene, inner, x, y, json!({ "samples": [[x - inner.x, y - inner.y]] }))));
+            actions.push(scene_action(scene, "canvasPointerMove",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "samples": [[x - inner.x, y - inner.y]] })))));
         }
         SurfaceKind::NodeGraph if down => {
             actions.extend(engine_canvas::node_graph_pointer_move(&scene.surface_id, &scene.controller_id, inner, x, y, false, false, false));
@@ -439,9 +439,9 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                             state.paint_stroke_active = true;
                         }
                     });
-                    actions.push(scene_action(scene, "paintStrokeBegin", json!({ "surfaceId": scene.surface_id })));
+                    actions.push(scene_action(scene, "paintStrokeBegin", semio_framework::dsl_value!({ "surfaceId": scene.surface_id })));
                 }
-                actions.push(scene_action(scene, "canvasPointerDown", canvas_world_pointer_json(scene, inner, x, y, json!({ "button": button, "extend": shift }))));
+                actions.push(scene_action(scene, "canvasPointerDown",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "button": button, "extend": shift })))));
                 if button == 1 || button == 2 {
                     mutate_scene_state(&scene.surface_id, |state| {
                         state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
@@ -476,13 +476,13 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                 actions.extend(ink_pointer_up(scene, inner, x, y));
             }
             SurfaceKind::Canvas2d => {
-                actions.push(scene_action(scene, "canvasPointerUp", canvas_world_pointer_json(scene, inner, x, y, json!({ "cancelled": false }))));
+                actions.push(scene_action(scene, "canvasPointerUp",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "cancelled": false })))));
                 mutate_scene_state(&scene.surface_id, |state| {
                     if state.paint_stroke_active {
                         state.paint_stroke_active = false;
                     }
                 });
-                actions.push(scene_action(scene, "paintStrokeEnd", json!({ "surfaceId": scene.surface_id })));
+                actions.push(scene_action(scene, "paintStrokeEnd", semio_framework::dsl_value!({ "surfaceId": scene.surface_id })));
             }
             SurfaceKind::NodeGraph => {
                 actions.extend(engine_canvas::node_graph_pointer_up(&scene.surface_id, &scene.controller_id, inner, x, y, shift, false, false));
@@ -655,22 +655,22 @@ fn ink_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase
     if let Some(ids) = select_ids {
         args["selectIds"] = json!(ids);
     }
-    scene_action(scene, "inkApplyEvents", args)
+    scene_action(scene, "inkApplyEvents",semio_framework::DslValue::from(args))
 }
 
 #[cfg(test)]
 fn ink_set_selection_action(scene: &UiComponentSceneNode, ids: &[String]) -> ActionDescriptor {
-    scene_action(scene, "setSelection", json!({ "surfaceId": scene.surface_id, "ids": ids }))
+    scene_action(scene, "setSelection", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "ids": ids }))
 }
 
 #[cfg(test)]
 fn ink_set_hover_action(scene: &UiComponentSceneNode, id: Option<&str>) -> ActionDescriptor {
-    scene_action(scene, "setHover", json!({ "surfaceId": scene.surface_id, "id": id }))
+    scene_action(scene, "setHover", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "id": id }))
 }
 
 #[cfg(test)]
 fn ink_set_camera_action(scene: &UiComponentSceneNode, camera: InkCameraF) -> ActionDescriptor {
-    scene_action(scene, "setCamera", json!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }))
+    scene_action(scene, "setCamera", semio_framework::dsl_value!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }))
 }
 
 

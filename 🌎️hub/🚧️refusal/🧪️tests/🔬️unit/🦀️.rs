@@ -48,3 +48,18 @@ fn the_transient_apply_refusal_is_the_declared_schema_message() {
     assert_eq!(hub_transient_apply_refusal_message(""), HUB_TRANSIENT_APPLY_REFUSAL_CODE);
     assert_eq!(hub_transient_apply_refusal_message(&"é".repeat(5000)).chars().count(), HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS);
 }
+
+/// 📏️ The Rust batch-limit refusal is `HubBatchLimitRefusalCodeV1` / `HubBatchLimitRefusalMessageV1`: the code is the declared
+/// const, distinct from the transient one, and every reason becomes a non-empty message within the declared bound.
+#[test]
+fn the_batch_limit_refusal_is_the_declared_schema_message() {
+    let module: serde_json::Value = serde_json::from_str(HUB_REFUSAL_SCHEMA_JSON).unwrap();
+    assert_eq!(module["$defs"]["HubBatchLimitRefusalCodeV1"]["const"], HUB_BATCH_LIMIT_REFUSAL_CODE);
+    assert_ne!(HUB_BATCH_LIMIT_REFUSAL_CODE, HUB_TRANSIENT_APPLY_REFUSAL_CODE);
+    assert_eq!(module["$defs"]["HubBatchLimitRefusalMessageV1"]["properties"]["level"]["const"], "error");
+    let message = &module["$defs"]["HubBatchLimitRefusalMessageV1"]["properties"]["message"];
+    assert_eq!(message["maxLength"].as_u64(), Some(HUB_BATCH_LIMIT_REFUSAL_MESSAGE_MAX_CHARS as u64));
+    assert_eq!(hub_batch_limit_refusal_message("limit exceeded: envelopes"), "limit exceeded: envelopes");
+    assert_eq!(hub_batch_limit_refusal_message(""), HUB_BATCH_LIMIT_REFUSAL_CODE);
+    assert_eq!(hub_batch_limit_refusal_message(&"é".repeat(5000)).chars().count(), HUB_BATCH_LIMIT_REFUSAL_MESSAGE_MAX_CHARS);
+}

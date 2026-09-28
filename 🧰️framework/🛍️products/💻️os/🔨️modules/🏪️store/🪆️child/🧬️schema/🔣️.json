@@ -10,10 +10,18 @@
   ],
   "properties": {
     "childId": {
-      "type": "string"
+      "type": "string",
+      "description": "🆔️ The child's member identity. A content-addressed child (one whose identity follows its content) carries a `ContentId`."
     },
     "target": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
+    }
+  },
+  "$defs": {
+    "ContentId": {
+      "description": "🆔️ `<prefix>-` + the first 16 lowercase hex digits of SHA-256 over the child's canonical content bytes (several fields joined with U+001F). Rust `store::content_id`, TypeScript `contentId`.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*-[0-9a-f]{16}$"
     }
   }
 }

@@ -148,7 +148,7 @@ export interface HostAppAliasesV1 { readonly landingAppId: string; readonly host
 export interface HostAppV1 { readonly id: string; readonly role: "editor" | "viewer"; readonly dialect: { readonly artifactKind: string } }
 export interface HostIdentityResolutionV1 { readonly aliases: HostAppAliasesV1; readonly apps: readonly HostAppV1[]; readonly expected: { readonly landingAppId: string; readonly hostAppId: string } }
 export interface ArtifactBootstrapProgressV1 { readonly kind: "artifact-bootstrap-progress"; readonly documentId: string; readonly receivedBytes: number; readonly totalBytes: number; readonly receivedChunks: number; readonly totalChunks: number }
-export interface ArtifactBootstrapFailedV1 { readonly kind: "artifact-bootstrap-failed"; readonly documentId: string; readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure"; readonly message: string; readonly retryable: boolean }
+export interface ArtifactBootstrapFailedV1 { readonly kind: "artifact-bootstrap-failed"; readonly documentId: string; readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure" | "recovery-exhausted"; readonly message: string; readonly retryable: boolean }
 export interface ArtifactRebootstrapRequiredV1 { readonly kind: "artifact-rebootstrap-required"; readonly documentId: string; readonly message: string; readonly retryable: boolean }
 export type BootstrapStatusV1 = ArtifactBootstrapProgressV1 | ArtifactBootstrapFailedV1 | ArtifactRebootstrapRequiredV1;
 export interface LocalizedNoticeTextV1 { readonly en: string; readonly de: string }

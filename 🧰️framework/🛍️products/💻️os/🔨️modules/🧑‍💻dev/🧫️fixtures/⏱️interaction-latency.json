@@ -1,6 +1,6 @@
 {
  "schema": "semio.os-dev.interaction-latency-scenarios/v1",
- "description": "Interactions the latency gate drives in the served s shell: the input, its target and the bounds the measurement is judged by. Input → end of the first frame after it; paints = renderFrame calls of the canvas session classes (wasm bindings and host elements) during the gesture; a scenario whose paints could not be hooked fails. A highlighted editor (trinity jack) paints each key twice by design — the local edit, then the guest's re-highlighted echo — plus the caret cadence (2 per second) inside the measured window.",
+ "description": "Interactions the latency gate drives in the served s shell: the input, its target and the bounds the measurement is judged by. Input → end of the first frame after it; paints = renderFrame calls of the canvas session classes (wasm bindings and host elements) during the gesture; a scenario whose paints could not be hooked fails. Commits = React root commits of every renderer (react-dom, r3f) per input, counted through a minimal DevTools global hook; hover = the pointer alternately onto a point whose hover the target paints into hoverAttribute, and off it. A highlighted editor (trinity jack) paints each key twice by design — the local edit, then the guest's re-highlighted echo — plus the caret cadence (2 per second) inside the measured window.",
  "loadCeilingPerCore": 1.0,
  "scenarios": [
   {
@@ -13,7 +13,8 @@
    "inputs": 24,
    "intervalMs": 180,
    "maxP95Ms": 100,
-   "maxPaintsPerInput": 2
+   "maxPaintsPerInput": 2,
+   "maxCommitsPerInput": 5
   },
   {
    "id": "jack-typing",
@@ -25,7 +26,8 @@
    "inputs": 24,
    "intervalMs": 180,
    "maxP95Ms": 100,
-   "maxPaintsPerInput": 2.5
+   "maxPaintsPerInput": 2.5,
+   "maxCommitsPerInput": 5
   },
   {
    "id": "draw-drag",
@@ -37,7 +39,8 @@
    "inputs": 30,
    "intervalMs": 33,
    "maxP95Ms": 50,
-   "maxPaintsPerInput": 2
+   "maxPaintsPerInput": 2,
+   "maxCommitsPerInput": 3
   },
   {
    "id": "dag-drag",
@@ -49,7 +52,35 @@
    "inputs": 30,
    "intervalMs": 33,
    "maxP95Ms": 50,
-   "maxPaintsPerInput": 3
+   "maxPaintsPerInput": 3,
+   "maxCommitsPerInput": 1.5
+  },
+  {
+   "id": "puzzle2d-drag",
+   "pluginId": "puzzle",
+   "appId": "s.puzzle.puzzle2d@1/*#editor",
+   "window": "",
+   "target": "canvas",
+   "action": "drag",
+   "inputs": 30,
+   "intervalMs": 33,
+   "maxP95Ms": 50,
+   "maxPaintsPerInput": 2,
+   "maxCommitsPerInput": 1
+  },
+  {
+   "id": "puzzle3d-hover",
+   "pluginId": "puzzle",
+   "appId": "s.puzzle.puzzle3d@1/*#editor",
+   "window": "puzzle3d-main-perspective",
+   "target": ".semio-world-3d-host",
+   "action": "hover",
+   "hoverAttribute": "data-hover-paint-id",
+   "inputs": 16,
+   "intervalMs": 400,
+   "maxP95Ms": 50,
+   "maxPaintsPerInput": 2,
+   "maxCommitsPerInput": 8
   }
  ]
 }

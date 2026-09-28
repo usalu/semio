@@ -90,9 +90,21 @@ pub struct OsSessionRecord {
     pub started_at_ms: u64,
 }
 
-/// 📨️ One live gateway's standing invitation to dial its `/bridge`.
+/// 🎯️ Which shells one offer is for (ticket 26/09/23, G12 session 14c: an offer used to reach every live os session of the
+/// machine, and another person's shell attached to a hub agent's gateway). A hub-bound gateway's offer is for the shell of
+/// the human whose delegation it runs — the supervisor serves it only to a shell open on that hub and space whose human's
+/// own delegation list names the offer's `principal`; a local (folder) gateway's offer is for any shell of this user.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum BridgeOfferScope {
+    Hub { hub_origin: String, space_id: String },
+    Local,
+}
+
+/// 📨️ One live gateway's standing invitation to dial its `/bridge`. `principal` is the principal the gateway acts as — for a
+/// delegated agent, `agent:<delegation id>`. Language-neutral rows: `🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🔣️.json` `select`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BridgeOffer {
     pub schema_version: u32,
     pub url: String,
@@ -100,9 +112,12 @@ pub struct BridgeOffer {
     pub principal: String,
     pub pid: u32,
     pub published_at_ms: u64,
+    pub scope: BridgeOfferScope,
 }
 
-pub const RENDEZVOUS_SCHEMA_VERSION: u32 = 1;
+/// 🏷️ The rendezvous record version both halves write and read (`🔗️AgentBridge/🛰️offer` `AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION`);
+/// version 2 gave every offer its [`BridgeOfferScope`].
+pub const RENDEZVOUS_SCHEMA_VERSION: u32 = 2;
 //#endregion 🔖️Records
 
 //#region 🔖️Liveness

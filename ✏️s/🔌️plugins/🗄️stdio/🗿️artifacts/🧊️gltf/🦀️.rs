@@ -632,7 +632,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: GLTF_ARTIFACT_KIND_ID.into(),
-        name: "Gltf".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Gltf", "Gltf"),
         source_format: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

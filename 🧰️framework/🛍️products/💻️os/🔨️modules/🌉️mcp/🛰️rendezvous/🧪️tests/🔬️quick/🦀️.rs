@@ -35,7 +35,30 @@ fn offer_for(pid: u32) -> BridgeOffer {
         principal: "agent:local".to_string(),
         pid,
         published_at_ms: 1_700_000_000_000,
+        scope: BridgeOfferScope::Local,
     }
+}
+
+/// 🔐️ The offer files the scoped-offer law selects between (`🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🔣️.json` `select`,
+/// ticket 26/09/23 G12 session 14c) are exactly this gateway's records: each decodes and re-encodes to the same JSON, and a
+/// record of another version, with an extra field or a scope missing its space is refused.
+#[test]
+fn the_scoped_offer_records_are_this_gateways_offer_files() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
+    let records = fixture["select"]["records"].as_array().expect("select records");
+    assert!(records.len() >= 6);
+    for record in records {
+        let offer: BridgeOffer = serde_json::from_value(record.clone()).unwrap_or_else(|error| panic!("{record}: {error}"));
+        assert_eq!(offer.schema_version, RENDEZVOUS_SCHEMA_VERSION);
+        assert_eq!(serde_json::to_value(&offer).expect("offer encodes"), *record);
+    }
+    assert!(records.iter().any(|record| record["scope"] == serde_json::json!({ "kind": "local" })));
+    let mut extra = records[0].clone();
+    extra["token"] = serde_json::json!("secret");
+    assert!(serde_json::from_value::<BridgeOffer>(extra).is_err());
+    let mut unscoped = records[0].clone();
+    unscoped["scope"] = serde_json::json!({ "kind": "hub", "hubOrigin": "http://127.0.0.1:7800" });
+    assert!(serde_json::from_value::<BridgeOffer>(unscoped).is_err());
 }
 
 fn write_session(root: &Path, record: &OsSessionRecord) {

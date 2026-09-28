@@ -31,7 +31,8 @@
   ],
   "interfaceImports": [
     { "name": "direct value, type, addon and dynamic imports outside the owner", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import {\n  Mesh,\n} from \"three\";\nimport { GLTFLoader } from \"three/examples/jsm/loaders/GLTFLoader.js\";\ntype Camera = import(\"three\").Camera;\nconst lazy = await import('three');\n", "expected": [3, 4, 5, 6] },
-    { "name": "the owning ui module imports the package and its addons freely", "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "text": "import * as THREE from \"three\";\nimport { OrbitControls } from \"three/addons/controls/OrbitControls.js\";\n", "expected": [] },
-    { "name": "look-alike package names and the ui interface are not the owned package", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import { MeshBVH } from \"three-mesh-bvh\";\nimport { Mesh } from \"@semio-tech/ui-react\";\nconst label = \"from three\";\n", "expected": [] }
+    { "name": "the owning ui module imports the package and its addons freely", "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "text": "import * as THREE from \"three\";\nimport { OrbitControls } from \"three/addons/controls/OrbitControls.js\";\nimport { MeshBVH } from \"three-mesh-bvh\";\n", "expected": [] },
+    { "name": "the three BVH addon package outside the owner", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import { MeshBVH, type HitPointInfo } from \"three-mesh-bvh\";\nconst lazy = await import(\"three-mesh-bvh\");\n", "expected": [1, 2] },
+    { "name": "look-alike package names and the ui interface are not the owned package", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import { TransformControls } from \"three-stdlib\";\nimport { Mesh } from \"@semio-tech/ui-react\";\nconst label = \"from three\";\n", "expected": [] }
   ]
 }

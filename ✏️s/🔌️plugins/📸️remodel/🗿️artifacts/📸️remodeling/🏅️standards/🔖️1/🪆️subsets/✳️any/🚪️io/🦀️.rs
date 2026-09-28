@@ -227,12 +227,7 @@ fn mesh_durable_chunks(mesh: &MeshData) -> Vec<String> {
 }
 
 fn mesh_content_id(chunks: &[String]) -> String {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    for chunk in chunks {
-        chunk.hash(&mut hasher);
-    }
-    format!("remodeling-mesh-io-{:016x}-{:016x}", hasher.finish(), chunks.len())
+    format!("{}-{:016x}", store::content_id("remodeling-mesh-io", chunks.join("\u{1f}").as_bytes()), chunks.len())
 }
 
 /// 🧱️ Admits an imported mesh into the scene as REAL durable content: content-addressed chunks in

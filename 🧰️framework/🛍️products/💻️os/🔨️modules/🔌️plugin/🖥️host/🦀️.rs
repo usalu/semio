@@ -565,10 +565,14 @@ pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Com
 /// place, so a reader never sees a partial `.cwasm` and a writer killed midway leaves only its own
 /// [`compiled_cache_scratch_path`] behind.
 pub async fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
+    write_compiled_cache_entry(&component.serialize().map_err(|error| std::io::Error::other(error.to_string()))?, path)
+}
+
+/// 💾️ The one atomic write every `.cwasm` takes: scratch name of this process, then rename into place.
+fn write_compiled_cache_entry(bytes: &[u8], path: &Path) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let bytes = component.serialize().map_err(|error| std::io::Error::other(error.to_string()))?;
     let scratch = compiled_cache_scratch_path(path, std::process::id());
     std::fs::write(&scratch, bytes)?;
     std::fs::rename(&scratch, path)
@@ -620,12 +624,16 @@ impl SharedEngineConfig {
 }
 
 /// 🧊️ The whole body of an isolated compile process: rebuild the host's engine from `engine`,
-/// compile `bytes`, and store the compiled code at `cache_path`.
+/// compile `bytes` straight to its serialized code ([`Engine::precompile_component`]) and store it at
+/// `cache_path`. The code is never published as executable memory here, so the process registers — and on
+/// its way out tears down — no unwind frame: macOS deregisters each frame by a linear scan of every frame,
+/// which kept a finished 330 MB compile (stdio) stuck in `__deregister_frame` for more than 15 minutes
+/// after its `.cwasm` was written, while the host waited for its exit (ticket 26/09/23, G12 session 14c).
 pub fn compile_component_isolated(engine: &str, bytes: &[u8], cache_path: &Path) -> Result<(), PluginHostError> {
     let cfg = SharedEngineConfig::from_isolated_arg(engine)?;
     let (engine, _pooling_active) = semio_framework_async::block_on(build_shared_engine(cfg))?;
-    let component = Component::from_binary(&engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-    semio_framework_async::block_on(store_compiled_component(&component, cache_path)).map_err(|error| PluginHostError::Plugin(format!("storing {}: {error}", cache_path.display())))
+    let compiled = engine.precompile_component(bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    write_compiled_cache_entry(&compiled, cache_path).map_err(|error| PluginHostError::Plugin(format!("storing {}: {error}", cache_path.display())))
 }
 //#endregion 🧊️IsolatedCompile
 

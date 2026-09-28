@@ -2573,7 +2573,7 @@ fn apply_world_action_preview_updates_component_hover_and_selection() {
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "setHover".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "objectId": "obj-1",
                 "mode": "vertex",
                 "id": 2,
@@ -2589,7 +2589,7 @@ fn apply_world_action_preview_updates_component_hover_and_selection() {
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "worldPick".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "granularity": "vertex",
                 "id": 4,
                 "merge": "replace",
@@ -2611,7 +2611,7 @@ fn preview_survives_sync_when_scene_json_unchanged() {
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "worldPick".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "granularity": "vertex",
                 "id": 5,
                 "merge": "replace",
@@ -4121,7 +4121,7 @@ fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_dom
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "interactionSelect".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "domainId": WORLD_INTERACTION_DOMAIN_ID,
                 "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-1" }],
                 "merge": "replace",
@@ -4136,7 +4136,7 @@ fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_dom
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "interactionHover".into(),
-            args: action_args(json!({
+            args: Some(semio_framework::dsl_value!({
                 "domainId": WORLD_INTERACTION_DOMAIN_ID,
                 "channel": "pointer",
                 "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-2" }],
@@ -4145,7 +4145,7 @@ fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_dom
     );
     assert_eq!(state.local_hover_id.as_deref(), Some("obj-2"));
 
-    apply_world_action_preview(&mut state, &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) });
+    apply_world_action_preview(&mut state, &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) });
     assert!(state.local_hover_id.is_none(), "empty targets clears hover");
 }
 
@@ -4218,14 +4218,14 @@ fn apply_world_action_preview_respects_bound_app_domain_and_ignores_other_domain
         &ActionDescriptor {
             controller_id: "controller-1".into(),
             action: "interactionSelect".into(),
-            args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-1" }], "merge": "replace", "method": "pick" })),
+            args: Some(semio_framework::dsl_value!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-1" }], "merge": "replace", "method": "pick" })),
         },
     );
     assert!(state.selected_ids.is_empty(), "an unbound-domain action must not apply once this window binds its own domain");
 
     apply_world_action_preview(
         &mut state,
-        &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionSelect".into(), args: action_args(json!({ "domainId": "cad", "targets": [{ "granularity": "object", "id": "obj-1" }], "merge": "replace", "method": "pick" })) },
+        &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionSelect".into(), args: Some(semio_framework::dsl_value!({ "domainId": "cad", "targets": [{ "granularity": "object", "id": "obj-1" }], "merge": "replace", "method": "pick" })) },
     );
     assert_eq!(state.selected_ids, vec!["obj-1".to_string()], "bare id applies as-is — no surfaceId/ stripping for a bound domain");
 }

@@ -20,5 +20,32 @@
     { "id": "array", "body": [], "shape": false, "expected": null },
     { "id": "string", "body": "ws://127.0.0.1:6300/bridge", "shape": false, "expected": null },
     { "id": "null", "body": null, "shape": false, "expected": null }
-  ]
+  ],
+  "select": {
+    "note": "Scoped offers (ticket 26/09/23, G12 session 14c). `records` are gateway offer files (`<rendezvous>/offers/<pid>.json`, schema version 2, `🌉️mcp/🛰️rendezvous::BridgeOffer` — the Rust law decodes and re-encodes each one exactly). A case's `request` is the path a shell asks the supervisor on; `live` the pids whose gateways still run; `expectedPid` the offer served (null: typed not-offered). A hub offer reaches only the shell open on its hub and space whose own human's delegation list names its agent; a local offer any shell; newest wins; a trailing slash on a hub origin is the same origin. `scopes` derive a shell's scope from the hub's list of its own human's delegations: a revoked or expired delegation names no agent, so its gateway's offer is never served (`live` = every record).",
+    "records": [
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6401/bridge", "admissionProof": "proof-1001", "principal": "agent:alice-agent", "pid": 1001, "publishedAtMs": 1000, "scope": {"kind": "hub", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-a"}},
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6402/bridge", "admissionProof": "proof-1002", "principal": "agent:bob-agent", "pid": 1002, "publishedAtMs": 3000, "scope": {"kind": "hub", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-a"}},
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6403/bridge", "admissionProof": "proof-1003", "principal": "agent:alice-agent", "pid": 1003, "publishedAtMs": 2000, "scope": {"kind": "hub", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-b"}},
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6404/bridge", "admissionProof": "proof-1004", "principal": "agent:local", "pid": 1004, "publishedAtMs": 500, "scope": {"kind": "local"}},
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6405/bridge", "admissionProof": "proof-1005", "principal": "agent:alice-agent", "pid": 1005, "publishedAtMs": 4000, "scope": {"kind": "hub", "hubOrigin": "http://127.0.0.1:8031", "spaceId": "space-a"}},
+      {"schemaVersion": 2, "url": "ws://127.0.0.1:6406/bridge", "admissionProof": "proof-1006", "principal": "agent:alice-agent", "pid": 1006, "publishedAtMs": 1500, "scope": {"kind": "hub", "hubOrigin": "http://127.0.0.1:7800/", "spaceId": "space-a"}}
+    ],
+    "cases": [
+      {"id": "the-delegating-humans-shell-dials-its-newest-agent-offer", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Aalice-agent", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1006},
+      {"id": "another-humans-shell-never-receives-the-first-humans-agent", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Acarol-agent", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1004},
+      {"id": "a-shell-whose-human-delegated-both-agents-dials-the-newest", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Aalice-agent%2Cagent%3Abob-agent", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1002},
+      {"id": "the-same-agent-in-another-space-is-not-offered", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-b&agents=agent%3Abob-agent", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1004},
+      {"id": "another-hub-is-another-scope", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A8031&space=space-a&agents=agent%3Aalice-agent", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1005},
+      {"id": "a-shell-in-no-hub-space-dials-only-local-offers", "request": "/__semio/agent-bridge", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1004},
+      {"id": "no-matching-and-no-local-offer-is-none", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Acarol-agent", "live": [1001, 1002, 1003, 1005, 1006], "expectedPid": null},
+      {"id": "a-dead-gateway-is-never-offered", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a&agents=agent%3Aalice-agent", "live": [1001, 1004], "expectedPid": 1001},
+      {"id": "a-scope-without-agents-dials-only-local-offers", "request": "/__semio/agent-bridge?hub=http%3A%2F%2F127.0.0.1%3A7800&space=space-a", "live": [1001, 1002, 1003, 1004, 1005, 1006], "expectedPid": 1004}
+    ],
+    "scopes": [
+      {"id": "a-withdrawn-delegations-offer-is-never-served-again", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-a", "nowMs": 5000, "delegations": [{"agentPrincipalId": "agent:alice-agent", "revoked": true, "expiresAtMs": 9000}, {"agentPrincipalId": "agent:bob-agent", "revoked": false, "expiresAtMs": 9000}], "expectedAgents": ["agent:bob-agent"], "expectedPid": 1002},
+      {"id": "an-expired-delegations-offer-is-never-served", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-a", "nowMs": 5000, "delegations": [{"agentPrincipalId": "agent:alice-agent", "revoked": false, "expiresAtMs": 4000}], "expectedAgents": [], "expectedPid": 1004},
+      {"id": "a-live-delegations-offer-is-served-to-its-human", "hubOrigin": "http://127.0.0.1:7800", "spaceId": "space-a", "nowMs": 5000, "delegations": [{"agentPrincipalId": "agent:alice-agent", "revoked": false, "expiresAtMs": 9000}], "expectedAgents": ["agent:alice-agent"], "expectedPid": 1006}
+    ]
+  }
 }

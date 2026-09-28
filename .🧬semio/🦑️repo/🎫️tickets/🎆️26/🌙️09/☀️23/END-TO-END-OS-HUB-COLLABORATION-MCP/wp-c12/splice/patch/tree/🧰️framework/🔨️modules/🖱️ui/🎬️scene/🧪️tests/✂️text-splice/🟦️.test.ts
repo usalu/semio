@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { diffChars } from "diff";
 import fixture from "../../🧫️fixtures/✂️text-splice/🔣️.json";
 import schema from "../../🧬️schema/✂️text-splice/🔣️.json";
-import { applyTextSpliceV1, locateTextSpliceV1, rebaseTextEditsV1, scalarOfUtf8OffsetV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
+import { applyTextSpliceV1, locateTextSpliceV1, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {
   test("the schema admits the fixture and pins the constants", () => {
@@ -109,6 +109,97 @@ describe("text splice", () => {
       expect(folded.filter((char) => char === "A").length, `workload ${workload}`).toBe(typed[0]);
       expect(folded.filter((char) => char === "B").length, `workload ${workload}`).toBe(typed[1]);
       expect(folded.length).toBe(Array.from(base).length + typed[0]! + typed[1]!);
+    }
+  });
+
+  for (const row of fixture.hostTyping) {
+    test(`host ${row.id}: sends one numbered splice per run, never reverts its own typing, drops a refused run`, () => {
+      let host = textEditorSpliceHostV1(row.init.buffer, row.init.applied);
+      let local = row.init.buffer, caret = Array.from(local).length;
+      for (const [index, event] of (row.events as readonly Record<string, unknown>[]).entries()) {
+        if (typeof event.local === "string") {
+          local = event.local;
+          caret = event.caret as number;
+        } else if (event.send !== undefined) {
+          const sent = sendTextEditorSpliceV1(host, local);
+          expect(sent && { seq: sent.seq, splice: sent.splice }, `${row.id} #${index}`).toEqual(event.send as { seq: number; splice: TextSpliceV1 });
+          host = sent!.host;
+        } else {
+          const received = typeof event.scene === "string" ? receiveTextEditorSceneV1(host, event.scene, event.applied as number, local, { anchor: caret, caret }) : refuseTextEditorSpliceV1(host, event.refuse as number, local, { anchor: caret, caret });
+          expect(received.show, `${row.id} #${index} show`).toEqual(event.show as never);
+          host = received.host;
+          expect(host.unapplied.map((entry) => entry.seq), `${row.id} #${index} unapplied`).toEqual(event.unapplied as number[]);
+          if (received.show !== null) ({ text: local, caret } = received.show);
+        }
+      }
+    });
+  }
+
+  test("two splice-typing hosts over two replicas converge on the hub order and never lose or hide a typed scalar (seeded, 300 sessions)", () => {
+    let seed = 0xc12_14c;
+    const random = () => ((seed = (Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0) / 2 ** 32);
+    const pick = <T,>(items: readonly T[]): T => items[Math.floor(random() * items.length)]!;
+    type Op = { readonly author: number; readonly seq: number; readonly splice: TextSpliceV1 };
+    for (let session = 0; session < 300; session += 1) {
+      const initial = Array.from({ length: Math.floor(random() * 16) }, () => pick(Array.from("ab c\n😀"))).join("");
+      const hub: Op[] = [];
+      const replicas = [0, 1].map(() => ({ known: 0, inbox: [] as Op[], pending: [] as Op[], outbox: [] as Op[] }));
+      const hosts = [0, 1].map(() => ({ host: textEditorSpliceHostV1(initial, 0) as TextEditorSpliceHostV1, local: initial, caret: Math.floor(random() * (Array.from(initial).length + 1)), typed: "" }));
+      const letters = ["A", "B"];
+      const replicaText = (author: number) => [...hub.slice(0, replicas[author]!.known), ...replicas[author]!.pending].reduce((text, op) => applyTextSpliceV1(text, op.splice).text, initial);
+      const applied = (author: number) => Math.max(0, ...hub.slice(0, replicas[author]!.known).filter((op) => op.author === author).map((op) => op.seq), ...replicas[author]!.pending.map((op) => op.seq));
+      const publish = (author: number) => {
+        const view = hosts[author]!;
+        const received = receiveTextEditorSceneV1(view.host, replicaText(author), applied(author), view.local, { anchor: view.caret, caret: view.caret });
+        view.host = received.host;
+        if (received.show !== null) ({ text: view.local, caret: view.caret } = received.show);
+        for (const letter of Array.from(view.typed)) expect(Array.from(view.local).filter((char) => char === letter).length, `session ${session}: host ${author} shows every ${letter} it typed`).toBe(view.typed.length);
+      };
+      const step = (action: number) => {
+        const author = action % 2, view = hosts[author]!, replica = replicas[author]!;
+        switch (Math.floor(action / 2)) {
+          case 0: {
+            const chars = Array.from(view.local);
+            view.local = [...chars.slice(0, view.caret), letters[author]!, ...chars.slice(view.caret)].join("");
+            view.caret += 1;
+            view.typed += letters[author]!;
+            return;
+          }
+          case 1: {
+            const sent = sendTextEditorSpliceV1(view.host, view.local);
+            if (sent === null) return;
+            view.host = sent.host;
+            replica.inbox.push({ author, seq: sent.seq, splice: sent.splice });
+            return;
+          }
+          case 2: {
+            const op = replica.inbox.shift();
+            if (op === undefined) return;
+            replica.pending.push(op);
+            replica.outbox.push(op);
+            return publish(author);
+          }
+          case 3: {
+            const op = replica.outbox.shift();
+            if (op !== undefined) hub.push(op);
+            return;
+          }
+          default: {
+            if (replica.known === hub.length) return;
+            const op = hub[replica.known]!;
+            replica.known += 1;
+            if (op.author === author) replica.pending = replica.pending.filter((entry) => entry.seq !== op.seq);
+            return publish(author);
+          }
+        }
+      };
+      for (let turn = 0; turn < 60; turn += 1) step(Math.floor(random() * 10));
+      for (let drain = 0; drain < 400 && (replicas.some((replica) => replica.inbox.length > 0 || replica.outbox.length > 0 || replica.known < hub.length) || hosts.some((view) => textSpliceFromEditV1(view.host.base, view.local) !== null)); drain += 1) step(2 + (drain % 8));
+      const final = hub.reduce((text, op) => applyTextSpliceV1(text, op.splice).text, initial);
+      for (const author of [0, 1]) {
+        expect(hosts[author]!.local, `session ${session}: host ${author} converged`).toBe(final);
+        expect(Array.from(final).filter((char) => char === letters[author]).length, `session ${session}: every ${letters[author]} survives`).toBe(hosts[author]!.typed.length);
+      }
     }
   });
 });

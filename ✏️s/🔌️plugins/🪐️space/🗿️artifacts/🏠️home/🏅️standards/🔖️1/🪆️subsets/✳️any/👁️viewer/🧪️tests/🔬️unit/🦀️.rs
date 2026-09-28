@@ -90,7 +90,7 @@ fn viewer_feed(config: &HomeConfig, page_json: &str) -> Result<Emit<SHomeMutatio
     let hover = semio_framework_plugin::app::InteractionHoverState::new();
     let command = <HomeViewer as ArtifactViewer>::command_from_action("applyDirectoryEventPage", Some(&DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json.into()))])))?;
     assert!(home_view_retained_extent(&command, &snapshot, &state).is_some(), "an ordinary page fits the retained wire budget");
-    home_view_retained_reduce(&command, &snapshot, config, &history, &state, &hover, None, &AppOperationContext { app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32] })
+    home_view_retained_reduce(&command, &snapshot, config, &history, &state, &hover, None, &AppOperationContext { app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() })
 }
 
 fn editor_feed(config: &HomeConfig, page_json: &str) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {

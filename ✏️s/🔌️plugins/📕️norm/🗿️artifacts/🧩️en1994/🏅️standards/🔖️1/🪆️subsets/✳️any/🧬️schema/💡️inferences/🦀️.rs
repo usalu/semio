@@ -418,11 +418,12 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(stress.build());
 
-    // SLS frequent — deflection EN 1994-1-1 §7.3.1 / DE NA
+    // SLS frequent — deflection EN 1994-1-1 §7.3.1 / EN 1990 Table A1.4 + DIN EN 1990/NA
     let n_l = part_1_1::modular_ratio_long_term(beam.concrete_e_cm_pa, 2.0);
     let i_eff = beam.steel.i_y_m4 * (1.0 + 0.35 * n_l / 10.0);
     let delta = 5.0 * sls_freq.m_nm * beam.span_m.powi(2) / (48.0 * 210e9 * i_eff.max(1e-12));
-    let delta_lim = part_1_1::deflection_limit_m(beam.span_m);
+    let delta_lim = part_1_1::deflection_limit_m(beam.span_m, annex);
+    let lim_div = part_1_1::deflection_span_divisor(annex);
     let mut sls = CheckResult::assess(
         format!("en1994.7.3.1.deflection.{}", beam.id), "DIN EN 1994-1-1",
         ClauseId::new("EN 1994-1-1", "§7.3.1", "7.3.1"), beam_ref(&beam, "actions"),
@@ -431,14 +432,35 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     .utilization(Quantity::length_m(delta), Quantity::length_m(delta_lim))
     .annex(annex)
     .explanation(lc(
-        format!("{}: δ = {:.1} mm, limit L/250 = {:.1} mm.", sls_freq.label_en, delta * 1000.0, delta_lim * 1000.0),
-        format!("{}: δ = {:.1} mm, Grenze L/250 = {:.1} mm.", sls_freq.label_de, delta * 1000.0, delta_lim * 1000.0),
+        format!(
+            "{}: δ = {:.1} mm, limit L/{lim_div:.0} = {:.1} mm ({}).",
+            sls_freq.label_en,
+            delta * 1000.0,
+            delta_lim * 1000.0,
+            match annex {
+                AnnexChoice::En => "EN 1990 Table A1.4 recommended",
+                AnnexChoice::De => "DIN EN 1990/NA variable-actions appearance",
+            }
+        ),
+        format!(
+            "{}: δ = {:.1} mm, Grenze L/{lim_div:.0} = {:.1} mm ({}).",
+            sls_freq.label_de,
+            delta * 1000.0,
+            delta_lim * 1000.0,
+            match annex {
+                AnnexChoice::En => "EN 1990 Tab. A1.4 empfohleniert",
+                AnnexChoice::De => "DIN EN 1990/NA Verformung aus veränderlichen Einwirkungen",
+            }
+        ),
     ));
     if delta > delta_lim {
         let ratio = (delta_lim / delta.max(1e-12)).clamp(0.0, 1.0);
         let span_req = beam.span_m * ratio.powf(1.0 / 3.0) * 0.98;
         sls = sls.remedy(Remedy::at_most(beam_ref(&beam, "spanM"), Quantity::length_m(beam.span_m), Quantity::length_m(span_req),
-            lc("Reduce span so frequent deflection ≤ L/250.", "Spannweite reduzieren, damit δ häufig ≤ L/250.")));
+            lc(
+                format!("Reduce span so frequent deflection ≤ L/{lim_div:.0}."),
+                format!("Spannweite reduzieren, damit δ häufig ≤ L/{lim_div:.0}."),
+            )));
         if let Some(a) = beam.actions.iter().find(|a| a.id == "Q-office")
             .or_else(|| beam.actions.iter().find(|a| a.kind == "imposed" && a.stage == "composite" && a.q_area_pa.abs() > 1e-9))
         {
@@ -448,7 +470,10 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             // otherwise span remedy above clears alone / sequentially.
             let q_req = q_cur * ratio * 0.5;
             sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
-                lc("Reduce imposed load so frequent deflection ≤ L/250.", "Nutzlast reduzieren, damit δ häufig ≤ L/250.")));
+                lc(
+                    format!("Reduce imposed load so frequent deflection ≤ L/{lim_div:.0}."),
+                    format!("Nutzlast reduzieren, damit δ häufig ≤ L/{lim_div:.0}."),
+                )));
         }
     }
     report.push(sls.build());

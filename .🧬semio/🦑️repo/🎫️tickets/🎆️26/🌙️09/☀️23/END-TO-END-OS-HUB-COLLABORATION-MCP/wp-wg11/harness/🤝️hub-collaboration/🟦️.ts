@@ -395,6 +395,16 @@ export class Wasm32Shell {
     if (pill?.checked !== true) await this.activate(SYNC_CARD, 2_000);
   }
 
+  /** 🔄️ Closes the Sync card, judged by its painted content (the `framework.sync.panel` group), not the pill's switch state —
+   * a pixel comparison needs the same chrome in both frames. */
+  async closeSyncCard(): Promise<boolean> {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (!(await this.projection()).some((node) => String(node.key).endsWith("framework.sync.panel"))) return true;
+      await this.activate(SYNC_CARD, 2_000);
+    }
+    return !(await this.projection()).some((node) => String(node.key).endsWith("framework.sync.panel"));
+  }
+
   /** 🔗️ Attaches `remote://<hub host>/<space>/<document>` from the Sync card. */
   async attach(spaceId: string, documentId: string): Promise<{ uri: string; pressed: string }> {
     await this.openSyncCard();
@@ -967,6 +977,10 @@ async function wasm32Journey(run: JourneyRun): Promise<void> {
   const after = await b.link();
   record("an expired link never relinks by itself", !LIVE_SYNC.test(after.sync) && (after.codes.includes("link-expired") || /detached|getrennt/iu.test(after.sync)), after);
   const late = await Wasm32Shell.boot(browser, options.humans[0], serve, options.hub, options.locale, run.clock, documentId);
+  run.onCleanup(async () => {
+    writeFileSync(run.out("console-late.txt"), late.lines.join("\n"));
+    writeFileSync(run.out("hub-late.txt"), late.hubLines.join("\n"));
+  });
   await signedIn(run, late);
   await attached(run, late);
   await kind.prepare(late);
@@ -1174,8 +1188,8 @@ async function agentPixelsJourney(run: JourneyRun): Promise<void> {
   run.onCleanup(async () => writeFileSync(run.out("console-human.txt"), human.lines.join("\n")));
   await signedIn(run, human);
   await attached(run, human);
-  await human.openSyncCard();
   await kind.prepare(human);
+  if (!(await human.closeSyncCard())) throw new Error("the human's Sync card does not close — the frames would differ in chrome");
   const parked = async (shell: Wasm32Shell): Promise<void> => {
     await shell.page.mouse.move(2, 996);
     await shell.page.waitForTimeout(1_500);
@@ -1223,6 +1237,7 @@ async function agentPixelsJourney(run: JourneyRun): Promise<void> {
   record("the human's shell decodes the agent's block without a reload", decoded.value !== null, { count: [countBefore, kind.count(decoded.view)], afterMs: Date.now() - committedAt });
   const headAfter = await documentHead(options.hub, run.token, run.document.spaceId, run.document.documentId);
   record("the hub ledger advanced with the agent's commit", headAfter > headBefore, { head: [headBefore, headAfter] });
+  if (!(await human.closeSyncCard())) throw new Error("the human's Sync card reopened — the frames would differ in chrome");
   await parked(human);
   let live = await regionPixels(human.page, body, run.out("agent-live.png"));
   for (let settle = 0; settle < 5; settle += 1) {
@@ -1238,8 +1253,8 @@ async function agentPixelsJourney(run: JourneyRun): Promise<void> {
   run.onCleanup(async () => writeFileSync(run.out("console-reference.txt"), reference.lines.join("\n")));
   await signedIn(run, reference);
   await attached(run, reference);
-  await reference.openSyncCard();
   await kind.prepare(reference);
+  if (!(await reference.closeSyncCard())) throw new Error("the reference's Sync card does not close — the frames would differ in chrome");
   const referenceDecoded = await reference.waitFor((view) => kind.count(view) === kind.count(decoded.view) && view, 60_000);
   record("a fresh session decodes the same committed state (cold reference)", referenceDecoded.value !== null, { count: [kind.count(decoded.view), kind.count(referenceDecoded.view)] });
   await parked(reference);

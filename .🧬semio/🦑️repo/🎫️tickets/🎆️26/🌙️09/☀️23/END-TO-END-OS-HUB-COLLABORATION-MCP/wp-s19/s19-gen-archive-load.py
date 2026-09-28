@@ -12,7 +12,16 @@ whole-document load fails its publication (`*-publication.authority-missing`). p
 generation the host started on, the domain's own credits) when no host lease exists, every lookup reads the host table first
 and the self-grant second, and the grant is released at validation, cancellation, fault and close. This ports that shape
 verbatim into both generation artifacts (the three templated copies stay structurally identical) and adds one law per
-artifact driving the real archive door. Idempotent. usage: s19-gen-archive-load.py <root>"""
+artifact driving the real archive door.
+
+Second fault (overlay proof 1, 2026-09-28 14:34, `s14-s19-logs/gen-archive-proof-1.txt`): with the lease in place generation3d
+still trapped — the KERNEL's retained hydrations (`🏪️store/🧾️document/📜️history/💧️hydration`, and its config twin
+`🏪️store/🎚️config/📥️retained`) replay every persisted forward as `MutationDiff::apply(operation.diff(x).diff(), x)`, which
+plain-drops the outcome's diff instead of routing it through `MutationDiff::retire_cold`; a procedural diff owns
+`host_snapshot.layout: OrderedMap`, so the FIRST replayed edit aborts the guest. Both seams now use `os_vcs::apply_mutation`
+(the per-step replay transform every store-level fold already uses, which retires the diff). Each law exports an EDITED
+document so the replay seam is always exercised (generation2d's first law exported an edit-free document and passed by luck).
+Idempotent. usage: s19-gen-archive-load.py <root>"""
 import os
 import sys
 
@@ -206,7 +215,8 @@ pub fn {v}_refresh_publication_authority''', f"fn {v}_app_publication_lease()")
         deref = "&mut *"
         ref = "&*"
     else:
-        seat = ""
+        seat = '''    context::dispatch(&mut source, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
+'''
         read = "context::snapshot_read"
         close = "context::close({app});"
         deref = "&mut "
@@ -215,10 +225,12 @@ pub fn {v}_refresh_publication_authority''', f"fn {v}_app_publication_lease()")
 //#region 🚪️ArchiveImportDoor
 /// 🚪️ A framework document archive of this editor loads into a FRESH instance through the shell's Import Document door
 /// (`createApp` → `loadDocumentArchive` → poll → acknowledge). Measured live 2026-09-28 (S20 io-matrix,
-/// `s14-s20-io/s20b-local-en-2`): the load never published — the initializer held no publication lease outside tests
-/// (`{v}-publication.authority-missing`), which generation3d surfaced as a guest trap and generation2d as
-/// `document-archive-replacement.initializer-failed`. The initializer now grants itself the lease the host's replacement
-/// needs (ticket 26/09/23 slice S19).
+/// `s14-s20-io/s20b-local-en-2`): generation3d trapped the guest, generation2d faulted
+/// `document-archive-replacement.initializer-failed`. Two faults: the initializer held no publication lease outside tests
+/// (`{v}-publication.authority-missing`) — it now grants itself the lease the host's replacement needs — and the kernel's
+/// retained hydration plain-dropped every replayed diff, whose `host_snapshot.layout` `OrderedMap` aborts on drop — it now
+/// retires them through `os_vcs::apply_mutation`. The source document is EDITED first so the archive carries history to
+/// replay (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {{
     let _serial = crate::publication_authority::lock();
@@ -249,8 +261,38 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
 '''
 
     def law_change(text):
-        if "fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door()" in text:
-            return text
+        start, end = "\n//#region 🚪️ArchiveImportDoor\n", "//#endregion 🚪️ArchiveImportDoor\n"
+        if start in text:
+            head, rest = text.split(start, 1)
+            return head + LAW + rest.split(end, 1)[1]
         return text.rstrip("\n") + "\n" + LAW
 
     edit(law_file, law_change)
+
+
+HYDRATIONS = [
+    ("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs", "MemberOpenDiagnostic",
+     "use crate::{CompositionPin, Edit, FromValue, Mutation, MutationDiff, OpBinary, OpText, ToValue};",
+     "use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};"),
+    ("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs", "ConfigStoreHydrationDiagnostic",
+     "ErasedSnapshotRetirement, FromValue, Mutation, MutationDiff, OpBinary,",
+     "ErasedSnapshotRetirement, FromValue, Mutation, OpBinary,"),
+]
+
+
+def hydration_change(diagnostic, old_use, new_use):
+    def change(text):
+        for projection in ("validation", "current"):
+            old = f"""                        let next = match MutationDiff::apply(operation.diff({projection}).diff(), {projection}) {{
+                            Ok(next) => next,
+                            Err(_) => return self.reject({diagnostic}::Replay),"""
+            new = f"""                        let next = match crate::os_vcs::apply_mutation({projection}, operation) {{
+                            Ok((next, _)) => next,
+                            Err(_) => return self.reject({diagnostic}::Replay),"""
+            text = once(text, old, new, new)
+        return once(text, old_use, new_use, new_use)
+    return change
+
+
+for rel, diagnostic, old_use, new_use in HYDRATIONS:
+    edit(rel, hydration_change(diagnostic, old_use, new_use))

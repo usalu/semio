@@ -147,3 +147,21 @@ describe("🖱️ context menu outside dismiss", () => {
   });
 });
 // #endregion 🖱️OutsideDismiss
+
+// #region 🔁️ClosedRenderBudget
+describe("🖱️ closed context menu render budget", () => {
+  it("renders once per parent render while closed, even when every parent render hands it fresh items", () => {
+    let commits = 0;
+    const menu = () => (
+      <React.Profiler id="menu" onRender={() => (commits += 1)}>
+        <ContextMenuController open={false} position={{ x: 0, y: 0 }} items={[{ id: "a", label: uiDataLabel("Alpha") }]} onOpenChange={() => undefined} title={uiDataLabel("Actions")} />
+      </React.Profiler>
+    );
+    const { rerender } = render(menu());
+    rerender(menu());
+    const settled = commits;
+    for (let index = 0; index < 4; index++) rerender(menu());
+    expect(commits - settled).toBe(4);
+  });
+});
+// #endregion 🔁️ClosedRenderBudget

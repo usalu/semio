@@ -293,6 +293,43 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
+/// ⚖️ LAW (agent lane, ticket 26/09/23 G12 session 14c): an agent's archive rename without a `revision` is admitted against the
+/// addressed entry's own token — the same edit as with the token its draft binding carries, a stale token still refused —
+/// while the shell lane keeps refusing the omission.
+async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    let row = fixture();
+    let original: ZipSnapshot = dsl::os_pack::json::from_json_str(&row["snapshot"].to_string()).unwrap();
+    let registered = definition.clone();
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }).await;
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
+    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    let name = row["rename"]["name"].as_str().unwrap();
+    let value = row["rename"]["value"].as_str().unwrap();
+    let address = |revision: Option<String>| {
+        dsl::DslValue::object(
+            [("nodeId".to_string(), dsl::DslValue::String(entry_node_id(name))), ("value".to_string(), dsl::DslValue::String(value.into()))].into_iter().chain(revision.map(|revision| ("revision".to_string(), dsl::DslValue::String(revision)))),
+        )
+    };
+    assert_eq!(agent_target_revision(&original, &address(None)).unwrap(), Some(text_revision(name)), "the fill is the token the draft binding carries");
+    let omitted = artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None)).await.expect("the agent lane admits an omitted revision");
+    let bound = artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name)))).await.expect("the draft binding's revision");
+    assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
+    assert!(artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale")))).await.is_err(), "a stale token is refused on the agent lane too");
+    assert!(app.handle_action("set-node", Some(&address(None)), &artifact_app_laws::meta("local")).await.is_err(), "the shell lane still requires the draft binding's revision");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn base_archive_agent_rename_is_admitted_against_the_entry_token() {
+    agent_archive_rename_law::<crate::editor::zip::base::ZipAnyEditor>(crate::editor::zip::base::create_zip_any_editor()).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn iso_archive_agent_rename_is_admitted_against_the_entry_token() {
+    agent_archive_rename_law::<crate::editor::zip::iso21320::ZipIso21320Editor>(crate::editor::zip::iso21320::create_zip_iso21320_editor()).await;
+}
+
 #[semio_framework_async_macros::async_test]
 async fn base_archive_draft_uses_the_registered_retained_factory() {
     retained_archive_law::<crate::editor::zip::base::ZipAnyEditor>(crate::editor::zip::base::create_zip_any_editor()).await;
@@ -351,7 +388,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
                     0,
                     ArtifactOwnedToolJobSnapshots { children: Arc::new(ChildContentView::EMPTY), draft: Arc::new(Default::default()), transient: Arc::new(Default::default()), window_config: None, window_transient: None },
                 ))),
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "zip-replay".into(), operation_id: 41, generation: 3, canonical_base_revision: revision },
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "zip-replay".into(), operation_id: 41, generation: 3, canonical_base_revision: revision, authoring_seed: "authoring-seed-test".into() },
                 completion,
             },
             Editor::command_id,

@@ -108,7 +108,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).map_err(|error| error.to_string())?;
         app.handle_action(
             INTERACTION_SELECT_ACTION_ID,
-            semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }))).as_ref(),
+            Some(semio_framework_plugin::dsl_value!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })).as_ref(),
             &artifact_app_laws::meta("missing-target-selection"),
         )
         .await

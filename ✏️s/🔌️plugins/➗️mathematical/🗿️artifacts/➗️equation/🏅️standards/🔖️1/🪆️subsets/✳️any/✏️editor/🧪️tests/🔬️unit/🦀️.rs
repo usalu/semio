@@ -98,7 +98,7 @@ use crate::editor::equation::unit_tests::context::{math_app, math_app_with_regis
 
 //#region 🔖️RetainedCommands
 fn retained_operation(generation: u64) -> AppOperationContext {
-    AppOperationContext { app_instance_id: 7, parent_document_id: "equation-retained-test".into(), operation_id: 11, generation, canonical_base_revision: [17; 32] }
+    AppOperationContext { app_instance_id: 7, parent_document_id: "equation-retained-test".into(), operation_id: 11, generation, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into() }
 }
 
 fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {

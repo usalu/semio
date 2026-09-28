@@ -142,3 +142,118 @@ finished compile-atomically by W4. The chain copy tolerates transient reds (retr
   on the live tree (component features not covered). ST2 fixed the svg `📡️.protocol.semio` SHA pins ~14:1x; a2 had not described
   stdio/gis/vcs yet.
 
+
+### Session 14c
+
+- 16:57 successor W4 started (predecessor cut ~14:37 with the app; chain a2 had reached components). Chain RELAUNCHED by main 16:55:46
+  (pid 76013, same command/log). hub-prewarm running (os-hub build-dev compiling host deps), wasm hold → rebuild-all a1 at 2/11
+  mutation-authority 16:57 (1/11 provenance 66 s, 0 foreign units). Load 23, 9 rustc, disk 84 GiB free, swap 4.9/6.1 GB. 7800 down (the
+  move step starts it on ALL). Old `final-rebuild-all-a1*.txt` (14b) will be overwritten by this run's attempt logs.
+- 17:13 **hub-prewarm rc=0** (1039 s; H14's kernel-db fixes hold — the 14b rc=1 is gone). Forward warm lane starts now. rebuild-all a1 at
+  3/11 guest-framework (2/11 mutation-authority 165 s); only lint-style warnings so far. Load 46–60 from peer native tests (LB2 stdio
+  `shipped_fleet`, Cursor peer norm `--no-run`, a `cargo test --bin os-hub`).
+- 17:32 rebuild-all a1: **3/11 guest-framework done (1401 s, no error)**; 4/11 components (descriptors) running (playbook procedural build).
+  Forward warm lane: stdio release building since 17:13 (no error).
+- 18:11 components: 32 plugin crates compiled (all 26 extensions incl. robotic + flow-text, then cad/demonstrator/imperative/mathematical/
+  process/sourcing), no error. Forward warm lane: **stdio release rc=0** (17:13–17:48), gis since 17:48.
+- 19:00 components still running (raster now), no error in 1 h 28 min; warm lane released stdio, gis, animate, architect, block, cad (all rc=0),
+  dag running. Load ~32.
+- 19:1x **components a1 has two reds** (step continues, fails at its end → blind retry `--from components` after 5 min):
+  (1) **stdio describe refused**: dev component 274 393 279 B > 256 MiB `FRESH_COMPONENT_MAX_BYTES` (s13 core 253 MiB → 262 MiB now;
+  `name` section 54.6 %) → `Cargo.toml` `[profile.wasm-dev.package.semio-s-plugin-stdio] strip = "symbols"` (norm's precedent; norm dev
+  145 MB, no name section) LANDED 19:21.
+  (2) **`process` component-dev failed** with the old `…warningerror` signature (no crate named; nothing edited on its path since launch).
+  Root cause measured: `buildCargoArtifacts` spawned cargo with stderr `inherit`; Bun marks its stderr `O_NONBLOCK` once written, so cargo
+  shared a non-blocking pipe and its burst of replayed warnings failed with EAGAIN when the nx prefixer lagged under load
+  (`w4-nonblock-probe.ts`: inherit → BlockingIOError 35 after 64 KiB; pipe+forward → 4 000 000/4 000 000 B). Fix LANDED 19:23 in
+  `native-build/🟦️.ts` (stderr piped + forwarded); tsc 0 new errors. gis describe passed (235 MB dev).
+- 19:28:41 rebuild-all a1 rc=1 (9175 s): nx "Failed tasks" = exactly `process-plugin:component-dev` + `stdio-plugin:describe` (both fixed above);
+  vcs/wfc/… after the native-build edit built + described fine. RETRY-WAIT blind → a2 `--from components` at ~19:33:42.
+- 20:03 **rebuild-all a2 components GREEN** (19:33–~20:0x): process component-dev + describe passed; **stdio dev component 124 447 025 B**
+  (core 119 MiB, was 274 MB) and **stdio describe passed** = proof of the strip override AND of LB2's p4 (`plugin()` no longer panics at
+  describe). 5/11 generate done, 6/11 check running. Blind retry is spent: a no-crate failure from here ends the chain.
+- 20:05 **chain run c1 FAILED** at rebuild-all a2 6/11 `check` (registry): forms modes `📨️responses` / `✍️fill` (overnight peer, 01:0x–01:4x)
+  missing required mode lanes (blind retry already spent → hold exited, chain exited 20:05:18; warm lane had released stdio…process).
+  Fixed 20:1x (landing row: 9 `📌️.empty.md` lanes copied from the sibling `📝️blueprint` mode, fill's `🪟️windows` from architect `🔍️review`);
+  **registry check rc=0** (201 s, `generated/s14c-registry-check-1.txt`). Logs of run c1 archived as `s14-w4-logs/c1-*`.
+- 20:1x `w4-wasm-hold.sh`: `W4_REBUILD_FROM=<step>` resumes rebuild-all at a step (zsh -n ok). Relaunch command sent to main:
+  `python3 .tmp-ticket/wp-w2/w2-detach.py .🧬semio/🌐hub/s14-w4-logs/chain-final.txt env W4_REBUILD_FROM=check zsh .tmp-ticket/wp-w4/w4-chain.sh final`
+- 20:1x pre-validation on the tree the relaunch uses: `os-hub:trusted-catalog-preflight --packages all` **rc=0** (39 s: 34 committed descriptors
+  with bounded deps; 60 component-dev deliverables = 34 packages + 26 extensions match their descriptors; `generated/s14c-preflight-1.txt`).
+- **20:11:59 chain run c2 RELAUNCHED** by main (pid 95069, `W4_REBUILD_FROM=check`; a 20:10:55 start left only a log line, no processes).
+  rebuild-all `--from check` + hub-prewarm running.
+- 20:10:55 correction (coordinator): the first relaunch failed in 26 s — MY bug: zsh does not word-split `${W4_REBUILD_FROM:+--from $W4_REBUILD_FROM}`,
+  so rebuild-all got `--from check` as ONE argument and rejected it. The coordinator killed that process group (pgid 94710), changed both
+  expansions in `w4-wasm-hold.sh` to `${VAR:+--from} ${VAR:+$VAR}` and relaunched 20:11:59 (pid 95069). Lesson: in zsh, a `:+` word with a
+  space is one word — split it into two expansions (or `${=…}`). c2 hub-prewarm rc=0 (77 s) 20:13:16; rebuild-all 6/11 check running.
+- **20:23:08 rebuild-all c2 rc=0** (669 s: check, activate-s, verify-s, flow-core-bindings all green). Preflight started 20:23:08.
+- **20:36:12 publish-all c2 FAILED** (758 s, strict): `trusted fem closure carries no artifact codec` → **final-publish.rc = 1** (sent to main).
+  Reproduced offline with the publish's own probe (`w4-codec-probe.py`: descriptor ArtifactKindSpecs asked of each component-dev via
+  `semio-framework-plugin-describe codecs`; `generated/s14c-codec-probe-1.txt`): **9 of 34 packages own 0 codec rows** — the guest resolves a
+  codec owner only by an app's `DOCUMENT_SCHEMA` or dialect kind, and each of these declares a spec schema that is neither:
+
+  | package | declared ArtifactKindSpec schema(s) | app `DOCUMENT_SCHEMA` / dialect kind |
+  |---|---|---|
+  | fem | `computation.fem2d`, `computation.fem3d` (results OUTPUT kinds of `results:out`) | `fem.2d`, `fem.3d` / `s.fem.fem2d`, `s.fem.fem3d` — no document kind spec at all |
+  | flow | `flow.artifact` (kind `computation.flow`) | `FLOW_DOCUMENT_SCHEMA` / `s.flow.flow` |
+  | mathematical | `computation.equation` | `semio.equation/v1` / `s.mathematical.equation` |
+  | shooting | `shooting.scene`, `2d.image` | `shooting.shooting` / `s.shooting.shooting` |
+  | lowpoly | `lowpoly.fixture` | `lowpoly.document` / `s.lowpoly.lowpoly` |
+  | forms | `form.dictionary` | `forms.form` / `s.forms.forms` |
+  | norm | `norm.<std>.document` ×15 | `semio.norm.<std>/v1` ×15 / `s.norm.<std>` |
+  | imperative | `procedure.document` | `procedure.document/v1` / `s.imperative.procedure` |
+  | sourcing | `sourcing.curation`, `catalogue.kinds`, `kit.catalog` | `sourcing.curation/v1` / `s.sourcing.curation` |
+
+  24 packages answer ≥ 1 owned row (+ stdio via linked codecs). demonstrator owns 5 rows but depends on sourcing (descriptor dependency) →
+  excluded from the subset too. **Coordinator DECISION B (20:4x):** publish the codec-complete subset now; the 9 spec fixes (each spec's
+  schema = its app's DOCUMENT_SCHEMA constant, fem gains a document kind spec beside its results kinds) + a describe-time law refusing any
+  package whose closure owns 0 codec rows are W4's window-3 items; the next chain republishes all 34.
+- 20:4x partial `s14-w4-catalog-all` (empty `trusted-catalog/`) moved to `s14-w4-catalog-all-failed-c2-2036`. Preflight `--packages <25>`
+  refused (demonstrator → sourcing); **preflight p24 rc=0** (24 descriptors, 33 component-dev deliverables = 24 packages + 9 extensions;
+  `generated/s14c-preflight-p24.txt`). Chain scripts gained `W4_PACKAGES`, `W4_CATALOG`, `W4_ROOT`, `W4_REBUILD_FROM=skip` (lanes warm only
+  the subset; `zsh -n` ok; split/ordering tested; pre-edit copies `generated/*.pre-p24`). Run c2 logs archived as `s14-w4-logs/c2-*`.
+- **20:45:25 chain run c3 RELAUNCHED** by main (p24 publish-only: `W4_REBUILD_FROM=skip`, catalog `s14-w4-catalog-p24`, root
+  `s14-w4-hub-7800-p24`); rebuild-all skipped, preflight started.
+- **20:56:26 publish-all c3 rc=0 → final-publish.rc = 0** (628 s; preflight p24 33 s; immutable 24-package generation
+  `d1099ba98c89995f…`, bundle `d527af60…`, profile `local-stdio-gis-…-writer-open-v1`, catalog `s14-w4-catalog-p24`). Sent to main.
+- **21:00:00 7800 READY on p24** (hold 9448 / hub 9459, spawned 20:59:52 → HOLD status=ready in 8 s; admin issued; root `s14-w4-hub-7800-p24`,
+  binary sha256 `587ed4a2…`, generation `d1099ba9…`). hub-build rc=0 (20 s), mcp-build rc=0 (157 s), restart rc=0.
+  **Chain bug (mine):** `move_7800` polls `status.txt` for `HOLD `, but the hold overwrites it 4 ms later with `ADMIN issued` → the loop
+  would have waited its full 7200 s. Released 21:10 by appending the true HOLD line (from `hold.txt`) to `status.txt`; the chain logged
+  "READY boot=616s" (inflated by the race; real boot 8 s). Fix after the chain ends (never edit a running zsh script): poll `hold.txt`.
+- 21:10–21:29 chain probes: /readyz ready (no unready component); hub-freshness "unverifiable" = harness bug (lsof raw UTF-8 under nx locale,
+  latin1 round trip mangled the emoji path) → fixed (landing row) → **verdict fresh** (`generated/s14c-hub-freshness-2.txt`). **Open-plan
+  36 kinds: 34 PASS, 2 FAIL** — procedural `2d.generation`/`3d.generation` genesis: guest panic "ordered-map root must be explicitly retired
+  before drop" (`🌱️value/🗂️ordered/🦀️.rs:81`, hub capture l.178/359) → procedural owner. **Footprint idle 1157 MB → 1622 MB** after
+  creations. Chain: "s14-w4-catalog-p24 SERVED on 7800" 21:29:15; release plugin-root re-materialize running. READY summary sent to main.
+- 21:00 WINDOW 3 OPEN (coordinator). Next W4 item: the 9-package kind-spec scripts + the zero-owned-codec describe gate for L1 (T3).
+- 21:3x–22:1x **window-3 item: ONE schema identity per document kind** (coordinator DECISION 21:4x: unify on the io identity; rewrite the pinned
+  laws to pin equality; keep any real media information as a separate declared field). Findings behind it: every platform reader keys a kind on
+  ONE schema — hub `🗿️artifact-authority` adapters (`document_codec(&kind.schema)`, `codec.schema != kind.schema` refused), trusted-catalog
+  open targets, MCP workspace (`storage.write(id, &kind.schema, …)`), host-media contributions (`artifact_kind.schema == artifact_schema`) — and
+  each app's `io` already presents that identity (`ArtifactPresentation.id` + `artifact_schema` = DOCUMENT_SCHEMA). Four packages (flow,
+  imperative, shooting, sourcing) had laws pinning the split ("deliberately NOT"); math had one too. **Old media strings are not lost:** each
+  stays declared as `source_format` (flow `flow.artifact`, shooting `shooting.scene`, lowpoly `lowpoly.fixture`, forms `form.dictionary`,
+  imperative `procedure.document`, sourcing `sourcing.curation`, norm `norm.<v>.document`); math's was the kind id itself. Port payload schemas
+  (forms `dictionary:out` = `form.dictionary`, fem `results:out` = `computation.fem2d/3d`) are separate `Media` payload fields — unchanged.
+  Static spec/io law over all 34 current descriptors: violators = the 9 + demonstrator (embeds sourcing's app) + **trinity** (rewriting io
+  presents undeclared `trinity.rewriting`; its spec is `text.rewriting`) → fixed too.
+  - `wp-w4/w4-kind-spec-identity.py` (`--dry-run|--write|--revert`, **dry-run 42 pending / 0 bad**): 9 spec schemas → DOCUMENT_SCHEMA
+    constants (norm: `artifact_kind_spec(variant, label, artifact_schema)` + 15 callers pass `<V>_DOCUMENT_SCHEMA`); 5 laws rewritten to pin
+    equality + `source_format`; shooting editor io → `crate::SHOOTING_DOCUMENT_SCHEMA` (+ its test); forms editor inline spec →
+    `crate::artifact_kind()` (unused `ArtifactKindSpec`/`OsMediaCapability` imports dropped); fem `document_artifact_kind()` 2d/3d (`2d.fem`/
+    `3d.fem`, FEM_xD_SCHEMA, io media type, stdio lists copied from the results kinds) stitched before the results kind + `OnArtifactKind`
+    activations; trinity rewriting io id → `crate::artifact_kind().id`.
+  - `wp-w4/w4-kind-identity-gate.py` (**dry-run 8 pending / 0 bad**, land AFTER the spec script): describe-time gate in
+    `🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs` — static law `kind_identity_faults` over `descriptor_kind_identity_apps`, and
+    `owned_codec_census` on the SAME compiled component (execute_describe_owned now returns runtime + CompiledHandle; no second compile):
+    ≥ 1 declared kind ⇒ ≥ 1 owned codec row, other per-kind faults printed; language-neutral fixture `🧫️fixtures/🪪️kind-identity/🔣️.json`
+    (5 cases) + unit test `kind_identity_law_matches_the_fixture`. Written, NOT compiled (landing = L1, T3).
+  - Open risk for the gate: stdio's guest answers `stdio.xml` with "resolves more than one app of the same role" (two editors own the
+    schema) — the gate prints it but only refuses 0 owned; tolerant stdio census running to confirm stdio owns ≥ 1 row.
+- 22:00:46 **chain c3 ended by SIGTERM** (not by itself): `release-modules` (`nx run-many -t materialize-release`, 63 min in, at playbook
+  component-release) exited 143 and every chain process is gone (no further chain-final line; hub hold 9448 untouched, 7800 still READY). The
+  shared RELEASE plugin-module root is therefore partially re-materialized (dag/fem/gis/vcs/wfc/playbook/sequence… not done) and
+  `w3-release-root-check` never ran — only matters for release-variant serves; rerun `framework-plugin-web:support-release` +
+  `run-many -t materialize-release` + `w3-release-root-check.ts release` when the wasm lane is free (or with the next all-34 chain).
+- 22:0x `w4-chain.sh` readiness poll now reads the hold's append-only `hold.txt` (zsh -n ok; the status.txt race is documented in the header).

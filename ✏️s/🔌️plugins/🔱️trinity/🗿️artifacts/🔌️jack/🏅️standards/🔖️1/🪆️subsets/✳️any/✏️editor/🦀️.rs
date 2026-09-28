@@ -784,6 +784,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
                 operation_id: request.operation.operation.0,
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
+                authoring_seed: request.authoring_seed.clone(),
             };
             let payload = ArtifactRetainedCommandPayload::try_new(
                 semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -824,6 +825,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1060,7 +1062,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
-                name: "Trinity Graph".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
                 source_format: "trinity.graph".into(),
                 component_kind: "trinity".into(),
                 dimension: "graph".into(),
@@ -1153,7 +1155,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 ]).required(),
             ])
             .action_args("patchNodes", vec![
-                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)")),
+                ActionArgDef::entity_ids("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)"), "ast", "node"),
                 ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![ActionArgOption::new("name", LocalizedLabel::native("Name", "Name"))]).required(),
                 ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
             ])

@@ -14,6 +14,9 @@ import {
   SRGBColorSpace,
   type Mesh,
   type MeshStandardMaterial,
+  type Side,
+  type TextureFilter,
+  type Wrapping,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -23,9 +26,9 @@ const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixtureRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material");
 const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-material/🔣️.json"), "utf8"));
-const sideNames = new Map([[FrontSide, "FrontSide"], [DoubleSide, "DoubleSide"]]);
-const wrapNames = new Map([[ClampToEdgeWrapping, "ClampToEdgeWrapping"], [MirroredRepeatWrapping, "MirroredRepeatWrapping"]]);
-const filterNames = new Map([[LinearFilter, "LinearFilter"], [NearestFilter, "NearestFilter"]]);
+const sideNames = new Map<Side, string>([[FrontSide, "FrontSide"], [DoubleSide, "DoubleSide"]]);
+const wrapNames = new Map<Wrapping, string>([[ClampToEdgeWrapping, "ClampToEdgeWrapping"], [MirroredRepeatWrapping, "MirroredRepeatWrapping"]]);
+const filterNames = new Map<TextureFilter, string>([[LinearFilter, "LinearFilter"], [NearestFilter, "NearestFilter"]]);
 const rounded = (values: readonly number[]) => values.map((value) => Number(value.toFixed(6)));
 
 async function loadActualThreePrimitives(): Promise<readonly Mesh[]> {

@@ -88,6 +88,23 @@
                 "iconId": "sparkles",
                 "args": [
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
                     "id": "text",
                     "label": {
                       "native": {
@@ -142,6 +159,51 @@
                       "en": "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                       "de": "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -766,6 +828,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -2032,7 +2139,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -3186,6 +3339,23 @@
                 "iconId": "sparkles",
                 "args": [
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
                     "id": "text",
                     "label": {
                       "native": {
@@ -3240,6 +3410,51 @@
                       "en": "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                       "de": "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -3864,6 +4079,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -5112,7 +5372,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -6297,6 +6603,24 @@
                       }
                     },
                     "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
                       "kind": "string"
                     },
                     "required": true
@@ -6314,9 +6638,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -6355,6 +6680,433 @@
                       "en": "Writes the given value into one table cell, addressed by row index and column, replacing what the cell held before.",
                       "de": "Schreibt den angegebenen Wert in eine Tabellenzelle, adressiert über Zeilenindex und Spalte, und ersetzt ihren bisherigen Inhalt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "add-row",
+                "label": {
+                  "native": {
+                    "en": "Add row",
+                    "de": "Zeile hinzufügen"
+                  },
+                  "reuse": {
+                    "en": "Add row",
+                    "de": "Zeile hinzufügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "remove-row",
+                "label": {
+                  "native": {
+                    "en": "Remove row",
+                    "de": "Zeile entfernen"
+                  },
+                  "reuse": {
+                    "en": "Remove row",
+                    "de": "Zeile entfernen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "row",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "add-column",
+                "label": {
+                  "native": {
+                    "en": "Add column",
+                    "de": "Spalte hinzufügen"
+                  },
+                  "reuse": {
+                    "en": "Add column",
+                    "de": "Spalte hinzufügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "remove-column",
+                "label": {
+                  "native": {
+                    "en": "Remove column",
+                    "de": "Spalte entfernen"
+                  },
+                  "reuse": {
+                    "en": "Remove column",
+                    "de": "Spalte entfernen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "set-header",
+                "label": {
+                  "native": {
+                    "en": "Set header",
+                    "de": "Spaltenkopf setzen"
+                  },
+                  "reuse": {
+                    "en": "Set header",
+                    "de": "Spaltenkopf setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Header",
+                        "de": "Spaltenkopf"
+                      },
+                      "reuse": {
+                        "en": "Header",
+                        "de": "Spaltenkopf"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -6979,6 +7731,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -8228,7 +9025,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -9413,6 +10256,24 @@
                       }
                     },
                     "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
                       "kind": "string"
                     },
                     "required": true
@@ -9430,9 +10291,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -9471,6 +10333,335 @@
                       "en": "Writes the given value into one table cell, addressed by row index and column, replacing what the cell held before.",
                       "de": "Schreibt den angegebenen Wert in eine Tabellenzelle, adressiert über Zeilenindex und Spalte, und ersetzt ihren bisherigen Inhalt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "add-row",
+                "label": {
+                  "native": {
+                    "en": "Add row",
+                    "de": "Zeile hinzufügen"
+                  },
+                  "reuse": {
+                    "en": "Add row",
+                    "de": "Zeile hinzufügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "remove-row",
+                "label": {
+                  "native": {
+                    "en": "Remove row",
+                    "de": "Zeile entfernen"
+                  },
+                  "reuse": {
+                    "en": "Remove row",
+                    "de": "Zeile entfernen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "row",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "add-column",
+                "label": {
+                  "native": {
+                    "en": "Add column",
+                    "de": "Spalte hinzufügen"
+                  },
+                  "reuse": {
+                    "en": "Add column",
+                    "de": "Spalte hinzufügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "remove-column",
+                "label": {
+                  "native": {
+                    "en": "Remove column",
+                    "de": "Spalte entfernen"
+                  },
+                  "reuse": {
+                    "en": "Remove column",
+                    "de": "Spalte entfernen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      },
+                      "reuse": {
+                        "en": "Document revision",
+                        "de": "Dokumentrevision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -10095,6 +11286,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -11362,7 +12598,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -12517,6 +13799,23 @@
                 "iconId": "sparkles",
                 "args": [
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
                     "id": "text",
                     "label": {
                       "native": {
@@ -12571,6 +13870,51 @@
                       "en": "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                       "de": "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -13195,6 +14539,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -14462,7 +15851,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -15634,6 +17069,23 @@
                     "required": true
                   },
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
                     "id": "value",
                     "label": {
                       "native": {
@@ -15646,9 +17098,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -15687,6 +17140,51 @@
                       "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
                       "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -16311,6 +17809,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -17560,7 +19103,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -18732,6 +20321,23 @@
                     "required": true
                   },
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
                     "id": "value",
                     "label": {
                       "native": {
@@ -18744,9 +20350,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -18785,6 +20392,51 @@
                       "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
                       "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -19409,6 +21061,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -20658,7 +22355,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -21830,6 +23573,23 @@
                     "required": true
                   },
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
                     "id": "value",
                     "label": {
                       "native": {
@@ -21842,9 +23602,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -21883,6 +23644,51 @@
                       "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
                       "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -22507,6 +24313,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -23756,7 +25607,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -24928,6 +26825,23 @@
                     "required": true
                   },
                   {
+                    "id": "revision",
+                    "label": {
+                      "native": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      },
+                      "reuse": {
+                        "en": "Revision",
+                        "de": "Revision"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
                     "id": "value",
                     "label": {
                       "native": {
@@ -24940,9 +26854,10 @@
                       }
                     },
                     "schema": {
-                      "kind": "string"
+                      "kind": "string",
+                      "minLen": 0
                     },
-                    "required": false
+                    "required": true
                   }
                 ],
                 "inPalette": true,
@@ -24981,6 +26896,51 @@
                       "en": "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
                       "de": "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -25605,6 +27565,51 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -26854,7 +28859,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -28343,7 +30394,7 @@
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
               "factoryId": "stdio.native.svg.v1",
-              "packSchemaSha256": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+              "packSchemaSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
               "runtimeCapabilityId": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
               "schema": "stdio.svg"
             },
@@ -35436,7 +37487,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
+                  "descriptorSha256": "9b74a8abc418bd961e3f09813971fccd10aaa8a9edc4fb9f400116ca022a68d8",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -37442,7 +39493,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -38011,7 +40062,7 @@
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
               "factoryId": "stdio.native.svg.v1",
-              "packSchemaSha256": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+              "packSchemaSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
               "runtimeCapabilityId": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
               "schema": "stdio.svg"
             },
@@ -45104,7 +47155,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
+                  "descriptorSha256": "9b74a8abc418bd961e3f09813971fccd10aaa8a9edc4fb9f400116ca022a68d8",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -50430,8 +52481,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b13eb21c07caac0fe3b836bf11699c2c1f61e39e706b718a74f13f5b80126d71",
-    "coreWasmSha256": "3ede87b5035660a95483018f96cad707742aba70a88fb2b424d927bb234d93c9",
-    "descriptorSha256": "91a0540e264608357b11b7adedb777ea14f5c470bb3abc1604f8c6bdffee1524"
+    "wasmSha256": "4da2c84653d4052a207224dd7c2eb810badea0551b5bdeff2992602be0920192",
+    "coreWasmSha256": "c6689b7382142fd94a0d767b90391dc7746ba774fd60dbe3792f949e78f7384c",
+    "descriptorSha256": "8973d0ee2d950c2ec233f8cf0a57cde537a676000705a0da7be244aa270e03a6"
   }
 }

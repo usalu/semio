@@ -2167,6 +2167,51 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
     }
 }
 
+/// 📏️ C12 P1 live (hub 8010 on p24: a 600-envelope outbox answered `hub.unavailable` forever): the largest batch the document
+/// backbone declares legal (the wire's own exact decoder admits it) commits through a production-profile `Database` →
+/// `ArtifactHandle::submit` as one transaction (the hub's socket judges the declared bytes), and a batch of one envelope more
+/// than the declared count is refused PERMANENTLY (`LimitExceeded`), never as the transient `Unavailable` a client would resend
+/// without end.
+#[semio_framework_async_macros::async_test]
+async fn a_declared_maximal_batch_commits_through_the_database_and_an_over_declared_one_is_refused_permanently() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::a_declared_maximal_batch_commits_through_the_database_and_an_over_declared_one_is_refused_permanently") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
+    let root = tempdir("declared-maximal-batch").await;
+    let database = Database::open_at(test_worker_pool(), &root, Profile::Prod).await.unwrap();
+    let document = protocol::ArtifactId("declared-maximal".to_string());
+    let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+    let mut envelopes = Vec::new();
+    let mut bytes = 0usize;
+    let next = loop {
+        let next = envelope(&format!("{:x}", envelopes.len()), &[], "a", &document, &[]).await;
+        let mut encoded = Vec::new();
+        protocol::encode_envelope(&next, &mut encoded);
+        let count_bytes = if envelopes.len() + 1 < 128 { 1 } else if envelopes.len() + 1 < 16_384 { 2 } else { 3 };
+        if envelopes.len() == protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES || count_bytes + bytes + encoded.len() > protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES {
+            break next;
+        }
+        bytes += encoded.len();
+        envelopes.push(next);
+    };
+    assert!(protocol::decode_document_backbone_envelopes_exact(&protocol::encode_envelopes(&envelopes)).is_ok(), "the batch is declared legal by the wire's own decoder");
+    let mut beyond = envelopes.clone();
+    beyond.push(next);
+    assert!(protocol::decode_document_backbone_envelopes_exact(&protocol::encode_envelopes(&beyond)).is_err(), "one more envelope leaves the declaration");
+    let mut over = Vec::with_capacity(protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES + 1);
+    for index in 0..=protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES {
+        over.push(envelope(&format!("over-{index:x}"), &[], "a", &document, &[]).await);
+    }
+    assert!(envelopes.len() > 256, "the declared-maximal batch ({} envelopes) exceeds the former 256-envelope submit credit", envelopes.len());
+    let count = envelopes.len() as u64;
+    let receipt = db_actor::block_on(handle.submit(db_artifact::CommandBatch::new(envelopes).await.unwrap(), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
+    assert_eq!(receipt.frontier.head_seq, count, "the whole declared batch commits");
+    let refused = db_actor::block_on(handle.submit(db_artifact::CommandBatch { envelopes: over }, db_artifact::SubmitOptions::default())).and_then(std::convert::identity);
+    assert!(matches!(refused, Err(DbError::LimitExceeded(_))), "a batch beyond the declaration is a permanent refusal: {refused:?}");
+    assert_eq!(handle.frontier().await.unwrap().head_seq, count, "the refused batch applied nothing");
+}
+
 async fn create_catalog_fixture(entries: Vec<CatalogEntry>) -> (Arc<db_storage::DbBackend>, Arc<Mutex<CatalogState>>, EpochFence) {
     let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
     let pages = encode_catalog_pages(&entries).await.unwrap();

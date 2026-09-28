@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::{
     layer_resistance, part_2, part_3, part_4, part_6, part_7, total_resistance, u_value, F_RSI_MINIMUM, R_SE, R_SI_WALL,
 };
 use crate::{Din4108Snapshot, EnvelopeElement, LayerDocument, LayerSegment};
-use dsl::ToValue;
+use dsl::{FromValue, ToValue};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -719,3 +719,163 @@ fn catalogue_design_lambda_matches_evaluated_limit() {
     assert!(part_4::DESIGN_LAMBDA_ROWS.iter().any(|(id, v)| *id == "eps" && (*v - cell).abs() < 1e-12));
 }
 
+
+fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
+    let report = evaluate(snap);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == check_id)
+        .unwrap_or_else(|| panic!("missing check {check_id}"));
+    if check.status != CheckStatus::Fail {
+        return;
+    }
+    assert!(
+        !check.remedies.is_empty(),
+        "{check_id}: Fail must carry ≥1 remedy (gate panic otherwise)"
+    );
+    let applicables: Vec<(usize, _)> = check
+        .remedies
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.applicable)
+        .collect();
+    assert!(
+        !applicables.is_empty(),
+        "{check_id}: Fail must carry ≥1 applicable remedy"
+    );
+
+    let mut cleared = false;
+    for &(index, _) in &applicables {
+        let mut tree = ToValue::to_value(snap);
+        if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
+            continue;
+        }
+        let Ok(fixed) = FromValue::from_value(tree) else {
+            continue;
+        };
+        let after = evaluate(&fixed);
+        match after.checks.iter().find(|c| c.id == check_id) {
+            None => {
+                cleared = true;
+                break;
+            }
+            Some(updated) if updated.status != CheckStatus::Fail => {
+                cleared = true;
+                break;
+            }
+            _ => {}
+        }
+    }
+    if !cleared && applicables.len() > 1 {
+        let mut tree = ToValue::to_value(snap);
+        let mut ok = true;
+        for &(index, _) in &applicables {
+            if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
+                ok = false;
+                break;
+            }
+        }
+        if ok {
+            if let Ok(fixed) = FromValue::from_value(tree) {
+                let after = evaluate(&fixed);
+                match after.checks.iter().find(|c| c.id == check_id) {
+                    None => cleared = true,
+                    Some(updated) if updated.status != CheckStatus::Fail => cleared = true,
+                    _ => {}
+                }
+            }
+        }
+    }
+    assert!(
+        cleared,
+        "{check_id}: no option-0 / sequential applicables left status not Fail"
+    );
+}
+
+/// 🔁 Gate-shaped re-eval: apply zone-ht option-0 and sequential applicables, then assert target Fails still carry clearing remedies.
+#[semio_framework_async_macros::async_test]
+async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
+    let snap0 = Din4108Snapshot::failing_thin_insulation();
+    let report0 = evaluate(&snap0);
+    let ht_id = "din4108-2.zone-ht.zone-living";
+    let ht = report0
+        .checks
+        .iter()
+        .find(|c| c.id == ht_id)
+        .expect("zone-ht check");
+    assert_eq!(ht.status, CheckStatus::Fail, "fixture must fail zone-ht");
+    let applicables: Vec<usize> = ht
+        .remedies
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.applicable)
+        .map(|(i, _)| i)
+        .collect();
+    assert!(!applicables.is_empty(), "zone-ht must expose applicables");
+
+    // Option index 0 on the first applicable (gate's first probe).
+    {
+        let mut tree = ToValue::to_value(&snap0);
+        crate::app_surface::apply_remedy_edit(&report0, ht_id, applicables[0], 0, &mut tree)
+            .expect("apply zone-ht first applicable option 0");
+        let flipped: Din4108Snapshot = FromValue::from_value(tree).expect("decode after zone-ht option0");
+        let targets = [
+            "din4108-6.u-prime.wall-north",
+            "din4108-6.u-prime.roof",
+            "din4108-2.summer.zone-living",
+            "din4108-2.zone-ht.zone-living",
+            "din4108-10.app.wall-north.thin-eps",
+        ];
+        for id in targets {
+            assert_fail_has_clearing_remedy(&flipped, id);
+        }
+    }
+
+    // Sequential applicables (gate's multi-remedy fallback).
+    {
+        let mut tree = ToValue::to_value(&snap0);
+        for index in &applicables {
+            crate::app_surface::apply_remedy_edit(&report0, ht_id, *index, 0, &mut tree)
+                .unwrap_or_else(|e| panic!("sequential zone-ht remedy[{index}]: {e:?}"));
+        }
+        let flipped: Din4108Snapshot = FromValue::from_value(tree).expect("decode after zone-ht sequential");
+        let targets = [
+            "din4108-6.u-prime.wall-north",
+            "din4108-6.u-prime.roof",
+            "din4108-2.summer.zone-living",
+            "din4108-2.zone-ht.zone-living",
+            "din4108-10.app.wall-north.thin-eps",
+        ];
+        for id in targets {
+            assert_fail_has_clearing_remedy(&flipped, id);
+        }
+    }
+}
+
+
+/// 🩹 Gate-shaped: option-0 on initial failing_thin_insulation must clear u-prime.wall-north (not a printed-1.0000 Fail).
+#[semio_framework_async_macros::async_test]
+async fn failing_thin_u_prime_option0_clears_wall_north() {
+    let snap = Din4108Snapshot::failing_thin_insulation();
+    let report = evaluate(&snap);
+    let id = "din4108-6.u-prime.wall-north";
+    let check = report.checks.iter().find(|c| c.id == id).expect("u-prime");
+    assert_eq!(check.status, CheckStatus::Fail, "fixture must fail u-prime");
+    assert!(!check.remedies.is_empty(), "Fail must carry remedies");
+    assert!(check.remedies[0].applicable, "remedy[0] must be applicable");
+    let mut tree = ToValue::to_value(&snap);
+    crate::app_surface::apply_remedy_edit(&report, id, 0, 0, &mut tree).expect("apply remedy[0] option 0");
+    let fixed: Din4108Snapshot = FromValue::from_value(tree).expect("decode after remedy[0]");
+    let after = evaluate(&fixed);
+    let updated = after.checks.iter().find(|c| c.id == id).expect("u-prime after");
+    assert_ne!(
+        updated.status,
+        CheckStatus::Fail,
+        "remedy[0] must clear Fail (util was {:.10}, still {:.10})",
+        check.utilization,
+        updated.utilization
+    );
+    // Also cover via shared clearing helper (all applicables / sequential).
+    assert_fail_has_clearing_remedy(&snap, id);
+}

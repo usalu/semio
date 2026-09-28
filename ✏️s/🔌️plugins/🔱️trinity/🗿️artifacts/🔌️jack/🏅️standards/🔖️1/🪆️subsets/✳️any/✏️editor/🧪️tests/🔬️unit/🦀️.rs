@@ -839,15 +839,17 @@ async fn clear_selection_on_an_empty_selection_settles_and_frees_the_lane() {
 }
 
 /// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
-/// `mutation.target-missing`, no id and no selection or an unsupported field is `app.command.invalid-args`
-/// — and the document stays untouched. It used to answer an empty emit that read as an accepted edit.
+/// `mutation.target-missing`, no id and no selection is `app.command.targets-required` (the precondition an agent,
+/// which has no selection, meets by naming `nodeIds`), an unsupported field or an empty value is
+/// `app.command.invalid-args` — and the document stays untouched. It used to answer an empty emit that read as an
+/// accepted edit.
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_refuses_what_it_cannot_apply_and_leaves_the_document_untouched() {
     let snapshot = default_fixture();
     let first = snapshot.nodes()[0].id.clone();
     let code = |result: Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(commands::patch_nodes(&snapshot, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
-    assert_eq!(code(commands::patch_nodes(&snapshot, &[], &[], "name", "x")), "app.command.invalid-args");
+    assert_eq!(code(commands::patch_nodes(&snapshot, &[], &[], "name", "x")), "app.command.targets-required");
     assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "kind", "x")), "app.command.invalid-args");
     assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "name", "  ")), "app.command.invalid-args");
     assert_eq!(commands::patch_nodes(&snapshot, &[], &[first], "name", "x").expect("the selection is the target").artifact_mutations.len(), 1);
@@ -869,3 +871,41 @@ async fn the_text_gesture_verbs_are_kept_off_the_rail() {
     assert!(patch.args.iter().any(|arg| arg.id == "nodeIds" && !arg.required), "nodeIds is optional: empty means the selection");
 }
 //#endregion 🩹️RailVerbLaws
+
+//#region 🤖️AgentLaneLaws
+/// 🤖️ LAW: an agent — no window, no selection — names the nodes `patchNodes` renames in its declared `nodeIds`
+/// argument, published as `entityId`s of the `ast/node` granularity. Through the agent lane (the MCP gateway's
+/// `action_prepare`, `artifact_app_laws::probe_agent_lane`) the named node is renamed exactly as the shell renames it;
+/// without `nodeIds` the agent is refused by name with `app.command.targets-required`, as the shell is with nothing
+/// selected. The rail keeps its text field: empty still means the selection.
+#[semio_framework_async_macros::async_test]
+async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_without_them() {
+    use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_staged_wrote_document, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
+    let definition = create_trinity_jack_app();
+    let patch = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "patchNodes").expect("declared");
+    let node_ids = patch.args.iter().find(|arg| arg.id == "nodeIds").expect("nodeIds");
+    assert!(!node_ids.required, "the rail may leave nodeIds empty to act on the selection");
+    let schema = node_ids.json_schema();
+    let items = schema.get("items").expect("nodeIds is a list");
+    assert_eq!(
+        (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),
+        (Some("array"), Some("entityId"), Some("ast/node"))
+    );
+    let first = default_fixture().nodes()[0].id.clone();
+    let named = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(
+        create_trinity_jack_app,
+        Some(&format!(r#"{{"verbs":{{"patchNodes":{{"nodeIds":["{first}"],"field":"name","value":"Agent Named"}}}}}}"#)),
+        &["patchNodes"],
+    )
+    .await;
+    let probe = declared_verb_probe(&named, "patchNodes");
+    assert!(declared_verb_wrote_document(probe.agent.as_ref().expect("patchNodes is agent-facing")), "the agent's preview renames the named node: {:?}", probe.agent);
+    assert!(declared_verb_staged_wrote_document(probe), "the shell renames the named node too");
+    let unnamed = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_trinity_jack_app, Some(r#"{"verbs":{"patchNodes":{"field":"name","value":"Agent Unnamed"}}}"#), &["patchNodes"]).await;
+    match declared_verb_probe(&unnamed, "patchNodes").agent.as_ref() {
+        Some(DeclaredVerbOutcome::Refused { code, .. }) => assert_eq!(code, "app.command.targets-required"),
+        other => panic!("an agent naming no node is refused by name: {other:?}"),
+    }
+    assert_eq!((declared_verb_agent_divergences(&named), declared_verb_agent_divergences(&unnamed)), (Vec::<String>::new(), Vec::<String>::new()), "agent-lane divergences");
+}
+//#endregion 🤖️AgentLaneLaws

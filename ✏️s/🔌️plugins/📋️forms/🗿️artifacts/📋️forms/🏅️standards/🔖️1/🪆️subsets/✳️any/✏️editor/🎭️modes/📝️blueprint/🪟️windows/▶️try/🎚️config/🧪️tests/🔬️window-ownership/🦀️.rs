@@ -193,7 +193,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
 }
 
 fn operation() -> semio_framework_plugin::AppOperationContext {
-    semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "forms-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [0; 32] }
+    semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "forms-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() }
 }
 
 fn lease(id: &str, generation: u64) -> FormsTryWindowLease {

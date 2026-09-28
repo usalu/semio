@@ -13,8 +13,8 @@
 
 // #region 🔌️Adapters
 import { readPublishedPageOrigins } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
-export { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, nextBridgeDiscoveryIntervalMs, parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferAnswerV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferScopeV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
+export { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, agentBridgeOfferPathV1, agentBridgeOfferScopeFromDelegationsV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeKindV2, type AgentBridgeOfferScopeV1, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, nextBridgeDiscoveryIntervalMs, parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferAnswerV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
 import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
@@ -184,16 +184,21 @@ export type UseDiscoveredAgentBridgeConfigOptions = {
   readonly enabled?: boolean;
   readonly endpoint?: string;
   readonly fetchImpl?: BridgeOfferFetch;
+  /** 🎯️ Who this shell is right now, re-read before every poll — its hub origin, open space and the agents its human
+   * delegated there (`AgentBridgeOfferScopeV1`); omitted, the shell is in no hub space and dials only local offers. */
+  readonly offerScope?: (signal: AbortSignal) => Promise<AgentBridgeOfferScopeV1>;
 };
 
 /** 🛰️ The live supervisor offer, re-asked on a backoff. The returned object identity changes **only**
  * when `url` or `admissionProof` actually change, so an unchanged offer polled a hundred times never
  * re-runs {@link useAgentBridge}'s socket effect — the redial storm U1 already had to fix once. */
 export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridgeConfigOptions = {}): AgentBridgeConfig | null {
-  const { enabled = true, endpoint = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl } = options;
+  const { enabled = true, endpoint = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl, offerScope } = options;
   const [config, setConfig] = useState<AgentBridgeConfig | null>(null);
   const fetchImplRef = useRef(fetchImpl);
   fetchImplRef.current = fetchImpl;
+  const offerScopeRef = useRef(offerScope);
+  offerScopeRef.current = offerScope;
 
   useEffect(() => {
     if (!enabled || Object.keys(readPublishedPageOrigins()).length > 0) {
@@ -203,9 +208,12 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
     let disposed = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let interval = BRIDGE_DISCOVERY_MIN_INTERVAL_MS;
+    const abort = new AbortController();
 
     const poll = async (): Promise<void> => {
-      const discovered = await fetchAgentBridgeConfig(endpoint, fetchImplRef.current);
+      const scope = await (offerScopeRef.current?.(abort.signal) ?? Promise.resolve(null)).catch(() => null);
+      if (disposed) return;
+      const discovered = await fetchAgentBridgeConfig(endpoint, fetchImplRef.current, abort.signal, scope);
       if (disposed) return;
       setConfig((current) => (sameAgentBridgeOffer(current, discovered) ? current : discovered));
       interval = nextBridgeDiscoveryIntervalMs(interval, discovered);
@@ -215,6 +223,7 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
     void poll();
     return () => {
       disposed = true;
+      abort.abort();
       if (timer !== null) clearTimeout(timer);
     };
   }, [enabled, endpoint]);
@@ -395,6 +404,8 @@ export type UseAgentBridgeOptions = {
   /** 🔎️ Overrides for the discovery seam — the endpoint path and the `fetch` used to ask it. */
   readonly discoveryEndpoint?: string;
   readonly discoveryFetch?: BridgeOfferFetch;
+  /** 🎯️ See {@link UseDiscoveredAgentBridgeConfigOptions.offerScope}. */
+  readonly offerScope?: (signal: AbortSignal) => Promise<AgentBridgeOfferScopeV1>;
   readonly shellKind?: ShellKind;
   readonly shellSessionId?: string;
   readonly principalActor?: string;
@@ -451,7 +462,7 @@ export const BRIDGE_UNANSWERED_ATTEMPTS = 3;
  * effect redials it, while an unchanged offer keeps the exact same object identity and redials
  * nothing. */
 export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBridgeResult {
-  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch });
+  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch, offerScope: options.offerScope });
   const config = options.config === undefined ? discovered : options.config;
   const shellKind = options.shellKind ?? "react";
   // 🔒️ Minted ONCE per hook instance. It was `?? \`shell-${Math.random()…}\`` computed in the render

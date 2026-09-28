@@ -156,7 +156,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.dxf".into(),
-        name: "Dxf".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Dxf", "Dxf"),
         source_format: STDIO_DXF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

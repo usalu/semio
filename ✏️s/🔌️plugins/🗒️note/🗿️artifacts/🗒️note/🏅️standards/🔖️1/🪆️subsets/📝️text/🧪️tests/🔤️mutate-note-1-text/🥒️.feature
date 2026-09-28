@@ -13,7 +13,7 @@ Feature: Apply every typed note document text mutation twice — once in Rust, o
   document shape — not only this subset's own members — because every scenario validates the whole
   document, not merely the fields this subset's own kinds write.
 
-  This subset owns `edit-block-text`, and it is the one kind BOTH implementations refuse by clause rather than work around. A text block does not hold its paragraphs: it holds a COMPOSED CHILD HANDLE `{childId, target}` into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving from `note-text-eea42a3b80b1052b` to `note-text-938222b3522927c6` — a content address of the child AFTER the new paragraphs are written, computed by a function no document in this repository states. `🟩️mutate-program-1` reports the identical blocker over `knowledge`/`benchmarks`, `🧩️mutate-block-3d-1` over `catalog`, and `🐸️mutate-en1990-1`'s two red scenarios are the same finding again.
+  This subset owns `edit-block-text`, and it is the one kind BOTH implementations refuse by clause rather than work around. A text block does not hold its paragraphs: it holds a COMPOSED CHILD HANDLE `{childId, target}` into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving from `note-text-2252e245395c55b7` to `note-text-7e026b3251baa149` — a content address of the child AFTER the new paragraphs are written, computed by a function no document in this repository states. `🟩️mutate-program-1` reports the identical blocker over `knowledge`/`benchmarks`, `🧩️mutate-block-3d-1` over `catalog`, and `🐸️mutate-en1990-1`'s two red scenarios are the same finding again.
 
   @id-mutate
   @level-exhaustive

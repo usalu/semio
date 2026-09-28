@@ -20,7 +20,6 @@
     "trinity.patchNodes": { "nodeIds": "@liveId", "field": "name", "value": "Matrix Node" },
     "sourcing.curationSetCount": { "objectId": "@liveId", "delta": "1" },
     "writer.setText": { "text": "Matrix writer buffer" },
-    "stdio.set-cell": { "row": "0", "column": "0", "value": "Matrix Cell" },
     "architect.addElement": { "name": "Matrix Element" },
     "space.createArtifact": { "name": "Matrix Probe Artifact", "kindChoice": "@liveId" },
     "space.renameArtifact": { "name": "Matrix Renamed Artifact" }
@@ -57,11 +56,15 @@
     "trinity/rewriting.addRuleClause": { "kind": "create" },
     "stdio/txt.textEdit": { "text": "Matrix text" },
     "stdio/md.textEdit": { "text": "# Matrix" },
-    "stdio/html.textEdit": { "text": "<p>Matrix</p>" },
-    "stdio/json.set-node": { "nodeId": "$␟k=name", "value": "\"Matrix\"" },
-    "stdio/xml.set-node": { "nodeId": "$␟2␟0", "value": "Matrix" },
-    "stdio/json/i-json.set-node": { "nodeId": "$␟k=id", "value": "\"Matrix\"" },
-    "stdio/xml/valid.set-node": { "nodeId": "$␟0␟0␟0", "value": "Matrix" }
+    "stdio/html.textEdit": { "text": "<p>Matrix</p>" }
+  },
+  "pluginEdits": {
+    "stdio.set-cell": { "control": "[id$=\"/row-0/cell-0\"]", "value": "Matrix Cell" }
+  },
+  "kindEdits": {
+    "stdio/json.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"name:\"]", "value": "\"Matrix\"" },
+    "stdio/json/i-json.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"id:\"]", "value": "\"Matrix\"" },
+    "stdio/xml.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"text:\"]", "value": "Matrix" }
   },
   "kindOrigin": {
     "demonstrator/generation3d": "procedural",

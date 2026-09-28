@@ -101,7 +101,7 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
             "duplicate" => actual[1] = actual[0].clone(),
             "identity" => actual[0].id = "foreign.artifact".into(),
             "schema" => actual[0].schema = "foreign.schema".into(),
-            "name" => actual[0].name = "Foreign".into(),
+            "label" => actual[0].label = semio_framework_plugin::LocalizedLabel::native("Foreign", "Fremd"),
             "source-format" => actual[0].source_format = "foreign.format".into(),
             value => panic!("unknown neutral mutation {value}"),
         }

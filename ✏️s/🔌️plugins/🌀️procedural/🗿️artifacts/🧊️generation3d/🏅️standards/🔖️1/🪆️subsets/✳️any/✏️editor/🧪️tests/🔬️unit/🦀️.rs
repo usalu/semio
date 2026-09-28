@@ -883,7 +883,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve { window_id: "w1".into(), window_kind_id: "procedural-preview".into(), output_json: "{\"ok\":true,\"retired\":1}".into(), ok: true }),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
         Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {}),
-        Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "cube.stl".into(), payload: "data:model/stl;base64,aGVsbG8=".into(), chunk: 0, chunk_count: 1 }),
+        Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "cube.stl".into(), payload: "data:model/stl;base64,aGVsbG8=".into() }),
         Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "stl".into() }),
         Generation3dCommand::CycleShowMode(cycle_show_mode::CycleShowMode {}),
         Generation3dCommand::CycleLodMode(cycle_lod_mode::CycleLodMode {}),
@@ -932,23 +932,20 @@ fn declared_select_options(action: &semio_framework_plugin::ActionDefinition, ar
 /// ⚖️ LAW: the document-IO route's wire ceiling is DERIVED from the bounds that actually bind, and
 /// each one is reachable.
 ///
-/// One import chunk crosses as a single `payload` string, and `validate_public_json_envelope`
-/// refuses any string above `PUBLIC_INVOCATION_STRING_BYTES` BEFORE the addressed tool's contract is
-/// consulted — so the chunk extent IS that cap and no tool contract can widen it. The whole run is
-/// bounded by one Artifact-lane edit, because an imported file is planted in the graph as an
-/// `InputNote`'s text: a run allowed to grow past that would stage bytes only to be refused by the
-/// store at the very last chunk.
+/// The framework reassembles a picked file before `importDocument` runs
+/// (`semio_framework::kernel::ImportStaging`), so the route carries ONE whole import. An imported file
+/// is planted in the graph as an `InputNote`'s text, so one import is bounded by one Artifact-lane
+/// edit; the route's body must hold that import plus its envelope, and the framework staging must be
+/// able to reassemble every import the route admits.
 #[test]
 fn document_io_route_declares_a_reachable_wire_ceiling() {
-    use crate::editor::generation3d::commands::import_document::{GENERATION3D_IMPORT_CHUNK_BYTES, GENERATION3D_IMPORT_MAXIMUM_CHUNKS, GENERATION3D_IMPORT_TOTAL_BYTES};
+    use crate::editor::generation3d::commands::import_document::GENERATION3D_IMPORT_TOTAL_BYTES;
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    assert_eq!(GENERATION3D_IMPORT_CHUNK_BYTES, semio_framework::PUBLIC_INVOCATION_STRING_BYTES, "the chunk extent is the string cap the host applies, never a literal");
-    assert_eq!(GENERATION3D_IMPORT_TOTAL_BYTES, GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES, "the run budget is one Artifact-lane edit, never a literal");
-    assert_eq!(GENERATION3D_IMPORT_MAXIMUM_CHUNKS, GENERATION3D_IMPORT_TOTAL_BYTES.div_ceil(GENERATION3D_IMPORT_CHUNK_BYTES));
+    assert_eq!(GENERATION3D_IMPORT_TOTAL_BYTES, GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES, "the import budget is one Artifact-lane edit, never a literal");
     assert_eq!(GENERATION3D_DOCUMENT_IO_RAW_BYTES, semio_framework::PUBLIC_INVOCATION_BODY_BYTES);
     assert_eq!(generation3d_document_io_contract().max_raw_wire_bytes, GENERATION3D_DOCUMENT_IO_RAW_BYTES, "the registered contract and the factory-side cap are one bound");
-    assert!(GENERATION3D_IMPORT_CHUNK_BYTES < GENERATION3D_DOCUMENT_IO_RAW_BYTES, "one chunk plus its envelope has to fit the route's body");
-    assert!(GENERATION3D_IMPORT_CHUNK_BYTES > GENERATION3D_RETAINED_RAW_BYTES / 4, "a chunk this small would need a route of its own for no reason");
+    assert!(GENERATION3D_IMPORT_TOTAL_BYTES < GENERATION3D_DOCUMENT_IO_RAW_BYTES, "one whole import plus its envelope has to fit the route's body");
+    assert!(GENERATION3D_IMPORT_TOTAL_BYTES <= semio_framework::kernel::IMPORT_STAGING_MAXIMUM_BYTES, "the framework staging reassembles every import this route admits");
     assert_eq!(generation3d_document_io_contract().shape, semio_framework::ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_document_io_contract().cancellation, semio_framework::ToolCancellationPolicy::PerOperation, "an import run is cancellable per operation");
 }
@@ -1136,87 +1133,6 @@ fn the_export_action_offers_every_declared_format_in_both_languages() {
     }
 }
 
-/// ⚖️ LAW: the guest cuts a payload into exactly the chunks the fixture declares — the same slicing
-/// the host's own `importPayloadChunks` performs, so the guest's laws exercise the real wire rather
-/// than a shape only tests use.
-#[test]
-fn one_payload_is_cut_into_the_fixtures_chunks() {
-    use crate::editor::generation3d::commands::import_document::{generation3d_import_chunks, GENERATION3D_IMPORT_CHUNK_BYTES};
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    let fixture = document_io_fixture();
-    assert_eq!(fixture["chunking"]["chunkBytes"].as_u64().expect("chunkBytes") as usize, GENERATION3D_IMPORT_CHUNK_BYTES);
-    for row in fixture_rows(&fixture["chunking"], "cases") {
-        let id = row["id"].as_str().expect("case id");
-        let payload: String = std::iter::repeat_n('x', row["payloadBytes"].as_u64().expect("payloadBytes") as usize).collect();
-        let chunks = generation3d_import_chunks(&payload);
-        assert_eq!(chunks.len(), row["chunks"].as_u64().expect("chunks") as usize, "{id}: chunk count");
-        assert!(chunks.iter().all(|chunk| chunk.len() <= GENERATION3D_IMPORT_CHUNK_BYTES), "{id}: no chunk exceeds the extent");
-        assert_eq!(chunks.concat(), payload, "{id}: the chunks reassemble the payload exactly");
-    }
-}
-
-/// ⚖️ LAW: the staging ledger answers every declared arrival the fixture describes — an open run
-/// stages and emits nothing, a retransmission is acknowledged at the cursor it stands on rather than
-/// costing the whole upload, and a gap drops the run instead of resuming into bytes nobody can
-/// account for. This IS the progress and cancellation contract of an import: `next_chunk` of
-/// `chunk_count` is what a surface reports, and an abandoned run is what cancelling looks like.
-#[test]
-fn import_staging_answers_every_declared_arrival() {
-    use crate::editor::generation3d::commands::import_document::{Generation3dImportEnvelope, Generation3dImportFault, Generation3dImportStaging, Generation3dImportStep};
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    let fixture = document_io_fixture();
-    let codes = &fixture["faultCodes"];
-    for row in fixture_rows(&fixture["chunking"], "staging") {
-        let id = row["id"].as_str().expect("case id");
-        let mut staging = Generation3dImportStaging::default();
-        let events = row["events"].as_array().expect("events").clone();
-        let mut last: Option<Result<Generation3dImportStep, Generation3dImportFault>> = None;
-        for event in &events {
-            let envelope = Generation3dImportEnvelope {
-                name: "cube.stl".into(),
-                chunk: event["chunk"].as_u64().expect("chunk") as usize,
-                chunk_count: event["chunkCount"].as_u64().expect("chunkCount") as usize,
-            };
-            last = Some(staging.admit(&envelope, "x"));
-        }
-        let outcome = last.expect("every case declares at least one event");
-        match row["outcome"].as_str().expect("outcome") {
-            "complete" => {
-                let Ok(Generation3dImportStep::Complete(pages)) = outcome else { panic!("{id}: expected a closed run, got {outcome:?}") };
-                assert_eq!(pages.len(), events.len(), "{id}: one page per admitted chunk");
-                assert!(staging.open_runs().is_empty(), "{id}: a closed run holds no slot");
-            }
-            "staged" => {
-                let Ok(Generation3dImportStep::Staged { next_chunk, chunk_count }) = outcome else { panic!("{id}: expected an open run, got {outcome:?}") };
-                assert_eq!(next_chunk, row["nextChunk"].as_u64().expect("nextChunk") as usize, "{id}: the progress cursor");
-                assert_eq!(chunk_count, events[0]["chunkCount"].as_u64().expect("chunkCount") as usize, "{id}: the run's declared length");
-                assert_eq!(staging.open_runs().len(), 1, "{id}: exactly one run stays open");
-            }
-            expected_fault => {
-                let Err(fault) = outcome else { panic!("{id}: expected {expected_fault}, got {outcome:?}") };
-                assert_eq!(fault.code(), codes[expected_fault].as_str().expect("fault code"), "{id}: fault code");
-                assert!(staging.open_runs().is_empty(), "{id}: a refused run keeps no slot");
-            }
-        }
-    }
-}
-
-/// ⚖️ LAW: a chunk wider than one public invocation string is refused BY the guest, and an
-/// abandoned run is swept — the memory half of cancellation.
-#[test]
-fn an_oversized_chunk_is_refused_and_an_abandoned_run_is_swept() {
-    use crate::editor::generation3d::commands::import_document::{Generation3dImportEnvelope, Generation3dImportFault, Generation3dImportStaging, GENERATION3D_IMPORT_CHUNK_BYTES};
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    let mut staging = Generation3dImportStaging::default();
-    let envelope = Generation3dImportEnvelope { name: "cube.stl".into(), chunk: 0, chunk_count: 2 };
-    let oversized: String = std::iter::repeat_n('x', GENERATION3D_IMPORT_CHUNK_BYTES + 1).collect();
-    assert_eq!(staging.admit(&envelope, &oversized), Err(Generation3dImportFault::Chunk));
-    assert!(staging.admit(&envelope, "x").is_ok(), "an in-extent chunk opens the run");
-    assert_eq!(staging.open_runs().len(), 1);
-    staging.retire_abandoned();
-    staging.retire_abandoned();
-    assert!(staging.open_runs().is_empty(), "a run that did not advance across a sweep cycle is dropped");
-}
 //#endregion 📄️DocumentIoSurface
 
 //#endregion 🔖️CommandSurface
@@ -3311,3 +3227,63 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
+
+//#region 🚪️ArchiveImportDoor
+/// 🚪️ A framework document archive of this editor loads into a FRESH instance through the shell's Import Document door
+/// (`createApp` → `loadDocumentArchive` → poll → acknowledge). Measured live 2026-09-28 (S20 io-matrix,
+/// `s14-s20-io/s20b-local-en-2`): generation3d trapped the guest, generation2d faulted
+/// `document-archive-replacement.initializer-failed`. Two faults: the initializer held no publication lease outside tests
+/// (`generation3d-publication.authority-missing`) — it now grants itself the lease the host's replacement needs — and the kernel's
+/// retained hydration plain-dropped every replayed diff, whose `host_snapshot.layout` `OrderedMap` aborts on drop — it now
+/// retires them through `os_vcs::apply_mutation`. The source document is EDITED first so the archive carries history to
+/// replay (ticket 26/09/23 slice S19).
+#[semio_framework_async_macros::async_test]
+async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {
+    let _serial = crate::publication_authority::lock();
+    let mut source = app_with_registry().await;
+    context::dispatch(&mut source, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
+    context::settle(&mut source).await;
+    let archive = PluginApp::document_archive(&*source).await.expect("the open document exports as a framework archive");
+    let expected: Vec<String> = context::snapshot(&*source).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    assert!(!expected.is_empty(), "the exported document carries widgets to compare");
+    let mut target = app_with_registry().await;
+    PluginApp::begin_document_archive_load(&mut *target, 91, archive).expect("archive admission");
+    let mut status = None;
+    for _ in 0..200_000 {
+        let polled = PluginApp::poll_document_archive_load(&mut *target, 91).await.expect("archive status");
+        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+            PluginApp::acknowledge_document_archive_load(&mut *target, 91).expect("archive acknowledgement");
+            status = Some(polled);
+            break;
+        }
+        PluginApp::maintenance_step(&mut *target, 1, 4_096).expect("archive maintenance step");
+    }
+    let status = status.expect("the archive load reaches a terminal state");
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    let loaded: Vec<String> = context::snapshot(&*target).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    assert_eq!(loaded, expected, "the fresh instance holds exactly the archived document");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *target);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *source);
+}
+//#endregion 🚪️ArchiveImportDoor
+
+//#region 🌱️HubGenesis
+/// 🌱️ The hub creates a `generation3d` document through this plugin's `codec.genesis` export — the SDK's one producer
+/// `artifact_app_genesis_pair` — and the pair it prints must parse back to a live document. Measured on hub 7800
+/// (2026-09-28, W4 open-plan probe): creation failed `ordered-map root must be explicitly retired before drop`, the
+/// producer plain-dropped the initial snapshot whose `host_snapshot.layout` is an `OrderedMap` (ticket 26/09/23 slice S19).
+#[semio_framework_async_macros::async_test]
+async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
+    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
+    assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
+    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot, crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation>(&pair.pack, &pair.spr)
+        .await
+        .expect("the genesis pair parses back");
+    let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
+    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");
+    initial.retire_cold();
+    snapshot.retire_cold();
+}
+//#endregion 🌱️HubGenesis

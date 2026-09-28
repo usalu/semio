@@ -643,18 +643,6 @@ impl ArtifactEditor for Fem2dPlayApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
-    /// (`reset_document_effect`: example switch, `artifact:in` import) drives through the host's
-    /// persisted-envelope replacement — the trait default refuses the envelope, which makes every
-    /// fem2d document swap fault at the archive-load boundary.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::FEM_2D_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
@@ -763,6 +751,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

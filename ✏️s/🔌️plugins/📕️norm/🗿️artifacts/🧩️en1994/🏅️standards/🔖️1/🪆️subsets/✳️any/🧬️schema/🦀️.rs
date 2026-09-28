@@ -224,8 +224,9 @@ use crate::document::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantit
 use crate::{CompositeBeam, CompositeColumn, CompositeSlab, En1994Snapshot};
 
 /// 🇪️🇺️ National-annex NDPs for EN 1994.
-/// Bridge steel fatigue γ_Mf: EN 1994-2 §6.8.2 refers to EN 1993-1-9 Table 3.1 (EN recommended
-/// damage-tolerant γ_Mf = 1,15); DIN EN 1993-1-9/NA adopts safe-life γ_Mf = 1,35 for bridges.
+/// Steel stability γ_M1: EN 1994-1-1 §2.4.1.2 → EN 1993-1-1 (EN recommended 1,00; DIN EN 1993-1-1/NA 1,10).
+/// Bridge steel fatigue γ_Mf: EN 1994-2 §6.8.2 → EN 1993-1-9 Table 3.1 (EN recommended damage-tolerant
+/// γ_Mf = 1,15); DIN EN 1993-1-9/NA adopts safe-life γ_Mf = 1,35 for bridges.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AnnexParams {
     pub choice: AnnexChoice,
@@ -243,9 +244,10 @@ impl AnnexParams {
         Self { choice: AnnexChoice::En, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15, gamma_m0: 1.0, gamma_m1: 1.0, gamma_mf: 1.15 }
     }
 
-    /// 🇩️🇪️ DIN EN 1994-1-1/NA keeps γ_V/γ_C/γ_S. For bridge steel fatigue, EN 1994-2 §6.8.2 → EN 1993-1-9; DIN EN 1993-1-9/NA uses γ_Mf = 1,35 (safe-life) vs EN recommended 1,15 (damage-tolerant).
+    /// 🇩️🇪️ DIN EN 1994-1-1/NA keeps γ_V/γ_C/γ_S; steel stability uses DIN EN 1993-1-1/NA γ_M1 = 1,10.
+    /// Bridge fatigue: EN 1994-2 §6.8.2 → EN 1993-1-9; DIN EN 1993-1-9/NA γ_Mf = 1,35 (safe-life) vs EN 1,15.
     pub fn de() -> Self {
-        Self { choice: AnnexChoice::De, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15, gamma_m0: 1.0, gamma_m1: 1.0, gamma_mf: 1.35 }
+        Self { choice: AnnexChoice::De, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15, gamma_m0: 1.0, gamma_m1: 1.1, gamma_mf: 1.35 }
     }
 
     pub fn for_annex(annex: AnnexChoice) -> Self {
@@ -760,9 +762,21 @@ pub mod part_1_1 {
         wel * f_y_pa / 1.0
     }
 
-    pub fn deflection_limit_m(span_m: f64) -> f64 {
+    /// 📐️ Frequent SLS deflection limit [m] — EN 1990 Table A1.4 recommended floor w_max = L/250;
+    /// DIN EN 1990/NA applies the tighter variable-actions appearance limit w = L/300 to the frequent check.
+    pub fn deflection_limit_m(span_m: f64, annex: AnnexChoice) -> f64 {
+        match annex {
+            AnnexChoice::En => span_m / 250.0,
+            AnnexChoice::De => span_m / 300.0,
+        }
+    }
 
-        span_m / 250.0
+    /// 📐️ Span divisor for [`deflection_limit_m`] (250 EN recommended, 300 DE NA).
+    pub fn deflection_span_divisor(annex: AnnexChoice) -> f64 {
+        match annex {
+            AnnexChoice::En => 250.0,
+            AnnexChoice::De => 300.0,
+        }
     }
 
     /// 📐️ Uncapped span-side effective width 2·be1 [m] before the bi = spacing/2 bound (§5.4.1.2).

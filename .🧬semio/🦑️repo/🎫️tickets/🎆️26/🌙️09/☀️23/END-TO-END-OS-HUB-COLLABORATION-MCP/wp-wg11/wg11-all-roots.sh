@@ -8,7 +8,8 @@ R=/Users/ueli/Documents/semio
 CAT="$1"; shift
 [ -d "$CAT" ] || { echo "usage: wg11-all-roots.sh <catalogRoot> [plugin…]"; exit 2; }
 cd $R || exit 1
-for p in ${@:-note block puzzle}; do
+plugins=("$@"); (( $# )) || plugins=(note block puzzle)
+for p in $plugins; do
   echo "[wg11-roots] $p start $(date '+%F %T')"
   nice -n 10 bun $R/.tmp-ticket/wp-wg7/wg7-catalog-module.ts "$CAT" "$p" "semio_s_plugin_$p" "s14-wg11-all-$p" 2>&1 | tail -3
   echo "[wg11-roots] $p materialize rc=$pipestatus[1] $(date '+%F %T')"

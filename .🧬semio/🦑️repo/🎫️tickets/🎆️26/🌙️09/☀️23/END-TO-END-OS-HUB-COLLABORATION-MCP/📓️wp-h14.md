@@ -7,6 +7,113 @@ Handovers: [📓️wp-h12.md](📓️wp-h12.md), [📓️wp-h10.md](📓️wp-h1
 [📓️acceptance-s13.md](📓️acceptance-s13.md) §2. Neighbours: H13 (hub correctness/security, fuzz row 2.13, interpreter
 cancellation), R10 (launch generator, harness productization), W4 (chain, 7800).
 
+### Session 14c
+
+Successor agent (wave B, 2026-09-28 21:1x, WINDOW 3 OPEN). 7800 READY on `s14-w4-catalog-p24` (24 packages). My hub/serve ports
+8160–8169 / 6660–6669. Binary for every live run: copy of the chain's p24 `os-hub` (build-dev, 20:59) →
+`.🧬semio/🌐hub/s14-h14-bin/os-hub-p24-2059` (sha256 `9731d5f4…` after re-sign).
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | 7800 "616 s" cold boot | **closed** (coordinator: W4's chain polling race; 7800 READY in 8.0 s). Own numbers (debug `os-hub`, p24, 583 MB components read + SHA-256/BLAKE3-hashed serially per package): cold ready 61.6 s (load ~40) / ~20 s (lower load), warm ready 48.9 / 34.7 / 84.8 s (load 40 / 40 / 54), background pinning 201 s cold (puzzle codec 112 s), +50 ms warm |
+| 1b | Coordinator 21:2x: commit cost vs document size + lost Ack (H13 hub 8010) | **measured**: hub CPU per 256-envelope batch flat 295 → ~370 ms over 0 → 17 k edits; wall 0.7–5 s = ~13 serial F_FULLFSYNC barriers per batch (WAL + 12 index-run replacements) under machine I/O; commit CPU 56 % in the unused `vcs` version graph. Lost Ack = 30 s frame deadline dropping a frame whose batch had reached the engine |
+| 1c | (a) Ack every committed batch (frame deadline = admission only) + bin law | **landed + proven**: hub check EXIT 0, bin laws 4/4 PASS 23:14 (hold 3) |
+| 1d | (b) hub builds kernel-db without `vcs` | **landed** 21:47, checks green 22:07/22:14/23:01 |
+| 1e | (c) index owned appends + level folds; (d) index flush after the receipt; (e) outbox/commit_log removed, receipts bounded | **landed** 22:05; laws: every assertion green in hold 3 incl. 70 016 single-envelope commits (≤ 300 runs); helper WAL-close fixed → full rerun in hold 4 (queued) |
+| 1f | P1 hello of a long document refused | (A) streamed tail `h14-hello-tail-stream.py` + `h14-hello-tail-fix.py` (first retained segment, last frame = welcome frontier incl. commit seq, dead helpers removed): compiled green in hold 3 (the revert there was my test-only law errors), **hold 4 queued** (apply + check + laws). (B2) `h14-hello-from-checkpoint.py`: a frontier-less hello from a `closed-browser-actor` plan resumes at the plan checkpoint's baseline (the worker's documented contract; the Rust store already names that baseline) + law. (B1) `h14-checkpoint-policy.py`: declared `features.checkpointPolicy` (schema, pipe fixture, README env rows `OS_HUB_CHECKPOINT_POLICY_EDITS`/`_BYTES`, default 1 024 edits / 512 KiB), per-document tally on committed socket batches, the policy Check In runs the ordinary claim → fold → fenced publication as the author whose batch reached it + 3 laws (bounds/readiness, tally, e2e GIS Check In). B1+B2 simulated clean on scratch copies; **hold 6 queued** (apply, hub check, bin + `integration-fixtures` Check In laws, TS parity) |
+| 2 | Idle-release / residency-LRU under real memory pressure, 24 packages (row 2.7) | **measured 23:5x** (hub 8161, `OS_HUB_GUEST_RESIDENCY_BYTES` = 128 MiB, `residency-watch --rounds 2`, `s14-h14-logs/residency-8161-p24-128mib-2.txt`): resident guests held at 6 / **133.2 MB ≤ 134.2 MB budget** both rounds; TinyLFU keeps a stable set — compiles 31 → 21, hits 34 → 44, bypassed 22 → 20, released 3 → 1; RSS 210.8 → **peak 629.5** → **settled 27.7 MiB** after 90 s idle (601.8 MiB released); pairs agree; 68/72 creations (2d/3d.generation genesis trap ×2 rounds = S19 `gen-archive-load`, T1) → verdict FAIL only on those. Finding: peak RSS ≈ 4.9× the residency budget — the budget charges component bytes + measured footprint (0 today; the T4 codec origin makes it real), interpreter working memory of a running creation is uncharged |
+| 3 | Warm restart + `/readyz` timings, creation latency per package | warm ready above; creation latency per kind (default budget, round 1): 1.0 s computation.sequence … 5.1 s 2d.block, 12.6 s data.program, 22.7 s 3d.cad, 26–53 s gis/vcs/stdio md+csv, 56 s 3d.puzzle, 82 s 2d.puzzle, 126 s 5d.puzzle = baseline for the T4 codec-origin set |
+| 4 | README/metrics parity law (row 4.9) | done in session 14 (7/7 PASS) |
+| 5 | channel-version census vitest law bounded | **landed** 22:09: census reads the source files under the roots of the pin + registered consumers; vitest 5/5 in 7.5 s, check 0 findings, os tsc 0 |
+| 6 | Codec-origin set (T4) dry run after G12's plugin-host change | **clean** 22:2x: plugin-host 3-way merge clean, owned-instance laws + hub footprint `replace` |
+
+#### Session 14c log
+
+- 21:1x read preamble 14 (rules 1–24, 14b, 14c), AGENTS.md, fleet tail, this report, `📓️wp-h13.md` §14c (kernel-db: WAL readers,
+  retirement wake, close-ring routing are H13's, landed). Load 34–41, swap 9.7/11 GB.
+- 21:13–21:19 **boot timeline** (`wp-h14/h14-boot-timeline.ts`: APFS-cloned root `.🧬semio/🌐hub/s14-h14-boot-p24`, every hub line
+  stamped ms-since-spawn, `/readyz` every 100 ms, admin `catalog` every 250 ms, per-package phase transitions; captures
+  `.🧬semio/🌐hub/s14-h14-logs/boot-timeline-1-{0,1,2}.{log,json}`), port 8160, 3 boots:
+  cold ready 61 606 ms / settled 262 672 ms / exit 2 233 ms; warm ready 48 905 ms and 34 690 ms (settled +50 ms: verification memory
+  pins every row), 0 refused. Cold: packages read + dual-hashed one after another (0.5–6.7 s each; stdio 6.7 s, gis 5.6 s, vcs
+  3.3 s incl. their linked codec rows), `CatalogResolved` 41.55 s → `server.boot` 61.54 s (**19.9 s cold-only gap**, warm 0.2 s), then
+  background verification 201 s (compile 1–3 s + codec per package; puzzle `GuestCodecExecuting` → 500 M fuel = 112 s).
+
+- 21:2x **commit growth** (coordinator item): own hub 8161 (`wp-h14/h14-hub.sh`, p24 clone `.🧬semio/🌐hub/s14-h14-hub-8161-p24`,
+  binary `os-hub-p24-2059`), probe `wp-h14/h14-commit-growth.ts` (one writer + one observer socket, chained 256-envelope batches of
+  s.note.note, Ack latency + hub CPU per batch via `ps cputime`), runner `h14-growth-run.sh` (+ `sample` of the hub 3 s every 20 s,
+  folded by `h14-sample-tree.py`). Runs (captures `.🧬semio/🌐hub/s14-h14-logs/commit-growth-{1,2,3}.txt`, `samples-{1,2}/`):
+  run 1 40 batches 2.5–7.2 s wall (load 40, background verification still interpreting puzzle), run 2 60 batches 0.6–10.9 s wall
+  (load 55 → 30), run 3 67 batches: **hub CPU/batch 295 ms (0–2.5 k edits) → 350–397 ms (2.5–17 k)**, wall 0.7–5.0 s at the same
+  sizes; batch 67 refused `hub.unavailable` (socket DoS budget: 128 envelopes/s sent vs 60/s refill — the declared transient path).
+  Clean commit profile (`samples-2/s3.txt`): **vcs version graph ≈ 56 %** (`VcsVersionGraph::record_change` per envelope → store
+  `Apply` → `reproject`/`replay_mutations` over the 64-edit window, `edit_digest` = JSON `to_string` per edit), WAL CRC32C 13 %,
+  rest alloc/memmove; wall ≫ CPU because `FsDbIoExecutor::replace_step` makes every index run write durable (file fsync + drive
+  `F_FULLFSYNC` + rename + dir fsync), 12 runs per 256-envelope batch + the WAL sync. `checkpoint_document`/`merge_base`/`head`
+  have no production caller (db tests only) → the graph is pure overhead on the hub. **Lost Ack root cause:** H13's writer socket
+  closed exactly 30 s after batch 23 was sent — `tokio::time::timeout(DOCUMENT_SOCKET_FRAME_DEADLINE, handle_client_frame(..))`
+  drops the frame future while the engine still commits the batch (head 6144), so the socket closes `1013 frame-deadline` without
+  the Ack. **O(document) found:** `IndexHandle::append_run` lists every run of the document (`kind_run_ids` → `list_runs`) on
+  each append; runs are never merged (full 64-entry runs never pair), so a document holds N/64 runs per kind and the list output
+  is capped at `DB_IO_LIST_ITEMS` = 4096 → past ~65 k single-envelope commits (4 runs / 64 commits) every run write fails, the
+  backlog passes `INDEX_BACKLOG_ENTRIES_MAX` and every `submit` returns an error AFTER its WAL write was durable. Engine memory
+  grows with history: `outbox` (never drained on the hub), `commit_log`, `applied_receipts`.
+- 21:4x coordinator GO: (a) frame deadline = admission only, (b) hub db without `vcs`, (c) index append without listing + bounded
+  run count (law > 70 k single-envelope commits), (d) index flush off the Ack path + crash law, (e) drain outbox/commit_log/
+  receipts; H13 keeps submit credit/admission — wait for its region relay before editing near `submit`.
+- 21:4x **(a) + (b) written and applied** (hub-only, H13's concurrent `undeclared_batch_refusal` hunk in `handle_client_frame`
+  preserved): `handle_client_frame` returns `ClientFrameStepV1` (`Continue`/`End`/`Commit(AdmittedCommandsV1)`); an admitted batch
+  leaves the deadline holding the document write gate; `commit_admitted_commands` submits, relays and always sends the Ack;
+  `document_socket_frame_deadline(state)` (law override via `TestLiveGate.socket_frame_deadline`), commit-phase test gate.
+  Law `a_batch_committed_past_the_frame_deadline_is_still_acknowledged` (bin-unit quick: deadline 200 ms, commit held 600 ms after
+  the engine committed, Ack Accepted + relay, socket keeps serving a second batch). Hub `Cargo.toml`: kernel-db (normal + dev) without
+  `vcs`. Native lane queued 21:47 (3rd, behind l1 + g12).
+
+- 21:5x (c)(d)(e) written: `wp-h14/h14-index-levels.py` (db_index levels/owned runs), `h14-index-off-ack.py` (backlog via owned runs, runner
+  `maintain_index` after the reply, pre-WAL backlog bound, outbox/commit_log/DrainOutbox removed, receipts window), `h14-index-laws.py`.
+  Hold 2 (`wp-h14/h14-lane-db.sh`, queue stamp kept, applied inside the hold, restore-on-red): kernel-db check EXIT 0 22:06, no-vcs EXIT 0
+  22:07, semio-hub check EXIT 0 22:14 (incl. the Ack set); db_index + db_artifact laws 92/96 — 4 new laws red on the harness: the memory
+  backend holds 64 WAL/index owners (1 034 buffered commits failed at WAL close; 300 Fsync commits refused), typed lookups carry a fixed
+  8 192-grant fuel (an old key behind two level-3 runs exhausts it — pre-existing: ~117 level-0 runs did too; no production reader) →
+  laws moved to the fs backend with `Os` durability, lookups via the handle with an explicit budget + `verify`. Hub bin laws: test build
+  red on a peer's stdio tiff/bmp (`ArtifactKindSpec` has no field `label`), not ours.
+- 22:0x coordinator P1 (H13 capture `transient-probe-8010-3.txt`): hello of a 13 201-edit document refused. Root cause
+  (`🔄️sync/🦀️.rs` `replay_sync_state_retained`): the hello decodes every command past the replica's head into one Vec, charged
+  cumulatively (65 536-item ledger ≈ 8 k envelopes), then sends ONE Commands frame; a fresh client (null frontier) always gets the whole
+  history. A db `SnapshotPub` cannot bound it for app documents (their envelopes put nothing into the db pathmap state) — told main;
+  the valid snapshot is the guest's verified checkpoint (CAS pair + RebootstrapRequired). Clients: React worker `requireArtifactRebootstrap`
+  (`🏪️store/👷️worker/🟦️.ts` ~l.4643) and the wgpu shell/store sync (`🏪️store/🔄️sync/🦀️.rs` l.3255/4804) handle RebootstrapRequired.
+- 22:1x (A) written (`h14-hello-tail-stream.py`): pass 1 hashes every command and decodes none (O(1) memory); `DatabaseSyncHelloTail`
+  streams frames through page futures (`database_sync_hello_tail_page`: resume at the segment of the first unemitted command, skip what the
+  chain covers, hash, decode what the replica lacks, stop on the first commit boundary after 256 envelopes); frame backing charged while
+  out, released on close (`database_sync_hello_returned_frame_credit` counts Commands frames); `DatabaseSyncHelloFollowUpStep` (`Waiting`
+  parks the hello on the page future's waker instead of spinning). Channel-version census bounded (item 5) — vitest/check/tsc green 22:10.
+- 22:2x codec-origin dry run after G12's plugin-host change: clean (3-way merge). 2d/3d.generation genesis trap = S19 `gen-archive-load` (T1).
+- 22:3x hub 8161 restarted with `OS_HUB_GUEST_RESIDENCY_BYTES` = 128 MiB (warm ready 84.8 s at load 54); residency-watch 2 rounds running
+  (`s14-h14-logs/residency-8161-p24-128mib-1.txt`).
+
+- 22:42 **machine reboot** (coordinator): every process died (hub 8161, hold 3 had not started). Torn-write check 22:46: every applied
+  set present exactly once (ack set, hub Cargo.toml, index levels, index-off-ack; marker counts 1), the streamed tail NOT applied; nothing
+  to revert. /tmp lane state was wiped.
+- 22:47 hold 3 (`h14-lane-db3.sh`, load 77 → 47): applied the stream set, kernel-db `--lib --tests` check **red on MY post-hold-2 law
+  fixes** (test-only: a shadowed `control()` helper, an untyped range, an `Arc` moved into `create`) → the script restored the sync files
+  as designed; fixed the three test errors at once (test-only, kernel-db lib unaffected). The laws then ran on the fixed tests (sync
+  reverted): **db_index + db_artifact + db_sync 135 pass / 3 fail** — the 3 new artifact laws (index after receipt + reopen refill, receipt
+  window, **70 016 single-envelope commits on fs**) passed every assertion and failed only in the test helper's WAL close (`Os` durability
+  leaves pending records: "force_flush is required before close") → helper flushes first. semio-hub `--lib --bins --tests` **EXIT 0
+  23:01** (the peer's stdio tiff/bmp break is gone).
+- 22:5x stream follow-up `wp-h14/h14-hello-tail-fix.py` (applied after the stream set, simulated on scratch copies: clean): the first page
+  reads from the first retained segment (a compacted WAL has no segment 0 — `cursor.segment: Option`); the frame emitting the last
+  command carries the welcome's commit sequence (transactions without a command after it count in the server frontier — the React worker
+  `equalFrontiers` and the Rust store `frontier_reaches` would otherwise never finish catch-up); dead `close_tail`/`retire_vec` removed;
+  law variant with a trailing snapshot-marker transaction. Both clients already accept a multi-frame tail (React worker: every Commands
+  frame sets `state.frontier` and `finishCatchupIfReady` waits for the welcome frontier; store sync: `frontier_reaches`).
+- (B) findings: the React worker's contract (`forgetMountedDocument` doc, `🏪️store/👷️worker/🟦️.ts`) says a frontier-less hello is
+  answered "with the tail from its active checkpoint" and the child is seeded from the checkpoint pair — the hub does NOT do that today
+  (it always passes the client's frontier to `db.hello`, so a fresh client gets the whole history on top of the seeded pair). The
+  seeding happens only for `closed-browser-actor` leases with a checkpoint. React worker, wgpu directory client
+  (`📇️directory/🔌️client/🪢️canonical-checkpoint-pair`) and the MCP workspace (`🌉️mcp/🏠️workspace/🔗️remote/🧩️pair`) read the pair route.
+
 ### Session 14b
 
 Successor agent, 2026-09-28 12:1x (predecessor cut ~20:45 by the usage limit, mid-way through the P1 db credit fix).

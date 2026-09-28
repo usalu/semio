@@ -2854,6 +2854,7 @@ struct DbIoBackendRegistrySlot {
     pool: Option<Arc<WorkerPool>>,
     pool_use: Option<Arc<WorkerPoolUse>>,
     close_fault: Option<DbIoText>,
+    cleanup_fault: Option<DbIoFault>,
 }
 
 struct DbIoBackendRegistry {
@@ -2883,6 +2884,7 @@ impl DbIoBackendRegistry {
                 pool: None,
                 pool_use: None,
                 close_fault: None,
+                cleanup_fault: None,
             }),
             free: std::array::from_fn(|index| index as u16),
             free_read: 0,
@@ -3446,6 +3448,7 @@ fn register_db_io_backend_reserved_with_use(
         pool: Some(pool),
         pool_use: Some(pool_use),
         close_fault: None,
+        cleanup_fault: None,
     };
     Ok(control)
 }
@@ -3518,6 +3521,9 @@ pub async fn close_db_io_backend(control: DbIoBackendControl) -> Result<(), DbEr
         }
         if let Err(error) = db_io_maintenance_step() {
             return std::task::Poll::Ready(Err(error));
+        }
+        if let Some(fault) = db_io_take_backend_cleanup_fault(control) {
+            return std::task::Poll::Ready(Err(fault));
         }
         context.waker().wake_by_ref();
         std::task::Poll::Pending
@@ -3728,6 +3734,7 @@ fn db_io_backend_close_step(control: DbIoBackendControl, context: &mut std::task
         pool: None,
         pool_use: None,
         close_fault: None,
+        cleanup_fault: None,
     };
     let write = (registry.free_read + registry.free_len) % DB_IO_BACKEND_CONTROLS;
     registry.free[write] = slot;
@@ -4054,6 +4061,38 @@ fn db_io_text_literal(value: &'static str) -> DbIoText {
 
 fn db_io_error_text(error: &DbError) -> DbIoText {
     DbIoText::try_from_str(&error.to_string()).unwrap_or_else(|_| db_io_text_literal("DB I/O error detail exceeded fixed authority"))
+}
+
+/// 🧯 Records one operation-cleanup fault on the backend it belongs to — never on the caller that happened to drive the close
+/// ring — so only that backend's own task waiters and its close report it; the task stays in the ring and is retried. A
+/// successful cleanup of the backend (`None`) clears it.
+fn db_io_note_backend_cleanup(control: DbIoBackendControl, outcome: Option<&DbError>) {
+    let (slot, generation) = db_io_backend_parts(control);
+    let stale = {
+        let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let owner = &mut registry.slots[slot as usize];
+        if owner.generation != generation || db_io_backend_control(owner.kind, slot, generation) != control {
+            return;
+        }
+        std::mem::replace(&mut owner.cleanup_fault, outcome.map(|error| db_io_task_fault(DbIoFaultKind::Backend, error)))
+    };
+    if let Some(mut stale) = stale {
+        while stale.close_step() {}
+    }
+}
+
+/// 🧯 Takes the operation-cleanup fault last recorded on `control`, if any, as the error its own waiter or close reports.
+fn db_io_take_backend_cleanup_fault(control: DbIoBackendControl) -> Option<DbError> {
+    let (slot, generation) = db_io_backend_parts(control);
+    let fault = {
+        let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let owner = &mut registry.slots[slot as usize];
+        if owner.generation != generation || db_io_backend_control(owner.kind, slot, generation) != control {
+            return None;
+        }
+        owner.cleanup_fault.take()
+    };
+    fault.map(DbIoFault::into_db_error)
 }
 
 fn db_io_allocate_task(mut task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, DbIoTask)> {
@@ -5326,9 +5365,15 @@ impl Future for DbIoTaskOperation {
 async fn db_io_wait_task_retirement(handle: DbIoTaskHandle) -> Result<(), DbError> {
     std::future::poll_fn(move |context| {
         db_io_maintenance_step()?;
-        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if !db_io_slot_matches(&owner, handle) {
-            return std::task::Poll::Ready(Ok(()));
+        let backend = {
+            let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if !db_io_slot_matches(&owner, handle) {
+                return std::task::Poll::Ready(Ok(()));
+            }
+            owner.backend
+        };
+        if let Some(fault) = backend.and_then(db_io_take_backend_cleanup_fault) {
+            return std::task::Poll::Ready(Err(fault));
         }
         context.waker().wake_by_ref();
         std::task::Poll::Pending
@@ -5438,10 +5483,14 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
             owner.backend_cleanup_done = true;
         }
         drop(owner);
-        let rotated = if matches!(result, Ok(false)) { db_io_rotate_close_head(handle) } else { Ok(()) };
+        let rotated = if matches!(result, Ok(true)) { Ok(()) } else { db_io_rotate_close_head(handle) };
         drop(_turn);
         writer::release::defer_fault_notifications(backend);
-        result?;
+        match &result {
+            Ok(true) => db_io_note_backend_cleanup(backend, None),
+            Ok(false) => {}
+            Err(error) => db_io_note_backend_cleanup(backend, Some(error)),
+        }
         rotated?;
         return Ok(Some(0));
     }
@@ -5501,9 +5550,11 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
             owner.backend_admitted = false;
         }
         drop(owner);
+        let rotated = if result.is_ok() { Ok(()) } else { db_io_rotate_close_head(handle) };
         drop(_turn);
         writer::release::defer_fault_notifications(backend);
-        result?;
+        db_io_note_backend_cleanup(backend, result.as_ref().err());
+        rotated?;
         return Ok(Some(0));
     }
     if let Some(backend) = owner.backend_to_close {

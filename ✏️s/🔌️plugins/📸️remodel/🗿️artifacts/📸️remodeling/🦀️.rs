@@ -42,7 +42,7 @@ use std::sync::Arc;
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.remodeling".into(),
-        name: "3D Remodeling".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Remodeling", "3D-Umbau"),
         source_format: "remodeling.scene".into(),
         component_kind: "remodeling".into(),
         dimension: "3d".into(),
@@ -208,26 +208,19 @@ const REMODELING_BOUNDED_MESH_VERTICES: usize = 512;
 const REMODELING_BOUNDED_MESH_TRIANGLES: usize = 512;
 
 //#region 🔖️AssetHandles
-fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelingAssetChild {
-    let child_id = format!("remodeling-asset-{content_hash:016x}");
+fn mint_asset_child_handle(asset_id: &str, child_id: String) -> RemodelingAssetChild {
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
 pub fn committed_remodeling_asset_handle(asset_id: &str, content_id: &str) -> RemodelingAssetChild {
-    let mut handle = mint_asset_child_handle(asset_id, 0);
-    handle.child_id = content_id.into();
-    handle
+    mint_asset_child_handle(asset_id, content_id.into())
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle for one bounded durable asset.
 pub fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelingAssetChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    asset.mime.hash(&mut hasher);
-    asset.data.hash(&mut hasher);
-    mint_asset_child_handle(asset_id, hasher.finish())
+    mint_asset_child_handle(asset_id, store::content_id("remodeling-asset", format!("{}\u{1f}{}", asset.mime, asset.data).as_bytes()))
 }
 
 /// 🧩️ Admits a normal imported asset as independently bounded raw leaves. No whole `ImageAsset`

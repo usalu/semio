@@ -31,9 +31,9 @@ only.
 
 **Three kinds this implementation REFUSES, by clause rather than by absence.** `create-vortex-kind`,
 `delete-vortex-kind` and `rename-vortex-kind` all rewrite `catalog`, which a committed snapshot
-carries as a COMPOSED CHILD HANDLE — `{"childId": "catalog-a602bbe51a39cd44", "target": {…}}`. Their
-committed after-snapshots carry a NEW `childId` (`catalog-69f2059178f5dfa4`,
-`catalog-9dc5de0f33c9568d`, `catalog-e76534bc13e6b5a6`), which is a content address of the child
+carries as a COMPOSED CHILD HANDLE — `{"childId": "catalog-96e060ca37422012", "target": {…}}`. Their
+committed after-snapshots carry a NEW `childId` (`catalog-5ce9c1bc68fe0136`,
+`catalog-8d421fac84ff7c6c`, `catalog-f4edbb0f2f89853d`), which is a content address of the child
 `s.stdio.semio@v1/kit` document after the vocabulary moved. No document in this repository states the
 addressing function or the child's canonical encoding, so a second implementation cannot reproduce
 it. This is the same blocker `🟩️mutate-program-1` reports over `knowledge`/`benchmarks` and

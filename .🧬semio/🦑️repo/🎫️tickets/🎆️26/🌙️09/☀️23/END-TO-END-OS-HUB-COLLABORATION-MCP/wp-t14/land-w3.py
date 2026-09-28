@@ -21,6 +21,7 @@ OVERLAY = ROOT / ".🧬semio/🌐hub/s14-t14-overlay"
 LOGS = ROOT / ".🧬semio/🌐hub/s14-t14-logs"
 STATE = ROOT / ".🧬semio/🌐hub/s14-t14-land"
 STORE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
+PROCESS3D = "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs"
 MAPS = [str(path) for path in sorted(LOGS.glob("s14b-f9-map-*.tsv"))]
 SETS = [
     ("f9", [sys.executable, str(HERE / "f9/content-id.py")], "--write", None),
@@ -46,12 +47,16 @@ def proven_files():
 
 def expected_bytes(rel):
     data = (OVERLAY / rel).read_bytes()
-    if rel != STORE:
+    if rel not in (STORE, PROCESS3D):
         return data
     constants = {}
     source = (HERE / "f9/record-instrument.py").read_text(encoding="utf-8")
     exec(compile(source.split('if __name__ != "__main__":', 1)[0], "record-instrument", "exec"), constants)
-    return data.decode("utf-8").replace(constants["NEW"], constants["OLD"]).encode("utf-8")
+    pairs = [(constants["NEW"], constants["OLD"])] if rel == STORE else [(constants["P3_NEW"], constants["P3_OLD"]), (constants["P3_FLOW_NEW"], constants["P3_FLOW_OLD"])]
+    text = data.decode("utf-8")
+    for instrumented, original in pairs:
+        text = text.replace(instrumented, original)
+    return text.encode("utf-8")
 
 
 def check():

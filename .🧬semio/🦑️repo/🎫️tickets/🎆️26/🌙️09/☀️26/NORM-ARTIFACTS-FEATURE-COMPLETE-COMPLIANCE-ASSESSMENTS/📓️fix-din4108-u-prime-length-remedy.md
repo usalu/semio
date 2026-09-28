@@ -1,21 +1,26 @@
-# Fix — DIN 4108 U′ bare Fail after remedy flip
+# Fix — DIN 4108 U′ remedy[0] printed 1.0000 still Fail (R4)
 
 ## Problem
 
-Gate panic: `Fail checks must carry at least one remedy: id=din4108-6.u-prime.wall-north`.
+Verifier re-run: `din4108-6.u-prime.wall-north — remedy[0] only lowered utilization 3.2819→1.0000; status still Fail after option-0 apply on failing_thin_insulation`.
 
-During remedy-flip re-evaluation (after zone-ht thickness on `thin-eps`), `check_u_prime` could still Fail while both primary remedy branches skipped:
+## Diagnosis
 
-- insulation: `d_req ≤ current thickness`
-- ψ: `psi_req + 1e-12 ≥ bridge.psi` for `tb-bad` (ψ = 0.4)
+Insulation ulp-nudge stopped when `1/(r_other + d/λ) + bridge_add ≤ U_max`. That combined-denominator U is **one ulp lower** than the check’s `u_value(total_resistance = r_si+r_se+Σ layer R)`. After apply:
 
-## Fix
+| Quantity | Value |
+|----------|-------|
+| formula sum | `0.83333333333333337034` (≤ U_max → nudge stops) |
+| re-eval U′ | `0.83333333333333348136` |
+| utilization | `1.00000000000000022204` → prints `1.0000`, status Fail (`util ≤ 1` false) |
 
-In `check_u_prime`, when U′ > U_max:
+## Change
 
-1. Keep insulation / ψ remedies when they apply (ψ bound nudged for float).
-2. Always emit a clearing `thermalBridges[id].lengthM` `at_most` when shortening the dominant ψ·l bridge makes U′ ≤ U_max.
-3. Fallback: grow element `areaM2` when length cannot clear but U < U_max.
-4. Last resort: force an insulation thickness bump when U itself still exceeds U_max.
+- Clearance predicate = same as `CheckBuilder::utilization`: `u_prime / u_max ≤ 1`.
+- Insulation candidate U′ uses the same R_T layer-sum as `total_resistance` (`u_prime_at_insulation_thickness`).
+- ψ / lengthM / area / guarantee branches nudge with the same utilization predicate.
+- New test `failing_thin_u_prime_option0_clears_wall_north` covers the gate’s initial-doc remedy[0] path; `zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies` kept.
 
-en/de copy differs. No gate edits, no check/test deletion, no fingerprint gaming.
+## Result
+
+Summary [   1.740s] 97 tests run: 97 passed, 0 skipped

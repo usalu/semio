@@ -31,7 +31,7 @@ pub const WFC_2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_2D_DOCUMENT_SCH
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfc2d".into(),
-        name: "2D".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("2D", "2D"),
         source_format: WFC_2D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfc2d".into(),
         dimension: "2d".into(),

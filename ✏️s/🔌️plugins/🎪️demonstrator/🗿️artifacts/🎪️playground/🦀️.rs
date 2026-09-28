@@ -26,7 +26,7 @@ pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "playground.document".into(),
-        name: "Playground Document".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Playground Document", "Playground-Dokument"),
         source_format: PLAYGROUND_DOCUMENT_SCHEMA.into(),
         component_kind: "playground".into(),
         dimension: "data".into(),

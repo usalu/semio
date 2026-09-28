@@ -208,6 +208,14 @@ pub(crate) mod context {
         let result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
         settle(app, result)
     }
+
+    /// 📥️ [`dispatch`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel — the lane a
+    /// shell's picked-file chunks take, where the framework's import staging admits them first.
+    pub fn dispatch_through_action(app: &mut Puzzle5dApp, action: &str, args: &dsl::DslValue) -> Result<InvocationResult, Fault> {
+        let action_meta = action_meta(action, None, None);
+        let result = block_on(app.handle_action(action, Some(args), &action_meta));
+        settle(app, result)
+    }
     
     /// 🩺️ `dispatch` for an app command, with the publication ladder's own census traced on stderr: every
     /// power-of-two turn and every 30 s it prints the turn, wall time, the framework's per-ladder unit census
@@ -1436,7 +1444,7 @@ const MIGRATED_CONFIG_LANE_VERBS: &[&str] = &["setBrushPlacementContactTolerance
 fn retained_factory_contract_matches_its_declared_proof_band() {
     let contract = ToolJobFactory::execution_contract(&Puzzle5dRetainedCommandJobFactory::new("s.puzzle.puzzle5d@1/*#editor"));
     assert_eq!(contract.max_raw_wire_bytes, PUZZLE5D_RETAINED_RAW_BYTES);
-    assert_eq!(PUZZLE5D_RETAINED_RAW_BYTES, 262_144);
+    assert_eq!(PUZZLE5D_RETAINED_RAW_BYTES, crate::retained_command::PUZZLE_IMPORT_RAW_BYTES, "the retained route admits one whole import");
     assert_eq!(PUZZLE5D_RETAINED_DECODED_ITEMS, 16_384);
     assert!(PUZZLE5D_RETAINED_RAW_BYTES > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "the retained route must admit more than the shared puzzle default it replaced");
 }
@@ -2103,9 +2111,8 @@ fn every_shipped_example_document_really_carries_its_content() {
 
 /// 📤️📥️ LAW: exporting a document and importing those exact bytes back yields a BYTE-IDENTICAL
 /// document, for every shipped example — including the one above the transport budget, because the
-/// projection and the paged reassembly are the same law the transport only carries. The reassembly
-/// runs through the paged cursor (`puzzle5d_import_root_value`), never one contiguous string, so this
-/// also proves the cursor reads every member of the largest example correctly.
+/// projection and the import decode are the same law the transport only carries. The decode reads the
+/// whole file the framework hands the import (`puzzle5d_decode_document`).
 #[test]
 fn export_import_round_trips_every_shipped_example_byte_for_byte() {
     for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
@@ -2113,11 +2120,8 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
         // nothing the moment the shipped examples regress (see the diagnosis law above).
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
         let exported = export_fixture::puzzle5d_export_json(&document);
-        let pages = import_fixture::puzzle5d_import_chunks(&exported);
-        assert!(pages.iter().all(|page| page.len() <= import_fixture::PUZZLE5D_IMPORT_CHUNK_BYTES), "every chunk fits the wire page");
-        assert_eq!(pages.iter().map(String::len).sum::<usize>(), exported.len(), "chunking loses no byte");
-        let root = import_fixture::puzzle5d_import_root_value(&pages).expect("paged root parse");
-        let reimported: Puzzle5dDocument = serde_json::from_value(root).expect("the reassembled root is a puzzle 5d document");
+        let root = import_fixture::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
+        let reimported: Puzzle5dDocument = serde_json::from_value(root).expect("the decoded root is a puzzle 5d document");
         assert_eq!(export_fixture::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
     }
 }
@@ -2163,30 +2167,28 @@ fn export_filename_follows_the_document_label() {
     assert_eq!(export_fixture::puzzle5d_export_filename(&empty_document()), "puzzle-5d.json");
 }
 
-/// 📥️ LAW: a chunk that does not CLOSE its run stages changes nothing — no document edit — and the
-/// closing chunk lands the whole document as ONE undoable edit. A staged chunk still logs one
-/// unapplied command row.
+/// 📥️ LAW: a chunked pick goes through the SDK's own action dispatch: every chunk but the last is staged by
+/// the framework (`semio_framework::kernel::ImportStaging`) and edits nothing, and the closing chunk hands
+/// `importFixture` the whole file, which lands as ONE undoable edit.
 #[semio_framework_async_macros::async_test]
-async fn import_stages_every_chunk_and_only_the_closing_one_edits_the_document() {
+async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging() {
     let mut app = app_with_registry();
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
     assert_eq!(part_count(&app), 0);
     // 📄️ The law needs a document that really chunks — the first shipped one whose export spans more
-    // than one wire page, so it keeps holding whichever example grows past the page next.
-    let (target, pages) = [concrete_forest_example_document(), nakagin_example_document()]
+    // than one host chunk, so it keeps holding whichever example grows past the chunk next.
+    let (target, chunks) = [concrete_forest_example_document(), nakagin_example_document()]
         .into_iter()
         .find_map(|document| {
-            let pages = import_fixture::puzzle5d_import_chunks(&export_fixture::puzzle5d_export_json(&document));
-            (pages.len() > 1).then_some((document, pages))
+            let chunks = semio_framework::kernel::import_payload_chunks(&export_fixture::puzzle5d_export_json(&document));
+            (chunks.len() > 1).then_some((document, chunks))
         })
-        .expect("a shipped document whose export spans more than one wire page");
-    let count = pages.len();
-    for (index, page) in pages.iter().enumerate() {
-        let args = dsl::json!({ "payload": page.as_str(), "name": "chunked.json", "chunk": index as f64, "chunkCount": count as f64 });
-        let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("import chunk");
-        if index + 1 < count {
-            assert!(result.mutations.is_empty(), "chunk {index} of {count} staged and must edit nothing");
-            assert_eq!(part_count(&app), 0, "chunk {index} of {count} must leave the document untouched");
+        .expect("a shipped document whose export spans more than one host chunk");
+    for chunk in &chunks {
+        let result = dispatch_through_action(&mut app, "importFixture", &semio_framework::kernel::import_chunk_arguments("chunked.json", chunk, None)).expect("import chunk");
+        if chunk.chunk + 1 < chunk.chunk_count {
+            assert!(result.mutations.is_empty(), "chunk {} of {} staged and must edit nothing", chunk.chunk, chunk.chunk_count);
+            assert_eq!(part_count(&app), 0, "chunk {} of {} must leave the document untouched", chunk.chunk, chunk.chunk_count);
         }
     }
     assert_eq!(part_count(&app), target.parts.len(), "the closing chunk landed the whole document");
@@ -2195,20 +2197,19 @@ async fn import_stages_every_chunk_and_only_the_closing_one_edits_the_document()
     close_app(&mut app);
 }
 
-/// 📥️ LAW: every refusal answers. A document over the import budget, a chunk that skips its cursor
-/// and a payload that is not a puzzle 5d document each publish a named notice and leave the document
-/// exactly as it was — never a silent no-op, and never a fault.
+/// 📥️ LAW: every refusal answers. A file over the import budget and a payload that is not a puzzle 5d
+/// document each publish a named notice and leave the document exactly as it was — never a silent no-op,
+/// and never a fault.
 #[semio_framework_async_macros::async_test]
 async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
     let mut app = app_with_registry();
     let before = projection_of(&app);
+    let oversized = "x".repeat(crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES + 1);
     let cases = [
-        // 🕳️ A chunk past the cursor with no open run.
-        ("gap", dsl::json!({ "payload": "{\"schema\":\"puzzle.5d\"", "name": "gap.json", "chunk": 3.0, "chunkCount": 4.0 })),
-        // 📦️ A run claiming more chunks than the whole budget admits.
-        ("envelope", dsl::json!({ "payload": "{}", "name": "huge.json", "chunk": 0.0, "chunkCount": (import_fixture::PUZZLE5D_IMPORT_MAXIMUM_CHUNKS + 1) as f64 })),
-        // 🔤️ One whole chunk that is not a puzzle 5d document.
-        ("payload", dsl::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json", "chunk": 0.0, "chunkCount": 1.0 })),
+        // 📦️ One byte above what one export may stream.
+        ("capacity", dsl::json!({ "payload": oversized.as_str(), "name": "huge.json" })),
+        // 🔤️ A whole file that is not a puzzle 5d document.
+        ("payload", dsl::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json" })),
     ];
     for (case, args) in cases {
         let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("a refused import answers, it never faults");
@@ -2219,16 +2220,18 @@ async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
     close_app(&mut app);
 }
 
-/// 📥️ LAW: the staging area is keyed by `(name, chunkCount)` — a chunk the run already admitted is a
-/// RETRANSMISSION acknowledged at the cursor it stands on, not a gap that costs the whole upload.
-#[test]
-fn a_retransmitted_import_chunk_is_acknowledged_at_the_cursor() {
-    let envelope = |chunk: usize| import_fixture::Puzzle5dImportEnvelope { name: "retransmit.json".into(), chunk, chunk_count: 3 };
-    assert_eq!(import_fixture::stage_import_chunk(&envelope(0), "{\"schema\":\"puzzle.5d\","), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 1, chunk_count: 3 }));
-    assert_eq!(import_fixture::stage_import_chunk(&envelope(1), "\"parts\":[],"), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 2, chunk_count: 3 }));
-    assert_eq!(import_fixture::stage_import_chunk(&envelope(1), "\"parts\":[],"), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 2, chunk_count: 3 }), "a retransmission holds the cursor");
-    assert_eq!(import_fixture::stage_import_chunk(&envelope(2), "\"fasteners\":[]}"), Ok(import_fixture::Puzzle5dImportStep::Complete(vec!["{\"schema\":\"puzzle.5d\",".into(), "\"parts\":[],".into(), "\"fasteners\":[]}".into()])));
-    assert!(import_fixture::staged_import_runs().iter().all(|run| run.0 != "retransmit.json"), "a closed run releases its slot");
+/// 🕳️ LAW: a chunk that does not continue its pick is refused BY THE FRAMEWORK with the typed
+/// `file-import.gap` fault — the staging never resumes into bytes nobody can account for — and the
+/// document stays exactly as it was.
+#[semio_framework_async_macros::async_test]
+async fn a_gap_in_a_chunked_pick_is_a_typed_framework_refusal() {
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let chunk = semio_framework::kernel::ImportChunk { payload: "\"parts\":[],".into(), chunk: 1, chunk_count: 3 };
+    let fault = dispatch_through_action(&mut app, "importFixture", &semio_framework::kernel::import_chunk_arguments("gap.json", &chunk, None)).expect_err("a chunk past the cursor of no open run is refused");
+    assert_eq!(fault.code.0, semio_framework::kernel::ImportStagingRefusal::Gap.code(), "the refusal is the framework's typed gap code: {fault:?}");
+    assert_eq!(projection_of(&app), before, "a refused chunk leaves the document alone");
+    close_app(&mut app);
 }
 
 /// 🗂️ LAW: `openImportFixture` asks the HOST for a file and edits nothing — the picker re-dispatches

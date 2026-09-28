@@ -166,6 +166,94 @@ mod tests {
         eprintln!("[DEBUG] physical SQLite aliases and a separate process shared one stable writer sidecar; terminal close and process exit each permitted exact reacquisition");
     }
 
+    /// 📖️ Reads of a file database run on WAL readers: while another connection holds the database's write lock, concurrent
+    /// reads of every blob family (WAL range, snapshot generation, index run, payload; the neutral page-lifecycle lengths)
+    /// complete with exactly the committed bytes an independent SQLite connection reads (third-party oracle), and they write
+    /// nothing — the oracle's `data_version` and the `-wal` file length are unchanged across them. The staging reads they
+    /// replace wrote `db_io_stage` rows and blocked behind that lock.
+    #[semio_framework_async_macros::async_test]
+    async fn file_reads_run_on_wal_readers_beside_a_held_write_lock_and_never_write() {
+        let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+        let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = base.join(format!("sqlite-readers-{}-{nonce}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let database = root.join("readers.sqlite3");
+        let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &database).await.unwrap();
+        let document: ArtifactId = "sqlite-readers".into();
+        let writer = storage.acquire_writer(&document).await.unwrap();
+        let blobs: Vec<Vec<u8>> = fixture.lengths.iter().map(|length| (0..*length).map(|index| (index % fixture.pattern_modulo + fixture.pattern_addend) as u8).collect()).collect();
+        let mut hashes = Vec::with_capacity(blobs.len());
+        for (index, bytes) in blobs.iter().enumerate() {
+            let key = index as u64 + 1;
+            storage.create_segment(&writer, key).await.unwrap();
+            storage.append(&writer, key, pages(bytes).await).await.unwrap();
+            storage.write_generation(&document, key, pages(bytes).await).await.unwrap();
+            storage.write_run(&document, key, pages(bytes).await).await.unwrap();
+            hashes.push(storage.put(pages(bytes).await).await.unwrap());
+        }
+
+        let oracle = Connection::open(&database).unwrap();
+        let data_version = |connection: &Connection| connection.query_row("PRAGMA data_version", [], |row| row.get::<_, i64>(0)).unwrap();
+        let wal_len = || std::fs::metadata(root.join("readers.sqlite3-wal")).map(|metadata| metadata.len()).unwrap_or(0);
+        let version_before = data_version(&oracle);
+        let wal_before = wal_len();
+        oracle.execute_batch("BEGIN IMMEDIATE").unwrap();
+        let oracle_bytes = |sql: &str, key: i64| -> Vec<u8> { oracle.query_row(sql, params!["sqlite-readers", key], |row| row.get(0)).unwrap() };
+        for (index, bytes) in blobs.iter().enumerate() {
+            let key = index as i64 + 1;
+            assert_eq!(&oracle_bytes("SELECT bytes FROM wal_segment WHERE document = ?1 AND segment_index = ?2", key), bytes);
+            assert_eq!(&oracle_bytes("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", key), bytes);
+            assert_eq!(&oracle_bytes("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", key), bytes);
+            let payload: Vec<u8> = oracle.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hashes[index].to_string()], |row| row.get(0)).unwrap();
+            assert_eq!(&payload, bytes);
+        }
+
+        let storage_ref = &storage;
+        let document_ref = &document;
+        let reads: Vec<Result<(), String>> = std::thread::scope(|scope| {
+            let threads: Vec<_> = blobs
+                .iter()
+                .enumerate()
+                .flat_map(|(index, bytes)| ["wal", "snapshot", "index", "payload"].map(|family| (index, bytes, family)))
+                .map(|(index, bytes, family)| {
+                    let hash = &hashes[index];
+                    scope.spawn(move || {
+                        crate::db_actor::block_on(async move {
+                            let key = index as u64 + 1;
+                            let read = match family {
+                                "wal" => storage_ref.read(document_ref, key, ByteRange { offset: 0, len: bytes.len() as u64 }).await,
+                                "snapshot" => storage_ref.read_generation(document_ref, key).await,
+                                "index" => storage_ref.read_run(document_ref, key).await,
+                                _ => storage_ref.get(hash).await,
+                            };
+                            let mut pages = read.map_err(|error| format!("{family} read of blob {index} beside the held write lock failed: {error:?}"))?;
+                            let equal = pages == *bytes;
+                            while pages.close_step().map_err(|error| format!("{family} pages of blob {index} did not close: {error:?}"))?.is_some() {}
+                            if equal {
+                                Ok(())
+                            } else {
+                                Err(format!("{family} read of blob {index} differs from the committed bytes"))
+                            }
+                        })
+                    })
+                })
+                .collect();
+            threads.into_iter().map(|thread| thread.join().unwrap()).collect()
+        });
+        oracle.execute_batch("ROLLBACK").unwrap();
+        for read in reads {
+            read.unwrap();
+        }
+        assert_eq!(data_version(&oracle), version_before, "a read committed a write");
+        assert_eq!(wal_len(), wal_before, "a read grew the SQLite WAL");
+
+        writer.release().await.unwrap();
+        storage.close().await.unwrap();
+        drop(oracle);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
     #[test]
     fn wal_segment_state_decoder_rejects_non_boolean_storage_values() {
         assert_eq!(decode_wal_segment_state(0).unwrap(), WalSegmentState::Active);

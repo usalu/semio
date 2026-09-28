@@ -1272,6 +1272,7 @@ impl VerifiedTrustedCatalog {
                     && hex_lower(&package.component_sha256) == selection.package.component_sha256
             })?;
             let app = retained.descriptor.manifest.apps.iter().find(|app| app.id == selection.surface.app_id && app.dialect == selection.parent_dialect)?;
+            let kind = app.artifact_kinds.iter().chain(retained.descriptor.manifest.artifact_kinds.iter()).find(|kind| kind.id == selection.artifact.kind && kind.schema == selection.artifact.schema)?;
             kinds.push(SpaceArtifactCreationKindV1 {
                 kind_id: selection.artifact.kind.clone(),
                 schema: selection.artifact.schema.clone(),
@@ -1281,8 +1282,8 @@ impl VerifiedTrustedCatalog {
                     subset: selection.parent_dialect.subset.clone(),
                 },
                 label: SpaceArtifactCreationLabelV1 {
-                    en: app.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::En).to_string(),
-                    de: app.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::De).to_string(),
+                    en: kind.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::En).to_string(),
+                    de: kind.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::De).to_string(),
                 },
             });
         }

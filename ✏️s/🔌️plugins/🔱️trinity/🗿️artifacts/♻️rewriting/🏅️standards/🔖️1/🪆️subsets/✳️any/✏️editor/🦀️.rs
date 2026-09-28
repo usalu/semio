@@ -659,6 +659,7 @@ fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::Artif
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {
@@ -709,21 +710,6 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(schema::retirement::document_store_owners())
-    }
-
-    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` of this app carries —
-    /// `resetRule` and `setActiveExample` both build one through `reset_document_effect`. The trait
-    /// default REFUSES the envelope, so the host answered each of them at the archive-load boundary
-    /// with `artifact-store.persisted-initializer-refused` and neither verb could ever land; the boot
-    /// example switch failed that way on every single boot
-    /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, `📓️b3b-trinity-wfc-puzzle.md` §3.1b).
-    /// Same generic authority `🕸️dag` and `💡️reasoning` pair with their own retirement owners.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, REWRITE_RULE_SCHEMA, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1132,7 +1118,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
                 ]).required(),
             ])
             .action_args("patchNodes", vec![
-                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)")),
+                ActionArgDef::entity_ids("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)"), "graph", "node"),
                 ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![
                     ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
                     ActionArgOption::new("kind", LocalizedLabel::native("Kind", "Art")),

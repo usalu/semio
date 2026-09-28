@@ -72,3 +72,28 @@ fn serde_json_uses_the_same_json_shape_as_the_dsl_value_bridge() {
     let round_tripped = serde_json::from_value::<DslValue>(actual).unwrap();
     assert!(dsl_value_eq_ignoring_object_order(&round_tripped, &original), "{round_tripped:?} != {original:?}");
 }
+
+/// 🧾️ `dsl_value!` equals `serde_json::json!` (third-party oracle) on every literal form — null, booleans, signed, unsigned
+/// and fractional numbers, nested arrays and objects, `const` and parenthesized expression keys, trailing commas, borrowed
+/// values (`&String`, `&[String]`, `&&str`) — and,
+/// unlike `json!` without `preserve_order`, keeps object entries in written order.
+#[test]
+fn dsl_value_literal_matches_serde_json_and_keeps_written_order() {
+    const KEY: &str = "constKey";
+    let count = 3u32;
+    let names = vec![String::from("a"), String::from("b")];
+    let flag = false;
+    let literal = crate::dsl_value!({ "zeta": null, "alpha": [1, -2, 2.5, true, false, null, [], {}], KEY: count, ("expr".to_string()): !flag, "nested": { "names": names, "text": "ä€😀" }, });
+    let oracle = serde_json::json!({ "zeta": null, "alpha": [1, -2, 2.5, true, false, null, [], {}], KEY: count, ("expr".to_string()): !flag, "nested": { "names": names, "text": "ä€😀" }, });
+    assert_eq!(serde_json::Value::from(&literal), oracle);
+    let DslValue::Object(entries) = &literal else { panic!("an object literal builds an object") };
+    assert_eq!(entries.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["zeta", "alpha", "constKey", "expr", "nested"]);
+    assert_eq!(crate::dsl_value!(7u64), DslValue::uint(7));
+    assert_eq!(crate::dsl_value!([]), DslValue::Array(Vec::new()));
+    assert_eq!(crate::dsl_value!({}), DslValue::Object(Vec::new()));
+    assert_eq!(serde_json::Value::from(&crate::dsl_value!([[1, [2]], { "k": [3] }])), serde_json::json!([[1, [2]], { "k": [3] }]));
+    let borrowed_text = &names[0];
+    let borrowed_list: &[String] = &names;
+    let borrowed_str: &&str = &"x";
+    assert_eq!(serde_json::Value::from(&crate::dsl_value!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str })), serde_json::json!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str }));
+}

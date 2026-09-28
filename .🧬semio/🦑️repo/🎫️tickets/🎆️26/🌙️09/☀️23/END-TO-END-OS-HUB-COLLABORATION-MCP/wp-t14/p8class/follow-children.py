@@ -149,7 +149,8 @@ exact("""        pub fn artifact_generation_now(&self) -> semio_framework_job::G
         /// `ArtifactApp::genesis_child_pack` derives — the restore path `seed_genesis_children` uses — and retires
         /// every held child whose slot now names another derived child, so exporters, archives, hub members,
         /// agents and the next verb read the child the parent names. Gated by the parent store's generation and
-        /// deferred while a child admission is in flight.
+        /// deferred while a child admission is in flight or while the named child is still retiring (an undo back
+        /// to it) — the pass then repeats until that retirement drained.
         async fn follow_derivable_children(&mut self) -> Result<(), Fault> {
             let generation = self.store.generation_now();
             if generation == self.followed_parent_generation || self.children.has_admission_in_flight() {
@@ -157,6 +158,7 @@ exact("""        pub fn artifact_generation_now(&self) -> semio_framework_job::G
             }
             let mut genesis = Vec::new();
             let mut retire = Vec::new();
+            let mut deferred = false;
             {
                 let snapshot = self.store.snapshot_ref();
                 let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("derivable child projection failed: {error}")))?;
@@ -165,7 +167,9 @@ exact("""        pub fn artifact_generation_now(&self) -> semio_framework_job::G
                     let Some((slot, fields)) = projection.get(index) else { break };
                     let key = (slot.to_string(), fields.child_id.to_string());
                     if self.children.get(&key).is_none() {
-                        if let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id) {
+                        if self.child_member_retirements.retains_member(slot, fields.child_id) {
+                            deferred = true;
+                        } else if let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id) {
                             let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
                             genesis.push((key.0.clone(), key.1.clone(), dialect, initial_pack));
                         }
@@ -189,13 +193,16 @@ exact("""        pub fn artifact_generation_now(&self) -> semio_framework_job::G
                 let envelope_pack = store::genesis_member_envelope_pack(schema, &dialect, &owner, &initial_pack).await.map_err(|error| plugin_sdk_fault(format!("followed child {slot}/{child_id} envelope: {error}")))?;
                 self.open_child(slot, child_id, dialect, &envelope_pack).await?;
             }
-            self.followed_parent_generation = generation;
+            if !deferred {
+                self.followed_parent_generation = generation;
+            }
             Ok(())
         }
 
         /// 🍂️ Moves one held child its coordinate left out of every live authority — the member map, the ownership
         /// graph and the published child-content root (the previous root goes to bounded content retirement) —
-        /// into bounded child-member retirement.
+        /// into bounded child-member retirement, where it stays the disposer of the snapshot leases that previous
+        /// root still holds (`ChildContentRetirement::close_step` finds it there) and closes only after them.
         async fn retire_followed_child(&mut self, slot: &str, child_id: &str) -> Result<(), Fault> {
             let retirement_generation = self.child_member_retirement_generation.checked_add(1).ok_or_else(|| plugin_sdk_fault("child member retirement generation exhausted"))?;
             if !self.child_member_retirements.can_insert(retirement_generation) {
@@ -235,6 +242,106 @@ exact("""            self.advance_typed_operation_publication_one().await
 exact("""            let folded_member_lanes = self.fold_member_inbound().await?;
 """, """            let folded_member_lanes = self.fold_member_inbound().await?;
             self.follow_derivable_children().await?;
+""")
+
+exact("""    impl ArtifactFixedRegistry<ChildContentRetirement> {
+""", """    impl<M> ArtifactFixedRegistry<ChildMemberRetirement<M>> {
+        /// 🍂️ Whether one exact child identity is still retiring (its member has not closed yet).
+        fn retains_member(&self, slot: &str, child_id: &str) -> bool {
+            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.entry(index).is_some_and(|(_, retirement)| retirement.retires(slot, child_id)))
+        }
+
+        /// 🍂️ The member of one exact retiring child — the disposer of the snapshot leases retired roots still hold.
+        fn retiring_member_mut(&mut self, slot: &str, child_id: &str) -> Option<&mut M> {
+            let id = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index| self.entry(index).and_then(|(id, retirement)| retirement.retires(slot, child_id).then_some(*id)))?;
+            self.get_mut(id)?.entry.as_mut().map(|entry| &mut entry.member)
+        }
+    }
+
+    /// 🪪️ The member that disposes one child snapshot lease: the live member, else the retiring member of a child
+    /// its coordinate left while a retired root still lent its snapshot.
+    fn child_snapshot_owner<'a, M>(children: &'a mut ChildMemberRegistry<M>, retiring: Option<&'a mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, slot: &str, child_id: &str) -> Option<&'a mut M> {
+        if let Some(entry) = children.get_mut(&(slot.to_string(), child_id.to_string())) {
+            return Some(&mut entry.member);
+        }
+        retiring?.retiring_member_mut(slot, child_id)
+    }
+
+    impl ArtifactFixedRegistry<ChildContentRetirement> {
+""")
+exact("fn close_step<M: SpaceMember>(&mut self, children: &mut ChildMemberRegistry<M>, current: &ChildContentView,", "fn close_step<M: SpaceMember>(&mut self, children: &mut ChildMemberRegistry<M>, retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, current: &ChildContentView,")
+exact("""                let Some(entry) = children.get_mut(&(slot.clone(), child_id.clone())) else {
+                    return Ok(PluginCloseStep::Blocked { reason: "final child snapshot lease verification lost its exact live member owner" });
+                };
+                let member = &mut entry.member;
+""", """                let Some(member) = child_snapshot_owner(children, retiring, slot, child_id) else {
+                    return Ok(PluginCloseStep::Blocked { reason: "final child snapshot lease verification lost its exact live member owner" });
+                };
+""")
+exact("""            let Some(member_entry) = children.get_mut(&(entry.slot.clone(), entry.child_id.clone())) else {
+                *self.pending = Some(entry);
+                return Ok(PluginCloseStep::Blocked { reason: "retired child snapshot has no exact live member disposer owner" });
+            };
+            let member = &mut member_entry.member;
+""", """            let Some(member) = child_snapshot_owner(children, retiring, &entry.slot, &entry.child_id) else {
+                *self.pending = Some(entry);
+                return Ok(PluginCloseStep::Blocked { reason: "retired child snapshot has no exact live member disposer owner" });
+            };
+""")
+exact("?.close_step(children, current, &owners, maximum_items.min(1), maximum_bytes)?;", "?.close_step(children, None, current, &owners, maximum_items.min(1), maximum_bytes)?;")
+exact("retirement.close_step(children, current_content, &ChildContentOwners::none(), maximum_items.min(1), maximum_bytes)?;", "retirement.close_step(children, None, current_content, &ChildContentOwners::none(), maximum_items.min(1), maximum_bytes)?;")
+exact("""                        let children = &mut self.children;
+                        let current = &*self.child_content_root;
+""", """                        let children = &mut self.children;
+                        let retiring = &mut self.child_member_retirements;
+                        let current = &*self.child_content_root;
+""", 2)
+exact(".close_step(children, current, &owners, maximum_items, maximum_bytes)?", ".close_step(children, Some(retiring), current, &owners, maximum_items, maximum_bytes)?", 2)
+exact("""    impl<M: SpaceMember> ChildMemberRetirement<M> {
+        fn new(entry: ChildMemberEntry<M>) -> Self {
+            Self { entry: std::mem::ManuallyDrop::new(Some(entry)) }
+        }
+""", """    impl<M> ChildMemberRetirement<M> {
+        fn retires(&self, slot: &str, child_id: &str) -> bool {
+            self.entry.as_ref().is_some_and(|entry| entry.owner.slot == slot && entry.reference.artifact_id == child_id)
+        }
+    }
+
+    impl<M: SpaceMember> ChildMemberRetirement<M> {
+        fn new(entry: ChildMemberEntry<M>) -> Self {
+            Self { entry: std::mem::ManuallyDrop::new(Some(entry)) }
+        }
+""")
+exact("""            let retirement = self.child_member_retirements.get_mut(generation).expect("exact child-member retirement remains admitted");
+            let step = retirement.close_step(maximum_items.min(1), maximum_bytes)?;
+""", """            let retirement = self.child_member_retirements.get_mut(generation).expect("exact child-member retirement remains admitted");
+            if retirement.entry.as_ref().is_some_and(|entry| !entry.member.snapshot_read_leases_terminal_is_empty()) {
+                return Ok(PluginCloseStep::Blocked { reason: "retired child member still lends a snapshot to a retiring child root" });
+            }
+            let step = retirement.close_step(maximum_items.min(1), maximum_bytes)?;
+""")
+exact("""            if !self.child_member_retirements.is_empty() {
+                return self.child_member_retirement_step(maximum_items, maximum_bytes);
+            }
+""", """            if !self.child_member_retirements.is_empty() {
+                let step = self.child_member_retirement_step(maximum_items, maximum_bytes)?;
+                if !matches!(step, PluginCloseStep::Blocked { .. }) || self.child_content_retirements.is_empty() {
+                    return Ok(step);
+                }
+            }
+""")
+
+exact("""                        app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
+                    }
+                }
+            }
+            app
+""", """                        app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
+                    }
+                }
+                app.follow_derivable_children().await.unwrap_or_else(|fault| panic!("the boot example's derivable children must follow its coordinates: {fault:?}"));
+            }
+            app
 """)
 
 print(f"{SDK.relative_to(ROOT)}: {'write' if WRITE else 'dry-run'}, {len(problems)} problems")

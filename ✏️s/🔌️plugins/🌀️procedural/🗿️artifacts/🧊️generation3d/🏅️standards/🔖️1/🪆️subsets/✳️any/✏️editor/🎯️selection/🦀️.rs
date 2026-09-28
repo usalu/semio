@@ -192,7 +192,7 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
             icon_id: Some(icon.into()),
             pressed: Some(if mode == "object" { !selection.active() } else { selection.granularity == mode }),
             disabled: None,
-            action: Some(super::generation3d_action("setInteractionGranularity", Some(serde_json::json!({"domainId": DOMAIN, "granularityId": mode})))),
+            action: Some(super::generation3d_action("setInteractionGranularity", Some(semio_framework_plugin::dsl_value!({"domainId": DOMAIN, "granularityId": mode})))),
         }).collect();
     let edits: &[(&str, &str, &str)] = match selection.granularity.as_str() {
         "face" => &[("extrude", "Extrude 0.1", "0,1 extrudieren"), ("inset", "Inset 0.1", "0,1 einziehen"), ("subdivide", "Subdivide", "Unterteilen"), ("flip", "Flip", "Umkehren"), ("deleteFaces", "Delete Faces", "Flächen löschen")],
@@ -203,7 +203,7 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
         edits.iter().map(|&(operation, en, de)| semio_framework_plugin::WindowEngagementPossible {
                 id: format!("procedural.mesh-{operation}"), label: if is_de { de } else { en }.into(),
                 detail: Some(if is_de { "Danach im Inspektor einstellbar" } else { "Adjustable in the inspector afterwards" }.into()),
-                action: Some(super::generation3d_action("editMeshSelection", Some(serde_json::json!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0})))),
+                action: Some(super::generation3d_action("editMeshSelection", Some(semio_framework_plugin::dsl_value!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0})))),
             }).collect()
     } else { Vec::new() };
     let status = if selection.active() {

@@ -150,7 +150,6 @@ semio_framework_plugin::app_labels! {
         export_too_large: native_en "This document is larger than one export may stream", native_de "Dieses Dokument ist größer als ein Export übertragen kann", reuse_en "This document is larger than one export may stream", reuse_de "Dieses Dokument ist größer als ein Export übertragen kann";
         import_invalid: native_en "That file is not a puzzle 5d document", native_de "Diese Datei ist kein Puzzle-5d-Dokument", reuse_en "That file is not a puzzle 5d document", reuse_de "Diese Datei ist kein Puzzle-5d-Dokument";
         import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
-        import_incomplete: native_en "That import arrived incomplete", native_de "Dieser Import ist unvollständig angekommen", reuse_en "That import arrived incomplete", reuse_de "Dieser Import ist unvollständig angekommen";
         add: native_en "Add", native_de "Hinzufügen", reuse_en "Add", reuse_de "Hinzufügen";
         add_part: native_en "Add Part", native_de "Teil hinzufügen", reuse_en "Add building component", reuse_de "Baukomponente hinzufügen";
         add_part_prompt: native_en "Add Part…", native_de "Teil hinzufügen…", reuse_en "Add building component…", reuse_de "Baukomponente hinzufügen…";

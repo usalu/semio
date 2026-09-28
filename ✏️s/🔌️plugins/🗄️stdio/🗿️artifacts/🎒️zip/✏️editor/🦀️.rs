@@ -74,6 +74,21 @@ pub fn edit_node(snapshot: &ZipSnapshot, node_id: &str, value: &str, revision: &
     }
 }
 
+/// 🔐️ The token an agent's omitted `revision` is admitted against: the addressed field's saved text, as its draft binding
+/// carries it (`draft`); a missing or ambiguous entry is refused exactly as the edit itself would refuse it.
+pub fn agent_target_revision(snapshot: &ZipSnapshot, args: &dsl::DslValue) -> Result<Option<String>, Fault> {
+    let node_id = semio_s_artifact_stdio_contract::window_kit_required_text_argument(Some(args), "nodeId")?;
+    if node_id == COMMENT_NODE_ID {
+        return Ok(Some(text_revision(&snapshot.comment)));
+    }
+    let mut named = snapshot.entries.iter().filter(|entry| entry_node_id(&entry.name) == node_id);
+    match (named.next(), named.next()) {
+        (Some(entry), None) => Ok(Some(text_revision(&entry.name))),
+        (Some(_), Some(_)) => Err(fault("stdio.zip.target-ambiguous", "entries with identical names must be disambiguated before renaming")),
+        (None, _) => Err(fault("stdio.zip.target-missing", "the archive entry changed or no longer exists")),
+    }
+}
+
 /// 🔐️ Guards an archive draft against changes to its persisted text.
 pub fn text_revision(value: &str) -> String {
     semio_framework_hash::hash_bytes(value.as_bytes())

@@ -1,0 +1,16 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️scene-raster-ownership/🟦️.ts"
+ ]
+}

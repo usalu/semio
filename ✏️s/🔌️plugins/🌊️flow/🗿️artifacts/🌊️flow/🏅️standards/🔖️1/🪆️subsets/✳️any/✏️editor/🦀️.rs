@@ -283,7 +283,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
                     label: Some(labels.duplicate_widget.into()),
                     icon: Some("copy".into()),
                     action: Some("duplicateWidget".into()),
-                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "widgetId": node_id }))),
+                    args: Some(semio_framework_plugin::dsl_value!({ "widgetId": node_id })),
                     ..Default::default()
                 })
             });
@@ -294,7 +294,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
                         label: Some(labels.replace_image.into()),
                         icon: Some("image".into()),
                         action: Some("replaceImage".into()),
-                        args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
+                        args: Some(semio_framework_plugin::dsl_value!({ "id": node_id })),
                         ..Default::default()
                     })
                 });
@@ -308,7 +308,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
                     icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
                     checked: Some(!all_preview_off),
                     action: Some("setPreviewOff".into()),
-                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
+                    args: Some(semio_framework_plugin::dsl_value!({ "ids": nodes, "value": !all_preview_off })),
                     ..Default::default()
                 })
             });
@@ -2265,16 +2265,6 @@ impl ArtifactEditor for FlowPlayApp {
         Some(crate::retirement::store_owners())
     }
 
-    /// 🏗️ Restores a complete Flow document archive through the same bounded initializer used by
-    /// ordinary document replacement, including its composed child closure.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, FLOW_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
@@ -2361,6 +2351,7 @@ impl ArtifactEditor for FlowPlayApp {
                 operation_id: request.operation.operation.0,
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
+                authoring_seed: request.authoring_seed.clone(),
             };
             let payload = ArtifactRetainedCommandPayload::try_new(
                 semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

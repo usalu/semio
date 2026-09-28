@@ -23,7 +23,7 @@ import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe } from "../🧮️program-matrix/🟦️.ts";
+import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe, type MatrixRenderedEdit } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 //#region 🔖️Journey
@@ -118,22 +118,31 @@ const storeState = (page: Page): Promise<unknown> =>
     })
     .catch((error: unknown) => ({ error: String(error).slice(0, 120) }));
 
-/** 🔎️ The kinds the space index's staged `createArtifact` form offers: each option's encoded choice (kind id + dialect). */
+/** 🔎️ One encoded kind choice (kind id + dialect) as the sweep drives it; null for any other option value. */
+function kindChoiceOf(value: string): { kindId: string; plugin: string; value: string } | null {
+  if (!value.startsWith("{")) return null;
+  try {
+    const choice = JSON.parse(value) as { kindId?: string; dialect?: { artifactKind?: string } };
+    const kindId = String(choice.kindId ?? "");
+    return kindId.length === 0 ? null : { kindId, plugin: /^s\.([a-z0-9-]+)\./u.exec(String(choice.dialect?.artifactKind ?? ""))?.[1] ?? "", value };
+  } catch {
+    return null;
+  }
+}
+
+/** 🔎️ The kinds the space index's staged `createArtifact` form offers: each option's encoded choice, read from a native
+ * `<select>` or — when the form renders the choice as a combobox — from the listbox it opens (closed again after). */
 export async function stagedKinds(page: Page): Promise<{ kindId: string; plugin: string; value: string }[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll('[data-slot="window-action-pane"] select option, select option')]
-      .map((element) => (element as HTMLOptionElement).value)
-      .filter((value) => value.startsWith("{"))
-      .map((value) => {
-        try {
-          const choice = JSON.parse(value) as { kindId?: string; dialect?: { artifactKind?: string } };
-          return { kindId: String(choice.kindId ?? ""), plugin: /^s\.([a-z0-9-]+)\./u.exec(String(choice.dialect?.artifactKind ?? ""))?.[1] ?? "", value };
-        } catch {
-          return { kindId: "", plugin: "", value };
-        }
-      })
-      .filter((row) => row.kindId.length > 0),
-  );
+  const native = await page.evaluate(() => [...document.querySelectorAll('[data-slot="window-action-pane"] select option, select option')].map((element) => (element as HTMLOptionElement).value));
+  const fromNative = native.map(kindChoiceOf).filter((choice) => choice !== null);
+  if (fromNative.length > 0) return fromNative;
+  const trigger = page.locator('[data-slot="window-action-pane"] [id$=".arg.kindChoice"] [role="combobox"], [data-slot="window-action-pane"] button#kindChoice').first();
+  if ((await trigger.count()) === 0) return [];
+  await trigger.click({ force: true, timeout: 8_000 }).catch(() => undefined);
+  await page.locator('[role="option"]').first().waitFor({ state: "visible", timeout: 8_000 }).catch(() => undefined);
+  const listed = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((option) => option.getAttribute("data-value") ?? ""));
+  await page.keyboard.press("Escape");
+  return listed.map(kindChoiceOf).filter((choice) => choice !== null);
 }
 //#endregion 🔖️Journey
 
@@ -159,13 +168,16 @@ export type HubDocumentSweepOptions = Readonly<{
 export type HubSweepRow = Record<string, unknown> & { kindId: string; plugin: string; pass: boolean; faults: string[]; notices: Notice[] };
 
 export async function openSweepSpace(page: Page, options: HubDocumentSweepOptions, row: HubSweepRow): Promise<string | null> {
-  await page.goto(options.baseUrl, { waitUntil: "commit", timeout: 300_000 });
+  await page.goto(new URL("/hub", options.baseUrl).href, { waitUntil: "commit", timeout: 300_000 });
   row.beacon = await awaitBeacon(page, Date.now() + 300_000);
   await dismissIntroduction(page);
   if (await page.locator('[data-semio-hub-sign-in=""]').count()) {
     const refused = await signIn(page, options.email, options.password);
     if (refused) return refused;
   }
+  await page
+    .waitForFunction(() => { const phase = document.querySelector("[data-semio-hub-spaces-phase]")?.getAttribute("data-semio-hub-spaces-phase"); return phase !== undefined && phase !== null && phase !== "loading"; }, undefined, { timeout: 60_000 })
+    .catch(() => undefined);
   const spaces = await ensureSpace(page, options.spaceName);
   const space = spaces.find((entry) => entry.text.includes(options.spaceName));
   if (!space?.id) return `the hub workspace lists no space named ${JSON.stringify(options.spaceName)} (${spaces.length} listed)`;
@@ -266,8 +278,10 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
     }
     const args: Record<string, Readonly<Record<string, string>>> = {};
     for (const [argKey, value] of Object.entries(pins.pluginArgs)) if (argKey.startsWith(`${kind.plugin}.`)) args[`${kind.kindId}.${argKey.slice(kind.plugin.length + 1)}`] = value;
+    const renderedEdits: Record<string, MatrixRenderedEdit> = {};
+    for (const [editKey, edit] of Object.entries(pins.pluginEdits)) if (editKey.startsWith(`${kind.plugin}.`)) renderedEdits[`${kind.kindId}.${editKey.slice(kind.plugin.length + 1)}`] = edit;
     const refusals: string[] = [];
-    const result = await mutateUndoRedo(page, refusals, kind.kindId, verb ? { [kind.kindId]: verb } : {}, args, pins.liveId, 6);
+    const result = await mutateUndoRedo(page, refusals, kind.kindId, verb ? { [kind.kindId]: verb } : {}, args, renderedEdits, pins.liveId, 6);
     const edits = ("edits" in result ? result.edits : []) as number[];
     Object.assign(row, { verb: result.mutation, verbDetail: result.mutationDetail, railRows: result.railRows, edits, refusals: refusals.slice(0, 5), ledgerTail: (await readShell(page)).ledger.slice(-4).map((entry) => entry.label) });
     row.cleanRoundTrip = edits.length === 4 && edits[1]! >= 1 && edits[2] === edits[1]! - 1 && edits[3] === edits[1];

@@ -48,7 +48,7 @@ FORMATS = ["Avi", "Bcf", "Bmp", "Csv", "Docx", "Dwg", "Dxf", "Epw", "Gif", "Gltf
 GERMAN.update({name: name for name in FORMATS})
 
 FRAMEWORK_LABEL_PATH = {
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️app-router/🦀️.rs": "semio_framework_plugin::LocalizedLabel",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️app-router/🦀️.rs": "semio_framework::LocalizedLabel",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🔬️plugin-builder-dependency/🦀️.rs": "crate::LocalizedLabel",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs": "LocalizedLabel",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs": "crate::LocalizedLabel",

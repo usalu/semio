@@ -130,22 +130,22 @@ pub fn live_fill_run(tool_run: Option<&semio_framework_plugin::ToolRunView>) -> 
 
 /// 🎬 `toolRunStart` effect that arms this fill tool.
 pub fn start_effect() -> semio_framework::kernel::Effect {
-    let args = serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID });
+    let args = semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID });
     semio_framework::kernel::Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: TOOL_RUN_START_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(args)),
+        args: Some(args),
         delay_ms: 0,
     }
 }
 
 /// 💾 `commit-fill` effect that lands the finished cache in `solve_json`.
 pub fn commit_effect(commit: &Grid2dInferenceCommit) -> semio_framework::kernel::Effect {
-    let args = serde_json::json!({ "solveJson": protocol::json::to_json_string(commit) });
+    let args = semio_framework::dsl_value!({ "solveJson": protocol::json::to_json_string(commit) });
     semio_framework::kernel::Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: COMMIT_FILL_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(args)),
+        args: Some(args),
         delay_ms: 0,
     }
 }

@@ -156,7 +156,7 @@ fn every_command() -> Vec<ArchitectCommand> {
         ArchitectCommand::SetAdjacencyField(set_adjacency_field::SetAdjacencyField { entity_id: "a1".into(), field: "kind".into(), value_json: "\"required\"".into() }),
         ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: "t1".into() }),
         ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {}),
-        ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv: "a,b".into(), strategy: "upsert".into() }),
+        ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { payload: "a,b".into(), strategy: "upsert".into() }),
         ArchitectCommand::AddElement(add_element::AddElement { name: "Room".into() }),
         ArchitectCommand::RemoveElement(remove_element::RemoveElement { element_id: "e1".into() }),
         ArchitectCommand::RunValidation(run_validation::RunValidation {}),
@@ -170,6 +170,7 @@ fn every_command() -> Vec<ArchitectCommand> {
         ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true }),
         ArchitectCommand::Search(query::Search { query: "hall".into() }),
         ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None }),
+        ArchitectCommand::ImportRegistersCsvRequest(import_registers_csv_request::ImportRegistersCsvRequest {}),
     ]
 }
 
@@ -393,9 +394,20 @@ async fn analysis_kind_picker_maps_all_variants() {
 async fn import_registers_csv_action_sets_plugin() {
     let program = sample_plugin();
     let csv = export_registers_csv(&program).expect("export csv");
-    let emit = context::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
+    let emit = context::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { payload: csv, strategy: "upsert".into() }), &program);
     assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
     assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
+}
+
+/// 📂️ LAW: the CSV import is reachable from a file: its request verb asks the shell for one CSV file and names
+/// `importRegistersCsv` as the verb the picked file is dispatched to — no document edit of its own.
+#[semio_framework_async_macros::async_test]
+async fn import_registers_csv_request_opens_a_csv_file_picker() {
+    let program = sample_plugin();
+    let emit = context::drive(&ArchitectCommand::ImportRegistersCsvRequest(import_registers_csv_request::ImportRegistersCsvRequest {}), &program);
+    assert!(emit.artifact_mutations.is_empty(), "a file request edits nothing");
+    let Some(semio_framework_plugin::Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. }) = emit.effects.first() else { panic!("importRegistersCsvRequest must request a file: {:?}", emit.effects) };
+    assert_eq!((accept.as_str(), read_as.as_deref(), import_action.as_str(), *multiple), (".csv,text/csv", Some("text"), "importRegistersCsv", false));
 }
 
 #[semio_framework_async_macros::async_test]

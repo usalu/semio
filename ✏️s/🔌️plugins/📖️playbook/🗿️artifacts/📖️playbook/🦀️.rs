@@ -159,13 +159,9 @@ pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, 
 /// for identical `steps`, a different pair once the content actually changes; mirrors writer's
 /// `document_child_handle`/flow's `flow_content_child_handle`.
 pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_steps(steps);
     let content_json = protocol::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("playbook-flow-{content_hash:016x}");
+    let child_id = store::content_id("playbook-flow", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -174,13 +170,9 @@ pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
 /// 🕸️ Deterministic content-addressed CHILD handle for the narrative document projection — same
 /// `(child_id, target)` for identical `(title, steps)`.
 pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_steps(title, steps);
     let content_json = protocol::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("playbook-document-{content_hash:016x}");
+    let child_id = store::content_id("playbook-document", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -420,7 +412,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
-        name: "Playbook".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Playbook", "Playbook"),
         source_format: PLAYBOOK_DOCUMENT_SCHEMA.into(),
         component_kind: "playbook".into(),
         dimension: "text".into(),

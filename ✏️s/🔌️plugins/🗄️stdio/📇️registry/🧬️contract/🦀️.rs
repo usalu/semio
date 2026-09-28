@@ -1131,9 +1131,19 @@ pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowK
     action.args = vec![
         ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
         ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(),
-        ActionArgDef::text("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")).required(),
+        ActionArgDef::document_revision("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")),
         ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
     ];
+    definition
+}
+
+/// 🔐️ Declares a table cell address guarded by its row's own revision — a target token, not the document's.
+pub fn row_revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
+    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    let mut definition = revision_addressed_table_window_kind();
+    let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("the revision-addressed table declares set-cell");
+    let revision = action.args.iter_mut().find(|argument| argument.id == "revision").expect("set-cell declares revision");
+    *revision = ActionArgDef::target_revision("revision", LocalizedLabel::native("Row revision", "Zeilenrevision"));
     definition
 }
 
@@ -1143,12 +1153,13 @@ pub const ADD_TABLE_COLUMN_ACTION_ID: &str = "add-column";
 pub const REMOVE_TABLE_COLUMN_ACTION_ID: &str = "remove-column";
 pub const SET_TABLE_HEADER_ACTION_ID: &str = "set-header";
 
-/// 🧱️ Declares direct structural table edits beside revision-addressed cell editing.
+/// 🧱️ Declares direct structural table edits beside revision-addressed cell editing — retained routes, classified
+/// `Migrated` here like the kit scaffold classifies its own rows, so every app declaring the table assembles.
 pub fn structural_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, LocalizedLabel};
-    let revision = || ActionArgDef::text("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")).required();
+    use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, InteractiveJobClassification, LocalizedLabel};
+    let revision = || ActionArgDef::document_revision("revision", LocalizedLabel::native("Document revision", "Dokumentrevision"));
     let mut definition = revision_addressed_table_window_kind();
-    definition.actions.extend([
+    let structural = [
         ActionDefinition::bounded_catalog(ADD_TABLE_ROW_ACTION_ID, LocalizedLabel::native("Add row", "Zeile hinzufügen"), ActionKind::Mutation).with_args(vec![revision()]).in_palette(false),
         ActionDefinition::bounded_catalog(REMOVE_TABLE_ROW_ACTION_ID, LocalizedLabel::native("Remove row", "Zeile entfernen"), ActionKind::Mutation)
             .with_args(vec![ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(), revision()])
@@ -1160,7 +1171,11 @@ pub fn structural_table_window_kind() -> semio_framework_plugin::WindowKindDefin
         ActionDefinition::bounded_catalog(SET_TABLE_HEADER_ACTION_ID, LocalizedLabel::native("Set header", "Spaltenkopf setzen"), ActionKind::Mutation)
             .with_args(vec![ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(), revision(), ActionArgDef::text("value", LocalizedLabel::native("Header", "Spaltenkopf")).min_length(0).required()])
             .in_palette(false),
-    ]);
+    ];
+    definition.actions.extend(structural.map(|mut action| {
+        action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        action
+    }));
     definition
 }
 
@@ -1199,42 +1214,49 @@ pub fn window_kit_canonical_revision(revision: [u8; 32]) -> String {
     encoded
 }
 
+/// 🎟️ A refusal of the process-wide `UiValue` arena is the framework's capacity refusal: the row window building this
+/// address ends there with a shorter run instead of refusing the editor render (`tree_window_indexed_rows`).
+fn table_arena(stage: &'static str) -> semio_framework_plugin::PluginAssemblyError {
+    semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", format!("stdio table {stage} admission failed: the UiValue arena has no free credit"))
+}
+
 /// 📍️ Builds one complete revision-guarded ordinal cell address without materializing its table.
 pub fn window_kit_revisioned_cell_arguments(row: usize, column: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
-    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.cell-arguments", "cell argument map capacity"))?;
-    arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "row argument capacity"))?;
-    arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "column argument capacity"))?;
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("cell argument map"))?;
+    arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| table_arena("row argument"))?;
+    arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| table_arena("column argument"))?;
     arguments
         .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
-        .map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "revision argument capacity"))?;
+        .map_err(|_| table_arena("cell revision argument"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
 /// 📍️ Builds one revision-only structural table address.
 pub fn window_kit_revision_arguments(revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
-    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.revision-arguments", "argument map capacity"))?;
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("structure argument map"))?;
     arguments
         .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
-        .map_err(|_| PluginAssemblyError::new("stdio.table.revision-arguments", "revision argument capacity"))?;
+        .map_err(|_| table_arena("structure revision argument"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
 /// 📍️ Builds one row- or column-indexed structural table address.
 pub fn window_kit_indexed_revision_arguments(index_name: &str, index: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
-    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.indexed-arguments", "argument map capacity"))?;
-    arguments.try_insert(index_name.into(), UiValue::Number(index as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.indexed-arguments", "index argument capacity"))?;
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("indexed argument map"))?;
+    arguments.try_insert(index_name.into(), UiValue::Number(index as f64)).map_err(|_| table_arena("index argument"))?;
     arguments
         .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
-        .map_err(|_| PluginAssemblyError::new("stdio.table.indexed-arguments", "revision argument capacity"))?;
+        .map_err(|_| table_arena("indexed revision argument"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
-/// 🧱️ Adds localized structural controls and a windowed header editor around a table body.
+/// 🧱️ Adds localized structural controls and a windowed header editor around a table body. The controls are admitted
+/// before `table` renders its windowed body: the body takes whatever `UiValue` arena credit is left and ends its window
+/// short on the arena's capacity refusal, so a starved body never takes the controls down.
 pub fn render_structural_table(
-    table: semio_framework_plugin::BuiltNode,
     header_count: usize,
     mut header: impl FnMut(usize) -> String,
     editable_headers: bool,
@@ -1242,6 +1264,7 @@ pub fn render_structural_table(
     revision: &str,
     locale: semio_framework_plugin::Locale,
     windows: &semio_framework_plugin::TreeWindows<'_>,
+    table: impl FnOnce() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use semio_framework_plugin::app::{editable_table_window_row, table_row_action, TableWindowKit, WindowedEditableTableCell};
     use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, Trigger};
@@ -1283,7 +1306,7 @@ pub fn render_structural_table(
         };
         editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove])
     })?);
-    children.push(table);
+    children.push(table()?);
     ui::column()
         .try_id("stdio-structural-table")
         .map_err(|_| PluginAssemblyError::new("stdio.table.root", "root id admission"))?
@@ -1312,7 +1335,7 @@ pub fn stable_addressed_table_window_kind() -> semio_framework_plugin::WindowKin
         ActionArgDef::text("sheetName", LocalizedLabel::native("Worksheet", "Arbeitsblatt")).required(),
         ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
         ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(),
-        ActionArgDef::text("revision", LocalizedLabel::native("Cell revision", "Zellrevision")).required(),
+        ActionArgDef::target_revision("revision", LocalizedLabel::native("Cell revision", "Zellrevision")),
         ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
     ];
     definition

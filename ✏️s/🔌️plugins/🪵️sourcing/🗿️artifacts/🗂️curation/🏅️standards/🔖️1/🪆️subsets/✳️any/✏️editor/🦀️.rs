@@ -921,14 +921,6 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, SOURCING_CURATION_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
@@ -1023,6 +1015,7 @@ impl ArtifactEditor for SourcingCurationApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
@@ -1206,7 +1199,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),
-                name: "Kind Catalogue".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("Kind Catalogue", "Typenkatalog"),
                 source_format: "catalogue.kinds".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),
@@ -1223,7 +1216,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // which declares the SAME `kit.catalog` shape independently).
             .artifact_kind(ArtifactKindSpec {
                 id: "kit.catalog".into(),
-                name: "Kit Catalogue".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
                 source_format: "kit.catalog".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),

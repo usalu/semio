@@ -60,6 +60,7 @@ const required = (row: Record<string, unknown>, keys: readonly string[], at: str
 const record = (value: unknown, keys: readonly string[], at: string): Record<string, unknown> => required(parseSchemaRecord(value, keys, at), keys, at);
 const string = (value: unknown, at: string): string => { if (typeof value !== "string") throw new Error(`${at}: string required`); return value; };
 const number = (value: unknown, at: string): number => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: finite number required`); return value; };
+const boolean = (value: unknown, at: string): boolean => { if (typeof value !== "boolean") throw new Error(`${at}: boolean required`); return value; };
 const integer = (value: unknown, at: string): number => { const result = number(value, at); if (!Number.isSafeInteger(result) || result < 0) throw new Error(`${at}: unsigned integer required`); return result; };
 const array = (value: unknown, at: string): unknown[] => { if (!Array.isArray(value)) throw new Error(`${at}: array required`); return value; };
 const strings = (value: unknown, at: string): string[] => array(value, at).map((item, index) => string(item, `${at}[${index}]`));
@@ -77,8 +78,8 @@ export const parseSpreadPatch = (value: unknown, at = "$" ): SpreadPatch => simp
 export const parseTextStoryPatch = (value: unknown, at = "$" ): TextStoryPatch => simplePatch(value, "content", at);
 export const parseImageLinkPatch = (value: unknown, at = "$" ): ImageLinkPatch => simplePatch(value, "path", at);
 export function parseFramePatch(value: unknown, at = "$" ): FramePatch {
-  const keys = ["x", "y", "width", "height", "fill", "stroke", "wrap_mode", "columns"], row = record(value, keys, at);
-  return { x: nullable(row.x, number, `${at}.x`), y: nullable(row.y, number, `${at}.y`), width: nullable(row.width, number, `${at}.width`), height: nullable(row.height, number, `${at}.height`), fill: nullable(row.fill, rgba, `${at}.fill`), stroke: nullable(row.stroke, rgba, `${at}.stroke`), wrap_mode: nullable(row.wrap_mode, string, `${at}.wrap_mode`), columns: nullable(row.columns, integer, `${at}.columns`) };
+  const keys = ["x", "y", "width", "height", "rotation", "fill", "stroke", "wrap_mode", "columns", "locked", "visible"], row = record(value, keys, at);
+  return { x: nullable(row.x, number, `${at}.x`), y: nullable(row.y, number, `${at}.y`), width: nullable(row.width, number, `${at}.width`), height: nullable(row.height, number, `${at}.height`), rotation: nullable(row.rotation, number, `${at}.rotation`), fill: nullable(row.fill, rgba, `${at}.fill`), stroke: nullable(row.stroke, rgba, `${at}.stroke`), wrap_mode: nullable(row.wrap_mode, string, `${at}.wrap_mode`), columns: nullable(row.columns, integer, `${at}.columns`), locked: nullable(row.locked, boolean, `${at}.locked`), visible: nullable(row.visible, boolean, `${at}.visible`) };
 }
 export function parsePageFrameAdded(value: unknown, at = "$" ): PageFrameAdded {
   const keys = ["frame", "index", "layer_id"], row = record(value, keys, at);

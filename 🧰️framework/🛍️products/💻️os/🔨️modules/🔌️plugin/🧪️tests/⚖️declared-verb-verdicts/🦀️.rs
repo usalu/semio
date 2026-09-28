@@ -21,6 +21,7 @@ mod declared_verb_verdict_tests {
             user_path_written: flag("userPathWritten"),
             host_effects: settled["hostEffects"].as_u64().expect("fixture host effects") as usize,
             fingerprint: settled["fingerprint"].as_u64().expect("fixture fingerprint"),
+            orphaned_children: settled["orphanedChildren"].as_array().map_or_else(Vec::new, |children| children.iter().map(|child| child.as_str().expect("fixture orphaned child").to_string()).collect()),
         })
     }
 
@@ -76,6 +77,7 @@ mod declared_verb_verdict_tests {
             DeclaredVerbFinding::Unreachable { .. } => ("unreachable", None),
             DeclaredVerbFinding::Unbridged { .. } => ("unbridged", None),
             DeclaredVerbFinding::AgentLaneDiverges { .. } => ("agentLaneDiverges", None),
+            DeclaredVerbFinding::ComposedChildOrphaned { .. } => ("composedChildOrphaned", None),
         }
     }
 

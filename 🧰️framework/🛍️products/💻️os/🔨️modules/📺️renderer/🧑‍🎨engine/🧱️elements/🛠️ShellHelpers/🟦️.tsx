@@ -102,6 +102,8 @@ import {
     type WindowMeasure,
     type WindowStackCorner,
     type ViewTreeWindowRequest,
+    EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+    IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
 } from "@semio-tech/framework";
 import {
     type ArtifactSyncStatus,
@@ -332,6 +334,8 @@ export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "startTutorial",
   "setActiveUtility",
   "setActiveTool",
+  EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+  IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
 ]);
 
 /** 🪟️ The shape `undeclaredActionDiagnostic` reads a session app's window kinds through — the manifest's
@@ -1021,20 +1025,29 @@ export type { ImportChunk };
  * contiguous block above its own per-request ceiling. A file that fits one chunk dispatches exactly one
  * call whose args are the pre-B59 `{payload, name}` plus the chunk envelope naming itself as `0` of `1`.
  *
- * 🧯 The chunks of one file are dispatched in ORDER and awaited one at a time: the guest's staging area
- * refuses a gap rather than resuming into bytes nobody can account for, so a concurrent fan-out would
- * cost the whole file. */
+ * 🧯 The chunks of one file are dispatched in ORDER and awaited one at a time: the guest's staging
+ * (`ImportStaging`, `🎠️kernel/🦀️.rs`) refuses a gap rather than resuming into bytes nobody can account for, so a
+ * concurrent fan-out would cost the whole file. `progress(completed, total)` counts chunks over every picked file; an
+ * aborted `signal` stops before the next chunk and the guest's unfinished run gives its slot to the next pick. */
 export async function dispatchOpenedFiles(
   opened: readonly { readonly contents: string; readonly name: string }[],
   importAction: string,
   multiple: boolean,
   dispatchOne: EffectDispatchOne,
+  signal?: AbortSignal,
+  progress?: (completed: number, total: number) => void,
 ): Promise<void> {
   const total = opened.length;
+  const pages = opened.map((file) => importPayloadChunks(file.contents));
+  const chunks = pages.reduce((sum, filePages) => sum + filePages.length, 0);
+  let completed = 0;
   for (let index = 0; index < opened.length; index += 1) {
     const file = opened[index]!;
-    for (const page of importPayloadChunks(file.contents)) {
+    for (const page of pages[index]!) {
+      signal?.throwIfAborted();
       await dispatchOne(importAction, importChunkArguments(file.name, page, multiple ? { index, total } : undefined));
+      completed += 1;
+      progress?.(completed, chunks);
     }
   }
 }
@@ -2147,7 +2160,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 export function panelTabDefinitionToNode(
   tab: AppPanelTabDefinition,
   group: string,
-  panelUiByKey: Readonly<Record<string, BuiltNode>>,
+  panelBodyStoreByKey: Readonly<Record<string, UiDocumentStore>>,
   onAction: (action: ActionDescriptor) => void,
   order: number,
   appLabelsOverlay: PluginAppLabelsOverlay,
@@ -2166,7 +2179,7 @@ export function panelTabDefinitionToNode(
       icon: panelTabIcon(tabId, group),
       name: label,
       order,
-      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache, actorPanels)),
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelBodyStoreByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache, actorPanels)),
     };
   }
   return singleTreeLeaf({
@@ -2176,7 +2189,7 @@ export function panelTabDefinitionToNode(
     order,
     tree: staticTreePanelDefinition(
       actorPanels === null
-        ? cachedTreePanelConfigV1(cache, tabId, panelUiByKey[tabId] ?? pendingPanelUiNodeV1(), tab.bodyKey ?? tabId, onAction, treeWindows)
+        ? cachedBodyStoreTreePanelConfigV1(cache, tabId, panelBodyStoreByKey[tabId], tab.bodyKey ?? tabId, onAction, treeWindows)
         : cachedActorTreePanelConfigV1(cache, tabId, actorPanels, tab.bodyKey ?? tabId, treeWindows),
     ),
   });
@@ -2622,7 +2635,7 @@ function treeWindowOpenSignatureV1(openStates: Readonly<Record<string, boolean>>
  * inputs move.
  *
  * `uiNodeToTreePanelConfig` mints a fresh `UiDocumentStore` and re-snapshots the whole body on every
- * call, and the `panelUiByKey` `useMemo`s in `ShellHost` list the whole record as a dependency — so one
+ * call, and the panel-body `useMemo`s in `ShellHost` list the whole record as a dependency — so one
  * body refreshing re-parsed and remounted EVERY open tab's tree (📓️audit-host-tree-pipeline.md §8).
  * With a windowed tree that is not merely wasteful: a remount throws away the `<Tree>` instance the
  * scroll observer is attached to, on every scroll of a sibling panel. */
@@ -2637,18 +2650,30 @@ function cachedTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabI
   return config;
 }
 
-/** 🎭️ {@link cachedTreePanelConfigV1} for an actor-rendered panel: the tree hosts the actor's retained store itself,
- * so a patch updates the mounted panel in place and the config is rebuilt only when the store, the intent route or
- * the tree-window inputs move. */
+/** 🗂️ A tree that hosts a retained body store itself — the shell's own panel body store or an actor's — so a reload or a
+ * patch updates the mounted panel in place; the config is rebuilt only when the store, the intent `route` or the
+ * tree-window inputs move. */
+function cachedStoreTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, store: UiDocumentStore, bodyKey: string, treeWindows: TreeWindowHostV1 | null, route: unknown, build: () => TreePanelConfig): TreePanelConfig {
+  const openSignature = treeWindows ? treeWindowOpenSignatureV1(treeWindows.openStatesFor(bodyKey)) : "";
+  const entry = cache?.get(tabId);
+  if (entry && entry.source === store && entry.onAction === route && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
+  const config = build();
+  cache?.set(tabId, { source: store, onAction: route, bodyKey, treeWindows, openSignature, config });
+  return config;
+}
+
+/** 🗂️ A shell-rendered panel over its body store ({@link cachedStoreTreePanelConfigV1}); a tab whose body has no store yet
+ * shows the pending body. */
+function cachedBodyStoreTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, store: UiDocumentStore | undefined, bodyKey: string, onAction: (action: ActionDescriptor) => void, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
+  if (store === undefined) return cachedTreePanelConfigV1(cache, tabId, pendingPanelUiNodeV1(), bodyKey, onAction, treeWindows);
+  return cachedStoreTreePanelConfigV1(cache, tabId, store, bodyKey, treeWindows, onAction, () => interpretedTreePanelConfigV1(store, tabId, onAction, (intent) => onAction(uiIntentToActionDescriptor(intent)), bodyKey, treeWindows));
+}
+
+/** 🎭️ An actor-rendered panel over the actor's retained store ({@link cachedStoreTreePanelConfigV1}). */
 function cachedActorTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, actorPanels: BrowserActorPanelHostV1, bodyKey: string, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
   const store = actorPanels.stores.get(tabId);
   if (store === undefined) return cachedTreePanelConfigV1(cache, tabId, pendingPanelUiNodeV1(), bodyKey, actorPanels.onAction, treeWindows);
-  const openSignature = treeWindows ? treeWindowOpenSignatureV1(treeWindows.openStatesFor(bodyKey)) : "";
-  const entry = cache?.get(tabId);
-  if (entry && entry.source === store && entry.onAction === actorPanels.onIntent && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
-  const config = interpretedTreePanelConfigV1(store, tabId, actorPanels.onAction, (intent) => actorPanels.onIntent(tabId, intent), bodyKey, treeWindows);
-  cache?.set(tabId, { source: store, onAction: actorPanels.onIntent, bodyKey, treeWindows, openSignature, config });
-  return config;
+  return cachedStoreTreePanelConfigV1(cache, tabId, store, bodyKey, treeWindows, actorPanels.onIntent, () => interpretedTreePanelConfigV1(store, tabId, actorPanels.onAction, (intent) => actorPanels.onIntent(tabId, intent), bodyKey, treeWindows));
 }
 
 /** 🦴 The ONE pending body — `pendingPanelUiNode()` mints a fresh object per call, which would miss
@@ -2882,16 +2907,9 @@ export const OPEN_TASK_MANAGER_COMMAND_ID = "os.openTaskManager";
 export const OPEN_HUB_COMMAND_ID = "os.openHub";
 
 //#region 📤️DocumentTransfer
-/** 📤️ The framework's Export Document: the focused program's whole document archive — root envelope, its op log and
- * every owned member (`DocumentArchivePack`, `encodeDocumentArchiveBytes`) — as one file, for every artifact kind alike. */
-export const EXPORT_DOCUMENT_COMMAND_ID = "os.exportDocument";
-
-/** 📥️ The framework's Import Document: opens a file {@link EXPORT_DOCUMENT_COMMAND_ID} wrote as a NEW document of the same
- * program (`createApp` → `loadDocumentArchive`, progress + cancellation in the Tasks window); the focused document is never
- * overwritten. */
-export const IMPORT_DOCUMENT_COMMAND_ID = "os.importDocument";
-
-/** 🗃️ File extension of an exported document archive. */
+/** 🗃️ File extension of the document archive the framework's Export Document writes and Import Document reads
+ * (`EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`/`IMPORT_ARTIFACT_DOCUMENT_ACTION_ID`, shell-intercepted in `🏛️ShellHost`): the
+ * program's root envelope, its op log and every owned member (`DocumentArchivePack`, `encodeDocumentArchiveBytes`). */
 export const DOCUMENT_ARCHIVE_FILE_EXTENSION = ".semio-archive";
 
 /** 🗃️ Media type of an exported document archive. */
@@ -4925,8 +4943,6 @@ export function buildOsCommands(
    * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
    * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above. */
   hasOpenArtifactSurfaces = false,
-  /** 📤️ Whether a document program (not the Home or the space host) is focused — gates Export/Import Document. */
-  hasDocumentProgram = false,
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
@@ -5083,12 +5099,6 @@ export function buildOsCommands(
       ? [
           { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
           { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
-        ]
-      : []),
-    ...(hasDocumentProgram
-      ? [
-          { id: EXPORT_DOCUMENT_COMMAND_ID, label: shellLabel("ui.command.exportDocument"), category: "artifact", iconId: "export" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
-          { id: IMPORT_DOCUMENT_COMMAND_ID, label: shellLabel("ui.command.importDocument"), category: "artifact", iconId: "import" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
         ]
       : []),
   ];

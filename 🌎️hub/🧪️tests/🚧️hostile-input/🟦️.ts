@@ -103,6 +103,32 @@ describe("hub hostile-input oracle", () => {
     for (const message of transient.invalidMessages) expect(validate(message), JSON.stringify(message)).toBe(false);
   });
 
+  it("a batch the hub can never admit carries a valid HubBatchLimitRefusalMessageV1 for every cause, never the transient code, and no near miss is valid", () => {
+    const refusals = read(hubRoot, "🚧️refusal", "🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
+    const validate = compileDef(refusal, "HubBatchLimitRefusalMessageV1");
+    const transient = compileDef(refusal, "HubTransientApplyRefusalMessageV1");
+    expect(refusals.batchLimitAnswer.code).toBe(refusal.$defs.HubBatchLimitRefusalCodeV1.const);
+    expect(refusals.batchLimitAnswer.code).not.toBe(refusal.$defs.HubTransientApplyRefusalCodeV1.const);
+    expect(new Set(refusals.batchLimitCauses.map((cause: any) => cause.cause))).toEqual(new Set(["undeclared-batch", "db-limit-exceeded"]));
+    for (const cause of refusals.batchLimitCauses) {
+      const message = { level: refusals.batchLimitAnswer.level, code: refusals.batchLimitAnswer.code, message: cause.reason };
+      expect(validate(message), JSON.stringify(validate.errors)).toBe(true);
+      expect(transient(message)).toBe(false);
+    }
+    expect(refusals.batchLimitInvalidMessages.length).toBeGreaterThanOrEqual(4);
+    for (const message of refusals.batchLimitInvalidMessages) expect(validate(message), JSON.stringify(message)).toBe(false);
+  });
+
+  it("a rate-limited request's body is a valid RateLimitRefusalV1 for every non-auth class, and no near miss is", () => {
+    const auth = read(hubRoot, "🔐️auth", "🧬️schema", "🔣️.json");
+    const refusals = read(hubRoot, "🔐️auth", "🧫️fixtures", "🚦️rate-limit-refusal-v1", "🔣️.json");
+    const validate = compileDef(auth, "RateLimitRefusalV1");
+    expect(new Set(refusals.valid.map((body: any) => body.class))).toEqual(new Set(auth.$defs.AuthRateLimitClassV1.enum.filter((name: string) => name !== "auth")));
+    for (const body of refusals.valid) expect(validate(body), JSON.stringify(validate.errors)).toBe(true);
+    expect(refusals.invalid.length).toBeGreaterThanOrEqual(6);
+    for (const body of refusals.invalid) expect(validate(body), JSON.stringify(body)).toBe(false);
+  });
+
   it("the fixture's oversized vector exceeds every declared body limit", () => {
     expect(fixture.oversizedBytes).toBeGreaterThan(2 * 1024 * 1024);
     expect(fixture.hostilePathSegments.some((segment: string) => segment.length > 1024)).toBe(true);

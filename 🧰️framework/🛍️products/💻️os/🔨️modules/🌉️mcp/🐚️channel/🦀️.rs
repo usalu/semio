@@ -224,6 +224,14 @@ impl SessionChannelBinding {
         Self { bridge, decided: Mutex::new(None) }
     }
 
+    /// 🤖️ The binding for `principal`'s artifact verbs. A delegated agent is its own hub participant: its edits run on
+    /// its own hub-bound guests under its agent principal, never through the human's attached shell — that route would
+    /// author them as the human, and would fail whenever the human has not opened the document. The attached shell still
+    /// carries approvals, conversation and UI verbs (measured on the live user path, ticket 26/09/23, G12 session 14c).
+    pub fn for_principal(principal: &crate::policy::AgentPrincipal, bridge: Option<BridgeSlot>) -> Self {
+        Self::new(if principal.delegated_by.is_some() { None } else { bridge })
+    }
+
     /// 🔎️ The shell connection this session routes through, when one is live AND declared the
     /// relay. A shell that never claimed `relayAppCommands` is a shell that cannot answer an
     /// `AppCommand`, so it is not a candidate.
@@ -260,6 +268,11 @@ impl SessionChannelBinding {
 /// `ui_focus`'s 4 s because this lane carries real mutations through a real plugin guest turn — but
 /// bounded, because a shell that stops answering must not hang a tool call forever.
 pub const SHELL_APP_COMMAND_TIMEOUT_MS: u64 = 60_000;
+/// ⏳️ How long a command waits for the attached shell to publish an open instance of its plugin before it is refused
+/// by name. A shell that just landed in a space is still opening the space's document when an agent's first edit
+/// arrives — measured on the live user path (de, 7800 p24): the agent's `addBlock` 5 s after the landing found only
+/// the space home, the note's instance followed moments later (ticket 26/09/23, G12 session 14c).
+pub const SHELL_INSTANCE_WAIT_MS: u64 = 10_000;
 const SHELL_APP_COMMAND_POLL_INTERVAL_MS: u64 = 10;
 
 static SHELL_APP_COMMAND_SEQ: AtomicU64 = AtomicU64::new(1);
@@ -291,11 +304,19 @@ pub struct ShellArtifactChannel {
     /// with a spawned editor: `the attached shell has 3 open instances` (ticket 26/09/18 S6 §5.4).
     plugin: Option<String>,
     timeout: Duration,
+    instance_wait: Duration,
+}
+
+/// 🎯️ One look at the shell's published instances: bound, not published yet (worth waiting for), or refused.
+enum InstanceResolution {
+    Bound(String),
+    Pending(Fault),
+    Refused(Fault),
 }
 
 impl ShellArtifactChannel {
     pub fn new(binding: Arc<SessionChannelBinding>, catalog: Arc<crate::catalog::Catalog>) -> Self {
-        Self { binding, catalog, bound: Mutex::new(HashMap::new()), plugin: None, timeout: Duration::from_millis(SHELL_APP_COMMAND_TIMEOUT_MS) }
+        Self { binding, catalog, bound: Mutex::new(HashMap::new()), plugin: None, timeout: Duration::from_millis(SHELL_APP_COMMAND_TIMEOUT_MS), instance_wait: Duration::from_millis(SHELL_INSTANCE_WAIT_MS) }
     }
 
     /// 🎯️ Pins the plugin whose artifact this channel drives, so a capability-less command resolves
@@ -320,6 +341,12 @@ impl ShellArtifactChannel {
         self
     }
 
+    #[must_use]
+    pub fn with_instance_wait(mut self, instance_wait: Duration) -> Self {
+        self.instance_wait = instance_wait;
+        self
+    }
+
     /// 🔌️ The plugin id that owns `capability_id`, per the compiled catalog — the same resolution
     /// `RoutingArtifactChannel` performs, so the two channels can never disagree about ownership.
     fn owning_plugin(&self, capability_id: &str) -> Option<String> {
@@ -336,31 +363,45 @@ impl ShellArtifactChannel {
         }
     }
 
-    /// 🎯️ Resolves the shell-side instance id this exchange addresses, and remembers it.
+    /// 🎯️ Resolves the shell-side instance id this exchange addresses, and remembers it — waiting up to
+    /// [`SHELL_INSTANCE_WAIT_MS`] for the shell to publish an instance of the command's plugin, then refusing by name.
     ///
     /// 🎯️ ONE open program of the artifact's own plugin is the artifact: bind it. Several is
     /// genuinely ambiguous, and an ambiguous handle is refused BY NAME rather than resolved
     /// silently — picking one would edit a document the agent never named.
     fn resolve_instance_id(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance: u32, command: &AppCommand) -> Result<String, Fault> {
+        let deadline = Instant::now() + self.instance_wait;
+        loop {
+            match self.resolve_published_instance(handle, connection, instance, command) {
+                InstanceResolution::Bound(instance_id) => return Ok(instance_id),
+                InstanceResolution::Refused(fault) => return Err(fault),
+                InstanceResolution::Pending(fault) if Instant::now() >= deadline => return Err(fault),
+                InstanceResolution::Pending(_) => std::thread::sleep(Duration::from_millis(SHELL_APP_COMMAND_POLL_INTERVAL_MS)),
+            }
+        }
+    }
+
+    fn resolve_published_instance(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance: u32, command: &AppCommand) -> InstanceResolution {
+        let waited = self.instance_wait.as_millis();
         let entries = handle.last_instances(connection).unwrap_or_default();
         if entries.is_empty() {
-            return Err(fault("plugin.unavailable", "the attached shell has published no open plugin instances yet — open an artifact in the shell (or wait for its first `Instances` frame) before driving it from an agent"));
+            return InstanceResolution::Pending(fault("plugin.unavailable", format!("the attached shell has published no open plugin instances within {waited}ms — open an artifact in the shell before driving it from an agent")));
         }
         if let Some(capability_id) = Self::capability_of(command) {
             if let Some(plugin_id) = self.owning_plugin(capability_id) {
                 if let Some(entry) = entries.iter().find(|entry| entry.plugin_id == plugin_id) {
                     self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, entry.instance_id.clone());
-                    return Ok(entry.instance_id.clone());
+                    return InstanceResolution::Bound(entry.instance_id.clone());
                 }
-                return Err(fault(
+                return InstanceResolution::Pending(fault(
                     "plugin.unavailable",
-                    format!("capability `{capability_id}` is owned by plugin `{plugin_id}`, which has no open instance in the attached shell — open one there first (the shell reports {} open instance(s))", entries.len()),
+                    format!("capability `{capability_id}` is owned by plugin `{plugin_id}`, which has no open instance in the attached shell within {waited}ms — open one there first (the shell reports {} open instance(s))", entries.len()),
                 ));
             }
         }
         if let Some(existing) = self.bound.lock().expect("shell channel instance binding lock poisoned").get(&instance) {
             if entries.iter().any(|entry| &entry.instance_id == existing) {
-                return Ok(existing.clone());
+                return InstanceResolution::Bound(existing.clone());
             }
         }
         if let Some(plugin_id) = self.plugin.as_deref() {
@@ -368,26 +409,26 @@ impl ShellArtifactChannel {
             if owned.len() == 1 {
                 let only = owned[0].instance_id.clone();
                 self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, only.clone());
-                return Ok(only);
+                return InstanceResolution::Bound(only);
             }
             if owned.len() > 1 {
                 let candidates = owned.iter().map(|entry| entry.artifact_ref.clone()).collect::<Vec<_>>().join(", ");
-                return Err(fault(
+                return InstanceResolution::Refused(fault(
                     "plugin.unavailable",
                     format!("this artifact handle names plugin `{plugin_id}`, which has {} open instances in the attached shell — name one by preparing an action against it (candidates: {candidates})", owned.len()),
                 ));
             }
-            return Err(fault(
+            return InstanceResolution::Pending(fault(
                 "plugin.unavailable",
-                format!("this artifact handle names plugin `{plugin_id}`, which has no open instance in the attached shell — open one there first (the shell reports {} open instance(s))", entries.len()),
+                format!("this artifact handle names plugin `{plugin_id}`, which has no open instance in the attached shell within {waited}ms — open one there first (the shell reports {} open instance(s))", entries.len()),
             ));
         }
         if entries.len() == 1 {
             let only = entries[0].instance_id.clone();
             self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, only.clone());
-            return Ok(only);
+            return InstanceResolution::Bound(only);
         }
-        Err(fault(
+        InstanceResolution::Refused(fault(
             "plugin.unavailable",
             format!("this command carries no capability to resolve an instance from and the attached shell has {} open instances — prepare an action against the artifact first so the route binds", entries.len()),
         ))

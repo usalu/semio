@@ -133,6 +133,9 @@ def rewrite_calls(rel, name, index, mode, expect_other=0, wrap_other=False):
 value = text_of("🧰️framework/🔨️modules/🌱️value/🦀️.rs")
 if "macro_rules! dsl_value" not in value:
     raise SystemExit("phase A (dsl-value.py) is not in this tree — apply it first")
+if "optional_json_to_dsl" not in text_of("🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs"):
+    print("nothing to do (applied): `optional_json_to_dsl` is gone (B2 writes all-or-nothing)")
+    sys.exit(0)
 
 # 🌉️ The bridge itself.
 exact("🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs", """/// 🌉️ Bridges staged JSON action args into the owned DSL boundary.
@@ -141,6 +144,8 @@ pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue>
 }
 
 """, "")
+exact("🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs", "use dsl::DslValue;\n", "")
+exact("🧰️framework/📦️packages/🦀️rust/🦀️.rs", "pub use action_bus::{\n    optional_json_to_dsl, ActionBus,", "pub use action_bus::{\n    ActionBus,")
 
 # 🔌️ Plugin SDK: region note, declared-verb probe, world-3d measure closures.
 SDK = OS + "🔌️plugin/🦀️.rs"
@@ -153,8 +158,8 @@ exact(SDK, """    // 🎯️ Shared ~30x hand-rolled `fn x_action(action: &str, 
 """)
 exact(SDK, "let example = semio_framework::optional_json_to_dsl(examples[\"verbs\"].get(&action.id).cloned()).unwrap_or(DslValue::Object(Vec::new()));",
       "let example = examples[\"verbs\"].get(&action.id).map(DslValue::from).unwrap_or(DslValue::Object(Vec::new()));")
-exact(SDK, "is_de: bool, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {", "is_de: bool, action: impl Fn(&str, Option<DslValue>) -> ActionDescriptor) -> WindowMeasure {")
-exact(SDK, "p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {", "p: &WorldProjectionConfig, action: impl Fn(&str, Option<DslValue>) -> ActionDescriptor) -> WindowMeasure {")
+exact(SDK, "is_de: bool, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {", f"is_de: bool, action: impl Fn(&str, Option<{DV}>) -> ActionDescriptor) -> WindowMeasure {{")
+exact(SDK, "p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {", f"p: &WorldProjectionConfig, action: impl Fn(&str, Option<{DV}>) -> ActionDescriptor) -> WindowMeasure {{")
 exact(SDK, 'action("setProjection", Some(json!({ "field": field })))', f'action("setProjection", Some({MAC}({{ "field": field }})))')
 exact(SDK, 'action("setProjectionParam", Some(json!({ "param": param })))', f'action("setProjectionParam", Some({MAC}({{ "param": param }})))')
 HOST_UNIT = OS + "🔌️plugin/🧪️tests/🔬️world3d-host-unit/🦀️.rs"
@@ -393,8 +398,34 @@ BOUNDARY = [
 for rel, old, new, count in BOUNDARY:
     exact(rel, old, new, count)
 
+# 🦀️ New hunks (s14c, first compile of B2): serde `Value`s that reach a `dsl_value!` become DslValue where they are built.
+WORLD = OS + "♾️infinite/🌍️world/🦀️.rs"
+exact(WORLD, '                            "scale": preview.scale,\n', '                            "scale": preview.scale.as_ref().map(semio_framework::DslValue::from),\n')
+exact(WORLD, "    let targets: Vec<serde_json::Value> = hit\n", "    let targets: Vec<semio_framework::DslValue> = hit\n")
+exact(WORLD, '        .map(|id| json!({ "granularity": instance_interaction_granularity_id(state, &id), "id": resolved_item_id(state, instance_interaction_id(state, &id)) }))\n',
+      '        .map(|id| semio_framework::dsl_value!({ "granularity": instance_interaction_granularity_id(state, &id), "id": resolved_item_id(state, instance_interaction_id(state, &id)) }))\n')
+exact(WORLD, "    let targets: Vec<serde_json::Value> = ids\n", "    let targets: Vec<semio_framework::DslValue> = ids\n")
+exact(WORLD, '.then(|| json!({ "granularity": granularity, "id": resolved_item_id(state, target_id) }))\n', '.then(|| semio_framework::dsl_value!({ "granularity": granularity, "id": resolved_item_id(state, target_id) }))\n')
+WORLD_TESTS = OS + "♾️infinite/🌍️world/🧪️tests/🔬️unit/🦀️.rs"
+exact(WORLD_TESTS, "action_args(json!(", "Some(semio_framework::dsl_value!(", 8)
+exact(RE + "🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs", 'let authors: Vec<Value> = self.identity.as_ref().map(|identity| vec![serde_json::json!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();',
+      'let authors: Vec<semio_framework::DslValue> = self.identity.as_ref().map(|identity| vec![semio_framework::dsl_value!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();')
+
+
+def owning_manifest(path):
+    directory = path.parent
+    while directory != ROOT and directory != directory.parent:
+        manifest = directory / "📦️packages/🦀️rust/Cargo.toml"
+        if manifest.exists():
+            return manifest.read_text(encoding="utf-8")
+        directory = directory.parent
+    return ""
+
+
 for path, text in edits.items():
-    if not re.search(r"(?<![A-Za-z0-9_])semio_framework::", path.read_text(encoding="utf-8")):
+    names_framework = re.search(r"(?<![A-Za-z0-9_])semio_framework::", path.read_text(encoding="utf-8"))
+    has_plugin_sdk = re.search(r'(?m)^semio-framework-plugin\b|package = "semio-framework-plugin"', owning_manifest(path))
+    if not names_framework and has_plugin_sdk:
         edits[path] = text.replace(MAC, "semio_framework_plugin::dsl_value!").replace(DV, "semio_framework_plugin::DslValue")
 for path in sorted(edits, key=str):
     print(("write " if WRITE else "dry-run ") + str(path.relative_to(ROOT)))

@@ -8,6 +8,7 @@ use std::sync::atomic::AtomicUsize;
 
 #[derive(Clone)]
 struct RecordingTransport {
+    faults: Arc<Mutex<VecDeque<TransportError>>>,
     responses: Arc<Mutex<VecDeque<HttpResponse>>>,
     requests: Arc<Mutex<Vec<(HttpMethod, String, bool)>>>,
 }
@@ -56,6 +57,9 @@ impl DirectoryTransport for RecordingTransport {
 
     async fn http(&self, _ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
         self.requests.lock().unwrap().push((method, url.to_string(), bearer.is_some()));
+        if let Some(fault) = self.faults.lock().unwrap().pop_front() {
+            return Err(fault);
+        }
         self.responses.lock().unwrap().pop_front().ok_or_else(|| TransportError::Io("fixture response exhausted".to_string()))
     }
 
@@ -101,6 +105,11 @@ fn fixture() -> serde_json::Value {
 }
 
 fn client_for(case: &serde_json::Value) -> (DirectoryClient<RecordingTransport>, Arc<Mutex<Vec<(HttpMethod, String, bool)>>>) {
+    faulted_client_for(case, Vec::new())
+}
+
+/// 💥️ [`client_for`] whose first requests fail with the injected transport `faults`, in order, before any response.
+fn faulted_client_for(case: &serde_json::Value, faults: Vec<TransportError>) -> (DirectoryClient<RecordingTransport>, Arc<Mutex<Vec<(HttpMethod, String, bool)>>>) {
     let responses = case["responses"]
         .as_array()
         .unwrap()
@@ -114,7 +123,7 @@ fn client_for(case: &serde_json::Value) -> (DirectoryClient<RecordingTransport>,
         })
         .collect();
     let requests = Arc::new(Mutex::new(Vec::new()));
-    let transport = RecordingTransport { responses: Arc::new(Mutex::new(responses)), requests: requests.clone() };
+    let transport = RecordingTransport { faults: Arc::new(Mutex::new(faults.into())), responses: Arc::new(Mutex::new(responses)), requests: requests.clone() };
     let client = DirectoryClient::new(transport, "http://hub.invalid");
     (client, requests)
 }
@@ -181,6 +190,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     binding.install_snapshot_for_test(snapshot.clone());
     let requests = Arc::new(Mutex::new(Vec::new()));
     let transport = RecordingTransport {
+        faults: Arc::default(),
         responses: Arc::new(Mutex::new(VecDeque::from([HttpResponse { status: 200, body: semio_framework_os_kernel::os_pack::json::to_json_string(&manifest).into_bytes() }, HttpResponse { status: 200, body: descriptor_bytes }]))),
         requests: requests.clone(),
     };
@@ -370,6 +380,47 @@ fn authenticated_hub_workspace_fixed_caps_and_scoped_uri_laws() {
     assert!(bounded_diagnostic(&"é".repeat(HUB_BINDING_DIAGNOSTIC_MAX_BYTES)).len() <= HUB_BINDING_DIAGNOSTIC_MAX_BYTES);
     assert_eq!(validate_document_count(HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS as u32), Ok(()));
     assert_eq!(validate_document_count(HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS + 1, (HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS + 1) as u32), Err(HubBindingError::CapacityExceeded));
+}
+
+/// 🔌️ A hub-unavailable refusal keeps its cause typed and bilingual (shared fixture `🔣️hub-unavailable-refusal.json`):
+/// a transport fault names its own detail (an exhausted byte budget, a refused connection) instead of the bare word
+/// "transport" the semio MCP answered while its gateway was wedged (ticket 26/09/23, session 14b).
+#[test]
+fn a_hub_unavailable_refusal_names_its_typed_cause_in_english_and_german() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️hub-unavailable-refusal.json")).unwrap();
+    assert_eq!(corpus["detailMaxChars"], HUB_UNAVAILABLE_DETAIL_MAX_CHARS);
+    for case in corpus["cases"].as_array().unwrap() {
+        let fault = &case["fault"];
+        let error = match fault["kind"].as_str().unwrap() {
+            "transport" => DirectoryClientError::Transport(TransportError::Io(fault["io"].as_str().unwrap().to_string())),
+            "http" => DirectoryClientError::Http { status: u16::try_from(fault["status"].as_u64().unwrap()).unwrap(), body: fault["body"].as_str().unwrap().to_string() },
+            "decode" => DirectoryClientError::Decode(fault["decode"].as_str().unwrap().to_string()),
+            other => panic!("unknown fault kind {other}"),
+        };
+        assert_eq!(serde_json::to_value(binding_error_to_gateway(map_client_error(error))).unwrap(), case["expected"], "{}", case["id"]);
+    }
+}
+
+/// 🔁️ An injected transport fault leaves the binding refreshing (never revoked) with its own cause as the last fault,
+/// and the next refresh over a healthy transport binds it again: a transient transport failure is recoverable, never
+/// a wedge (ticket 26/09/23, session 14b).
+#[tokio::test]
+async fn a_transport_fault_keeps_its_cause_and_the_next_refresh_recovers_the_binding() {
+    let contract = fixture();
+    let exhausted = "package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget";
+    let (client, requests) = faulted_client_for(&contract["cases"]["memberReady"], vec![TransportError::Io(exhausted.to_string())]);
+    let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
+    let fault = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap_err();
+    assert_eq!(fault, HubBindingError::Unavailable(HubUnavailableCause::Transport { detail: exhausted.to_string() }));
+    assert!(matches!(binding.state(), HubRemoteBindingState::Refreshing), "a transport fault never revokes the binding");
+    let refusal = binding.ready_snapshot(1_000).unwrap_err();
+    assert!(refusal.retryable);
+    assert!(refusal.details["lastFault"].as_str().is_some_and(|last| last.contains(exhausted)), "the refusal names the fault: {:?}", refusal.details);
+    let snapshot = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.expect("the next refresh over a healthy transport binds again");
+    assert_eq!(snapshot.authenticated_user_id, "user-a");
+    assert!(binding.ready_snapshot(1_000).is_ok());
+    assert_eq!(binding.diagnostic(), None);
+    assert_eq!(requests.lock().unwrap().len(), 3, "one faulted request, then the session and the space page");
 }
 
 #[test]

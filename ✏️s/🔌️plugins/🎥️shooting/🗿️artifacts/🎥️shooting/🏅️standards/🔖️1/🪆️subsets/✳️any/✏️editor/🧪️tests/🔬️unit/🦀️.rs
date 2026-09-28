@@ -221,17 +221,17 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         bounded_ids: bounded_ids.clone(),
         host_only_ids: host_only_ids.clone(),
     };
-    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 38, bounded: 37, resumable: 1, migrated: 37, fail_closed: 1, unique: true, route_ids: command_ids, bounded_ids, host_only_ids });
+    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 37, bounded: 36, resumable: 1, migrated: 36, fail_closed: 1, unique: true, route_ids: command_ids, bounded_ids, host_only_ids });
     assert_eq!(subject, oracle);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-    let expected = ["importSnapshotJson", "setActiveExample", "resetFixture", "worldPointerDown", "worldPointerMove", "saveDownload", "loadRequest", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+    let expected = ["importSnapshotJson", "setActiveExample", "resetFixture", "worldPointerDown", "worldPointerMove", "saveDownload", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(SerdeJsonShootingRetainedCatalogOracle.summarize(fixture).host_only_ids, expected);
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
-    let wrong_tool = fixture.replacen("\"loadRequest\"", "\"forgedRequest\"", 1);
+    let wrong_tool = fixture.replacen("\"importAssetRequest\"", "\"forgedRequest\"", 1);
     assert_ne!(SerdeJsonShootingRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
     assert_ne!(SerdeJsonShootingRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
 }
@@ -248,7 +248,7 @@ async fn command_ids_are_unique_across_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 37, "every ShootingCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 36, "every ShootingCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -295,7 +295,6 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
         ShootingCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
         ShootingCommand::WorldPointerMove(world_pointer_move::WorldPointerMove {}),
         ShootingCommand::SaveDownload(save_download::SaveDownload {}),
-        ShootingCommand::LoadRequest(load_request::LoadRequest {}),
         ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {}),
         ShootingCommand::ExportActiveShot(export_active_shot::ExportActiveShot {}),
         ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}),
@@ -399,7 +398,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
     let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
     let scoped: Vec<&str> = scene.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
-    for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
+    for command in ["importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
         assert!(
             definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).any(|action| action.id == command),
             "registry declares {command}"
@@ -578,11 +577,6 @@ async fn shooting_photo_media_exports_a_raster_2d_image() {
 #[semio_framework_async_macros::async_test]
 async fn export_import_and_download_operations() {
     let mut app = shooting_app().await;
-    let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {})).await;
-    match &result.requested_effects[0] {
-        Effect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
-        other => panic!("expected RequestFileOpen, got {other:?}"),
-    }
     let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {})).await;
     match &result.requested_effects[0] {
         Effect::DownloadMediaExport { filename, data, .. } => {

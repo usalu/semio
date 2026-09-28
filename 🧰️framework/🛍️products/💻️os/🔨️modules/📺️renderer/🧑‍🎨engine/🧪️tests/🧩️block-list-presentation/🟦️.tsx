@@ -19,7 +19,7 @@ describe("BlockList presentation parity", () => {
         blockList: { stepsJson: JSON.stringify(fixture.steps), paletteJson: "[]", domainId: "fields", selectedId: "load" },
       };
       const view = render(<UiDriverProvider driver={DEFAULT_UI_DRIVER}><BlockListHost node={node as never} onAction={onAction} /></UiDriverProvider>);
-      const button = screen.getByRole("button", { name: selection.label, exact: true });
+      const button = screen.getByRole("button", { name: selection.label });
       expect(button.getAttribute("aria-pressed")).toBe(selection.target.id === "load" ? "true" : "false");
       fireEvent.click(button);
       expect(onAction).toHaveBeenCalledExactlyOnceWith({
@@ -69,7 +69,7 @@ describe("BlockList presentation parity", () => {
         fireEvent.click(screen.getByRole("button", { name: locale.addStep }));
         expect(onAction).toHaveBeenNthCalledWith(4, { controllerId: node.controllerId, action: "addStep", args: fixture.actions[0].args });
         for (const deletion of fixture.deletionCases) {
-          fireEvent.click(screen.getByRole("button", { name: deletion.labels[locale.locale], exact: true }));
+          fireEvent.click(screen.getByRole("button", { name: deletion.labels[locale.locale] }));
           expect(onAction).toHaveBeenLastCalledWith({ controllerId: node.controllerId, action: deletion.action, args: deletion.args });
         }
         view.unmount();

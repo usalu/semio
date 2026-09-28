@@ -33,7 +33,7 @@ pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Window
                 label: Some(labels.move_flag.into()),
                 pressed: runtime.transform_move,
                 text: None,
-                on_change: puzzle2d_action("setTransformGumballFlag", Some(json!({ "flag": "move" }))),
+                on_change: puzzle2d_action("setTransformGumballFlag", Some(semio_framework_plugin::dsl_value!({ "flag": "move" }))),
             },
             WindowMeasure::Toggle {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-transform-rotate"),
@@ -41,7 +41,7 @@ pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Window
                 label: Some(labels.rotate_flag.into()),
                 pressed: runtime.transform_rotate,
                 text: None,
-                on_change: puzzle2d_action("setTransformGumballFlag", Some(json!({ "flag": "rotate" }))),
+                on_change: puzzle2d_action("setTransformGumballFlag", Some(semio_framework_plugin::dsl_value!({ "flag": "rotate" }))),
             },
         ],
     }

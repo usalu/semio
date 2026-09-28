@@ -22,7 +22,7 @@ pub fn engagement_abort(ctx: &mut Puzzle5dActionCtx<'_>, _args: Option<&Value>) 
             ctx.effects.push(Effect::DispatchAction {
                 req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
                 action: TOOL_RUN_ABORT_ACTION_ID.into(),
-                args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation }))),
+                args: Some(semio_framework::dsl_value!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation })),
                 delay_ms: 0,
             });
         }

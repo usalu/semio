@@ -142,6 +142,33 @@
           "maxLength": 1024
         }
       }
+    },
+    "HubBatchLimitRefusalCodeV1": {
+      "description": "The `code` of the one `MutationMessage` a hub puts in a document batch's `ApplyOutcome::Rejected.messages` when the batch exceeds what the document backbone declares legal (`DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`, judged by the wire's own exact decoder) or what one database operation can ever hold. PERMANENT: nothing was applied and the same batch can never be admitted, so the client never resends it unchanged (it splits or rolls it back). A transient refusal carries `HubTransientApplyRefusalCodeV1` instead, never both.",
+      "const": "hub.batch-limit"
+    },
+    "HubBatchLimitRefusalMessageV1": {
+      "description": "The batch-limit `MutationMessage` (its `ToValue` wire object): level `error`, the declared code, and the limit the batch exceeded; never a target or an operation index, since the whole batch was refused before any operation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "level": {
+          "const": "error"
+        },
+        "code": {
+          "$ref": "#/$defs/HubBatchLimitRefusalCodeV1"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
     }
   }
 }

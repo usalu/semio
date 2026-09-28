@@ -30,6 +30,17 @@ type CameraPose = { readonly position: Vector3Tuple; readonly target: Vector3Tup
 type Dispatched = { readonly controllerId: string; readonly action: string; readonly args: Record<string, unknown> };
 type Gesture = (typeof fixture)["gestures"][number];
 
+/** 📐️ A fixture camera array as the exact 3-tuple a canvas reports. */
+function vector3(values: readonly number[]): Vector3Tuple {
+  if (values.length !== 3) throw new Error(`fixture vector has ${values.length} components, expected 3`);
+  return [values[0]!, values[1]!, values[2]!];
+}
+
+/** 🧭️ A fixture camera as the pose a real gizmo snap reports, carrying the projection spec it resolved to. */
+function gizmoPose(camera: { readonly position: readonly number[]; readonly target: readonly number[]; readonly zoom: number }, projectionSpec: WorldProjectionSpec): CameraPose & { projectionSpec: WorldProjectionSpec } {
+  return { ...camera, position: vector3(camera.position), target: vector3(camera.target), projectionSpec };
+}
+
 /** 🎛️ The two canvas-owned callbacks a real `WorldCanvas`/`WorldOrbitGated` would invoke — captured on
  * render so a test can play a background click or a completed orbit without a WebGL context. */
 const seams: { resetCamera: (() => void) | null; onPointerMissed: ((event: MouseEvent) => void) | null; onCamera: ((camera: CameraPose) => void) | null; onGizmo: ((camera: CameraPose & { projectionSpec: WorldProjectionSpec }) => void) | null; onPendingProjectionClear: (() => void) | null; externalPendingProjection: WorldProjectionSpec | null; projectionSpec: WorldProjectionSpec | null; rigState: (CameraPose & { readonly fov: number; readonly projection: string; readonly projectionSpec?: WorldProjectionSpec }) | null } = { resetCamera: null, onPointerMissed: null, onCamera: null, onGizmo: null, onPendingProjectionClear: null, externalPendingProjection: null, projectionSpec: null, rigState: null };
@@ -171,7 +182,7 @@ export function testWorld3dInteraction(): void {
         expect(onTitle.mock.calls).toEqual([]);
         expect(onIcon.mock.calls).toEqual([[pane.id, pane.projectionIcon]]);
         expect(seams.onGizmo).not.toBeNull();
-        act(() => seams.onGizmo?.({ ...fixture.scene.camera, projectionSpec: pane.initialProjection as WorldProjectionSpec }));
+        act(() => seams.onGizmo?.(gizmoPose(fixture.scene.camera, pane.initialProjection as WorldProjectionSpec)));
         expect(onTitle.mock.calls).toEqual([[pane.id, pane.projectionTitle]]);
       } finally {
         clearPendingWorldProjection(pane.id);
@@ -186,7 +197,7 @@ export function testWorld3dInteraction(): void {
       try {
         const first = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
         expect(seams.projectionSpec).toEqual(retained.initialProjection);
-        act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+        act(() => seams.onGizmo?.(gizmoPose(retained.selectedCamera, retained.selectedCamera.projectionSpec as WorldProjectionSpec)));
         expect(seams.projectionSpec).toEqual(retained.selectedCamera.projectionSpec);
         expect(seams.rigState).toMatchObject(retained.selectedCamera);
         first.unmount();
@@ -221,7 +232,7 @@ export function testWorld3dInteraction(): void {
 
         const remounted = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
         expect(seams.externalPendingProjection).toEqual(retained.selectedCamera.projectionSpec);
-        act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+        act(() => seams.onGizmo?.(gizmoPose(retained.selectedCamera, retained.selectedCamera.projectionSpec as WorldProjectionSpec)));
         expect(store.read(retained.windowId)?.pendingProjectionSpec).toBeNull();
         remounted.unmount();
 
@@ -240,7 +251,7 @@ export function testWorld3dInteraction(): void {
       const spawnedOwner = `${retained.owner}:spawned`;
       const spawned = registry.scope(spawnedOwner);
       const first = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: spawned });
-      act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+      act(() => seams.onGizmo?.(gizmoPose(retained.selectedCamera, retained.selectedCamera.projectionSpec as WorldProjectionSpec)));
       first.unmount();
 
       registry.scope(primaryOwner);

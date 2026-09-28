@@ -132,6 +132,8 @@ import {
   SET_SELECTION_MODE_ACTION_ID,
   SELECT_ALL_ACTION_ID,
   type ShellBrand,
+  EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+  IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
   START_INTRODUCTION_ACTION_ID,
   START_TUTORIAL_ACTION_ID,
   type StoragePort,
@@ -221,7 +223,7 @@ import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
-import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
+import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, createProgramHistoryStoreV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputAppliedV1, inputAwaitsHubIdentityV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
@@ -362,6 +364,7 @@ import {
   ShellScopeProvider,
   singleTreeLeaf,
   staticTreePanelDefinition,
+  liveTreePanelDefinition,
   TextSelectionContextMenuHost,
   type ThemeAppearanceName,
   type ThemePaletteGroup,
@@ -500,8 +503,6 @@ import {
   isShellOwnedCommandId,
   buildOsCommands,
   OPEN_HUB_COMMAND_ID,
-  EXPORT_DOCUMENT_COMMAND_ID,
-  IMPORT_DOCUMENT_COMMAND_ID,
   DOCUMENT_ARCHIVE_FILE_EXTENSION,
   DOCUMENT_ARCHIVE_MEDIA_TYPE,
   documentArchiveFileNameV1,
@@ -729,7 +730,7 @@ import {
 
 
 import { HubConnectionIndicator, SyncAttachCard, syncAttachTargetV1, type HubLinkV1, type HubSessionPresenceV1, type SyncAttachTargetV1 } from "../🔄️ShellSync/🟦️.tsx";
-import { useAgentBridge, type AgentAppCommandHandler } from "../🔗️AgentBridge/🟦️.tsx";
+import { agentBridgeOfferScopeFromDelegationsV1, useAgentBridge, type AgentAppCommandHandler, type AgentBridgeOfferScopeV1 } from "../🔗️AgentBridge/🟦️.tsx";
 import { shellAppFault, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
 import type { BridgeInstanceRef } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 import type { ReduceResult, ShellCommand } from "../../../../🖥️shell/🟦️.ts";
@@ -968,6 +969,19 @@ type ShellHistoryProjectionV1 = {
 /** 🧾️ What a program whose history has not been read yet projects — and what the History panel shows
  * for it, which is nothing rather than another program's ledger. */
 const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined };
+
+/** 📌️ Uncommitted-since-last-checkpoint count, derived purely from a projection's entries (no new wire field): every applied
+ * `mutation`-kind entry counts, reset to 0 the moment a `commitCheckpoint` (`kind: "history"`) entry is seen — mirrors
+ * `store::uncommitted_edit_ids`'s own "since the last Change" semantics closely enough for an auto-checkin heuristic
+ * (undo/redo of an already-committed edit is the one case this under/over-counts by one entry). */
+function shellUncommittedEditCountV1(entries: ShellHistoryProjectionV1["entries"]): number {
+  let pending = 0;
+  for (const entry of Object.values(entries).sort((left, right) => left.seq - right.seq)) {
+    if (entry.kind === "history" && entry.actionId === "commitCheckpoint") pending = 0;
+    else if (entry.kind === "mutation" && entry.applied !== false) pending += 1;
+  }
+  return pending;
+}
 
 /** 🏁️ The typed-operation id an admitting `InvocationResult` started, or `undefined` when the action
  * started none. `dispatch_typed_command_inner` (`🔌️plugin/🦀️.rs`) answers a started operation with
@@ -2112,6 +2126,8 @@ export type BuiltNodeStoreCacheV1 = {
   /** 🔎️ The store already minted for `key`, without offering a node — what a render reads for a body it does not own
    * (a spawned window's body is loaded outside render, {@link BuiltNodeStoreCacheV1.flushPendingReloads}). */
   readonly storeOf: (key: string) => UiDocumentStore | null;
+  /** 🧾️ The authored node `store` currently holds — set before a reload notifies, so a subscriber reads the new one. */
+  readonly nodeOf: (store: UiDocumentStore) => BuiltNode | null;
   readonly flushPendingReloads: () => void;
   readonly forceReload: (key: string, node: BuiltNode) => void;
   readonly pendingReloadKeys: () => readonly string[];
@@ -2119,6 +2135,7 @@ export type BuiltNodeStoreCacheV1 = {
 
 export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
   const stores = new Map<string, { node: BuiltNode; revision: number; readonly store: UiDocumentStore }>();
+  const byStore = new WeakMap<UiDocumentStore, { node: BuiltNode }>();
   const pending = new Map<string, BuiltNode>();
   return {
     storeFor: (key, node) => {
@@ -2126,7 +2143,9 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
       if (!existing) {
         const store = new UiDocumentStore(key);
         store.loadSnapshot(builtNodeToSnapshot(key, node));
-        stores.set(key, { node, revision: 0, store });
+        const entry = { node, revision: 0, store };
+        stores.set(key, entry);
+        byStore.set(store, entry);
         return store;
       }
       if (existing.node === node) pending.delete(key);
@@ -2134,13 +2153,14 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
       return existing.store;
     },
     storeOf: (key) => stores.get(key)?.store ?? null,
+    nodeOf: (store) => byStore.get(store)?.node ?? null,
     flushPendingReloads: () => {
       for (const [key, node] of pending) {
         const entry = stores.get(key);
         if (!entry) continue;
         entry.revision += 1;
-        entry.store.loadSnapshot(builtNodeToSnapshot(key, node, entry.revision));
         entry.node = node;
+        entry.store.loadSnapshot(builtNodeToSnapshot(key, node, entry.revision));
       }
       pending.clear();
     },
@@ -2159,6 +2179,16 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
 export function publishBuiltNodesV1(cache: BuiltNodeStoreCacheV1, entries: readonly (readonly [string, BuiltNode])[]): void {
   for (const [key, node] of entries) cache.storeFor(key, node);
   cache.flushPendingReloads();
+}
+
+/** 🗂️ Publishes panel bodies into their stores (`panel:<record key>`) outside render and answers each key's store: a body
+ * the refresh did not re-serialize keeps its store's content, a panel with no store yet starts on the pending body. */
+export function publishPanelBodiesV1(cache: BuiltNodeStoreCacheV1, bodies: readonly (readonly [string, BuiltNode | undefined])[]): (readonly [string, UiDocumentStore])[] {
+  publishBuiltNodesV1(
+    cache,
+    bodies.flatMap(([key, node]) => (node !== undefined ? [[`panel:${key}`, node] as const] : cache.storeOf(`panel:${key}`) === null ? [[`panel:${key}`, pendingPanelUiNode()] as const] : [])),
+  );
+  return bodies.map(([key]) => [key, cache.storeOf(`panel:${key}`)!] as const);
 }
 //#endregion 🔖️BuiltNodeStoreCache
 
@@ -2231,8 +2261,9 @@ function FrameworkOsShellInner({
    * A spawned program is a member of this session with a document and a cursor of its own, and the
    * cursor rule below is what decides whether a patch is a step forward — taken against the wrong
    * program it silently drops every patch the other one sends (`🪟️spawned-program`'s
-   * {@link programHistoryProjectionsAfterPatchV1} carries the measurement). */
-  const [historyProjectionByProgram, setHistoryProjectionByProgram] = useState<ProgramHistoryProjectionsV1<ShellHistoryProjectionV1>>({});
+   * {@link programHistoryProjectionsAfterPatchV1} carries the measurement). Kept in a store, not in render state: the
+   * entries move on every keystroke and only their own readers follow them ({@link createProgramHistoryStoreV1}). */
+  const [historyStore] = useState(() => createProgramHistoryStoreV1<ShellHistoryProjectionV1>());
   const historyOrderRef = useRef(0);
   /** 🧾️ The order at which each program's projection last moved — what a full snapshot's own
    * staleness guard compares against. Shell-wide it was the wrong question the moment two programs
@@ -2265,7 +2296,7 @@ function FrameworkOsShellInner({
     const key = programHistoryKeyV1(owner ?? sessionRef.current);
     if (key === "") return;
     let applied = false;
-    setHistoryProjectionByProgram((projections) => {
+    historyStore.update((projections) => {
       const next = programHistoryProjectionsAfterPatchV1(
         projections,
         key,
@@ -2434,7 +2465,7 @@ function FrameworkOsShellInner({
     // used to produce (one `readHistory` guest round trip per dispatch).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHistoryPatch, session?.pluginId, session?.instanceId]);
-  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
+  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelBodyStoreByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
   const { spawnedWindowActivityByWindowId, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
@@ -2629,7 +2660,7 @@ function FrameworkOsShellInner({
   /** 🌲️ Per-tab `TreePanelConfig` reuse — see {@link PanelTreeConfigCacheV1}. Reset with the scheduler. */
   const panelTreeConfigCacheRef = useRef<PanelTreeConfigCacheV1>(new Map());
   /** 🪟️ Bumped by an OPEN toggle so the panel-tab memos re-run for it. A window report needs no bump:
-   * it changes the guest body, which arrives as a new `panelUiByKey` entry the memos already watch. */
+   * it changes the guest body, which the panel's own body store reloads in place. */
   const [treeWindowGeneration, setTreeWindowGeneration] = useState(0);
   if (!treeWindowSchedulerRef.current) {
     treeWindowSchedulerRef.current = createTreeWindowSchedulerV1({
@@ -2698,7 +2729,7 @@ function FrameworkOsShellInner({
     shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));
   }));
   //#region 🔖️BuiltNodeStores
-  /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey` already are
+  /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the way `windowUiByWindowId`/`panelBodyStoreByKey` are
    * (a spawned window's store, `spawned:<windowId>`, is the ONLY holder of its body) — one stable store instance per key, reloaded via
    * `loadSnapshot`/`builtNodeToSnapshot` whenever that key's authored `BuiltNode` reference actually
    * changes (the reducer's own `mergeRecordPreservingIdentity` already keeps an unchanged window's
@@ -2772,10 +2803,13 @@ function FrameworkOsShellInner({
    * identity published on `data-semio-artifact-id`, so what a browser can be asked about and what
    * the agent route hands out stay the same string once more than one program is open. */
   const agentBridgeInstances = agentBridgeCensus;
+  /** 🎯️ Who this shell is for the agent-bridge offer — assigned once the hub connection port exists below. */
+  const agentBridgeOfferScopeRef = useRef<(signal: AbortSignal) => Promise<AgentBridgeOfferScopeV1>>(async () => null);
   // 🤖️ Agent bridge: stays `disabled` (never throws, never blocks render) until a gateway URL+token
   // is discovered, so a shell with no agent attached behaves exactly as before.
   const agentBridge = useAgentBridge({
     shellSessionId: shellSessionIdRef.current,
+    offerScope: useCallback((signal: AbortSignal) => agentBridgeOfferScopeRef.current(signal), []),
     instances: agentBridgeInstances,
     onCommandApplied: useCallback((command: ShellCommand | null, result: ReduceResult | null) => {
       if (command && result?.ok) applyAgentShellCommandRef.current(command);
@@ -3056,6 +3090,14 @@ function FrameworkOsShellInner({
       }),
     [rememberHubSessionCapability],
   );
+  /** 🎯️ The scope this shell asks the agent-bridge supervisor with (ticket 26/09/23, G12 session 14c — scoped offers): its
+   * hub, the space it has open and the agents THIS human delegated there, read from the hub, which lists only the asking
+   * human's own. A hub-bound gateway's offer is then served to its own human's shell and to no other. */
+  agentBridgeOfferScopeRef.current = async (signal) => {
+    if (hubEnv === null || openSpaceId === null || hubSessionCapabilityRef.current === null) return null;
+    const hubOrigin = hubBootstrapOriginV1();
+    return agentBridgeOfferScopeFromDelegationsV1(hubOrigin, openSpaceId, await hubConnectionPort.listAgentDelegations(hubOrigin, openSpaceId, signal), Date.now());
+  };
   const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
   spaceAdministrationRef.current = spaceAdministration;
   const spaceAdministrationEpochRef = useRef(0);
@@ -3749,7 +3791,7 @@ function FrameworkOsShellInner({
         (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: typeof status.remote | null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote);
         dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: runtimeKey, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote } });
       } else if (event.kind === "presence") {
-        const peers = entry.scope === undefined ? [] : scopedPresencePeersV1(message, entry.scope);
+        const peers = entry.scope === undefined ? [] : scopedPresencePeersV1(message, entry.scope, entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null);
         setPresencePeersByRuntimeKey((current) => {
           if (current[runtimeKey] === peers) return current;
           return { ...current, [runtimeKey]: peers };
@@ -3984,31 +4026,25 @@ function FrameworkOsShellInner({
       // any prior state for the same id first).
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...identityConfig }) });
       // 📇️ terra-web-shellhost (finding 3) — event-driven wait for a previously-persisted identity's
-      // `documentArchiveReplaced`, raced against a 2s `AbortSignal.timeout` instead of an unconditional fixed
-      // `setTimeout`: a 404/no-file-yet folder read never emits a `documentArchiveReplaced` at all (see
-      // `pollFolderOnce`'s doc in `🏪️store/👷️worker/🟦️.ts`), so the timeout branch is still the only way
-      // a session with no persisted identity ever proceeds — but a REAL event now resolves as soon as
-      // it arrives instead of always paying the full 2s. `identityWaitAbort` folds into the same raced
-      // signal so an unmount tears the subscription down immediately (this effect's own cleanup below)
-      // rather than leaking a live listener/timer until the timeout fires on its own.
-      let cachedIdentity: Identity | null = null;
-      try {
-        cachedIdentity = await waitForEvent<Identity | null>(
-          (handler) => {
-            identitySnapshotResolverRef.current = handler;
-            return () => {
-              if (identitySnapshotResolverRef.current === handler) identitySnapshotResolverRef.current = null;
-            };
-          },
-          { signal: AbortSignal.any([identityWaitAbort.signal, AbortSignal.timeout(2000)]) },
-        );
-      } catch {
-        // 📇️ Either the 2s grace period elapsed (no persisted identity — proceed with `null`, same as
-        // the old fixed-timeout fallback) or the component unmounted mid-wait (`cancelled` below is
-        // what actually stops further work in that case).
-        cachedIdentity = null;
-      }
-      if (cancelled || identityClientInstanceIdRef.current !== clientInstanceId) return;
+      // `documentArchiveReplaced`, raced against a 2s `AbortSignal.timeout`: a 404/no-file-yet folder read
+      // never emits a `documentArchiveReplaced` at all (see `pollFolderOnce`'s doc in `🏪️store/👷️worker/🟦️.ts`).
+      // It runs BESIDE the hub's authority read below, never before it: awaited first, it held every first
+      // sign-in's identity — and with it the input funnel's identity gate — 2 s behind the hub's answer
+      // (ticket 26/09/23 S18 §14c). The record only decides what is written back: an unchanged identity is
+      // not rewritten unless the authority moved, and a returning human keeps the record's `issuedAtMs`.
+      // `identityWaitAbort` folds into the raced signal so an unmount tears the subscription down at once.
+      const storedIdentityRead = waitForEvent<Identity | null>(
+        (handler) => {
+          identitySnapshotResolverRef.current = handler;
+          return () => {
+            if (identitySnapshotResolverRef.current === handler) identitySnapshotResolverRef.current = null;
+          };
+        },
+        { signal: AbortSignal.any([identityWaitAbort.signal, AbortSignal.timeout(2000)]) },
+      ).catch(() => null);
+      const sameIdentity = (left: Identity | null, right: Identity): boolean => left !== null && left.userId === right.userId && left.email === right.email && left.displayName === right.displayName && left.hubBaseUrl === right.hubBaseUrl;
+      let shownIdentity: Identity | null = null;
+      let writtenIdentity: Identity | null = null;
       // 🎫️ Hands the credential-owning worker the human's own capability over a private port, then
       // reads the hub's authority back through it. A fresh channel per bootstrap is deliberate: the
       // worker retires every owner bound to a previous capability when a new one is installed, so
@@ -4030,17 +4066,23 @@ function FrameworkOsShellInner({
           if (authorityChanged) setVerifiedSessionAuthority(authority);
           setIdentityOffline(false);
           setHubSessionRefused(false);
-          const resolved: Identity = { userId: authority.userId, email: authority.email, displayName: authority.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.userId === authority.userId ? cachedIdentity.issuedAtMs : Date.now() };
+          const resolved: Identity = { userId: authority.userId, email: authority.email, displayName: authority.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: shownIdentity?.userId === authority.userId ? shownIdentity.issuedAtMs : Date.now() };
           shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
           setPluginRuntimeActor(shellActorIdRef.current);
-          const unchanged = cachedIdentity?.userId === resolved.userId && cachedIdentity.email === resolved.email && cachedIdentity.displayName === resolved.displayName && cachedIdentity.hubBaseUrl === resolved.hubBaseUrl;
-          if (unchanged && !authorityChanged) return;
+          if (sameIdentity(shownIdentity, resolved) && !authorityChanged) return;
+          shownIdentity = resolved;
           setIdentity(resolved);
-          const envelope = identityMutationEnvelope(shellActorIdRef.current, signIn(resolved), cachedIdentity);
-          cachedIdentity = resolved;
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
-          const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(resolved)), parent_spr: [], members: [] });
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(archive) } }) });
+          void storedIdentityRead.then((stored) => {
+            if (!ownerIsCurrent()) return;
+            const previous = writtenIdentity ?? stored;
+            if (sameIdentity(previous, resolved) && !authorityChanged) return;
+            const record: Identity = previous?.userId === resolved.userId ? { ...resolved, issuedAtMs: previous.issuedAtMs } : resolved;
+            const envelope = identityMutationEnvelope(shellActorIdRef.current, signIn(record), previous);
+            writtenIdentity = record;
+            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
+            const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(record)), parent_spr: [], members: [] });
+            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(archive) } }) });
+          });
         },
         onUnavailable: () => {
           if (!ownerIsCurrent()) return;
@@ -4142,6 +4184,8 @@ function FrameworkOsShellInner({
   // sharing the page with others must not fight them over `window.history`.
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", hostMode && scope.ownsPage);
   const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
+  /** 🧭️ The path the shell renders as not found — never the hub overlay route, which renders over the underlying session. */
+  const notFoundPath = shellRoute.kind === "notFound" && shellRoute.path !== SHELL_HUB_ROUTE ? shellRoute.path : null;
   const shellUriRef = useRef(shellUri);
   shellUriRef.current = shellUri;
   /** 🧭️ A navigation a human or a guest asks for always takes effect: a session-replacing route is invalidated, a new URI
@@ -4967,18 +5011,22 @@ function FrameworkOsShellInner({
   );
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], focusedProgram), [surfaceSessionFactories, focusedProgram?.pluginId, focusedProgram?.appId, focusedProgram?.instanceId]);
   const focusedApp = hostMode && activeSpawnedApp ? activeSpawnedApp : (session?.app ?? null);
-  /** 📤️ Whether the focused program holds a document of its own (not the Home landing, not the space host) — gates the
-   * framework's Export/Import Document. */
-  const documentProgramFocused = focusedApp !== null && focusedApp.id !== hostAppId && focusedApp.id !== landingAppId;
   const focusedSpawnedId = focusedProgram?.spawnedId ?? null;
-  const focusedPanelUiByKey = useMemo(() => programEntriesV1(panelUiByKey, focusedSpawnedId, spawnedIds), [panelUiByKey, focusedSpawnedId, spawnedIds]);
+  const focusedPanelBodyStores = useMemo(() => programEntriesV1(panelBodyStoreByKey, focusedSpawnedId, spawnedIds), [panelBodyStoreByKey, focusedSpawnedId, spawnedIds]);
+  /** ⏯️ The focused program's ToolRun panel body — the task feed and the reveal follow THIS store, not every panel body. */
+  const toolRunPanelStore = focusedPanelBodyStores[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID] ?? null;
+  const subscribeToolRunPanel = useCallback((listener: () => void) => toolRunPanelStore?.subscribeRevision(listener) ?? (() => undefined), [toolRunPanelStore]);
+  const toolRunPanelNode = useSyncExternalStore(subscribeToolRunPanel, () => (toolRunPanelStore === null ? null : builtNodeStoreCacheRef.current.nodeOf(toolRunPanelStore)), () => null) ?? undefined;
   const focusedToolMeasuresByToolId = useMemo(() => programEntriesV1(toolMeasuresByToolId, focusedSpawnedId, spawnedIds), [toolMeasuresByToolId, focusedSpawnedId, spawnedIds]);
   const focusedModeId = focusedSpawnedId !== null && focusedApp !== null ? (spawnedProgramViewStateV1<ViewModel>({}, focusedApp).activeModeId ?? focusedApp.id) : (session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "");
   /** 🧾️ The history the History panel, the undo/redo controls, the uncommitted-edit count and
    * `data-history-json` all read: the FOCUSED program's own, because that is the document the user
    * is editing. While a spawned editor owns the canvas the session's ledger is still kept — it is
    * just not what is shown — so coming back to it shows its own rows, not the editor's. */
-  const historyProjection = programHistoryProjectionV1(historyProjectionByProgram, programHistoryKeyV1(focusedProgram), EMPTY_SHELL_HISTORY_PROJECTION_V1);
+  const focusedHistoryKey = programHistoryKeyV1(focusedProgram);
+  const focusedHistoryV1 = useCallback(() => programHistoryProjectionV1(historyStore.get(), focusedHistoryKey, EMPTY_SHELL_HISTORY_PROJECTION_V1), [historyStore, focusedHistoryKey]);
+  const historyCanUndo = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().canUndo, () => false);
+  const historyCheckpointId = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().currentCheckpointId, () => undefined);
   /** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch
    * the projection incrementally from then on; without this first snapshot its ledger would start
    * empty even for a document that already carries entries (a re-opened artifact). */
@@ -5010,7 +5058,7 @@ function FrameworkOsShellInner({
    * the session's instance, which is exactly when a program appears or disappears. */
   useEffect(() => {
     const live = [programHistoryKeyV1(session), ...spawnedAppsRef.current.map((entry) => programHistoryKeyV1(entry))];
-    setHistoryProjectionByProgram((projections) => programHistoryProjectionsRetainedV1(projections, live));
+    historyStore.update((projections) => programHistoryProjectionsRetainedV1(projections, live));
     for (const key of [...historyOrderByProgramRef.current.keys()]) if (!live.includes(key)) historyOrderByProgramRef.current.delete(key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spawnedRosterKey, session?.pluginId, session?.instanceId]);
@@ -5920,18 +5968,11 @@ function FrameworkOsShellInner({
       // through `AppCatalogueContext` never re-renders on an unchanged catalogue.
       const freshAppCatalogue = (cache.get("catalogue")?.value as AppCatalogue | undefined) ?? EMPTY_APP_CATALOGUE;
       dispatch({ type: "SET_APP_CATALOGUE", value: (current) => preserveJsonIdentity(current, freshAppCatalogue) });
-      dispatch({
-        type: "SET_PANEL_UI_BY_KEY",
-        value: (current) => {
-          const entries = panelTabLeaves
-            .filter((tab) => tab.bodyKey)
-            .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const);
-          if (!replaceBodies) return mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, entries));
-          const next: Record<string, BuiltNode> = { ...current };
-          for (const [id, node] of entries) next[id] = node;
-          return next;
-        },
-      });
+      const panelStores = publishPanelBodiesV1(
+        builtNodeStoreCacheRef.current,
+        panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined] as const),
+      );
+      dispatch({ type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, panelStores)) });
       if (replaceBodies) forceReloadLiveUiStoresV1(cache);
       closeApplySpan();
       // 🖼️ React commit + paint: the state above is dispatched, not yet reconciled, so the cost of
@@ -6133,9 +6174,10 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)) });
       const panelBodies = programKeyedEntriesV1(
         spawned.id,
-        Object.fromEntries(panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined) ?? pendingPanelUiNode()] as const)),
+        Object.fromEntries(panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined] as const)),
       );
-      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(panelBodies))) });
+      const panelStores = publishPanelBodiesV1(builtNodeStoreCacheRef.current, Object.entries(panelBodies));
+      dispatch({ type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, panelStores)) });
       const toolMeasures = programKeyedEntriesV1(spawned.id, (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
       dispatch({ type: "SET_TOOL_MEASURES_BY_TOOL_ID", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(toolMeasures))) });
     },
@@ -6720,10 +6762,15 @@ function FrameworkOsShellInner({
           if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
-              // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
-              // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
-              // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }));
+              const task = documentTransferRef.current.trackDocumentTransfer(opened.map((file) => file.name).join(", "), baseSession.pluginId);
+              try {
+                await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }), task.signal, task.progress);
+              } catch (error) {
+                if (!task.signal.aborted) throw error;
+                documentTransferRef.current.notifyDocumentTransfer("import-cancelled", opened[0]!.name, "info");
+              } finally {
+                task.finish();
+              }
             }
           }
           continue;
@@ -7664,6 +7711,14 @@ function FrameworkOsShellInner({
         if (!isCurrentDialogOrigin(actionOrigin)) return refuse("owner-mismatch", "dialog origin is not current");
         const primaryActionOwner = captureEffectOwner(session, actionOrigin, entry.provenance.inputSeq);
 
+        if (action.action === EXPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
+          void documentTransferRef.current.exportDocumentArchive();
+          return applied();
+        }
+        if (action.action === IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
+          void documentTransferRef.current.importDocumentArchive();
+          return applied();
+        }
         // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
         // playback to the first step, never forwarded to the program.
         if (action.action === START_INTRODUCTION_ACTION_ID) {
@@ -7952,7 +8007,7 @@ function FrameworkOsShellInner({
             return document?.session.pluginId === targetSession.pluginId && document.session.instanceId === targetSession.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === targetSession.instanceId;
           });
           const remote = mounted.length === 1 ? mounted[0] : undefined;
-          const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+          const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyCanUndo, order: localHistoryOrderRef.current });
           if (route === "blocked") return refuse("dispatch-failed", "undo route blocked: nothing to undo");
           if (route === "remote") {
             const history = remote![1];
@@ -8191,7 +8246,7 @@ function FrameworkOsShellInner({
       hostApp,
       landingControllerId,
       hostCatalogueTabId,
-      historyProjection.canUndo,
+      historyCanUndo,
       ensureBackboneWorker,
       completeIntroductionInteraction,
       primaryPluginId,
@@ -9564,8 +9619,8 @@ function FrameworkOsShellInner({
     return null;
   }, [appLabelsOverlay, session?.app.actions, session?.app.commands, uiLocale, uiTerminology]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale, hasOpenArtifactSurfaces, documentProgramFocused),
-    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, hasOpenArtifactSurfaces, documentProgramFocused],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale, hasOpenArtifactSurfaces),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, hasOpenArtifactSurfaces],
   );
 
   /** 🧭️ Direct theme/appearance/locale/terminology/driver/layout setters below (settings panel, theme/driver
@@ -10153,7 +10208,7 @@ function FrameworkOsShellInner({
     const startedAt = installStartedAtRef.current;
     for (const pluginId of [...startedAt.keys()]) if (!installingPluginIds.includes(pluginId)) startedAt.delete(pluginId);
     for (const pluginId of installingPluginIds) if (!startedAt.has(pluginId)) startedAt.set(pluginId, Date.now());
-    const runs = toolRunPanelTasksV1(focusedPanelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
+    const runs = toolRunPanelTasksV1(toolRunPanelNode);
     const program = { pluginId: focusedProgram?.pluginId ?? "", spawnedId: focusedProgram?.spawnedId ?? "" };
     const runIds = new Set(runs.map((run) => taskManagerToolRunIdV1(program.spawnedId, run.run)));
     const runStartedAt = toolRunStartedAtRef.current;
@@ -10163,7 +10218,7 @@ function FrameworkOsShellInner({
     const toolRuns = toolRunTasksV1(runs.map((run) => ({ run: run.run, label: run.label, completed: run.completed, total: run.total, valueText: run.valueText, paused: run.pause === null })), program, runStartedAt);
     taskManagerShellTasksRef.current = [...installTasksV1(installingPluginIds, startedAt), ...toolCallTasksV1(agentBridge.conversation), ...toolRuns];
     for (const listener of [...taskManagerListenersRef.current]) listener();
-  }, [agentBridge.conversation, installingPluginIds, focusedPanelUiByKey, focusedProgram?.pluginId, focusedProgram?.spawnedId]);
+  }, [agentBridge.conversation, installingPluginIds, toolRunPanelNode, focusedProgram?.pluginId, focusedProgram?.spawnedId]);
   const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow sources={taskManagerSources} />), [taskManagerSources, uiLocale]);
 
   //#region 📤️DocumentTransfer
@@ -10173,6 +10228,29 @@ function FrameworkOsShellInner({
   };
   const notifyDocumentTransfer = (notice: DocumentTransferNoticeV1, file: string, kind: Severity): void => {
     showTransientNoticeRef.current(documentTransferNoticeTextV1(notice, file, uiLocaleRef.current), kind, documentTransferNoticeCodeV1(notice));
+  };
+  /** 🧵️ One file moving into a program as a cancellable Tasks-window task (`documentTransfer` lane): `progress` states
+   * `completed` of `total` units (`null` = open-ended), Cancel aborts `signal`, `finish` removes the row. */
+  const trackDocumentTransfer = (file: string, pluginId: string): { readonly signal: AbortSignal; readonly progress: (completed: number, total: number | null) => void; readonly finish: () => void } => {
+    const id = crypto.randomUUID();
+    const abort = new AbortController();
+    const update = (patch: Partial<TaskManagerDocumentTransferV1>): void => {
+      const entry = documentTransfersRef.current.get(id);
+      if (entry === undefined) return;
+      documentTransfersRef.current.set(id, { ...entry, transfer: { ...entry.transfer, ...patch } });
+      publishDocumentTransfers();
+    };
+    documentTransfersRef.current.set(id, { transfer: { id, file, pluginId, startedAtMs: Date.now(), progress: null, cancelling: false }, abort });
+    abort.signal.addEventListener("abort", () => update({ cancelling: true }), { once: true });
+    publishDocumentTransfers();
+    return {
+      signal: abort.signal,
+      progress: (completed, total) => update({ progress: { completed, total, text: `${completed}/${total ?? "?"}` } }),
+      finish: () => {
+        documentTransfersRef.current.delete(id);
+        publishDocumentTransfers();
+      },
+    };
   };
   /** 📤️ The focused document program, or `null` when the Home or the space host has the canvas. */
   const documentTransferTarget = (): { readonly target: ActiveSession; readonly handle: PluginWasmHandle } | null => {
@@ -10210,38 +10288,27 @@ function FrameworkOsShellInner({
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1("import-unreadable")} ${picked.name}`, error);
       return notifyDocumentTransfer("import-unreadable", picked.name, "warning");
     }
-    const id = crypto.randomUUID();
-    const abort = new AbortController();
-    const transfer = (patch: Partial<TaskManagerDocumentTransferV1>): void => {
-      const entry = documentTransfersRef.current.get(id);
-      if (entry === undefined) return;
-      documentTransfersRef.current.set(id, { ...entry, transfer: { ...entry.transfer, ...patch } });
-      publishDocumentTransfers();
-    };
-    documentTransfersRef.current.set(id, { transfer: { id, file: picked.name, pluginId: owned.target.pluginId, startedAtMs: Date.now(), progress: null, cancelling: false }, abort });
-    abort.signal.addEventListener("abort", () => transfer({ cancelling: true }), { once: true });
-    publishDocumentTransfers();
+    const task = trackDocumentTransfer(picked.name, owned.target.pluginId);
     let instanceId: number | null = null;
     try {
       if (!load) throw new Error("document-backbone.archive-loader-unavailable");
       instanceId = await owned.handle.createApp(owned.target.app.id);
-      await load(instanceId, archive, abort.signal, (status) => transfer({ progress: { completed: status.completed, total: status.total > 0 ? status.total : null, text: `${status.completed}/${status.total}` } }));
+      await load(instanceId, archive, task.signal, (status) => task.progress(status.completed, status.total > 0 ? status.total : null));
       const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
       const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       updateSpacePanel(studioPanelFocusingSpawned(currentPanel, { id: `${owned.target.pluginId}-${instanceId}`, pluginId: owned.target.pluginId, instanceId, appId: owned.target.app.id, label: program?.label ?? owned.target.app.id, breadcrumb: program?.breadcrumb ?? [] }));
       notifyDocumentTransfer("imported", picked.name, "info");
     } catch (error) {
       if (instanceId !== null) await owned.handle.destroyApp(instanceId).catch((destroyError: unknown) => console.error(`[os-shell] imported instance ${instanceId} could not be closed`, destroyError));
-      const notice: DocumentTransferNoticeV1 = abort.signal.aborted ? "import-cancelled" : "import-failed";
+      const notice: DocumentTransferNoticeV1 = task.signal.aborted ? "import-cancelled" : "import-failed";
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1(notice)} ${picked.name}`, error);
-      notifyDocumentTransfer(notice, picked.name, abort.signal.aborted ? "info" : "error");
+      notifyDocumentTransfer(notice, picked.name, task.signal.aborted ? "info" : "error");
     } finally {
-      documentTransfersRef.current.delete(id);
-      publishDocumentTransfers();
+      task.finish();
     }
   };
-  const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive });
-  documentTransferRef.current = { exportDocumentArchive, importDocumentArchive };
+  const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive, trackDocumentTransfer, notifyDocumentTransfer });
+  documentTransferRef.current = { exportDocumentArchive, importDocumentArchive, trackDocumentTransfer, notifyDocumentTransfer };
   //#endregion 📤️DocumentTransfer
   /** ⛩️ An approval request has ONE affordance: its row in the agent conversation. Revealing the chat panel
    * is what makes it visible; `focus` additionally moves keyboard focus onto it (the footer notice's
@@ -10416,7 +10483,7 @@ function FrameworkOsShellInner({
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session || !focusedApp) return [];
-    const pluginLeftTabs = focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
+    const pluginLeftTabs = focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
     if (hostMode && focusedApp.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = flattenPanelTabNodes(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
@@ -10464,18 +10531,18 @@ function FrameworkOsShellInner({
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, panel?.spawnedApps.length, focusedPanelUiByKey, session, focusedApp, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
+  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, panel?.spawnedApps.length, focusedPanelBodyStores, session, focusedApp, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session || !focusedApp) return [];
-    return focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
-  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelUiByKey, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
+    return focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
+  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelBodyStores, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
 
   /**
    * 🧭️ The two bottom anchors' app-declared tabs — `PanelGroup::Display` → `bottom-left`,
    * `PanelGroup::Settings` → `bottom-right`. Without these an app could declare either group and the
    * dock assembly dropped the tab silently: the guest still rendered the body (every declared tab is
-   * flattened into `buildUiRefreshRequest`) and the result was cached in `panelUiByKey` and then never
+   * flattened into `buildUiRefreshRequest`) and the result was cached as a panel body and then never
    * mounted, which is exactly how puzzle3d's own Settings section — grid spacing, chunk size,
    * proximity radius, overlap budget — was unreachable while the framework's own `framework.settings`
    * branch beside it opened fine.
@@ -10490,9 +10557,9 @@ function FrameworkOsShellInner({
       session && focusedApp
         ? focusedApp.panelTabs
             .filter((tab) => panelAnchorForGroup(tab.group) === anchor && !shellRendersPanelTabItself(panelTabKindId(tab.kind)))
-            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels))
+            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels))
         : [],
-    [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelUiByKey, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
+    [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelBodyStores, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
   );
   const displayBottomLeftTabs = useMemo(() => appTabsForBottomAnchor("bottom-left"), [appTabsForBottomAnchor]);
   const settingsBottomRightTabs = useMemo(() => appTabsForBottomAnchor("bottom-right"), [appTabsForBottomAnchor]);
@@ -10553,26 +10620,6 @@ function FrameworkOsShellInner({
    * (a folder-only or anonymous participant) contributes nothing, so the roster can never show a
    * member the directory does not know. */
   const hubOnlineUserIds = useMemo(() => [...new Set(presencePeers.flatMap((peer) => (typeof peer.userId === "string" && peer.userId.length > 0 ? [peer.userId] : [])))], [presencePeers]);
-
-  /** 📌️ Uncommitted-since-last-checkpoint count, derived purely from the already-tracked
-   * `historyProjection.entries` (no new wire field): every applied `mutation`-kind entry counts,
-   * reset to 0 the moment a `commitCheckpoint` (`kind: "history"`) entry is seen — mirrors
-   * `store::uncommitted_edit_ids`'s own "since the last Change" semantics closely enough for an
-   * auto-checkin heuristic (undo/redo of an already-committed edit is the one case this
-   * under/over-counts by one entry; not worth threading `applied_edit_ids` all the way to the host
-   * for this). */
-  const uncommittedEditCount = useMemo(() => {
-    const entries = Object.values(historyProjection.entries).sort((left, right) => left.seq - right.seq);
-    let pending = 0;
-    for (const entry of entries) {
-      if (entry.kind === "history" && entry.actionId === "commitCheckpoint") {
-        pending = 0;
-        continue;
-      }
-      if (entry.kind === "mutation" && entry.applied !== false) pending += 1;
-    }
-    return pending;
-  }, [historyProjection.entries]);
 
   const isEditorSession = canCheckIn(session?.app.role);
 
@@ -10672,13 +10719,13 @@ function FrameworkOsShellInner({
   );
 
   // 📌️ §C5 item 6 continued — `TouchArtifact` fires once per checkpoint THIS shell asked for,
-  // detected as `historyProjection.currentCheckpointId` changing away from whatever it was the last
+  // detected as the focused program's `currentCheckpointId` changing away from whatever it was the last
   // time this effect ran (never on the initial mount/session-snapshot, which isn't a checkpoint WE
   // just made).
   const previousCheckpointIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     const previous = previousCheckpointIdRef.current;
-    const next = historyProjection.currentCheckpointId;
+    const next = historyCheckpointId;
     previousCheckpointIdRef.current = next;
     if (!checkpointDispatchedRef.current || !next || next === previous) return;
     checkpointDispatchedRef.current = false;
@@ -10687,7 +10734,7 @@ function FrameworkOsShellInner({
     if (spaceId && currentDocumentId && currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) {
       void touchSpaceIndexArtifact(spaceId, currentDocumentId);
     }
-  }, [historyProjection.currentCheckpointId, currentDocumentId, currentDocumentRuntimeKey, requestHubCheckIn, touchSpaceIndexArtifact]);
+  }, [historyCheckpointId, currentDocumentId, currentDocumentRuntimeKey, requestHubCheckIn, touchSpaceIndexArtifact]);
 
   // 📌️ §C5 item 2 — auto check-in, delegated to the framework-free `AutoCheckinScheduler`
   // (`ShellHelpers`) so the debounce/storm-guard logic is unit-testable with fake timers without
@@ -10705,17 +10752,25 @@ function FrameworkOsShellInner({
     return () => scheduler.cancel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditorSession, currentDocumentId, dispatchCheckpoint]);
+  const uncommittedEditCountRef = useRef(0);
   useEffect(() => {
-    autoCheckinSchedulerRef.current?.notify(uncommittedEditCount);
-  }, [uncommittedEditCount]);
+    let notified: number | null = null;
+    const observe = (): void => {
+      const count = shellUncommittedEditCountV1(focusedHistoryV1().entries);
+      uncommittedEditCountRef.current = count;
+      if (count === notified) return;
+      notified = count;
+      autoCheckinSchedulerRef.current?.notify(count);
+    };
+    observe();
+    return historyStore.subscribe(observe);
+  }, [historyStore, focusedHistoryV1]);
 
   // 📌️ §C5 item 4 — checkpoint on close: fires from the cleanup of an effect keyed on
   // `[session, currentDocumentId]`, so it runs the instant either changes (switching document/app —
   // this shell keeps exactly one session mounted, so "switch away" IS "close" here) as well as on true
   // unmount. Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
   // time the response arrives `historyProjection` may already belong to the NEW session).
-  const uncommittedEditCountRef = useRef(uncommittedEditCount);
-  uncommittedEditCountRef.current = uncommittedEditCount;
   useEffect(() => {
     if (!isEditorSession || !currentDocumentId) return;
     const documentId = currentDocumentId;
@@ -10739,6 +10794,20 @@ function FrameworkOsShellInner({
   }, [checkinDialog, dispatchCheckpoint]);
   //#endregion 🔖️CheckIn
 
+  /** 🧾️ `data-history-json` on the shell root follows the focused program's history straight from the store — written on
+   * the element, never through a shell render. */
+  const historyDomElementRef = useRef<HTMLDivElement | null>(null);
+  const publishHistoryDomRef = useRef<() => void>(() => undefined);
+  publishHistoryDomRef.current = () => historyDomElementRef.current?.setAttribute("data-history-json", JSON.stringify(shellHistoryCursorDomV1(focusedHistoryV1(), { terminology: uiTerminology, locale: uiLocale })));
+  const historyDomRef = useCallback((element: HTMLDivElement | null) => {
+    historyDomElementRef.current = element;
+    publishHistoryDomRef.current();
+  }, []);
+  useLayoutEffect(() => {
+    publishHistoryDomRef.current();
+    return historyStore.subscribe(() => publishHistoryDomRef.current());
+  }, [historyStore, focusedHistoryV1, uiTerminology, uiLocale]);
+
   //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
   // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
   const mountedInferenceHistory = useMemo(() => {
@@ -10749,7 +10818,7 @@ function FrameworkOsShellInner({
     });
     return matches.length === 1 ? matches[0]![1] : null;
   }, [inferenceHistoryByRuntimeKey, session]);
-  const shellUndoRoute = shellHistoryUndoRouteV1(mountedInferenceHistory === null ? null : { ...mountedInferenceHistory.status, order: mountedInferenceHistory.order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+  const shellUndoRoute = shellHistoryUndoRouteV1(mountedInferenceHistory === null ? null : { ...mountedInferenceHistory.status, order: mountedInferenceHistory.order }, { canUndo: historyCanUndo, order: localHistoryOrderRef.current });
   const shellCanUndo = shellUndoRoute === "remote" || shellUndoRoute === "local";
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
     if (!session) return null;
@@ -10760,99 +10829,102 @@ function FrameworkOsShellInner({
     // mutating) are hidden outright rather than disabled, since neither has a meaningful disabled
     // affordance for a session that can never enable them.
     const isViewer = session.app.role === "viewer";
-    const entries = Object.values(historyProjection.entries).sort((left, right) => right.seq - left.seq);
     return singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_HISTORY_ID,
       icon: shellTabIcon("undo"),
       name: resolvePanelTabLabel(appLabelsOverlay, FRAMEWORK_PANEL_TAB_HISTORY_ID, resolveManifestLabel(tab.label as LocalizedLabel | string, uiTerminology, uiLocale)),
       order: 1,
-      tree: {
-        sections: [
-          {
-            id: "framework.history.actions",
-            label: shellLabel("ui.panel.history"),
-            items: [
-              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>{historyPanelText("undo", uiLocale)}</button> },
-              { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>{historyPanelText("redo", uiLocale)}</button> },
-              // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
-              // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
-              // absent outright for a viewer (never disabled — a viewer role has no meaningful
-              // disabled affordance for either, mirroring undo/redo's own comment above `isViewer`).
-              // `!canCheckIn(...)` here specifically (not the local `isViewer`) so this gate is the
-              // SAME tested predicate `📓️w3-a-report.md`'s viewer-guard test exercises.
-              ...(!canCheckIn(session.app.role)
-                ? []
-                : [
-                    { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>{historyPanelText("checkpoint", uiLocale)}</button> },
-                    {
-                      id: "framework.history.checkin",
-                      label: "",
-                      control: checkinDialog ? (
-                        <span style={{ display: "inline-flex", gap: 4 }}>
-                          <input
-                            id="s-checkin-message"
-                            type="text"
-                            value={checkinDialog.message}
-                            placeholder={checkinMessagePlaceholderText(uiLocale)}
-                            onChange={(event) => setCheckinDialog({ message: event.target.value })}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") submitCheckin();
-                              if (event.key === "Escape") setCheckinDialog(null);
-                            }}
-                          />
-                          <button type="button" onClick={submitCheckin}>{checkinSubmitText(uiLocale)}</button>
-                          <button type="button" onClick={() => setCheckinDialog(null)}>{checkinCancelText(uiLocale)}</button>
-                        </span>
-                      ) : (
-                        <button type="button" id="s-checkin" onClick={() => setCheckinDialog({ message: "" })}>
-                          {checkinActionText(uiLocale)}
-                          {uncommittedEditCount > 0 ? ` (${uncommittedEditCount})` : ""}
-                        </button>
-                      ),
-                    },
-                    ...(currentDocumentRuntimeKey === null || documentCheckInUi[currentDocumentRuntimeKey] === undefined
-                      ? []
-                      : [
-                          {
-                            id: "framework.history.checkin-status",
-                            label: "",
-                            control: (
-                              <span style={{ display: "inline-flex", gap: 4 }}>
-                                <span id="s-checkin-status" role="status" aria-live="polite">{checkinStatusText(documentCheckInUi[currentDocumentRuntimeKey]!.status, uiLocale)}</span>
-                                {isTerminalDocumentCheckInPhaseV1(documentCheckInUi[currentDocumentRuntimeKey]!.status.phase) ? null : (
-                                  <button type="button" id="s-checkin-abort" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>{checkinAbortText(uiLocale)}</button>
-                                )}
-                              </span>
-                            ),
-                          },
-                        ]),
-                  ]),
-            ],
-          },
-          {
-            id: "framework.history.commands",
-            label: historyPanelText("commands", uiLocale),
-            items: entries.map((entry) => ({
-              id: `framework.history.entry.${entry.seq}`,
-              label: entry.count && entry.count > 1 ? `${historyRowLabelText(entry)} ×${entry.count}` : historyRowLabelText(entry),
-              description: entry.opLines?.join(" · "),
-              dimmed: entry.applied === false,
-              // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
-              // nothing outside a mouse could reach it: the ◻️2d/🧊️3d batteries both looked for a
-              // `framework.history.revert` that has never existed and scored the panel as lacking revert
-              // altogether. The id is per entry, because the verb takes that entry's `entrySeq`.
-              control:
-                entry.revertible && !isViewer ? (
-                  <button type="button" id={`framework.history.entry.${entry.seq}.revert`} title={historyPanelText("revert", uiLocale)} aria-label={historyPanelText("revert", uiLocale)} onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>
-                    ↶
-                  </button>
-                ) : undefined,
-            })),
-          },
-        ],
-      },
+      tree: liveTreePanelDefinition(historyStore.subscribe, focusedHistoryV1, (projection) => {
+        const entries = Object.values(projection.entries).sort((left, right) => right.seq - left.seq);
+        const uncommittedEditCount = shellUncommittedEditCountV1(projection.entries);
+        return {
+          sections: [
+            {
+              id: "framework.history.actions",
+              label: shellLabel("ui.panel.history"),
+              items: [
+                { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>{historyPanelText("undo", uiLocale)}</button> },
+                { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !projection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>{historyPanelText("redo", uiLocale)}</button> },
+                // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
+                // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
+                // absent outright for a viewer (never disabled — a viewer role has no meaningful
+                // disabled affordance for either, mirroring undo/redo's own comment above `isViewer`).
+                // `!canCheckIn(...)` here specifically (not the local `isViewer`) so this gate is the
+                // SAME tested predicate `📓️w3-a-report.md`'s viewer-guard test exercises.
+                ...(!canCheckIn(session.app.role)
+                  ? []
+                  : [
+                      { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>{historyPanelText("checkpoint", uiLocale)}</button> },
+                      {
+                        id: "framework.history.checkin",
+                        label: "",
+                        control: checkinDialog ? (
+                          <span style={{ display: "inline-flex", gap: 4 }}>
+                            <input
+                              id="s-checkin-message"
+                              type="text"
+                              value={checkinDialog.message}
+                              placeholder={checkinMessagePlaceholderText(uiLocale)}
+                              onChange={(event) => setCheckinDialog({ message: event.target.value })}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") submitCheckin();
+                                if (event.key === "Escape") setCheckinDialog(null);
+                              }}
+                            />
+                            <button type="button" onClick={submitCheckin}>{checkinSubmitText(uiLocale)}</button>
+                            <button type="button" onClick={() => setCheckinDialog(null)}>{checkinCancelText(uiLocale)}</button>
+                          </span>
+                        ) : (
+                          <button type="button" id="s-checkin" onClick={() => setCheckinDialog({ message: "" })}>
+                            {checkinActionText(uiLocale)}
+                            {uncommittedEditCount > 0 ? ` (${uncommittedEditCount})` : ""}
+                          </button>
+                        ),
+                      },
+                      ...(currentDocumentRuntimeKey === null || documentCheckInUi[currentDocumentRuntimeKey] === undefined
+                        ? []
+                        : [
+                            {
+                              id: "framework.history.checkin-status",
+                              label: "",
+                              control: (
+                                <span style={{ display: "inline-flex", gap: 4 }}>
+                                  <span id="s-checkin-status" role="status" aria-live="polite">{checkinStatusText(documentCheckInUi[currentDocumentRuntimeKey]!.status, uiLocale)}</span>
+                                  {isTerminalDocumentCheckInPhaseV1(documentCheckInUi[currentDocumentRuntimeKey]!.status.phase) ? null : (
+                                    <button type="button" id="s-checkin-abort" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>{checkinAbortText(uiLocale)}</button>
+                                  )}
+                                </span>
+                              ),
+                            },
+                          ]),
+                    ]),
+              ],
+            },
+            {
+              id: "framework.history.commands",
+              label: historyPanelText("commands", uiLocale),
+              items: entries.map((entry) => ({
+                id: `framework.history.entry.${entry.seq}`,
+                label: entry.count && entry.count > 1 ? `${historyRowLabelText(entry)} ×${entry.count}` : historyRowLabelText(entry),
+                description: entry.opLines?.join(" · "),
+                dimmed: entry.applied === false,
+                // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
+                // nothing outside a mouse could reach it: the ◻️2d/🧊️3d batteries both looked for a
+                // `framework.history.revert` that has never existed and scored the panel as lacking revert
+                // altogether. The id is per entry, because the verb takes that entry's `entrySeq`.
+                control:
+                  entry.revertible && !isViewer ? (
+                    <button type="button" id={`framework.history.entry.${entry.seq}.revert`} title={historyPanelText("revert", uiLocale)} aria-label={historyPanelText("revert", uiLocale)} onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>
+                      ↶
+                    </button>
+                  ) : undefined,
+              })),
+            },
+          ],
+        };
+      }),
     });
-  }, [appLabelsOverlay, cancelHubCheckIn, checkinDialog, currentDocumentRuntimeKey, documentCheckInUi, historyProjection, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
+  }, [appLabelsOverlay, cancelHubCheckIn, checkinDialog, currentDocumentRuntimeKey, documentCheckInUi, focusedHistoryV1, historyStore, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -11118,8 +11190,6 @@ function FrameworkOsShellInner({
       if (isOsCommandAddress(address) && commandId === OPEN_HUB_COMMAND_ID) {
         navigateHistory(SHELL_HUB_ROUTE);
       }
-      if (isOsCommandAddress(address) && commandId === EXPORT_DOCUMENT_COMMAND_ID) void documentTransferRef.current.exportDocumentArchive();
-      if (isOsCommandAddress(address) && commandId === IMPORT_DOCUMENT_COMMAND_ID) void documentTransferRef.current.importDocumentArchive();
       if (isOsCommandAddress(address) && commandId === OPEN_TASK_MANAGER_COMMAND_ID) {
         dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [FRAMEWORK_TASK_MANAGER_PANEL_ID] });
         dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: true });
@@ -11629,7 +11699,7 @@ function FrameworkOsShellInner({
 
   const toolRunPanelRunsRef = useRef<ReadonlySet<bigint>>(new Set());
   useEffect(() => {
-    const { runs, added } = toolRunPanelReveal(toolRunPanelRunsRef.current, focusedPanelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
+    const { runs, added } = toolRunPanelReveal(toolRunPanelRunsRef.current, toolRunPanelNode);
     toolRunPanelRunsRef.current = runs;
     if (added.length === 0) return;
     const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
@@ -11637,7 +11707,7 @@ function FrameworkOsShellInner({
     const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
-  }, [focusedPanelUiByKey, dock]);
+  }, [toolRunPanelNode, dock]);
 
   /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
    * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the
@@ -12023,7 +12093,7 @@ function FrameworkOsShellInner({
         </span>
         {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
          * `session.app.role`, never parsed out of `session.app.id`. */}
-        <span data-slot="surface-role-chip" data-role={session.app.role} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
+        <span data-slot="surface-role-chip" data-role={session.app.role} data-app-id={session.app.id} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
           {surfaceRoleChipText(session.app.role, uiLocale)}
         </span>
       </div>
@@ -12457,8 +12527,8 @@ function FrameworkOsShellInner({
   );
 
   const canvas = useMemo(() => {
-    if (hostMode && shellRoute.kind === "notFound" && shellRoute.path !== SHELL_HUB_ROUTE) {
-      return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateShellUri("/")} />;
+    if (hostMode && notFoundPath !== null) {
+      return <ShellRouteNotFoundPage path={notFoundPath} onHome={() => navigateShellUri("/")} />;
     }
     const supervisorPluginId = primaryPluginId;
     const supervisorState = supervisorPluginId ? pluginSupervisorById[supervisorPluginId] : undefined;
@@ -12646,7 +12716,7 @@ function FrameworkOsShellInner({
         </div>
       </div>
     );
-  }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, notFoundPath, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -12714,7 +12784,7 @@ function FrameworkOsShellInner({
     const root = document.documentElement;
     const shellRoot = scope.rootRef.current;
     const beaconId = pluginFilter ?? "unknown";
-    const notFound = hostMode && shellRoute.kind === "notFound";
+    const notFound = hostMode && notFoundPath !== null;
     if (notFound) {
       root.dataset.semioOsNotFound = beaconId;
       delete root.dataset.semioOsReady;
@@ -12753,7 +12823,7 @@ function FrameworkOsShellInner({
         delete shellRoot.dataset.shellNotFound;
       }
     };
-  }, [session, initialExampleReady, error, pluginFilter, shellRoute.kind, hostMode, scope.rootRef]);
+  }, [session, initialExampleReady, error, pluginFilter, notFoundPath, hostMode, scope.rootRef]);
   // #endregion 🔖️ReadinessBeacon
 
   // #region 🔖️CatalogSmokeProbe
@@ -12946,7 +13016,7 @@ function FrameworkOsShellInner({
              a gateway reading `expectedRevision.artifactId` off `action_prepare` can resolve its
              session straight onto this element. */
           data-semio-artifact-id={agentBridgeInstances[0]?.artifactRef}
-          data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection, { terminology: uiTerminology, locale: uiLocale }))}
+          ref={historyDomRef}
         >
           {hubEnv && hubSessionCapability !== null && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (

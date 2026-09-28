@@ -175,35 +175,112 @@ async fn merge_runs_of_zero_runs_is_empty() {
 
 //#region 🔖️IndexKind
 #[semio_framework_async_macros::async_test]
-async fn run_id_round_trips_kind_sequence_and_entry_count_for_every_kind() {
+async fn run_id_round_trips_kind_sequence_level_and_entry_count_for_every_kind() {
     for kind in IndexKind::ALL {
         for sequence in [0u64, 1, SEQUENCE_MASK] {
             for entries in [1usize, 2, MAX_RUN_ENTRIES as usize] {
-                let run_id = make_run_id(kind, sequence, entries).expect("make_run_id");
+                let run_id = make_run_id(kind, sequence, 0, entries).expect("make_run_id");
                 assert_eq!(namespace_of_run_id(run_id), run_namespace(kind));
                 assert_eq!(sequence_of_run_id(run_id), sequence);
+                assert_eq!(level_of_run_id(run_id), 0);
                 assert_eq!(entries_of_run_id(run_id), entries as u64);
                 assert!(run_id < 1 << 63, "a run id stays a positive SQL integer");
+            }
+            for level in 1..=RUN_LEVEL_MAX {
+                let run_id = make_run_id(kind, sequence, level, level_capacity(level) as usize).expect("make_run_id");
+                assert_eq!(sequence_of_run_id(run_id), sequence);
+                assert_eq!(level_of_run_id(run_id), level);
+                assert_eq!(entries_of_run_id(run_id), MAX_RUN_ENTRIES << (2 * level), "a folded run declares its level's capacity");
             }
         }
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn run_ids_order_by_kind_then_sequence() {
-    let older = make_run_id(IndexKind::Command, 7, MAX_RUN_ENTRIES as usize).unwrap();
-    let newer = make_run_id(IndexKind::Command, 8, 1).unwrap();
-    let other_kind = make_run_id(IndexKind::ActorSeq, 0, 1).unwrap();
-    assert!(older < newer && newer < other_kind);
+async fn run_ids_order_by_kind_then_sequence_then_level() {
+    let older = make_run_id(IndexKind::Command, 7, 0, MAX_RUN_ENTRIES as usize).unwrap();
+    let folded = make_run_id(IndexKind::Command, 7, 1, 4 * MAX_RUN_ENTRIES as usize).unwrap();
+    let newer = make_run_id(IndexKind::Command, 8, 0, 1).unwrap();
+    let other_kind = make_run_id(IndexKind::ActorSeq, 0, 0, 1).unwrap();
+    assert!(older < folded && folded < newer && newer < other_kind, "a folded run sorts right after its oldest input and before every newer run");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn run_id_rejects_sequence_overflow_and_entry_counts_outside_one_run() {
-    assert!(matches!(make_run_id(IndexKind::Command, SEQUENCE_MASK + 1, 1), Err(DbError::LimitExceeded(_))));
-    assert!(matches!(make_run_id(IndexKind::Command, 0, 0), Err(DbError::LimitExceeded(_))));
-    assert!(matches!(make_run_id(IndexKind::Command, 0, MAX_RUN_ENTRIES as usize + 1), Err(DbError::LimitExceeded(_))));
+async fn run_id_rejects_sequence_overflow_levels_and_entry_counts_outside_a_run() {
+    assert!(matches!(make_run_id(IndexKind::Command, SEQUENCE_MASK + 1, 0, 1), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, 0, 0), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, 0, MAX_RUN_ENTRIES as usize + 1), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, RUN_LEVEL_MAX + 1, 1), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, RUN_LEVEL_MAX, level_capacity(RUN_LEVEL_MAX) as usize + 1), Err(DbError::LimitExceeded(_))));
 }
 //#endregion 🔖️IndexKind
+
+//#region 🔖️OwnedRuns
+async fn append_seq_runs(index: &CommandIndex<'_, MemoryStorage>, runs: &mut OwnedRuns, from: u64, full_runs: u64) {
+    for run in 0..full_runs {
+        let first = from + run * MAX_RUN_ENTRIES;
+        let entries: Vec<(u64, RecordLocation)> = (first..first + MAX_RUN_ENTRIES).map(|seq| (seq, RecordLocation { segment: seq / 1_000, offset: seq, len: 1 })).collect();
+        index.record_owned_run(runs, &entries).await.expect("owned append");
+    }
+}
+
+/// ⚖️ An append-only owner's appends never list and fold every four full runs of one level into one run of the next, so
+/// 147 full runs (9 408 entries) end as exactly the base-4 digits of 147 — two level-3, one level-2 and three level-0
+/// runs — whose ids storage lists exactly as the owner knows them, oldest first, and every entry still resolves.
+#[semio_framework_async_macros::async_test]
+async fn owned_appends_fold_full_runs_into_levels_and_every_entry_still_resolves() {
+    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let document = ArtifactId::from("doc-levels");
+    let index = CommandIndex::new(&storage, document.clone()).await;
+    let mut runs = index.owned_runs().await.expect("owned runs");
+    assert!(runs.is_empty());
+    append_seq_runs(&index, &mut runs, 1, 147).await;
+    let handle = IndexHandle::new(&storage, document.clone(), IndexKind::Command).await;
+    let mut control = control();
+    let listed = handle.kind_run_ids(&mut control).await.expect("listing");
+    assert_eq!(listed, runs.ids, "storage holds exactly the runs the owner knows");
+    let shape: Vec<(u64, u32)> = listed.iter().map(|id| (sequence_of_run_id(*id), level_of_run_id(*id))).collect();
+    assert_eq!(shape, vec![(0, 3), (64, 3), (128, 2), (144, 0), (145, 0), (146, 0)]);
+    handle.verify(&mut control).await.expect("every folded run verifies");
+    assert_eq!(index.indexed_through().await.expect("indexed through"), 147 * 64);
+    for seq in (1u64..=147 * 64).step_by(97).chain([1, 4_096, 4_097, 9_216, 9_408]) {
+        let mut budget = handle.operation_control(1_000_000).unwrap();
+        let found = handle.get(&retained(&seq.to_be_bytes()).await, &mut budget).await.expect("get").expect("every indexed seq resolves");
+        let mut reader = RunPageReader::new(&found.pages, found.len());
+        assert_eq!(decode_location(&mut reader).expect("location"), RecordLocation { segment: seq / 1_000, offset: seq, len: 1 }, "seq {seq}");
+    }
+    let mut budget = handle.operation_control(1_000_000).unwrap();
+    assert!(handle.get(&retained(&9_409u64.to_be_bytes()).await, &mut budget).await.expect("get").is_none());
+    let mut reopened = index.owned_runs().await.expect("owned runs again");
+    append_seq_runs(&index, &mut reopened, 147 * 64 + 1, 1).await;
+    let refolded: Vec<(u64, u32)> = handle.kind_run_ids(&mut control).await.expect("listing").iter().map(|id| (sequence_of_run_id(*id), level_of_run_id(*id))).collect();
+    assert_eq!(refolded, vec![(0, 3), (64, 3), (128, 2), (144, 1)], "a re-listed owner folds its newest four level-0 runs on the next append");
+}
+
+/// ⚖️ A fold whose inputs exceed one read operation's credit writes nothing: the runs stay as they were, readable, and the
+/// owner stops folding at that level instead of re-reading them on every later append.
+#[semio_framework_async_macros::async_test]
+async fn a_fold_beyond_one_read_credit_is_skipped_and_its_level_becomes_the_ceiling() {
+    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let document = ArtifactId::from("doc-wide");
+    let handle = IndexHandle::new(&storage, document.clone(), IndexKind::Projection).await;
+    let mut control = control();
+    let mut runs = handle.owned_runs(&mut control).await.expect("owned runs");
+    let value = vec![7u8; 2_048];
+    for run in 0..8u64 {
+        let keys: Vec<[u8; 8]> = (0..MAX_RUN_ENTRIES).map(|entry| (run * MAX_RUN_ENTRIES + entry).to_be_bytes()).collect();
+        let entries: Vec<(&[u8], &[u8])> = keys.iter().map(|key| (&key[..], &value[..])).collect();
+        handle.append_owned_sorted_run(&mut runs, &entries, &mut control).await.expect("wide append");
+    }
+    let listed = handle.kind_run_ids(&mut control).await.expect("listing");
+    assert_eq!(listed.len(), 8, "four 128 KiB runs exceed one read credit: nothing folds");
+    assert!(listed.iter().all(|id| level_of_run_id(*id) == 0));
+    assert_eq!(runs.fold_ceiling, 0);
+    let key = (5 * MAX_RUN_ENTRIES + 3).to_be_bytes();
+    let found = handle.get(&retained(&key).await, &mut control).await.expect("get").expect("present");
+    assert_eq!(read_retained(&found).await, value);
+}
+//#endregion 🔖️OwnedRuns
 
 //#region 🔖️IndexHandle
 #[semio_framework_async_macros::async_test]

@@ -2,7 +2,7 @@
  * (hard load of /spaces/<id>, row Open) and (b) after a Check In? Two humans, one hub writer. Every round records both editors'
  * text, what each page SENT (Commands envelope ids) and RECEIVED (Ack/Commands), and the document sockets each page holds.
  * usage: source env.sh; bun probe-c12-reopen.mjs <tag> <url1> <url2> <spaceId> [rounds=base,reopenA,checkinA,base] */
-import { boot, openSessions, recorder, signIn } from "./c12-lib.mjs";
+import { boot, clickRowAction, openSessions, read, recorder, signIn, waitRow } from "./c12-lib.mjs";
 import { awaitMounted, createArtifact, creatableKinds, faultsSince, hubHead, openRow, openSpace, pause } from "./c12-journey.mjs";
 import { decodeClientFrame, decodeServerFrame } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 const [tag = "c12reopen", url1, url2, spaceId, rounds = "base,reopenA,checkinA,base"] = process.argv.slice(2);
@@ -42,23 +42,33 @@ for (const session of sessions) {
 }
 const editorOf = (session) => session.page.locator(".semio-text-editor-host textarea").first();
 const textOf = async (session) => (await editorOf(session).inputValue().catch(() => "")) ?? "";
+const restoreNotices = (session) => session.page.getByText(/Document restore failed|Dokument.{0,40}(wiederherstell|Wiederherstell)/u).allInnerTexts().then((texts) => texts.map((text) => text.slice(0, 700))).catch(() => []);
 const openDocSockets = (session) => session.docSockets.filter((row) => row.closedAt === null).map((row) => row.url);
 async function checkIn(session) {
   const tab = session.page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]').first();
   await tab.click();
   const checkin = session.page.locator('[id="s-checkin"]').first();
   const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline && !(await checkin.isVisible().catch(() => false))) {
+  for (let turn = 1; Date.now() < deadline && !(await checkin.isVisible().catch(() => false)); turn += 1) {
     const closed = session.page.locator('[data-slot="tree-section-row"]:not([data-state="open"])').filter({ hasText: /^\s*(history|verlauf)\b/iu });
     if ((await closed.count()) > 0) await closed.first().click();
+    if (turn % 6 === 0) await tab.click();
     await pause(session, 500);
   }
   await checkin.click();
   const message = `c12 check-in ${Date.now()}`;
   await session.page.locator('[id="s-checkin-message"]').fill(message);
   await session.page.locator('[id="s-checkin-message"]').press("Enter");
-  const shown = await session.page.getByText(message, { exact: false }).first().waitFor({ state: "visible", timeout: 60_000 }).then(() => true).catch(() => false);
-  return { message, shown, notices: await session.page.locator('[role="status"], [role="alert"], [data-slot="toast"]').allInnerTexts().catch(() => []) };
+  const status = session.page.locator('[id="s-checkin-status"]').first();
+  const until = Date.now() + 60_000;
+  let phase = "";
+  while (Date.now() < until && !/^(Checked in|Eingecheckt|Check-in refused|Einchecken abgelehnt|Already checked in|Check-in unavailable|Check-in stopped|Check-in collided|Check-in cancelled)/u.test(phase)) {
+    phase = (await status.innerText().catch(() => "")).trim();
+    await pause(session, 250);
+  }
+  const shown = (await session.page.getByText(message, { exact: false }).count()) > 0;
+  const history = await session.page.evaluate(() => JSON.parse(document.querySelector("[data-history-json]")?.getAttribute("data-history-json") ?? "null"));
+  return { message, status: phase, messageShown: shown, history, notices: await session.page.locator('[role="status"], [role="alert"], [data-slot="toast"]').allInnerTexts().catch(() => []) };
 }
 try {
   await boot(A); await boot(B); await signIn(A); await signIn(B); await pause(A, 10_000);
@@ -74,6 +84,28 @@ try {
     if (round === "reopenA") {
       await openRow(A, spaceId, artifactId);
       await awaitMounted(A, 300_000);
+      const mountedAt = Date.now();
+      const truth = await textOf(B);
+      const early = await textOf(A);
+      while (Date.now() - mountedAt < 30_000 && (await textOf(A)) !== truth) await pause(A, 100);
+      extra.catchUp = { truth: truth.slice(-80), atMount: early.slice(-80), caughtUpMs: (await textOf(A)) === truth ? Date.now() - mountedAt : null, restoreA: await restoreNotices(A) };
+    }
+    if (round === "reloadA") {
+      await A.page.goto(`${new URL(A.page.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await A.page.locator('[data-ui-node-key="s-space-create-artifact"]').first().waitFor({ state: "attached", timeout: 120_000 });
+      await waitRow(A.page, "artifact", artifactId, 90_000);
+      await clickRowAction(A.page, "artifact", artifactId, /^(open|öffnen)\b/iu);
+      await awaitMounted(A, 300_000);
+      extra.reloadedWithoutSettle = true;
+      await pause(A, 3_000);
+      extra.afterReload = await read(A.page);
+    }
+    if (round === "reloadB") {
+      await B.page.goto(`${new URL(B.page.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await B.page.locator('[data-ui-node-key="s-space-create-artifact"]').first().waitFor({ state: "attached", timeout: 120_000 });
+      await waitRow(B.page, "artifact", artifactId, 90_000);
+      await pause(B, 5_000);
+      extra.afterReloadB = { editor: await editorOf(B).count(), text: (await textOf(B)).slice(-80), shell: await read(B.page) };
     }
     if (round === "checkinA") extra.checkIn = await checkIn(A);
     const cursor = [A.lines.length, B.lines.length];
@@ -94,6 +126,7 @@ try {
       socketsA: openDocSockets(A), socketsB: openDocSockets(B),
       wireA: A.wire.slice(wire[0]).map((row) => ({ ...row, at: row.at - started })).slice(0, 30), wireB: B.wire.slice(wire[1]).map((row) => ({ ...row, at: row.at - started })).slice(0, 30),
       faults: [...faultsSince(A, cursor[0]), ...faultsSince(B, cursor[1])].slice(0, 8),
+      restoreA: await restoreNotices(A), restoreB: await restoreNotices(B),
     });
   }
 } catch (error) {

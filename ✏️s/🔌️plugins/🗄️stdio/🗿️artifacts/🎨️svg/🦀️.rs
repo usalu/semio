@@ -71,7 +71,7 @@ pub const SVG_TINY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", st
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.svg".into(),
-        name: "Svg".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Svg", "Svg"),
         source_format: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

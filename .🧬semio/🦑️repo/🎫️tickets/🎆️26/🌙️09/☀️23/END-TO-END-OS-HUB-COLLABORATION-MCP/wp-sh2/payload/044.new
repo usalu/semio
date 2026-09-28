@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/space/home/transient/mutation/ApplyDirectoryPage/schema.json",
+  "title": "ApplyDirectoryPage",
+  "description": "📬️ One authenticated, receipt-sealed directory page (canonical `DirectoryEventPageV1` JSON, at most one hub page) folded into the Home transient directory projection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageJson"
+  ],
+  "properties": {
+    "pageJson": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 65536
+    }
+  }
+}

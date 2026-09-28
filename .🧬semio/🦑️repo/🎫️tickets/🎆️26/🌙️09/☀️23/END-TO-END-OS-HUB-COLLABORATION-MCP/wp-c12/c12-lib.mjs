@@ -240,3 +240,32 @@ export async function canvasHash(page) {
 export async function shot(session, tag, name) {
   await session.page.screenshot({ path: join(OUT, `${tag}-${name}-${session.user.label}.png`) }).catch(() => {});
 }
+
+/** 🏘️ Creates a public studio as `owner` and shares it with `member` as author through the hub's directory command API (the
+ * shell's own route, `/_semio/hub/directory/commands`, with the page's session capability — never logged), and answers its id.
+ * For probes whose subject is not Home: user1's Home shows only its first 11 spaces (ticket 26/09/23 C12, `c12home-rows-2`). */
+export async function createSharedSpace(owner, member, name) {
+  return owner.page.evaluate(async ({ name, email }) => {
+    const stored = [globalThis.sessionStorage, globalThis.localStorage].map((storage) => storage?.getItem("semio.os.hub-session-capability.v1")).find(Boolean);
+    const capability = JSON.parse(stored ?? "null");
+    const token = capability?.capability ?? capability?.token ?? capability?.bearer;
+    if (!token) throw new Error(`no hub session capability in storage (keys: ${Object.keys(capability ?? {}).join(",")})`);
+    const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+    const command = async (body) => {
+      const response = await fetch("/_semio/hub/directory/commands", { method: "POST", headers, body: JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: crypto.randomUUID().replaceAll("-", ""), command: body }) });
+      if (!response.ok) throw new Error(`directory command ${body.kind}: HTTP ${response.status} ${(await response.text()).slice(0, 200)}`);
+    };
+    await command({ kind: "create-space", name, spaceKind: "studio", visibility: "public" });
+    let spaceId = null;
+    for (let turn = 0; turn < 60 && spaceId === null; turn += 1) {
+      const response = await fetch("/_semio/hub/directory/spaces", { headers });
+      const listing = response.ok ? await response.json() : null;
+      const spaces = Array.isArray(listing) ? listing : listing?.spaces ?? listing?.rows ?? [];
+      spaceId = spaces.map((entry) => entry.space ?? entry).find((space) => space.name === name)?.id ?? null;
+      if (spaceId === null) await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    if (spaceId === null) throw new Error(`space ${name} never listed by /directory/spaces (last listing keys: ${JSON.stringify(Object.keys((await (await fetch("/_semio/hub/directory/spaces", { headers })).json().catch(() => ({}))) ?? {}))})`);
+    await command({ kind: "upsert-member", spaceId, email, role: "author" });
+    return spaceId;
+  }, { name, email: member.user.email });
+}

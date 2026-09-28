@@ -1,5 +1,5 @@
 /** 📤️ Canonical guest publications and Shell-owned inference intent effects. */
-import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, encodeAppFrame, encodePackValue } from "../../../../../🟦️.ts";
+import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, encodeAppFrame, encodePackValue, faultDisplayMessage } from "../../../../../🟦️.ts";
 import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, parseBrowserActorHostEffectBytesV1 } from "../🟦️.ts";
 
 /** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */
@@ -12,9 +12,9 @@ export type BrowserActorUnsolicitedPublicationV1 =
   | { readonly kind: "merge-report" }
   | { readonly kind: "operation-completed"; readonly historyPatch: BrowserActorHistoryPatchBytesV1 }
   | { readonly kind: "completion"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 };
-export type BrowserActorIntentPublicationV1 = { readonly kind: "emit" } | { readonly kind: "error"; readonly reason: string } | BrowserActorUnsolicitedPublicationV1;
+export type BrowserActorIntentPublicationV1 = { readonly kind: "emit" } | { readonly kind: "error"; readonly reason: string; readonly detail: string } | BrowserActorUnsolicitedPublicationV1;
 type BrowserActorCommandMutationProjectionV1 = ReturnType<typeof decodeInvocationResultPacks>;
-export type BrowserActorCommandPublicationV1 = { readonly kind: "invocation"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 } | { readonly kind: "error"; readonly reason: string } | BrowserActorUnsolicitedPublicationV1;
+export type BrowserActorCommandPublicationV1 = { readonly kind: "invocation"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 } | { readonly kind: "error"; readonly reason: string; readonly detail: string } | BrowserActorUnsolicitedPublicationV1;
 export type BrowserActorCommandBackboneEnvelopeV1 = Readonly<{
   mutation_id: string;
   actor: string;
@@ -107,7 +107,7 @@ export function decodeBrowserActorIntentPublicationV1(bytes: Uint8Array): Browse
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
   if ("Emit" in frame && frame.Emit.in_reply_to === 0) return { kind: "emit" };
-  if ("Error" in frame && frame.Error.in_reply_to === null) return { kind: "error", reason: "action-guest-refused" };
+  if ("Error" in frame && frame.Error.in_reply_to === null) return { kind: "error", reason: "action-guest-refused", detail: faultDisplayMessage(frame.Error.fault, decodePackValue) };
   if ("Ephemeral" in frame) return ephemeralPublication(frame.Ephemeral);
   if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
   const completion = unsolicitedCompletion(frame);
@@ -157,7 +157,7 @@ export function decodeBrowserActorCommandPublicationV1(bytes: Uint8Array, action
   if (bytes.length === 0 || bytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid frame size");
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
-  if ("Error" in frame && frame.Error.in_reply_to === actionSequence) return { kind: "error", reason: "action-guest-refused" };
+  if ("Error" in frame && frame.Error.in_reply_to === actionSequence) return { kind: "error", reason: "action-guest-refused", detail: faultDisplayMessage(frame.Error.fault, decodePackValue) };
   if ("Ephemeral" in frame) return ephemeralPublication(frame.Ephemeral);
   if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
   const completion = unsolicitedCompletion(frame);

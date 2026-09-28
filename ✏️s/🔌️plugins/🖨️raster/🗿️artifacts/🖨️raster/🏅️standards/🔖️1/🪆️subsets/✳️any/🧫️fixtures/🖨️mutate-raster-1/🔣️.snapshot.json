@@ -90,7 +90,7 @@
   ],
   "assets": {
     "semio-emblem": {
-      "childId": "raster-asset-81e1564e819d209c",
+      "childId": "raster-asset-e0a3cc5c3910a81d",
       "target": {
         "artifactId": "semio-emblem-image",
         "dialect": {

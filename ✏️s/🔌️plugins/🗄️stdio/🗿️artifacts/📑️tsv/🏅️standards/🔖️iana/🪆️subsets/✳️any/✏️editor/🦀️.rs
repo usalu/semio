@@ -468,6 +468,7 @@ impl ArtifactEditor for TsvEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             ArtifactRetainedCommandInputs {
@@ -548,13 +549,6 @@ impl ArtifactEditor for TsvEditor {
     /// the envelope, which answers every `setActiveExample` with
     /// `artifact-store.persisted-initializer-refused` at the archive-load boundary.
     #[allow(clippy::result_large_err, reason = "Mirrors the framework trait signature, which returns the original envelope on refusal.")]
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TSV_DOCUMENT_SCHEMA, operation, generation))
-    }
 
     fn command_id(command: &Self::Command) -> &'static str {
         tsv_command_id(command)

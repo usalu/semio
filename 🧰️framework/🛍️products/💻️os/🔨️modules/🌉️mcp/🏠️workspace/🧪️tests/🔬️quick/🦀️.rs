@@ -119,6 +119,33 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
     assert!(matches!(&committed[..], [AppFrame::TransactionCommitted { relay: Some(relay), .. }] if !relay.acknowledged && relay.refused.is_none()), "{committed:?}");
 }
 
+/// 🗂️ A hub workspace's catalog follows the hub's descriptor authority: a new selection set (a package installed on the
+/// hub) is compiled in, an unchanged set reuses the compiled catalog, and while the authority refreshes discovery fails
+/// closed but routing keeps the last compiled catalog (measured 2026-09-28 by H13: a gateway opened on 4 packages never
+/// saw the space's 5th).
+#[test]
+fn a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation() {
+    let workspace = authenticated_hub_workspace_fixture();
+    let binding = Arc::clone(workspace.hub_binding.as_ref().expect("hub fixture"));
+    let catalog = WorkspaceCatalog::following(Arc::clone(&binding)).expect("a ready authority compiles");
+    let first = catalog.current();
+    assert_eq!(distinct_plugin_ids(&first), vec!["gis".to_string()]);
+    assert!(Arc::ptr_eq(&first, &catalog.current()), "an unchanged selection set is never recompiled");
+    let mut selections = binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX)).expect("ready").selections.clone();
+    let mut note = selections[0].clone();
+    note.lease.package.plugin_id = "note".to_string();
+    note.lease.package.descriptor_byte_sha256 = "note-descriptor".to_string();
+    note.descriptor = load_package_descriptor(&find_repo_root().expect("repo root").join("✏️s/🔌️plugins/🗒️note")).expect("installed note descriptor test input");
+    selections.push(note);
+    binding.install_catalog_for_test(selections);
+    let grown = catalog.current();
+    assert_eq!(distinct_plugin_ids(&grown), vec!["gis".to_string(), "note".to_string()], "the package the hub selected since is routable");
+    assert!(Arc::ptr_eq(&grown, &catalog.authoritative().expect("ready")), "discovery reads the same compiled catalog");
+    binding.invalidate_stream();
+    assert!(catalog.authoritative().is_err(), "a refreshing authority lists nothing");
+    assert!(Arc::ptr_eq(&grown, &catalog.current()), "routing keeps the last compiled catalog while the authority refreshes");
+}
+
 #[test]
 fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
     let actual = store::os_pack::schema_hash(&probe_record_spec()).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -165,6 +192,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let descriptor = load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
     let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog());
+    workspace.catalog = Arc::new(WorkspaceCatalog::following(Arc::clone(&binding)).expect("the fixture's authority compiles"));
     workspace.hub_binding = Some(binding);
     workspace
 }
@@ -428,7 +456,7 @@ fn unbound_plugin_artifacts() -> Arc<Mutex<HashMap<String, PluginArtifactBinding
 #[test]
 fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     let bound = unbound_plugin_artifacts();
-    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
+    let router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
     let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
     let cad = AppRoute { plugin_id: "cad".to_string(), app_id: Some("cad.editor".to_string()) };
     assert_eq!(router.session_artifact_for(&note), None, "nothing bound yet");
@@ -492,21 +520,21 @@ fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
 
 #[test]
 fn routing_artifact_channel_purecommand_unknown_capability_is_not_found_before_opening_any_channel() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}) }]).expect_err("unknown capability must not route to any plugin");
     assert_eq!(fault.code, "capability.not-found");
 }
 
 #[test]
 fn routing_artifact_channel_purecommand_gateway_owned_capability_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "capabilities.search".to_string(), input: serde_json::json!({}) }]).expect_err("a gateway-owned capability names no plugin channel");
     assert_eq!(fault.code, "plugin.unavailable");
 }
 
 #[test]
 fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecommand_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(empty_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
     assert_eq!(fault.code, "plugin.unavailable");
 }
@@ -560,7 +588,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
     let (note_verb, cad_verb) = (first_app_verb("note"), first_app_verb("cad"));
     let note_instance = capability_instance_slot(&catalog, &note_verb).expect("note's verb has a route slot");
     let cad_instance = capability_instance_slot(&catalog, &cad_verb).expect("cad's verb has a route slot");
-    let mut router = RoutingArtifactChannel::new(Arc::clone(&catalog), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None);
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(Arc::clone(&catalog))), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None);
 
     let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: note_verb.clone(), input: serde_json::json!({}) }]);
     assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{note_verb} must route to a real note channel: {note_result:?}");
@@ -666,7 +694,7 @@ fn only_a_backbone_effect_addressed_at_this_channel_is_document_egress() {
 #[test]
 fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() {
     let bound = unbound_plugin_artifacts();
-    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
+    let router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
     let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
     let unbound = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("no bound document at all");
     assert_eq!(unbound.code, "channel.not-wired");

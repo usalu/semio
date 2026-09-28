@@ -654,6 +654,7 @@ impl ArtifactEditor for Grid3dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(Grid3dCommandWork { tool_id, completed: false });
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
@@ -691,17 +692,6 @@ impl ArtifactEditor for Grid3dEditor {
             "pinCell", "unpinCell", "maskCell", "unmaskCell",
             "pickCell", "worldSelect", "setHover", "worldPick", "setActiveTile", "setCamera", "setActiveExample", "solve"
         ]
-    }
-
-    /// 🔁️ Admits the envelope a `LoadDocument` effect hands the store. The trait default REFUSES it
-    /// (`Err(envelope)`), which faults every whole-document swap at the archive-load boundary — and
-    /// the example picker is exactly such a swap.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, WFC_GRID3D_DOCUMENT_SCHEMA, operation, generation))
     }
 
     /// ✏️ Every dispatch route — the direct one and the retained one — runs the very same reducer,

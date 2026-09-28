@@ -25,7 +25,7 @@ async fn snapshot_decoders_and_builder_refuse_invalid_document_boundaries() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_svg_snapshot_ingress_refuses_unpublishable_declarations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    let fixture = pack::parse_json(include_str!("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
     for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
         let mut invalid = crate::schema::empty_svg_snapshot();
         invalid.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });

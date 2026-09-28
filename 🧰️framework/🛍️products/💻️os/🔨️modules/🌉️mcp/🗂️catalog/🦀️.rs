@@ -373,11 +373,11 @@ fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef]) -> 
 //#endregion 🔖️SchemaBuilders
 
 //#region 🔖️FrameworkDedup
-/// 🕹️ The 5 framework-injected action ids that carry `ActionKind::View`/`🐚️Shell` (not
+/// 🕹️ The 7 framework-injected action ids that carry `ActionKind::View`/`🐚️Shell` (not
 /// `History`/`Clipboard`/`Interaction`, which are already unambiguous by kind) — see
 /// `🛂️manifest/🦀️.rs` `history_action_definitions`/`clipboard_action_definitions`/
 /// `set_active_utility_action_definition`/etc.'s own doc comments for the full auto-injection story.
-const FRAMEWORK_VIEW_SHELL_ACTION_IDS: [&str; 5] = ["setActiveUtility", "setActiveTool", "startIntroduction", "setHistoryCommandFilter", "noteShellCommand"];
+const FRAMEWORK_VIEW_SHELL_ACTION_IDS: [&str; 7] = ["setActiveUtility", "setActiveTool", "startIntroduction", "setHistoryCommandFilter", "noteShellCommand", manifest::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, manifest::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID];
 
 /// 🕹️ Whether `action` is one of the 21 framework-auto-injected ids (`📓️luna-actions-audit.md` §1) —
 /// these are walked ONCE per distinct id across every app (see `framework_capabilities`) rather than
@@ -440,6 +440,7 @@ fn framework_action_definitions(app: &manifest::AppDefinition) -> Vec<manifest::
     actions.extend(manifest::tool_run_action_definitions(app));
     actions.push(manifest::set_history_command_filter_action_definition());
     actions.push(manifest::note_shell_command_action_definition());
+    actions.extend(manifest::document_transfer_action_definitions());
     if !app.utilities.is_empty() {
         actions.push(manifest::set_active_utility_action_definition());
     }

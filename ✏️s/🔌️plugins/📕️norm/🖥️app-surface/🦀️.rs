@@ -1434,7 +1434,7 @@ pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body
 pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
-        name: label.into(),
+        label: semio_framework_plugin::LocalizedLabel::data(label),
         source_format: format!("norm.{variant}.document"),
         component_kind: "norm".into(),
         dimension: "data".into(),
@@ -2188,6 +2188,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

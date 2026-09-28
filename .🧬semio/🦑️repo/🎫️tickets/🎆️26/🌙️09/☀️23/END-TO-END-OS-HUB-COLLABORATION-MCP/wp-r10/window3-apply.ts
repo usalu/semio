@@ -28,16 +28,16 @@ const LAUNCH = join(ROOT, ".vscode/launch.json");
 const PLAN = join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json");
 const LAW = join(ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts");
 const DISCOVERY_PATCH = join(ROOT, ".tmp-ticket/wp-r9/launch-manifest-inputs.discovery.patch");
-const KINDS = ["generated/tax-kinds-2.json", "generated/tax-kinds-3.json", "generated/tax-kinds-4.json", "generated/tax-kinds-5.json", "generated/tax-kinds-window3.json"].map((path) => join(HERE, path));
+const KINDS = ["generated/tax-kinds-2.json", "generated/tax-kinds-3.json", "generated/tax-kinds-4.json", "generated/tax-kinds-5.json", "generated/tax-kinds-window3.json", "generated/tax-kinds-planned-1.json"].map((path) => join(HERE, path));
 
 type Spec = {
-  targets: { project: string; projectJson: string; name: string; command: string; forwardAllArgs: boolean; cache: boolean; dependsOn?: string[]; configurations?: Record<string, { args: string }> }[];
+  targets: { hold?: string; project: string; projectJson: string; name: string; command: string; forwardAllArgs: boolean; cache: boolean; dependsOn?: string[]; configurations?: Record<string, { args: string }> }[];
   projectJsonEdits?: { projectJson: string; target: string; before: string; after: string }[];
   seedTextEdits?: { row: string; before: string; after: string }[];
   seedRows: { after: string; row: { name: string } & Record<string, unknown> }[];
   seedRowEdits: { name: string; command: string }[];
   seedInputEdits: { id: string; default: string }[];
-  planChecks: { step: string; landed?: string; check: { id: string } & Record<string, unknown> }[];
+  planChecks: { step: string; landed?: string; hold?: string; check: { id: string } & Record<string, unknown> }[];
   planSteps: { after: string; step: { id: string } & Record<string, unknown> }[];
 };
 const spec = JSON.parse(readFileSync(join(HERE, "window3-spec.json"), "utf8")) as Spec;
@@ -145,7 +145,8 @@ function stepDiscovery(): void {
 
 function stepTargets(): void {
   const byFile = new Map<string, Spec["targets"]>();
-  for (const target of spec.targets) byFile.set(target.projectJson, [...(byFile.get(target.projectJson) ?? []), target]);
+  for (const held of spec.targets.filter((target) => target.hold)) console.log(`target ${held.project}:${held.name}: held — ${held.hold}`);
+  for (const target of spec.targets.filter((candidate) => !candidate.hold)) byFile.set(target.projectJson, [...(byFile.get(target.projectJson) ?? []), target]);
   for (const [relative, targets] of byFile) {
     const path = join(ROOT, relative);
     let text = readFileSync(path, "utf8");
@@ -268,8 +269,12 @@ async function stepPlan(): Promise<void> {
     console.log(`plan step ${planStep.id}: added after ${after}`);
   }
   const plan = JSON.parse(text) as { steps: { id: string; checks: { id: string }[] }[] };
-  for (const { step: stepId, check, landed } of spec.planChecks) {
+  for (const { step: stepId, check, landed, hold } of spec.planChecks) {
     if (landed) continue;
+    if (hold) {
+      console.log(`plan check ${check.id}: held — ${hold}`);
+      continue;
+    }
     if (plan.steps.some((candidate) => candidate.checks.some((existing) => existing.id === check.id))) {
       console.log(`plan check ${check.id}: present`);
       continue;

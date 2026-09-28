@@ -1,0 +1,8 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json",
+ "compilerOptions": { "noEmit": true, "incremental": false, "baseUrl": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript" },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🧪️tests/🧩️component/🟦️.tsx"
+ ]
+}

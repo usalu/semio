@@ -2,15 +2,28 @@
  * values computed by the independent Python oracle `wp-f3/f3-boot-budget-oracle.py`, ticket 26/09/23 F3): every resource's
  * kind, the per-kind payload sums and the verdict — payload and warm transfer always judged, timings only under the load
  * ceiling, a missing beacon or an unloaded plugin always a violation. */
+import { readFileSync } from "node:fs";
+import { Validator } from "jsonschema";
 import { describe, expect, it } from "vitest";
 import { bootPayloadV1, bootResourceKindV1, judgeBootBudgetV1, readBootBudgetFixtureV1 } from "../🟦️.ts";
 
 const fixture = readBootBudgetFixtureV1();
+const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🔣️.json", import.meta.url), "utf8")) as { $id: string };
+const validator = new Validator();
+validator.addSchema(schema as never, schema.$id);
+const fixtureSchema = { $ref: `${schema.$id}#/$defs/BootBudgetFixtureV1` };
 
 describe("boot-budget reducers", () => {
   it("carries at least one vector per verdict", () => {
     expect(fixture.schema).toBe("semio.os-dev.boot-budget/v1");
     expect(new Set(fixture.vectors.map((vector) => vector.expectedVerdict.status))).toEqual(new Set(["pass", "blocked", "fail"]));
+  });
+
+  it("satisfies BootBudgetFixtureV1 of the os-dev schema (jsonschema), which refuses a vector naming an unknown kind", () => {
+    expect(validator.validate(fixture, fixtureSchema as never).errors.map(String)).toEqual([]);
+    const hostile = structuredClone(fixture) as unknown as { vectors: { expectedKinds: string[] }[] };
+    hostile.vectors[0]!.expectedKinds[0] = "image";
+    expect(validator.validate(hostile, fixtureSchema as never).valid).toBe(false);
   });
 
   it.each(fixture.vectors.map((vector) => [vector.name, vector] as const))("classifies, sums and judges %s like the independent oracle", (_name, vector) => {

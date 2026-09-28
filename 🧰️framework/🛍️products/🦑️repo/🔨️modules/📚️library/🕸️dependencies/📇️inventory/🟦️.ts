@@ -43,6 +43,7 @@ export const DEPENDENCY_ECOSYSTEMS: readonly DependencyEcosystem[] = ["rust", "j
  * is not an oracle conflict: an oracle of the same package stays independent of code that only reaches it through here. */
 export const DEPENDENCY_INTERFACE_OWNERS: Readonly<Record<string, Readonly<{ ecosystem: DependencyEcosystem; directory: string; manifest: string }>>> = Object.freeze({
   three: Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/", manifest: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json" }),
+  "three-mesh-bvh": Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/", manifest: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json" }),
 });
 /**
  * 🔒️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a

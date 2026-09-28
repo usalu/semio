@@ -15,7 +15,7 @@ async fn space_command_op_text_round_trips_every_variant() {
 async fn connect_media_ports_rejects_incompatible_types_via_notice() {
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.2d".into(),
-        name: "Test 2D".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Test 2D", "Test 2D"),
         source_format: "test.2d".into(),
         component_kind: "test".into(),
         dimension: "2d".into(),
@@ -29,7 +29,7 @@ async fn connect_media_ports_rejects_incompatible_types_via_notice() {
     });
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.3d".into(),
-        name: "Test 3D".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Test 3D", "Test 3D"),
         source_format: "test.3d".into(),
         component_kind: "test".into(),
         dimension: "3d".into(),
@@ -62,7 +62,7 @@ async fn connect_media_ports_rejects_incompatible_types_via_notice() {
 async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.doc-a".into(),
-        name: "Test Doc A".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Test Doc A", "Testdokument A"),
         source_format: "test.doc".into(),
         component_kind: "test".into(),
         dimension: "data".into(),
@@ -76,7 +76,7 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
     });
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.doc-b".into(),
-        name: "Test Doc B".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Test Doc B", "Testdokument B"),
         source_format: "test.doc".into(),
         component_kind: "test".into(),
         dimension: "data".into(),

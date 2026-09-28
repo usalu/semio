@@ -1,7 +1,7 @@
 //! 📥️ Bounded hydration of an exact persisted config history into a fresh config store.
 
 use super::{
-    mutation_meta_from_history_op_meta, ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, MutationDiff, OpBinary,
+    mutation_meta_from_history_op_meta, ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, OpBinary,
     OpText, SnapshotRetirementStep, ToValue,
 };
 use std::mem::ManuallyDrop;
@@ -350,7 +350,7 @@ where
                     };
                     let edit_id = self.pending_edit.as_ref().expect("pending config edit remains retained").id.as_str();
                     if let Some(id) = &meta.mutation_id {
-                        if id.0 != edit_id && self.runtime.as_mut().expect("config hydration runtime remains retained").seed_mutation(id.clone()).is_err() {
+                        if self.runtime.as_mut().expect("config hydration runtime remains retained").seed_edit_operation(edit_id, id.clone()).is_err() {
                             return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                         }
                     }
@@ -405,8 +405,8 @@ where
                 if let Some(edit) = envelope.vcs.edits.get(self.record_index) {
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let validation = self.validation.as_mut().expect("config validation projection remains retained");
-                        let next = match MutationDiff::apply(operation.diff(validation).diff(), validation) {
-                            Ok(next) => next,
+                        let next = match crate::os_vcs::apply_mutation(validation, operation) {
+                            Ok((next, _)) => next,
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(validation, next);
@@ -437,8 +437,8 @@ where
                     let edit = envelope.vcs.edits.get(position).expect("indexed config edit remains retained");
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("config current remains retained");
-                        let next = match MutationDiff::apply(operation.diff(current).diff(), current) {
-                            Ok(next) => next,
+                        let next = match crate::os_vcs::apply_mutation(current, operation) {
+                            Ok((next, _)) => next,
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
                         let displaced = std::mem::replace(current, next);

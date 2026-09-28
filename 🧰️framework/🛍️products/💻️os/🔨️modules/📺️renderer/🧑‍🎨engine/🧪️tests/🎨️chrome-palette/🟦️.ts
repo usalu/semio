@@ -88,8 +88,7 @@ describe("🎨️ Chrome palette projection", () => {
   }, 30_000);
 
   it("paints authored light and dark palettes independently and switches appearance without reapplying", async () => {
-    const themes = [semioTheme(), structuredClone(semioTheme())];
-    themes[1].id = "custom.chrome";
+    const themes = [semioTheme(), { ...structuredClone(semioTheme()), id: "custom.chrome" }];
     for (const appearance of ["light", "dark"] as const) Object.assign(themes[1].appearances[appearance].chrome, fixture.custom[appearance]);
     const roots = themes.map((theme, index) => {
       const root = document.createElement("section");

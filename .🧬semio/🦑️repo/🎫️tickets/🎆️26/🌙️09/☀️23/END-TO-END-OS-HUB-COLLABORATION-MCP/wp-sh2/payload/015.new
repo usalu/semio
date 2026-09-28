@@ -20,6 +20,7 @@
 //! app's controller. Local-only spaces stay open-only until promoted to a hub space.
 
 use crate::editor::home::config::HomeConfig;
+use crate::editor::home::transient::HomeDirectoryProjection;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
@@ -208,10 +209,9 @@ fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, ac
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
 
-pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     let actions = semio_framework_plugin::resolve_labels::<SHomeLabels>(view_state);
-    let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🪪️ SIGNED OUT IS A STATE, NOT A FAULT. Refusing here (`s.home.session-identity-required`) meant
     // the landing window of the whole product never published for anyone who was not already signed in
     // — which is the ordinary first paint of every hub-configured shell. The host then had an app that
@@ -227,7 +227,7 @@ pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) 
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
     let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id, &cfg.retired_local_studio_ids)),
+        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows_wrapped(&rows, table, actions, &TreeWindows::for_body(view_state, S_HOME_BODY))

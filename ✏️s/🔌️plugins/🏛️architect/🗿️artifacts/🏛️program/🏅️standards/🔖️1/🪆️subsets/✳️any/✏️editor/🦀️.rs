@@ -12,7 +12,7 @@ use crate::editor::architect::commands::adjacency::{set_adjacency_field, set_adj
 use crate::editor::architect::commands::analysis::{run_analysis, run_report, run_validation};
 use crate::editor::architect::commands::element::{add_element, remove_element};
 use crate::editor::architect::commands::example::set_active_example;
-use crate::editor::architect::commands::exchange::{export_program, export_registers_csv, import_program, import_program_request, import_registers_csv};
+use crate::editor::architect::commands::exchange::{export_program, export_registers_csv, import_program, import_program_request, import_registers_csv, import_registers_csv_request};
 use crate::editor::architect::commands::graph::{node_graph_edit, node_graph_viewport};
 use crate::editor::architect::commands::register::{add_register_item, patch_register_item, remove_register_item, select_register};
 use crate::editor::architect::commands::search::query;
@@ -1114,6 +1114,7 @@ semio_framework_plugin::app_commands! {
         "search" as "search" => query::Search,
         "setAdjacencyFilter" as "set-adjacency-filter" => set_adjacency_filter::SetAdjacencyFilter,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "importRegistersCsvRequest" as "import-registers-csv-request" => import_registers_csv_request::ImportRegistersCsvRequest,
     }
 }
 //#endregion 🔖️Commands
@@ -1331,7 +1332,7 @@ impl ArchitectWindowCommandJobFactoryProofs {
 /// 🧵️ The analysis and exchange verbs. Imports carry a whole CSV or ProgramSnapshot DSL body and exports,
 /// analyses and reports publish whole records, so they run on their own factory with the public
 /// invocation wire budget instead of the 4 KiB window budget. Every verb here is one bounded step.
-pub(crate) const ARCHITECT_EXCHANGE_TOOL_IDS: &[&str] = &["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsv"];
+pub(crate) const ARCHITECT_EXCHANGE_TOOL_IDS: &[&str] = &["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsvRequest", "importRegistersCsv"];
 const ARCHITECT_EXCHANGE_PAYLOAD_SCHEMA: &str = "architect.program.exchange-command.v1";
 const ARCHITECT_EXCHANGE_RAW_BYTES: usize = semio_framework_plugin::PUBLIC_INVOCATION_BODY_BYTES;
 
@@ -1347,9 +1348,10 @@ fn architect_exchange_extent(command: &ArchitectCommand, _snapshot: &ProgramSnap
         | ArchitectCommand::Search(_)
         | ArchitectCommand::ExportProgram(_)
         | ArchitectCommand::ExportRegistersCsv(_)
-        | ArchitectCommand::ImportProgramRequest(_) => Some(1),
+        | ArchitectCommand::ImportProgramRequest(_)
+        | ArchitectCommand::ImportRegistersCsvRequest(_) => Some(1),
         ArchitectCommand::ImportProgram(payload) if payload.payload.len() <= ARCHITECT_EXCHANGE_RAW_BYTES => Some(1),
-        ArchitectCommand::ImportRegistersCsv(payload) if payload.csv.len() <= ARCHITECT_EXCHANGE_RAW_BYTES => Some(1),
+        ArchitectCommand::ImportRegistersCsv(payload) if payload.payload.len() <= ARCHITECT_EXCHANGE_RAW_BYTES => Some(1),
         _ => None,
     }
 }
@@ -1439,6 +1441,7 @@ impl ArtifactOwnedToolJobFactory for ArchitectExchangeCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "exportRegistersCsv", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "importProgramRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "importProgram", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importRegistersCsvRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "importRegistersCsv", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
@@ -1454,7 +1457,7 @@ impl ArchitectExchangeCommandJobFactoryProofs {
         factory: "ArchitectExchangeCommandJobFactory",
         factory_type: ArchitectExchangeCommandJobFactory,
         contract: architect_exchange_contract(),
-        tools: ["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsv"]
+        tools: ["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsvRequest", "importRegistersCsv"]
     }
 }
 //#endregion 🧵️RetainedExchangeCommands
@@ -1513,18 +1516,6 @@ impl ArtifactEditor for ArchitectPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// 📥️ Without this the host refuses every archive this app hands back
-    /// (`artifact-store.persisted-initializer-refused`), which is what a `setActiveExample` /
-    /// `importProgram` `Effect::LoadDocument` is: the trait default owns no retained initialization
-    /// authority, so `loadDocumentArchive` fails after the guest has already accepted the verb.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, ARCHITECT_PROGRAM_SCHEMA, operation, generation))
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -1618,6 +1609,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             ArtifactRetainedCommandInputs {
@@ -1688,7 +1680,8 @@ impl ArtifactEditor for ArchitectPlayApp {
             })),
             "applyTemplate" => Ok(ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: parse_entity_id_from_args(args, "templateId").map(|id| id.0).unwrap_or_default() })),
             "exportRegistersCsv" => Ok(ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})),
-            "importRegistersCsv" => Ok(ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv: str_field("csv").unwrap_or_default(), strategy: str_field("strategy").unwrap_or_else(|| "upsert".into()) })),
+            "importRegistersCsv" => Ok(ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { payload: str_field("payload").unwrap_or_default(), strategy: str_field("strategy").unwrap_or_else(|| "upsert".into()) })),
+            "importRegistersCsvRequest" => Ok(ArchitectCommand::ImportRegistersCsvRequest(import_registers_csv_request::ImportRegistersCsvRequest {})),
             "addElement" => Ok(ArchitectCommand::AddElement(add_element::AddElement { name: str_field("name").unwrap_or_else(|| "New Room".into()) })),
             "removeElement" => Ok(ArchitectCommand::RemoveElement(remove_element::RemoveElement { element_id: str_field("elementId").or_else(|| str_field("id")).unwrap_or_default() })),
             "runValidation" => Ok(ArchitectCommand::RunValidation(run_validation::RunValidation {})),
@@ -1817,6 +1810,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition::new("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition::new("importProgramRequest", LocalizedLabel::native("Import Program File", "Programmdatei importieren"), ActionKind::Shell, "upload"))
+            .action_with(ActionDefinition::new("importRegistersCsvRequest", LocalizedLabel::native("Import Registers CSV File", "Register-CSV-Datei importieren"), ActionKind::Shell, "upload"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
             .action_interactive_job("addElement", InteractiveJobClassification::Migrated)
             .action_interactive_job("addRegisterItem", InteractiveJobClassification::Migrated)
@@ -1827,6 +1821,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("exportRegistersCsv")
             .action_interactive_job("importProgram", InteractiveJobClassification::Migrated)
             .action_interactive_job("importProgramRequest", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importRegistersCsvRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importRegistersCsv", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
@@ -1880,7 +1875,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_args(
                 "importRegistersCsv",
                 vec![
-                    ActionArgDef::text("csv", LocalizedLabel::native("CSV", "CSV")),
+                    ActionArgDef::text("payload", LocalizedLabel::native("CSV Text", "CSV-Text")),
                     ActionArgDef::select(
                         "strategy",
                         LocalizedLabel::native("Strategy", "Strategie"),
@@ -1956,6 +1951,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole program with one of the plugin's bundled example programs, by example id.", "Ersetzt das gesamte Programm durch eines der mitgelieferten Beispielprogramme, anhand der Beispiel-Id."))
             .action_describe("exportProgram", LocalizedLabel::native("Writes the whole program as ProgramSnapshot DSL text to a downloaded .architect.dsl file on the user's machine.", "Schreibt das gesamte Programm als ProgramSnapshot-DSL-Text in eine heruntergeladene .architect.dsl-Datei auf dem Rechner des Nutzers."))
             .action_describe("importProgramRequest", LocalizedLabel::native("Asks the user to pick a ProgramSnapshot DSL file and then imports it with Import Program, replacing the whole program.", "Lässt den Nutzer eine ProgramSnapshot-DSL-Datei wählen und importiert sie dann mit Programm importieren, wobei das gesamte Programm ersetzt wird."))
+            .action_describe("importRegistersCsvRequest", LocalizedLabel::native("Asks the user to pick a CSV file of register rows and then imports it with Import Registers CSV by upsert.", "Lässt den Nutzer eine CSV-Datei mit Registerzeilen wählen und importiert sie dann mit Register CSV importieren per Upsert."))
             .action_describe("exportRegistersCsv", LocalizedLabel::native("Writes every register of the program as CSV to a downloaded .registers.csv file on the user's machine.", "Schreibt alle Register des Programms als CSV in eine heruntergeladene .registers.csv-Datei auf dem Rechner des Nutzers."))
             .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)

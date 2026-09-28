@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
-type Effect = Readonly<{ lanes: string[]; documentChanged: boolean; documentReplaced: boolean; configChanged: boolean; userPathWritten: boolean; hostEffects: number; fingerprint: number }>;
+type Effect = Readonly<{ lanes: string[]; documentChanged: boolean; documentReplaced: boolean; configChanged: boolean; userPathWritten: boolean; hostEffects: number; fingerprint: number; orphanedChildren?: string[] }>;
 type Outcome = Readonly<{ settled: Effect } | { refused: { code: string; detail: string } } | { unreachable: { code: string; detail: string } }>;
 type Argument = Readonly<{ argument: string; othersSpecified: boolean; first: Outcome; second: Outcome }>;
 type Probe = Readonly<{ verb: string; kind: string; audience: string; destructive: boolean; bridge: string | null; windows: Readonly<{ window: string; staged: Outcome; arguments: Argument[] }>[]; agent: Outcome | null }>;
@@ -35,6 +35,7 @@ const rules = {
     required: ["destructive", "effects"],
     properties: { destructive: { const: true }, effects: { type: "array", minItems: 1, items: { type: "object", not: { anyOf: [touches, { type: "object", required: ["userPathWritten"], properties: { userPathWritten: { const: true } } }] } } } },
   }),
+  composedChildOrphaned: ajv.compile({ type: "object", required: ["effects"], properties: { effects: { type: "array", contains: { type: "object", required: ["orphanedChildren"], properties: { orphanedChildren: { type: "array", minItems: 1 } } } } } }),
   agentLaneDiverges: ajv.compile({
     type: "object",
     required: ["agent", "staged"],
@@ -58,8 +59,8 @@ const rules = {
   }),
 };
 
-/** 🧮️ An outcome in the Rust verdict's own equality: lanes are a set. */
-const normal = (outcome: Outcome): Outcome => ("settled" in outcome ? { settled: { ...outcome.settled, lanes: [...new Set(outcome.settled.lanes)].sort() } } : outcome);
+/** 🧮️ An outcome in the Rust verdict's own equality: lanes are a set, a missing orphan list is empty. */
+const normal = (outcome: Outcome): Outcome => ("settled" in outcome ? { settled: { ...outcome.settled, lanes: [...new Set(outcome.settled.lanes)].sort(), orphanedChildren: outcome.settled.orphanedChildren ?? [] } } : outcome);
 
 /** 🔍️ The findings of one probe, in the Rust verdict's order: an unbridged or unreachable verb reports that alone. */
 function findings(probe: Probe): Finding[] {
@@ -69,7 +70,7 @@ function findings(probe: Probe): Finding[] {
   const view = { kind: probe.kind, audience: probe.audience, destructive: probe.destructive, bridge: probe.bridge, staged, outcomes, effects, ...(probe.agent === null ? {} : { agent: normal(probe.agent) }) };
   if (!rules.bridged(view)) return rules.unbridged(view) ? [{ finding: "unbridged" }] : [];
   if (rules.unreachable(view)) return [{ finding: "unreachable" }];
-  const found: Finding[] = (["documentWriteFromNonMutation", "silentMutation", "destructiveWithoutDiscard", "agentLaneDiverges"] as const).filter((rule) => rules[rule](view)).map((rule) => ({ finding: rule }));
+  const found: Finding[] = (["documentWriteFromNonMutation", "silentMutation", "destructiveWithoutDiscard", "composedChildOrphaned", "agentLaneDiverges"] as const).filter((rule) => rules[rule](view)).map((rule) => ({ finding: rule }));
   if (!rules.argumentAudience(view)) return found;
   const names = [...new Set(probe.windows.flatMap((window) => window.arguments.map((argument) => argument.argument)))];
   for (const name of names) {

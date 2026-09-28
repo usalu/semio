@@ -118,12 +118,9 @@ pub fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[
 /// converge on the same `child_id` (never a random/incrementing id), mirroring `sourcing`'s
 /// `catalog_child_handle`.
 pub fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild<SemioKitSnapshot> {
-    use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_vortex_kinds(kinds);
     let canonical = dsl::os_pack::json::to_json_string(&catalog.types);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    canonical.hash(&mut hasher);
-    let child_id = format!("catalog-{:016x}", hasher.finish());
+    let child_id = store::content_id("catalog", canonical.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -267,7 +264,7 @@ impl Block3dWindowView {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.block".into(),
-        name: "Object Kind".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Object Kind", "Objekttyp"),
         source_format: BLOCK_3D_SCHEMA.into(),
         component_kind: "block3d".into(),
         dimension: "3d".into(),

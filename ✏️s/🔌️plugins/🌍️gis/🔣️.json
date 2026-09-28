@@ -671,6 +671,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -4088,6 +4133,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -5826,6 +5916,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -7341,7 +7476,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -8690,7 +8871,7 @@
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
               "factoryId": "stdio.native.svg.v1",
-              "packSchemaSha256": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+              "packSchemaSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
               "runtimeCapabilityId": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
               "schema": "stdio.svg"
             },
@@ -15783,7 +15964,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
+                  "descriptorSha256": "9b74a8abc418bd961e3f09813971fccd10aaa8a9edc4fb9f400116ca022a68d8",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -17246,7 +17427,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -17606,7 +17787,7 @@
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
               "factoryId": "stdio.native.svg.v1",
-              "packSchemaSha256": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+              "packSchemaSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
               "runtimeCapabilityId": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
               "schema": "stdio.svg"
             },
@@ -24699,7 +24880,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
+                  "descriptorSha256": "9b74a8abc418bd961e3f09813971fccd10aaa8a9edc4fb9f400116ca022a68d8",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -26266,8 +26447,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "45e5b1184bb6160de02c5fc873436a38c5cf327f1e1a86755d1dc2a3b7a4e40c",
-    "coreWasmSha256": "1df38e206653d9983f6897e529bb3c1ad91901710fa3f151a35beaa7a92d38df",
-    "descriptorSha256": "929bf695ea4f67ad1e383809e4078a9498842e1e59d664c008529e3f2221cd5a"
+    "wasmSha256": "b6a1758205b96ea77fd68d6e96dd7552a5d5c688a88093ab5a80147c3ee27fd8",
+    "coreWasmSha256": "b874303783effba6136123c99014b16b98615006ff13871dffefcb5014f19410",
+    "descriptorSha256": "40cf9a511008165b52921e01019abb6ef13837d025f8e57ef89b163c0f63f985"
   }
 }

@@ -50,7 +50,7 @@ fn show_mode_row(mode: &str, is_de: bool) -> (&'static str, &'static str) {
 }
 
 /// 👁️ Preview shading mode for the world-3d window.
-pub fn show_mode_measure(show_mode: &str, is_de: bool, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn show_mode_measure(show_mode: &str, is_de: bool, procedural_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "generation3d-measure-show".into(),
@@ -69,7 +69,7 @@ pub fn show_mode_measure(show_mode: &str, is_de: bool, procedural_action: impl F
 
 /// 🎚️ Shared preview-window chrome measures (show-mode toggle + sun group) — reused by both preview
 /// windows (edit mode's 3D preview and generate mode's generation preview).
-pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, is_de, procedural_action), world3d_sun_measures("generation3d", &sun, is_de, procedural_action)]
 }

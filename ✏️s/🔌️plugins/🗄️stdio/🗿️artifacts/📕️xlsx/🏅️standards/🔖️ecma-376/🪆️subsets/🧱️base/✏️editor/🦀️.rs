@@ -183,6 +183,9 @@ impl ArtifactEditor for XlsxEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
     }
 
+    fn agent_target_revision(_action: &str, args: &dsl::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+        xlsx_agent_target_revision(doc.snapshot, args)
+    }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
@@ -228,6 +231,15 @@ impl ArtifactEditor for XlsxEditor {
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
+}
+
+/// 🔐️ The token an agent's omitted `set-cell` revision is admitted against: the addressed cell's own token, as its rendered
+/// binding carries it; a stale address is refused exactly as the edit itself would refuse it.
+pub(crate) fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &dsl::DslValue) -> Result<Option<String>, Fault> {
+    let sheet_name = semio_s_artifact_stdio_contract::window_kit_required_text_argument(Some(args), "sheetName")?;
+    let row = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "row")?;
+    let column = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "column")?;
+    xlsx_cell_address(snapshot, &sheet_name, row, column).map(|address| Some(address.revision)).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))
 }
 
 fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {

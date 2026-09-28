@@ -114,7 +114,8 @@
     {
       "target": "generator-inputs",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "authored": true
     },
     {
       "target": "forms-document-contract",

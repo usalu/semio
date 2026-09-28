@@ -129,15 +129,15 @@ impl LayoutInteractionSnapshot {
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
 /// shared by the canvas pointer commands (wrapped into a `Effect::DispatchAction`) and any
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
-pub fn layout_select_action_args(ids: &[String], merge: &str) -> Value {
-    let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
-    json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
+pub fn layout_select_action_args(ids: &[String], merge: &str) -> semio_framework::DslValue {
+    let targets: Vec<semio_framework::DslValue> = ids.iter().map(|id| semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
+    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": dsl::os_pack::json::to_json_string(&targets), "merge": merge, "method": "pick" })
 }
 
 /// 🐁️ Builds `interactionHover`'s JSON args for the `"pointer"` channel — `id: None` clears hover.
-pub fn layout_hover_action_args(id: Option<&str>) -> Value {
-    let targets: Vec<Value> = id.map(|id| vec![json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
-    json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": serde_json::to_string(&targets).unwrap_or_default() })
+pub fn layout_hover_action_args(id: Option<&str>) -> semio_framework::DslValue {
+    let targets: Vec<semio_framework::DslValue> = id.map(|id| vec![semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
+    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": dsl::os_pack::json::to_json_string(&targets) })
 }
 
 /// 🕹️ Wraps [`layout_select_action_args`] into the redispatch effect a canvas gesture's own `handle`
@@ -146,12 +146,12 @@ pub fn layout_hover_action_args(id: Option<&str>) -> Value {
 /// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(layout_select_action_args(ids, merge)), delay_ms: 0 }
 }
 
 /// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
 pub fn layout_hover_effect(id: Option<&str>) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(114), action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(114), action: INTERACTION_HOVER_ACTION_ID.into(), args: Some(layout_hover_action_args(id)), delay_ms: 0 }
 }
 
 /// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
@@ -194,13 +194,13 @@ fn layout_authoring_surface(surface: Option<&ContextMenuSurfaceTarget>) -> bool 
     surface.map_or(true, |target| target.surface_id != LAYOUT_PLAY_SURFACE_PREVIEW)
 }
 
-fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, disabled: bool) -> ContextMenuItemSpec {
+fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool) -> ContextMenuItemSpec {
     ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
+        args,
         destructive: destructive.then_some(true),
         disabled: disabled.then_some(true),
         ..Default::default()
@@ -213,7 +213,7 @@ fn layout_add_frame_items<'a>(menu: semio_framework_plugin::Menu<'a>, labels: &'
         "image" => ("add-image-frame", labels.kind_image.as_str(), "image"),
         _ => ("add-rect-frame", labels.kind_rect.as_str(), "square"),
     };
-    menu.item(layout_context_menu_item(id, label, icon, "addFrame", Some(json!({ "kind": kind })), false, false))
+    menu.item(layout_context_menu_item(id, label, icon, "addFrame", Some(semio_framework::dsl_value!({ "kind": kind })), false, false))
 }
 
 /// 🖱️ On-demand layout context menu — canvas, document tree, and preflight surfaces each carry
@@ -234,7 +234,7 @@ fn layout_context_menu_items(
 
     if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-document.page.")) {
         if let Some(page_id) = hit.id.strip_prefix("layout-document.page.") {
-            return Menu::of(registry).item(layout_context_menu_item("set-active-page", labels.active_page.as_str(), "file", "setActivePage", Some(json!({ "pageId": page_id })), false, false)).build();
+            return Menu::of(registry).item(layout_context_menu_item("set-active-page", labels.active_page.as_str(), "file", "setActivePage", Some(semio_framework::dsl_value!({ "pageId": page_id })), false, false)).build();
         }
     }
 
@@ -258,14 +258,14 @@ fn layout_context_menu_items(
 
     if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-preflight.")) {
         if let Some(issue) = layout_preflight_issue_for_row(doc, labels, &hit.id) {
-            let issue_value = json!({
+            let issue_value = semio_framework::dsl_value!({
                 "severity": issue.severity,
                 "code": issue.code,
                 "message": issue.message,
                 "objectId": issue.object_id,
                 "pageId": issue.page_id,
             });
-            return Menu::of(registry).item(layout_context_menu_item("focus-preflight-issue", labels.preflight.as_str(), "alert-triangle", "focusPreflightIssue", Some(json!({ "issue": issue_value })), false, false)).build();
+            return Menu::of(registry).item(layout_context_menu_item("focus-preflight-issue", labels.preflight.as_str(), "alert-triangle", "focusPreflightIssue", Some(semio_framework::dsl_value!({ "issue": issue_value })), false, false)).build();
         }
     }
 
@@ -1222,6 +1222,7 @@ impl ArtifactEditor for LayoutPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1398,7 +1399,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
-                name: "Layout".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("Layout", "Layout"),
                 source_format: "layout.layout".into(),
                 component_kind: "layout".into(),
                 dimension: "2d".into(),

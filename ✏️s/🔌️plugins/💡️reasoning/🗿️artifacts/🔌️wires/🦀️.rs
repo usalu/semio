@@ -173,18 +173,9 @@ pub fn scene_from_wires_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<D
 /// `(child_id, target)` for identical `(nodes, edges)`, a different pair once the content actually
 /// changes; mirrors `dag`'s `dag_content_child_handle`/writer's `document_child_handle`.
 pub fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> WiresContentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = wires_content_snapshot_from_scene(nodes, edges);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    wires_content_child_from_hash(content_hash)
-}
-
-/// 🔏️ Mints the composed-child identity from a hash produced by the bounded neutral graph encoder.
-pub fn wires_content_child_from_hash(content_hash: u64) -> WiresContentChild {
-    let child_id = format!("wires-content-{content_hash:016x}");
+    let child_id = store::content_id("wires-content", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -306,7 +297,7 @@ pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.wires".into(),
-        name: "Wires Graph".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
         source_format: MINDMAP_WIRES_SCHEMA.into(),
         component_kind: "wires".into(),
         dimension: "graph".into(),

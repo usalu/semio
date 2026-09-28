@@ -80,7 +80,8 @@ export type InputRefusalReasonV1 =
   | "owner-mismatch"
   | "view-state-unresolved"
   | "mutation-rejected"
-  | "dispatch-failed";
+  | "dispatch-failed"
+  | "not-applied";
 
 export type InputOutcomeV1 =
   | Readonly<{ kind: "applied"; inputSeq: number }>
@@ -101,6 +102,7 @@ export const INPUT_REFUSAL_RETRYABLE_V1: Readonly<Record<InputRefusalReasonV1, b
   "view-state-unresolved": false,
   "mutation-rejected": false,
   "dispatch-failed": true,
+  "not-applied": true,
 };
 
 /** 🔇️ Reasons a USER-origin refusal is shown as a shell notice. A guest echo that lost a CAS race is logged,
@@ -117,6 +119,7 @@ export const INPUT_REFUSAL_NOTIFIED_V1: Readonly<Record<InputRefusalReasonV1, bo
   "view-state-unresolved": true,
   "mutation-rejected": true,
   "dispatch-failed": true,
+  "not-applied": true,
 };
 
 export function inputAppliedV1(inputSeq: number): InputOutcomeV1 {
@@ -204,6 +207,7 @@ function freshRefusalCounts(): Record<InputRefusalReasonV1, number> {
     "view-state-unresolved": 0,
     "mutation-rejected": 0,
     "dispatch-failed": 0,
+    "not-applied": 0,
   };
 }
 
@@ -349,6 +353,7 @@ export const INPUT_REFUSAL_LABELS_V1: Readonly<Record<InputRefusalReasonV1, Inpu
   "view-state-unresolved": { en: "That window is no longer open.", de: "Dieses Fenster ist nicht mehr geöffnet." },
   "mutation-rejected": { en: "The change was rejected.", de: "Die Änderung wurde abgelehnt." },
   "dispatch-failed": { en: "The input could not be delivered.", de: "Die Eingabe konnte nicht zugestellt werden." },
+  "not-applied": { en: "Not applied — the document is reopening. Try again.", de: "Nicht angewendet — das Dokument wird neu geöffnet. Bitte erneut versuchen." },
 };
 export function inputRefusalNoticeTextV1(reason: InputRefusalReasonV1, locale: string): string {
   const label = INPUT_REFUSAL_LABELS_V1[reason];

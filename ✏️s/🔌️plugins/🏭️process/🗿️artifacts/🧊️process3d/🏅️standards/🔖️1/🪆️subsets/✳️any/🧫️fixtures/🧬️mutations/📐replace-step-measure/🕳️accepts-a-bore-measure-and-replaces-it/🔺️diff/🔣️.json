@@ -7,9 +7,9 @@
   "stockPayload": null,
   "stockSolid": null,
   "steps": {
-    "childId": "steps-flow-49e7fce5e42bc9b8",
+    "childId": "steps-flow-4c4aafdbb0856835",
     "target": {
-      "artifactId": "steps-flow-49e7fce5e42bc9b8",
+      "artifactId": "steps-flow-4c4aafdbb0856835",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

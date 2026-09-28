@@ -303,3 +303,57 @@ async fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
     std::panic::set_hook(previous);
     assert!(outcome.is_err(), "the fixture panic must reach this caller as an unwind");
 }
+
+//#region 🔖️HubTailInitialization
+/// 🔁️ The hub's catch-up tail of STEP 8 (ticket 26/09/23 C12, captured from hub 7800): a replica folds each operation as a remote edit
+/// named after its mutation id. Parsed from the fixture's verbatim wire fields.
+fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
+    let text = |node: &serde_json::Value| node.as_str().expect("hub tail fixture string").to_string();
+    let bytes = |node: &serde_json::Value| node["payload"].as_array().expect("hub tail payload bytes").iter().map(|byte| u8::try_from(byte.as_u64().expect("hub tail byte")).expect("hub tail byte fits u8")).collect::<Vec<u8>>();
+    let number = |node: &serde_json::Value| node.as_u64().expect("hub tail timestamp field");
+    protocol::MutationEnvelope {
+        mutation_id: protocol::MutationId(text(&value["mutation_id"])),
+        document_id: protocol::ArtifactId(text(&value["document_id"])),
+        actor: protocol::ActorId(text(&value["actor"])),
+        dependencies: value["dependencies"].as_array().expect("hub tail dependencies").iter().map(|id| protocol::MutationId(text(id))).collect(),
+        observed: value["observed"].as_str().map(|id| protocol::MutationId(id.to_string())),
+        target: value["target"].as_array().expect("hub tail target").iter().map(text).collect(),
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(text(&value["diff"]["schema"])), payload: bytes(&value["diff"]) },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(text(&value["inverse"]["schema"])), payload: bytes(&value["inverse"]) },
+        timestamp: protocol::HybridLogicalTimestamp { actor: number(&value["timestamp"]["actor"]), physical_ms: number(&value["timestamp"]["physical_ms"]), logical: number(&value["timestamp"]["logical"]) },
+    }
+}
+
+/// 🌱️ LAW: a document a replica folded from the hub's tail — beside its own local edits, STEP 8's mixed shape — initializes again through this store initializer. Every folded operation is
+/// an edit whose id IS its only operation's mutation id — one causal node, which SeedHistory used to seed twice and refuse as
+/// `duplicate mutation id` (collab-e2e STEP 8: the reload after a Check In showed "Document restore failed … initializer-failed").
+/// The initialized candidate must be the folded document.
+#[semio_framework_async_macros::async_test]
+async fn a_document_folded_from_the_hub_tail_initializes_again() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
+    let document_id = fixture["documentId"].as_str().expect("hub tail document id");
+    let tail = fixture["envelopes"].as_array().expect("hub tail envelopes");
+    assert_eq!(tail.len(), 17, "the captured tail: four edits, a Check In, eleven two-author edits, a second Check In");
+    let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None)).await.expect("valid writer store fixture");
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], description: None }).await.expect("a locally authored edit before the tail");
+    for value in tail {
+        folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
+    }
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], description: None }).await.expect("a locally authored edit after the tail");
+    let (remote, local) = folded.envelope().vcs.edits.iter().fold((0, 0), |(remote, local), edit| if edit.mutation_meta.first().and_then(|meta| meta.mutation_id.as_ref()).is_some_and(|id| id.0 == edit.id) { (remote + 1, local) } else { (remote, local + 1) });
+    assert_eq!((remote, local), (15, 2), "STEP 8's mixed shape: every folded operation is an edit named after its own mutation id, the replica's own edits are local (entry id + operation id)");
+    let live = folded.snapshot().expect("folded writer snapshot");
+    let files = store::print_document_pack(folded.envelope()).await.expect("print the folded document pack");
+    let parsed: store::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");
+    let operation = semio_framework_job::OperationId(403);
+    let generation = semio_framework_job::Generation(13);
+    let mut authority = WriterStoreInitializationAuthority::new(parsed.into_envelope(), operation, generation);
+    let outcome = drive_writer_initializer(&mut authority, operation, generation);
+    assert!(matches!(outcome, semio_framework_job::StepOutcome::Complete(_)), "the folded hub tail must initialize, not fault (duplicate mutation id)");
+    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
+    assert_eq!(candidate.snapshot().expect("initialized writer snapshot"), live, "the initialized document is the folded one");
+    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+    drop(authority);
+    close_writer_candidate(candidate);
+}
+//#endregion 🔖️HubTailInitialization

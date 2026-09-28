@@ -53,7 +53,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
-pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
+pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     vec![WindowMeasure::Select {
         id: "generation3d-measure-lod".into(),

@@ -329,11 +329,11 @@ pub fn start_fill_effects() -> Vec<Effect> {
 }
 
 fn commit_fill_effect(payload: &Wfc2dFillTickPayload) -> Effect {
-    let args = serde_json::json!({ "payloadJson": protocol::json::to_json_string(payload) });
+    let args = semio_framework::dsl_value!({ "payloadJson": protocol::json::to_json_string(payload) });
     Effect::DispatchAction {
         req: RequestId(FILL_HOP_REQUEST ^ 1),
         action: COMMIT_FILL_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(args)),
+        args: Some(args),
         delay_ms: 0,
     }
 }

@@ -17,18 +17,18 @@ pub struct EngagementSubmit {
 pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let typed = payload.value.trim();
     let action = if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
-        Some(("exportPng", Some(serde_json::json!({ "pageId": null }))))
+        Some(("exportPng", Some(semio_framework::dsl_value!({ "pageId": null }))))
     } else if engagement_token_matches(typed, "export svg") || engagement_token_matches(typed, "svg") {
-        Some(("exportSvg", Some(serde_json::json!({ "pageId": null }))))
+        Some(("exportSvg", Some(semio_framework::dsl_value!({ "pageId": null }))))
     } else if engagement_token_matches(typed, "export pdf") || engagement_token_matches(typed, "pdf") {
-        Some(("exportPdf", Some(serde_json::json!({ "pageId": null }))))
+        Some(("exportPdf", Some(semio_framework::dsl_value!({ "pageId": null }))))
     } else if engagement_token_matches(typed, "export package") || engagement_token_matches(typed, "package") {
-        Some(("exportPackage", Some(serde_json::json!({}))))
+        Some(("exportPackage", Some(semio_framework::dsl_value!({}))))
     } else {
         None
     };
     Ok(action.map_or_else(Emit::default, |(action, args)| Emit {
-        effects: vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(116), action: action.into(), args: semio_framework::optional_json_to_dsl(args), delay_ms: 0 }],
+        effects: vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(116), action: action.into(), args, delay_ms: 0 }],
         ..Default::default()
     }))
 }

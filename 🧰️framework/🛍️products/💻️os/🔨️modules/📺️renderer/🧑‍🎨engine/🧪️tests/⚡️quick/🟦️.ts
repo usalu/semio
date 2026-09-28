@@ -78,6 +78,10 @@ describe("renderer quick contracts", () => {
     expect(cancelled).toBe(progress.documentId);
     view.rerender(React.createElement(BootstrapStatusNotice, { status: hostBootstrapFixture.bootstrap.rebootstrap as Extract<BootstrapUiStatus, { kind: "artifact-rebootstrap-required" }>, locale: "en", onCancel: () => {} }));
     expect(view.getByRole("alert").textContent).toContain(hostBootstrapFixture.bootstrap.expected.rebootstrapEn);
+    for (const locale of ["en", "de"] as const) {
+      view.rerender(React.createElement(BootstrapStatusNotice, { status: hostBootstrapFixture.bootstrap.reopen as Extract<BootstrapUiStatus, { kind: "artifact-rebootstrap-required" }>, locale, onCancel: () => {} }));
+      expect(view.getByRole("alert").textContent).toBe(hostBootstrapFixture.bootstrap.expected[locale === "en" ? "reopenEn" : "reopenDe"]);
+    }
     cleanup();
 
     const active = reduceBootstrapUiState({}, progress);

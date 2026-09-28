@@ -28,7 +28,7 @@ case $cmd in
     lsof -nP -iTCP:$PORT -sTCP:LISTEN >/dev/null && { echo "port $PORT busy"; exit 1; }
     n=1; while [ -e "$LOGS/$NAME-$PORT-$n.log" ]; do n=$((n+1)); done
     LOG="$LOGS/$NAME-$PORT-$n.log"
-    pid=$(OS_HUB_DATA="$ROOT" OS_HUB_MODE=production OS_HUB_BIND=127.0.0.1 OS_HUB_PORT=$PORT OS_HUB_CREDENTIAL_SIGN_IN=true \
+    pid=$(OS_HUB_STORAGE_BACKEND=${H13_STORAGE_BACKEND:-fs} OS_HUB_DATA="$ROOT" OS_HUB_MODE=production OS_HUB_BIND=127.0.0.1 OS_HUB_PORT=$PORT OS_HUB_CREDENTIAL_SIGN_IN=true \
       OS_HUB_ADMIN_SUBJECTS=credential.password.v1:user1@semio.dev SEMIO_TRACE_LEVEL=info SEMIO_TRACE_SINK=stderr \
       python3 /Users/ueli/Documents/semio/.tmp-ticket/wp-w2/w2-detach.py "$LOG" "$BIN")
     echo "$pid" > "$ROOT.pid"

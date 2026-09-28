@@ -264,12 +264,9 @@ pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (V
 /// (`InvalidReference`), which aborts the guest inside `ArtifactApp::genesis_child_pack` before the
 /// first window renders.
 pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let child_id = format!("sequence-content-{:016x}", hasher.finish());
+    let child_id = store::content_id("sequence-content", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -346,7 +343,7 @@ pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) 
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
-        name: "Sequence".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Sequence", "Sequenz"),
         source_format: "sequence.sequence".into(),
         component_kind: "sequence".into(),
         dimension: "graph".into(),

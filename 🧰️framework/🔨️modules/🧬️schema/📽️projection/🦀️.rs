@@ -301,7 +301,7 @@ export type ApprovalMode = "never" | "whenDestructive" | "always";"####,
  * beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
  * semantics): a `Color` format could still render as free text in a minimal shell.
  */
-export type ArgFormat = { "kind": "artifactRef" } | { "kind": "windowId" } | { "kind": "entityId", entityKind: string, } | { "kind": "iconId" } | { "kind": "color" } | { "kind": "uri" } | { "kind": "json" } | { "kind": "locale" } | { "kind": "terminology" } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, };"####,
+export type ArgFormat = { "kind": "artifactRef" } | { "kind": "windowId" } | { "kind": "entityId", entityKind: string, } | { "kind": "iconId" } | { "kind": "color" } | { "kind": "uri" } | { "kind": "json" } | { "kind": "locale" } | { "kind": "terminology" } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, } | { "kind": "documentRevision" } | { "kind": "targetRevision" };"####,
         },
         SchemaMetadata {
             name: "ArgPresentation",

@@ -650,8 +650,8 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapsho
 
 pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 
-fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChild {
-    let child_id = format!("raster-asset-{content_hash:016x}");
+fn mint_asset_child_handle(asset_id: &str, content: &[u8]) -> RasterAssetChild {
+    let child_id = store::content_id("raster-asset", content);
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -662,11 +662,7 @@ fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChil
 /// (see `mint_raster_asset_child`), and by pure-codec tests that need SOME stable handle without
 /// exercising the real png bridge. Prefer `mint_raster_asset_child` at every real call site.
 pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    asset.mime.hash(&mut hasher);
-    asset.data.hash(&mut hasher);
-    mint_asset_child_handle(asset_id, hasher.finish())
+    mint_asset_child_handle(asset_id, &[asset.mime.as_bytes(), b"\x1f", &asset.data].concat())
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
@@ -679,10 +675,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
 /// `decode → cache → re-encode → decode` idempotent at the handle level, which `add-layer-asset`'s
 /// inverse (`🧬️mutations/🖇️add-layer-asset/↩️inverse`) depends on to restore the exact prior handle.
 fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
-    mint_asset_child_handle(asset_id, hasher.finish())
+    mint_asset_child_handle(asset_id, &<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image))
 }
 
 /// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
@@ -841,7 +834,7 @@ pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.raster".into(),
-        name: "2D Raster".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("2D Raster", "2D-Rasterbild"),
         source_format: "raster.document".into(),
         component_kind: "raster".into(),
         dimension: "2d".into(),

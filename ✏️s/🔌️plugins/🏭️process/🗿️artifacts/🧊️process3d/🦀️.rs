@@ -798,11 +798,7 @@ pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::Ar
 }
 
 fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild<SemioBrepSnapshot> {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("{slug}-brep-{content_hash:016x}");
+    let child_id = store::content_id(&format!("{slug}-brep"), content.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -915,11 +911,7 @@ pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
 
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
 pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    serde_json::to_string(&semio_framework_os_kernel::ToValue::to_value(content)).unwrap_or_default().hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("steps-flow-{content_hash:016x}");
+    let child_id = store::content_id("steps-flow", dsl::json::to_json_string(content).as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -1046,7 +1038,7 @@ pub fn empty_process3d_snapshot() -> Process3dSnapshot {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.process".into(),
-        name: "3D Process".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Process", "3D-Prozess"),
         source_format: PROCESS_3D_SCHEMA.into(),
         component_kind: "process3d".into(),
         dimension: "3d".into(),

@@ -46,7 +46,7 @@ pub fn render_revisioned(document: &CsvSnapshot, revision: &str, locale: Locale,
             })
     };
     let controller_id = "s.stdio.csv@rfc4180/*#editor";
-    let table = TableWindowKit::render_indexed_matrix_with_id(
+    let table = || TableWindowKit::render_indexed_matrix_with_id(
         windows,
         TableWindowKit::KIND_ID,
         match locale {
@@ -93,8 +93,8 @@ pub fn render_revisioned(document: &CsvSnapshot, revision: &str, locale: Locale,
             )?;
             editable_table_window_row_at(&format!("row-{row}"), controller_id, locale, column_offset, cells, [remove])
         },
-    )?;
-    semio_s_artifact_stdio_contract::render_structural_table(table, width, column_name, true, controller_id, revision, locale, windows)
+    );
+    semio_s_artifact_stdio_contract::render_structural_table(width, column_name, true, controller_id, revision, locale, windows, table)
 }
 //#endregion 🔖️Render
 

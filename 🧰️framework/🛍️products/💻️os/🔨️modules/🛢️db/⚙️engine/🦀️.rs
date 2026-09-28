@@ -34,8 +34,7 @@
 //! documents that `DocumentState` materializes purely from the WAL suffix with no full-state
 //! enumeration to serialize into a pack snapshot, and `db_snapshot` is not even a direct dependency
 //! of this crate per its `Cargo.toml`. `ArtifactHandle::history` replays the WAL through the
-//! document authority's retained cursor because its in-memory `commit_log` only contains live
-//! submissions from the current process.
+//! document authority's retained cursor: the WAL is the only record of a document's history.
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -9184,12 +9183,24 @@ pub const DATABASE_HELLO_ADMISSION_WAIT_MS: u64 = 30_000;
 //#region 🔖️ArtifactHandle
 const ARTIFACT_SUBMIT_OPERATION_ITEMS: usize = 64;
 const ARTIFACT_SUBMIT_PAGE_BYTES: u64 = 16 * 1024;
-const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = 64;
+/// 📐️ One submit holds any batch the document backbone declares legal (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`): a
+/// writer's whole post-cut outbox arrives as one batch and must commit, so the envelope, nested-item and byte credits are the
+/// declaration's own maxima — never a smaller engine-side cap a declared batch could hit.
+const ARTIFACT_SUBMIT_BATCH_ITEMS: usize = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES;
+const ARTIFACT_SUBMIT_NESTED_ITEMS: usize = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS;
+/// 📐️ Owner bytes of the largest declared batch: the credit page, its fixed owners (envelopes, dependency ids, target
+/// segments), every declared byte, and one declared identifier per envelope for the document id the hub re-keys.
+const ARTIFACT_SUBMIT_DECLARED_BATCH_BYTES: u64 = ARTIFACT_SUBMIT_PAGE_BYTES
+    + (protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES * size_of::<protocol::MutationEnvelope>()
+        + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES * size_of::<protocol::MutationId>()
+        + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS * size_of::<String>()
+        + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES
+        + protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES * protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES) as u64;
+const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = ARTIFACT_SUBMIT_DECLARED_BATCH_BYTES.div_ceil(ARTIFACT_SUBMIT_PAGE_BYTES);
 const ARTIFACT_SUBMIT_OPERATION_BYTES: u64 = ARTIFACT_SUBMIT_PAGE_BYTES * ARTIFACT_SUBMIT_OPERATION_PAGES;
-const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = 1024;
+/// 📐️ In-flight submit owners across every document: four declared-maximal batches at once; a fifth waits (`Unavailable`).
+const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = ARTIFACT_SUBMIT_OPERATION_PAGES * 4;
 const ARTIFACT_SUBMIT_TOTAL_BYTES: u64 = ARTIFACT_SUBMIT_PAGE_BYTES * ARTIFACT_SUBMIT_TOTAL_PAGES;
-const ARTIFACT_SUBMIT_BATCH_ITEMS: usize = 256;
-const ARTIFACT_SUBMIT_NESTED_ITEMS: usize = 4096;
 const ARTIFACT_SUBMIT_RETRY_MS: u64 = 1;
 const ARTIFACT_SUBMIT_RETRY_LIMIT: u8 = 8;
 
@@ -9279,6 +9290,18 @@ fn artifact_submit_credit(batch: &db_artifact::CommandBatch) -> Result<(usize, u
             .ok_or(DbError::LimitExceeded("artifact submit nested byte credit"))?;
         for dependency in &envelope.dependencies {
             bytes = bytes.checked_add(dependency.0.capacity() as u64).ok_or(DbError::LimitExceeded("artifact submit dependency byte credit"))?;
+        }
+        items = items.checked_add(envelope.target.len()).ok_or(DbError::LimitExceeded("artifact submit nested items"))?;
+        if items > ARTIFACT_SUBMIT_NESTED_ITEMS {
+            return Err(DbError::LimitExceeded("artifact submit nested item credit"));
+        }
+        let target_owner_bytes = envelope.target.capacity().checked_mul(size_of::<String>()).ok_or(DbError::LimitExceeded("artifact submit target owner bytes"))?;
+        bytes = bytes
+            .checked_add(target_owner_bytes as u64)
+            .and_then(|value| value.checked_add(envelope.observed.as_ref().map_or(0, |observed| observed.0.capacity() as u64)))
+            .ok_or(DbError::LimitExceeded("artifact submit target byte credit"))?;
+        for segment in &envelope.target {
+            bytes = bytes.checked_add(segment.capacity() as u64).ok_or(DbError::LimitExceeded("artifact submit target byte credit"))?;
         }
     }
     let pages = bytes.checked_add(ARTIFACT_SUBMIT_PAGE_BYTES - 1).ok_or(DbError::LimitExceeded("artifact submit page rounding"))? / ARTIFACT_SUBMIT_PAGE_BYTES;
@@ -9589,7 +9612,7 @@ impl ArtifactSubmitState {
 impl SubmitFuture {
     fn submit(handle: &ArtifactHandle, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> Self {
         let credit = artifact_submit_credit(&batch).and_then(|(items, bytes)| ArtifactSubmitAdmission::try_claim(items, bytes));
-        let admission_error = credit.as_ref().err().map(ToString::to_string);
+        let admission_error = credit.as_ref().err().cloned();
         let generation = credit.as_ref().map_or(0, |admission| admission.generation);
         let request = ArtifactSubmitWorkOwner::Request { batch, options, submitted_at_ms: handle.pool.now_ms() };
         let (work, terminal_work) = if generation == 0 { (None, Some(request)) } else { (Some(request), None) };
@@ -9616,7 +9639,7 @@ impl SubmitFuture {
             progress: std::sync::atomic::AtomicU8::new(if generation == 0 { SubmitProgress::Fault as u8 } else { SubmitProgress::Admitted as u8 }),
         });
         if generation == 0 {
-            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(DbError::Unavailable(admission_error.unwrap_or_else(|| "artifact submit admission exhausted".to_string()))));
+            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(admission_error.unwrap_or_else(|| DbError::Unavailable("artifact submit admission exhausted".to_string()))));
         } else {
             state.schedule();
         }

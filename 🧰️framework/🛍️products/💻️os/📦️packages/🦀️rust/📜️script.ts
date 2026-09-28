@@ -82,7 +82,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
     } finally {
       oracle.close();
     }
-    console.log("[DEBUG] database-history-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length);
+    console.log("database-history-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -185,7 +185,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     } finally {
       oracle.close();
     }
-    console.log("[DEBUG] database-catalog-read-ownership-check: AJV=1 sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
+    console.log("database-catalog-read-ownership-check: AJV=1 sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -1745,6 +1745,87 @@ class TestScript extends BundleScript {
   }
 }
 
+//#region 🧬️RetainedCloneFixtures
+/** 🎭️ One `choice` arm of `🧬️retained-clone/🧫️fixtures/📦️nested/🧬️schema/🔣️.json` (`#/$defs/choice`). */
+type RetainedCloneChoiceV1 =
+  | { readonly kind: "unit" }
+  | { readonly kind: "text"; readonly text: string }
+  | { readonly kind: "nested"; readonly rows: readonly { readonly id: number; readonly text: string }[] };
+
+/** 🎟️ The copy grant a retained-clone corpus hands one step. */
+type RetainedCloneGrantV1 = { readonly maximumItems: number; readonly maximumCopyBytes: number; readonly maximumCapacityBytes: number; readonly maximumDepth: number };
+
+/** 📦️ `🧬️retained-clone/🧫️fixtures/📦️nested` — the nested-value clone corpus its schema admits. */
+type RetainedCloneNestedFixtureV1 = {
+  readonly source: {
+    readonly title: string;
+    readonly optional: string | null;
+    readonly choice: RetainedCloneChoiceV1;
+    readonly choices: readonly RetainedCloneChoiceV1[];
+    readonly fixedArray: readonly [number, number, number, number];
+    readonly pair: readonly [string, number];
+    readonly triple: readonly [string, number, string];
+    readonly labels: Readonly<Record<string, string>>;
+  };
+  readonly payloadByteLength: number;
+  readonly payloadModulo: number;
+  readonly recursiveDepth: number;
+  readonly grant: RetainedCloneGrantV1;
+  readonly insufficientCapacityBytes: number;
+  readonly immutableLease: { readonly captured: string; readonly externalAfterCapture: string; readonly expected: string };
+  readonly cancellationStops: readonly number[];
+};
+
+/** 🎯️ The state an ordered-map operation row must leave behind. */
+type RetainedOrderedMapExpectationV1 = { readonly found: boolean; readonly ordinal: number; readonly entryCount: number };
+
+/** 🗺️ `🗺️ordered-map/🧫️fixtures/📦️paging` — a lookup carries no value; an insert or duplicate carries the value it offers. */
+type RetainedOrderedMapOperationV1 =
+  | { readonly kind: "lookup"; readonly key: string; readonly expected: RetainedOrderedMapExpectationV1 }
+  | { readonly kind: "insert" | "duplicate"; readonly key: string; readonly value: string; readonly expected: RetainedOrderedMapExpectationV1 };
+
+/** 🗺️ `🗺️ordered-map/🧫️fixtures/📦️paging` — the paging, growth and immutable-lookup corpus its schema admits. */
+type RetainedOrderedMapPagingFixtureV1 = {
+  readonly pageCapacity: 16;
+  readonly entryCount: number;
+  readonly keyPrefix: string;
+  readonly valuePrefix: string;
+  readonly longKeyByteLength: number;
+  readonly comparisonGrant: { readonly maximumItems: number; readonly maximumBytes: number };
+  readonly progressChannels: { readonly comparisonOnly: true; readonly capacityOnly: true; readonly minimumMovedItems: number };
+  readonly repeatedGrowth: { readonly entryCount: 32; readonly insertions: 17; readonly keyPrefix: string; readonly valuePrefix: string; readonly expectedEntryCount: 49 };
+  readonly immutableLookup: { readonly capturedTarget: string; readonly externalAfterCapture: string; readonly expectedOrdinal: number };
+  readonly operations: readonly RetainedOrderedMapOperationV1[];
+};
+
+/** 🧩️ `🧩preparation/🧪️fixtures/📦️lifecycle` — one preparation outcome row. */
+type RetainedClonePreparationCaseV1 = {
+  readonly id: string;
+  readonly kind: "success" | "rejection" | "cancel" | "stale" | "fault" | "overBudget";
+  readonly initial: number;
+  readonly value: number;
+  readonly interruptAfterTurns: number;
+  readonly expected: { readonly published: boolean; readonly value: number; readonly history: number; readonly terminalEmpty: true };
+};
+
+/** 🧩️ `🧩preparation/🧪️fixtures/📦️lifecycle` — the preparation lifecycle corpus its schema admits. */
+type RetainedClonePreparationFixtureV1 = {
+  readonly grant: { readonly maximumItems: 1; readonly maximumBytes: number; readonly maximumDepth: number };
+  readonly largeCapacity: { readonly stringByteLength: number; readonly expectedCode: "retained-clone.step-grant-too-small" };
+  readonly cases: readonly RetainedClonePreparationCaseV1[];
+};
+
+/** 📋️ `📋️paged-list/🧫️fixtures/📦️copy` — the paged-list copy corpus its schema admits. */
+type RetainedPagedListCopyFixtureV1 = {
+  readonly maximumEntries: 1024;
+  readonly entryCount: 513;
+  readonly valuePrefix: string;
+  readonly grant: { readonly maximumItems: 5; readonly maximumCopyBytes: 32; readonly maximumCapacityBytes: 4096; readonly maximumDepth: 64 };
+  readonly cancellationAfterEntries: 173;
+  readonly expected: { readonly ordered: true; readonly sourcePreserved: true; readonly copyRequiresMultipleTurns: true; readonly closeRequiresMultipleTurns: true; readonly terminalEmpty: true };
+};
+//#endregion 🧬️RetainedCloneFixtures
+
 /** 🧬️ Validates the retained-clone resource contract and neutral corpus with Ajv and the platform structured-clone oracle. */
 class RetainedCloneCheckScript extends BundleScript {
   run(segments: string[]): void {
@@ -1752,7 +1833,7 @@ class RetainedCloneCheckScript extends BundleScript {
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🧫️fixtures/📦️nested");
     const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedCloneNestedFixtureV1>(schema);
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(structuredClone(fixture), fixture);
     assert.equal(fixture.source.choices.length, 3);
@@ -1767,7 +1848,7 @@ class RetainedCloneCheckScript extends BundleScript {
     const mapRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging");
     const mapSchema = JSON.parse(readFileSync(join(mapRoot, "🧬️schema/🔣️.json"), "utf8"));
     const mapFixture = JSON.parse(readFileSync(join(mapRoot, "🔣️.json"), "utf8"));
-    const validateMap = new Ajv2020({ strict: true, allErrors: true }).compile(mapSchema);
+    const validateMap = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedOrderedMapPagingFixtureV1>(mapSchema);
     assert(validateMap(mapFixture), JSON.stringify(validateMap.errors));
     const entries = Array.from({ length: mapFixture.entryCount }, (_, ordinal) => [`${mapFixture.keyPrefix}${ordinal.toString().padStart(4, "0")}`, `${mapFixture.valuePrefix}${ordinal}`] as [string, string]);
     const oracle = new Map(entries);
@@ -1807,7 +1888,7 @@ class RetainedCloneCheckScript extends BundleScript {
     const preparationRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle");
     const preparationSchema = JSON.parse(readFileSync(join(preparationRoot, "🧬️schema/🔣️.json"), "utf8"));
     const preparationFixture = JSON.parse(readFileSync(join(preparationRoot, "🔣️.json"), "utf8"));
-    const validatePreparation = new Ajv2020({ strict: true, allErrors: true }).compile(preparationSchema);
+    const validatePreparation = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedClonePreparationFixtureV1>(preparationSchema);
     assert(validatePreparation(preparationFixture), JSON.stringify(validatePreparation.errors));
     assert(preparationFixture.largeCapacity.stringByteLength > preparationFixture.grant.maximumBytes);
     assert.equal(preparationFixture.largeCapacity.expectedCode, "retained-clone.step-grant-too-small");
@@ -1829,7 +1910,7 @@ class RetainedCloneCheckScript extends BundleScript {
     const pagedRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy");
     const pagedSchema = JSON.parse(readFileSync(join(pagedRoot, "🧬️schema/🔣️.json"), "utf8"));
     const pagedFixture = JSON.parse(readFileSync(join(pagedRoot, "🔣️.json"), "utf8"));
-    const validatePaged = new Ajv2020({ strict: true, allErrors: true }).compile(pagedSchema);
+    const validatePaged = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedPagedListCopyFixtureV1>(pagedSchema);
     assert(validatePaged(pagedFixture), JSON.stringify(validatePaged.errors));
     const pagedValues = Array.from({ length: pagedFixture.entryCount }, (_, ordinal) => `${pagedFixture.valuePrefix}${ordinal}`);
     const pagedOracle = structuredClone(pagedValues);
@@ -1843,7 +1924,7 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.equal(pagedFixture.expected.copyRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.closeRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.terminalEmpty, true);
-    console.log(`[DEBUG] retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length}`);
+    console.log(`retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length}`);
   }
 }
 
@@ -2246,7 +2327,7 @@ class MemberDialectCheckScript extends BundleScript {
         },
       ],
     });
-    console.log(`[DEBUG] exact member admission laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed across ${receipts.length} verified test executables`);
+    console.log(`exact member admission laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed across ${receipts.length} verified test executables`);
   }
 }
 
@@ -2297,8 +2378,7 @@ class ReopenStormCheckScript extends BundleScript {
     console.log(`[reopen-storm] throughput fixture valid (ThroughputV1, AJV): storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
     const unclaimed = wanted.filter((name) => REOPEN_STORM_LAWS[name]!.claimed && !process.env[REOPEN_STORM_LAWS[name]!.claimed!]);
     if (unclaimed.length) throw new Error(`reopen-storm-check ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
-    const { spawn } = await import("node:child_process");
-    const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess } = await import("../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
     const startedAt = new Date();
     const measured: Record<string, number | string | boolean> = {};
     const failed: string[] = [];
@@ -2307,30 +2387,14 @@ class ReopenStormCheckScript extends BundleScript {
       if (cancelled) break;
       const { law, features, claimed } = REOPEN_STORM_LAWS[name]!;
       console.log(`[reopen-storm] ${index + 1}/${wanted.length} ${name}: ${law}`);
-      const lines: string[] = [];
-      const status = await new Promise<number>((resolveExit) => {
-        const child = spawn("cargo", ["test", "-p", "semio-framework-os-kernel-db", "--features", features, "--lib", "--no-fail-fast", "--", "--exact", law, "--nocapture", "--test-threads=1", ...(claimed ? ["--include-ignored"] : [])], {
-          cwd: this.repoRoot,
-          env: { ...process.env, CARGO_INCREMENTAL: "0", RUST_MIN_STACK: "268435456", SEMIO_DB_ISOLATED_LAW: law },
-          stdio: ["ignore", "pipe", "pipe"],
-        });
-        const interrupt = (): void => {
+      const { status, lines } = await runLawProcess(
+        "cargo",
+        ["test", "-p", "semio-framework-os-kernel-db", "--features", features, "--lib", "--no-fail-fast", "--", "--exact", law, "--nocapture", "--test-threads=1", ...(claimed ? ["--include-ignored"] : [])],
+        { cwd: this.repoRoot, env: { ...process.env, CARGO_INCREMENTAL: "0", RUST_MIN_STACK: "268435456", SEMIO_DB_ISOLATED_LAW: law } },
+        () => {
           cancelled = true;
-          child.kill("SIGINT");
-        };
-        process.once("SIGINT", interrupt);
-        const collect = (chunk: Buffer): void => {
-          const text = chunk.toString("utf8");
-          process.stdout.write(text);
-          lines.push(...text.split("\n"));
-        };
-        child.stdout?.on("data", collect);
-        child.stderr?.on("data", collect);
-        child.once("close", (code) => {
-          process.removeListener("SIGINT", interrupt);
-          resolveExit(code ?? -1);
-        });
-      });
+        },
+      );
       const passed = status === 0 && lines.some((line) => line.includes("test result: ok. 1 passed"));
       measured[`${name}Pass`] = passed;
       const storm = lines.map((line) => /storm of (\d+) in (\d+) ms: welcome p50 ([\d.]+) ms .*? max ([\d.]+) ms(?:.*solo ([\d.]+) ms)?/u.exec(line)).find((match) => match !== null);

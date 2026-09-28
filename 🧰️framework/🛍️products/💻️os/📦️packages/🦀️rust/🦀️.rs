@@ -350,6 +350,7 @@ pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 /// crate under that literal name needs them reachable at the crate root, not only as
 /// `crate::schema::ToValue`.
 pub use crate::os_dsl::schema::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+pub use protocol::dsl_value;
 pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
 /// 🌿️ Crate-root re-export of the `#[derive(ToValue, FromValue)]` proc-macros themselves (distinct

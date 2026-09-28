@@ -8,7 +8,6 @@
 //! merely by being inserted into the bus.
 
 use crate::manifest::InteractiveJobClassification;
-use dsl::DslValue;
 use semio_framework_job::{InteractiveJob, Operation, StepContext, StepOutcome};
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};
@@ -41,13 +40,6 @@ impl ToolPayload {
 
     fn downcast<T: Send + 'static>(self) -> Result<T, ToolJobFactoryError> {
         self.value.downcast::<T>().map(|value| *value).map_err(|_| ToolJobFactoryError::new(format!("tool payload '{}' has the wrong Rust payload type", self.schema_id)))
-    }
-
-    /// 🔓️ Takes back the typed payload a builder put in, or hands this payload back unchanged when it carries
-    /// another type — the agent lane's prepare phase reads a retained route's work without dispatching it.
-    pub fn into_inner<T: Send + 'static>(self) -> Result<T, Self> {
-        let schema_id = self.schema_id;
-        self.value.downcast::<T>().map(|value| *value).map_err(|value| Self { schema_id, value })
     }
 }
 
@@ -761,11 +753,6 @@ impl ActionBus {
     }
 }
 //#endregion 🚌️Bus
-
-/// 🌉️ Bridges staged JSON action args into the owned DSL boundary.
-pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
-    args.map(DslValue::from)
-}
 
 #[cfg(test)]
 #[path = "🧹️wire-retirement/🧪️tests/🔬️standalone/🦀️.rs"]

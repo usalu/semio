@@ -59,7 +59,7 @@ async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
     let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: "x\r\r\ny\r\n".into() }, &snapshot, None).expect("valid replacement");
     let mut next = snapshot.clone();
     for mutation in &emit.artifact_mutations {
-        next = <TxtMutation as protocol::Mutation<TxtSnapshot>>::apply(mutation, &next).expect("native mutation applies");
+        next = protocol::MutationDiff::apply(<TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next).diff(), &next).expect("native mutation applies");
     }
     assert_eq!(next.to_body(), "x\r\r\ny\r\n");
 }

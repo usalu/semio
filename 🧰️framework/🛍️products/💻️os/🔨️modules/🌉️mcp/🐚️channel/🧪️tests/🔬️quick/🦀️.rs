@@ -137,6 +137,21 @@ fn an_app_frames_reply_is_recorded_against_its_correlation_id() {
     assert_eq!(handle.last_app_frames(id), Some((41, "inst-1".to_string(), vec![b"{}".to_vec()])));
 }
 
+/// 🤖️ A delegated agent's artifact verbs never take the attached shell's route, however willing the shell: the agent is
+/// its own hub participant. The human's own gateway (no delegation) still takes it.
+#[test]
+fn a_delegated_agent_never_routes_artifact_verbs_through_the_attached_shell() {
+    let handle = std::sync::Arc::new(BridgeHandle::new());
+    let (id, _receiver) = handle.register();
+    handle.record_hello(id, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
+    let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    slot.set(std::sync::Arc::clone(&handle)).ok();
+    let agent = crate::policy::AgentPrincipal::from_scope_names("agent:delegation-1", "delegated agent", &["artifact.write".to_string()], Some("user:human-1".to_string()));
+    assert_eq!(SessionChannelBinding::for_principal(&agent, Some(std::sync::Arc::clone(&slot))).resolve(), ChannelKind::Headless);
+    let human = crate::policy::AgentPrincipal::from_scope_names("agent:local", "human's own gateway", &["artifact.write".to_string()], None);
+    assert_eq!(SessionChannelBinding::for_principal(&human, Some(slot)).resolve(), ChannelKind::Shell);
+}
+
 #[test]
 fn a_session_that_resolved_shell_refuses_rather_than_editing_a_different_document() {
     let handle = std::sync::Arc::new(BridgeHandle::new());
@@ -161,10 +176,43 @@ fn a_shell_with_no_open_instances_names_what_the_human_must_do() {
     let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     slot.set(std::sync::Arc::clone(&handle)).ok();
     let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
-    let mut channel = ShellArtifactChannel::new(binding, empty_catalog());
+    let mut channel = ShellArtifactChannel::new(binding, empty_catalog()).with_instance_wait(Duration::from_millis(80));
+    let started = Instant::now();
     let fault = channel.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no instances");
     assert_eq!(fault.code, "plugin.unavailable");
-    assert!(fault.message.contains("open plugin instances"), "{}", fault.message);
+    assert!(fault.message.contains("open plugin instances within 80ms"), "{}", fault.message);
+    assert!(started.elapsed() >= Duration::from_millis(80) && started.elapsed() < Duration::from_secs(5), "the refusal comes after the bounded wait, never before and never unbounded");
+}
+
+/// ⏳️ A shell that just landed in a space publishes its document's instance a moment after the agent's first
+/// command arrives (live user path, de, G12 session 14c): the command waits for it and addresses it — nothing
+/// answers here, so it times out having ADDRESSED the instance instead of refusing `plugin.unavailable`.
+#[test]
+fn a_command_waits_a_bounded_time_for_the_shell_to_publish_its_plugins_instance() {
+    let handle = std::sync::Arc::new(BridgeHandle::new());
+    let (id, _receiver) = handle.register();
+    handle.record_hello(id, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
+    handle.record(id, ShellToGateway::Instances { entries: vec![BridgeInstanceRef { plugin_id: "space".to_string(), app_id: "s.space.home".to_string(), instance_id: "1".to_string(), artifact_ref: "space:s.space.home:1".to_string(), window_ids: vec![] }] });
+    let publisher = std::sync::Arc::clone(&handle);
+    let late = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(150));
+        publisher.record(
+            id,
+            ShellToGateway::Instances {
+                entries: vec![
+                    BridgeInstanceRef { plugin_id: "space".to_string(), app_id: "s.space.home".to_string(), instance_id: "1".to_string(), artifact_ref: "space:s.space.home:1".to_string(), window_ids: vec![] },
+                    BridgeInstanceRef { plugin_id: "note".to_string(), app_id: "s.note.note".to_string(), instance_id: "2".to_string(), artifact_ref: "note:s.note.note:2".to_string(), window_ids: vec![] },
+                ],
+            },
+        );
+    });
+    let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    slot.set(std::sync::Arc::clone(&handle)).ok();
+    let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
+    let mut channel = ShellArtifactChannel::new(binding, empty_catalog()).for_plugin("note").with_timeout(Duration::from_millis(60)).with_instance_wait(Duration::from_secs(5));
+    let fault = channel.exchange(0, vec![AppCommand::ReadArtifact]).expect_err("nothing answers");
+    late.join().expect("publisher thread");
+    assert_eq!(fault.code, "budget.exceeded", "{}", fault.message);
 }
 
 #[test]

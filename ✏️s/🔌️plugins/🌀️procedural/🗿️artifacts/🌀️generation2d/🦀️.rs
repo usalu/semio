@@ -48,7 +48,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.generation".into(),
-        name: "2D Generation".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("2D Generation", "2D-Generierung"),
         source_format: "generation.2d".into(),
         component_kind: "generation2d".into(),
         dimension: "2d".into(),

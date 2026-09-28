@@ -428,6 +428,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     use protocol::Mutation;
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
+    use quick_xml::XmlVersion;
     use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
     use std::io::Read;
     let (mut snapshot, fixture) = canonical_authority_fixture();
@@ -465,16 +466,21 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     let document_xml = xml_document_to_text(&snapshot.xml_part(main_path).unwrap().document);
     let mut reader = Reader::from_str(&document_xml);
     let mut rows = 0usize;
+    let mut paragraph_styles = Vec::new();
     loop {
         match reader.read_event().unwrap() {
             Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == "tr" => rows += 1,
+            Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == "pStyle" => {
+                let value = event.attributes().map(|attr| attr.unwrap()).find(|attr| attr.key.local_name().as_ref() == "val").map(|attr| attr.normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned());
+                paragraph_styles.push(value);
+            }
             Event::Eof => break,
             _ => {}
         }
     }
     assert_eq!(rows, 2, "quick-xml independently observes the inserted table row");
+    assert_eq!(paragraph_styles, vec![Some("Quote".to_string())], "quick-xml independently observes the one paragraph style, now Quote");
     assert!(document_xml.contains("Edited 🚀") && document_xml.contains("New ßeta"));
-    assert!(document_xml.contains("w:pStyle w:val=\"Quote\""));
 
     let changed = snapshot.clone();
     for inverse in inverses.into_iter().rev() {

@@ -1170,6 +1170,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {
@@ -1420,6 +1421,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {

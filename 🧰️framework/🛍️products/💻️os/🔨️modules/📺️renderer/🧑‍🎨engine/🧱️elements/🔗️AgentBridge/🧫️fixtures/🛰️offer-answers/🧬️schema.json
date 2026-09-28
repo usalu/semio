@@ -2,6 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio.os.agent-bridge-offer/v1",
   "title": "AgentBridgeOfferAnswerV1",
+  "definitions": {
+    "AgentBridgeOfferRecordV2": {
+      "description": "One live gateway's offer file, `<rendezvous>/offers/<pid>.json` (`🌉️mcp/🛰️rendezvous::BridgeOffer`): served by the supervisor only to a shell its scope admits.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "url", "admissionProof", "principal", "pid", "publishedAtMs", "scope"],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "url": { "type": "string", "minLength": 1 },
+        "admissionProof": { "type": "string", "minLength": 1 },
+        "principal": { "type": "string", "minLength": 1 },
+        "pid": { "type": "integer", "minimum": 0 },
+        "publishedAtMs": { "type": "integer", "minimum": 0 },
+        "scope": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["kind", "hubOrigin", "spaceId"], "properties": { "kind": { "const": "hub" }, "hubOrigin": { "type": "string", "minLength": 1 }, "spaceId": { "type": "string", "minLength": 1 } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "local" } } }
+          ]
+        }
+      }
+    }
+  },
   "oneOf": [
     {
       "type": "object",

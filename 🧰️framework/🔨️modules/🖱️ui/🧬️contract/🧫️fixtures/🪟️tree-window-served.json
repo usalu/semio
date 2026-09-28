@@ -291,5 +291,63 @@
         "anchor": "end"
       }
     }
+  ],
+  "tableViewportCaps": [
+    {
+      "name": "no short answer yet: uncapped",
+      "learned": null,
+      "previous": null,
+      "total": 33,
+      "capRows": null
+    },
+    {
+      "name": "Home on 7800: the guest serves 11 of 33 → 10 rows show, a partial row at each edge still served",
+      "learned": 11,
+      "previous": null,
+      "total": 33,
+      "capRows": 10
+    },
+    {
+      "name": "a new total forgot the capacity: the last one holds until re-taught",
+      "learned": null,
+      "previous": 11,
+      "total": 34,
+      "capRows": 10
+    },
+    {
+      "name": "a re-taught capacity replaces the previous one",
+      "learned": 22,
+      "previous": 11,
+      "total": 34,
+      "capRows": 21
+    },
+    {
+      "name": "a list no longer than the capacity is uncapped",
+      "learned": 11,
+      "previous": null,
+      "total": 11,
+      "capRows": null
+    },
+    {
+      "name": "a list shorter than the capacity is uncapped",
+      "learned": null,
+      "previous": 11,
+      "total": 7,
+      "capRows": null
+    },
+    {
+      "name": "a zero capacity never caps (an empty answer teaches nothing)",
+      "learned": 0,
+      "previous": null,
+      "total": 5,
+      "capRows": null
+    },
+    {
+      "name": "a one-row capacity still shows one row",
+      "learned": 1,
+      "previous": null,
+      "total": 5,
+      "capRows": 1
+    }
   ]
 }

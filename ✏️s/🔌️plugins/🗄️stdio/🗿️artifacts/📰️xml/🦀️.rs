@@ -58,7 +58,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.xml".into(),
-        name: "Xml".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Xml", "Xml"),
         source_format: STDIO_XML_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

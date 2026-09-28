@@ -36,14 +36,20 @@ def region(live: str, start: str, end: str) -> str:
 
 
 def reanchor_preview_head(live: str, old: str, new: str):
-    """Hunk 12: the opBytes tail + `preview_retained_command` head, whose `operation_id` line rustfmt now wraps."""
+    """Hunk 12: the opBytes tail + `preview_retained_command` head, re-applied as three sub-edits on the live span, so
+    whatever a peer placed between them (rustfmt's `operation_id` wrap, T14/G12's `authoring_seed` fn) is kept verbatim:
+    the `jobSteps` output row, the doc + signature + `verb` head, and the keyed cancellation lease."""
     live_old = region(live, '                ("opBytes".into(), DslValue::String(priced.to_string())),\n', "            let completion = ArtifactToolCompletion::<A>::new();\n")
-    wrapped = re.search(r"            let operation_id =\n                self\.admit_typed_operation_slot\(\)[^\n]*\n", live_old).group(0)
-    one_line = re.search(r"            let operation_id = self\.admit_typed_operation_slot\(\)[^\n]*\n", new).group(0)
-    assert one_line.split("= ", 1)[1].strip() == wrapped.split("=\n", 1)[1].strip(), "operation_id statement changed"
-    live_new = new.replace(one_line, wrapped)
-    live_new_old = old.replace(re.search(r"            let operation_id = self\.admit_typed_operation_slot\(\)[^\n]*\n", old).group(0), wrapped)
-    assert live_new_old == live_old, "hunk 12 differs from the live region beyond the wrapped operation_id line"
+    ops_row = '                ("opBytes".into(), DslValue::String(priced.to_string())),\n'
+    steps_row = next(line + "\n" for line in new.splitlines() if '("jobSteps".into()' in line)
+    old_head = live_old[live_old.index("        /// 👁️ Builds the SAME retained job"):live_old.index("            let verb = A::command_id(&command).await.to_string();\n") + len("            let verb = A::command_id(&command).await.to_string();\n")]
+    new_head = new[new.index("        /// 👁️ Builds the SAME app-owned job"):new.index("            let verb = admission.verb.clone();\n") + len("            let verb = admission.verb.clone();\n")]
+    lease = new[new.index("            let lease ="):new.index(";\n", new.index("            let lease =")) + 2]
+    completion = "            let completion = ArtifactToolCompletion::<A>::new();\n"
+    live_new = live_old.replace(ops_row, ops_row + steps_row, 1).replace(old_head, new_head, 1)
+    assert live_new.endswith(completion)
+    live_new = live_new[: -len(completion)] + lease + completion
+    assert live_new.count("jobSteps") == 1 and "preview_typed_command_job" in live_new and "preview_retained_command" not in live_new
     return live_old, live_new
 
 

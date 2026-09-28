@@ -562,6 +562,16 @@ pub(crate) mod context {
         dispatch_reporting_with_items(app, action, args, window_id, 1).await
     }
 
+    /// 📥️ [`dispatch_reporting`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel —
+    /// the lane a shell's picked-file chunks take, where the framework's import staging admits them first.
+    pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &dsl::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+        let window_id = main::WINDOW_KIND_ID;
+        app.ensure_window(window_id);
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let answered = app.handle_action(action, Some(args), &action_meta).await;
+        settle_into_reporting_with_items(app, answered, 1).await
+    }
+
     /// ⏱️ [`dispatch_reporting`] settling at the HOST's own per-turn item grant, so `Puzzle3dSettled::turns`
     /// counts host↔guest round trips rather than paging items. See [`SETTLE_HOST_TURN_ITEMS`].
     pub async fn dispatch_reporting_with_items(
@@ -6683,14 +6693,11 @@ async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling
 /// `paneObjects=180→180` with no notice at all (wave B57 §2.3). Every import law before this one fed a
 /// payload of a few hundred bytes, so the size class the product actually imports was never under test.
 ///
-/// 🧩️ The payload rides the chunk lane the host builds (`importPayloadChunks`, `🛠️ShellHelpers/🟦️.tsx`),
-/// mirrored here by `puzzle3d_import_chunks`, so the law exercises the wire the renderer sends rather than
-/// a shape only tests use. The witnesses are the browser's own three: the object census moves, exactly ONE
-/// applied history row lands — on the sealing chunk; a staged chunk logs the command with no edit — and
-/// nothing is refused.
+/// 🧩️ The payload reaches the action the way the framework hands it once it has reassembled the host's
+/// chunks (`semio_framework::kernel::ImportStaging`): ONE whole `{payload, name}`. The witnesses are the
+/// browser's own three: the object census moves, exactly ONE applied history row lands, nothing is refused.
 #[semio_framework_async_macros::async_test]
 async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_settle() {
-    use crate::editor::puzzle3d::commands::import_fixture::puzzle3d_import_chunks;
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
@@ -6699,47 +6706,8 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     assert_eq!(object_count(&app), seeded, "the document is back at the example census before the import");
     assert!(distinct.len() > 140_000, "the payload under test must be the product's own size class; observed {} B", distinct.len());
-    let chunks = puzzle3d_import_chunks(&distinct);
-    assert!(chunks.len() > 1, "a product-sized payload must not fit one chunk; observed {} chunk(s)", chunks.len());
-    eprintln!("[DEBUG] B59 import payload bytes={} chunks={} seeded={seeded}", distinct.len(), chunks.len());
-    let mut settled_rows = 0usize;
-    let mut notices: Vec<String> = Vec::new();
-    let count = chunks.len();
-    for (index, chunk) in chunks.iter().enumerate() {
-        let args = json!({ "payload": chunk.as_str(), "name": "nakagin-capsule-tower-distinct.json", "chunk": index as f64, "chunkCount": count as f64 });
-        let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&args), None).await;
-        let result = result.expect("every chunk of a product-sized import is admitted");
-        notices.extend(result.requested_effects.iter().filter_map(|effect| match effect {
-            Effect::Notify { message } => Some(message.clone()),
-            _ => None,
-        }));
-        let rows = history_row_labels(&settled);
-        if index + 1 < count {
-            assert_eq!(rows.len(), 1, "a staged chunk logs the command and no edit; chunk {index}: {rows:?}");
-            assert!(rows.iter().all(|row| row.contains("applied=false") && row.contains("ops=0")), "a staged chunk is not a document edit; chunk {index}: {rows:?}");
-            assert_eq!(object_count(&app), seeded, "a staged chunk must not move the document; chunk {index}");
-        }
-        settled_rows += rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count();
-    }
-    assert!(notices.is_empty(), "a payload inside the declared import budget must not be refused: {notices:?}");
-    assert_eq!(settled_rows, 1, "the whole chunked import records exactly one applied history row");
-    assert_eq!(object_count(&app), seeded + 1, "a product-sized distinct payload must replace the document it was imported over");
-}
-
-/// 🧯️ Wave B59: an import the host never chunked is REFUSED with a notice, never silently dropped. This is
-/// the shape the live verdict actually saw — one command carrying 145 924 B — and the shape every hop from
-/// the renderer's pack encode to the guest's `read_bounded_bytes` answers by asking the fixed guest heap for
-/// one contiguous block 2.2× its own per-request ceiling.
-#[semio_framework_async_macros::async_test]
-async fn an_unchunked_over_ceiling_import_refuses_with_a_notice() {
-    use crate::editor::puzzle3d::commands::import_fixture::PUZZLE3D_IMPORT_CHUNK_BYTES;
-    let mut app = app().await;
-    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
-    let seeded = object_count(&app);
-    let whole = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&puzzle3d_fixture_from_projection(&projection_of(&app)));
-    assert!(whole.len() > PUZZLE3D_IMPORT_CHUNK_BYTES, "the payload under test must be above one chunk");
-    let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": whole.as_str(), "name": "unchunked.json" })), None).await;
-    let result = result.expect("an over-ceiling import is an ANSWER, never a fault");
+    let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": distinct.as_str(), "name": "nakagin-capsule-tower-distinct.json" })), None).await;
+    let result = result.expect("a product-sized import inside the budget is admitted");
     let notices: Vec<String> = result
         .requested_effects
         .iter()
@@ -6748,79 +6716,81 @@ async fn an_unchunked_over_ceiling_import_refuses_with_a_notice() {
             _ => None,
         })
         .collect();
-    assert_eq!(notices.len(), 1, "an over-ceiling import publishes exactly one notice: {notices:?}");
+    assert!(notices.is_empty(), "a payload inside the declared import budget must not be refused: {notices:?}");
+    let rows = history_row_labels(&settled);
+    assert_eq!(rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count(), 1, "the whole import records exactly one applied history row: {rows:?}");
+    assert_eq!(object_count(&app), seeded + 1, "a product-sized distinct payload must replace the document it was imported over");
+}
+
+/// 🧩️ The framework half of an import, end to end for this app: the host's chunk envelope
+/// (`semio_framework::kernel::import_chunk_arguments`) goes through the SDK's own action dispatch, whose
+/// instance-scoped `ImportStaging` stages every chunk but the last — no command, no edit — and hands
+/// `importFixture` the whole file once the run closes: ONE applied history row, the census moved.
+#[semio_framework_async_macros::async_test]
+async fn a_chunked_pick_reaches_import_fixture_as_one_whole_file_through_the_framework_staging() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
+    let seeded = object_count(&app);
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
+    let distinct = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&puzzle3d_fixture_from_projection(&projection_of(&app)));
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
+    let chunks = semio_framework::kernel::import_payload_chunks(&distinct);
+    assert!(chunks.len() > 1, "a product-sized payload spans several host chunks; observed {}", chunks.len());
+    let mut applied = 0usize;
+    for chunk in &chunks {
+        let args = semio_framework::kernel::import_chunk_arguments("nakagin-capsule-tower-distinct.json", chunk, None);
+        let (result, settled) = dispatch_action_reporting(&mut app, "importFixture", &args).await;
+        result.expect("every chunk of a product-sized pick is admitted");
+        let rows = history_row_labels(&settled);
+        if chunk.chunk + 1 < chunk.chunk_count {
+            assert!(rows.is_empty(), "a staged chunk is no command and no edit; chunk {}: {rows:?}", chunk.chunk);
+            assert_eq!(object_count(&app), seeded, "a staged chunk must not move the document; chunk {}", chunk.chunk);
+        }
+        applied += rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count();
+    }
+    assert_eq!(applied, 1, "the whole chunked pick records exactly one applied history row");
+    assert_eq!(object_count(&app), seeded + 1, "the reassembled file replaced the document it was imported over");
+}
+
+/// 🧯️ An import above the budget one export may stream is REFUSED with a notice, never silently dropped
+/// and never a fault — the framework hands the whole file, so this budget is the app's one size rule.
+#[semio_framework_async_macros::async_test]
+async fn an_import_above_the_export_budget_refuses_with_a_notice() {
+    use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
+    let seeded = object_count(&app);
+    let oversized = "x".repeat(PUZZLE_IMPORT_TOTAL_BYTES + 1);
+    let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": oversized.as_str(), "name": "oversized.json" })), None).await;
+    let result = result.expect("an over-budget import is an ANSWER, never a fault");
+    let notices: Vec<String> = result
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(notices.len(), 1, "an over-budget import publishes exactly one notice: {notices:?}");
     let rows = history_row_labels(&settled);
     assert_eq!(history_rows(&settled), 1, "a refused import logs the command and no edit: {rows:?}");
     assert!(rows.iter().all(|row| row.contains("importFixture") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
     assert_eq!(object_count(&app), seeded, "a refused import leaves the document alone");
-    eprintln!("[DEBUG] B59 unchunked refusal notice={notices:?}");
 }
 
-/// 🧊️ Wave B59, the contiguous-request law: importing a 145 KB document must never ask the guest for a
-/// single block above [`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`]. Both halves are measured — the CHUNK the
-/// host sends, and the largest contiguous value the guest's own paged reassembly captures while rebuilding
-/// the root object element by element.
-///
-/// 🧨️ The bound is the framework's own, not a literal of this app's: `semio_framework_trace`'s ceiling is
-/// the same number `🧮️memory/🟦️.ts` publishes to the host, so the two chunkers cannot drift apart.
+/// 📤️📥️ LAW: the Nakagin export re-imports as the very document it came from — the whole exported file,
+/// read by `puzzle3d_import_value`, rebuilds a fixture whose own export is byte-identical.
 #[test]
-fn a_one_hundred_forty_five_kilobyte_import_never_asks_for_a_block_above_the_guest_contiguous_ceiling() {
-    use crate::editor::puzzle3d::commands::import_fixture::{puzzle3d_import_chunks, puzzle3d_import_root_value, PUZZLE3D_IMPORT_CHUNK_BYTES, PUZZLE3D_IMPORT_MAXIMUM_CHUNKS, PUZZLE3D_IMPORT_TOTAL_BYTES};
-    use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
-    assert_eq!(PUZZLE3D_IMPORT_CHUNK_BYTES, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2, "the chunk extent is DERIVED from the guest ceiling, never a literal");
-    assert_eq!(PUZZLE3D_IMPORT_TOTAL_BYTES, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, "an import must carry exactly what an export may stream");
-    assert_eq!(PUZZLE3D_IMPORT_MAXIMUM_CHUNKS, PUZZLE3D_IMPORT_TOTAL_BYTES.div_ceil(PUZZLE3D_IMPORT_CHUNK_BYTES));
+fn the_nakagin_export_reimports_byte_for_byte() {
+    use crate::editor::puzzle3d::commands::import_fixture::puzzle3d_import_value;
     let payload = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&NAKAGIN_EXAMPLE_FIXTURE.clone());
-    assert!(payload.len() > 140_000, "the payload under test is the product's own size class: {} B", payload.len());
-    let chunks = puzzle3d_import_chunks(&payload);
-    assert!(chunks.len() <= PUZZLE3D_IMPORT_MAXIMUM_CHUNKS, "{} chunks exceeds the declared run length", chunks.len());
-    for (index, chunk) in chunks.iter().enumerate() {
-        assert!(chunk.len() <= PUZZLE3D_IMPORT_CHUNK_BYTES, "chunk {index} is {} B, above the {PUZZLE3D_IMPORT_CHUNK_BYTES} B chunk extent", chunk.len());
-    }
-    assert_eq!(chunks.concat(), payload, "the chunk run must reassemble the document byte for byte");
-    let root = puzzle3d_import_root_value(&chunks).expect("the paged reassembly rebuilds the root object");
-    let members = root.as_object().expect("the reassembled document is one JSON object");
-    let widest = members.iter().map(|(_, value)| dsl::os_pack::json::to_json_string(value).len()).max().unwrap_or_default();
-    let widest_element = members
-        .iter()
-        .filter_map(|(_, value)| value.as_array())
-        .flat_map(|items| items.iter().map(|item| dsl::os_pack::json::to_json_string(item).len()))
-        .max()
-        .unwrap_or_default();
-    assert!(widest > GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "the widest root MEMBER is {widest} B — if no member is over the ceiling this law proves nothing about paging");
-    assert!(
-        widest_element <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
-        "the reassembly captures one ELEMENT at a time, so the widest contiguous request is {widest_element} B against a {GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES} B ceiling"
-    );
+    assert!(payload.len() > semio_framework::kernel::IMPORT_CHUNK_BYTES, "the payload under test spans several host chunks: {} B", payload.len());
+    let root = puzzle3d_import_value(&json!({ "payload": payload.as_str(), "name": "nakagin.json" })).expect("the whole export is a puzzle 3D document");
     assert_eq!(
-        crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&Puzzle3dFixture::from_value(dsl::json::to_dsl_value(&root)).expect("the reassembled root IS a puzzle 3D document")),
+        crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&Puzzle3dFixture::from_value(dsl::json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
         payload,
-        "the paged reassembly is byte-identical to the document that was chunked"
+        "the import is byte-identical to the document that was exported"
     );
-    eprintln!("[DEBUG] B59 ceiling law chunks={} widestMember={widest} widestElement={widest_element}", chunks.len());
-}
-
-/// 🕳️ Wave B59: a chunk that does not continue its run is REFUSED by name, and the broken run is dropped so
-/// the client re-opens at chunk 0 rather than resuming into bytes nobody can account for — the same gap
-/// discipline the `registerBrushMesh` page run already enforces.
-#[test]
-fn an_out_of_order_import_chunk_is_refused_and_a_retransmitted_one_is_acknowledged() {
-    use crate::editor::puzzle3d::commands::import_fixture::{retire_abandoned_import_runs, stage_import_chunk, Puzzle3dImportEnvelope, Puzzle3dImportFault, Puzzle3dImportStep, PUZZLE3D_IMPORT_CHUNK_BYTES, PUZZLE3D_IMPORT_MAXIMUM_CHUNKS};
-    retire_abandoned_import_runs();
-    retire_abandoned_import_runs();
-    let envelope = |chunk: usize, chunk_count: usize| Puzzle3dImportEnvelope { name: "b59-gap.json".into(), chunk, chunk_count };
-    assert_eq!(stage_import_chunk(&envelope(1, 3), "b"), Err(Puzzle3dImportFault::Gap), "a run may only open at chunk 0");
-    assert_eq!(stage_import_chunk(&envelope(0, 3), "a"), Ok(Puzzle3dImportStep::Staged { next_chunk: 1, chunk_count: 3 }));
-    assert_eq!(stage_import_chunk(&envelope(2, 3), "c"), Err(Puzzle3dImportFault::Gap), "a skipped chunk drops the run");
-    assert_eq!(stage_import_chunk(&envelope(0, 3), "a"), Ok(Puzzle3dImportStep::Staged { next_chunk: 1, chunk_count: 3 }));
-    assert_eq!(stage_import_chunk(&envelope(1, 3), "b"), Ok(Puzzle3dImportStep::Staged { next_chunk: 2, chunk_count: 3 }));
-    assert_eq!(stage_import_chunk(&envelope(1, 3), "b"), Ok(Puzzle3dImportStep::Staged { next_chunk: 2, chunk_count: 3 }), "a retransmitted chunk is acknowledged at the cursor, never charged the whole run again");
-    assert_eq!(stage_import_chunk(&envelope(2, 3), "c"), Ok(Puzzle3dImportStep::Complete(vec!["a".into(), "b".into(), "c".into()])));
-    assert_eq!(stage_import_chunk(&envelope(0, 0), "a"), Err(Puzzle3dImportFault::Envelope));
-    assert_eq!(stage_import_chunk(&envelope(0, PUZZLE3D_IMPORT_MAXIMUM_CHUNKS + 1), "a"), Err(Puzzle3dImportFault::Envelope));
-    assert_eq!(stage_import_chunk(&envelope(0, 2), &"x".repeat(PUZZLE3D_IMPORT_CHUNK_BYTES + 1)), Err(Puzzle3dImportFault::Chunk));
-    retire_abandoned_import_runs();
-    retire_abandoned_import_runs();
 }
 
 /// 📥️ Wave B16: leftover `exportFixture` must emit `DownloadMediaExport`.

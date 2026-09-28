@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
         action.args = vec![
             semio_framework_plugin::ActionArgDef::text("nodeId", LocalizedLabel::native("Entry", "Eintrag")).required(),
             semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Name or comment", "Name oder Kommentar")).min_length(0).required(),
-            semio_framework_plugin::ActionArgDef::text("revision", LocalizedLabel::native("Saved revision", "Gespeicherte Revision")).required(),
+            semio_framework_plugin::ActionArgDef::target_revision("revision", LocalizedLabel::native("Saved revision", "Gespeicherte Revision")),
         ];
     }
     definition

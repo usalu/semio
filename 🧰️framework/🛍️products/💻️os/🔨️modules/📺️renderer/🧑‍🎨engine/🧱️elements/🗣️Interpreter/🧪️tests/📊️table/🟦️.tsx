@@ -6,7 +6,7 @@ type TestSource = { readonly url: string };
  * windows' own spacers, and the keyboard moves one tab stop across rows the host has not streamed yet.
  * Testing Library's role queries are the third-party oracle for the accessibility tree. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, treeWindowRowHeightPx } = dependencies;
+  const { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx } = dependencies;
   const { describe, expect, it, afterEach } = vitest;
 
   const { cleanup, fireEvent, render, screen } = await import("@semio-tech/ui-react/test");
@@ -114,11 +114,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       const rows = Array.from(grid.querySelectorAll<HTMLElement>("[role='row']")).slice(1);
       fireEvent.keyDown(rows[1]!, { key: "End" });
-      expect(scrollTop).toBe(40 * treeRowHeightPx - viewportHeight);
+      expect(scrollTop).toBe(41 * treeRowHeightPx - viewportHeight);
       scroller.dispatchEvent(new Event("scroll"));
       await new Promise((resolve) => setTimeout(resolve, 60));
       const last = reports.at(-1);
-      expect(last.viewportRows).toBe(10);
+      expect(last.viewportRows).toBe(9);
       expect(last.requests.map((request: any) => request.nodeKey)).toEqual(["spaces"]);
       expect(last.requests[0].offset + last.requests[0].rows).toBeGreaterThanOrEqual(40);
     });
@@ -142,6 +142,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(tableWindowScrollTopForRowV1(12, 20, 200, 200)).toBe(200);
     });
 
+    it("caps the scroll viewport at the rows the guest serves, by the fixture's viewport law", () => {
+      const served = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
+      expect(served.tableViewportCaps.length).toBeGreaterThan(0);
+      for (const row of served.tableViewportCaps) expect(tableWindowViewportCapRowsV1(row.learned, row.previous, row.total), row.name).toBe(row.capRows);
+    });
+
+    it("renders no DOM id twice: two editable rows' cells live under their own row", () => {
+      const two = structuredClone(snapshot);
+      const editable = two.nodes.find((node: any) => node.key === "space:sp-1");
+      const cells = two.nodes.filter((node: any) => (editable.children ?? []).includes(node.id));
+      const offset = Math.max(...two.nodes.map((node: any) => node.id)) + 1;
+      const copies = cells.map((cell: any, index: number) => ({ ...structuredClone(cell), id: offset + index + 1 }));
+      two.nodes.push({ ...structuredClone(editable), id: offset, key: "space:sp-3", component: { ...structuredClone(editable.component), cells: ["Atelier Bea", "atelier"] }, children: copies.map((cell: any) => cell.id) }, ...copies);
+      const table = two.nodes.find((node: any) => node.id === two.root);
+      table.children = [...table.children, offset];
+      const view = mount(() => {}, null, two);
+      const ids = Array.from(view.container.querySelectorAll<HTMLElement>("[id]")).map((element) => element.id);
+      expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([]);
+      const rows = Array.from(screen.getByRole("grid", { name: "Spaces" }).querySelectorAll<HTMLElement>("[role='row'][data-ui-node-key^='space:']"));
+      for (const row of rows) for (const input of Array.from(row.querySelectorAll<HTMLInputElement>("input"))) expect(input.id.startsWith(`${row.id}/`)).toBe(true);
+    });
+
     it("windows columns independently and preserves their logical addresses", () => {
       const validate = new Ajv2020({ strict: true }).compile(matrixSchema);
       expect(validate(matrixFixture), JSON.stringify(validate.errors)).toBe(true);
@@ -154,7 +176,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const [rowPosition, rowId] of wide.nodes[0].children.entries()) {
         const row = wide.nodes.find((node: any) => node.id === rowId);
         row.component.cells = matrixFixture.cells[rowPosition];
-        for (const [cellPosition, childId] of row.children.filter((id: number) => !wide.nodes.find((node: any) => node.id === id)?.key.startsWith("row-action-")).entries()) {
+        for (const [cellPosition, childId] of (row.children ?? []).entries()) {
           const cell = wide.nodes.find((node: any) => node.id === childId);
           cell.key = `cell-${matrixFixture.columnOffset + cellPosition}`;
           cell.component.value = matrixFixture.cells[rowPosition][cellPosition];

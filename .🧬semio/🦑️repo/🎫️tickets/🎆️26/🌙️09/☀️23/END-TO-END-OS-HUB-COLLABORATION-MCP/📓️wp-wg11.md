@@ -6,6 +6,136 @@ Slice WG11 (session 14, 2026-09-27 18:2x), successor of WG9 ([`📓️wp-wg9.md`
 Scripts `wp-wg11/`, captures `wp-wg11/generated/` (expendable), durable logs `.🧬semio/🌐hub/s14-wg11-logs/`. Private cargo
 target `.tmp-ticket/wp-wg11/target`. Landing rows: [`📓️landing.md`](📓️landing.md) `# Session 14`.
 
+## Session 14c
+
+Successor agent (2026-09-28 16:5x, second restart; chain relaunched 16:55:46, GUEST FREEZE ON, 7800 DOWN until the chain moves it onto ALL).
+
+| # | Item | Status |
+|---|------|--------|
+| 0 | Reconcile the predecessor's last step (`native-react-cursors` own journey/check, `--mode` dropped) | **staged only, complete**: no tree file touched (target dir absent, no verb in the renderer `📜️script.ts`); staged harness has no `--mode`, journey `native-react-cursors` → `wgpu-peer-cursors-native-react`; tsc **0 errors** 16:59 (`wp-wg11/generated/s14c/tsc-harness-5.txt`); landing dry run clean (2 files, 1 new; `s14c/harness-land-dryrun.txt`) |
+| 1 | Window-3 sets dry-run clean on the live tree | **all clean again 00:0x on the T1-written tree** (+ table painter); full WG11 T3 chain composed on a scratch mirror (order: shell-turn LAST, relayed to L1). Earlier: **all 5 clean 17:02** (`wp-wg11/generated/s14c/*-dryrun.txt`): reseed (11 files), board-pointer (3), a11y text-name (3), shell-turn (2 files, 12 turns; diff identical to 14b's), harness landing (2) |
+| 2 | wgpu TableRow painter (with LB2's SDK half, window 3) | **prepared** `wp-wg11/wg11-table-row-painter-patch.py` (10 files + 2 new, dry run clean, all patched Rust parses — nightly rustfmt, fmt-clean in its own hunks); compile + laws = window 3 (native lane, `semio-framework-ui --features wgpu-engine`), lands in ONE step with LB2's `lb2-p3-row-actions.py` |
+| 3 | Live suite on 7800 p24 (channel 19), catalog-exact roots | wasm32 en **24/24**, de **24/24** (1 late-joiner flake 22/24 before); agent-pixels **12/12** (live == cold reference 0 px); wasm32 ↔ native **11/11**; native ↔ React **8/8**; native ↔ React cursors **4/4**; native two-shell gate **12/12**; wasm32 ↔ React **13/14** (a11y counts paragraph unnamed → text-name set); wasm32 cursors **5/7** (frozen presence pointer → board-pointer set). Native runs need RUST_MIN_STACK 8 MiB (default overflows → shell-turn set). All sets land via L1 T3 |
+| 4 | wgpu shell drops `os.local-catalog.*` + `os.create-space-artifact` (SH2) → T3 set | **prepared** `wp-wg11/wg11-replay-routes-patch.py` (4 files + 1 new; dry run clean, patched Rust parses; `--write` backs up to `wp-wg11/w3-backup/replay-routes/`, `--revert` restores) — create routed into the wgpu creation door, local-catalog + unknown `os.*` = typed localized refusals, replay arms on wasm32 too; relayed to L1 + main |
+| 5 | G12 × WG11 joint T3 set: wgpu shell's agent-bridge offer scope | **prepared** `wp-wg11/wg11-offer-scope-patch.py` (11 files + 2 new; dry run clean; all patched Rust parses, the new kernel module fmt-clean; `--write` backs up to `wp-wg11/w3-backup/offer-scope/`, `--revert` restores) — relayed to L1 + G12 |
+
+### Session 14c log
+
+- 16:58–17:00 item 0 reconciled (see table): the harness edit lives only in `wp-wg11/harness/🤝️hub-collaboration/🟦️.ts` (13:18:46); the
+  tree has neither `🎯️targets/🧊️wgpu/🧪️tests/🤝️hub-collaboration/` nor the verb → nothing half-applied, nothing to revert.
+- 17:0x–17:3x item 2 **TableRow painter prepared** (`wp-wg11/wg11-table-row-painter-patch.py`, dry run `generated/s14c/table-painter-dryrun.txt`,
+  parse check `wg11-parse-check.py` → `generated/s14c/table-painter-parse.txt`: 11/11 parse). Measured first: besides the known Table/TableRow
+  projection gap, **no retained tree row action was ever clickable or announced on wgpu** (paint drew the icons; no hit path in `events`, no
+  registry entry, no accessibility node) — so the fix covers tree rows too. Design (supersedes the 14b sketch; column grid stays on the document):
+  - `🔀️reconcile`: `Table` → `UiNode::Tree` with ONE section keyed by the table's record key (`window` = `Table.window`), rows mount directly under
+    the table node; `TableRow` → tree item (name = first cell, `action` = record `Activate`, `actions` = `RowAction`s) + keyed identity row (the
+    Button/`cells.join(" · ")` and bare-Stack arms go). `TableProps.columns/actions_label` + `TableRowProps.cells` are read through the node
+    binding (`mounted_layout::document_table{,_row}`, `document_row_action`) — no second copy in the legacy spec, no `UiTreeItemNode` field change.
+  - ONE grid (`🧮️layout::table_column_rect`, equal columns between the leading gap and the actions column = `table_actions_width(max row actions)`):
+    `flex` `LayoutNodeKind::Tree{header}` reserves the header band, new `LayoutNodeKind::TableRow` flows an editable row's cell children in the same
+    columns (basis 0 + grow); `paint` draws header labels + plain cells there and skips materialised cells (children paint themselves); a row whose
+    cell hosts a surface (draft/read-only) is `TREE_DETAIL_HEIGHT` tall in layout AND paint.
+  - ONE action geometry (`🧮️layout::tree_row_action_rect/tree_row_action_at`, `TreeRowMetrics.action_gap`): paint's icon slots, the pointer router
+    (`EventRouter::pointer_row_action` → `row_action_command` = row address + the RowAction's OWN versioned `ActionId` — `build_intent` would have
+    answered the row's `Activate` binding), a row with Row-placed actions is a hit target; accessibility walk adds virtual
+    `<rowKey>::row-action::<i>` buttons named `"<label>: <row name>"` (React `TableView`), activated via the engine's virtual-key route.
+  - Laws: NEW `🧪️tests/📊️table-row-grid` over NEW fixture `🧫️fixtures/📊️table-row-grid/🔣️.json` (metrics pin, rows/columns/editable cell rects,
+    action slots, 5 clicks → fired action, painted glyph columns + no table glyphs in the editable row, a11y buttons + activation) + **taffy
+    oracle** for the editable row's cells; the 2 reconcile laws re-pinned (identity row, one child per cell, RowAction as the row's action);
+    flex-unit `Tree` literals gain `header: 0.0`. Expected numbers computed by hand from the theme tokens (row 24, gap 3.2, icon 12, pad 3.2).
+  - Window-3 landing: `python3 wp-lb2/lb2-p3-row-actions.py --write` + `python3 wp-wg11/wg11-table-row-painter-patch.py --apply` in one step →
+    native lane `cargo test -p semio-framework-ui --features wgpu-engine --lib -- table_row_grid reconcile::tests flex::tests
+    accessibility` + `cargo check -p semio-framework-ui --features wgpu-engine --lib --tests` + LB2's SDK law; wasm32 = the renderer bundle in
+    the chain's next rebuild; live = Home in the wgpu shell (SH2 verify-home). `--revert` restores exactly (embedded pre-image).
+- 17:4x RELAY LB2 (via main): painter ready, landing = ONE window-3 step with `lb2-p3 --write`; runbook above. No tree edit by WG11 this session (no landing row). Other prepared sets touching the same wgpu files: none live (`wp-u5`, `wp-wg8` are landed history).
+- 21:10 coordinator: 7800 READY on `s14-w4-catalog-p24` (channel 19, current-tree hub) → live suite. Catalog-exact module roots
+  materialized from p24 (`wg11-all-roots.sh`, fixed a zsh `${@:-…}` word-split bug first; `s14-wg11-logs/all-roots-p24-2.txt`): note
+  `284b3d18…`, block `f094ec31…`, puzzle `b62d4859…` (served == catalog, shard worker fresh). Note serve **6552** (pid 20118, renderer wasm-release 20:47).
+- 21:22–21:29 **wasm32 journey `w-3` (en) on 7800 p24: 24/24 PASS, rc=0** (`s14-wg11-logs/harness-w-3.txt`, `wp-wg11/generated/hub-collaboration/w-3/`):
+  sign-in ×2, attach ×2 `Persisted`, roster both ways, A→B 4.1 s, B→A 4.0 s, frames name the document, real 15 s cut (6 connections) never
+  freezes A (1–2 ms), offline edit kept (`reconnecting` after 4.7 s), relink 3.2 s + B receives it, medium cut spoken after 2.1 s, relink 14.2 s,
+  long cut expires B after 62.5 s (en line), never relinks by itself, late joiner = hub head 3. Record `wgpu-collaboration-wasm32-en` PASS.
+- 21:30–21:39 wasm32 `w-4` (de): 22/24 — every step through the long-cut expiry (German line) PASS; the LATE JOINER's fresh session (7800 direct)
+  activated `Remote` but the path editor/attach never appeared within 45 + 30 s (`pressed: absent`, card `Remote: getrennt`, final projection shows
+  the sync panel collapsed to file/folder/remote) → late-joiner count red. The late shell's console was never written (harness gap) → harness now
+  dumps `console-late.txt`/`hub-late.txt` (tsc 0, `generated/s14c/tsc-harness-6.txt`). Both runs log `ui-doc begin refused … fault=InterruptedClose`
+  bursts (en 166, de 184 lines, windows `s-sync-status`, `framework.hub`, `framework.panel.artifact`) — retried and absorbed in passing runs.
+- 21:40–21:48 **wasm32 `w-5` (de) re-run: 24/24 PASS, rc=0** (`harness-w-5.txt`): A→B 4.0 s, B→A 4.0 s, relink 3.8 s, expiry 62.5 s (German), late
+  joiner 3 = head 3. Record `wgpu-collaboration-wasm32-de` PASS. The w-4 late-joiner miss did not reproduce (1 of 3 runs today) — recorded as an
+  open flake with evidence `wp-wg11/generated/hub-collaboration/w-4/projection-A-538818.json`; the next occurrence carries the late console.
+- 21:49–21:59 agent-pixels `ap-3` (en): 11/12 — agent = own delegated principal, roster names it `(AI agent)`, MCP `addBlock` SUCCEEDED, block decoded
+  3.1 s later, head 0→1, frame changes 1 173 px; red "live == cold reference" (34 740 px) = HARNESS: the live frame had the Sync card open, the
+  reference had it closed (`ap-3/agent-live.png` vs `agent-reference.png`: document content identical). Fix: `closeSyncCard()` judged by the painted
+  `framework.sync.panel` group (not the pill's switch state) before both captures; tsc 0 (`generated/s14c/tsc-harness-7.txt`).
+- 21:59–22:09 **agent-pixels `ap-4` (en): 12/12 PASS, rc=0** (`s14-wg11-logs/harness-ap-4.txt`): decoded 2.0 s after the commit, head 0→1, frame
+  changes 1 173 px, **live frame == cold reference 0 px** (noise 0). Record `wgpu-agent-reply-pixels-en` PASS (rows 3.12, 4.10).
+- 22:0x coordinator FYI: the chain's release-modules re-materialization was stopped at 32/60 (L1 landing T1); the shared release plugin-module root
+  is partially refreshed — WG11's serves use the catalog-exact p24 roots + renderer wasm-release 20:47, unaffected.
+- 22:10–22:16 cursors `cu-2` (puzzle2d, en; serve **6554** on `s14-wg11-all-puzzle`, note serve 6552 stopped first): **5/7 = current state** —
+  sign-in ×2, attach ×2 `Persisted`, presence both ways PASS; peer cursors red both ways (pixel deltas 0/0/0, noise 0) = the frozen presence
+  pointer the prepared board-pointer set fixes (lands via L1) (`s14-wg11-logs/harness-cu-2.txt`). Record `wgpu-peer-cursors-en` FAIL (expected).
+- 22:16 block2d serve **6553** on `s14-wg11-all-block` (puzzle serve 6554 stopped first); catalog-exact native runtime `.🧬semio/🌐hub/
+  s14-wg11-native-block2d/🔣️runtime.json` (block `f094ec31…` = the p24 catalog component + the materialized descriptor; the dev dist runtime still
+  pointed at a 09-25 component). Native binary = `s14-wg11-bin/renderer-tests-1423` (channel 19).
+- 22:17–22:22 wasm32 ↔ native `wn-2` (en, DEFAULT test-thread stack): native law `has overflowed its stack` → abort (3rd reproduction of item 3 on
+  today's tree; the prepared shell-turn set lands via L1) — `wp-wg11/generated/hub-collaboration/wn-2/native.txt`.
+- 22:27–22:39 **wasm32 ↔ native `wn-3` (en, `RUST_MIN_STACK=8388608` as a measurement condition): 11/11 PASS, rc=0** (`s14-wg11-logs/harness-wn-3.txt`):
+  browser opens the native user's document live, presence both ways (8 ms), native edit → browser 6→7 (9 ms), browser edit → native ingests 7→8,
+  each undoes only their own, reload converges (live 31.0 s) and the next native edit arrives, native law exit 0. Record
+  `wgpu-collaboration-wasm32-native-en` PASS (row 3.8).
+- ~22:42 MACHINE REBOOT (coordinator): every process died (serve 6553 pid 52059 included); all WG11 runs had finished before it (wn-3 rc=0 22:38:50;
+  ap-4 12/12 at 22:09 — not lost). 7800 resumed on p24 (os-hub pid 2218). Post-reboot load 78 → waiting for < 40 before the next run.
+- 22:5x React `s` dev serve **6555** (S18 `ensureDevServe`, joined to 7800, pid 4817; `wg11-react-serve.ts`).
+- 22:55–23:06 **native ↔ React `nr-2` (en, RUST_MIN_STACK 8 MiB): 8/8 PASS, rc=0** (`s14-wg11-logs/harness-nr-2.txt`): React opens the native user's
+  document `Persisted`, presence both ways (6 ms), native edit → React 6→7 (11 ms), React edit → native ingests 7→8, each undoes only their own
+  (8→7→6), React reload converges (live 3.0 s) + next native edit arrives, native law exit 0. Record `wgpu-collaboration-native-react-en` PASS
+  (row 3.5) — first native ↔ React pass on the channel-19 hub.
+- 23:08–23:24 **native ↔ React cursors `nrc-1` (en, RUST_MIN_STACK 8 MiB): 4/4 PASS, rc=0** (`harness-nrc-1.txt`): React opens the native user's
+  board live (6.3 s), cursors both ways (React sees the native pointer after 5 ms; native sees React's), native law exit 0 (754 s). Record
+  `wgpu-peer-cursors-native-react-en` PASS (row 3.6). Contrast: wasm32 ↔ wasm32 cursors stay red (cu-2) — the frozen presence pointer lives in
+  `AppInteractionState::handle_pointer_move` (the winit/browser-worker move path), which the native law's ShellState-level pointer does not cross.
+- 23:2x coordinator (queued): implement `os.local-catalog.*` (SH2 route B) + `os.create-space-artifact` in the wgpu shell (no silent drop; parity
+  with ShellHost or typed localized refusal), a law each, as a T3 set with `--write/--revert` + byte backups under `wp-wg11/w3-backup/` → next after the live runs.
+- 23:23–23:28 wasm32 ↔ React `wr-3` (en; block2d serve 6553 pid 21451 + React 6555): **13/14** (`harness-wr-3.txt`) — presence both ways across shell
+  types (`User One · User Two` / `UO UT`), wasm32 edit → React 6→7 (2 ms), React edit → wasm32 7→8 (1.0 s), each undoes its own (8→7, 7→6), late
+  React joiner 6 = 6, late wasm32 joiner 6 = 6. Only red = the a11y step: the board's counts paragraph (`6 Handle Kinds, 11 Handles`) has NO
+  accessible name → the prepared a11y text-name set (lands via L1 T3). Record `wgpu-collaboration-wasm32-react-en` FAIL on that step only.
+- 23:28–23:35 **native two-shell gate `gate-p24-1` (RUST_MIN_STACK 8 MiB, catalog-exact native block2d): 12/12 PASS, EXIT 0, 390 s**
+  (`s14-wg11-logs/gate-p24-1.txt`): sign-in ×2, same space, roster, create through the door (`accepted → ready`), both guests mounted + hub-bound,
+  socket Live 43 ms, presence 165 ms, A authors 8.8 s + B ingests, B authors 10.8 s + A ingests, per-actor undo, connection loss (20 severed,
+  offline edit, stale → ready, relive 10.5 s). Serves 6553/6555 stopped before it (WG11 has no serve/hub/browser running now).
+- 23:3x–23:5x item 4 prepared: `wp-wg11/wg11-replay-routes-patch.py` (dry run `generated/s14c/replay-routes-dryrun.txt`; both patched Rust
+  files parse under nightly rustfmt). Measured first: on wasm32 BOTH `ReplayShellCommand` arms were `cfg(not(wasm32))` → the browser wgpu shell
+  dropped EVERY replay (directory, open, create) at `queue_host_effects`' debug line; native served only directory + open. Set: schema-first
+  `🏛️ShellHost/📣️replay-refusal/🔣️.json` (reasons, en + de, code prefix, shared vectors; + `local-catalog-unavailable`), TS module derives
+  from it (API unchanged), wgpu `ReplayRefusalReasonV1`/`REPLAY_REFUSAL_V1` (same JSON) + `refuse_replay` (warning notice + fault code),
+  `os.create-space-artifact` → the ONE creation door (`space_artifact_creation_replay_choice` = ShellHost's gate: exact `{kindChoice,name}`,
+  canonical choice == one offered kind of the index space's ready catalog → seal, submit, open ready), `os.local-catalog.*` → refusal until
+  route B's native half (after SH2's B1 lands its Rust twins), unknown `os.directory.*` → invalid-request, other unknown `os.*` → unrouted.
+  Laws: Rust ×3 (vocabulary + vectors; 7 unserved-replay cases en/de; creation choice gate 1 accept + 7 refusals), TS engine-contract ×2 (same
+  vectors). Crates: `semio-framework-os-renderer-wgpu` (native + wasm32) + os TS (ShellHost, engine-contract vitest). Open gap (not in the set):
+  non-`os.` replays (guest follow-ups, e.g. `setActiveExample`) — React queues them back into the guest; wgpu still ignores them.
+- 00:0x item 5 prepared: `wp-wg11/wg11-offer-scope-patch.py` (dry run `generated/s14c/offer-scope-dryrun.txt`). The scope's inputs (session
+  capability, hub, open space) live in the Rust shell, so: kernel directory client `live_agent_delegation_principals` + pure
+  `live_agent_principals` (NEW `📇️directory/🔌️client/🤖️agent-delegations/🦀️.rs` — NEW dir → R10 taxonomy; Rust twin of the TS parser +
+  ShellHost's live filter) with shared vectors NEW `📇️directory/🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json` (5 cases; Rust client
+  unit law + TS AgentDelegations law); renderer `AgentBridgeOfferScopeOwnerV1` (sign-out / space switch retire at once, stale listing dropped,
+  re-listed every 30 s = discovery max so a revoke leaves it) + `pump_agent_bridge_offer_scope` on the directory pump + wasm export
+  `dumpAgentBridgeOfferScope` (only `{hubOrigin, spaceId, agentPrincipalIds}` or `null` crosses; the capability never); TS
+  `watchAgentBridgeOffer({offerScope})` re-read before every poll + strict `agentBridgeOfferScopeFromJsonV1`, transport probe
+  `agent-bridge-scope`, frame worker answers it, both page entries pass it; laws: Rust owner state machine (hub-projection-workspace),
+  TS watcher asks with each re-read scope + scope JSON strictness (AgentBridge). Crates: `semio-framework-os-kernel`,
+  `semio-framework-os-renderer-wgpu` (native + wasm32); os TS (AgentBridge offer, transport, frame worker, both boots, 2 vitest files).
+- 00:0x L1: replay-routes registered in T3 (after wg11-harness); laws on request after T3's proof.
+- 00:0x item (2): all WG11 window-3 sets re-dry-run clean on the T1-written tree (`generated/s14c/*2-dryrun.txt`: reseed 11, board 3, a11y 3,
+  harness 2, table painter 10+2, shell-turn 2/12). ORDER CONSTRAINT found + relayed to L1: shell-turn must land AFTER replay-routes and
+  offer-scope (it re-boxes `handle_replay_shell_command`, whose text replay-routes anchors on). Proof: the whole WG11 T3 chain composed on a
+  29-file scratch mirror in L1's corrected order reseed → board → a11y → replay-routes → offer-scope → shell-turn: every step applied, all 16
+  resulting Rust files parse (`generated/s14c/compose-t3-chain.txt`).
+- 00:1x housekeeping (rule 7): deleted my own oversized captures `wp-wg11/generated/s14b/wg10bin-graph.pickle` (209 MB) and
+  `generated/stack-frames-wg10bin-all.txt` (7 MB) — predecessor's call-graph/frame caches whose results are recorded in this report. No WG11 hub, serve, browser or native run is alive. Next on request: laws for the T3 sets when L1 asks;
+  the TableRow painter rides T2 with LB2's p3 (set `lb2-p3-wg11`).
+
 ## Session 14b
 
 Successor agent (2026-09-28 12:0x, restart after the usage cut). Chain launched 12:02:46, GUEST FREEZE ON (window 3 closed).

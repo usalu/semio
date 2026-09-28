@@ -847,18 +847,6 @@ impl ArtifactEditor for VcsPlayApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    /// 📥️ Without this the host refuses every archive this app hands back
-    /// (`artifact-store.persisted-initializer-refused`), which is exactly what a `setActiveExample`
-    /// `Effect::LoadDocument` is: the trait default owns no retained initialization authority, so
-    /// `loadDocumentArchive` fails after the guest has already accepted the verb.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, VCS_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
@@ -943,6 +931,7 @@ impl ArtifactEditor for VcsPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

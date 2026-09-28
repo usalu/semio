@@ -1,13 +1,14 @@
 //! 📄 PDF page editor — paints every page and addresses text, vectors, images, forms, shadings,
 //! and annotations as objects the end user can insert, move, resize, restyle, and delete.
-//! Document info and page structure use the same command channel. Raw fields that have no page
-//! geometry stay on the snapshot details window.
+//! Document info and page structure use the same command channel. A canvas click hit-tests a page
+//! object and redispatches `interactionSelect`; it does not mutate the PDF. Raw fields that have no
+//! page geometry stay on the snapshot details window.
 
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::mutations::{
-    insert_page::InsertPage, move_page::MovePage, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_encryption::SetEncryption, set_font::SetFont, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
+    insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_font::SetFont, set_form::SetForm, set_snapshot::SetSnapshot, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
 };
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAction, PdfAnnotation, PdfColorSpace, PdfDestination, PdfDestinationFit, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfFont, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfImage, PdfImageCodec, PdfMarkInfo, PdfOpenAction, PdfOutputIntent, PdfMatrix, PdfNamedDestination, PdfOp, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFont, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageCodec, PdfImageMask, PdfMarkInfo, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
 use crate::PdfSnapshot;
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, Canvas2dScene, Fault, FaultCode, FaultOrigin, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
@@ -15,7 +16,9 @@ use serde_json::{json, Value};
 pub const WINDOW_KIND_ID: &str = "pdf.page";
 pub const BODY_KEY: &str = "pdf.page";
 
-const PAGE_ACTIONS: [&str; 40] = [
+pub const OBJECT_DOMAIN: &str = "objects";
+
+const PAGE_ACTIONS: [&str; 60] = [
     "set-text",
     "move",
     "resize",
@@ -56,6 +59,26 @@ const PAGE_ACTIONS: [&str; 40] = [
     "set-open-action",
     "set-document-id",
     "set-font-program",
+    "set-graphics-state",
+    "set-pattern",
+    "set-color-space",
+    "set-properties",
+    "set-font-metrics",
+    "set-image-mask",
+    "set-form-content",
+    "set-page-transition",
+    "set-catalog-entry",
+    "set-trailer-entry",
+    "set-annotation-appearance",
+    "set-glyph",
+    "set-indirect-object",
+    "set-mesh-data",
+    "set-info-field",
+    "set-page-extra",
+    "set-annotation-style",
+    "canvasPointerDown",
+    "canvasPointerMove",
+    "canvasPointerUp",
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -146,11 +169,14 @@ pub fn window_definition() -> WindowKindDefinition {
         icon_id: "file-text".into(),
         options: WindowOptions::default(),
         actions: vec![
+            action("canvasPointerDown", "Canvas Pointer Down", "Leinwandzeiger", vec![ActionArgDef::number("x", LocalizedLabel::native("X", "X")), ActionArgDef::number("y", LocalizedLabel::native("Y", "Y"))]).input_event(),
+            action("canvasPointerMove", "Canvas Pointer Move", "Leinwandzeiger bewegt", vec![ActionArgDef::number("x", LocalizedLabel::native("X", "X")), ActionArgDef::number("y", LocalizedLabel::native("Y", "Y"))]).input_event(),
+            action("canvasPointerUp", "Canvas Pointer Up", "Leinwandzeiger losgelassen", vec![ActionArgDef::number("x", LocalizedLabel::native("X", "X")), ActionArgDef::number("y", LocalizedLabel::native("Y", "Y"))]).input_event(),
             action(
                 "set-page",
                 "Set Page Text",
                 "Seitentext setzen",
-                vec![page(), ActionArgDef::number("item", LocalizedLabel::native("Text Item", "Textelement")).required(), ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")).min_length(1).required(), text()],
+                vec![page(), ActionArgDef::number("item", LocalizedLabel::native("Text Item", "Textelement")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).min_length(1), text()],
             )
             .describe(LocalizedLabel::native(
                 "Replaces the addressed page text when its revision still matches; the previous text remains available through undo.",
@@ -173,7 +199,10 @@ pub fn window_definition() -> WindowKindDefinition {
             action("move-page", "Move Page", "Seite verschieben", vec![page(), x()]),
             action("set-page-size", "Set Page Size", "Seitengröße setzen", vec![page(), width(), height()]),
             action("set-info", "Set Document Info", "Dokumentinfo setzen", vec![ActionArgDef::text("text", LocalizedLabel::native("Title", "Titel")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Author", "Autor")).min_length(0), ActionArgDef::text("object", LocalizedLabel::native("Subject", "Thema")).min_length(0)]),
+            action("set-info-field", "Set Info Field", "Infofeld setzen", vec![object(), text()]),
             action("set-annotation", "Set Annotation", "Anmerkung setzen", vec![page(), object(), text(), x(), y(), width(), height()]),
+            action("set-annotation-style", "Set Annotation Style", "Anmerkung gestalten", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x(), red(), green(), blue()]),
+            action("set-page-extra", "Set Page Extra", "Seite ergänzen", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(0), x(), y()]),
             action("set-font", "Set Font", "Schrift setzen", vec![page(), object(), text()]),
             action("set-outline", "Set Outline", "Lesezeichen setzen", vec![page(), x(), text()]),
             action("set-page-rotation", "Set Page Rotation", "Seitendrehung setzen", vec![page(), x()]),
@@ -197,6 +226,20 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-open-action", "Set Open Action", "Öffnen-Aktion setzen", vec![page(), ActionArgDef::text("object", LocalizedLabel::native("Kind", "Art")).min_length(0), ActionArgDef::text("text", LocalizedLabel::native("URI", "URI")).min_length(0)]),
             action("set-document-id", "Set Document Id", "Dokumentkennung setzen", vec![ActionArgDef::text("text", LocalizedLabel::native("Permanent", "Dauerhaft")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Changing", "Wechselnd")).min_length(0)]),
             action("set-font-program", "Set Font Program", "Schriftprogramm setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Program", "Programm")).min_length(1).required()]),
+            action("set-graphics-state", "Set Graphics State", "Grafikzustand setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Blend Mode", "Mischmodus")).min_length(0), x(), y()]),
+            action("set-pattern", "Set Pattern", "Muster setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Shading", "Verlauf")).min_length(0), x(), y(), width(), height()]),
+            action("set-color-space", "Set Color Space", "Farbraum setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Separation", "Sonderfarbe")).min_length(0)]),
+            action("set-properties", "Set Properties", "Eigenschaften setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
+            action("set-font-metrics", "Set Font Metrics", "Schriftmetrik setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Encoding", "Kodierung")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Widths", "Breiten")).min_length(0), x(), y()]),
+            action("set-image-mask", "Set Image Mask", "Bildmaske setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Kind", "Art")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Mask", "Maske")).min_length(0)]),
+            action("set-form-content", "Set Form Content", "Formularinhalt setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0), x(), y(), width(), height()]),
+            action("set-page-transition", "Set Page Transition", "Seitenübergang setzen", vec![page(), ActionArgDef::text("text", LocalizedLabel::native("Style", "Stil")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Direction", "Richtung")).min_length(0), x()]),
+            action("set-catalog-entry", "Set Catalog Entry", "Katalogeintrag setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
+            action("set-trailer-entry", "Set Trailer Entry", "Anhang setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
+            action("set-annotation-appearance", "Set Annotation Appearance", "Erscheinungsbild setzen", vec![page(), object(), ActionArgDef::text("text", LocalizedLabel::native("Form", "Formular")).min_length(0)]),
+            action("set-glyph", "Set Glyph", "Glyphe setzen", vec![object(), text(), x(), y(), width(), height()]),
+            action("set-indirect-object", "Set Indirect Object", "Objekt setzen", vec![x(), y(), ActionArgDef::text("text", LocalizedLabel::native("Name", "Name")).min_length(0)]),
+            action("set-mesh-data", "Set Mesh Data", "Netzdaten setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Decode", "Dekodierung")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Vertices", "Knoten")).min_length(0)]),
         ],
         utilities: Vec::new(),
         interactions: Vec::new(),
@@ -210,7 +253,17 @@ pub fn window_definition() -> WindowKindDefinition {
 
 /// 🖼️ Paints every page, stacked top to bottom, with one layer per object.
 pub fn render_window(snapshot: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
-    semio_framework_plugin::scene_surface(BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, None)))
+    render_window_with_selection(snapshot, None)
+}
+
+/// 🖼️ Paints every page and outlines `selected` when the host has one.
+pub fn render_window_with_selection(snapshot: &PdfSnapshot, selected: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+    semio_framework_plugin::scene_surface(BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, selected)))
+}
+
+/// 🖼️ Paints the page window from the framework-owned object selection.
+pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_framework_plugin::app::InteractionView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+    render_window_with_selection(snapshot, interaction.selection(OBJECT_DOMAIN).ids.first().map(String::as_str))
 }
 
 /// 🧾 Reads a page-edit action into a replayable payload.
@@ -249,11 +302,27 @@ pub fn edit_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Pd
         "set-named-destination" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-label" => (page_index()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-mark-info" => (0, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
-        "set-viewer-preferences" => (0, object_id()?, String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-viewer-preferences" => (0, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-info-field" => (0, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-extra" => (page_index()?, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-style" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
         "set-encryption" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-output-intent" | "set-form-field" | "set-document-id" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-open-action" => (opt_index(args, "page"), text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-font-program" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-graphics-state" => (0, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-pattern" => (0, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
+        "set-color-space" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-properties" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-font-metrics" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-image-mask" | "set-catalog-entry" | "set-trailer-entry" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-form-content" => (0, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
+        "set-page-transition" => (page_index()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-appearance" => (page_index()?, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-glyph" => (0, object_id()?, text_value()?, String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 10.0), opt_num(args, "height", 10.0), 0.0, 0.0, 0.0),
+        "set-indirect-object" => (0, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-mesh-data" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (0, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         _ => return Err(fault(format!("unknown pdf page action '{action}'"))),
     };
     Ok(payload_edit(action, page, object, text, extra, x, y, width, height, red, green, blue))
@@ -309,16 +378,103 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-page-label" => set_page_label(snapshot, page, &text, &extra, x),
         "set-mark-info" => Ok(set_mark_info(x, y, width)),
         "set-metadata" => Ok(vec![PdfMutation::SetMetadata(SetMetadata { xmp: none_if_empty(&text) })]),
-        "set-viewer-preferences" => set_viewer_preference(snapshot, &object, x),
+        "set-viewer-preferences" => set_viewer_preference(snapshot, &object, &text, x),
+        "set-info-field" => set_info_field(snapshot, &object, &text),
+        "set-page-extra" => set_page_extra(snapshot, page, &object, &text, &extra, x, y),
+        "set-annotation-style" => set_annotation_style(snapshot, page, &object, &text, &extra, red, green, blue, x),
         "set-encryption" => set_encryption(&text, &extra, &object, x),
         "set-output-intent" => set_output_intent(snapshot, &object, &text, &extra),
         "set-form-field" => set_form_field(snapshot, &object, &text, &extra),
         "set-open-action" => set_open_action(&object, &text, page),
         "set-document-id" => Ok(set_document_id(&text, &extra)),
         "set-font-program" => set_font_program(snapshot, &object, &text, &extra),
+        "set-graphics-state" => set_graphics_state(snapshot, &object, &text, x, y),
+        "set-pattern" => set_pattern(snapshot, &object, &text, x, y, width, height),
+        "set-color-space" => set_color_space(snapshot, &object, &text, &extra),
+        "set-properties" => set_properties(snapshot, &object, &text, &extra),
+        "set-font-metrics" => set_font_metrics(snapshot, &object, &text, &extra, x, y),
+        "set-image-mask" => set_image_mask(snapshot, &object, &text, &extra),
+        "set-form-content" => set_form_content(snapshot, &object, &text, x, y, width, height),
+        "set-page-transition" => set_page_transition(snapshot, page, &text, &extra, x),
+        "set-catalog-entry" => set_named_object(&object, &text, "a catalog entry needs a key", |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |key, value| PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value })),
+        "set-trailer-entry" => set_named_object(&object, &text, "a trailer entry needs a key", |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |key, value| PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value })),
+        "set-annotation-appearance" => set_annotation_appearance(snapshot, page, &object, &text),
+        "set-glyph" => set_glyph(snapshot, &object, &text, x, y, width, height),
+        "set-indirect-object" => set_indirect_object(snapshot, x, y, &text),
+        "set-mesh-data" => set_mesh_data(snapshot, &object, &text, &extra),
         "set-annotation" => edit_annotation(snapshot, page, &object, &text, x, y, width, height),
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => Ok(Vec::new()),
         _ => edit_object(snapshot, action, &object, x, y, width, height, red, green, blue, &text),
     }
+}
+
+/// 🖱️ A page edit, or a canvas hit that redispatches selection and leaves the PDF unchanged.
+pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_framework_plugin::Emit<PdfMutation>, Fault> {
+    match action {
+        "canvasPointerMove" | "canvasPointerUp" => Ok(semio_framework_plugin::Emit::default()),
+        "canvasPointerDown" => {
+            let effect = pointer_down_effect(snapshot, payload)?;
+            Ok(semio_framework_plugin::Emit { description: Some("Select".into()), ..semio_framework_plugin::Emit::effect(effect) })
+        }
+        _ => {
+            let mutations = apply_payload(snapshot, action, payload)?;
+            Ok(semio_framework_plugin::Emit { artifact_mutations: mutations, description: Some(action.to_string()), ..Default::default() })
+        }
+    }
+}
+
+/// 🎯 Declares the page-object selection domain and points the page window at it.
+pub fn install_object_interaction(definition: &mut semio_framework_plugin::AppDefinition) {
+    definition.interactions.push(semio_framework_plugin::InteractionDefinition {
+        id: OBJECT_DOMAIN.into(),
+        label: LocalizedLabel::native("Objects", "Objekte"),
+        granularities: vec![semio_framework_plugin::GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "square".into() }],
+        hierarchy: semio_framework_plugin::HierarchyProvider::Flat,
+        hover: semio_framework_plugin::HoverSpec::default(),
+        selection: semio_framework_plugin::SelectionSpec {
+            modes: vec![semio_framework_plugin::SelectionMode::Multiple, semio_framework_plugin::SelectionMode::Single],
+            methods: vec![semio_framework_plugin::SelectionMethod::Pick],
+            merges: vec![semio_framework_plugin::MergeMode::Replace, semio_framework_plugin::MergeMode::Invertive],
+            transitive: false,
+            broadcast: true,
+        },
+    });
+    for window in definition.window_kinds.iter_mut() {
+        if window.id == WINDOW_KIND_ID {
+            window.interactions = vec![semio_framework_plugin::InteractionRef::new(OBJECT_DOMAIN)];
+        }
+    }
+}
+
+fn pointer_down_effect(snapshot: &PdfSnapshot, payload: &str) -> Result<semio_framework_plugin::Effect, Fault> {
+    let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
+    let extend = value.get("extra").and_then(Value::as_str) == Some("shift") || value.get("shift").and_then(Value::as_bool).unwrap_or(false) || json_f64(&value, "shift") >= 0.5;
+    let merge = if extend { "invertive" } else { "replace" };
+    Ok(match hit_test(snapshot, json_f64(&value, "x"), json_f64(&value, "y")) {
+        Some(id) => select_effect(&id, merge),
+        None => semio_framework_plugin::Effect::DispatchAction { req: semio_framework_plugin::RequestId(113), action: semio_framework_plugin::CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 },
+    })
+}
+
+fn select_effect(id: &str, merge: &str) -> semio_framework_plugin::Effect {
+    semio_framework_plugin::Effect::DispatchAction {
+        req: semio_framework_plugin::RequestId(115),
+        action: semio_framework_plugin::INTERACTION_SELECT_ACTION_ID.into(),
+        args: Some(dsl::DslValue::from(json!({ "domainId": OBJECT_DOMAIN, "targets": json!([{ "granularity": "object", "id": id }]).to_string(), "merge": merge, "method": "pick" }))),
+        delay_ms: 0,
+    }
+}
+
+fn pointer_extend(args: Option<&dsl::DslValue>) -> bool {
+    let Some(dsl::DslValue::Object(entries)) = args else { return false };
+    entries.iter().any(|(key, value)| {
+        (key == "shift" || key == "ctrl" || key == "meta") && match value {
+            dsl::DslValue::Bool(flag) => *flag,
+            dsl::DslValue::Number(number) => number.as_f64() >= 0.5,
+            dsl::DslValue::String(text) => text == "true" || text == "1",
+            _ => false,
+        }
+    })
 }
 
 /// 👁 Every addressable object in painting order.
@@ -666,7 +822,28 @@ fn set_mark_info(marked: f64, user_properties: f64, suspects: f64) -> Vec<PdfMut
     vec![PdfMutation::SetMarkInfo(SetMarkInfo { info: (info != PdfMarkInfo::default()).then_some(info) })]
 }
 
-fn set_viewer_preference(snapshot: &PdfSnapshot, flag: &str, value: f64) -> Result<Vec<PdfMutation>, Fault> {
+fn set_info_field(snapshot: &PdfSnapshot, field: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let mut info = snapshot.info.clone();
+    match field {
+        "keywords" => info.keywords = none_if_empty(value),
+        "creator" => info.creator = none_if_empty(value),
+        "producer" => info.producer = none_if_empty(value),
+        "trapped" => info.trapped = none_if_empty(value),
+        "creationDate" => info.creation_date = parse_optional_date(value)?,
+        "modificationDate" => info.modification_date = parse_optional_date(value)?,
+        other => return Err(fault(format!("unknown info field '{other}'"))),
+    }
+    Ok(vec![PdfMutation::SetInfo(SetInfo { info })])
+}
+
+fn parse_optional_date(value: &str) -> Result<Option<PdfDate>, Fault> {
+    if value.is_empty() {
+        return Ok(None);
+    }
+    PdfDate::parse(value).map(Some).ok_or_else(|| fault("a document date needs D:YYYYMMDDHHmmSS"))
+}
+
+fn set_viewer_preference(snapshot: &PdfSnapshot, flag: &str, text: &str, value: f64) -> Result<Vec<PdfMutation>, Fault> {
     let mut preferences = snapshot.viewer_preferences.clone().unwrap_or_default();
     let on = value >= 0.5;
     match flag {
@@ -676,6 +853,17 @@ fn set_viewer_preference(snapshot: &PdfSnapshot, flag: &str, value: f64) -> Resu
         "fitWindow" => preferences.fit_window = on,
         "centerWindow" => preferences.center_window = on,
         "displayDocTitle" => preferences.display_doc_title = on,
+        "pickTrayByPdfSize" => preferences.pick_tray_by_pdf_size = on,
+        "numCopies" => preferences.num_copies = (value >= 0.0).then_some(value.round() as u32),
+        "nonFullScreenPageMode" => preferences.non_full_screen_page_mode = page_mode(text)?,
+        "printPageRange" => preferences.print_page_range = if text.is_empty() { Vec::new() } else { text.split(',').map(str::trim).filter(|item| !item.is_empty()).map(|item| item.parse::<u32>().map_err(|_| fault("a print range needs whole page numbers"))).collect::<Result<Vec<_>, _>>()? },
+        "direction" => preferences.direction = none_if_empty(text),
+        "viewArea" => preferences.view_area = none_if_empty(text),
+        "viewClip" => preferences.view_clip = none_if_empty(text),
+        "printArea" => preferences.print_area = none_if_empty(text),
+        "printClip" => preferences.print_clip = none_if_empty(text),
+        "printScaling" => preferences.print_scaling = none_if_empty(text),
+        "duplex" => preferences.duplex = none_if_empty(text),
         other => return Err(fault(format!("unknown viewer preference '{other}'"))),
     }
     Ok(vec![PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: (preferences != PdfViewerPreferences::default()).then_some(preferences) })])
@@ -789,6 +977,297 @@ fn place_font_program(kind: PdfFontKind, program: PdfFontProgram) -> Result<PdfF
         }
         _ => Err(fault("that font program does not fit this font")),
     }
+}
+
+fn set_image_mask(snapshot: &PdfSnapshot, address: &str, kind: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let mut image = image_by_address(snapshot, address)?;
+    match kind {
+        "" => {
+            image.mask = None;
+            image.soft_mask = None;
+        }
+        "stencil" if !value.is_empty() => image.mask = Some(PdfImageMask::Stencil { image: value.to_string() }),
+        "soft" if !value.is_empty() => image.soft_mask = Some(value.to_string()),
+        "colorKey" => {
+            let ranges = value.split(',').map(|item| item.trim().parse::<u32>().map_err(|_| fault("a color key is comma-separated integers"))).collect::<Result<Vec<_>, _>>()?;
+            if ranges.is_empty() {
+                return Err(fault("a color key needs ranges"));
+            }
+            image.mask = Some(PdfImageMask::ColorKey { ranges });
+        }
+        "stencil" | "soft" => return Err(fault("a mask needs an image id")),
+        other => return Err(fault(format!("unknown image mask '{other}'"))),
+    }
+    Ok(vec![PdfMutation::SetImage(SetImage { image })])
+}
+
+fn image_by_address(snapshot: &PdfSnapshot, address: &str) -> Result<PdfImage, Fault> {
+    if let Some(image) = snapshot.images.iter().find(|image| image.id == address) {
+        return Ok(image.clone());
+    }
+    let object = objects(snapshot).into_iter().find(|item| item.id == address).ok_or_else(|| fault(format!("pdf image '{address}' is gone")))?;
+    if object.kind != ObjectKind::Image {
+        return Err(fault(format!("pdf object '{address}' is not an image")));
+    }
+    snapshot.images.iter().find(|image| image.id == object.text).cloned().ok_or_else(|| fault(format!("pdf image '{}' is not a stored image", object.text)))
+}
+
+fn set_form_content(snapshot: &PdfSnapshot, id: &str, text: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if id.is_empty() {
+        return Err(fault("a form needs an id"));
+    }
+    let font = snapshot.fonts.first().map(|font| font.id.clone()).unwrap_or_else(|| "F1".into());
+    let content = if text.is_empty() {
+        vec![PdfOp::Rectangle { x, y, width: width.max(1.0), height: height.max(1.0) }, PdfOp::Fill]
+    } else {
+        vec![PdfOp::BeginText, PdfOp::SetFont { name: font, size: height.max(1.0) }, PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, x, y] }, PdfOp::ShowText { text: PdfTextString::text(text) }, PdfOp::EndText]
+    };
+    let form = match snapshot.forms.iter().find(|form| form.id == id) {
+        Some(form) => {
+            let mut form = form.clone();
+            form.content = content;
+            form
+        }
+        None => PdfFormXObject::new(id, [x, y, x + width.max(1.0), y + height.max(1.0)], content),
+    };
+    Ok(vec![PdfMutation::SetForm(SetForm { form })])
+}
+
+fn set_page_extra(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, extra: &str, x: f64, y: f64) -> Result<Vec<PdfMutation>, Fault> {
+    require_page(snapshot, page)?;
+    let mut next = snapshot.clone();
+    let target = &mut next.pages[page];
+    match kind {
+        "thumbnail" => target.thumbnail = none_if_empty(text),
+        "metadata" => target.metadata = none_if_empty(text),
+        "structParents" => target.struct_parents = (x >= 0.0).then_some(x.round() as u32),
+        "group" if text == "clear" => target.group = None,
+        "group" => {
+            let color_space = match text {
+                "" => None,
+                "deviceGray" => Some(PdfColorSpace::DeviceGray),
+                "deviceRgb" => Some(PdfColorSpace::DeviceRgb),
+                "deviceCmyk" => Some(PdfColorSpace::DeviceCmyk),
+                other => return Err(fault(format!("unknown group color space '{other}'"))),
+            };
+            target.group = Some(PdfTransparencyGroup { color_space, isolated: x >= 0.5, knockout: y >= 0.5 });
+        }
+        "action" | "entry" => {
+            if extra.is_empty() {
+                return Err(fault("a page entry needs a key"));
+            }
+            let entries = if kind == "action" { &mut target.additional_actions } else { &mut target.extra };
+            if text.is_empty() {
+                entries.retain(|item| item.key != extra);
+            } else if let Some(existing) = entries.iter_mut().find(|item| item.key == extra) {
+                *existing = PdfDictEntry::new(extra, PdfObject::Name(text.to_string()));
+            } else {
+                entries.push(PdfDictEntry::new(extra, PdfObject::Name(text.to_string())));
+            }
+        }
+        other => return Err(fault(format!("unknown page extra '{other}'"))),
+    }
+    Ok(vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: next })])
+}
+
+fn set_annotation_style(snapshot: &PdfSnapshot, page: usize, object_id: &str, aspect: &str, value: &str, red: f64, green: f64, blue: f64, flags: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
+    let mut annotation = snapshot.pages.get(page).and_then(|item| item.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
+    match aspect {
+        "color" => annotation.color = if value == "clear" { Vec::new() } else { vec![red, green, blue] },
+        "flags" => annotation.flags = flags.max(0.0).round() as u32,
+        "name" => annotation.name = none_if_empty(value),
+        "state" => annotation.appearance_state = none_if_empty(value),
+        "modified" => annotation.modified = none_if_empty(value),
+        other => return Err(fault(format!("unknown annotation style '{other}'"))),
+    }
+    Ok(vec![PdfMutation::SetAnnotation(SetAnnotation { index: page, at: index, annotation })])
+}
+
+fn set_page_transition(snapshot: &PdfSnapshot, page: usize, style: &str, direction: &str, duration: f64) -> Result<Vec<PdfMutation>, Fault> {
+    require_page(snapshot, page)?;
+    let mut next = snapshot.clone();
+    let target = &mut next.pages[page];
+    target.transition = if style.is_empty() {
+        None
+    } else {
+        let mut entries = vec![PdfDictEntry::new("S", PdfObject::Name(style.to_string()))];
+        if !direction.is_empty() {
+            entries.push(PdfDictEntry::new("Di", PdfObject::Name(direction.to_string())));
+        }
+        Some(entries)
+    };
+    if duration < 0.0 {
+        target.duration = None;
+    } else if duration > 0.0 {
+        target.duration = Some(duration);
+    }
+    Ok(vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: next })])
+}
+
+fn set_named_object(key: &str, value: &str, missing: &str, remove: impl FnOnce(String) -> PdfMutation, set: impl FnOnce(String, PdfObject) -> PdfMutation) -> Result<Vec<PdfMutation>, Fault> {
+    if key.is_empty() {
+        return Err(fault(missing));
+    }
+    Ok(vec![if value.is_empty() { remove(key.to_string()) } else { set(key.to_string(), PdfObject::Name(value.to_string())) }])
+}
+
+fn set_annotation_appearance(snapshot: &PdfSnapshot, page: usize, object_id: &str, form: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
+    let mut annotation = snapshot.pages.get(page).and_then(|item| item.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
+    annotation.appearance = if form.is_empty() { None } else { Some(PdfAppearance { normal: PdfAppearanceEntry::Single { form: form.to_string() }, rollover: None, down: None }) };
+    Ok(vec![PdfMutation::SetAnnotation(SetAnnotation { index: page, at: index, annotation })])
+}
+
+fn set_glyph(snapshot: &PdfSnapshot, id: &str, name: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if name.is_empty() {
+        return Err(fault("a glyph needs a name"));
+    }
+    let mut font = snapshot.fonts.iter().find(|font| font.id == id).cloned().ok_or_else(|| fault(format!("pdf font '{id}' is gone")))?;
+    let content = vec![PdfOp::Rectangle { x, y, width: width.max(1.0), height: height.max(1.0) }, PdfOp::Fill];
+    match &mut font.kind {
+        PdfFontKind::Type3 { char_procs, .. } => {
+            if let Some(procedure) = char_procs.iter_mut().find(|procedure| procedure.name == name) {
+                procedure.content = content;
+            } else {
+                char_procs.push(PdfCharProc { name: name.to_string(), content });
+            }
+        }
+        _ => return Err(fault("glyph procedures belong to a Type 3 font")),
+    }
+    Ok(vec![PdfMutation::SetFont(SetFont { font })])
+}
+
+fn set_indirect_object(snapshot: &PdfSnapshot, number: f64, generation: f64, name: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let id = ObjRef { num: number.max(0.0).round() as u32, gen: generation.max(0.0).round() as u16 };
+    if name.is_empty() {
+        if snapshot.objects.iter().any(|object| object.id == id) {
+            return Ok(vec![PdfMutation::RemoveObject(RemoveObject { id })]);
+        }
+        return Err(fault("pdf object is gone"));
+    }
+    let value = PdfObject::Name(name.to_string());
+    let mutation = if snapshot.objects.iter().any(|object| object.id == id) { PdfMutation::SetObjectValue(SetObjectValue { id, value }) } else { PdfMutation::InsertObject(InsertObject { id, value }) };
+    Ok(vec![mutation])
+}
+
+fn set_mesh_data(snapshot: &PdfSnapshot, id: &str, decode_text: &str, hex: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let mut shading = snapshot.shadings.iter().find(|item| item.id == id).cloned().ok_or_else(|| fault(format!("pdf shading '{id}' is gone")))?;
+    let PdfShadingKind::Mesh { data, decode, .. } = &mut shading.kind else { return Err(fault(format!("pdf shading '{id}' is not a mesh"))) };
+    if !hex.is_empty() {
+        *data = decode_hex(hex)?;
+    }
+    if !decode_text.is_empty() {
+        *decode = decode_text.split(',').map(|item| item.trim().parse::<f64>().map_err(|_| fault("mesh decode is comma-separated numbers"))).collect::<Result<Vec<_>, _>>()?;
+    }
+    Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+}
+
+fn set_graphics_state(snapshot: &PdfSnapshot, id: &str, blend: &str, fill_alpha: f64, stroke_alpha: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if id.is_empty() {
+        return Err(fault("a graphics state needs an id"));
+    }
+    let mut state = snapshot.ext_g_states.iter().find(|item| item.id == id).cloned().unwrap_or_else(|| PdfExtGState { id: id.to_string(), ..PdfExtGState::default() });
+    state.fill_alpha = Some(fill_alpha.clamp(0.0, 1.0));
+    state.stroke_alpha = Some(stroke_alpha.clamp(0.0, 1.0));
+    if !blend.is_empty() {
+        state.blend_mode = Some(vec![blend.to_string()]);
+    }
+    Ok(vec![PdfMutation::SetExtGState(SetExtGState { state })])
+}
+
+fn set_pattern(snapshot: &PdfSnapshot, id: &str, shading: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if id.is_empty() {
+        return Err(fault("a pattern needs an id"));
+    }
+    let width = if width <= 0.0 { 8.0 } else { width };
+    let height = if height <= 0.0 { 8.0 } else { height };
+    let kind = if shading.is_empty() {
+        PdfPatternKind::Tiling { paint_type: 1, tiling_type: 1, bbox: [x, y, x + width, y + height], x_step: width, y_step: height, content: Vec::new() }
+    } else if snapshot.shadings.iter().any(|item| item.id == shading) {
+        PdfPatternKind::Shading { shading: shading.to_string(), ext_g_state: None }
+    } else {
+        return Err(fault(format!("pdf shading '{shading}' is gone")));
+    };
+    let matrix = snapshot.patterns.iter().find(|item| item.id == id).map(|item| item.matrix).unwrap_or(PDF_IDENTITY_MATRIX);
+    Ok(vec![PdfMutation::SetPattern(SetPattern { pattern: PdfPattern { id: id.to_string(), matrix, kind, extra: Vec::new() } })])
+}
+
+fn set_color_space(snapshot: &PdfSnapshot, name: &str, kind: &str, separation: &str) -> Result<Vec<PdfMutation>, Fault> {
+    if name.is_empty() {
+        return Err(fault("a color space needs a name"));
+    }
+    let color_space = match kind {
+        "deviceGray" => PdfColorSpace::DeviceGray,
+        "deviceRgb" => PdfColorSpace::DeviceRgb,
+        "deviceCmyk" => PdfColorSpace::DeviceCmyk,
+        "separation" if !separation.is_empty() => PdfColorSpace::Separation { name: separation.to_string(), alternate: Box::new(PdfColorSpace::DeviceRgb), tint_transform: PdfFunction::Exponential { domain: vec![0.0, 1.0], range: None, c0: vec![0.0, 0.0, 0.0], c1: vec![1.0, 0.0, 0.0], n: 1.0 } },
+        "separation" => return Err(fault("a separation needs a name")),
+        other => return Err(fault(format!("unknown color space '{other}'"))),
+    };
+    let _ = snapshot;
+    Ok(vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: PdfNamedColorSpace { name: name.to_string(), color_space } })])
+}
+
+fn set_properties(snapshot: &PdfSnapshot, name: &str, key: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
+    if name.is_empty() || key.is_empty() {
+        return Err(fault("a property list needs a name and a key"));
+    }
+    let mut properties = snapshot.properties.iter().find(|item| item.name == name).cloned().unwrap_or(PdfNamedProperties { name: name.to_string(), entries: Vec::new() });
+    let entry = PdfDictEntry::new(key, PdfObject::Name(value.to_string()));
+    if let Some(existing) = properties.entries.iter_mut().find(|item| item.key == key) {
+        *existing = entry;
+    } else {
+        properties.entries.push(entry);
+    }
+    Ok(vec![PdfMutation::SetProperties(SetProperties { properties })])
+}
+
+fn set_font_metrics(snapshot: &PdfSnapshot, id: &str, encoding_name: &str, widths_text: &str, first: f64, ascent: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let mut font = snapshot.fonts.iter().find(|font| font.id == id).cloned().ok_or_else(|| fault(format!("pdf font '{id}' is gone")))?;
+    let encoding = font_encoding(encoding_name)?;
+    let widths = font_widths(widths_text)?;
+    match &mut font.kind {
+        PdfFontKind::Type1 { base_font, encoding: slot, first_char, widths: slot_widths, descriptor, .. } | PdfFontKind::TrueType { base_font, encoding: slot, first_char, widths: slot_widths, descriptor, .. } => {
+            write_simple_metrics(base_font, slot, first_char, slot_widths, descriptor, encoding, widths, first, ascent);
+        }
+        _ => return Err(fault("font metrics apply to a simple font")),
+    }
+    Ok(vec![PdfMutation::SetFont(SetFont { font })])
+}
+
+fn write_simple_metrics(base_font: &str, slot: &mut PdfSimpleEncoding, first_char: &mut u32, slot_widths: &mut Vec<f64>, descriptor: &mut Option<PdfFontDescriptor>, encoding: Option<PdfSimpleEncoding>, widths: Option<Vec<f64>>, first: f64, ascent: f64) {
+    if let Some(encoding) = encoding {
+        *slot = encoding;
+    }
+    if first >= 0.0 {
+        *first_char = first.round() as u32;
+    }
+    if let Some(widths) = widths {
+        *slot_widths = widths;
+    }
+    if ascent != 0.0 {
+        descriptor.get_or_insert_with(|| PdfFontDescriptor { font_name: base_font.to_string(), ..PdfFontDescriptor::default() }).ascent = ascent;
+    }
+}
+
+fn font_encoding(name: &str) -> Result<Option<PdfSimpleEncoding>, Fault> {
+    let base = match name {
+        "" => return Ok(None),
+        "winAnsi" => PdfBaseEncoding::WinAnsi,
+        "macRoman" => PdfBaseEncoding::MacRoman,
+        "macExpert" => PdfBaseEncoding::MacExpert,
+        "standard" => PdfBaseEncoding::Standard,
+        other => return Err(fault(format!("unknown font encoding '{other}'"))),
+    };
+    Ok(Some(PdfSimpleEncoding { base: Some(base), differences: Vec::new() }))
+}
+
+fn font_widths(text: &str) -> Result<Option<Vec<f64>>, Fault> {
+    if text.is_empty() {
+        return Ok(None);
+    }
+    text.split(',').map(|item| item.trim().parse::<f64>().map_err(|_| fault("font widths are comma-separated numbers"))).collect::<Result<Vec<_>, _>>().map(Some)
 }
 
 fn remove_named(name: &str, message: &str) -> Result<String, Fault> {

@@ -38,10 +38,10 @@ The verb table below is derived from the schemas and the vectors, and was checke
 
 * `create-knowledge-record` and `create-benchmark-record`. `knowledge` and `benchmarks` are the only
   two of the 66 registers that a committed snapshot carries as a COMPOSED CHILD HANDLE
-  (`{"childId": "architect-knowledge-7904dd65836c8ff4", "target": {…}}`) rather than as an array of
+  (`{"childId": "architect-knowledge-4f53cda18c2baa0c", "target": {…}}`) rather than as an array of
   records. Their `create` vectors are the only two in the case whose whole observable effect is that
-  `childId` changing — to `architect-knowledge-b3743ce016d5422b` and
-  `architect-benchmarks-ebb8ef7bad26edae`. That value is a content address of the child
+  `childId` changing — to `architect-knowledge-dd9717898467fea3` and
+  `architect-benchmarks-d495e45cb640f017`. That value is a content address of the child
   `s.stdio.semio@v1/table` document AFTER the row is appended, and no document in this repository
   states the addressing function, the child table's canonical encoding, or where the child's existing
   rows come from. This implementation refuses to guess rather than to hard-code the committed answer.

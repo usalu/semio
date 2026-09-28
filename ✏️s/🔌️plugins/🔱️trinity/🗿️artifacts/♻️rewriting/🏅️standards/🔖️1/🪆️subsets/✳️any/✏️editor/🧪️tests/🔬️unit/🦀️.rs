@@ -374,7 +374,8 @@ async fn patch_nodes_from_the_rail_patches_the_selection_or_the_listed_nodes() {
 }
 
 /// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
-/// `mutation.target-missing`, no id and no selection, an unsupported field or an empty value is
+/// `mutation.target-missing`, no id and no selection is `app.command.targets-required` (the precondition an agent,
+/// which has no selection, meets by naming `nodeIds`), an unsupported field or an empty value is
 /// `app.command.invalid-args`. It used to answer an empty emit that read as an accepted edit.
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_refuses_what_it_cannot_apply() {
@@ -382,7 +383,7 @@ async fn patch_nodes_refuses_what_it_cannot_apply() {
     let first = working_graph_node_ids(&state)[0].clone();
     let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[], &[], "name", "x")), "app.command.invalid-args");
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[], &[], "name", "x")), "app.command.targets-required");
     assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "colour", "x")), "app.command.invalid-args");
     assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", " ")), "app.command.invalid-args");
     assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", "NoSuchKind")), "app.command.invalid-args", "a kind the manifest does not declare is refused, not written");

@@ -51,8 +51,8 @@ pub const GENERATION_3D_PLAY_APP_ID: &str = "procedural3d-play";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🍱️panes/*`, `☑️options/*`) builds its `on_change`/item actions with.
-pub fn generation3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: GENERATION_3D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub fn generation3d_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GENERATION_3D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
@@ -129,11 +129,6 @@ semio_framework_plugin::app_commands! {
 /// Mirrors `FlowInstanceOperationOwner` in the flow artifact — the framework's reference owner.
 struct Generation3dInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
-    /// 📥️ The chunk runs this INSTANCE has open. Instance-scoped, never process-global: two users
-    /// importing into two documents of the same component must never see each other's staged bytes,
-    /// and an instance that closes takes its runs with it
-    /// (`🎮️commands/📥️import-document/🦀️.rs`).
-    import_staging: import_document::Generation3dImportStaging,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: crate::preview_eval::PreviewEvalRunLink,
     closing: bool,
@@ -141,7 +136,7 @@ struct Generation3dInstanceOperationOwner {
 
 impl Generation3dInstanceOperationOwner {
     fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), import_staging: import_document::Generation3dImportStaging::default(), run_link: crate::preview_eval::PreviewEvalRunLink::default(), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), closing: false }
     }
 
     fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -392,16 +387,15 @@ const GENERATION3D_FLOW_EVAL_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalReso
 const GENERATION3D_FLOW_EVAL_WINDOW_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalResolve", "flowTessellateResolve"];
 /// 📄️ The user's OWN import/export route: its own tool ids, its own factory and its own execution
 /// contract, for the same reason the preview chain has one — what it carries is nothing like a
-/// gesture. `importDocument` hands over one CHUNK of a picked file, and a chunk is filled to (and
-/// never past) `semio_framework::PUBLIC_INVOCATION_STRING_BYTES`, the bound
-/// `validate_public_json_envelope` applies BEFORE any tool contract is consulted. Widening the
+/// gesture. `importDocument` hands over one WHOLE picked file — reassembled by the framework
+/// (`semio_framework::kernel::ImportStaging`) and bounded by one Artifact-lane edit. Widening the
 /// 8 KiB gesture quota to admit it would widen 23 unrelated interactive routes with it
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, io-surface lane).
 const GENERATION3D_DOCUMENT_IO_TOOL_IDS: &[&str] = &["importDocumentRequest", "importDocument", "exportDocument"];
 const GENERATION3D_DOCUMENT_IO_PAYLOAD_SCHEMA: &str = "generation.3d.document-io-command.v1";
-/// 🎒️ Real bound for one document-IO hop's wire payload: one import chunk
-/// ([`import_document::GENERATION3D_IMPORT_CHUNK_BYTES`]) plus the addressed envelope, the chunk
-/// counters and the command id — the whole public-invocation body the host may send, pinned to
+/// 🎒️ Real bound for one document-IO hop's wire payload: one whole import
+/// ([`import_document::GENERATION3D_IMPORT_TOTAL_BYTES`]) plus the addressed envelope and the command
+/// id — the whole public-invocation body the host may send, pinned to
 /// `PUBLIC_INVOCATION_BODY_BYTES` by `document_io_route_declares_a_reachable_wire_ceiling` rather
 /// than guessed.
 const GENERATION3D_DOCUMENT_IO_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
@@ -1055,9 +1049,9 @@ fn generation3d_document_io_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_DOCUMENT_IO_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
-/// 📄️ Runs one import/export hop against the app instance's RETAINED owner — the import's chunk
-/// staging lives there, so chunk `n` of a run finds the pages chunk `n-1` left, and a completed
-/// import re-arms every attached preview through the same per-window latch an example switch uses.
+/// 📄️ Runs one import/export hop against the app instance's RETAINED owner — the export reads its
+/// retained preview, and a completed import re-arms every attached preview through the same
+/// per-window latch an example switch uses.
 struct Generation3dDocumentIoWork {
     tool_id: &'static str,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
@@ -1111,9 +1105,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
                 let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
                 let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-                    let mut emit = import_document::emit(payload, &doc, &cfg, &mut owner.import_staging)?;
-                    // 🔁️ Only a chunk that CLOSED its run moved the graph; a staged one authored no
-                    // mutation and owes the previews nothing.
+                    let mut emit = import_document::emit(payload, &doc, &cfg)?;
+                    // 🔁️ An import that changed nothing owes the previews nothing.
                     if !emit.artifact_mutations.is_empty() {
                         owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
                     }
@@ -1798,7 +1791,9 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
         crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
-            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))
+            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))?;
+        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_app_publication_authority(operation);
+        Ok(())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1901,6 +1896,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -2157,14 +2153,10 @@ impl ArtifactEditor for Generation3dPlayApp {
                 page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
             })),
             "importDocumentRequest" => Ok(Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {})),
-            // 📥️ `chunk`/`chunkCount` are what `dispatchOpenedFiles` (`🛠️ShellHelpers/🟦️.tsx`) adds
-            // to every picked file's `{payload, name}`; an invocation that declares neither is one
-            // whole-payload chunk, the shape every file below one public invocation string takes.
+            // 📥️ The framework hands the whole picked file (`semio_framework::kernel::ImportStaging`).
             "importDocument" => Ok(Generation3dCommand::ImportDocument(import_document::ImportDocument {
                 name: str_arg(&["name"]).unwrap_or_default(),
                 payload: str_arg(&["payload", "contents"]).unwrap_or_default(),
-                chunk: u64_arg(&["chunk"]).unwrap_or_default() as u32,
-                chunk_count: u64_arg(&["chunkCount", "chunk_count"]).unwrap_or(1) as u32,
             })),
             "exportDocument" => Ok(Generation3dCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()) })),
             other => Err(Fault::from(format!(
@@ -2470,8 +2462,8 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // hands it a download (`🎮️commands/📂️import-document-request`, `📤️export-document`).
             .shell_action("importDocumentRequest", LocalizedLabel::native("Import Artifact…", "Artefakt importieren…"))
             .shell_action("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"))
-            // 📥️ Not palette-worthy: the shell re-dispatches it once per CHUNK of the picked file,
-            // with args no human types (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`).
+            // 📥️ Not palette-worthy: the shell dispatches it with the picked file, args no human
+            // types (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`).
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importDocument", LocalizedLabel::native("Import Artifact File", "Artefaktdatei importieren"), ActionKind::Mutation) })
             // 👁️ Ephemeral view actions — world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
             // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
@@ -2777,7 +2769,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one numeric field (such as a slider value) on several widgets at once; drags with the same gesture merge into one undo step.", "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; Züge derselben Geste werden zu einem Rückgängig-Schritt zusammengefasst."))
             .action_describe("importDocumentRequest", LocalizedLabel::native("Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."))
             .action_describe("exportDocument", LocalizedLabel::native("Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.", "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
-            .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file, delivered in chunks.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei, die in Teilen geliefert wird."))
+            .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei."))
             .action_describe("cycleShowMode", LocalizedLabel::native("Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.", "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."))
             .action_describe("cycleLodMode", LocalizedLabel::native("Switches the 3D preview to the next level of detail in turn; only the view changes.", "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."))
             .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)

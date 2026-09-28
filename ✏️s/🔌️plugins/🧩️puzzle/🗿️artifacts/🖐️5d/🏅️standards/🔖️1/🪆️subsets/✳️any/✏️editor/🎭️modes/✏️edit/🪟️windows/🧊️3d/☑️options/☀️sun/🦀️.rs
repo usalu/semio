@@ -13,5 +13,5 @@ use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
 /// Value`, so this one closure bridges the unavoidable seam via the framework's own pre-existing
 /// `DslValue: From<&serde_json::Value>` impl rather than widening `puzzle5d_action`'s signature.
 pub fn measure(runtime: &Puzzle5dRuntime, is_de: bool) -> WindowMeasure {
-    world3d_sun_measures("puzzle5d", &runtime.sun, is_de, |action, args| puzzle5d_action(action, args.map(|value| dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&value)))))
+    world3d_sun_measures("puzzle5d", &runtime.sun, is_de, |action, args| puzzle5d_action(action, args.map(|value| dsl::os_pack::json::from_dsl_value(&value))))
 }

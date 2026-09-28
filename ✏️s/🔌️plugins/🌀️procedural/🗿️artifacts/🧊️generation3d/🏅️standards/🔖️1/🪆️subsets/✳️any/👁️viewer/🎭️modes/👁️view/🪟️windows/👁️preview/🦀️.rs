@@ -61,7 +61,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 👁️ Preview shading mode selector — the read-only twin of the sibling surface's own chrome.
-pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-show".into(),
@@ -78,7 +78,7 @@ pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&s
 }
 
 /// 🔬️ Level-of-detail selector — coarser LOD is the viewer's only mesh-payload size lever.
-pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-lod".into(),
@@ -94,7 +94,7 @@ pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str
 }
 
 /// 🎚️ The Preview window's whole chrome row: show mode, LOD and the sun group.
-pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, is_de, viewer_action), lod_mode_measure(&config.lod_mode, is_de, viewer_action), world3d_sun_measures("generation3d-view", &sun, is_de, viewer_action)]
 }

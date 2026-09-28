@@ -14,6 +14,7 @@ const validateDescriptorIndex = (() => {
   return ajv.getSchema(`${schema.$id}#/$defs/AuthenticatedHubDescriptorIndexV1`)!;
 })();
 const fixture = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️authenticated-hub-descriptor-index.json"), "utf8"));
+const refusalCorpus = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️hub-unavailable-refusal.json"), "utf8"));
 
 describe("authenticated hub workspace fixture oracle", () => {
   test("AJV independently validates the neutral P4-A contract and fixed bounds", () => {
@@ -61,6 +62,39 @@ describe("authenticated hub workspace fixture oracle", () => {
     }
     expect(checked.sort()).toEqual(["agentBelowMembership", "humanBelowMembership", "memberReady", "principalAboveMembership", "sameDocumentOtherSpace"]);
     expect(fixture.cases.agentBelowMembership.expected.state).toBe("ready");
+  });
+
+  test("a hub-unavailable refusal keeps its typed cause bounded and bilingual", () => {
+    const ajv = new Ajv({ strict: true, allErrors: true });
+    ajv.addSchema(schema);
+    const validateCorpus = ajv.getSchema(`${schema.$id}#/$defs/HubUnavailableRefusalCorpusV1`)!;
+    expect(validateCorpus(refusalCorpus), JSON.stringify(validateCorpus.errors)).toBe(true);
+    const typedCode = (body: string): string | null => {
+      try {
+        const code = JSON.parse(body)?.code;
+        return typeof code === "string" ? [...code].slice(0, 64).join("") : null;
+      } catch {
+        return null;
+      }
+    };
+    const kinds = new Set<string>();
+    for (const entry of refusalCorpus.cases) {
+      const fault = entry.fault;
+      const cause =
+        fault.kind === "transport"
+          ? { kind: "transport", detail: [...fault.io].slice(0, refusalCorpus.detailMaxChars).join("") }
+          : fault.kind === "http"
+            ? { kind: "http", status: fault.status, code: typedCode(fault.body) }
+            : { kind: "undecodable-response" };
+      const said = cause.kind === "transport" ? `transport: ${cause.detail}` : cause.kind === "http" ? `HTTP ${cause.status}${cause.code === null ? "" : ` ${cause.code}`}` : "undecodable response";
+      expect(entry.expected.details.cause, entry.id).toEqual(cause);
+      expect(entry.expected.message, entry.id).toBe(`hub directory is temporarily unavailable (${said})`);
+      expect(entry.expected.details.summary.en, entry.id).not.toBe(entry.expected.details.summary.de);
+      if (cause.kind === "transport") for (const text of Object.values(entry.expected.details.summary)) expect(text, entry.id).toContain(cause.detail);
+      kinds.add(cause.kind);
+    }
+    expect([...kinds].sort()).toEqual(["http", "transport", "undecodable-response"]);
+    expect(refusalCorpus.cases.some((entry: any) => entry.fault.kind === "transport" && [...entry.fault.io].length > refusalCorpus.detailMaxChars)).toBe(true);
   });
 
   test("remote authorization stays distinct from local principal claims and bearer material", () => {

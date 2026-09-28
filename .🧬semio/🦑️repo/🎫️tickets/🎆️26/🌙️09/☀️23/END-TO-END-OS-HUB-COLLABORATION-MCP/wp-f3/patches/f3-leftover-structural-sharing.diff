@@ -1,0 +1,121 @@
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx
+index 25bd9e17edd..d642bc373d2 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx
+@@ -1579,6 +1579,9 @@ export type LeftoverWorldOverlayScopeV1 = { readonly kind: "window"; readonly wi
+ const leftoverWorldOverlayByWindow = new Map<string, LeftoverWorldSelectionOverlayV1>();
+ let leftoverWorldDocumentOverlay: LeftoverWorldSelectionOverlayV1 | null = null;
+ const leftoverWorldSelectionListeners = new Set<() => void>();
++/** 🈳️ The window fields of a document slot that no document-wide publication has spoken for: no hover, no armed utility. */
++const LEFTOVER_WORLD_NO_WINDOW_FIELDS: LeftoverWorldSelectionOverlayV1 = { ids: [], hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null, activeUtility: null };
++const leftoverWorldWindowOverlayMemo = new WeakMap<LeftoverWorldSelectionOverlayV1, { readonly document: LeftoverWorldSelectionOverlayV1 | null; readonly merged: LeftoverWorldSelectionOverlayV1 }>();
+ 
+ /** 🪪️ `document`'s own shared fields with `window`'s per-pane fields laid over them. */
+ function leftoverWorldOverlayForWindowFieldsV1(document: LeftoverWorldSelectionOverlayV1, window: LeftoverWorldSelectionOverlayV1): LeftoverWorldSelectionOverlayV1 {
+@@ -1587,20 +1590,50 @@ function leftoverWorldOverlayForWindowFieldsV1(document: LeftoverWorldSelectionO
+   return merged as unknown as LeftoverWorldSelectionOverlayV1;
+ }
+ 
++/** 🟰️ Two overlays carry the same fields with the same values (`ids` element-wise): a republished equal overlay is the SAME
++ * overlay, so the slot keeps its object and no reader re-renders for it (ticket 26/09/23 F3: every hover republished a fresh
++ * `ids` array and re-rendered every pane of the document twice per hover transition). */
++function leftoverWorldOverlaySameV1(left: LeftoverWorldSelectionOverlayV1 | null | undefined, right: LeftoverWorldSelectionOverlayV1 | null | undefined): boolean {
++  if (left === right) return true;
++  if (!left || !right) return false;
++  const keys = Object.keys(left) as (keyof LeftoverWorldSelectionOverlayV1)[];
++  return (
++    keys.length === Object.keys(right).length &&
++    keys.every((key) => {
++      const [a, b] = [left[key], right[key]];
++      return key in right && (a === b || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((id, index) => id === b[index])));
++    })
++  );
++}
++
+ /** 🕹️ Host leftover InteractionView overlay — vite-live until guest scene.selectionJson republishes.
+  *
+  * A `window` publication owns only that pane's window fields; the document slot takes the
+  * publication's shared fields and KEEPS its own window fields, so arming Brush in one pane leaves
+- * every other pane exactly as it was (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39). */
++ * every other pane exactly as it was (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39) — also when it is the
++ * first publication of all: a pane's hover never seeds the document slot, where every sibling pane without
++ * an overlay of its own would paint it and keep it (ticket 26/09/23 F3, puzzle3d MainTop). A slot whose
++ * value does not change keeps its object, and a publication that changes no slot notifies nobody. */
+ export function publishLeftoverWorldSelectionV1(overlay: LeftoverWorldSelectionOverlayV1 | null, scope: LeftoverWorldOverlayScopeV1): void {
++  let changed = scope.kind === "allWindows" && leftoverWorldOverlayByWindow.size > 0;
+   if (scope.kind === "allWindows") leftoverWorldOverlayByWindow.clear();
+   if (scope.kind === "window") {
+-    if (overlay) leftoverWorldOverlayByWindow.set(scope.windowId, overlay);
+-    else leftoverWorldOverlayByWindow.delete(scope.windowId);
++    if (!overlay) changed = leftoverWorldOverlayByWindow.delete(scope.windowId);
++    else if (!leftoverWorldOverlaySameV1(leftoverWorldOverlayByWindow.get(scope.windowId), overlay)) {
++      leftoverWorldOverlayByWindow.set(scope.windowId, overlay);
++      changed = true;
++    }
++  }
++  const nextDocument = !overlay
++    ? null
++    : scope.kind === "allWindows" || (scope.kind === "document" && !leftoverWorldDocumentOverlay)
++      ? overlay
++      : leftoverWorldOverlayForWindowFieldsV1(overlay, leftoverWorldDocumentOverlay ?? LEFTOVER_WORLD_NO_WINDOW_FIELDS);
++  if (!leftoverWorldOverlaySameV1(leftoverWorldDocumentOverlay, nextDocument)) {
++    leftoverWorldDocumentOverlay = nextDocument;
++    changed = true;
+   }
+-  if (!overlay) leftoverWorldDocumentOverlay = null;
+-  else if (scope.kind === "allWindows" || !leftoverWorldDocumentOverlay) leftoverWorldDocumentOverlay = overlay;
+-  else leftoverWorldDocumentOverlay = leftoverWorldOverlayForWindowFieldsV1(overlay, leftoverWorldDocumentOverlay);
++  if (!changed) return;
+   for (const listener of leftoverWorldSelectionListeners) listener();
+ }
+ 
+@@ -1612,11 +1645,17 @@ export function leftoverWorldSelectionOverlayV1(): LeftoverWorldSelectionOverlay
+ }
+ 
+ /** 🪟️ What ONE pane's record must be overlaid with: the document's shared fields under this pane's
+- * own window fields, falling back to the document-wide ones for a pane that has published none. */
++ * own window fields, falling back to the document-wide ones for a pane that has published none. The
++ * answer keeps its object while its value holds, so a pane can subscribe to exactly its own overlay. */
+ export function leftoverWorldWindowOverlayV1(windowId: string | null | undefined): LeftoverWorldSelectionOverlayV1 | null {
+   const own = windowId ? leftoverWorldOverlayByWindow.get(windowId) : undefined;
+   if (!own) return leftoverWorldDocumentOverlay;
+-  return leftoverWorldOverlayForWindowFieldsV1(leftoverWorldDocumentOverlay ?? own, own);
++  const memo = leftoverWorldWindowOverlayMemo.get(own);
++  if (memo?.document === leftoverWorldDocumentOverlay) return memo.merged;
++  const next = leftoverWorldOverlayForWindowFieldsV1(leftoverWorldDocumentOverlay ?? own, own);
++  const merged = memo && leftoverWorldOverlaySameV1(memo.merged, next) ? memo.merged : next;
++  leftoverWorldWindowOverlayMemo.set(own, { document: leftoverWorldDocumentOverlay, merged });
++  return merged;
+ }
+ 
+ /** 🖌️ The pane whose own overlay is armed with a brush, for the host's brush-preview refresh lane —
+@@ -1812,10 +1851,6 @@ export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord
+   };
+ }
+ 
+-function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, windowId: string | null | undefined, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
+-  return mergeWorldSelectionWithLeftoverV1(base, leftoverWorldWindowOverlayV1(windowId), instances);
+-}
+-
+ /** 🔦️ What ONE pane publishes as `data-selection-json` — the state the pane actually PAINTS, after
+  * `mergeWorldSelectionWithLeftoverV1` has laid the host's leftover overlay over the guest's own
+  * `selectionJson` lane. Until this attribute existed the pane published its geometry, its camera and
+@@ -5786,15 +5821,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
+     meshResidencyRef.current = advanced;
+     return advanced.records as WorldMeshRecord[];
+   }, [scene?.meshesJson]);
+-  const leftoverSelectionEpoch = useSyncExternalStore((listener) => {
+-    leftoverWorldSelectionListeners.add(listener);
+-    return () => leftoverWorldSelectionListeners.delete(listener);
+-  }, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
+-  const selection = useMemo(() => mergeWorldSelectionWithLeftover(parseSelection(scene?.selectionJson ?? "{}"), windowInstanceId, instances), [leftoverSelectionEpoch, scene?.selectionJson, instances, windowInstanceId]);
++  const paneLeftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, () => leftoverWorldWindowOverlayV1(windowInstanceId), () => leftoverWorldWindowOverlayV1(windowInstanceId));
++  const selection = useMemo(() => mergeWorldSelectionWithLeftoverV1(parseSelection(scene?.selectionJson ?? "{}"), paneLeftover, instances), [paneLeftover, scene?.selectionJson, instances]);
+   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
+   const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
+   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
+-  const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), leftoverWorldWindowOverlayV1(windowInstanceId)), [leftoverSelectionEpoch, scene?.interactionJson, windowInstanceId]);
++  const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), paneLeftover), [paneLeftover, scene?.interactionJson]);
+   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
+   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
+   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);

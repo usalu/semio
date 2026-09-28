@@ -5,7 +5,6 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
 use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework::optional_json_to_dsl;
 use semio_framework_plugin::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
 use serde_json::{json, Value};
 
@@ -17,7 +16,7 @@ pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> Window
         let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    let on_change = ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: "setLodMode".into(), args: optional_json_to_dsl(Some(json!({ "value": config.lod_mode }))) };
+    let on_change = ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: "setLodMode".into(), args: Some(semio_framework::dsl_value!({ "value": config.lod_mode })) };
     WindowMeasure::Select { id: "flow-play-measures.lod".into(), label: Some(labels.lod_mode.into()), value: config.lod_mode.clone(), items, on_change }
 }
 //#endregion 🔖️Measure

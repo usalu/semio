@@ -31,8 +31,8 @@ export default {
     // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
     include: [],
-    coverage: { include: ["📦️packages/🟦️typescript/🟦️.ts", "🔨️modules/🎠️kernel/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts"] },
-    includeSource: ["🔨️modules/🎠️kernel/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🧪️tests/🧫️contract/🟦️.ts"],
+    coverage: { include: ["📦️packages/🟦️typescript/🟦️.ts", "🔨️modules/🎠️kernel/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts", "🔨️modules/🔏️hash/🟦️.ts"] },
+    includeSource: ["🔨️modules/🎠️kernel/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🧪️tests/🧫️contract/🟦️.ts", "🔨️modules/🔏️hash/🧪️tests/🧮️blake3/🟦️.ts"],
     passWithNoTests: false,
   },
 };

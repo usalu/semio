@@ -1,0 +1,12 @@
+dialect protocol
+protocol stdio.docx.diff
+version 1
+schema stdio.docx
+start record
+
+# Real binary diff frame of `../../🦀️.rs`'s `DiffCodec::encode_diff`: the `OP_BINARY_FORMAT` tag byte, then the
+# UTF-8 RFC 8259 JSON of the diff's `ToValue` (the same text `print_diff` prints) running to the end of the frame.
+framing record
+header fixed 1
+field format u8
+chain payload utf8

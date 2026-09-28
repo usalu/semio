@@ -10,7 +10,9 @@ async fn definition_declares_the_editable_table_window_kit() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_table_node_for_the_default_document() {
     let document = BcfSnapshot::default();
-    let _node = render(&document);
+    for locale in [semio_framework_plugin::Locale::En, semio_framework_plugin::Locale::De] {
+        render(&document, locale).expect("default document table renders");
+    }
 }
 
 #[semio_framework_async_macros::async_test]

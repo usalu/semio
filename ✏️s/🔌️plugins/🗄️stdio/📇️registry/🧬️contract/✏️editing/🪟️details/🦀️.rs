@@ -1345,6 +1345,13 @@ fn error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "snapshot details UI admission failed")
 }
 
+/// 🎟️ A refusal of the process-wide `UiValue` arena is the framework's capacity refusal, so the tree window
+/// building this row ends there with a shorter run instead of faulting the whole render — see
+/// `semio_framework_plugin::tree_window_indexed_section` and law `🧪️tests/🎟️details-arena-headroom`.
+fn arena(stage: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", format!("snapshot details {stage} admission failed: the UiValue arena has no free credit"))
+}
+
 fn text(value: &str) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value).ok_or_else(|| error("ui.snapshot-details.text"))
 }
@@ -1354,9 +1361,9 @@ fn label(value: &str) -> UiAssemblyResult<ui::Label> {
 }
 
 fn ui_args(entries: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
-    let mut map = UiMapBuilder::try_new().ok_or_else(|| error("ui.snapshot-details.arguments"))?;
+    let mut map = UiMapBuilder::try_new().ok_or_else(|| arena("argument map"))?;
     for (key, value) in entries {
-        map.try_insert(key.to_string(), value).map_err(|_| error("ui.snapshot-details.argument"))?;
+        map.try_insert(key.to_string(), value).map_err(|_| arena("argument entry"))?;
     }
     Ok(UiValue::Map(map.finish()))
 }
@@ -1434,7 +1441,7 @@ fn pointer_argument(path: &str, direct: &'static str, chunks: &'static str) -> U
     if let Some(path) = UiText::try_from_str(path) {
         return Ok((direct, UiValue::Text(path)));
     }
-    let mut values = UiListBuilder::try_new().ok_or_else(|| error("ui.snapshot-details.path-chunks"))?;
+    let mut values = UiListBuilder::try_new().ok_or_else(|| arena("path chunk list"))?;
     let mut start = 0;
     while start < path.len() {
         let mut end = (start + ui_contract::UI_TEXT_MAX_BYTES).min(path.len());
@@ -1444,7 +1451,7 @@ fn pointer_argument(path: &str, direct: &'static str, chunks: &'static str) -> U
         if end == start {
             return Err(error("ui.snapshot-details.path-chunk-boundary"));
         }
-        values.push(UiValue::Text(UiText::try_from_str(&path[start..end]).ok_or_else(|| error("ui.snapshot-details.path-chunk"))?)).map_err(|_| error("ui.snapshot-details.path-chunks-capacity"))?;
+        values.push(UiValue::Text(UiText::try_from_str(&path[start..end]).ok_or_else(|| error("ui.snapshot-details.path-chunk"))?)).map_err(|_| arena("path chunk"))?;
         start = end;
     }
     Ok((chunks, UiValue::List(values.finish())))

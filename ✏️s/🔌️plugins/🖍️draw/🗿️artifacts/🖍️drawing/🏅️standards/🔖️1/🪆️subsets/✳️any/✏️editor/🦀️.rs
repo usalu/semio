@@ -1320,6 +1320,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        authoring_seed: request.authoring_seed.clone(),
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1718,6 +1719,7 @@ impl ArtifactEditor for DrawingPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = DrawingGestureOperationPayload {
             command: *request.command,

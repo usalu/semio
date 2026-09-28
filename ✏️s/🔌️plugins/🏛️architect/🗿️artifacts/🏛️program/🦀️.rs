@@ -85,11 +85,8 @@ pub struct ProgramBenchmarksWorkingTable {
 }
 
 fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
-    use std::hash::{Hash, Hasher};
     let content_json = dsl::json::to_json_string(&records.to_vec());
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("architect-benchmarks-{:016x}", hasher.finish())
+    store::content_id("architect-benchmarks", content_json.as_bytes())
 }
 
 fn program_benchmarks_target(scene_id: &str) -> store::os_io::ArtifactRef {
@@ -155,11 +152,8 @@ pub struct ProgramKnowledgeWorkingTable {
 }
 
 fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
-    use std::hash::{Hash, Hasher};
     let content_json = dsl::json::to_json_string(&records.to_vec());
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("architect-knowledge-{:016x}", hasher.finish())
+    store::content_id("architect-knowledge", content_json.as_bytes())
 }
 
 fn program_knowledge_target(scene_id: &str) -> store::os_io::ArtifactRef {
@@ -226,7 +220,7 @@ pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "data.program".into(),
-        name: "Architect Program".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Architect Program", "Raumprogramm"),
         source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
         component_kind: "architect".into(),
         dimension: "data".into(),

@@ -142,6 +142,11 @@ pub enum ArgFormat {
         roles: Vec<AppRole>,
         dialect_arg: String,
     },
+    /// 🔐️ The document's own revision token, as its rendered bindings carry it — see `ActionArgDef::document_revision`.
+    DocumentRevision,
+    /// 🔐️ One addressed target's own revision token (a page item, a cell, an entry), as its rendered binding carries it —
+    /// see `ActionArgDef::target_revision`.
+    TargetRevision,
 }
 
 /// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
@@ -204,6 +209,24 @@ pub enum ArgSchema {
         fields: Vec<ActionArgDef>,
     },
     Any,
+}
+
+impl ArgSchema {
+    /// @emoji 🎯️ Every entity kind this value names through [`ArgFormat::EntityId`], at any depth.
+    pub fn entity_kinds(&self) -> Vec<&str> {
+        match self {
+            ArgSchema::String { format: Some(ArgFormat::EntityId { entity_kind }), .. } => vec![entity_kind.as_str()],
+            ArgSchema::Array { items, .. } => items.entity_kinds(),
+            ArgSchema::Object { fields } => fields.iter().flat_map(|field| field.schema.entity_kinds()).collect(),
+            _ => Vec::new(),
+        }
+    }
+}
+
+/// @emoji 🪪️ The entity kind an [`ArgFormat::EntityId`] value names for one granularity of one declared interaction:
+/// `<interaction id>/<granularity id>` — the same pair a selection target of that interaction carries.
+pub fn interaction_entity_kind(interaction_id: &str, granularity_id: &str) -> String {
+    format!("{interaction_id}/{granularity_id}")
 }
 
 /// @emoji 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
@@ -380,6 +403,15 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Array { items: Box::new(Self::plain_string(None)), min_items: None, max_items: None })
     }
 
+    /// @emoji 🎯️ The ids of the entities a verb acts on, of one granularity of one declared interaction — the selection
+    /// that verb otherwise reads, stated as an argument: a human may leave it empty and act on what they selected, an
+    /// agent (which has no selection) names the entities. Each id is tagged `x-semio-format: entityId` with its
+    /// [`interaction_entity_kind`], which the app's definition build checks against the interactions it declares.
+    pub fn entity_ids(id: impl Into<String>, label: impl Into<LocalizedLabel>, interaction_id: &str, granularity_id: &str) -> Self {
+        let entity_kind = interaction_entity_kind(interaction_id, granularity_id);
+        Self::with_schema(id, label, ArgSchema::Array { items: Box::new(Self::plain_string(Some(ArgFormat::EntityId { entity_kind }))), min_items: None, max_items: None })
+    }
+
     /// @emoji 🧱️ A record argument — the `#[dsl(block)]` payload shape a typed command decodes with
     /// `dsl::from_dsl_value` (`setFrame.frame`, `setSource.source`), previously unexpressible, so
     /// those verbs published an empty input schema and no agent could ever call them.
@@ -407,6 +439,23 @@ impl ActionArgDef {
     /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
     pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
+    }
+
+    /// @emoji 🔐️ The document revision a rendered binding carries — hidden and optional: the shell lanes pass the binding's
+    /// token (and refuse its absence in the app's own parser); the agent lane omits it and is admitted against the document's
+    /// revision at admission, behind the MCP `expectedRevision` guard (ticket 26/09/23, G12 session 14c).
+    pub fn document_revision(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        let mut def = Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::DocumentRevision)));
+        def.presentation = Some(ArgPresentation::Hidden);
+        def
+    }
+
+    /// @emoji 🔐️ One addressed target's revision a rendered binding carries — hidden and optional like
+    /// [`Self::document_revision`]; the agent lane fills it from the app's own `agent_target_revision`.
+    pub fn target_revision(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        let mut def = Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::TargetRevision)));
+        def.presentation = Some(ArgPresentation::Hidden);
+        def
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
@@ -504,6 +553,8 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
         ArgFormat::Json => "json",
         ArgFormat::Locale => "locale",
         ArgFormat::Terminology => "terminology",
+        ArgFormat::DocumentRevision => "documentRevision",
+        ArgFormat::TargetRevision => "targetRevision",
         ArgFormat::ArtifactKind { roles } => {
             entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
             "artifactKind"
@@ -1581,6 +1632,25 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// dedicated `Introduce App` command.
 pub fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View, "graduation-cap") }
+}
+
+/// @emoji 📤️ The framework-owned action id of Export Document: injected into every app window and fully
+/// shell-intercepted (never forwarded to the program) — the shell writes the document's canonical archive (root
+/// envelope, its op log, every owned member) as one `.semio-archive` file, for every artifact kind alike.
+pub const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "exportArtifactDocument";
+
+/// @emoji 📥️ The framework-owned action id of Import Document, injected beside [`EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`]
+/// and shell-intercepted: the shell opens a picked archive as a NEW document of the same program (a cancellable,
+/// progress-reporting load of its op log), never overwriting the focused one.
+pub const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "importArtifactDocument";
+
+/// @emoji 🗃️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
+/// category, shell chrome ([`CapabilityAudience::Chrome`]) — agents export through the MCP's own artifact export.
+pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
+    [
+        ActionDefinition::resumable_framework(EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, LocalizedLabel::native("Export Document", "Dokument exportieren"), ActionKind::Shell, "export").with_category("transfer").audience(CapabilityAudience::Chrome),
+        ActionDefinition::resumable_framework(IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, LocalizedLabel::native("Import Document…", "Dokument importieren…"), ActionKind::Shell, "import").with_category("transfer").audience(CapabilityAudience::Chrome),
+    ]
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
@@ -4707,7 +4777,8 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
             if !roles.contains(&app.role) || app.io.artifact_schema.is_empty() {
                 continue;
             }
-            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.artifact_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
+            let label = app.artifact_kinds.iter().chain(manifest.artifact_kinds.iter()).find(|kind| kind.schema == app.io.artifact_schema).map_or_else(|| app.label.clone(), |kind| kind.label.clone());
+            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.artifact_schema.clone(), dialect: app.dialect.clone(), label });
         }
     }
     by_coordinate.into_values().collect()
@@ -5623,7 +5694,8 @@ pub enum OsMediaCapability {
 #[value(rename_all = "camelCase")]
 pub struct ArtifactKindSpec {
     pub id: String,
-    pub name: String,
+    /// 🗣️ The kind's own localized name — what a picker shows for it, never its editor app's label.
+    pub label: LocalizedLabel,
     pub source_format: String,
     pub component_kind: String,
     pub dimension: String,

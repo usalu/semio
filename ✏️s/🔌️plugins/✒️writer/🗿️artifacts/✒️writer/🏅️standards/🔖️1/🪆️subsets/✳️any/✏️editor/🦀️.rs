@@ -1495,6 +1495,10 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
+mod agent_lane_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

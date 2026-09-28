@@ -84,7 +84,7 @@ pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.txt".into(),
-        name: "Txt".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Txt", "Txt"),
         source_format: STDIO_TXT_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

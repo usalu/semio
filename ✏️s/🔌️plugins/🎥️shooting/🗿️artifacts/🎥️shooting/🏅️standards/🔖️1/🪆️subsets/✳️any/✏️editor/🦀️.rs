@@ -241,7 +241,6 @@ semio_framework_plugin::app_commands! {
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
         "saveDownload" as "save-download" => save_download::SaveDownload,
-        "loadRequest" as "load-request" => load_request::LoadRequest,
         "importAssetRequest" as "import-asset-request" => import_asset_request::ImportAssetRequest,
         "exportActiveShot" as "export-active-shot" => export_active_shot::ExportActiveShot,
         "exportAllShots" as "export-all-shots" => export_all_shots::ExportAllShots,
@@ -253,7 +252,7 @@ semio_framework_plugin::app_commands! {
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
 use export::{export_active_shot, export_all_shots};
-use document::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
+use document::{import_snapshot_json, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use selection::{set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
@@ -407,7 +406,6 @@ mod args_bridge {
             "worldPointerDown" => ShootingCommand::WorldPointerDown(decode(action, plain())?),
             "worldPointerMove" => ShootingCommand::WorldPointerMove(decode(action, plain())?),
             "saveDownload" => ShootingCommand::SaveDownload(decode(action, plain())?),
-            "loadRequest" => ShootingCommand::LoadRequest(decode(action, plain())?),
             "importAssetRequest" => ShootingCommand::ImportAssetRequest(decode(action, plain())?),
             "exportActiveShot" => ShootingCommand::ExportActiveShot(decode(action, plain())?),
             "exportAllShots" => ShootingCommand::ExportAllShots(decode(action, plain())?),
@@ -461,7 +459,6 @@ const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &[
     "worldPointerDown",
     "worldPointerMove",
     "saveDownload",
-    "loadRequest",
     "importAssetRequest",
     "exportActiveShot",
     "exportAllShots",
@@ -582,7 +579,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "importAssetRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "exportActiveShot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "exportAllShots", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -655,7 +651,6 @@ impl ArtifactEditor for ShootingPlayApp {
             "worldPointerDown" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "worldPointerMove" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "saveDownload" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "loadRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "importAssetRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "exportActiveShot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "exportAllShots" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
@@ -685,6 +680,7 @@ impl ArtifactEditor for ShootingPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -732,17 +728,6 @@ impl ArtifactEditor for ShootingPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// 🏗️ Admits the whole-document replacement `reset_document_effect` emits for every example switch
-    /// and snapshot import. The trait default refuses the envelope, so the host answered every
-    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load door.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::SHOOTING_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -921,7 +906,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             // — identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(semio_framework_plugin::ArtifactKindSpec {
                 id: "2d.image".into(),
-                name: "2D Image".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),
@@ -1003,7 +988,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(SHOOTING_PLAY_WINDOW_SCENE, vec![InteractionRef::new(SHOOTING_INTERACTION_DOMAIN)])
             // 🐚️ Shell effects — export/import round-trips through the host.
             .shell_action("saveDownload", LocalizedLabel::native("Save Download", "Download speichern"))
-            .shell_action("loadRequest", LocalizedLabel::native("Load Request", "Ladeanfrage"))
             .shell_action("importAssetRequest", LocalizedLabel::native("Import Asset Request", "Objekt-Importanfrage"))
             .shell_action("exportActiveShot", LocalizedLabel::native("Export Active Shot", "Aktive Aufnahme exportieren"))
             .shell_action("exportAllShots", LocalizedLabel::native("Export All Shots", "Alle Aufnahmen exportieren"))
@@ -1044,7 +1028,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("worldPointerMove", InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", InteractiveJobClassification::Migrated)
             .action_destructive("saveDownload")
-            .action_interactive_job("loadRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importAssetRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportActiveShot", InteractiveJobClassification::Migrated)
             .action_destructive("exportActiveShot")
@@ -1115,7 +1098,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setCameraDraftLabel", LocalizedLabel::native("Sets the label the next Save Camera stores the viewport camera under; the document is not changed.", "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."))
             .action_describe("setCenterModel", LocalizedLabel::native("Sets whether the viewport keeps the model centred; only the view changes.", "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."))
             .action_describe("saveDownload", LocalizedLabel::native("Writes the whole shooting document as text to a downloaded shooting.shooting.ops file on the user's machine.", "Schreibt das gesamte Shooting-Dokument als Text in eine heruntergeladene Datei shooting.shooting.ops auf dem Rechner des Nutzers."))
-            .action_describe("loadRequest", LocalizedLabel::native("Opens the host's file picker for a saved shooting document (.ops, .dsl or .spk); the chosen file then replaces the current document.", "Öffnet die Dateiauswahl des Hosts für ein gespeichertes Shooting-Dokument (.ops, .dsl oder .spk); die gewählte Datei ersetzt dann das aktuelle Dokument."))
             .action_describe("importAssetRequest", LocalizedLabel::native("Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.", "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."))
             .action_describe("exportActiveShot", LocalizedLabel::native("Renders the active shot and writes it as a PNG or SVG file named after the shot to the user's machine.", "Rendert die aktive Aufnahme und schreibt sie als PNG- oder SVG-Datei mit dem Namen der Aufnahme auf den Rechner des Nutzers."))
             .action_describe("exportAllShots", LocalizedLabel::native("Renders every shot and writes each as a PNG or SVG file named after its shot to the user's machine.", "Rendert alle Aufnahmen und schreibt jede als PNG- oder SVG-Datei mit dem Namen ihrer Aufnahme auf den Rechner des Nutzers."))

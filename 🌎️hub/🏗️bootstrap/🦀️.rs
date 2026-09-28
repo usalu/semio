@@ -1007,6 +1007,10 @@ struct TestLiveGate {
     check_in_pause_enabled: std::sync::atomic::AtomicBool,
     check_in_admitted: tokio::sync::Semaphore,
     check_in_release: tokio::sync::Semaphore,
+    socket_commit_pause_enabled: std::sync::atomic::AtomicBool,
+    socket_commit_admitted: tokio::sync::Semaphore,
+    socket_commit_release: tokio::sync::Semaphore,
+    socket_frame_deadline: Mutex<Option<std::time::Duration>>,
 }
 
 #[cfg(test)]
@@ -1059,6 +1063,10 @@ impl Default for TestLiveGate {
             check_in_pause_enabled: std::sync::atomic::AtomicBool::new(false),
             check_in_admitted: tokio::sync::Semaphore::new(0),
             check_in_release: tokio::sync::Semaphore::new(0),
+            socket_commit_pause_enabled: std::sync::atomic::AtomicBool::new(false),
+            socket_commit_admitted: tokio::sync::Semaphore::new(0),
+            socket_commit_release: tokio::sync::Semaphore::new(0),
+            socket_frame_deadline: Mutex::new(None),
         }
     }
 }
@@ -5138,20 +5146,32 @@ fn document_socket_gate(policy: db::security::RoleBasedPolicy) -> db::security::
     db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(DOCUMENT_SOCKET_COMMAND_BUDGET, DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND), Arc::new(db::NullEmit))
 }
 
-/// ⏱️ How long one document-socket frame — a command's admission, document write and durable commit
-/// included — may take before its socket closes `1013 frame-deadline` and its client resynchronizes.
-/// It bounds how long the frame holds its authority bindings (so how long a revocation of them can
-/// wait), and it is far above a loaded host's commit latency: at 2 s a busy hub closed sockets whose
-/// commands were merely waiting for their fsync, as `authorization-unavailable`, and never sent their Ack.
+/// ⏱️ How long one document-socket frame's admission may take — authority, the batch's own refusals, the
+/// security gate and the document's write gate — before its socket closes `1013 frame-deadline` and its
+/// client resynchronizes; nothing of such a frame reached the engine. A `Commands` batch the engine received
+/// is never cut by it: its commit is awaited to the engine's answer and acknowledged, since a batch that
+/// committed after a cut used to land durably with its socket closed and its Ack lost (ticket 26/09/23
+/// session 14c, H13's transient probe: batch 24 committed at head 6144, no Ack).
 const DOCUMENT_SOCKET_FRAME_DEADLINE: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// ⏱️ The frame deadline this socket applies: [`DOCUMENT_SOCKET_FRAME_DEADLINE`], or a law's shorter one.
+fn document_socket_frame_deadline(state: &HubState) -> std::time::Duration {
+    #[cfg(test)]
+    if let Some(deadline) = state.live_gate.as_ref().and_then(|gate| *gate.socket_frame_deadline.lock().unwrap_or_else(std::sync::PoisonError::into_inner)) {
+        return deadline;
+    }
+    let _ = state;
+    DOCUMENT_SOCKET_FRAME_DEADLINE
+}
 
 /// ⏳️ How long an agent's document `Commands` frame waits for its session's `agent-command` budget before it is refused
 /// (the MCP gateway's relay-acknowledgement wait): pacing keeps an honest agent's commits whole, and the wait sits before the
 /// socket re-reads its authority, so a revocation that lands while a frame waits still fences it.
 const AGENT_COMMAND_PATIENCE_MS: u64 = 10_000;
 
-/// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session.
-/// session. Returns `false` when the session should close (`Bye`, or a send failure).
+/// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session within the frame
+/// deadline: every frame but an admitted `Commands` batch completes here; an admitted batch leaves holding its
+/// document's write gate as [`ClientFrameStepV1::Commit`] for [`commit_admitted_commands`].
 ///
 /// 🪙️ Command-lane credit-based flow control: no server-side congestion control implemented
 /// this wave (matches `framework/sync`'s client, which also accepts and ignores this frame).
@@ -5171,18 +5191,23 @@ async fn handle_client_frame(
     tenant: &db::security::TenantId,
     frame: ClientFrame,
     sender: &mut SplitSink<WebSocket, Message>,
-) -> bool {
+) -> ClientFrameStepV1 {
     match frame {
         ClientFrame::Commands { batch_id, mut envelopes } => {
             if envelopes.iter().any(|envelope| &envelope.actor != actor) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }], frontier };
-                return sender.send(encode(&ack, document_id).await).await.is_ok();
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             if envelopes.iter().any(|envelope| envelope.document_id.0 != document_id) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "envelope document does not match this socket".into(), messages: Vec::new() }) }], frontier };
-                return sender.send(encode(&ack, document_id).await).await.is_ok();
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
+            }
+            if let Some(outcome) = undeclared_batch_refusal(&envelopes) {
+                let frontier = best_effort_frontier(handle).await;
+                let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(outcome) }], frontier };
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             for envelope in &mut envelopes {
                 envelope.document_id = db_id.clone();
@@ -5190,41 +5215,77 @@ async fn handle_client_frame(
             if let Err(error) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: messages_for_error(&error) }) }], frontier };
-                return sender.send(encode(&ack, document_id).await).await.is_ok();
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
-            let _document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
-            let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
-            if let Some(commands_frame) = relay {
-                let _ = fanout.send(commands_frame);
-            }
-            sender.send(encode(&ack, document_id).await).await.is_ok()
+            let document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
+            ClientFrameStepV1::Commit(AdmittedCommandsV1 { batch_id, envelopes, _document_write: document_write })
         }
         ClientFrame::FrontierAdvertise { mut frontier } => {
             if !wire_frontier_to_db(&mut frontier, document_id, db_id) {
-                return sender.send(error_frame("frontier-document-mismatch", "advertised frontier names a different document than this socket").await).await.is_ok();
+                return ClientFrameStepV1::after_send(sender.send(error_frame("frontier-document-mismatch", "advertised frontier names a different document than this socket").await).await.is_ok());
             }
             let core_document = db_core_document_id(db_id);
             match db::sync::handle_frontier_advertise(&state.db.storage().await.wal().await, core_document, &frontier, ActorId(HUB_CATCH_UP_ORIGIN.into())).await {
-                Ok(Some(catch_up)) => sender.send(encode(&catch_up, document_id).await).await.is_ok(),
-                Ok(None) => true,
-                Err(_) => true,
+                Ok(Some(catch_up)) => ClientFrameStepV1::after_send(sender.send(encode(&catch_up, document_id).await).await.is_ok()),
+                Ok(None) | Err(_) => ClientFrameStepV1::Continue,
             }
         }
         ClientFrame::PreviewPublish { key: preview_key, seq, payload } => {
             let _ = fanout.send(ServerFrame::Preview { actor: actor.clone(), key: preview_key, seq, payload });
-            true
+            ClientFrameStepV1::Continue
         }
         ClientFrame::Presence { peer } => {
             let _ = state.refresh_document_presence(key, space_id, document_id, &actor.0, socket_live_id, peer, state.presence_now()).await;
-            true
+            ClientFrameStepV1::Continue
         }
-        ClientFrame::CreditGrant { .. } => true,
-        ClientFrame::Bye => false,
+        ClientFrame::CreditGrant { .. } => ClientFrameStepV1::Continue,
+        ClientFrame::Bye => ClientFrameStepV1::End,
         ClientFrame::SocketHelloV1 { .. } => {
             let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
-            false
+            ClientFrameStepV1::End
         }
     }
+}
+
+/// @emoji 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline.
+enum ClientFrameStepV1 {
+    Continue,
+    End,
+    Commit(AdmittedCommandsV1),
+}
+
+impl ClientFrameStepV1 {
+    /// 📤️ `Continue` when the frame's answer was sent, `End` when the socket is gone.
+    fn after_send(sent: bool) -> Self {
+        if sent { Self::Continue } else { Self::End }
+    }
+}
+
+/// @emoji ✍️ One `Commands` batch admitted within the frame deadline, holding its document's write gate until its
+/// commit is answered.
+struct AdmittedCommandsV1 {
+    batch_id: u64,
+    envelopes: Vec<MutationEnvelope>,
+    _document_write: tokio::sync::OwnedMutexGuard<()>,
+}
+
+/// @emoji 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
+/// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
+/// frontier's relay reaches every peer. Returns `false` when the Ack could not be sent.
+#[allow(clippy::too_many_arguments)]
+async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, document_id: &str, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> bool {
+    let AdmittedCommandsV1 { batch_id, envelopes, _document_write } = admitted;
+    let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
+    #[cfg(test)]
+    if let Some(live_gate) = state.live_gate.as_ref().filter(|gate| gate.socket_commit_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
+        live_gate.socket_commit_admitted.add_permits(1);
+        live_gate.socket_commit_release.acquire().await.expect("socket commit test release").forget();
+    }
+    drop(_document_write);
+    if let Some(commands_frame) = relay {
+        let _ = fanout.send(commands_frame);
+    }
+    sender.send(encode(&ack, document_id).await).await.is_ok()
 }
 
 /// 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
@@ -5648,13 +5709,18 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                                 }
                             };
                             match tokio::time::timeout(
-                                DOCUMENT_SOCKET_FRAME_DEADLINE,
+                                document_socket_frame_deadline(&state),
                                 handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &socket_live.id, &gate, &principal, &tenant, frame, sender),
                             )
                             .await
                             {
-                                Ok(true) => {}
-                                Ok(false) => break,
+                                Ok(ClientFrameStepV1::Continue) => {}
+                                Ok(ClientFrameStepV1::End) => break,
+                                Ok(ClientFrameStepV1::Commit(admitted)) => {
+                                    if !commit_admitted_commands(&state, &handle, &document_id, &fanout, &actor, &gate, admitted, sender).await {
+                                        break;
+                                    }
+                                }
                                 Err(_) => {
                                     let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "frame-deadline".into() }))).await;
                                     break;
@@ -5935,8 +6001,24 @@ fn messages_for_error(error: &db::DbError) -> Vec<u8> {
     match error {
         db::DbError::Rejected { messages, .. } => encode_messages(messages),
         db::DbError::Unavailable(reason) => transient_apply_refusal_messages(reason),
+        db::DbError::LimitExceeded(limit) => batch_limit_refusal_messages(&format!("limit exceeded: {limit}")),
         _ => Vec::new(),
     }
+}
+
+/// @emoji 📏️ `ApplyOutcome::Rejected.messages` of a batch the hub can never admit: the one `HubBatchLimitRefusalMessageV1`
+/// (`🚧️refusal`), level error, code `hub.batch-limit`, the exceeded limit bounded — permanent, never the transient code.
+fn batch_limit_refusal_messages(reason: &str) -> Vec<u8> {
+    encode_messages(&[protocol::MutationMessage::error(semio_hub::refusal::HUB_BATCH_LIMIT_REFUSAL_CODE, semio_hub::refusal::hub_batch_limit_refusal_message(reason))])
+}
+
+/// @emoji 📏️ The permanent refusal of a `Commands` batch the document backbone does not declare legal
+/// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`, judged by the wire's own exact decoder over the batch's canonical
+/// encoding); `None` for every declared batch, which the socket budget and the db engine admit as one submit.
+fn undeclared_batch_refusal(envelopes: &[MutationEnvelope]) -> Option<ApplyOutcome> {
+    let limit = protocol::decode_document_backbone_envelopes_exact(&protocol::encode_envelopes(envelopes)).err()?;
+    let reason = format!("batch exceeds the document backbone's declaration: {limit}");
+    Some(ApplyOutcome::Rejected { messages: batch_limit_refusal_messages(&reason), reason })
 }
 
 /// @emoji ⏳️ `ApplyOutcome::Rejected.messages` of a batch refused for a transient reason: the one
@@ -9058,7 +9140,8 @@ async fn rate_limit_middleware(State(state): State<HubState>, request: axum::ext
             }
             _ => {
                 state.note("server.rate-limit", TraceOutcome::Refused, class.as_str());
-                let mut response = StatusCode::TOO_MANY_REQUESTS.into_response();
+                let mut response = (StatusCode::TOO_MANY_REQUESTS, Json(semio_hub::auth::rate_limit::RateLimitRefusalV1::new(class, retry_after_ms))).into_response();
+                response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
                 if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
                     response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
                 }

@@ -616,7 +616,7 @@ pub fn energy_model_load_document_effect(document_id: &str, model: &Model, links
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "data.model".into(),
-        name: "Energy Model".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Energy Model", "Energiemodell"),
         source_format: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         component_kind: "energy".into(),
         dimension: "data".into(),

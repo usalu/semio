@@ -36,7 +36,7 @@ pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_fram
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.sspace".into(),
-        name: "Space Artifacts".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
         source_format: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(),
         component_kind: "space-index".into(),
         dimension: "data".into(),

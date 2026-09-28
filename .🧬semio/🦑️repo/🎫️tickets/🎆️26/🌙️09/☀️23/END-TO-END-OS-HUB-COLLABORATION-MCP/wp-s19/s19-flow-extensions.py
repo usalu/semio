@@ -85,16 +85,17 @@ pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, FlowSnapshot>,
     install(payload, session)?;
     Ok(Emit::default())
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 ''')
 
-create(f"{COMMAND_DIR}/🧪️tests/🔬️unit/🦀️.rs", '''use super::*;
+create(f"{COMMAND_DIR}/🧪️tests/🧩️registry/🦀️.rs", '''//! ⚖️ The flow editor's host contributions route, alone in its process: the flow extension registry is
+//! process-global and a host push REPLACES its whole contributed table, so inside the lib test binary this law
+//! erased the fixture extension every concurrent flow test composes with (`math.add` vanished mid-suite:
+//! overlay proof 3, 2026-09-28, 9 unrelated flow reds).
+
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+use semio_s_artifact_flow_flow::editor::flow::commands::set_contributions::{handle, install, SetContributions};
+use semio_s_artifact_flow_flow::FlowSnapshot;
 
 const MANIFEST_ADMISSION_FIXTURE: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🧫️fixtures/🔣️manifest-admission.json");
 
@@ -126,10 +127,74 @@ fn a_pushed_flow_extension_closure_reaches_the_flow_editor_registry_without_a_st
         assert!(ids.contains(&operator.as_str()), "contributed operator {operator} must be in the flow registry after setContributions; catalogue={ids:?}");
     }
     assert!(!install(&SetContributions { json, page: 0, page_count: 1 }, &mut session).expect("an unchanged re-push is admitted"), "an unchanged closure keeps the registry generation and owes no re-evaluation");
-    flow::uninstall_flow_extension("admission").expect("the law leaves the process-wide registry as it found it");
     session.retire_cold();
 }
 ''')
+
+edit(f"{ARTIFACT}/📦️packages/🦀️rust/Cargo.toml", replace_once(
+    "[[test]]\nname = \"tree-projection-arena\"\n",
+    "# 🧩️ The host contributions law, alone in its process (the flow extension registry is process-global and a host\n# push replaces its whole contributed table).\n[[test]]\nname = \"set-contributions-registry\"\npath = \"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🧩️registry/🦀️.rs\"\n\n[[test]]\nname = \"tree-projection-arena\"\n",
+    marker="name = \"set-contributions-registry\"",
+))
+
+FIXTURE = f"{EDITOR}/🧫️fixtures/🧮️interactive-job/🔣️.json"
+edit(FIXTURE, replace_once(
+    '''        "setActiveExample"
+      ]
+    }
+  ],''',
+    '''        "setActiveExample"
+      ]
+    },
+    {
+      "factory": "FlowContributionsJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "setContributions"
+      ]
+    }
+  ],''',
+    marker='"factory": "FlowContributionsJobFactory"',
+))
+edit(FIXTURE, replace_once('    "setCatalogueSections",\n    "setGridFactor",', '    "setCatalogueSections",\n    "setContributions",\n    "setGridFactor",'))
+
+JOB_LAWS = f"{EDITOR}/🧪️tests/🔬️interactive-job/🦀️.rs"
+edit(JOB_LAWS, replace_once(
+    '''    let routes: [(&str, &[&str], &[semio_framework_plugin::ArtifactToolPublicationContract]); 4] = [''',
+    '''    let routes: [(&str, &[&str], &[semio_framework_plugin::ArtifactToolPublicationContract]); 5] = [''',
+))
+edit(JOB_LAWS, replace_once(
+    '''        ("FlowGraphOperationJobFactory", FLOW_GRAPH_OPERATION_TOOL_IDS, FlowGraphOperationJobFactory::PUBLICATION_CONTRACTS),
+    ];''',
+    '''        ("FlowGraphOperationJobFactory", FLOW_GRAPH_OPERATION_TOOL_IDS, FlowGraphOperationJobFactory::PUBLICATION_CONTRACTS),
+        ("FlowContributionsJobFactory", FLOW_CONTRIBUTIONS_TOOL_IDS, FlowContributionsJobFactory::PUBLICATION_CONTRACTS),
+    ];''',
+))
+edit(JOB_LAWS, replace_once(
+    "    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());\n    eprintln!(\"[DEBUG] flow bounded-first-step proofs",
+    "    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());\n    eprintln!(\"[DEBUG] flow bounded-first-step proofs",
+))
+edit(JOB_LAWS, replace_once(
+    "FLOW_HOST_ONLY_TOOL_IDS.contains(tool_id) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(tool_id),",
+    "FLOW_HOST_ONLY_TOOL_IDS.contains(tool_id) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(tool_id),",
+))
+
+edit(JOB_LAWS, replace_once("/// ⚖️ LAW: the four app-owned factories partition every declared `FlowCommand` tool id exactly —", "/// ⚖️ LAW: the five app-owned factories partition every declared `FlowCommand` tool id exactly —"))
+
+UNIT = f"{EDITOR}/🧪️tests/🔬️unit/🦀️.rs"
+edit(UNIT, replace_once(
+    "    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());\n    assert_eq!(FLOW_CHILD_GROUP_TOOL_IDS, &expected);",
+    "    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());\n    assert_eq!(FLOW_CHILD_GROUP_TOOL_IDS, &expected);",
+))
+edit(UNIT, replace_once(
+    '''        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
+    ]
+}''',
+    '''        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
+        FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
+    ]
+}''',
+))
 
 edit(f"{ARTIFACT}/🦀️.rs", replace_once(
     '''            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🦀️.rs"]

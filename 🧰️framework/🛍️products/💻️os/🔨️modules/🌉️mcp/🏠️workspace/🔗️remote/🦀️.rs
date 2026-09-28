@@ -21,6 +21,8 @@ pub const HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS: usize = 4_096;
 pub const HUB_VERIFIED_CATALOG_MAX_PACKAGES: usize = 256;
 pub const HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES: usize = 32 * 1024 * 1024;
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
+/// ✂️ The longest transport detail a hub-unavailable refusal carries (characters), schema `HubUnavailableCauseV1`.
+pub const HUB_UNAVAILABLE_DETAIL_MAX_CHARS: usize = 512;
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
 /// ⏳️ How long a hub-bound call waits for a descriptor refresh already in flight before it fails
@@ -139,12 +141,15 @@ pub enum HubBindingError {
     Unavailable(HubUnavailableCause),
 }
 
-/// 🔎️ What made the hub directory unavailable, so a refusal names it instead of one opaque word.
+/// 🔎️ What made the hub directory unavailable, so a refusal names it instead of one opaque word
+/// (schema `HubUnavailableCauseV1`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HubUnavailableCause {
     /// 🌐️ The HTTP status and, when the hub answered its typed refusal, that refusal's `code`.
     Http { status: u16, code: Option<String> },
-    Transport,
+    /// 🔌️ The transport failed before any HTTP answer; `detail` is its own bounded cause (an exhausted byte
+    /// budget, a refused connection), never dropped.
+    Transport { detail: String },
     UndecodableResponse,
 }
 
@@ -153,6 +158,47 @@ impl HubUnavailableCause {
     fn http(status: u16, body: &str) -> Self {
         let code = serde_json::from_str::<serde_json::Value>(body).ok().and_then(|value| value.get("code").and_then(serde_json::Value::as_str).map(|code| code.chars().take(64).collect()));
         Self::Http { status, code }
+    }
+
+    /// 🔌️ A transport failure, keeping its own detail bounded to [`HUB_UNAVAILABLE_DETAIL_MAX_CHARS`].
+    fn transport(error: &semio_framework_os_kernel::os_directory::client::TransportError) -> Self {
+        let detail = match error {
+            semio_framework_os_kernel::os_directory::client::TransportError::Io(detail) => detail.clone(),
+            other => other.to_string(),
+        };
+        Self::Transport { detail: detail.chars().take(HUB_UNAVAILABLE_DETAIL_MAX_CHARS).collect() }
+    }
+
+    /// 🧾️ The typed `HubUnavailableCauseV1` a refusal's `details.cause` carries.
+    fn to_json(&self) -> serde_json::Value {
+        match self {
+            Self::Http { status, code } => serde_json::json!({ "kind": "http", "status": status, "code": code }),
+            Self::Transport { detail } => serde_json::json!({ "kind": "transport", "detail": detail }),
+            Self::UndecodableResponse => serde_json::json!({ "kind": "undecodable-response" }),
+        }
+    }
+
+    /// 🗣️ The en + de sentence a client shows for this cause (`details.summary`).
+    fn summary(&self) -> serde_json::Value {
+        let (en, de) = match self {
+            Self::Http { status, code: Some(code) } => (
+                format!("The hub answered HTTP {status} ({code}); the request is retried once the hub recovers."),
+                format!("Der Hub antwortete mit HTTP {status} ({code}); die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."),
+            ),
+            Self::Http { status, code: None } => (
+                format!("The hub answered HTTP {status}; the request is retried once the hub recovers."),
+                format!("Der Hub antwortete mit HTTP {status}; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."),
+            ),
+            Self::Transport { detail } => (
+                format!("The hub could not be reached ({detail}); the request is retried once the connection recovers."),
+                format!("Der Hub war nicht erreichbar ({detail}); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."),
+            ),
+            Self::UndecodableResponse => (
+                "The hub's answer could not be read; the request is retried once the hub recovers.".to_string(),
+                "Die Antwort des Hubs war nicht lesbar; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist.".to_string(),
+            ),
+        };
+        serde_json::json!({ "en": en, "de": de })
     }
 }
 
@@ -169,7 +215,7 @@ impl std::fmt::Display for HubBindingError {
             Self::StaleRefresh => formatter.write_str("hub descriptor refresh was superseded"),
             Self::Unavailable(HubUnavailableCause::Http { status, code: Some(code) }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status} {code})"),
             Self::Unavailable(HubUnavailableCause::Http { status, code: None }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status})"),
-            Self::Unavailable(HubUnavailableCause::Transport) => formatter.write_str("hub directory is temporarily unavailable (transport)"),
+            Self::Unavailable(HubUnavailableCause::Transport { detail }) => write!(formatter, "hub directory is temporarily unavailable (transport: {detail})"),
             Self::Unavailable(HubUnavailableCause::UndecodableResponse) => formatter.write_str("hub directory is temporarily unavailable (undecodable response)"),
         }
     }
@@ -847,7 +893,7 @@ fn map_client_error(error: DirectoryClientError) -> HubBindingError {
         DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
         DirectoryClientError::Decode(_) => HubBindingError::Unavailable(HubUnavailableCause::UndecodableResponse),
         DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),
-        DirectoryClientError::Transport(_) => HubBindingError::Unavailable(HubUnavailableCause::Transport),
+        DirectoryClientError::Transport(error) => HubBindingError::Unavailable(HubUnavailableCause::transport(&error)),
     }
 }
 
@@ -859,7 +905,7 @@ fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
         DirectoryClientError::Decode(_) => HubBindingError::InvalidResponse("execution-target response failed validation"),
         DirectoryClientError::Http { status: 404 | 409, .. } => HubBindingError::StaleRefresh,
         DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),
-        DirectoryClientError::Transport(_) => HubBindingError::Unavailable(HubUnavailableCause::Transport),
+        DirectoryClientError::Transport(error) => HubBindingError::Unavailable(HubUnavailableCause::transport(&error)),
     }
 }
 
@@ -1223,7 +1269,10 @@ fn binding_error_to_gateway(error: HubBindingError) -> GatewayError {
         HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired => GatewayErrorCode::PermissionDenied,
         HubBindingError::DeadlineExceeded | HubBindingError::StaleRefresh | HubBindingError::Unavailable(_) => GatewayErrorCode::PluginUnavailable,
     };
-    let gateway = GatewayError::new(code, error.to_string());
+    let gateway = match &error {
+        HubBindingError::Unavailable(cause) => GatewayError::new(code, error.to_string()).with_details(serde_json::json!({ "cause": cause.to_json(), "summary": cause.summary() })),
+        _ => GatewayError::new(code, error.to_string()),
+    };
     if matches!(code, GatewayErrorCode::PluginUnavailable) { gateway.retryable() } else { gateway }
 }
 

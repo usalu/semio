@@ -231,8 +231,8 @@ pub fn default_empty_fixture() -> Value {
     })
 }
 
-pub fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+pub fn puzzle2d_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -240,7 +240,7 @@ pub fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// `setSelection` action builders.
 pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-    puzzle2d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+    puzzle2d_action(INTERACTION_SELECT_ACTION_ID, Some(semio_framework::dsl_value!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
@@ -270,17 +270,6 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
 /// 🧰️ Resolves the canonical host-owned utility for the current window.
 pub fn puzzle2d_active_utility(view_state: Option<&semio_framework_plugin::ViewModel>) -> &str {
     view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(select_utility::UTILITY_ID)
-}
-
-/// 🎯️ `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "id" fallback —
-/// this app's actions accept either shape depending on the caller.
-pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    let dsl_args = args.map(dsl::DslValue::from);
-    let ids = semio_framework_plugin::selection_ids(dsl_args.as_ref());
-    if !ids.is_empty() {
-        return ids;
-    }
-    args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]).unwrap_or_default()
 }
 
 /// 🎥️ The camera lives on `Puzzle2dConfig` — session-only view state, never a fixture field.
@@ -1920,12 +1909,12 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
-    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, disabled: bool| ContextMenuItemSpec {
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
+        args,
         destructive: destructive.then_some(true),
         disabled: disabled.then_some(true),
         ..Default::default()
@@ -1985,7 +1974,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     // utility never had: it opens the suggestions popup on that handle WITHOUT arming the brush.
     let mut menu = Menu::of(registry);
     if let [only] = selected_handle_ids.as_slice() {
-        menu = menu.item(item("suggestNodes", if is_de { "Knoten vorschlagen" } else { "Suggest nodes" }, "sparkles", "openHandleSuggestions", Some(json!({ "handleId": only })), false, false));
+        menu = menu.item(item("suggestNodes", if is_de { "Knoten vorschlagen" } else { "Suggest nodes" }, "sparkles", "openHandleSuggestions", Some(semio_framework::dsl_value!({ "handleId": only })), false, false));
     }
     // 🔗️ Two selected handles are the `createEdge` gesture: the row stays visible but refuses itself
     // when either end is already connected or no compatibility rule admits the pair, so the menu says
@@ -1994,10 +1983,10 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
         let occupied = puzzle2d_occupied_handles(fixture);
         let kinds = puzzle2d_handle_kind(fixture, source).zip(puzzle2d_handle_kind(fixture, target));
         let connectable = !occupied.contains(*source) && !occupied.contains(*target) && kinds.is_some_and(|(source_kind, target_kind)| puzzle2d_kinds_compatible(fixture, &source_kind, &target_kind));
-        menu = menu.item(item("connectHandles", if is_de { "Verbinden" } else { "Connect" }, "link", "createEdge", Some(json!({ "source": source, "target": target })), false, !connectable));
+        menu = menu.item(item("connectHandles", if is_de { "Verbinden" } else { "Connect" }, "link", "createEdge", Some(semio_framework::dsl_value!({ "source": source, "target": target })), false, !connectable));
     }
-    menu.item(item("toggleHidden", hide_label, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false))
-        .item(item("toggleLocked", lock_label, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false))
+    menu.item(item("toggleHidden", hide_label, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "hidden", "value": any_visible })), false, false))
+        .item(item("toggleLocked", lock_label, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "locked", "value": any_unlocked })), false, false))
         .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
         .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
         // 📋️ The framework declares copy/cut/paste (and their mod+c/x/v keys); these rows are the
@@ -2213,10 +2202,10 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
 /// through `NoopPuzzleCommandWork` under a solo `HostOnly` contract rather than the dispatch pipeline.
 const PUZZLE2D_HOST_ONLY_TOOL_IDS: &[&str] = &["lodScaleJson"];
 
-/// 📏️ Raw wire bytes ONE retained 2d command may carry — one 32 KiB import chunk plus its escaped
-/// envelope, or a whole-board `applyBoardEvents` select over Nakagin's 180 ids; the same figure the 3d
-/// factory admits, so a file this app wrote is always a file this app can read back.
-const PUZZLE2D_COMMAND_RAW_BYTES: usize = 262_144;
+/// 📏️ Raw wire bytes ONE retained 2d command may carry — one whole `importFixture` file, escaped, plus its envelope
+/// (`PUZZLE_IMPORT_RAW_BYTES`, the widest command this route admits; a whole-board `applyBoardEvents` select over
+/// Nakagin's 180 ids is far below it), the same figure the 3d factory admits.
+const PUZZLE2D_COMMAND_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
 const PUZZLE2D_COMMAND_DECODED_ITEMS: usize = 16_384;
 
 struct Puzzle2dRetainedCommandJobFactory {
@@ -4873,7 +4862,7 @@ impl Puzzle2dRetainedCommandProofs {
         artifact_schema: "puzzle.2d.fixture",
         factory: "Puzzle2dRetainedCommandJobFactory",
         factory_type: Puzzle2dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(262_144, 16_384, 1, 262_144, 7_500, 1, 1),
+        contract: semio_framework::ToolExecutionContract::resumable(PUZZLE2D_COMMAND_RAW_BYTES, PUZZLE2D_COMMAND_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         tools: [
             "setActiveExample",
             "forceLayout",
@@ -5589,7 +5578,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected nodes by the given factor.", "Skaliert die ausgewählten Knoten um den angegebenen Faktor."))
             .action_describe("exportFixture", LocalizedLabel::native("Writes the whole 2D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 2D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
             .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
-            .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 2D puzzle with one read from imported JSON, delivered in chunks; the previous puzzle is discarded.", "Ersetzt das gesamte 2D-Puzzle durch eines aus importiertem JSON, das in Teilen geliefert wird; das bisherige Puzzle wird verworfen."))
+            .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 2D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 2D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected nodes.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Knoten."))
             .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
             .action_describe("addNode", LocalizedLabel::native("Adds a node of the given kind (a 2D block kind) to the puzzle at x, y.", "Fügt dem Puzzle an x, y einen Knoten der angegebenen Art (einer 2D-Blockart) hinzu."))
@@ -5627,6 +5616,10 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
+mod agent_lane_tests;
 
 /// 📋️ The clipboard route's own laws — copy/cut/paste round trips, the locked refusal, and the
 /// single-edit/undo discipline every one of them owes.

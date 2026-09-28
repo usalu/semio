@@ -330,11 +330,8 @@ pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> For
 
 //#region 🔖️DurableDefinition
 fn forms_scene_id(steps: &[FormStep]) -> String {
-    use std::hash::{Hash, Hasher};
     let content_json = dsl::os_pack::json::to_json_string(&steps.to_vec());
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("forms-scene-{:016x}", hasher.finish())
+    store::content_id("forms-scene", content_json.as_bytes())
 }
 
 /// 📝️ Replaces the durable definition while retaining its owned projection handles.
@@ -381,7 +378,7 @@ pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: 
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
-        name: "Form Dictionary".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
         source_format: "form.dictionary".into(),
         component_kind: "forms".into(),
         dimension: "data".into(),

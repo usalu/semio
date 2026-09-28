@@ -1272,18 +1272,6 @@ impl ArtifactEditor for EquationPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    /// 📥️ Admits the whole-document replacement `reset_equation_document_effect` emits. The trait
-    /// default owns no retained initialization authority, so the host refuses the app's own archive
-    /// with `artifact-store.persisted-initializer-refused` AFTER the guest has already accepted the
-    /// verb — which is what every `setActiveExample` would hit without this.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, MATH_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
@@ -1362,6 +1350,7 @@ impl ArtifactEditor for EquationPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));
         let payload = ArtifactRetainedCommandPayload::try_new(

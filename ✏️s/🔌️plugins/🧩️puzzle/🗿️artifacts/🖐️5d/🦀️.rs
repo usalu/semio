@@ -993,12 +993,9 @@ pub fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSn
 /// the derived `SemioKitType` list so peers replaying the same catalogs converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `sourcing`'s `catalog_child_handle`.
 pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::ArtifactChild<SemioKitSnapshot> {
-    use std::hash::{Hash, Hasher};
     let types = kind_catalogs_kit_types(catalogs);
     let canonical = dsl::json::to_json_string(&types);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    canonical.hash(&mut hasher);
-    let child_id = format!("kind-catalogs-{:016x}", hasher.finish());
+    let child_id = store::content_id("kind-catalogs", canonical.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -1083,7 +1080,7 @@ pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>,
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "5d.puzzle".into(),
-        name: "5D Puzzle".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("5D Puzzle", "5D-Puzzle"),
         source_format: "puzzle.5d".into(),
         component_kind: "puzzle5d".into(),
         dimension: "5d".into(),

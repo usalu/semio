@@ -1,0 +1,10 @@
+{
+  "title": "Delete Committed Binaries Over 100MB",
+  "emoji": "🗑️",
+  "status": "open",
+  "description": "Binary files larger than 100MB were committed. Find every such blob reachable from commits and delete those files from the tree and from history so they are no longer in the repository.",
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "⚪deda7efe3244482eb04fb9d03a356e96"
+  ]
+}

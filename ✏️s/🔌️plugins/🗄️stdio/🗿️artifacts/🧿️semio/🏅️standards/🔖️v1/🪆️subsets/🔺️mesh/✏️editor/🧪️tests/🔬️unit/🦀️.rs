@@ -43,11 +43,11 @@ async fn set_vertex_refuses_duplicate_mesh_and_primitive_ids() {
     let args = SemioMeshSetVertexArgs { mesh_id: "mesh-a".into(), primitive_id: "primitive-a".into(), vertex_index: 0, point: [1.0, 2.0, 3.0] };
     let mut duplicate_mesh = SemioMeshSnapshot::default();
     duplicate_mesh.meshes = vec![SemioMesh { id: "mesh-a".into(), primitives: vec![primitive.clone()] }, SemioMesh { id: "mesh-a".into(), primitives: vec![primitive.clone()] }];
-    assert!(move_vertex_mutation(&duplicate_mesh, &args).expect_err("duplicate mesh id").to_string().contains("ambiguous"));
+    assert!(move_vertex_mutation(&duplicate_mesh, &args).expect_err("duplicate mesh id").describe().contains("ambiguous"));
 
     let mut duplicate_primitive = SemioMeshSnapshot::default();
     duplicate_primitive.meshes = vec![SemioMesh { id: "mesh-a".into(), primitives: vec![primitive.clone(), primitive] }];
-    assert!(move_vertex_mutation(&duplicate_primitive, &args).expect_err("duplicate primitive id").to_string().contains("ambiguous"));
+    assert!(move_vertex_mutation(&duplicate_primitive, &args).expect_err("duplicate primitive id").describe().contains("ambiguous"));
 }
 
 #[test]

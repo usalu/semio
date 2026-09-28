@@ -7,6 +7,106 @@ during the freeze, landed compile-atomic in window 3.
 
 ## Session 14
 
+### Session 14c
+
+Successor agent (2026-09-28 17:0x, chain relaunched 16:55:46, guest freeze ON). Predecessor cut ~14:37 (usage limit, app down).
+
+| # | Item | Status |
+|---|---|---|
+| R | reconcile the predecessor's last step (B1 ShellHost patch) | **tree clean**: no B1 identifier in any of the 43 targets, all 27 new B1 files absent, no `s14-sh2-b1-backup/`; the worker/ShellHost diffs vs the B1 bases are peers' (sync settle, S18/F3/C13 host work). The ShellHost patch itself was finished and captured in the stage before the cut (14:29 / 14:31) |
+| 1 | route-B local-catalog set `wp-sh2/b1/` (now 44 files) | **prepared, complete, overlay-proven**: all six ShellHost regions where S18 agreed; composed dry run (space-home set `--write`, then B1) on the live tree after F3's landing **39/39 + 44/44 apply, 0 conflicts**; overlay tsc **0 errors in B1/ShellHost/worker/config/case** (twice, 2nd after F3); os-config **159/159** (17 new leaf laws); case `📇️mutate-os-config-local-catalog` TS subject **6/6**; space-home feature **112/112**, lib **28/28**; 1 compile red (E0521) + 2 warnings found and fixed in the set; plugin-space proof-count law **8/8** with both sets (ov15); overlay build-dir + mirror deleted (rule 23) |
+| 2 | space-home set dry run (Cursor peer on stdio/norm) | **39/39 apply, 0 conflicts** on the live tree (18:36 after F3; `📜️script.ts`, ShellHost = clean 3-way merges); grew 38 → 39 by the proof-count law (Home 14 → 17) |
+| 5 | plugin-space proof-catalog law stale on the tree | **LANDED (rule 22)** studio 16 → 40, Home 13 → 14; native plugin-space **88/88** (landing row) |
+| 3 | W2 hub fix (member.removed then space.deleted) | landed 13:27 + proven native (14b); live proof waits for 7800 on ALL |
+| 4 | Home row-action label capitalization | in the space-home set (file 026: Open/Rename/Share/Delete/Manage, de Öffnen/Umbenennen/Teilen/Löschen/Verwalten); harness matches case-insensitively |
+
+#### Log 14c
+
+- 17:0x `b1-apply.py` on the tree: 37 apply, 6 conflict (032/033/036–039) — by design, their base is the 38-file set. Direct scan of every
+  B1 target for `local-catalog|LocalCatalog|admitLocalDocument|…`: 0 hits; `git ls-files --others` 0 B1 paths (git diff alone is not
+  enough — the 16:29 auto-commit would hide a half-applied hunk). `sh2-apply.py`: 38/38 apply.
+- 17:0x new `wp-sh2/b1/b1-compose.py` (scratch root `.🧬semio/🌐hub/s14-sh2-compose`: tree copy of the 72 paths of both sets, 38-set
+  `--write`, B1 dry run; `--rebase` re-bases B1 on the composed content): **38/38, then 43/43 apply, 0 conflicts**. Re-based 2 files
+  (worker, ShellHost), `b1-capture.py` → 43 files. The peer keeps editing the worker (17:06 `newArtifactState`); the B1 worker hunk
+  still merges clean (landing re-runs `b1-compose.py --rebase` first).
+- 17:1x overlay `s13-sh1-overlay` re-synced (`sh2-overlay-sync.py`: 838 copied), both sets `--write` into it (B1 then 42 applied +
+  worker = clean merge over the 17:06 peer change). `tsc -p wp-sh2/tsc/tsconfig-b1-overlay.json` (ShellHost, `🗂️local-catalog`,
+  worker, config mutations TS, case TS): **27 errors, all in `📃️UiDocumentStore/🧪️tests/🧪️typedwire`** (overlay-vs-tree dual module
+  identity of the retained contract; untouched file) — **0 in B1 code and 0 in ShellHost** (the predecessor's 3 ShellHost errors were
+  the stale overlay's channel 18 vs 19) (`generated/tsc-b1-14c.txt`). Harness tsc (`🎬️studio` + `👥️two-human`) **rc 0**
+  (`generated/tsc-harness-b1-14c.txt`).
+- 17:2x repo test platform in the overlay: `discover` lists `📇️mutate-os-config-local-catalog [rust,typescript]`;
+  `subject exhaustive --case 📇️mutate-os-config-local-catalog --implementation typescript` **6/6 passed** (identity sibling 6/6, same
+  shape; `quick` exercises neither — exhaustive-level cases) (`generated/b1-case-ts-*.txt`). The Rust implementation builds the plugin
+  host (wasmtime) → deferred to window 3 (rule 23: not worth a cold private build-dir).
+- 17:14 overlay Rust proof queued (tag `ov13`, pid 90150, `sh2-overlay.sh b1` = os-config lib tests, space-home
+  `component-app-assembly` lib tests, plugin-space lib tests; kernel dropped — B1 does not touch it) behind S19's overlay hold.
+- 17:2x review fix in the set: the worker's new VALUE import of `LOCAL_CATALOG_CONFIG_SCHEMA` was extensionless (`…/🟦️`, copied
+  from the identity `import type`, which is erased) → `…/🟦️.ts` like every other runtime import of the worker (stage + overlay,
+  re-captured).
+- **Gap found (not in this set, reported to main):** the wgpu native shell's `handle_replay_shell_command` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`)
+  serves only `os.directory.*` and `os.open-artifact*`; every other id is a documented no-op — so on wgpu a Home persist/bind/import
+  commit's `os.local-catalog.admit` is dropped silently (same today for `os.create-space-artifact`). Needs the native half of Design
+  B1 item 5 (the catalog on the native folder backbone + `open_folder_space_backbone`) or at least a named refusal notice.
+- 17:38–17:47 **ov13** (one overlay hold): os-config lib **159/159** incl. the 17 new leaf laws (admit ×10, retire ×7: unit, fixture
+  vector, canonical JSON, TS-projection parity, undo); space-home **compile red in B1 code**: E0521 in `🗃️apply-local-catalog-document`
+  `keep_on_device` (`let refused = |code: &str, …| Fault::new(…, code, …)` — `Fault` needs `'static` codes) → `code: &'static str`;
+  2 B1-introduced `unused_qualifications` warnings in the Home unit laws (`semio_framework_plugin::DslValue::as_str` → `DslValue::as_str`)
+  fixed too (stage + overlay, re-captured) (`generated/ov13-b1.txt`). Re-run queued as `ov14` (`sh2-overlay.sh b1-guest`: space-home
+  feature + plain lib tests, plugin-space; pid 16834; lane 4 deep: s19 holding, st2, t14, s18).
+- 18:36 after F3's two landed ShellHost regions (tree ShellHost 18:20:59): `sh2-apply.py` on the live tree **38/38 apply, 0 conflicts**;
+  `b1-compose.py` **38/38 then 43/43 apply, 0 conflicts** (ShellHost + worker clean 3-way merges). 19:0x overlay re-synced (368 files
+  incl. F3's ShellHost), 39-set + B1 re-applied, `tsc` again **0 errors in B1/ShellHost/worker/config/case** (only the 27 overlay-identity
+  errors in the untouched typedwire test) (`generated/tsc-b1-14c-post-f3.txt`).
+- 18:52 **ov14** (after the E0521 fix): space-home `component-app-assembly` lib **112/112** (ov11 109 + the B1 guest laws), space-home
+  lib **28/28**, plugin-space **86/2** — the same two reds as the tree baseline b14: `descriptor_is_fresh` (needs `describe`, window 3)
+  and `every_app_instance_constructs_against_its_registered_proof_catalog` (`generated/ov14-b1-guest.txt`). Only pre-existing warnings.
+- 18:5x root cause of the proof-catalog red: the law pins each app's `bounded_first_step_tool_proofs!` list length and is stale on the
+  TREE (studio 16 → 40, Home 13 → 14 since `presenceHeartbeat`; index 14 ok) — test-only, so **landed under rule 22** (counts + the
+  provenance moved from an in-body comment into the docstring; backup `.🧬semio/🌐hub/s14-sh2-backup/plugin-space-proof-count/`);
+  native lane `test -p semio-s-plugin-space --lib` (tag `c14`, 18:54–18:56) **88/88** incl. `descriptor_is_fresh` (the tree's descriptor is
+  current; the overlay's is stale only because the sets change it) (`generated/c14-plugin.txt`, landing row). The file joined both sets: space-home set Home
+  14 → 17 (`bindSpaceFile`, `importSpace`, `deleteVirtualFileSystemNode`), B1 17 → 18 (`applyLocalCatalogDocument`) → sets are now
+  **39** and **44** files; `b1-compose.py` **39/39 then 44/44 apply, 0 conflicts**. Overlay re-check queued (`ov15 plugin-proofs`,
+  pid 58563).
+- 19:29 **ov15** (both sets applied, overlay): `test -p semio-s-plugin-space --lib interactive_job_catalog` **8/8** incl. the proof-count law
+  at studio 40 / Home 18 / index 14 (`generated/ov15-plugin-proofs.txt`).
+- 19:3x rule 23: overlay proofs recorded → deleted my overlay build-dir `s13-sh1-build` (3.7 GB) + `s13-sh1-target`, and (disk 53 GiB
+  and falling under the chain) the overlay mirror `s13-sh1-overlay` (8.7 GB) and the compose scratch; disk 61 GiB after.
+  `b1-compose.py` recreates its scratch per run; a later overlay needs a full `sh2-overlay-sync.py` (≈ 80 k files).
+- W2 live proof still waits: chain in rebuild-all (hub-prewarm rc 0 17:13), 7800 down.
+
+### Session 14c-2 — P1 Home directory projection → transient lane (2026-09-28 23:2x →)
+
+Coordinator P1 (S18, 7800/p24 user1): `directory-bootstrap.apply-refused` at seq 808 — `Space Home config publication exceeds its
+complete retained envelope` (config lane sealed the WHOLE projection as one item + inverse copy). Design (approved 23:4x): the directory
+projection is derived hub state → the app TRANSIENT lane (`✏️editor/🫧️transient`, the facet dir already registered, scaffold
+`📌️.empty.md` retired): typed `Arc` rows folded by the canonical `store::os_directory::fold` one row at a time (copy-on-write of the
+touched rows only), each page ONE bounded non-invertible item (`📬️apply-directory-page`, priced by the page, never the projection), no
+edit/ledger rows; `HomeConfig` = local-studio tombstones only; rename/share/remove read the ONE row they need from the job's captured
+transient; both surfaces share one page route (`HomeDirectoryPageWork`); receipt protocol + host unchanged (host bootstraps `after=0`).
+
+- 23:2x both sets re-based onto the post-T1 tree (`sh2-rebase.py` new: 5 files; `b1-compose.py --rebase`: 4) → 39/39 + 44/44 clean.
+- 01:2x reconcile after the cut/panics/sweep: all P1 work lives in the hub stage `.🧬semio/🌐hub/s14-sh2-stage` (survived); the live tree
+  carries none of it (`git grep HomeTransient|apply-directory-page` 0, `git status` space plugin clean). Lost in the sweep: `wp-sh2/generated/`,
+  `wp-sh2/target/` (captures only). Captures now go to `.🧬semio/🌐hub/s14-sh2-captures/`.
+
+#### Window-3 landing runbook (SH2, both sets, in this order)
+
+1. `python3 wp-sh2/sh2-apply.py` (dry) → `--write` (39 files).
+2. `python3 wp-sh2/b1/b1-apply.py` (dry, on the tree after step 1;
+   every file must say `apply`, worker/ShellHost may say 3-way merge) → `--write` (44 files).
+3. Native lane: `test -p semio-framework-os-config --lib`, `test -p semio-s-artifact-space-home --features component-app-assembly
+   --lib`, `test -p semio-s-artifact-space-home --lib`, `test -p semio-s-plugin-space --lib` (expect `descriptor_is_fresh` red
+   until 4; the proof-count law expects Home 18), and the host case through the test platform: `bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts
+   subject exhaustive --case 📇️mutate-os-config-local-catalog` (rust + typescript; rust builds the plugin host).
+4. wasm lane: space plugin `describe` regen (`✏️s/🔌️plugins/🪐️space/🔣️.json` flips `bindSpaceFile` to migrated + adds
+   `applyLocalCatalogDocument`), `surface-schema --plugin space --check`, space TS oracles (`✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts`).
+5. `tsc` of the os package files touched (ShellHost, `🗂️local-catalog`, worker, config TS), rule-20 boot to Home, then
+   `zsh wp-sh2/sh2-verify-home.sh --serve <6580> [--hub …] --locale en|de` (steps incl. import-kept-studio + reopen keeps it).
+6. R10: taxonomy rows for the new dirs (config leaves `📥️admit-local-document`, `📤️retire-local-document`, host case
+   `📇️mutate-os-config-local-catalog`, `🏛️ShellHost/🗂️local-catalog`, home command `🗃️apply-local-catalog-document`).
+
 ### Session 14b
 
 Successor agent (2026-09-28 12:0x, guest freeze ON since 12:02:46).

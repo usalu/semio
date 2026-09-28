@@ -250,6 +250,21 @@ describe("declared project targets", () => {
     }
   });
 
+  it("declares every launch-projected project manifest as a registry catalog content input", async () => {
+    const { projects } = await renderLaunch();
+    const { loadCatalogTaxonomy, registryCatalogInputPaths, registryCatalogInputView } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+    const root = getWorkspaceRoot(), taxonomy = loadCatalogTaxonomy(), base = registryCatalogInputView(root, taxonomy);
+    const manifests = projects.map((project) => (project.path ? `${project.path}/📋️project.json` : "📋️project.json"));
+    const reachable = new Set(manifests.flatMap((manifest) => manifest.split("/").map((_, index, segments) => segments.slice(0, index + 1).join("/"))));
+    const inputs = new Set(registryCatalogInputPaths(root, taxonomy, {
+      kind: (path) => base.kind(path),
+      readText: (path) => base.readText(path),
+      entries: (path) => base.entries(path).filter((entry) => reachable.has(path ? `${path}/${entry.name}` : entry.name)),
+    }));
+    expect(manifests.length).toBeGreaterThan(100);
+    expect(manifests.filter((manifest) => !inputs.has(manifest))).toEqual([]);
+  });
+
   it("stays loadable by an independent JSONC reader and is byte-identical to the committed launch.json", async () => {
     const { text } = await renderLaunch();
     const ts = await import("typescript");

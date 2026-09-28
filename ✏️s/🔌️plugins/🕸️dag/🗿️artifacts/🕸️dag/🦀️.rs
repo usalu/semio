@@ -125,13 +125,9 @@ pub fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<D
 /// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
 /// flow's `flow_content_child_handle`/writer's `document_child_handle`.
 pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagHostSnapshotEdge]) -> DagContentChild {
-    use std::hash::{Hash, Hasher};
     let snapshot = dag_content_snapshot_from_working(nodes, edges);
     let content_json = dsl::json::to_json_string(&snapshot);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("dag-content-{content_hash:016x}");
+    let child_id = store::content_id("dag-content", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -217,7 +213,7 @@ impl From<semio_framework_artifact_infinite_dag::DagCamera> for DagCamera {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.dag".into(),
-        name: "DAG".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("DAG", "DAG"),
         source_format: DAG_DOCUMENT_SCHEMA.into(),
         component_kind: "dag".into(),
         dimension: "graph".into(),

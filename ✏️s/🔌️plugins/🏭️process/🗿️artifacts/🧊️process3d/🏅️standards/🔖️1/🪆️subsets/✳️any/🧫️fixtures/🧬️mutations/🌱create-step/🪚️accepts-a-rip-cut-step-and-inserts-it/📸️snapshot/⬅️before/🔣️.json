@@ -48,9 +48,9 @@
     }
   },
   "stockSolid": {
-    "childId": "stock-brep-7f66e598ea50b322",
+    "childId": "stock-brep-dc359cd3c4472a4c",
     "target": {
-      "artifactId": "stock-brep-7f66e598ea50b322",
+      "artifactId": "stock-brep-dc359cd3c4472a4c",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -59,9 +59,9 @@
     }
   },
   "steps": {
-    "childId": "steps-flow-a2104e830ad0e9c1",
+    "childId": "steps-flow-302b666603a75b59",
     "target": {
-      "artifactId": "steps-flow-a2104e830ad0e9c1",
+      "artifactId": "steps-flow-302b666603a75b59",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

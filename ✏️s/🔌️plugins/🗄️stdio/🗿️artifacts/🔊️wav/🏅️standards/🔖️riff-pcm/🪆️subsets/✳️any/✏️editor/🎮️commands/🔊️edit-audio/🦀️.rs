@@ -351,7 +351,7 @@ fn number_arg(id: &'static str, en: &'static str, de: &'static str, minimum: f64
 }
 
 fn revision_arg() -> ActionArgDef {
-    ActionArgDef::text("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")).required()
+    ActionArgDef::document_revision("revision", LocalizedLabel::native("Document revision", "Dokumentrevision"))
 }
 
 pub fn extra_actions() -> Vec<ActionDefinition> {
@@ -610,7 +610,7 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision });
         let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
@@ -714,7 +714,7 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-format-copy".into(), operation_id: 2, generation: 3, canonical_base_revision: [6; 32] };
+        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-format-copy".into(), operation_id: 2, generation: 3, canonical_base_revision: [6; 32], authoring_seed: "authoring-seed-test".into() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::SetSampleRate { revision, value: "22050".into() });
         let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };

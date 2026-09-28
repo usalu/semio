@@ -188,5 +188,205 @@
   "id": "037",
   "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
   "mode": "whole"
+ },
+ {
+  "id": "038",
+  "path": "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "039",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "040",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "041",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "042",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "043",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "044",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "045",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "046",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "047",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "048",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📬️apply-directory-event-page/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "049",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📬️apply-directory-event-page/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "050",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "051",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-space/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "052",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️share-space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "053",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️share-space/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "054",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "055",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures/📇️projection-persistence-v1/🔣️.json",
+  "mode": "delete"
+ },
+ {
+  "id": "056",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "057",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+  "mode": "delete"
+ },
+ {
+  "id": "058",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+  "mode": "create"
+ },
+ {
+  "id": "059",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📌️.empty.md",
+  "mode": "delete"
+ },
+ {
+  "id": "060",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "061",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "062",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "063",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "064",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "065",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "066",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "067",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "068",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "069",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "070",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "071",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "072",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "073",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "074",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "075",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "076",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🥒️.feature",
+  "mode": "create"
+ },
+ {
+  "id": "077",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🦀️.rs",
+  "mode": "create"
  }
 ]

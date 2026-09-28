@@ -2,7 +2,9 @@ use super::*;
 use semio_framework_plugin::{ActionBinding, Component, TreeWindowRequest, UiValue, ViewModel};
 
 fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
-    if node.key.as_str() == key { return Some(node); }
+    if node.key.as_str() == key {
+        return Some(node);
+    }
     node.children.iter().find_map(|child| node_by_key(child, key))
 }
 
@@ -16,12 +18,18 @@ fn node_with_binding<'a>(node: &'a BuiltNode, action: &str) -> Option<&'a BuiltN
 
 fn number_arg(binding: &ActionBinding, key: &str) -> Option<f64> {
     let Some(UiValue::Map(arguments)) = &binding.args else { return None };
-    arguments.iter().find_map(|(name, value)| (name.as_str() == key).then_some(value)).and_then(|value| match value { UiValue::Number(value) => Some(*value), _ => None })
+    arguments.iter().find_map(|(name, value)| (name.as_str() == key).then_some(value)).and_then(|value| match value {
+        UiValue::Number(value) => Some(value),
+        _ => None,
+    })
 }
 
-fn text_arg<'a>(binding: &'a ActionBinding, key: &str) -> Option<&'a str> {
+fn text_arg(binding: &ActionBinding, key: &str) -> Option<String> {
     let Some(UiValue::Map(arguments)) = &binding.args else { return None };
-    arguments.iter().find_map(|(name, value)| (name.as_str() == key).then_some(value)).and_then(|value| match value { UiValue::Text(value) => Some(value.as_str()), _ => None })
+    arguments.iter().find_map(|(name, value)| (name.as_str() == key).then_some(value)).and_then(|value| match value {
+        UiValue::Text(value) => Some(value.as_str().to_owned()),
+        _ => None,
+    })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -39,8 +47,8 @@ async fn definition_localizes_audio_actions_without_global_revision_forms() {
     let definition = definition();
     let route = |id: &str| definition.actions.iter().find(|action| action.id == id).expect("declared WAV action");
     let append = route(semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID);
-    assert_eq!(append.label.en, "Append frame");
-    assert_eq!(append.label.de, "Frame anhängen");
+    assert_eq!(append.label.resolve(semio_framework_plugin::Terminology::Native, Locale::En), "Append frame");
+    assert_eq!(append.label.resolve(semio_framework_plugin::Terminology::Native, Locale::De), "Frame anhängen");
     assert!(definition.actions.iter().all(|action| action.keys.is_none()));
     assert!(definition.actions.iter().all(|action| !action.in_palette));
 }
@@ -60,23 +68,16 @@ async fn every_audio_command_has_one_definition_and_a_revision_bound_surface_con
         let control = node_with_binding(&root, action_id).unwrap_or_else(|| panic!("{action_id} surface control"));
         assert!(matches!(&control.component, Component::Button(_) | Component::Input(_)), "{action_id} must remain a natively keyboard-operable control");
         let binding = binding_named(control, action_id).expect("control owns binding");
-        assert_eq!(text_arg(binding, "revision"), Some(revision), "{action_id} revision binding");
+        assert_eq!(text_arg(binding, "revision").as_deref(), Some(revision), "{action_id} revision binding");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_controls() {
-    let channels = 64usize;
+    let channels = 64u32;
     let revision = "0123456789abcdef";
     let document = WavSnapshot {
-        fmt: crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt {
-            channels: channels as u16,
-            sample_rate: 1_000,
-            byte_rate: (channels * 1_000) as u32,
-            block_align: channels as u16,
-            bits_per_sample: 8,
-            ..Default::default()
-        },
+        fmt: crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt { channels: channels as u16, sample_rate: 1_000, byte_rate: channels * 1_000, block_align: channels as u16, bits_per_sample: 8, ..Default::default() },
         data: WavData::Pcm8((0..channels * 2).map(|index| index as u8).collect()),
         ..WavSnapshot::default()
     };
@@ -97,15 +98,15 @@ async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_contro
     let sample = binding_named(samples, crate::editor::wav::edit_audio::SET_SAMPLE_ACTION_ID).expect("late-channel sample edit binding");
     assert_eq!(number_arg(sample, "row"), Some(1.0));
     assert_eq!(number_arg(sample, "column"), Some(63.0));
-    assert_eq!(text_arg(sample, "revision"), Some(revision));
+    assert_eq!(text_arg(sample, "revision").as_deref(), Some(revision));
     let channels_table = node_by_key(&root, CHANNEL_TABLE_ID).expect("channel controls");
     let Component::Table(channel_props) = &channels_table.component else { panic!("channel controls are a table") };
     assert_eq!(channel_props.window.map(|window| (window.total, window.offset)), Some((channels, channels - 1)));
     let insert_channel = binding_named(channels_table, crate::editor::wav::edit_audio::INSERT_CHANNEL_ACTION_ID).expect("late-channel insert binding");
     assert_eq!(number_arg(insert_channel, "channel"), Some(63.0));
-    assert_eq!(text_arg(insert_channel, "revision"), Some(revision));
-    assert_eq!(text_arg(binding_named(&root, crate::editor::wav::edit_audio::SET_SAMPLE_RATE_ACTION_ID).expect("sample-rate control"), "revision"), Some(revision));
-    assert_eq!(text_arg(binding_named(&root, semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID).expect("append-channel control"), "revision"), Some(revision));
+    assert_eq!(text_arg(insert_channel, "revision").as_deref(), Some(revision));
+    assert_eq!(text_arg(binding_named(&root, crate::editor::wav::edit_audio::SET_SAMPLE_RATE_ACTION_ID).expect("sample-rate control"), "revision").as_deref(), Some(revision));
+    assert_eq!(text_arg(binding_named(&root, semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID).expect("append-channel control"), "revision").as_deref(), Some(revision));
 }
 
 #[semio_framework_async_macros::async_test]

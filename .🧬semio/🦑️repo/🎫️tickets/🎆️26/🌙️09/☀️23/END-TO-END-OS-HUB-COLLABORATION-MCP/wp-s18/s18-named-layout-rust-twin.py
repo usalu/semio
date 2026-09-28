@@ -427,6 +427,7 @@ edit(SHELL / "🧪️tests/🗄️browser-prefs-persistence/🦀️.rs", '      
 edit(SHELL / "🧪️tests/🗄️browser-prefs-persistence/🦀️.rs", '    for projection in ["namedLayouts", "dockLayouts", "dockUi", "windowPanes"] {', '    for projection in ["dockLayouts", "dockUi", "windowPanes"] {')
 
 # R7 — an unreadable stored log is a typed refusal that blocks writes, never an empty log that a write replaces
+edit(WGPU, "#[derive(Clone, Default)]\nstruct UiPreferencesEventLog {", "#[derive(Clone, Debug, Default)]\nstruct UiPreferencesEventLog {")
 edit(
     WGPU,
     """fn decode_ui_preferences_event_log(raw: &str) -> Option<UiPreferencesEventLog> {

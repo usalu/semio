@@ -54,7 +54,7 @@ UNSTATED = {}
 UNSTATED_REASON = (
     "this implementation refuses this kind rather than guessing it. A text block does not hold its paragraphs: it holds a COMPOSED CHILD HANDLE "
     "`{childId, target}` into an `s.stdio.semio@v1/text` document. The committed vector's whole observable effect is that handle's `childId` moving "
-    "from `note-text-eea42a3b80b1052b` to `note-text-938222b3522927c6` — a content address of the child AFTER the new paragraphs are written — and no "
+    "from `note-text-2252e245395c55b7` to `note-text-7e026b3251baa149` — a content address of the child AFTER the new paragraphs are written — and no "
     "document in this repository states the addressing function or the child text document's canonical encoding. `mutate-program-1` reports the "
     "identical blocker over `knowledge`/`benchmarks`, `mutate-block-3d-1` over `catalog`, and `mutate-en1990-1`'s two red scenarios are the same "
     "finding again: publishing the child-addressing rule closes all of them, and no comparison profile moves."

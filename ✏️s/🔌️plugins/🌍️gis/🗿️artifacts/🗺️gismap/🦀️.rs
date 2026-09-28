@@ -142,7 +142,7 @@ pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_i
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: GISMAP_DIALECT.artifact_kind.into(),
-        name: "2D Map".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("2D Map", "2D-Karte"),
         source_format: GIS_MAP_SCHEMA.into(),
         component_kind: "gismap".into(),
         dimension: "2d".into(),

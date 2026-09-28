@@ -85,7 +85,7 @@ async fn dispatching_set_vertex_for_a_stale_selection_is_refused() {
 async fn dispatching_set_vertex_refuses_duplicate_vertex_ids() {
     let mut snapshot = one_vertex_snapshot();
     snapshot.vertices.push(snapshot.vertices[0].clone());
-    assert!(move_vertex_mutation(&snapshot, "v1", [1.0, 1.0, 1.0]).expect_err("ambiguous target").to_string().contains("ambiguous"));
+    assert!(move_vertex_mutation(&snapshot, "v1", [1.0, 1.0, 1.0]).expect_err("ambiguous target").describe().contains("ambiguous"));
 }
 
 #[semio_framework_async_macros::async_test]

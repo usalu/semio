@@ -38,7 +38,7 @@ fn find_select<'a>(node: &'a UiNode, id: &str) -> Option<&'a UiSelectNode> {
 }
 
 fn dispatch(shell: &mut ShellState, action: &str, args: Value) {
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) })).expect("driver editor action");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(args)) })).expect("driver editor action");
 }
 
 #[test]

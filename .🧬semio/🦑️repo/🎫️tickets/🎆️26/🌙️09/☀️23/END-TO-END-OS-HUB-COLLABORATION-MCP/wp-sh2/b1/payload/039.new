@@ -24,12 +24,19 @@ pub fn local_studio_id(node_id: &str) -> &str {
     node_id.strip_prefix("studio:").unwrap_or(node_id)
 }
 
-pub fn handle(payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+/// 🚫️ The direct lane cannot tell a hub space from a local studio: removal runs only as the retained job.
+pub fn handle(_payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    Err(Fault::from("s.home.delete-vfs-node.requires-retained-job"))
+}
+
+/// 🪦️ The retained route: `hub_row` is the id's one folded directory row from the job's captured projection — a listed
+/// hub space is refused, because the hub directory owns its deletion.
+pub fn handle_with_row(payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, hub_row: Option<&store::os_directory::DirectorySpace>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let space_id = local_studio_id(&payload.node_id);
     if !local_studio_id_is_admissible(space_id) {
         return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.node-invalid", "the node id names no admissible local studio"));
     }
-    if cfg.snapshot.directory()?.spaces.contains_key(space_id) {
+    if hub_row.is_some() {
         return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.hub-space", format!("{space_id} is a hub space; the hub directory deletes it (Delete Space)")));
     }
     if cfg.snapshot.is_local_studio_retired(space_id) {

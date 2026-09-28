@@ -52,7 +52,7 @@ const SHORTCUTS: &[Shortcut] = &[
     Shortcut { id: "architect-catalogue.export", label: "Export ProgramSnapshot", action: "exportProgram", args: &[] },
     Shortcut { id: "architect-catalogue.import", label: "Import ProgramSnapshot", action: "importProgramRequest", args: &[] },
     Shortcut { id: "architect-catalogue.export-csv", label: "Export Registers CSV", action: "exportRegistersCsv", args: &[] },
-    Shortcut { id: "architect-catalogue.import-csv", label: "Import Registers CSV", action: "importRegistersCsv", args: &[("csv", ShortcutArg::Text("")), ("strategy", ShortcutArg::Text("upsert"))] },
+    Shortcut { id: "architect-catalogue.import-csv", label: "Import Registers CSV", action: "importRegistersCsvRequest", args: &[] },
     Shortcut { id: "architect-catalogue.apply-template", label: "Apply Template", action: "applyTemplate", args: &[("templateId", ShortcutArg::Text(""))] },
     Shortcut { id: "architect-catalogue.search", label: "Search ProgramSnapshot", action: "search", args: &[("query", ShortcutArg::Text(""))] },
 ];

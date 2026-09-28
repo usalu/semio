@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "change-vortex-kind-color/recolors-door-vortex-kind: applied state differs from committed after-snapshot");
     assert_eq!(
         (snapshot.vortex_kind_extra[0].color.as_str(), snapshot.catalog.child_id.as_str()),
-        ("hsl(0 0% 10%)", "catalog-a602bbe51a39cd44"),
+        ("hsl(0 0% 10%)", "catalog-96e060ca37422012"),
         "change-vortex-kind-color lives entirely in the overflow half, so the composed catalog handle must not move"
     );
 }

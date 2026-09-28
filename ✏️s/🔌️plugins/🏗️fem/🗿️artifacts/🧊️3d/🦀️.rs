@@ -293,7 +293,7 @@ pub use crate::standards::v1::subsets::any::schema::Fem3dArtifact;
 pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "computation.fem3d".into(),
-        name: "FEM 3D Results".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("FEM 3D Results", "FEM-3D-Ergebnisse"),
         source_format: "computation.fem3d".into(),
         component_kind: "fem3d-results".into(),
         dimension: "computation".into(),

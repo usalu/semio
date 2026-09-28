@@ -14,6 +14,15 @@ pub const PUZZLE_COMMAND_OUTPUT_BYTES: usize = 262_144;
 pub const PUZZLE_COMMAND_STEP_MICROS: u32 = 7_500;
 pub const PUZZLE_COMMAND_CHECKPOINT_BYTES: usize = 120;
 
+/// 📥️ Largest file ONE puzzle import may carry — the budget one export may stream ([`PUZZLE_COMMAND_OUTPUT_BYTES`]), so
+/// a file a puzzle app wrote is always a file it can read back.
+pub const PUZZLE_IMPORT_TOTAL_BYTES: usize = PUZZLE_COMMAND_OUTPUT_BYTES;
+
+/// 📏️ Raw wire bytes of the largest command a puzzle route carries: one WHOLE import (the framework reassembles the
+/// picked file before `importFixture` runs, `semio_framework::kernel::ImportStaging`) as a JSON string — at most two
+/// wire bytes per text byte once escaped (`"`, `\` and the JSON whitespace escapes) — plus one command envelope.
+pub const PUZZLE_IMPORT_RAW_BYTES: usize = 2 * PUZZLE_IMPORT_TOTAL_BYTES + PUZZLE_COMMAND_RAW_BYTES;
+
 /// 📏️ Bytes one `WireBytes` ladder step admits from the assembled wire owner.
 ///
 /// 🧨️ Derived from the wire's OWN page extent ([`semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES`]),

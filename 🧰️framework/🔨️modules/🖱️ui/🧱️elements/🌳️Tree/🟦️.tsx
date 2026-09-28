@@ -32,7 +32,7 @@ import { Slider } from "../🎚️Slider/🟦️.tsx";
 import { Stepper } from "../🪜️Stepper/🟦️.tsx";
 import { Textarea } from "../🔤️Textarea/🟦️.tsx";
 import { Toggle } from "../🔀️Toggle/🟦️.tsx";
-import { childElementId } from "../🆔️ElementId/🟦️.tsx";
+import { childElementId, elementIdSegment, isElementId } from "../🆔️ElementId/🟦️.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -2556,7 +2556,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   windowRowIndex,
   windowRowExtent,
 }) => {
-  const disclosureLabelId = reactHostPort.useId();
+  const generatedLabelId = reactHostPort.useId();
+  const disclosureLabelId = id !== undefined && isElementId(id) ? childElementId(id, "disclosureLabel") : childElementId("ui.tree.disclosureLabel", elementIdSegment(generatedLabelId));
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const controlHint = useControlAccessibleLabel(id);

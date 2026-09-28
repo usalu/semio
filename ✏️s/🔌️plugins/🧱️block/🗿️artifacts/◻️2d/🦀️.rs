@@ -108,7 +108,7 @@ pub const BLOCK2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plu
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.block".into(),
-        name: "Node Kind".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Node Kind", "Knotentyp"),
         source_format: BLOCK_2D_SCHEMA.into(),
         component_kind: "block2d".into(),
         dimension: "2d".into(),
@@ -137,7 +137,7 @@ pub const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 pub fn kit_catalog_artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: KIT_CATALOG_ARTIFACT_ID.into(),
-        name: "Kit Catalog".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
         source_format: KIT_CATALOG_ARTIFACT_ID.into(),
         component_kind: "kit-catalog".into(),
         dimension: "3d".into(),

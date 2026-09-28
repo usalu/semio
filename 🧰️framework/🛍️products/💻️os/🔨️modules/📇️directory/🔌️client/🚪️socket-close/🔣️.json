@@ -6,6 +6,7 @@
     "protocolMismatch": { "code": 4002, "rfc6455": 1002, "reason": "socket protocol mismatch" },
     "actorActivationFailed": { "code": 4008, "rfc6455": 1008, "reason": "browser actor activation failed" },
     "checkpointPairRefused": { "code": 4008, "rfc6455": 1008, "reason": "canonical checkpoint pair refused" },
-    "actorMismatch": { "code": 4008, "rfc6455": 1008, "reason": "socket actor mismatch" }
+    "actorMismatch": { "code": 4008, "rfc6455": 1008, "reason": "socket actor mismatch" },
+    "actorLost": { "code": 4008, "rfc6455": 1008, "reason": "browser actor lost" }
   }
 }

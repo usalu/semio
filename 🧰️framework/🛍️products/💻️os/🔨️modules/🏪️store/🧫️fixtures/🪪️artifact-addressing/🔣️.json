@@ -278,5 +278,42 @@
         "kind": "head"
       }
     }
+  ],
+  "contentIds": [
+    {
+      "prefix": "catalog",
+      "text": "[]",
+      "id": "catalog-4f53cda18c2baa0c"
+    },
+    {
+      "prefix": "note-text",
+      "text": "block-1\u001f[{\"text\":\"Hallo\"}]",
+      "id": "note-text-700551871999c4d6"
+    },
+    {
+      "prefix": "document",
+      "text": "{\"schema\":\"s.stdio.semio.document\",\"text\":\"ä€😀\"}",
+      "id": "document-c91eb193d2f5fac7"
+    },
+    {
+      "prefix": "x",
+      "text": "",
+      "id": "x-e3b0c44298fc1c14"
+    },
+    {
+      "prefix": "raster-asset",
+      "text": "image/png\u001fPNG",
+      "id": "raster-asset-896471b22184bc6a"
+    },
+    {
+      "prefix": "shape-model",
+      "text": "{\"nodes\":[{\"id\":\"n0\"},{\"id\":\"n1\"},{\"id\":\"n2\"},{\"id\":\"n3\"},{\"id\":\"n4\"},{\"id\":\"n5\"},{\"id\":\"n6\"},{\"id\":\"n7\"},{\"id\":\"n8\"},{\"id\":\"n9\"},{\"id\":\"n10\"},{\"id\":\"n11\"}]}",
+      "id": "shape-model-b659fe1256b344e8"
+    },
+    {
+      "prefix": "remodeling-mesh-io",
+      "text": "chunk-a\u001fchunk-b\u001fchunk-c",
+      "id": "remodeling-mesh-io-4e33bc2a1cf68f4f"
+    }
   ]
 }

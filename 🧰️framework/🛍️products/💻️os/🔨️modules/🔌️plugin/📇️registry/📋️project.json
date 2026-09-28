@@ -73,7 +73,17 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "repo:generator-inputs"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": ".🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
+        }
+      ]
     },
     "rebuild-all": {
       "executor": "nx:run-commands",

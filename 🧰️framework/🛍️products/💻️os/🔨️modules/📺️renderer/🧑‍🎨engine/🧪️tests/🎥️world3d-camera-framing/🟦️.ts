@@ -46,7 +46,7 @@ function framed(camera: FixtureCamera) {
   // 📐️ The fixture's `projection` is the full projection SPEC; a camera state's own `projection`
   // is the orbit mode the spec resolves to, which is the same `parallel` decision the scene camera
   // above is built from.
-  return world3dFrameCameraFromBounds(center, radius, { ...camera, projection: parallel ? "orthographic" : "perspective", explicitProjection: camera.projection !== undefined }, fixture.fit.padding, aspect);
+  return world3dFrameCameraFromBounds(center, radius, { ...camera, projection: parallel ? "orthographic" : "perspective", explicitProjection: camera.projection !== undefined, projectionFrame: "content" }, fixture.fit.padding, aspect);
 }
 
 describe("🎥️ world3d current React camera framing", () => {

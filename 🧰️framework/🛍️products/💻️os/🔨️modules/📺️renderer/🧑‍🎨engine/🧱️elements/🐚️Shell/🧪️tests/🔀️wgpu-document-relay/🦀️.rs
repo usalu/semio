@@ -156,7 +156,7 @@ fn every_sync_card_verb_republishes_the_sync_panel() {
     shell.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
     for (action, args) in [("selectRemote", None), ("setSyncDraft", Some(serde_json::json!({ "value": "127.0.0.1:7800/space-1/doc-a" })))] {
         let before = shell.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header before");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) })).expect("sync card verb");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: args.map(semio_framework::DslValue::from) })).expect("sync card verb");
         let after = shell.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header after");
         assert!(after.revision != before.revision && after.generation > before.generation, "{action} republished the sync panel");
     }

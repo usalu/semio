@@ -12,9 +12,9 @@ import { fileURLToPath } from "node:url";
  * drift identically in the Rust module, in the fixture and in every owning artifact's definition
  * before both halves agreed again.
  *
- * 🧩️ The chunk ledger is re-derived from the fixture's own prose rather than called: an import
- * arrives one chunk at a time, so a run that staged, retransmitted or gapped differently in one
- * implementation would answer a different `nextChunk` here.
+ * 📦️ The framework reassembles a picked file's chunks before the import runs
+ * (`semio_framework::kernel::ImportStaging`, whose `stagingCases` live in the kernel's own
+ * `🧫️fixtures/📤️file-open-import/🔣️.json`), so this surface states only the one size refusal.
  *
  * @see ./🦀️.rs — the Rust half, which additionally drives `parry3d` over every geometry format.
  * @see ../../🦀️.rs — `document_io`, the module under test.
@@ -42,19 +42,6 @@ interface ActionRow {
   readonly chord?: string;
 }
 
-interface ChunkCase {
-  readonly id: string;
-  readonly payloadBytes: number;
-  readonly chunks: number;
-}
-
-interface StagingCase {
-  readonly id: string;
-  readonly events: readonly { readonly chunk: number; readonly chunkCount: number }[];
-  readonly outcome: string;
-  readonly nextChunk?: number;
-}
-
 interface ArtifactSurfaceFixture {
   readonly schema: string;
   readonly artifactKind: string;
@@ -64,7 +51,6 @@ interface ArtifactSurfaceFixture {
   readonly editorActions: readonly ActionRow[];
   readonly viewerActions: readonly ActionRow[];
   readonly publicationLanes: Record<string, Record<string, readonly string[]>>;
-  readonly chunking: { readonly chunkBytes: number; readonly cases: readonly ChunkCase[]; readonly staging: readonly StagingCase[] };
   readonly faultCodes: Record<string, string>;
   readonly dataUrl: { readonly cases: readonly { readonly id: string; readonly payload: string; readonly bytes: string }[] };
 }
@@ -96,66 +82,6 @@ function stdioRepresentations(stdioRoot: string): Map<string, StdioRepresentatio
   return found;
 }
 //#endregion 🗄️OwningArtifacts
-
-//#region 📥️ChunkLedger
-/** 📥️ The host's slicing, re-derived: a payload is cut by UTF-8 EXTENT so no slice ever splits a
- * code point, and an empty payload is still one chunk (there is always something to deliver). */
-function chunksOf(payload: string, chunkBytes: number): string[] {
-  const pages: string[] = [];
-  let page = "";
-  let pageBytes = 0;
-  for (const character of payload) {
-    const code = character.codePointAt(0) ?? 0;
-    const characterBytes = code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
-    if (pageBytes + characterBytes > chunkBytes) {
-      pages.push(page);
-      page = "";
-      pageBytes = 0;
-    }
-    page += character;
-    pageBytes += characterBytes;
-  }
-  if (page.length > 0 || pages.length === 0) pages.push(page);
-  return pages;
-}
-
-type LedgerStep = { readonly kind: "complete"; readonly pages: number } | { readonly kind: "staged"; readonly nextChunk: number; readonly chunkCount: number } | { readonly kind: "fault"; readonly fault: string };
-
-/** 🧵️ The staging ledger, re-derived from the fixture's prose: a run keyed by `(name, chunkCount)`
- * admits chunks in order, acknowledges a retransmission at the cursor it stands on, and drops itself
- * on a gap rather than resuming into bytes nobody can account for. */
-class ImportLedger {
-  private run: { name: string; chunkCount: number; nextChunk: number; pages: number } | undefined;
-
-  admit(name: string, chunk: number, chunkCount: number, maximumChunks: number): LedgerStep {
-    if (chunkCount === 0 || chunkCount > maximumChunks || chunk >= chunkCount) return { kind: "fault", fault: "envelope" };
-    if (chunkCount === 1) return { kind: "complete", pages: 1 };
-    const held = this.run && this.run.name === name && this.run.chunkCount === chunkCount ? this.run : undefined;
-    if (!held) {
-      if (chunk !== 0) return { kind: "fault", fault: "gap" };
-      this.run = { name, chunkCount, nextChunk: 0, pages: 0 };
-    } else if (held.nextChunk !== chunk) {
-      if (chunk !== 0 && chunk < held.nextChunk) return { kind: "staged", nextChunk: held.nextChunk, chunkCount: held.chunkCount };
-      if (chunk !== 0) {
-        this.run = undefined;
-        return { kind: "fault", fault: "gap" };
-      }
-      this.run = { name, chunkCount, nextChunk: 0, pages: 0 };
-    }
-    const run = this.run!;
-    run.pages += 1;
-    run.nextChunk = chunk + 1;
-    if (run.nextChunk < run.chunkCount) return { kind: "staged", nextChunk: run.nextChunk, chunkCount: run.chunkCount };
-    const pages = run.pages;
-    this.run = undefined;
-    return { kind: "complete", pages };
-  }
-
-  get open(): number {
-    return this.run ? 1 : 0;
-  }
-}
-//#endregion 📥️ChunkLedger
 
 /** 📦️ The payload shapes a shell can answer a file pick with, decoded independently. */
 function decodePayload(payload: string): string {
@@ -203,7 +129,7 @@ export function testGeneration3dDocumentIoSurface(): void {
 
   // 🎬️ Both surfaces really OFFER the verbs — the finding this lane closed was that neither did.
   const editorIds = fixture.editorActions.map((row) => row.id);
-  assert.deepEqual(editorIds, ["importDocumentRequest", "exportDocument", "importDocument"], "the editor offers the picker, the export and the chunk sink");
+  assert.deepEqual(editorIds, ["importDocumentRequest", "exportDocument", "importDocument"], "the editor offers the picker, the export and the import sink");
   assert.deepEqual(fixture.viewerActions.map((row) => row.id), ["exportDocument"], "a viewer exports and never imports");
   for (const row of [...fixture.editorActions, ...fixture.viewerActions]) {
     assert.ok(row.labelEn.length > 0 && row.labelDe.length > 0, `${row.id}: both languages`);
@@ -217,47 +143,16 @@ export function testGeneration3dDocumentIoSurface(): void {
   assert.deepEqual(fixture.publicationLanes.editor.exportDocument, ["HostOnly"]);
   assert.deepEqual(fixture.publicationLanes.editor.importDocumentRequest, ["HostOnly"]);
 
-  // 📦️ One payload is cut into exactly the declared chunks, and the chunks reassemble it.
-  for (const row of fixture.chunking.cases) {
-    const payload = "x".repeat(row.payloadBytes);
-    const chunks = chunksOf(payload, fixture.chunking.chunkBytes);
-    assert.equal(chunks.length, row.chunks, `${row.id}: chunk count`);
-    assert.ok(chunks.every((chunk) => new TextEncoder().encode(chunk).length <= fixture.chunking.chunkBytes), `${row.id}: no chunk exceeds the extent`);
-    assert.equal(chunks.join(""), payload, `${row.id}: the chunks reassemble the payload`);
-  }
-  // 🔤️ A multi-byte payload is still sliced by UTF-8 extent, never by code unit.
-  const multibyte = "ü".repeat(fixture.chunking.chunkBytes);
-  for (const chunk of chunksOf(multibyte, fixture.chunking.chunkBytes)) assert.ok(new TextEncoder().encode(chunk).length <= fixture.chunking.chunkBytes, "a non-ASCII payload still respects the byte extent");
-
-  // 🧵️ Every declared arrival answers the same step, which is what an import's progress and
-  // cancellation are made of.
-  const maximumChunks = 16;
-  for (const row of fixture.chunking.staging) {
-    const ledger = new ImportLedger();
-    let step: LedgerStep | undefined;
-    for (const event of row.events) step = ledger.admit("cube.stl", event.chunk, event.chunkCount, maximumChunks);
-    assert.ok(step, `${row.id}: at least one event`);
-    if (row.outcome === "complete") {
-      assert.equal(step.kind, "complete", `${row.id}: the run closed`);
-      assert.equal(ledger.open, 0, `${row.id}: a closed run holds no slot`);
-    } else if (row.outcome === "staged") {
-      assert.equal(step.kind, "staged", `${row.id}: the run is still open`);
-      assert.equal((step as { nextChunk: number }).nextChunk, row.nextChunk, `${row.id}: the progress cursor`);
-      assert.equal(ledger.open, 1, `${row.id}: exactly one run stays open`);
-    } else {
-      assert.equal(step.kind, "fault", `${row.id}: the arrival was refused`);
-      assert.equal((step as { fault: string }).fault, row.outcome, `${row.id}: which fault`);
-      assert.ok(fixture.faultCodes[row.outcome], `${row.id}: the fault carries a stable wire code`);
-      assert.equal(ledger.open, 0, `${row.id}: a refused run keeps no slot`);
-    }
-  }
+  // 📏️ An import refuses by size only, with one stable code: the framework hands the whole picked file.
+  assert.deepEqual(Object.keys(fixture.faultCodes), ["capacity"], "the import's one refusal is its size budget");
+  assert.match(fixture.faultCodes.capacity ?? "", /^generation3d-import-/u, "the capacity code is this artifact's own");
 
   // 📦️ Every shape a shell can answer a pick with decodes to the same bytes.
   for (const row of fixture.dataUrl.cases) assert.equal(decodePayload(row.payload), row.bytes, `${row.id}: decoded payload`);
 
   console.log(
     `generation3d artifact-io export=${fixture.exportFormats.length} import=${fixture.importFormats.length} ` +
-      `editorActions=${fixture.editorActions.length} viewerActions=${fixture.viewerActions.length} chunkBytes=${fixture.chunking.chunkBytes} ` +
-      `chunkCases=${fixture.chunking.cases.length} stagingCases=${fixture.chunking.staging.length} accept=${fixture.acceptFilter}`,
+      `editorActions=${fixture.editorActions.length} viewerActions=${fixture.viewerActions.length} faultCodes=${Object.keys(fixture.faultCodes).join(",")} ` +
+      `accept=${fixture.acceptFilter}`,
   );
 }

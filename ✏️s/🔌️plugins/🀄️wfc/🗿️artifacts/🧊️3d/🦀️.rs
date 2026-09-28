@@ -32,7 +32,7 @@ pub const WFC3D_DIALECT: Dialect = Dialect { artifact_kind: WFC3D_DOCUMENT_SCHEM
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.wfc3d".into(),
-        name: "3D".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D", "3D"),
         source_format: WFC3D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfc3d".into(),
         dimension: "3d".into(),

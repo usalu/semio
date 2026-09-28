@@ -138,7 +138,7 @@ pub struct Block5dGripTemplate {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
-        name: "Part Kind".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Part Kind", "Bauteiltyp"),
         source_format: BLOCK_5D_SCHEMA.into(),
         component_kind: "block5d".into(),
         dimension: "5d".into(),

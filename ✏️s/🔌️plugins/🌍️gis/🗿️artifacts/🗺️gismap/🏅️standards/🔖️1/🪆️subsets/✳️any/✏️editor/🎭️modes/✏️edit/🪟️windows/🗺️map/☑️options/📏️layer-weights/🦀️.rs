@@ -41,7 +41,7 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
             ready: None,
             loading: None,
             disabled: None,
-            on_change: gis2d_window_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
+            on_change: gis2d_window_action("setLayerStrokeScale", Some(semio_framework_plugin::dsl_value!({ "layerId": layer_id }))),
             waiting: None,
         })
         .collect();

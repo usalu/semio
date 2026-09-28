@@ -476,7 +476,7 @@ fn retained_snapshot(machine_count: usize) -> Process3dSnapshot {
 }
 
 fn retained_operation() -> AppOperationContext {
-    AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] }
+    AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() }
 }
 
 fn drive_resumable_work(

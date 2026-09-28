@@ -128,8 +128,8 @@ pub fn gis2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
 }
 
 /// 🪟️ Bridges semantic app actions into the retained window-measure transport.
-pub fn gis2d_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: GIS2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub fn gis2d_window_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GIS2D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 /// 🏷️ Admits resolved app text into the semantic UI contract.
@@ -845,6 +845,7 @@ impl ArtifactEditor for Gis2dPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

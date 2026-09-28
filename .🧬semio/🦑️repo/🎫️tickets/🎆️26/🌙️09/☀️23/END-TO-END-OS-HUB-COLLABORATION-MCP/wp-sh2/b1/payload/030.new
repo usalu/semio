@@ -74,6 +74,7 @@ import {
   decodeAppCommand,
   decodePackWire,
   decodePackValue,
+  faultDisplayMessage,
   documentRuntimeKeyV1,
   encodeBackboneMessage,
   encodeBackboneWorkerRequest,
@@ -97,15 +98,16 @@ import type { PackValue } from "../../../🟦️";
 import { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1 } from "../../../../../../🌎️hub/💡️inference/🧬️schema/🟦️.ts";
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, COMMAND_INGRESS_KINDS, boundChildText, measureChildValue, type CommandIngressKindV1 } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { driveSpawnedJob, spawnedJobCompletedEvent, TYPED_OPERATION_LANE_ARTIFACT, TYPED_OPERATION_LANE_FAULT, typedOperationResult, wireSpawnJob } from "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { driveSpawnedJob, spawnedJobCompletedEvent, typedOperationPageAnswerV1, typedOperationResult, wireSpawnJob } from "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
@@ -197,7 +199,7 @@ import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeo
 /** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
 import type { Identity } from "../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️";
-import { LOCAL_CATALOG_CONFIG_SCHEMA } from "../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️";
+import { LOCAL_CATALOG_CONFIG_SCHEMA } from "../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts";
 import { spaceArtifactCreationPollDelayV1, spaceArtifactCreationUnreachableV1 } from "./🌱️creation-polling/🟦️.ts";
 import { executionTargetRetrySleepV1, requestExecutionTargetAssetV1 } from "./🔁️execution-target-retry/🟦️.ts";
 import { closeHubSocketV1 } from "../../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
@@ -418,6 +420,8 @@ export type BackboneWorkerTestDependencies = {
   readonly documentExecutionTargetStatusRoleV1: typeof documentExecutionTargetStatusRoleV1;
   readonly documentOpenPlanAuthority: typeof documentOpenPlanAuthority;
   readonly documentRuntimeKeyForConfig: typeof documentRuntimeKeyForConfig;
+  readonly newArtifactState: typeof newArtifactState;
+  readonly requestDocumentActorRecoveryV1: typeof requestDocumentActorRecoveryV1;
   readonly documentRuntimeKeyV1: typeof documentRuntimeKeyV1;
   readonly driveInferencePort: typeof driveInferencePort;
   readonly dropDocumentExecutionTargetLease: typeof dropDocumentExecutionTargetLease;
@@ -622,6 +626,10 @@ export type ArtifactState = {
   artifactRebootstrapDeadlineMs: number | null;
   artifactRebootstrapDeadlineTimer: ReturnType<typeof setTimeout> | null;
   artifactRebootstrapRequired: boolean;
+  /** 🚑️ The document's actor-recovery memory (`🚑️actor-recovery`) and whether the socket closing now is a recovery close that
+   * reconnects at once. */
+  actorRecovery: DocumentActorRecoveryMemoryV1;
+  actorRecoveryRequested: boolean;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
   canonicalFolderMirror: FolderCanonicalBootstrapMirrorOwner | null;
   verifiedColdPair: VerifiedColdDocumentPair | null;
@@ -1682,12 +1690,34 @@ function forgetMountedDocument(state: ArtifactState): void {
  * a reconnect's plan named another execution target than the suspended child's — and, when a child was mounted, tells the Shell to
  * discard its stale surface exactly as a rebuild does (`artifact-rebootstrap-required`): the connection that follows seeds a fresh
  * child from the hub's active checkpoint and replays the unsent operations on top. */
-function retireMountedDocumentChild(state: ArtifactState): void {
+function retireMountedDocumentChild(state: ArtifactState, cause: "rebootstrap-required" | "actor-lost" = "rebootstrap-required"): void {
   const mounted = state.verifiedColdPair !== null || state.browserActorReservation !== null;
   dropDocumentExecutionTargetLease(state);
   if (!mounted || state.closed || state.docAbort.signal.aborted || state.artifactRebootstrapRequired) return;
   const scope = artifactScope(state);
-  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
+  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), message: cause, retryable: true });
+}
+
+/** 🚑️ A mounted browser actor was lost without anyone asking — its action's outcome unconfirmed, its child faulted on an inbound
+ * hub frame, a render turn failed ({@link DOCUMENT_ACTOR_RECOVERY_V1}). The in-flight batches go back to the outbox front (their
+ * outcome is unknown; the hub settles what it already holds), the mounted child retires as `actor-lost`, and the socket ends
+ * with `actorLost` so the reconnect loop reopens AT ONCE — a new plan, lease and actor seeded from the hub's checkpoint pair and
+ * tail, the outbox resent in order. Past the policy's bound the document gets the typed fault instead and no further actor. */
+function requestDocumentActorRecoveryV1(state: ArtifactState, cause: DocumentActorLossCauseV1): void {
+  if (state.closed || state.docAbort.signal.aborted) return;
+  const step = documentActorRecoveryStepV1(state.actorRecovery, { kind: "lost", cause, atMs: Date.now() });
+  state.actorRecovery = step.memory;
+  requeuePendingBatches(state);
+  if (step.decision === "exhausted") {
+    dropDocumentExecutionTargetLease(state);
+    const scope = artifactScope(state);
+    post({ kind: "artifact-bootstrap-failed", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), code: "recovery-exhausted", message: `${DOCUMENT_ACTOR_RECOVERY_V1.exhaustedFault} (${cause})`, retryable: false });
+    return;
+  }
+  state.actorRecoveryRequested = true;
+  retireMountedDocumentChild(state, "actor-lost");
+  const socket = state.socket;
+  if (socket !== null && socket.readyState === WebSocket.OPEN) closeHubSocketV1(socket, "actorLost");
 }
 
 export type DocumentBrowserActorChild = Awaited<ReturnType<typeof reserveBrowserActorChild>>;
@@ -1943,7 +1973,15 @@ function browserActorActionDisposition(request: BrowserActorActionRequestV1, out
   };
 }
 
-type BrowserActorActionPublication = { readonly kind: "ui-intent" | "app-command"; readonly sequence: number; frames: number; readonly hostEffects: (readonly number[])[]; readonly historyPatches: (readonly number[])[] };
+type BrowserActorActionPublication = { readonly kind: "ui-intent" | "app-command"; readonly sequence: number; frames: number; readonly refusals: string[]; readonly hostEffects: (readonly number[])[]; readonly historyPatches: (readonly number[])[] };
+
+/** 🚫️ The guest refused the action (a typed-operation fault page or its `AppFrame::Error` reply) — raised only after the
+ * whole turn was answered, so the actor stays open; `detail` is the guest's first fault as the shell displays it. */
+class BrowserActorGuestRefusalV1 extends Error {
+  constructor(readonly detail: string | null) {
+    super("action-guest-refused");
+  }
+}
 
 function browserActorCommandIngressStatus(value: BrowserActorChildValue): CommandIngressKindV1 {
   const ingress = browserActorRecord(browserActorTurnResult(value).commandIngress, "document browser actor: invalid command ingress"),
@@ -2164,7 +2202,7 @@ class DocumentBrowserActorReservation {
    * `unsupported host effect publish-event`, hub 7800, ticket 26/09/23 C10). An app command's invocation projects the
    * OPERATION envelopes it sent; history transitions (undo, redo, checkpoint commit — `HISTORY_TRANSITION_DIFF_SCHEMA`)
    * are framework records no invocation projects, so a checkpoint's transition is routed without a projection. */
-  private async routeTurnEffects(value: BrowserActorChildValue, mode: "ordinary" | "control" | BrowserActorActionPublication = "ordinary"): Promise<Readonly<{ receipts: readonly Uint8Array[]; mutations: number; publications: number; hostEffects: readonly (readonly number[])[]; historyPatches: readonly (readonly number[])[]; jobs: readonly BrowserActorSpawnedJob[]; acknowledgements: readonly BrowserActorChildValue[] }>> {
+  private async routeTurnEffects(value: BrowserActorChildValue, mode: "ordinary" | "control" | BrowserActorActionPublication = "ordinary"): Promise<Readonly<{ receipts: readonly Uint8Array[]; mutations: number; publications: number; refusals: readonly string[]; hostEffects: readonly (readonly number[])[]; historyPatches: readonly (readonly number[])[]; jobs: readonly BrowserActorSpawnedJob[]; acknowledgements: readonly BrowserActorChildValue[] }>> {
     const result = browserActorTurnResult(value),
       effects = result.effects;
     if (effects !== undefined && !Array.isArray(effects)) throw new Error("document browser actor: invalid effects");
@@ -2175,6 +2213,7 @@ class DocumentBrowserActorReservation {
       acknowledgements: BrowserActorChildValue[] = [],
       messages: Readonly<{ payload: Uint8Array }>[] = [],
       commandEnvelopes: BrowserActorCommandBackboneEnvelopeV1[] = [];
+    const refusals: string[] = [];
     let mutations = 0,
       publications = 0,
       artifactPages = 0,
@@ -2200,9 +2239,10 @@ class DocumentBrowserActorReservation {
         if (target.val !== 0) throw new Error("document browser actor: foreign shell effect");
         const page = mode === "control" ? null : typedOperationResult({ tag: "send-message", val: { target: { tag: "shell", val: target.val }, payload } });
         if (page !== null) {
-          if (page.lane === TYPED_OPERATION_LANE_FAULT) throw new Error("action-guest-refused");
-          if (page.lane === TYPED_OPERATION_LANE_ARTIFACT) artifactPages += 1;
-          acknowledgements.push({ tag: "message", val: { source: { tag: "shell", val: page.token.receiver }, payload: Uint8Array.from(page.acknowledgement.payload.payload) } });
+          const answer = typedOperationPageAnswerV1(page);
+          if (answer.refused) refusals.push(faultDisplayMessage(Array.from(page.payload), decodePackValue));
+          if (answer.artifact) artifactPages += 1;
+          acknowledgements.push({ tag: "message", val: { source: { tag: "shell", val: page.token.receiver }, payload: Uint8Array.from(answer.acknowledgement.payload.payload) } });
           continue;
         }
         if (mode === "control") receipts.push(payload);
@@ -2213,7 +2253,10 @@ class DocumentBrowserActorReservation {
             continue;
           }
           if (publication.kind === "merge-report") continue;
-          if (publication.kind === "error") throw new Error(publication.reason);
+          if (publication.kind === "error") {
+            refusals.push(publication.detail);
+            continue;
+          }
           if (publication.kind !== "emit" && publication.historyPatch !== null) historyPatches.push(publication.historyPatch);
           if (publication.kind === "operation-completed") continue;
           if (publication.kind === "completion") {
@@ -2266,7 +2309,7 @@ class DocumentBrowserActorReservation {
     }
     await this.localEffectTail;
     if (this.localEffectFailure !== null) throw this.localEffectFailure;
-    return { receipts, mutations, publications, hostEffects: retainedHostEffects, historyPatches, jobs, acknowledgements };
+    return { receipts, mutations, publications, refusals, hostEffects: retainedHostEffects, historyPatches, jobs, acknowledgements };
   }
 
   private async bindDocumentBackbone(child: DocumentBrowserActorChild): Promise<void> {
@@ -2436,7 +2479,7 @@ class DocumentBrowserActorReservation {
         const child = this.child;
         if (child === null) throw new Error("action-child-unavailable");
         this.lastActionSequence = request.actionSequence;
-        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, hostEffects: [], historyPatches: [] };
+        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, refusals: [], hostEffects: [], historyPatches: [] };
         let mutationCount = 0;
         if (intent !== null) {
           invoked = true;
@@ -2460,14 +2503,19 @@ class DocumentBrowserActorReservation {
           }
           if (terminal !== "command-complete") throw new Error("action-command-ingress-unconfirmed");
         }
+        if (publication.refusals.length !== 0) throw new BrowserActorGuestRefusalV1(publication.refusals[0] ?? null);
         if (publication.frames !== 1) throw new Error("action-publication-mismatch");
         await this.refreshDocumentSurfaces(child, () => this.assertDocumentOwnerCurrent(), command !== null || mutationCount > 0);
+        this.state.actorRecovery = documentActorRecoveryStepV1(this.state.actorRecovery, { kind: "applied", atMs: Date.now() }).memory;
         return browserActorActionDisposition(request, "guest-applied", mutationCount, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
       });
     } catch (error) {
-      const explicitRefusal = error instanceof Error && error.message === "action-guest-refused";
-      if (invoked && !explicitRefusal) this.close();
-      const reason = error instanceof Error && /^(action-owner-mismatch|action-child-unavailable|action-guest-refused)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
+      const explicitRefusal = error instanceof BrowserActorGuestRefusalV1;
+      if (invoked && !explicitRefusal) {
+        this.close();
+        requestDocumentActorRecoveryV1(this.state, "action-unconfirmed");
+      }
+      const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
       return browserActorActionDisposition(request, "rejected", 0, [], reason);
     }
   }
@@ -2851,6 +2899,7 @@ class DocumentBrowserActorReservation {
         acknowledgements.push(...routed.acknowledgements);
         if (publication !== null) {
           publication.frames += routed.publications;
+          publication.refusals.push(...routed.refusals);
           publication.hostEffects.push(...routed.hostEffects);
           publication.historyPatches.push(...routed.historyPatches);
           parseBrowserActorHistoryPatchBytesV1(publication.historyPatches);
@@ -3106,6 +3155,7 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
   try {
     if (state.socket !== socket || !state.hubActorReady || state.actor !== lease.browserActorGrant()?.actorId) throw new Error("document browser actor: missing Session");
     if (documentBrowserActorLease(state).fields().browserActor.kind === "none") return;
+    if (state.actorRecovery.exhausted) return;
     lease.assertBrowserActorDescribeCapacity();
     owner = await reserveDocumentBrowserActorChild(state);
     if (!owner) throw new Error("document browser actor: reservation unavailable");
@@ -3129,6 +3179,7 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
       finishCatchupIfReady(state);
     }
     await owner.activate(socket);
+    state.actorRecovery = documentActorRecoveryStepV1(state.actorRecovery, { kind: "mounted", atMs: Date.now() }).memory;
   } catch (error) {
     const diagnostic = error instanceof Error ? error.message : String(error);
     owner?.close();
@@ -4059,7 +4110,8 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
         resolve();
         return;
       }
-      if (sustainedHealthReached || state.artifactRebootstrapRequired) {
+      if (sustainedHealthReached || state.artifactRebootstrapRequired || state.actorRecoveryRequested) {
+        state.actorRecoveryRequested = false;
         // ♻️ Resets the DISPLAY estimate to match the real reset: `reconnectForever` is about to
         // start a brand-new `retryWithJitteredBackoff` call for the next cycle. A close this worker made
         // to rebuild the document (`requireArtifactRebootstrap`) is no link failure either: the rebuild
@@ -4345,6 +4397,32 @@ function queueOutbox(state: ArtifactState, envelopes: readonly MutationEnvelope[
       state.outbox.push(envelope);
     }
   }
+}
+
+/** ✅️ Settles this replica's own operations the hub's log already holds: a `Commands` frame (a catch-up tail or a relay) that carries
+ * an operation still in the outbox or a pending batch proves the hub committed it although its `Ack` was lost with the socket, so it
+ * leaves both (an emptied batch leaves too), its retention is released, its echo stays suppressed, and it is never resent — a
+ * resend is re-stamped and the hub refuses it as a replayed operation. TS twin of the Rust `settle_committed_envelopes`, both
+ * replaying the parity scenario `lost-ack-committed-op-settles` (`🔄️sync/⚖️parity/🧫️fixtures`). */
+function settleCommittedEnvelopes(state: ArtifactState, committedIds: readonly string[]): void {
+  const committed = new Set(committedIds);
+  const settled = new Set<MutationEnvelope>();
+  const keep = (envelope: MutationEnvelope): boolean => {
+    if (!committed.has(state.exactLocalEnvelopes.get(envelope)?.envelope.mutation_id ?? envelope.id)) return true;
+    settled.add(envelope);
+    return false;
+  };
+  state.outbox = state.outbox.filter(keep);
+  for (const [batchId, batch] of [...state.pendingBatches]) {
+    const kept = batch.filter(keep);
+    if (kept.length === 0) state.pendingBatches.delete(batchId);
+    else state.pendingBatches.set(batchId, kept);
+  }
+  if (settled.size === 0) return;
+  releaseDocumentBackboneOwnership(state, [...settled]);
+  state.pendingMutations = state.pendingMutations.filter((envelope) => !settled.has(envelope));
+  setStatus(state, { pendingMutations: state.pendingMutations.length });
+  flushMutationsToHubIfReady(state);
 }
 
 function requeuePendingBatches(state: ArtifactState): void {
@@ -5004,6 +5082,7 @@ async function handleHubFrame(
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
+    settleCommittedEnvelopes(state, frame.Commands.envelopes.map(wireEnvelopeId));
     const fresh = admitRemoteEnvelopes(state.ingestedMutationIds, frame.Commands.envelopes, wireEnvelopeId);
     if (fresh.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
     if (fresh.length > 0 && commandBatch !== null) {
@@ -5015,8 +5094,13 @@ async function handleHubFrame(
       if (reservation === null && documentAwaitsBrowserActor(state)) retainBackboneBeforeBrowserActor(state, message);
       else if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
       else {
-        try { await reservation.receiveBackbone(message); }
-        catch (error) { reservation.close(); throw error; }
+        try {
+          await reservation.receiveBackbone(message);
+        } catch (error) {
+          console.error("[backbone-worker] the browser actor child refused an inbound hub frame; reopening from the last confirmed state", state.config.documentId, error);
+          requestDocumentActorRecoveryV1(state, "inbound-frame");
+          return;
+        }
       }
     }
     state.frontier = frame.Commands.frontier;
@@ -7195,16 +7279,15 @@ void putCachedBlob;
 //#endregion 🔖️BlobCache
 
 //#region 🔖️Lifecycle
-function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId?: string }): void {
-  const config: ArtifactActorConfig = request;
+/** 🌱️ A just-opened document's runtime state: nothing linked, nothing pending, no pair, no lease. The ONE constructor —
+ * {@link openArtifact} and every law's hand-built state go through it, so a new field is never missing from a test state.
+ * `revalidateFolder` is a no-op until {@link openArtifact} binds a folder. */
+function newArtifactState(config: ArtifactActorConfig, runtimeKey: string, channel: BroadcastChannel, openClientInstanceId: string): ArtifactState {
   const hub = hubBinding(config);
-  const runtimeKey = documentRuntimeKeyForConfig(config);
-  retireArtifactBeforeReplacement(runtimeKey);
-  const channel = new BroadcastChannel(`semio-doc-${runtimeKey}`);
-  const state: ArtifactState = {
+  return {
     runtimeKey,
     config,
-    openClientInstanceId: request.clientInstanceId ?? crypto.randomUUID(),
+    openClientInstanceId,
     actor: hub === null ? config.actor : "",
     hubActorReady: hub === null,
     pendingSocketActorId: null,
@@ -7223,7 +7306,7 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     browserActorViewState: null,
     sanityPollTimer: null,
     watchHealthy: false,
-    revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
+    revalidateFolder: async () => {},
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
     pendingMutations: [],
@@ -7242,6 +7325,8 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     artifactRebootstrapDeadlineMs: null,
     artifactRebootstrapDeadlineTimer: null,
     artifactRebootstrapRequired: false,
+    actorRecovery: DOCUMENT_ACTOR_RECOVERY_FRESH_V1,
+    actorRecoveryRequested: false,
     artifactBootstrapProgress: [],
     canonicalFolderMirror: null,
     verifiedColdPair: null,
@@ -7256,6 +7341,15 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     hlcCounter: 0,
     closed: false,
   };
+}
+
+function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId?: string }): void {
+  const config: ArtifactActorConfig = request;
+  const hub = hubBinding(config);
+  const runtimeKey = documentRuntimeKeyForConfig(config);
+  retireArtifactBeforeReplacement(runtimeKey);
+  const channel = new BroadcastChannel(`semio-doc-${runtimeKey}`);
+  const state = newArtifactState(config, runtimeKey, channel, request.clientInstanceId ?? crypto.randomUUID());
   artifacts.set(runtimeKey, state);
   channel.onmessage = (messageEvent) => {
     const value = messageEvent.data;
@@ -7603,9 +7697,9 @@ if (import.meta.vitest) {
     get workerPostTestSink() { return workerPostTestSink; },
     set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
   };
-  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
-  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
+  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
 
 }
 //#endregion 🧪️Tests

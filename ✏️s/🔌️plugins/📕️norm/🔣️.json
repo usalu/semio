@@ -71,7 +71,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -96,7 +142,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -1920,7 +2012,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -3057,7 +3195,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -3082,7 +3266,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -4906,7 +5136,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -6043,7 +6319,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -6068,7 +6390,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -7892,7 +8260,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -9029,7 +9443,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -9054,7 +9514,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -10878,7 +11384,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -12015,7 +12567,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -12040,7 +12638,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -13864,7 +14508,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -15001,7 +15691,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -15026,7 +15762,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -16850,7 +17632,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -17987,7 +18815,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -18012,7 +18886,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -19836,7 +20756,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -20973,7 +21939,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -20998,7 +22010,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -22822,7 +23880,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -23959,7 +25063,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -23984,7 +25134,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -25808,7 +27004,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -26945,7 +28187,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -26970,7 +28258,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -28794,7 +30128,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -29931,7 +31311,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -29956,7 +31382,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -31780,7 +33252,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -32917,7 +34435,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -32942,7 +34506,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -34766,7 +36376,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -35903,7 +37559,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -35928,7 +37630,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -37752,7 +39500,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -38889,7 +40683,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -38914,7 +40754,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -40738,7 +42624,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -41875,7 +43807,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -41900,7 +43878,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -43724,7 +45748,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -44912,7 +46982,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.80 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-5e913c6dbbe501b5 target=\"din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.80 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-36af55c7f03468dc target=\"din18599-climate-36af55c7f03468dc!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
           "standard": "1",
@@ -44932,7 +47002,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.80 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-5e913c6dbbe501b5 target=\"din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.80 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-36af55c7f03468dc target=\"din18599-climate-36af55c7f03468dc!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
           "standard": "1",
@@ -44952,7 +47022,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.1 automation-class=d heating=generation-efficiency=0.78 distribution-efficiency=0.9 storage-efficiency=0.98 transfer-efficiency=0.92 energy-carrier=heating_oil dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=450 distribution-loss-kwh-a=300 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0 fan-power-w=0 cooling= lighting=control-factor=1 renewables=pv-area-m2=0 pv-efficiency=0.18 solar-thermal-kwh-a=0 climate=child_id=din18599-climate-5e913c6dbbe501b5 target=\"din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.48 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.48 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.48 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.48 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.4 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.45 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 2.7 180 90 0.7 1 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 2.7 0 90 0.7 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 3 0 90 0.6 1 outdoor\n}\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.1 automation-class=d heating=generation-efficiency=0.78 distribution-efficiency=0.9 storage-efficiency=0.98 transfer-efficiency=0.92 energy-carrier=heating_oil dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=450 distribution-loss-kwh-a=300 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0 fan-power-w=0 cooling= lighting=control-factor=1 renewables=pv-area-m2=0 pv-efficiency=0.18 solar-thermal-kwh-a=0 climate=child_id=din18599-climate-36af55c7f03468dc target=\"din18599-climate-36af55c7f03468dc!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 140 364 20 26 4 3.5 8\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.48 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.48 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.48 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.48 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.4 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.45 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 2.7 180 90 0.7 1 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 2.7 0 90 0.7 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 3 0 90 0.6 1 outdoor\n}\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
           "standard": "1",
@@ -44972,7 +47042,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.8 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-5e913c6dbbe501b5 target=\"din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 90 234 20 26 3 3.5 6\n  zone-office \"Home office\" Arbeitszimmer office 50 130 21 26 1 5 10\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-office 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-office 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=residential method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=500 storage-loss-kwh-a=200 distribution-loss-kwh-a=150 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.8 fan-power-w=60 cooling= lighting=control-factor=0.8 renewables=pv-area-m2=18 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-36af55c7f03468dc target=\"din18599-climate-36af55c7f03468dc!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen wfh 90 234 20 26 3 3.5 6\n  zone-office \"Home office\" Arbeitszimmer office 50 130 21 26 1 5 10\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-office 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-office 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
           "standard": "1",
@@ -44992,7 +47062,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=office method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=100 storage-loss-kwh-a=40 distribution-loss-kwh-a=30 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.8 fan-power-w=60 cooling=plant=eer=3.2 energy-carrier=electricity lighting=control-factor=0.8 renewables=pv-area-m2=80 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-5e913c6dbbe501b5 target=\"din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen office 140 364 20 26 4 6 10\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nbuilding-category=residential attachment=detached use-class=office method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=100 storage-loss-kwh-a=40 distribution-loss-kwh-a=30 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.8 fan-power-w=60 cooling=plant=eer=3.2 energy-carrier=electricity lighting=control-factor=0.8 renewables=pv-area-m2=80 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-36af55c7f03468dc target=\"din18599-climate-36af55c7f03468dc!s.stdio.semio@v1/table\"\nzones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {\n  zone-living Living Wohnen office 140 364 20 26 4 6 10\n}\nelements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {\n  wall-n \"North wall\" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor\n  wall-e \"East wall\" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor\n  wall-s \"South wall\" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor\n  wall-w \"West wall\" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor\n  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor\n  floor \"Ground floor\" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground\n  win-s \"South windows\" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor\n  win-n \"North windows\" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor\n  door \"Entrance door\" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor\n}\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
           "standard": "1",
@@ -45672,7 +47742,7 @@
           }
         },
         "iconId": "circle",
-        "artifactJson": "semio norm.iso16757.dsl v1\nexchange-process=integrateIntoSystem catalogue=id=cat.mfg-demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text=\"Demo HVAC catalogue\"\nalternatives [locale:TEXT text:TEXT] {\n  de \"Demo TGA-Katalog\"\n}\nlifecycle=revision=\"1\" status=published manufacturer=id=mfg-demo names=preferred=locale=en text=\"Demo Manufacturer\"\nalternatives [locale:TEXT text:TEXT] {\n  de \"Demo Hersteller\"\n}\ndictionary=id=hvac-dict version=\"2025-01\" accessories={\n}\ncompositions={\n  product-cv=[ component-product-id=product-cv quantity=1 ]\n}\nextensions=fields={\n}\nproduct-groups [id:TEXT names:REC dictionary-subject-id:TEXT] {\n  group-valves {preferred=locale=en text=Valves\n  alternatives [locale:TEXT text:TEXT] {\n    de Ventile\n  }\n  } subject-valve\n}\nproduct-classes [id:TEXT group-id:TEXT parent-id:TEXT names:REC required-property-ids:LIST optional-property-ids:LIST] {\n  class-valve group-valves _ {preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Regelventil\n  }\n  } [ prop-dn ] [ ]\n}\nproduct-series [id:TEXT class-id:TEXT names:REC shared-property-values:MAP geometry-id:TEXT] {\n  series-cv class-valve {preferred=locale=en text=\"CV series\"\n  alternatives [locale:TEXT text:TEXT] {\n    de CV-Serie\n  }\n  } {\n  }\n  geom-valve-50\n}\nproducts [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST static-properties:LIST] {\n  product-cv series-cv {preferred=locale=en text=CV-50\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } [ parameter-id=dn allowed-values=[ {\n    kind=\"decimal\" value=50.0\n  }\n  ] default-value={\n    kind=\"decimal\" value=50.0\n  }\n  ] [ id=variant-50 article-number=CV-50 geometry-id=geom.missing parameter-values={\n    dn={\n      kind=\"decimal\" value=999.0\n    }\n  }\n  property-values=[ ] ] [ ]\n}\nproduct-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {\n  index-cv50 product-cv variant-50 [ CV-50 product-cv dn50 ]\n  index-cv50-dup product-cv variant-50 [ dup ]\n}\nproperty-definitions [id:TEXT names:REC data-type:TEXT unit:REC cardinality:REC kind:ENUM dictionary-property-id:TEXT] {\n  prop-dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Nennweite\n  }\n  } decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} {min=1 max=1} static prop-dn\n}\ndescriptive-objects [id:TEXT media-type:TEXT uri:TEXT language:TEXT checksum:TEXT] {\n}\ndictionary=reference=id=hvac-dict version=\"2025-01\"\nsubjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n  subject-valve productClass {short-name=Valve preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Regelventil\n    fr \"Vanne de régulation\"\n  }\n  } {locale=en text=\"Flow control valve\"} _\n}\nrelationships [id:TEXT kind:ENUM source-id:TEXT target-id:TEXT cardinality:REC] {\n  rel-dangling hasPart subject-valve subject-missing {min=1 max=1}\n}\nproperties [id:TEXT names:REC kind:ENUM data-type:TEXT unit:REC applicable-subject-ids:LIST value-constraints:LIST] {\n  prop-dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Nennweite\n  }\n  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject-valve ] [ min=15 max=300 allowed-values=[ ] ]\n}\ncontrolled-lists [id:TEXT values:LIST context-subject-ids:LIST] {\n  dn-list [ \"50\" \"80\" \"100\" ] [ subject-valve ]\n}\nmeta-subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n}\ngeometry=objects={\n  geom-valve-50=id=geom-valve-50\n  shape {\n    primitive kind=box parameters={\n      depth=0.1 height=0.2 width=0.15\n    }\n  }\n  symbolic {\n  }\n  spaces=[ id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 ] surfaces=[ ] ports=[ ] parameter-bindings={\n    width=prop-dn\n  }\n}\nprimitive-registry [id:TEXT parameters:LIST] {\n  box [ width height depth ]\n  cylinder [ radius height ]\n  sphere [ radius ]\n}\nselection=class-id=class-valve series-id=series-cv constraints=[ id=constraint-dn property-id=prop-dn operator=equal value={\n  kind=\"decimal\" value=50.0\n}\n] part-number-rule={\n  function_id=\"partno\" kind=\"script\" source=\"dn * 10 + 50\"\n}\npart-number-inputs={\n  dn={\n    kind=\"decimal\" value=40.0\n  }\n}\nscript-limits=max-steps=0 max-recursion=0 timeout-ms=0\n",
+        "artifactJson": "semio norm.iso16757.dsl v1\nexchange-process=integrateIntoSystem catalogue=id=cat.mfg-demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text=\"Demo HVAC catalogue\"\nalternatives [locale:TEXT text:TEXT] {\n  de \"Demo TGA-Katalog\"\n}\nlifecycle=revision=\"1\" status=published manufacturer=id=mfg-demo names=preferred=locale=en text=\"Demo Manufacturer\"\nalternatives [locale:TEXT text:TEXT] {\n  de \"Demo Hersteller\"\n}\ndictionary=id=hvac-dict version=\"2025-01\" accessories={\n}\ncompositions={\n  product-cv=[ component-product-id=product-cv quantity=1 ]\n}\nextensions=fields={\n}\nproduct-groups [id:TEXT names:REC dictionary-subject-id:TEXT] {\n  group-valves {preferred=locale=en text=Valves\n  alternatives [locale:TEXT text:TEXT] {\n    de Ventile\n  }\n  } subject-valve\n}\nproduct-classes [id:TEXT group-id:TEXT parent-id:TEXT names:REC required-property-ids:LIST optional-property-ids:LIST] {\n  class-valve group-valves _ {preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Regelventil\n  }\n  } [ prop-dn ] [ ]\n}\nproduct-series [id:TEXT class-id:TEXT names:REC shared-property-values:MAP geometry-id:TEXT] {\n  series-cv class-valve {preferred=locale=en text=\"CV series\"\n  alternatives [locale:TEXT text:TEXT] {\n    de CV-Serie\n  }\n  } {\n  }\n  geom-valve-50\n}\nproducts [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST static-properties:LIST] {\n  product-cv series-cv {preferred=locale=en text=CV-50\n  alternatives [locale:TEXT text:TEXT] {\n    fr CV-50\n  }\n  } [ parameter-id=dn allowed-values=[ {\n    kind=\"decimal\" value=50.0\n  }\n  ] default-value={\n    kind=\"decimal\" value=50.0\n  }\n  ] [ id=variant-50 article-number=CV-50 geometry-id=geom.missing parameter-values={\n    dn={\n      kind=\"decimal\" value=999.0\n    }\n  }\n  property-values=[ definition-id=prop-dn value={\n    kind=\"decimal\" value=50.0\n  }\n  ] ] [ ]\n}\nproduct-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {\n  index-cv50 product-cv variant-50 [ CV-50 product-cv dn50 ]\n  index-cv50-dup product-cv variant-50 [ dup ]\n}\nproperty-definitions [id:TEXT names:REC data-type:TEXT unit:REC cardinality:REC kind:ENUM dictionary-property-id:TEXT] {\n  prop-dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Nennweite\n  }\n  } decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} {min=1 max=1} static prop-dn\n}\ndescriptive-objects [id:TEXT media-type:TEXT uri:TEXT language:TEXT checksum:TEXT] {\n}\ndictionary=reference=id=hvac-dict version=\"2025-01\"\nsubjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n  subject-valve productClass {short-name=Valve preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Regelventil\n    fr \"Vanne de régulation\"\n  }\n  } {locale=en text=\"Flow control valve\"} _\n}\nrelationships [id:TEXT kind:ENUM source-id:TEXT target-id:TEXT cardinality:REC] {\n  rel-dangling hasPart subject-valve subject-missing {min=1 max=1}\n}\nproperties [id:TEXT names:REC kind:ENUM data-type:TEXT unit:REC applicable-subject-ids:LIST value-constraints:LIST] {\n  prop-dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Nennweite\n  }\n  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject-valve ] [ min=15 max=300 allowed-values=[ ] ]\n}\ncontrolled-lists [id:TEXT values:LIST context-subject-ids:LIST] {\n  dn-list [ \"50\" \"80\" \"100\" ] [ subject-valve ]\n}\nmeta-subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n}\ngeometry=objects={\n  geom-valve-50=id=geom-valve-50\n  shape {\n    primitive kind=box parameters={\n      depth=0.1 height=0.2 width=0.15\n    }\n  }\n  symbolic {\n  }\n  spaces=[ id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 ] surfaces=[ ] ports=[ id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet ] parameter-bindings={\n    width=prop-dn\n  }\n}\nprimitive-registry [id:TEXT parameters:LIST] {\n  box [ width height depth ]\n  cylinder [ radius height ]\n  sphere [ radius ]\n}\nselection=class-id=class-valve series-id=series-cv constraints=[ id=constraint-dn property-id=prop-dn operator=equal value={\n  kind=\"decimal\" value=999.0\n}\n] part-number-rule={\n  function_id=\"partno\" kind=\"script\" source=\"dn * 10 + 50\"\n}\npart-number-inputs={\n  dn={\n    kind=\"decimal\" value=40.0\n  }\n}\nscript-limits=max-steps=0 max-recursion=0 timeout-ms=0\n",
         "dialect": {
           "artifactKind": "s.norm.iso16757",
           "standard": "1",
@@ -46223,7 +48293,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -48065,8 +50135,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "079925e84da13cf4c7c7b5833000c065489428a37fbce9428f49f55db6147cf4",
-    "coreWasmSha256": "9bd997f1bed8e9d0b4fcb08f41807c12183d7c23622d0ad6c0ebb49ee0c48d5b",
-    "descriptorSha256": "e5f2645d4aca5fa49923cabb424ecb5cf459955a107053f40df6955651463711"
+    "wasmSha256": "b69c54193dbb198e36dffc3c402ff9deda1de7776c0e627f13fbf3a694a2814a",
+    "coreWasmSha256": "9fffafe1963ac9af1204627768571684b15a93ec49533fbea3d8811c4bcbcdc1",
+    "descriptorSha256": "951fe568804033f4079b7d710cf486fbbca3c29ffbe410063e2015e50cddff36"
   }
 }

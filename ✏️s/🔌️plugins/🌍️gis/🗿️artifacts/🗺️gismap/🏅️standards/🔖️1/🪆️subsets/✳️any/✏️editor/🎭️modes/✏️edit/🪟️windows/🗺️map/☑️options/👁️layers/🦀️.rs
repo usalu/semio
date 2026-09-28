@@ -18,7 +18,7 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
             label: Some(gis2d_layer_label(id, labels).into()),
             pressed: layer_visible(cfg, id),
             text: None,
-            on_change: gis2d_window_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
+            on_change: gis2d_window_action("toggleLayerVisibility", Some(semio_framework_plugin::dsl_value!({ "layerId": id }))),
         })
         .collect();
     WindowMeasure::Group {

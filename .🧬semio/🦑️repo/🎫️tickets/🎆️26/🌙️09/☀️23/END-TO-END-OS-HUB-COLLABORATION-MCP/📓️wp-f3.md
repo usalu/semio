@@ -129,3 +129,72 @@ Successor F3 (2026-09-28 12:0x). Load 45 → 32 (10 cores), swap 4.5/6 GB, 3 rus
   test files: 8 errors, all pre-existing peer drift (5× TS2345 `projectionFrame` missing in `WorldParsedCameraState` fixtures, 3× TS2339
   `component.value` at l.4993–5008, present in HEAD) — none in this session's hunks (`tsc-shell-tests-3.txt`); both shell vitest runs
   found no files (invoked without the react package's `--config ../../🧪️tests/🎚️config/🟦️.ts`) → requeued as `f3-shell-vitest.sh 4`.
+
+### Session 14c
+
+Successor F3 (2026-09-28 16:5x). Chain relaunched 16:55 (guest freeze ON), hub 7800 DOWN, load 45 → 74 (10 cores).
+
+| # | item | state | evidence |
+|---|---|---|---|
+| F3-0c | reconcile predecessor's last step (Python oracle ↔ TS twin on the same kind spec, script-imported JSON vector, regenerated fixture) | **done — nothing half-applied**: oracle `kind_of` == `bootResourceKindV1` (script-initiated `.json` = module, css-pulled svg = other), vector 0 carries `🔣️.json?import`/script; tree == HEAD `dfe2687`; oracle `--check` rc 0, tsc (harness closure) rc 0, law **6/6 PASS** (native lane) | `generated/{oracle-check,tsc-boot-budget,test-boot-budget}-14c-1.txt` |
+| F3-1d | next hover / typing / paint offenders (host TS now, guest as prepared patches) | **LANDED (hover set) + budget laws**: leftover overlay structural sharing + per-pane snapshot + no doc seeding by a pane's first hover (World3dHost), ContextMenu closed-render fix; puzzle3d hover per transition react-dom commits 6 → **2**, R3F fibers 290 → **220**, React render 21.8 → **17.2 ms**; stale sibling-pane hover fixed; laws leftover 13/13 (red on HEAD 2 FAIL), ContextMenu 10/10 (red 12 vs 4 commits); latency fixture + `puzzle2d-drag` (1.13 paints/input) | `f3-render-census-puzzle-c14-*.json`, `world-hover-panes-c14-{head,2}.txt`, `test-*-c14-{6,7}.txt`, `latency-14c-{a,b}.txt` |
+| F3-1e | writer typing offender (ShellHost, coordinator GO both regions 18:0x) | **LANDED ×2**: (1) per-program history → `createProgramHistoryStoreV1` + live History tree (`liveTreePanelDefinition`, new ui Panel live source) + `data-history-json`/auto check-in off the store; (2) panel bodies → `panelBodyStoreByKey` (one store per panel, loaded outside render). Writer per key: shell renders **3 → 0.04**, react-dom fibers **808 → 21.7**, React render **46.7 → 1.9 ms**; commits/key 5.04 → 4.04; History + Inspection smokes live, 0 pageerrors | `f3-render-census-type-writer-c14-{before1,after1,after2}.json`, `history-smoke-c14-1.txt`, `inspection-smoke-c14-1.txt`, `test-*-c14-{9..12}.txt` |
+| F3-3d | budget laws for typing/hover (latency gate v2) | **LANDED**: `verify latency` judges React commits/input (DevTools hook) + `hover` gesture; rows `puzzle2d-drag`, `puzzle3d-hover`; commit bounds tightened after the fixes; schema defs for latency + boot-budget fixtures, jsonschema laws 11/11 | `latency-14c-{c..f}.txt`, `test-dev-laws-c14-13.txt` |
+| F3-4 | hub document open latency (7800) | **BLOCKED** — 7800 is down until the chain moves it onto ALL (chain at rebuild-all after hub-prewarm rc 0 17:13) | — |
+| F3-3c | one real `verify boot` run → acceptance record | **BLOCKED (measured, correct verdict)**: harness started its own serve via `ensureDevServe` (6700, local-only, stopped after); payload within budget (module 462/40.36 MB, json 120/17.83 MB, font 16/9.34 MB, style 3/0.36 MB, other 6/0 MB); timings not judged at load 68.7: serve 11.4 s, cold FCP 16.0 / ready 19.2 / plugins 19.4 s, warm ready 3.0 s | record `.🧬semio/🌐hub/s14-f3-acceptance/boot-budget-14c-b.json`, `generated/boot-budget-14c-{a,b}.txt`, `🧑‍💻dev/🤖️generated/🥾️boot-budget/s14c-f3-b/boot.json` |
+
+- 17:00 reconcile: laws via `zsh 📜️fleet-mutex.sh native f3 -- zsh wp-f3/f3-boot-budget-laws.sh 14c-1` (new script: oracle drift + tsc + vitest).
+- 17:01–17:03 `SEMIO_ACCEPTANCE_RESULT=… bun ./📜️script.ts verify boot --serve http://127.0.0.1:6700/ --tag s14c-f3-{a,b}` (os-dev
+  `📦️packages/🟦️typescript`): both BLOCKED (load 73.8 / 68.7), rc 0, 59 s / 47 s wall; serve first answer 11.2 / 11.4 s (Vite cold
+  after the app restart; 3.8 s warm at 12:12).
+- 17:04 latency gate on the current tree (`latency-14c-a.txt`, load 58–63, timings not judged): writer 1.13, jack 2.08, draw 1.06, dag 2.09
+  paints/input — all within bounds (the writer echo fix of 27 19:14 holds). Trial scenarios: `puzzle2d-drag` 1.13 paints/input (`BoardSession`)
+  → kept in the fixture as a budget law; `note-ink` dropped — the note canvas is DOM/svg (`f3-window-body.ts`: no `<canvas>`, no `renderFrame`
+  session), the paint hook cannot count its paints.
+- 17:12 hover census baseline (`c14-before1`, load 42.5) = the 13:1x state: per transition react-dom 6 commits / 90 fibers / 10.8 ms, R3F 5 / 290 /
+  11.0 ms; roots: `World3dHost` uSES@14 2× (the document slot as epoch — `{ids=json}`: every publication minted a fresh equal `ids` array),
+  `ContextMenuController` state@2 4× (closed menu reset `setActivePath([])` on every `items` change, plus fused-panel memo churn → HEAD renders a
+  closed menu **3×** per parent render), guest echo `UiNodeView` uSES@0 2× (frozen).
+- 17:2x–17:4x fix set landed (landing row "hover re-render set"): after (`c14-after1/2`, load 40–49): react-dom 2 commits / 67 fibers / 8.2 ms, R3F 5 /
+  220 / 9.0 ms, World3dHost re-renders only on its own hover change (1/transition, `{hoveredId≠}`), ContextMenuController gone from the roots.
+  Found on the way (pane smoke `f3-world-hover-panes.ts`, same on HEAD): a pane's FIRST window-scoped leftover became the whole document slot, so the
+  sibling pane (MainTop) painted that hover and kept it after the pointer left → fixed (neutral window fields), now `noStaleHoverAfterLeave: true`.
+  Still by design of the guest: while hovering, MainTop also shows the hover — the guest's `selection` lane carries hover for every pane (offender 1).
+  Rule 20: shell tsc rc 0 after every source edit, boot to Home `ready:s` 0 pageerrors (`home-boot-c14-{1,2}.txt`).
+- 17:5x writer typing census (`f3-render-census-type.ts`, the hover census driven by keys, load 50): per key 4.96 commits, 808 fibers, 46.7 ms React
+  render, **3 whole-shell renders** — 2 from the history projection (`useState` in ShellHost: entries/cursor change twice per key), 1 from
+  `windowUi.panelUiByKey` (the writer Inspection body republished per key → the tab's config minted a NEW `UiDocumentStore`). RELAY S18/SH2 →
+  coordinator GO for both regions (18:0x, keeping S18's TreeWindows/refreshUi/onAction-head lines and SH2's route-B anchors intact).
+- 18:1x region (1) landed (landing row): after = 1.04 shell renders/key (the 0.04 = one `canUndo` flip). Found on the way: `applyHistoryPatch` read an
+  `applied` flag set inside a lazy `useState` updater (not guaranteed to run synchronously) — the store's synchronous `update` fixes that.
+- 18:2x region (2) landed (landing row): after = 0.04 shell renders/key, 21.7 fibers, 1.9 ms. Remaining 4 small commits/key (text editor surface,
+  guest echo `UiNodeView`) cost ~0.5 ms each.
+- 18:3x latency gate v2 landed (commits per input + hover; bounds writer 5 / jack 5 / draw 3 / dag 1.5 / puzzle2d 1 / puzzle3d-hover 8; measured 4.04 /
+  4.0 / 2.22 / 1 / 0.22 / 7). Serve 6700 (pid 81340/81398, started 17:08) stopped 18:36.
+- Guest part (prepared patch NOT written — design decision): the remaining puzzle3d hover cost is the guest echo — the guest writes the hover into
+  every pane's `selection` lane BY DESIGN (5d/3d unit tests assert "the board pane paints the shared hover"), so each hover republishes 3 scene bodies
+  (2 extra World3dHost renders + one redundant repaint ~150 ms later, `f3-hover-puzzle-c14-a.json`: hover → local paint p50 2.7 ms, echo paint p95
+  158 ms). Options for window 3: (a) a hover lane outside the scene body's lane refs (host subscribes to the lane, bodies stay put), or (b) keep hover
+  per window (B39) and drop the shared-hover feature. Needs the product call (linked-view hover yes/no) before a patch.
+
+### Session 14c — hub latency (resumed 21:1x, 7800 READY 21:10 on `s14-w4-catalog-p24`; 7800 boot took **616 s**, H14 investigates)
+
+| # | item | state | evidence |
+|---|---|---|---|
+| F3-5 | hub-document open latency per kind (first open vs warm) + two-client edit round trip, acceptance record | **running** — `verify two-human` (edit journey) now times each edit's arrival at the other human (40 ms poll, submit → seen) and the warm reopen (row click → mounted) besides create→mounted / open→mounted; probe on writer PASS 10/10: create→mounted 9.2 s, B open→mounted 8.6 s, edit seen by the other human 233–450 ms | `two-human-probe.txt`, run `two-human-hub-a.txt` |
+
+- 21:1x serve 6700 via `ensureDevServe` joined to 7800 (pid 16595, ready 7.5 s). Two-human harness: + `awaitTextAt`, `KindTimings`
+  (aEditLocalMs, aEditSeenByBMs, bEditLocalMs, bEditSeenByAMs, reopenAToMountedMs, reopenBToMountedMs), edits polled concurrently on
+  both pages, acceptance measured + summary en/de gain edit-seen and warm-reopen p50/max; tsc rc 0. First probe timed the reopen
+  from `openSpace` (≥ 12 s settle) → re-timed from the row click. 21:19 full run launched (pid 18888, tag `s14c-f3-hub-a`).
+- 21:3x run a stopped after 2 kinds: the concurrent B poll timed PRESENCE changes (B's view moves before A submits → negative "seen" ms).
+  Fixed: `watchText` records B's distinct texts with first-seen epoch ms; arrival = the first time B shows A's edited text after submit.
+  Run b died at seeding: the fresh space never appeared on Home within 90 s (`no space row named …`, a hub/Home latency under load in
+  itself); run c (21:50, pid 34743) reuses run a's shared space `01a0e976-2848-790e-95ed-749ce377b568`.
+- 21:3x–21:4x **hub creation is the dominant open cost** (`f3-hub-creation-phases.ts`, HTTP only; `hub-creation-phases-*.{txt,jsonl}`,
+  load 33–59): the `accepted` phase = `materialize_genesis` = the package's guest `codec.genesis` run by the hub's OWNED WASM INTERPRETER
+  (`semio-framework-plugin-host`, `interpret_off_worker`, progress every 25 M fuel). Measured per creation, repeatable (not a cold
+  cost): text.document 0.75–1.2 s (~5 M fuel), 2d.block 3.7–17 s (~15 M), s.stdio.md 26–72 s and s.stdio.csv 41 s (**~360 M fuel**,
+  14–18 M fuel/s at load 37); open-plan answers in 1–63 ms. W4's cold open-plan probe (20:1x) had puzzle 2d/3d/5d 80/129/184 s, vcs
+  118 s, gis 50 s, stdio 100–143 s. The same interpreter runs every `codec.pack-schema-hash` verification at hub boot (Cargo.toml's
+  own note) → very likely the 616 s 7800 boot too (relayed to H14).

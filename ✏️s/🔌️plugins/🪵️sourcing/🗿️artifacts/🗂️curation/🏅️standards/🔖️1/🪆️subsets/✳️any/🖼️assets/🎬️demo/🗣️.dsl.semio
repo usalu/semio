@@ -1,5 +1,5 @@
 semio curation.curation.dsl v1
-catalog=child_id=catalog-572920189eef168d target="catalog-572920189eef168d!s.stdio.semio@v1/kit" stock-extra=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
+catalog=child_id=catalog-32ab638c359f7f13 target="catalog-32ab638c359f7f13!s.stdio.semio@v1/kit" stock-extra=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
 box width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name="KVH C24 100×200" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]
 box width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name="Steel IPE 200" module-id=beams availability=12 typology-path=[ beams steel ipe ]
 box width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name="Steel HEA 160" module-id=beams availability=8 typology-path=[ beams steel hea ]

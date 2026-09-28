@@ -244,5 +244,27 @@
         "url": "https://example.invalid/source"
       }
     }
-  }
+  },
+  "guestRefusals": [
+    {
+      "detail": null,
+      "reason": "action-guest-refused"
+    },
+    {
+      "detail": "extension.missing",
+      "reason": "action-guest-refused: extension.missing"
+    },
+    {
+      "detail": "stdio.xml.invalid-source: xml parse:\ntrailing content\tafter root",
+      "reason": "action-guest-refused: stdio.xml.invalid-source: xml parse: trailing content after root"
+    },
+    {
+      "detail": "   ",
+      "reason": "action-guest-refused"
+    },
+    {
+      "detail": "space.home.directory-projection: Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — ",
+      "reason": "action-guest-refused: space.home.directory-projection: Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlän"
+    }
+  ]
 }

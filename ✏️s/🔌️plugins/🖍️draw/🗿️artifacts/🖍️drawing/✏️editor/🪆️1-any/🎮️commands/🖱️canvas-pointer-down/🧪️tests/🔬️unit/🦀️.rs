@@ -79,6 +79,7 @@ fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
         operation_id: 11,
         generation: 13,
         canonical_base_revision: [17; 32],
+        authoring_seed: "authoring-seed-test".into(),
     };
     let geometry = [10.0, 20.0, 30.0, 40.0];
     let first = shape_drag_id("shapeRect", geometry, 3, Some(&operation));

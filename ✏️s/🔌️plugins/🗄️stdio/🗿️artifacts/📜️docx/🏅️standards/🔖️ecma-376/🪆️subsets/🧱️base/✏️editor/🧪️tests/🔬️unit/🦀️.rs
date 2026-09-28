@@ -79,7 +79,7 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
     let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = DocxSetPageWork::default();
     assert!(work.step(&input).is_err());

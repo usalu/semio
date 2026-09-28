@@ -3892,7 +3892,7 @@
       "name": "🖱️mcpinspector🌉️os",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx --yes @modelcontextprotocol/inspector --config .mcp.json --server semio",
+      "command": "bun x @modelcontextprotocol/inspector --config .mcp.json --server semio",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "2_mouse",
@@ -4976,6 +4976,28 @@
       }
     },
     {
+      "name": "📦️check📡️channel-version",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:channel-version-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.171
+      }
+    },
+    {
+      "name": "🛠️dev📡️channel-version🏭️generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:channel-version-generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.172
+      }
+    },
+    {
       "name": "📦️wasm🧊️wgpu",
       "type": "node-terminal",
       "request": "launch",
@@ -5961,11 +5983,22 @@
       "name": "⚖️gate🎯️repo-goal",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --local-serve ${input:acceptanceLocalServeUrl} --users ${input:acceptanceUsers}",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 411.22
+      }
+    },
+    {
+      "name": "⚖️gate🎯️repo-goal🔗️hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --local-serve ${input:acceptanceLocalServeUrl} --users ${input:acceptanceUsers}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.221
       }
     },
     {
@@ -5983,7 +6016,7 @@
       "name": "⚖️gate🧮️program-matrix⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-en --locale en --roles editor,viewer",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en --roles editor,viewer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5994,7 +6027,7 @@
       "name": "⚖️gate🧮️program-matrix⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-de --locale de --roles editor",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de --roles editor,viewer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -6005,7 +6038,7 @@
       "name": "⚖️gate⏯️tool-run⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-en --locale en",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -6016,7 +6049,7 @@
       "name": "⚖️gate⏯️tool-run⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-de --locale de",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -6027,7 +6060,7 @@
       "name": "⚖️gate🗂️hub-document-sweep⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- ${input:acceptanceServeUrl} --tag launch-en --locale en",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-en --locale en",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -6038,11 +6071,33 @@
       "name": "⚖️gate🗂️hub-document-sweep⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- ${input:acceptanceServeUrl} --tag launch-de --locale de",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-de --locale de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 411.254
+      }
+    },
+    {
+      "name": "⚖️gate🚪️io-matrix⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale en",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.255
+      }
+    },
+    {
+      "name": "⚖️gate🚪️io-matrix⚛️react🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale de",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.256
       }
     },
     {
@@ -6195,6 +6250,17 @@
       }
     },
     {
+      "name": "⚖️gate🛑️hub-graceful-shutdown",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:shutdown-drill",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.315
+      }
+    },
+    {
       "name": "⚖️gate🧠️hub-residency",
       "type": "node-terminal",
       "request": "launch",
@@ -6225,6 +6291,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️gate🤖️hub-agent-ceiling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:agent-ceiling-check -- --hub ${input:acceptanceHubUrl} --locale en",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.335
       }
     },
     {
@@ -11749,6 +11826,17 @@
       }
     },
     {
+      "name": "⚖️hostile-input-check🌎️hub🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:hostile-input-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0248
+      }
+    },
+    {
       "name": "⚖️inference-relay-check🌎️hub🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -11756,7 +11844,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0248
+        "order": 900.0249
       }
     },
     {
@@ -11767,7 +11855,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0249
+        "order": 900.025
       }
     },
     {
@@ -11778,7 +11866,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.025
+        "order": 900.0251
       }
     },
     {
@@ -11789,7 +11877,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0251
+        "order": 900.0252
       }
     },
     {
@@ -11800,7 +11888,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0252
+        "order": 900.0253
       }
     },
     {
@@ -11811,7 +11899,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0253
+        "order": 900.0254
       }
     },
     {
@@ -11822,7 +11910,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0254
+        "order": 900.0255
       }
     },
     {
@@ -11833,7 +11921,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0255
+        "order": 900.0256
       }
     },
     {
@@ -11877,7 +11965,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0256
+        "order": 900.0257
       }
     },
     {
@@ -11888,7 +11976,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0257
+        "order": 900.0258
       }
     },
     {
@@ -11899,7 +11987,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0258
+        "order": 900.0259
       }
     },
     {
@@ -11910,7 +11998,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0259
+        "order": 900.026
       }
     },
     {
@@ -11921,7 +12009,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.026
+        "order": 900.0261
       }
     },
     {
@@ -11932,7 +12020,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0261
+        "order": 900.0262
       }
     },
     {
@@ -11943,7 +12031,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0262
+        "order": 900.0263
       }
     },
     {
@@ -11954,7 +12042,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0263
+        "order": 900.0264
       }
     },
     {
@@ -11965,7 +12053,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0264
+        "order": 900.0265
       }
     },
     {
@@ -11976,7 +12064,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0265
+        "order": 900.0266
       }
     },
     {
@@ -11998,7 +12086,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0266
+        "order": 900.0267
       }
     },
     {
@@ -12020,7 +12108,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0267
+        "order": 900.0268
       }
     },
     {
@@ -12031,7 +12119,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0268
+        "order": 900.0269
       }
     },
     {
@@ -12042,7 +12130,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0269
+        "order": 900.027
       }
     },
     {
@@ -12053,7 +12141,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.027
+        "order": 900.0271
       }
     },
     {
@@ -12064,7 +12152,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0271
+        "order": 900.0272
       }
     },
     {
@@ -12075,7 +12163,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0272
+        "order": 900.0273
       }
     },
     {
@@ -12086,7 +12174,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0273
+        "order": 900.0274
       }
     },
     {
@@ -12097,7 +12185,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0274
+        "order": 900.0275
       }
     },
     {
@@ -12108,7 +12196,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0275
+        "order": 900.0276
       }
     },
     {
@@ -12119,7 +12207,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0276
+        "order": 900.0277
       }
     },
     {
@@ -12130,7 +12218,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0277
+        "order": 900.0278
       }
     },
     {
@@ -12141,7 +12229,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0278
+        "order": 900.0279
       }
     },
     {
@@ -12152,7 +12240,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0279
+        "order": 900.028
       }
     },
     {
@@ -12163,7 +12251,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.028
+        "order": 900.0281
       }
     },
     {
@@ -12174,7 +12262,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0281
+        "order": 900.0282
       }
     },
     {
@@ -12211,6 +12299,28 @@
       }
     },
     {
+      "name": "📦️docker-image-build🌎️hub🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:docker-image-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0027
+      }
+    },
+    {
+      "name": "⚖️docker-image-check🌎️hub🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:docker-image-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0283
+      }
+    },
+    {
       "name": "⚖️pending-host-close-check🌐️browser-bundle",
       "type": "node-terminal",
       "request": "launch",
@@ -12218,7 +12328,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0282
+        "order": 900.0284
       }
     },
     {
@@ -12229,7 +12339,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0283
+        "order": 900.0285
       }
     },
     {
@@ -12240,7 +12350,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0027
+        "order": 900.0028
       }
     },
     {
@@ -12251,7 +12361,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0028
+        "order": 900.0029
       }
     },
     {
@@ -12262,7 +12372,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0029
+        "order": 900.003
       }
     },
     {
@@ -12284,7 +12394,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0284
+        "order": 900.0286
       }
     },
     {
@@ -12295,7 +12405,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0285
+        "order": 900.0287
       }
     },
     {
@@ -12306,7 +12416,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0286
+        "order": 900.0288
       }
     },
     {
@@ -12317,7 +12427,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0287
+        "order": 900.0289
       }
     },
     {
@@ -12339,7 +12449,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0288
+        "order": 900.029
       }
     },
     {
@@ -12350,7 +12460,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0289
+        "order": 900.0291
       }
     },
     {
@@ -12361,7 +12471,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.029
+        "order": 900.0292
       }
     },
     {
@@ -12372,7 +12482,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0291
+        "order": 900.0293
       }
     },
     {
@@ -12383,7 +12493,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0292
+        "order": 900.0294
       }
     },
     {
@@ -12394,7 +12504,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0293
+        "order": 900.0295
       }
     },
     {
@@ -12416,7 +12526,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0294
+        "order": 900.0296
       }
     },
     {
@@ -12427,7 +12537,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0295
+        "order": 900.0297
       }
     },
     {
@@ -12449,7 +12559,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0296
+        "order": 900.0298
       }
     },
     {
@@ -12482,7 +12592,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0297
+        "order": 900.0299
       }
     },
     {
@@ -12493,7 +12603,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0298
+        "order": 900.03
       }
     },
     {
@@ -12504,7 +12614,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0299
+        "order": 900.0301
       }
     },
     {
@@ -12515,7 +12625,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.03
+        "order": 900.0302
       }
     },
     {
@@ -12526,7 +12636,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0301
+        "order": 900.0303
       }
     },
     {
@@ -12537,7 +12647,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0302
+        "order": 900.0304
       }
     },
     {
@@ -12548,7 +12658,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0303
+        "order": 900.0305
       }
     },
     {
@@ -12559,7 +12669,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0304
+        "order": 900.0306
       }
     },
     {
@@ -12570,7 +12680,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0305
+        "order": 900.0307
       }
     },
     {
@@ -12581,7 +12691,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.003
+        "order": 900.0031
       }
     },
     {
@@ -12592,7 +12702,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0306
+        "order": 900.0308
       }
     },
     {
@@ -12603,7 +12713,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0307
+        "order": 900.0309
       }
     },
     {
@@ -12614,7 +12724,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0308
+        "order": 900.031
       }
     },
     {
@@ -12625,7 +12735,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0309
+        "order": 900.0311
       }
     },
     {
@@ -12636,7 +12746,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.031
+        "order": 900.0312
       }
     },
     {
@@ -12647,7 +12757,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0311
+        "order": 900.0313
       }
     },
     {
@@ -12658,7 +12768,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0312
+        "order": 900.0314
       }
     },
     {
@@ -12669,7 +12779,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0313
+        "order": 900.0315
       }
     },
     {
@@ -12680,7 +12790,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0314
+        "order": 900.0316
       }
     },
     {
@@ -12691,7 +12801,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0315
+        "order": 900.0317
       }
     },
     {
@@ -12702,7 +12812,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0316
+        "order": 900.0318
       }
     },
     {
@@ -12713,7 +12823,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0317
+        "order": 900.0319
       }
     },
     {
@@ -12724,7 +12834,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0318
+        "order": 900.032
       }
     },
     {
@@ -12735,7 +12845,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0031
+        "order": 900.0032
       }
     },
     {
@@ -12746,7 +12856,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0319
+        "order": 900.0321
       }
     },
     {
@@ -12757,7 +12867,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.032
+        "order": 900.0322
       }
     },
     {
@@ -12768,7 +12878,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0321
+        "order": 900.0323
       }
     },
     {
@@ -12779,7 +12889,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0322
+        "order": 900.0324
       }
     },
     {
@@ -12790,7 +12900,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0323
+        "order": 900.0325
       }
     },
     {
@@ -12801,7 +12911,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0324
+        "order": 900.0326
       }
     },
     {
@@ -12812,7 +12922,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0325
+        "order": 900.0327
       }
     },
     {
@@ -12823,7 +12933,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0326
+        "order": 900.0328
       }
     },
     {
@@ -12834,7 +12944,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0327
+        "order": 900.0329
       }
     },
     {
@@ -12845,7 +12955,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0328
+        "order": 900.033
       }
     },
     {
@@ -12856,7 +12966,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0329
+        "order": 900.0331
       }
     },
     {
@@ -12867,7 +12977,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.033
+        "order": 900.0332
       }
     },
     {
@@ -12878,7 +12988,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0331
+        "order": 900.0333
       }
     },
     {
@@ -12889,7 +12999,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0332
+        "order": 900.0334
       }
     },
     {
@@ -12900,7 +13010,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0333
+        "order": 900.0335
       }
     },
     {
@@ -12911,7 +13021,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0334
+        "order": 900.0336
       }
     },
     {
@@ -12922,7 +13032,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0335
+        "order": 900.0337
       }
     },
     {
@@ -12933,7 +13043,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0336
+        "order": 900.0338
       }
     },
     {
@@ -12944,7 +13054,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0337
+        "order": 900.0339
       }
     },
     {
@@ -12955,7 +13065,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0338
+        "order": 900.034
       }
     },
     {
@@ -12966,7 +13076,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0339
+        "order": 900.0341
       }
     },
     {
@@ -12977,7 +13087,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.034
+        "order": 900.0342
       }
     },
     {
@@ -12988,7 +13098,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0341
+        "order": 900.0343
       }
     },
     {
@@ -12999,7 +13109,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0342
+        "order": 900.0344
       }
     },
     {
@@ -13010,7 +13120,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0032
+        "order": 900.0033
       }
     },
     {
@@ -13021,7 +13131,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0343
+        "order": 900.0345
       }
     },
     {
@@ -13032,7 +13142,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0344
+        "order": 900.0346
       }
     },
     {
@@ -13054,7 +13164,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0345
+        "order": 900.0347
       }
     },
     {
@@ -13076,7 +13186,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0346
+        "order": 900.0348
       }
     },
     {
@@ -13087,7 +13197,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0347
+        "order": 900.0349
       }
     },
     {
@@ -13098,7 +13208,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0033
+        "order": 900.0034
       }
     },
     {
@@ -13109,7 +13219,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0348
+        "order": 900.035
       }
     },
     {
@@ -13120,7 +13230,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0349
+        "order": 900.0351
       }
     },
     {
@@ -13131,7 +13241,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0034
+        "order": 900.0035
       }
     },
     {
@@ -13142,7 +13252,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0035
+        "order": 900.0036
       }
     },
     {
@@ -13153,7 +13263,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0036
+        "order": 900.0037
       }
     },
     {
@@ -13164,7 +13274,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0037
+        "order": 900.0038
       }
     },
     {
@@ -13186,7 +13296,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0038
+        "order": 900.0039
       }
     },
     {
@@ -13197,7 +13307,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0039
+        "order": 900.004
       }
     },
     {
@@ -13208,7 +13318,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.004
+        "order": 900.0041
       }
     },
     {
@@ -13219,7 +13329,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0041
+        "order": 900.0042
       }
     },
     {
@@ -13230,7 +13340,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.035
+        "order": 900.0352
       }
     },
     {
@@ -13241,7 +13351,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0351
+        "order": 900.0353
       }
     },
     {
@@ -13252,7 +13362,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0352
+        "order": 900.0354
       }
     },
     {
@@ -13263,7 +13373,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0353
+        "order": 900.0355
       }
     },
     {
@@ -13274,7 +13384,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0354
+        "order": 900.0356
       }
     },
     {
@@ -13285,7 +13395,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0355
+        "order": 900.0357
       }
     },
     {
@@ -13296,7 +13406,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0356
+        "order": 900.0358
       }
     },
     {
@@ -13307,7 +13417,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0357
+        "order": 900.0359
       }
     },
     {
@@ -13318,7 +13428,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0042
+        "order": 900.0043
       }
     },
     {
@@ -13340,7 +13450,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0358
+        "order": 900.036
       }
     },
     {
@@ -13362,7 +13472,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0359
+        "order": 900.0361
       }
     },
     {
@@ -13373,7 +13483,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.036
+        "order": 900.0362
       }
     },
     {
@@ -13384,7 +13494,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0361
+        "order": 900.0363
       }
     },
     {
@@ -13395,7 +13505,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0362
+        "order": 900.0364
       }
     },
     {
@@ -13406,7 +13516,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0363
+        "order": 900.0365
       }
     },
     {
@@ -13417,7 +13527,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0364
+        "order": 900.0366
       }
     },
     {
@@ -13428,7 +13538,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0365
+        "order": 900.0367
       }
     },
     {
@@ -13439,7 +13549,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0366
+        "order": 900.0368
       }
     },
     {
@@ -13450,7 +13560,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0367
+        "order": 900.0369
       }
     },
     {
@@ -13461,7 +13571,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0368
+        "order": 900.037
       }
     },
     {
@@ -13472,7 +13582,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0369
+        "order": 900.0371
       }
     },
     {
@@ -13483,7 +13593,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.037
+        "order": 900.0372
       }
     },
     {
@@ -13494,7 +13604,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0371
+        "order": 900.0373
       }
     },
     {
@@ -13505,7 +13615,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0372
+        "order": 900.0374
       }
     },
     {
@@ -13516,7 +13626,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0373
+        "order": 900.0375
       }
     },
     {
@@ -13527,7 +13637,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0374
+        "order": 900.0376
       }
     },
     {
@@ -13538,7 +13648,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0375
+        "order": 900.0377
       }
     },
     {
@@ -13549,7 +13659,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0376
+        "order": 900.0378
       }
     },
     {
@@ -13560,7 +13670,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0377
+        "order": 900.0379
       }
     },
     {
@@ -13571,7 +13681,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0378
+        "order": 900.038
       }
     },
     {
@@ -13582,7 +13692,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0379
+        "order": 900.0381
       }
     },
     {
@@ -13593,7 +13703,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.038
+        "order": 900.0382
       }
     },
     {
@@ -13604,7 +13714,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0381
+        "order": 900.0383
       }
     },
     {
@@ -13615,7 +13725,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0382
+        "order": 900.0384
       }
     },
     {
@@ -13626,7 +13736,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0383
+        "order": 900.0385
       }
     },
     {
@@ -13637,7 +13747,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0384
+        "order": 900.0386
       }
     },
     {
@@ -13648,7 +13758,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0385
+        "order": 900.0387
       }
     },
     {
@@ -13659,7 +13769,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0386
+        "order": 900.0388
       }
     },
     {
@@ -13670,7 +13780,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0387
+        "order": 900.0389
       }
     },
     {
@@ -13681,7 +13791,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0388
+        "order": 900.039
       }
     },
     {
@@ -13692,7 +13802,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0389
+        "order": 900.0391
       }
     },
     {
@@ -13703,7 +13813,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.039
+        "order": 900.0392
       }
     },
     {
@@ -13714,7 +13824,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0391
+        "order": 900.0393
       }
     },
     {
@@ -13725,7 +13835,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0392
+        "order": 900.0394
       }
     },
     {
@@ -13736,7 +13846,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0393
+        "order": 900.0395
       }
     },
     {
@@ -13747,7 +13857,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0394
+        "order": 900.0396
       }
     },
     {
@@ -13758,7 +13868,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0395
+        "order": 900.0397
       }
     },
     {
@@ -13769,7 +13879,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0396
+        "order": 900.0398
       }
     },
     {
@@ -13780,7 +13890,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0397
+        "order": 900.0399
       }
     },
     {
@@ -13791,7 +13901,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0398
+        "order": 900.04
       }
     },
     {
@@ -13802,7 +13912,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0399
+        "order": 900.0401
       }
     },
     {
@@ -13813,7 +13923,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.04
+        "order": 900.0402
       }
     },
     {
@@ -13824,7 +13934,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0401
+        "order": 900.0403
       }
     },
     {
@@ -13835,7 +13945,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0402
+        "order": 900.0404
       }
     },
     {
@@ -13846,7 +13956,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0403
+        "order": 900.0405
       }
     },
     {
@@ -13857,7 +13967,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0404
+        "order": 900.0406
       }
     },
     {
@@ -13868,7 +13978,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0405
+        "order": 900.0407
       }
     },
     {
@@ -13879,7 +13989,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0406
+        "order": 900.0408
       }
     },
     {
@@ -13901,7 +14011,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0407
+        "order": 900.0409
       }
     },
     {
@@ -13912,7 +14022,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0408
+        "order": 900.041
       }
     },
     {
@@ -13923,7 +14033,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0409
+        "order": 900.0411
       }
     },
     {
@@ -13934,7 +14044,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.041
+        "order": 900.0412
       }
     },
     {
@@ -13945,7 +14055,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0411
+        "order": 900.0413
       }
     },
     {
@@ -13956,7 +14066,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0412
+        "order": 900.0414
       }
     },
     {
@@ -13967,7 +14077,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0043
+        "order": 900.0044
       }
     },
     {
@@ -13978,7 +14088,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0413
+        "order": 900.0415
       }
     },
     {
@@ -13989,7 +14099,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0414
+        "order": 900.0416
       }
     },
     {
@@ -14000,7 +14110,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0415
+        "order": 900.0417
       }
     },
     {
@@ -14011,7 +14121,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0416
+        "order": 900.0418
       }
     },
     {
@@ -14022,7 +14132,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0417
+        "order": 900.0419
       }
     },
     {
@@ -14033,7 +14143,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0418
+        "order": 900.042
       }
     },
     {
@@ -14044,7 +14154,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0419
+        "order": 900.0421
       }
     },
     {
@@ -14055,7 +14165,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.042
+        "order": 900.0422
       }
     },
     {
@@ -14066,7 +14176,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0421
+        "order": 900.0423
       }
     },
     {
@@ -14077,7 +14187,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0422
+        "order": 900.0424
       }
     },
     {
@@ -14088,7 +14198,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0423
+        "order": 900.0425
       }
     },
     {
@@ -14099,7 +14209,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0424
+        "order": 900.0426
       }
     },
     {
@@ -14110,7 +14220,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0425
+        "order": 900.0427
       }
     },
     {
@@ -14121,7 +14231,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0426
+        "order": 900.0428
       }
     },
     {
@@ -14143,7 +14253,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0044
+        "order": 900.0045
       }
     },
     {
@@ -14154,7 +14264,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0427
+        "order": 900.0429
       }
     },
     {
@@ -14165,7 +14275,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0428
+        "order": 900.043
       }
     },
     {
@@ -14176,7 +14286,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0429
+        "order": 900.0431
       }
     },
     {
@@ -14187,7 +14297,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.043
+        "order": 900.0432
       }
     },
     {
@@ -14198,7 +14308,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0431
+        "order": 900.0433
       }
     },
     {
@@ -14209,7 +14319,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0432
+        "order": 900.0434
       }
     },
     {
@@ -14220,7 +14330,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0433
+        "order": 900.0435
       }
     },
     {
@@ -14231,7 +14341,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0434
+        "order": 900.0436
       }
     },
     {
@@ -14242,7 +14352,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0435
+        "order": 900.0437
       }
     },
     {
@@ -14253,7 +14363,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0436
+        "order": 900.0438
       }
     },
     {
@@ -14264,7 +14374,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0437
+        "order": 900.0439
       }
     },
     {
@@ -14275,7 +14385,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0438
+        "order": 900.044
       }
     },
     {
@@ -14286,7 +14396,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0439
+        "order": 900.0441
       }
     },
     {
@@ -14297,7 +14407,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.044
+        "order": 900.0442
       }
     },
     {
@@ -14308,7 +14418,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0441
+        "order": 900.0443
       }
     },
     {
@@ -14319,7 +14429,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0045
+        "order": 900.0046
       }
     },
     {
@@ -14330,7 +14440,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0046
+        "order": 900.0047
       }
     },
     {
@@ -14341,7 +14451,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0047
+        "order": 900.0048
       }
     },
     {
@@ -14352,7 +14462,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0048
+        "order": 900.0049
       }
     },
     {
@@ -14363,7 +14473,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0049
+        "order": 900.005
       }
     },
     {
@@ -14374,7 +14484,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.005
+        "order": 900.0051
       }
     },
     {
@@ -14385,7 +14495,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0051
+        "order": 900.0052
       }
     },
     {
@@ -14396,7 +14506,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0052
+        "order": 900.0053
       }
     },
     {
@@ -14407,7 +14517,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0053
+        "order": 900.0054
       }
     },
     {
@@ -14418,7 +14528,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0054
+        "order": 900.0055
       }
     },
     {
@@ -14429,7 +14539,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0442
+        "order": 900.0444
       }
     },
     {
@@ -14440,7 +14550,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0443
+        "order": 900.0445
       }
     },
     {
@@ -14451,7 +14561,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0444
+        "order": 900.0446
       }
     },
     {
@@ -14462,7 +14572,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0445
+        "order": 900.0447
       }
     },
     {
@@ -14473,7 +14583,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0446
+        "order": 900.0448
       }
     },
     {
@@ -14484,7 +14594,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0447
+        "order": 900.0449
       }
     },
     {
@@ -14495,7 +14605,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0448
+        "order": 900.045
       }
     },
     {
@@ -14517,7 +14627,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0449
+        "order": 900.0451
       }
     },
     {
@@ -14539,7 +14649,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.045
+        "order": 900.0452
       }
     },
     {
@@ -14550,7 +14660,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0451
+        "order": 900.0453
       }
     },
     {
@@ -14561,7 +14671,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0452
+        "order": 900.0454
       }
     },
     {
@@ -14572,7 +14682,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0453
+        "order": 900.0455
       }
     },
     {
@@ -14583,7 +14693,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0454
+        "order": 900.0456
       }
     },
     {
@@ -14594,7 +14704,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0055
+        "order": 900.0056
       }
     },
     {
@@ -14616,7 +14726,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0455
+        "order": 900.0457
       }
     },
     {
@@ -14627,7 +14737,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0056
+        "order": 900.0057
       }
     },
     {
@@ -14649,7 +14759,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0456
+        "order": 900.0458
       }
     },
     {
@@ -14660,7 +14770,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0457
+        "order": 900.0459
       }
     },
     {
@@ -14671,7 +14781,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0458
+        "order": 900.046
       }
     },
     {
@@ -14682,7 +14792,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0459
+        "order": 900.0461
       }
     },
     {
@@ -14693,7 +14803,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0057
+        "order": 900.0058
       }
     },
     {
@@ -14704,7 +14814,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.046
+        "order": 900.0462
       }
     },
     {
@@ -14715,7 +14825,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0461
+        "order": 900.0463
       }
     },
     {
@@ -14726,7 +14836,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0462
+        "order": 900.0464
       }
     },
     {
@@ -14737,7 +14847,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0463
+        "order": 900.0465
       }
     },
     {
@@ -14748,7 +14858,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0464
+        "order": 900.0466
       }
     },
     {
@@ -14759,7 +14869,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0465
+        "order": 900.0467
       }
     },
     {
@@ -14770,7 +14880,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0058
+        "order": 900.0059
       }
     },
     {
@@ -14781,7 +14891,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0059
+        "order": 900.006
       }
     },
     {
@@ -14792,7 +14902,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.006
+        "order": 900.0061
       }
     },
     {
@@ -14803,7 +14913,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0466
+        "order": 900.0468
       }
     },
     {
@@ -14814,7 +14924,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0467
+        "order": 900.0469
       }
     },
     {
@@ -14825,7 +14935,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0468
+        "order": 900.047
       }
     },
     {
@@ -14836,7 +14946,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0469
+        "order": 900.0471
       }
     },
     {
@@ -14847,7 +14957,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.047
+        "order": 900.0472
       }
     },
     {
@@ -14858,7 +14968,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0471
+        "order": 900.0473
       }
     },
     {
@@ -14869,7 +14979,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0472
+        "order": 900.0474
       }
     },
     {
@@ -14880,7 +14990,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0473
+        "order": 900.0475
       }
     },
     {
@@ -14891,7 +15001,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0474
+        "order": 900.0476
       }
     },
     {
@@ -14902,7 +15012,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0475
+        "order": 900.0477
       }
     },
     {
@@ -14913,7 +15023,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0476
+        "order": 900.0478
       }
     },
     {
@@ -14924,7 +15034,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0477
+        "order": 900.0479
       }
     },
     {
@@ -14935,7 +15045,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0061
+        "order": 900.0062
       }
     },
     {
@@ -14946,7 +15056,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0478
+        "order": 900.048
       }
     },
     {
@@ -14957,7 +15067,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0479
+        "order": 900.0481
       }
     },
     {
@@ -14968,7 +15078,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.048
+        "order": 900.0482
       }
     },
     {
@@ -14979,7 +15089,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0481
+        "order": 900.0483
       }
     },
     {
@@ -14990,7 +15100,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0482
+        "order": 900.0484
       }
     },
     {
@@ -15001,7 +15111,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0483
+        "order": 900.0485
       }
     },
     {
@@ -15012,7 +15122,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0484
+        "order": 900.0486
       }
     },
     {
@@ -15023,7 +15133,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0485
+        "order": 900.0487
       }
     },
     {
@@ -15034,7 +15144,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0486
+        "order": 900.0488
       }
     },
     {
@@ -15045,7 +15155,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0487
+        "order": 900.0489
       }
     },
     {
@@ -15056,7 +15166,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0488
+        "order": 900.049
       }
     },
     {
@@ -15067,7 +15177,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0489
+        "order": 900.0491
       }
     },
     {
@@ -15078,7 +15188,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.049
+        "order": 900.0492
       }
     },
     {
@@ -15089,7 +15199,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0491
+        "order": 900.0493
       }
     },
     {
@@ -15100,7 +15210,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0492
+        "order": 900.0494
+      }
+    },
+    {
+      "name": "▶️boot-budget🧑‍💻dev🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:boot-budget",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 950.0064
       }
     },
     {
@@ -15111,7 +15232,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0493
+        "order": 900.0495
       }
     },
     {
@@ -15122,7 +15243,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0062
+        "order": 900.0063
       }
     },
     {
@@ -15133,7 +15254,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0063
+        "order": 900.0064
       }
     },
     {
@@ -15144,7 +15265,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0064
+        "order": 900.0065
       }
     },
     {
@@ -15155,7 +15276,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0494
+        "order": 900.0496
       }
     },
     {
@@ -15166,7 +15287,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0495
+        "order": 900.0497
       }
     },
     {
@@ -15177,7 +15298,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0496
+        "order": 900.0498
       }
     },
     {
@@ -15188,7 +15309,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0497
+        "order": 900.0499
       }
     },
     {
@@ -15199,7 +15320,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0065
+        "order": 900.0066
       }
     },
     {
@@ -15210,7 +15331,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0066
+        "order": 900.0067
       }
     },
     {
@@ -15221,7 +15342,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0498
+        "order": 900.05
       }
     },
     {
@@ -15232,7 +15353,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0499
+        "order": 900.0501
       }
     },
     {
@@ -15243,7 +15364,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.05
+        "order": 900.0502
       }
     },
     {
@@ -15254,7 +15375,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0501
+        "order": 900.0503
       }
     },
     {
@@ -15265,7 +15386,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0067
+        "order": 900.0068
       }
     },
     {
@@ -15276,7 +15397,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0068
+        "order": 900.0069
       }
     },
     {
@@ -15287,7 +15408,40 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0502
+        "order": 900.0504
+      }
+    },
+    {
+      "name": "🛠️serve-hold🧑‍💻dev🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:serve-hold",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 900.0017
+      }
+    },
+    {
+      "name": "▶️two-human-cross-undo🧑‍💻dev🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:two-human-cross-undo",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 950.0065
+      }
+    },
+    {
+      "name": "▶️two-human-viewer🧑‍💻dev🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:two-human-viewer",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 950.0066
       }
     },
     {
@@ -15298,7 +15452,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0503
+        "order": 900.0505
+      }
+    },
+    {
+      "name": "⚖️verify-home🧑‍💻dev🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:verify-home",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0506
       }
     },
     {
@@ -15309,7 +15474,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0504
+        "order": 900.0507
       }
     },
     {
@@ -15320,7 +15485,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0505
+        "order": 900.0508
       }
     },
     {
@@ -15331,7 +15496,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0069
+        "order": 900.007
       }
     },
     {
@@ -15342,7 +15507,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0506
+        "order": 900.0509
       }
     },
     {
@@ -15353,7 +15518,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0507
+        "order": 900.051
       }
     },
     {
@@ -15364,7 +15529,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0508
+        "order": 900.0511
       }
     },
     {
@@ -15375,7 +15540,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0509
+        "order": 900.0512
       }
     },
     {
@@ -15386,7 +15551,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.051
+        "order": 900.0513
       }
     },
     {
@@ -15397,7 +15562,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0511
+        "order": 900.0514
       }
     },
     {
@@ -15408,7 +15573,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0512
+        "order": 900.0515
       }
     },
     {
@@ -15419,7 +15584,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0513
+        "order": 900.0516
       }
     },
     {
@@ -15430,7 +15595,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0514
+        "order": 900.0517
       }
     },
     {
@@ -15441,7 +15606,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0515
+        "order": 900.0518
       }
     },
     {
@@ -15452,7 +15617,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0516
+        "order": 900.0519
       }
     },
     {
@@ -15463,7 +15628,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0517
+        "order": 900.052
       }
     },
     {
@@ -15474,7 +15639,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0518
+        "order": 900.0521
       }
     },
     {
@@ -15485,7 +15650,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0519
+        "order": 900.0522
       }
     },
     {
@@ -15496,7 +15661,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.052
+        "order": 900.0523
       }
     },
     {
@@ -15507,7 +15672,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0521
+        "order": 900.0524
       }
     },
     {
@@ -15518,7 +15683,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0522
+        "order": 900.0525
       }
     },
     {
@@ -15529,7 +15694,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0523
+        "order": 900.0526
       }
     },
     {
@@ -15540,7 +15705,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0524
+        "order": 900.0527
       }
     },
     {
@@ -15551,7 +15716,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0525
+        "order": 900.0528
       }
     },
     {
@@ -15562,7 +15727,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0526
+        "order": 900.0529
       }
     },
     {
@@ -15573,7 +15738,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0527
+        "order": 900.053
       }
     },
     {
@@ -15584,7 +15749,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0528
+        "order": 900.0531
       }
     },
     {
@@ -15595,7 +15760,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0529
+        "order": 900.0532
       }
     },
     {
@@ -15606,7 +15771,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.053
+        "order": 900.0533
       }
     },
     {
@@ -15617,7 +15782,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 900.0017
+        "order": 900.0018
       }
     },
     {
@@ -15628,7 +15793,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.007
+        "order": 900.0071
       }
     },
     {
@@ -15639,7 +15804,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0071
+        "order": 900.0072
       }
     },
     {
@@ -15650,7 +15815,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0072
+        "order": 900.0073
       }
     },
     {
@@ -15661,7 +15826,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 900.0018
+        "order": 900.0019
       }
     },
     {
@@ -15672,7 +15837,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0531
+        "order": 900.0534
       }
     },
     {
@@ -15683,7 +15848,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 950.0064
+        "order": 950.0067
       }
     },
     {
@@ -15694,7 +15859,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0073
+        "order": 900.0074
       }
     },
     {
@@ -15705,7 +15870,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0074
+        "order": 900.0075
       }
     },
     {
@@ -15716,7 +15881,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0075
+        "order": 900.0076
       }
     },
     {
@@ -15727,7 +15892,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0076
+        "order": 900.0077
       }
     },
     {
@@ -15738,7 +15903,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0077
+        "order": 900.0078
       }
     },
     {
@@ -15749,7 +15914,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0078
+        "order": 900.0079
       }
     },
     {
@@ -15760,7 +15925,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0079
+        "order": 900.008
       }
     },
     {
@@ -15771,7 +15936,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.008
+        "order": 900.0081
       }
     },
     {
@@ -15782,7 +15947,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0081
+        "order": 900.0082
       }
     },
     {
@@ -15793,7 +15958,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0082
+        "order": 900.0083
       }
     }
   ],
@@ -15874,7 +16039,7 @@
       "id": "acceptanceHubUrl",
       "type": "promptString",
       "description": "Hub under acceptance (origin)",
-      "default": "http://127.0.0.1:7800"
+      "default": "http://127.0.0.1:8787"
     },
     {
       "id": "acceptanceServeUrl",

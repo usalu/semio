@@ -64,7 +64,10 @@ semio-framework-plugin.workspace = true
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+# 🛢️ The document database without its `vcs` version graph: the hub never reads one (no checkpoint, merge base or head
+# call), and recording one change per committed envelope into it was the commit path's largest cost (ticket 26/09/23
+# session 14c: 56% of commit CPU, a 64-edit window replayed and re-digested per envelope).
+db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", default-features = false, features = ["fs", "deflate"] }
 # 🖥️ The generic server product hub is instance #1 of: `🗄️stores/🦀️.rs` defines `HubInstance`
 # and the four durable storage roles it closes the product's ports over. The crate's lib is named
 # `server`, so hub writes `use server::gateway::ServerInstance;`.
@@ -92,4 +95,4 @@ tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
 # 🗝️ Test-only: the directory lanes' postgres/neo4j fixtures run on the ONE claimed shared server (`db_storage::claimed_backend`).
-db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", default-features = false, features = ["fs", "deflate", "claimed-backend-laws"] }

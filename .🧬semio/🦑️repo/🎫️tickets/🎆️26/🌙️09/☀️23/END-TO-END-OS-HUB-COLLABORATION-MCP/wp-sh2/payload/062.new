@@ -1,0 +1,10 @@
+{
+  "sessionBindingSha256": "",
+  "authorizationGeneration": 0,
+  "receiptSha256": "",
+  "directory": {
+    "spaces": {},
+    "cursor": 0,
+    "users": {}
+  }
+}

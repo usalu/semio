@@ -61,7 +61,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.html".into(),
-        name: "Html".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Html", "Html"),
         source_format: STDIO_HTML_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

@@ -1439,6 +1439,7 @@ impl ArtifactEditor for Process3dPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1798,7 +1799,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Bearbeiten"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
-                name: "3D Process".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("3D Process", "3D-Prozess"),
                 source_format: "process.3d".into(),
                 component_kind: "process3d".into(),
                 dimension: "3d".into(),

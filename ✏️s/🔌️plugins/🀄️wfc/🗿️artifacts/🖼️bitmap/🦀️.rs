@@ -38,7 +38,7 @@ pub const WFC_BITMAP_DIALECT: Dialect = Dialect { artifact_kind: WFC_BITMAP_DOCU
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfcbitmap".into(),
-        name: "WFC Bitmap".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("WFC Bitmap", "WFC-Bitmap"),
         source_format: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
         component_kind: "wfcbitmap".into(),
         dimension: "2d".into(),

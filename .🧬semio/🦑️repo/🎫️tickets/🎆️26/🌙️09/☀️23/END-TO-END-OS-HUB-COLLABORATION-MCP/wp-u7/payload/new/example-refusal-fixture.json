@@ -1,0 +1,104 @@
+{
+  "messages": {
+    "example.unknown": {
+      "en": "This app has no example with that name.",
+      "de": "Diese App hat kein Beispiel mit diesem Namen."
+    },
+    "example.undecodable": {
+      "en": "The example could not be read: its file is outdated or damaged.",
+      "de": "Das Beispiel konnte nicht gelesen werden: Seine Datei ist veraltet oder beschädigt."
+    },
+    "example.empty": {
+      "en": "The example file is empty, so nothing was loaded.",
+      "de": "Die Beispieldatei ist leer, daher wurde nichts geladen."
+    }
+  },
+  "cases": [
+    {
+      "name": "the empty id seats the app's own genesis document",
+      "exampleId": "",
+      "declared": [
+        "demo"
+      ],
+      "decode": "document",
+      "expected": {
+        "seat": "genesis"
+      }
+    },
+    {
+      "name": "the empty id never decodes an asset",
+      "exampleId": "",
+      "declared": [],
+      "decode": "undecodable",
+      "expected": {
+        "seat": "genesis"
+      }
+    },
+    {
+      "name": "a declared example that decodes seats that example",
+      "exampleId": "demo",
+      "declared": [
+        "demo",
+        "house"
+      ],
+      "decode": "document",
+      "expected": {
+        "seat": "example"
+      }
+    },
+    {
+      "name": "an undeclared id is refused as unknown",
+      "exampleId": "no-such-example",
+      "declared": [
+        "demo"
+      ],
+      "decode": "document",
+      "expected": {
+        "refusal": "example.unknown"
+      }
+    },
+    {
+      "name": "an undeclared id is refused before anything decodes",
+      "exampleId": "no-such-example",
+      "declared": [],
+      "decode": "undecodable",
+      "expected": {
+        "refusal": "example.unknown"
+      }
+    },
+    {
+      "name": "ids are exact, never case-folded or trimmed",
+      "exampleId": "Demo",
+      "declared": [
+        "demo"
+      ],
+      "decode": "document",
+      "expected": {
+        "refusal": "example.unknown"
+      }
+    },
+    {
+      "name": "a declared example whose asset does not decode is refused as undecodable",
+      "exampleId": "demo",
+      "declared": [
+        "demo"
+      ],
+      "decode": "undecodable",
+      "expected": {
+        "refusal": "example.undecodable"
+      }
+    },
+    {
+      "name": "a declared example whose asset decodes to the genesis document is refused as empty",
+      "exampleId": "house",
+      "declared": [
+        "demo",
+        "house"
+      ],
+      "decode": "genesis",
+      "expected": {
+        "refusal": "example.empty"
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ static MESH_IMPORT_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 async fn host_media_kind() -> semio_framework::ArtifactKindSpec {
     semio_framework::ArtifactKindSpec {
         id: "3d.builder-test".into(),
-        name: "Builder Test 3D".into(),
+        label: crate::LocalizedLabel::native("Builder Test 3D", "Builder-Test 3D"),
         source_format: "semio.builder-test.mesh/v1".into(),
         component_kind: "builder-test".into(),
         dimension: "3d".into(),

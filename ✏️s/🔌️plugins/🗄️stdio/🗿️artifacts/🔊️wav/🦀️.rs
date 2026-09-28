@@ -61,7 +61,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.wav".into(),
-        name: "Wav".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Wav", "Wav"),
         source_format: STDIO_WAV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

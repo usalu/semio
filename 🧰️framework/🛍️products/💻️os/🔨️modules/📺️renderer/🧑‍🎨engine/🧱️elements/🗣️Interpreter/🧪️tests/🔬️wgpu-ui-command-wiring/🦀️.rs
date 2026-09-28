@@ -96,7 +96,7 @@ fn retained_document_page_with_a_live_wrong_generation_remains_a_terminal_fault(
 }
 
 fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: semio_framework::optional_json_to_dsl(args) }
+    ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: args.map(semio_framework::DslValue::from) }
 }
 
 /** 🎬️ A `UiIntentCommand` standing in for one the renderer fired: the case's descriptor with a

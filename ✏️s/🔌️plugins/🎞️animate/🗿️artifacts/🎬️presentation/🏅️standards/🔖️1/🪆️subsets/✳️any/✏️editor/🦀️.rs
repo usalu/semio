@@ -886,17 +886,6 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    /// 📥️ The trait default owns no retained initialization authority, so the host refuses every
-    /// archive this app hands back (`artifact-store.persisted-initializer-refused`) — which is
-    /// exactly what `setActiveExample`'s `Effect::LoadDocument` is.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PRESENTATION_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     /// 📬️ Exact one-item PUBLICATION authority for the DOCUMENT store. Without it every tool
     /// declaring the `artifact` lane is marked `unsupported-publication-contract` at boot and fails
     /// closed with `interactive-job.publication-authority-missing`, which is why this app could own
@@ -1004,6 +993,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {

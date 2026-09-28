@@ -173,6 +173,45 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "agent-ceiling-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts agent-ceiling-check",
+        "forwardAllArgs": true
+      }
+    },
+    "shutdown-drill": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts shutdown-drill",
+        "forwardAllArgs": true
+      }
+    },
+    "docker-image-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "workspace:prepare"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-image-build",
+        "forwardAllArgs": true
+      }
+    },
+    "docker-image-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-image-check",
+        "forwardAllArgs": true
+      }
     }
   }
 }

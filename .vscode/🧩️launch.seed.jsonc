@@ -2219,7 +2219,7 @@
       "name": "🖱️mcpinspector🌉️os",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx --yes @modelcontextprotocol/inspector --config .mcp.json --server semio",
+      "command": "bun x @modelcontextprotocol/inspector --config .mcp.json --server semio",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "2_mouse",
@@ -3050,6 +3050,28 @@
       "presentation": {
         "group": "4_build",
         "order": 206.17
+      }
+    },
+    {
+      "name": "📦️check📡️channel-version",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:channel-version-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.171
+      }
+    },
+    {
+      "name": "🛠️dev📡️channel-version🏭️generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:channel-version-generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.172
       }
     },
     {
@@ -4038,11 +4060,22 @@
       "name": "⚖️gate🎯️repo-goal",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --local-serve ${input:acceptanceLocalServeUrl} --users ${input:acceptanceUsers}",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 411.22
+      }
+    },
+    {
+      "name": "⚖️gate🎯️repo-goal🔗️hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --local-serve ${input:acceptanceLocalServeUrl} --users ${input:acceptanceUsers}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.221
       }
     },
     {
@@ -4060,7 +4093,7 @@
       "name": "⚖️gate🧮️program-matrix⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-en --locale en --roles editor,viewer",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en --roles editor,viewer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4071,7 +4104,7 @@
       "name": "⚖️gate🧮️program-matrix⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-de --locale de --roles editor",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de --roles editor,viewer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4082,7 +4115,7 @@
       "name": "⚖️gate⏯️tool-run⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-en --locale en",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4093,7 +4126,7 @@
       "name": "⚖️gate⏯️tool-run⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- ${input:acceptanceLocalServeUrl} --tag launch-de --locale de",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4104,7 +4137,7 @@
       "name": "⚖️gate🗂️hub-document-sweep⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- ${input:acceptanceServeUrl} --tag launch-en --locale en",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-en --locale en",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4115,11 +4148,33 @@
       "name": "⚖️gate🗂️hub-document-sweep⚛️react🌐️de",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- ${input:acceptanceServeUrl} --tag launch-de --locale de",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-de --locale de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 411.254
+      }
+    },
+    {
+      "name": "⚖️gate🚪️io-matrix⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale en",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.255
+      }
+    },
+    {
+      "name": "⚖️gate🚪️io-matrix⚛️react🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale de",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.256
       }
     },
     {
@@ -4272,6 +4327,17 @@
       }
     },
     {
+      "name": "⚖️gate🛑️hub-graceful-shutdown",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:shutdown-drill",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.315
+      }
+    },
+    {
       "name": "⚖️gate🧠️hub-residency",
       "type": "node-terminal",
       "request": "launch",
@@ -4302,6 +4368,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️gate🤖️hub-agent-ceiling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:agent-ceiling-check -- --hub ${input:acceptanceHubUrl} --locale en",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.335
       }
     },
     {
@@ -4536,7 +4613,7 @@
       "id": "acceptanceHubUrl",
       "type": "promptString",
       "description": "Hub under acceptance (origin)",
-      "default": "http://127.0.0.1:7800"
+      "default": "http://127.0.0.1:8787"
     },
     {
       "id": "acceptanceServeUrl",

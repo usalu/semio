@@ -241,6 +241,37 @@ export async function withAcceptanceRecord(repoRoot: string, check: string, body
   }
 }
 
+/** 🪵️ Runs one law process (typically `cargo test` of one exact law), streams its output through and collects it as whole
+ * lines: each stream is decoded as UTF-8 across chunk boundaries and keeps its own unfinished tail, so a line split between
+ * chunks or interleaved with the other stream is still one line when a harness reads its verdict. Ctrl-C calls
+ * `onInterrupt` and stops the process. Resolves with the exit status (-1 when killed by a signal) and the lines. */
+export function runLawProcess(command: string, args: readonly string[], options: Readonly<{ cwd: string; env: NodeJS.ProcessEnv }>, onInterrupt?: () => void): Promise<{ status: number; lines: string[] }> {
+  return new Promise((resolveExit) => {
+    const lines: string[] = [];
+    const tails = { stdout: "", stderr: "" };
+    const child = spawn(command, [...args], { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"] });
+    const interrupt = (): void => {
+      onInterrupt?.();
+      child.kill("SIGINT");
+    };
+    process.once("SIGINT", interrupt);
+    for (const stream of ["stdout", "stderr"] as const) {
+      child[stream].setEncoding("utf8");
+      child[stream].on("data", (text: string) => {
+        process.stdout.write(text);
+        const parts = (tails[stream] + text).split("\n");
+        tails[stream] = parts.pop()!;
+        lines.push(...parts);
+      });
+    }
+    child.once("close", (code) => {
+      process.removeListener("SIGINT", interrupt);
+      lines.push(...Object.values(tails).filter((tail) => tail.length > 0));
+      resolveExit({ status: code ?? -1, lines });
+    });
+  });
+}
+
 //#endregion 🧾️CheckResult
 
 //#region 🎯️GoalGate

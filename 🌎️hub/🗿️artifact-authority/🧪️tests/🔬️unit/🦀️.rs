@@ -192,7 +192,7 @@ fn fixture_manifest() -> semio_framework::PluginManifest {
         commands: Vec::new(),
         artifact_kinds: vec![semio_framework::ArtifactKindSpec {
             id: "fixture.number".to_string(),
-            name: "Fixture Number".to_string(),
+            label: semio_framework_plugin::LocalizedLabel::native("Fixture Number", "Fixture-Zahl"),
             source_format: "fixture".to_string(),
             component_kind: "document".to_string(),
             dimension: "data".to_string(),

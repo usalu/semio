@@ -320,28 +320,6 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Self::from_payload(payload, Some(input), Some(checkpoint))
     }
 
-    /// 👁️ The agent lane's prepare phase: runs this job's own preflight and work to the emit the shell lane
-    /// would publish, and publishes nothing. The job stays owned by the caller, which closes it through its
-    /// ordinary close protocol ([`InteractiveJob::begin_close`] / [`InteractiveJob::close_step`]).
-    pub fn preview_emit(&mut self) -> Result<(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, EphemeralEmit<A>), Fault> {
-        let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) =
-            (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut())
-        else {
-            return Err(Fault::from("retained command preview owner is absent"));
-        };
-        let extent = work.extent(command, snapshot, interaction, self.context.as_deref()).ok_or_else(|| Fault::from("retained command work refused the command before any capacity was measured"))?;
-        if extent == 0 || extent > self.maximum_work_items {
-            return Err(Fault::from("retained command exceeds semantic work capacity"));
-        }
-        loop {
-            match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation })? {
-                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
-                ArtifactCommandWorkStep::Complete(emit) => return Ok((emit, EphemeralEmit::default())),
-                ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral } => return Ok((emit, ephemeral)),
-            }
-        }
-    }
-
     fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
         let phase = if checkpoint_input.is_some() {
             ArtifactRetainedCommandPhase::CheckpointPages
@@ -457,11 +435,15 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     }
 }
 
+/// 🏷️ The fixed prefix every reducer fault detail starts with — written by [`reducer_fault_detail`], read back by
+/// [`reducer_fault_of_detail`].
+const REDUCER_FAULT_DETAIL_PREFIX: &str = "retained command reducer rejected operation: ";
+
 /// 🧯️ The fault detail one refused reducer step reports: the fixed prefix every reader already keys on,
 /// then the app's OWN code and message. Clipped to [`ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES`] on a
 /// char boundary, so a runaway message narrows the report instead of truncating mid-codepoint.
 pub fn reducer_fault_detail(fault: &Fault) -> String {
-    let mut detail = format!("retained command reducer rejected operation: {} {}", fault.code.0.as_str(), fault.message);
+    let mut detail = format!("{REDUCER_FAULT_DETAIL_PREFIX}{} {}", fault.code.0.as_str(), fault.message);
     if detail.len() > ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES {
         let mut end = ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES;
         while end > 0 && !detail.is_char_boundary(end) {
@@ -470,6 +452,14 @@ pub fn reducer_fault_detail(fault: &Fault) -> String {
         detail.truncate(end);
     }
     detail
+}
+
+/// 🔎️ The reducer's own code and message back out of a detail [`reducer_fault_detail`] wrote, `None` for any other
+/// job fault detail — so the agent lane's preview answers an agent with the reducer's exact refusal code, the one it
+/// branches on, instead of the generic app-owned output code the shell's fault page carries.
+pub fn reducer_fault_of_detail(detail: &str) -> Option<Fault> {
+    let (code, message) = detail.strip_prefix(REDUCER_FAULT_DETAIL_PREFIX)?.split_once(' ')?;
+    (!code.is_empty()).then(|| Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new(code), message))
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {

@@ -58,7 +58,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.semio".into(),
-        name: "Semio".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Semio", "Semio"),
         source_format: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

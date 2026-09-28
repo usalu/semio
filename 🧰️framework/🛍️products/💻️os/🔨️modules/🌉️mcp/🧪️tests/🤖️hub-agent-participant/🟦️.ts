@@ -16,6 +16,7 @@
  *   OS_MCP_HUB_EMAIL     the human's sign-in (required; `blocked` without it)
  *   OS_MCP_HUB_PASSWORD  the human's password (required; `blocked` without it)
  *   OS_MCP_HUB_SPACE     an existing space holding a document, instead of a fresh one
+ *   S_OS_MCP_PARTICIPANT_OUT  where each gateway session's stderr lands (default `🌉️mcp/🤖️generated/🤖️hub-agent-participant`)
  *
  * It writes its acceptance record (`mcp-hub-agent-participant`, en + de) through `publishAcceptanceCheckResult`.
  *
@@ -23,7 +24,7 @@
  * refusal verbatim, because the whole value of this gate is that it cannot round a missing
  * participant up to a passing one. Ticket 26/09/18 slice M8.
  */
-import { chmodSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -56,6 +57,8 @@ const startedAt = new Date();
 
 type Row = { readonly step: string; readonly ok: boolean; readonly detail: string };
 const rows: Row[] = [];
+const outDir = process.env.S_OS_MCP_PARTICIPANT_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/🤖️hub-agent-participant");
+const gateways: Array<{ readonly name: string; readonly session: McpClientSession }> = [];
 function row(step: string, ok: boolean, detail: string): void {
   rows.push({ step, ok, detail });
   console.log(`${ok ? "PASS" : "FAIL"}  ${step} — ${detail}`);
@@ -78,6 +81,12 @@ async function hub(method: string, path: string, options: { token?: string; body
 
 function finish(blocked?: string): never {
   const red = rows.filter((entry) => !entry.ok);
+  mkdirSync(outDir, { recursive: true });
+  const evidence = gateways.map(({ name, session }) => {
+    const path = join(outDir, `gateway-stderr-${name}.txt`);
+    writeFileSync(path, `${session.stderrLines().join("\n")}\n`);
+    return path;
+  });
   console.log(`hub-agent-participant-check: ${rows.length - red.length}/${rows.length} rows green against ${ORIGIN}`);
   publishAcceptanceCheckResult(
     repoRoot,
@@ -86,6 +95,7 @@ function finish(blocked?: string): never {
       status: blocked ? "blocked" : red.length === 0 && rows.length > 0 ? "pass" : "fail",
       startedAt,
       measured: { rows: rows.length, green: rows.length - red.length },
+      evidence,
       summary: blocked
         ? { en: `precondition missing: ${blocked}`, de: `Voraussetzung fehlt: ${blocked}` }
         : { en: `${rows.length - red.length}/${rows.length} agent-participant rows green against ${ORIGIN}${red.length ? `; red: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}`, de: `${rows.length - red.length}/${rows.length} Zeilen des Agenten als Teilnehmer grün gegen ${ORIGIN}${red.length ? `; rot: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}` },
@@ -154,6 +164,7 @@ row("3b the agent principal is NOT the delegating human", delegation.json?.agent
 async function freshSessionContinuesFromTheHead(documentId: string, capabilityId: string, input: unknown, firstCursor: number): Promise<void> {
   const head = async (): Promise<number> => Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`, { token })).json?.head_seq ?? -1);
   const second = new McpClientSession(entry, ["--hub", ORIGIN, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge"], repoRoot);
+  gateways.push({ name: "second", session: second });
   try {
     const initialized = await second.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "semio-hub-agent-participant-second", title: "hub agent participant gate, second session", version: "1" } });
     if (initialized.error) {
@@ -187,6 +198,7 @@ const scopes = declared?.args.includes("--scopes") ? String(declared.args[declar
 // spawns the identical binary the wrapper execs, with the hub selector in its place.
 const entry = { command: requireMcpBinary(repoRoot), args: ["stdio", "--scopes", scopes] };
 const session = new McpClientSession(entry, ["--hub", ORIGIN, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge"], repoRoot);
+gateways.push({ name: "first", session });
 try {
   const initialized = await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} }, clientInfo: { name: "semio-hub-agent-participant", title: "hub agent participant gate", version: "1" } });
   row("5 the gateway serves over the delegated hub session", !initialized.error, initialized.error ? JSON.stringify(initialized.error).slice(0, 300) : `server=${initialized.result?.serverInfo?.name}@${initialized.result?.serverInfo?.version}`);
@@ -210,7 +222,7 @@ try {
   if (!documentId) finish();
 
   const opened = await session.call("artifact_open", { artifactId: documentId });
-  row("8 artifact_open of a HUB document answers", opened.isError !== true, opened.isError === true ? JSON.stringify(opened.structuredContent).slice(0, 300) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes}`);
+  row("8 artifact_open of a HUB document answers", opened.isError !== true, opened.isError === true ? JSON.stringify(opened.structuredContent).slice(0, 300) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes} link=${JSON.stringify(opened.structuredContent?.sessionDocument?.sync ?? null)}`);
 
   const snapshot = await session.call("artifact_snapshot", { artifactId: documentId });
   row("9 artifact_snapshot of a HUB document answers real bytes", snapshot.isError !== true && Number(snapshot.structuredContent?.packBytes ?? 0) > 0, snapshot.isError === true ? JSON.stringify(snapshot.structuredContent).slice(0, 300) : `packBytes=${snapshot.structuredContent?.packBytes} sprBytes=${snapshot.structuredContent?.sprBytes}`);

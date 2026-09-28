@@ -386,7 +386,7 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "name",
+        "label",
         "sourceFormat",
         "componentKind",
         "dimension",
@@ -402,8 +402,17 @@
         "id": {
           "const": "s.fixture.document"
         },
-        "name": {
-          "const": "Format Roundtrip"
+        "label": {
+          "const": {
+            "native": {
+              "de": "Format-Rundlauf",
+              "en": "Format Roundtrip"
+            },
+            "reuse": {
+              "de": "Format-Rundlauf",
+              "en": "Format Roundtrip"
+            }
+          }
         },
         "sourceFormat": {
           "const": "fixture.document"

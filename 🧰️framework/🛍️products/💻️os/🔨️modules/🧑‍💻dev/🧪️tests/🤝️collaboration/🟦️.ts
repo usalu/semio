@@ -128,7 +128,7 @@ const COLLAB_E2E_STEP_NAMES = [
   "user1 creates a writer artifact; the row appears in both tables and opens an editor for user1",
   "user2 opens the same artifact; user1 types and user2 sees the text",
   "#s-presence-peers shows 2 peers, in distinct hub-assigned session colours, in both shells",
-  "user1 checks in with a message; history shows it and the space table's updated column moves for both",
+  "user1 checks in with a message; the check-in status reads checked in, the active checkpoint moves and the space table's updated column moves for both",
   "admin: /admin/api/connections lists both connections with their surfaces; /admin returns HTML",
   "user1's keystroke reaches user2's editor within ONE ServerFrame::Commands round trip",
   "hub restarts against the same OS_HUB_DATA; user2 reloads and the space + artifact are still there",
@@ -206,12 +206,13 @@ async function collabShowsRebuild(page: import("playwright").Page): Promise<bool
 }
 
 /** 🌍️ The language both humans' browser contexts run in (`--locale`), and the dialog option labels STEP 1/2 pick in it — the
- * Space app's own `LocalizedLabel`s (`🪐️space/…/🏠️home/…/✏️editor/🦀️.rs`). */
+ * Space app's own `LocalizedLabel`s (`🪐️space/…/🏠️home/…/✏️editor/🦀️.rs`); `checkedIn` is the shell's ready Check In status
+ * (`CHECKIN_STATUS_LABELS.ready`, `🛠️ShellHelpers/🟦️.tsx`). */
 type CollabLocale = "en" | "de";
 
-const COLLAB_E2E_LOCALES: Readonly<Record<CollabLocale, { readonly browser: string; readonly studio: string; readonly public: string; readonly author: string }>> = {
-  en: { browser: "en-US", studio: "Studio", public: "Public", author: "Author" },
-  de: { browser: "de-DE", studio: "Studio", public: "Öffentlich", author: "Autor" },
+const COLLAB_E2E_LOCALES: Readonly<Record<CollabLocale, { readonly browser: string; readonly studio: string; readonly public: string; readonly author: string; readonly checkedIn: string }>> = {
+  en: { browser: "en-US", studio: "Studio", public: "Public", author: "Author", checkedIn: "Checked in" },
+  de: { browser: "de-DE", studio: "Studio", public: "Öffentlich", author: "Autor", checkedIn: "Eingecheckt" },
 };
 
 /** 🧾️ One step's verdict: `true` PASS, `false` FAIL, `null` SKIP (the run does not own what the step needs). */
@@ -735,6 +736,36 @@ async function collabOpenCheckin(page: import("playwright").Page): Promise<impor
   return checkin.first();
 }
 
+/** 📌️ The focused program's active checkpoint id, from the shell root's `data-history-json` (`null` before any). */
+async function collabCurrentCheckpointId(page: import("playwright").Page): Promise<string | null> {
+  return page.evaluate(() => (JSON.parse(document.querySelector("[data-history-json]")?.getAttribute("data-history-json") ?? "null") as { readonly currentCheckpointId?: string | null } | null)?.currentCheckpointId ?? null);
+}
+
+/** ⏳️ The hub Check In's terminal status sentence on `page` (`#s-checkin-status`: ready, cancelled or a refusal), or the last
+ * sentence it showed when `deadlineMs` ran out — a running check-in reads "Checking in… n/m". */
+async function collabAwaitCheckinStatus(page: import("playwright").Page, deadlineMs: number): Promise<string> {
+  const status = page.locator('[id="s-checkin-status"]').first();
+  const deadline = Date.now() + deadlineMs;
+  let text = "";
+  while (Date.now() < deadline) {
+    text = ((await status.innerText().catch(() => "")) ?? "").trim();
+    if (text !== "" && (await page.locator('[id="s-checkin-abort"]').count()) === 0) return text;
+    await page.waitForTimeout(250);
+  }
+  return text;
+}
+
+/** 🚪️ Re-opens the writer document of steps 3–13 for both humans from the Space index (a step before navigated away) and
+ * waits until both editors mounted. */
+async function collabReopenWriter(opts: { readonly user1: import("playwright").Page; readonly user2: import("playwright").Page; readonly spaceId: string; readonly artifactId: string; readonly purpose: string }): Promise<void> {
+  for (const [label, page] of [["user1", opts.user1], ["user2", opts.user2]] as const) {
+    await collabOpenSpace(page, opts.spaceId);
+    await collabWaitForRow(page, "artifact", opts.artifactId, 30_000);
+    await collabRowAction(page, "artifact", opts.artifactId, "open").catch(() => undefined);
+    spaceE2eAssert(await collabWaitForEditor(page, 120_000), `${label}'s writer editor never re-mounted for ${opts.purpose}`);
+  }
+}
+
 /** 🪪️ The hub user id of the human signed in on `page`: the connection report names users only by id, and the shell
  * remembers its minted capability (`semio.os.hub-session-capability.v1`) with that id. */
 async function collabHubUserId(page: import("playwright").Page): Promise<string | null> {
@@ -1136,12 +1167,15 @@ async function collabRunScenario(
       await collabRowAction(user1, "artifact", artifactId, "open");
       spaceE2eAssert(await collabWaitForEditor(user1, 120_000), "user1's writer editor never mounted, so there is no document to check in");
       const checkinButton = await collabOpenCheckin(user1);
+      const checkpointBefore = await collabCurrentCheckpointId(user1);
       await checkinButton.click();
       const message = `collab check-in ${Date.now()}`;
       await user1.locator('[id="s-checkin-message"]').fill(message);
-      const historyEntryVisible = user1.getByText(message, { exact: false });
       await user1.locator('[id="s-checkin-message"]').press("Enter");
-      await historyEntryVisible.first().waitFor({ state: "visible", timeout: 15_000 });
+      const status = await collabAwaitCheckinStatus(user1, 60_000);
+      spaceE2eAssert(status === COLLAB_E2E_LOCALES[locale].checkedIn, `the hub Check In ended as ${JSON.stringify(status)}, not ${JSON.stringify(COLLAB_E2E_LOCALES[locale].checkedIn)}`);
+      const checkpointAfter = await collabCurrentCheckpointId(user1);
+      spaceE2eAssert(checkpointAfter !== null && checkpointAfter !== checkpointBefore, `the active checkpoint did not move (${checkpointBefore} → ${checkpointAfter})`);
       await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
       const rowAfter1Deadline = Date.now() + 30_000;
@@ -1170,7 +1204,7 @@ async function collabRunScenario(
         await user2.waitForTimeout(1_000);
       }
       spaceE2eAssert(rowAfter2 !== rowBefore2, `user2's space table row for ${artifactId} did not change after user1's check-in (before: ${JSON.stringify(rowBefore2)}, after: ${JSON.stringify(rowAfter2)})`);
-      record(6, true, "check-in dispatched and the space table's row changed for both users");
+      record(6, true, `check-in "${message}" reads ${JSON.stringify(COLLAB_E2E_LOCALES[locale].checkedIn)}, checkpoint moved, the space table's row changed for both users`);
     } catch (error) {
       await collabScreenshot(user1, "step6-user1");
       await collabScreenshot(user2, "step6-user2");
@@ -1465,14 +1499,7 @@ async function collabRunCollaborationBehaviours(opts: {
     } catch (error) {
       // Re-open space artifact editors if step 6+ navigated away.
       if (opts.spaceId && opts.artifactId) {
-        await collabOpenSpace(opts.user1, opts.spaceId!);
-        await collabOpenSpace(opts.user2, opts.spaceId!);
-        await collabWaitForRow(opts.user1, "artifact", opts.artifactId, 30_000);
-        await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 30_000);
-        await collabRowAction(opts.user1, "artifact", opts.artifactId, "open").catch(() => undefined);
-        await collabRowAction(opts.user2, "artifact", opts.artifactId, "open").catch(() => undefined);
-        spaceE2eAssert(await collabWaitForEditor(opts.user1, 120_000), "user1's writer editor never re-mounted for the caret leg");
-        spaceE2eAssert(await collabWaitForEditor(opts.user2, 120_000), "user2's writer editor never re-mounted for the caret leg");
+        await collabReopenWriter({ user1: opts.user1, user2: opts.user2, spaceId: opts.spaceId, artifactId: opts.artifactId, purpose: "the caret leg" });
         details.push(await collabAssertPeerCaretMoves({ mover: opts.user1, observer: opts.user2, label: "writer" }));
       } else {
         throw error;
@@ -1508,6 +1535,7 @@ async function collabRunCollaborationBehaviours(opts: {
 
   try {
     const rounds: string[] = [];
+    await collabReopenWriter({ user1: opts.user1, user2: opts.user2, spaceId: opts.spaceId!, artifactId: opts.artifactId!, purpose: "the link cuts (STEP 14 left both humans on its draw/puzzle3d documents)" });
     for (const outageMs of COLLAB_E2E_LINK_CUTS_MS) {
       const settled = await collabAwaitConvergence(opts.user1, editor1, editor2, 30_000);
       spaceE2eAssert(settled.converged, `the editors disagreed before the ${outageMs} ms cut`);

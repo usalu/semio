@@ -33,7 +33,9 @@ export type BuildFreshnessReport = {
   reason: Readonly<{ en: string; de: string }>;
 };
 
-/** 🔎️ The executable path and start time of `pid`. */
+/** 🔎️ The executable path and start time of `pid`. macOS `lsof` escapes non-ASCII path bytes as `\xHH` without a locale but
+ * prints them raw under a UTF-8 locale (as under nx), so its output is read as latin1 — one code unit per byte — and both forms
+ * decode to the same UTF-8 path (an emoji path such as `.🧬semio/🌐hub/…` read as UTF-8 first came back mangled). */
 export function processExecutable(pid: number): { executable: string; startedAtMs: number | null } {
   if (process.platform === "linux") {
     const executable = readlinkSync(`/proc/${pid}/exe`);
@@ -45,7 +47,7 @@ export function processExecutable(pid: number): { executable: string; startedAtM
     const [executable = "", started = ""] = answer.stdout.trim().split("|");
     return { executable, startedAtMs: started ? Date.parse(started) : null };
   }
-  const escaped = (spawnSync("lsof", ["-a", "-p", String(pid), "-d", "txt", "-Fn"], { encoding: "utf8" }).stdout.split("\n").find((line) => line.startsWith("n")) ?? "").slice(1);
+  const escaped = (spawnSync("lsof", ["-a", "-p", String(pid), "-d", "txt", "-Fn"], { encoding: "latin1" }).stdout.split("\n").find((line) => line.startsWith("n")) ?? "").slice(1);
   const executable = Buffer.from(escaped.replace(/\\x([0-9a-f]{2})/giu, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16))), "latin1").toString("utf8");
   const started = spawnSync("ps", ["-o", "lstart=", "-p", String(pid)], { encoding: "utf8" }).stdout.trim();
   return { executable, startedAtMs: started ? Date.parse(started) : null };

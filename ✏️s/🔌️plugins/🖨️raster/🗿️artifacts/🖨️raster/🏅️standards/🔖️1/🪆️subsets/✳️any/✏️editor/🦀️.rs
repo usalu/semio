@@ -1143,6 +1143,7 @@ impl ArtifactEditor for RasterPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
@@ -1459,7 +1460,7 @@ pub fn create_raster_app() -> AppDefinition {
             // harmless duplicate registration (registry dedupes by id).
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.image".into(),
-                name: "2D Image".into(),
+                label: semio_framework_plugin::LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),

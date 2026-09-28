@@ -2380,7 +2380,7 @@ pub mod workflow {
     #[derive(Clone, Debug, Default)]
     pub struct OsArtifactDescriptor {
         pub kind: String,
-        pub name: String,
+        pub label: semio_framework::LocalizedLabel,
         pub source_format: String,
         pub component_kind: String,
         pub dimension: String,
@@ -4416,11 +4416,12 @@ pub mod registry {
     pub type OsArtifactKindId = String;
 
     //#region 🔖️ResourceDescriptors
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct OsArtifactDescriptor {
         pub kind: OsArtifactKindId,
-        pub name: String,
+        /// 🗣️ The kind's own localized name — its `ArtifactKindSpec.label`, what a picker shows for it.
+        pub label: LocalizedLabel,
         pub source_format: String,
         pub component_kind: String,
         pub dimension: String,
@@ -4479,7 +4480,7 @@ pub mod registry {
         ArtifactKindEntry {
             descriptor: OsArtifactDescriptor {
                 kind: spec.id.clone(),
-                name: spec.name.clone(),
+                label: spec.label.clone(),
                 source_format: spec.source_format.clone(),
                 component_kind: spec.component_kind.clone(),
                 dimension: spec.dimension.clone(),
@@ -4505,7 +4506,7 @@ pub mod registry {
             ArtifactKindEntry {
                 descriptor: OsArtifactDescriptor {
                     kind: "parameter.value".into(),
-                    name: "Parameter".into(),
+                    label: LocalizedLabel::native("Parameter", "Parameter"),
                     source_format: "parameter.value".into(),
                     component_kind: "parameter".into(),
                     dimension: "data".into(),
@@ -4528,7 +4529,7 @@ pub mod registry {
             ArtifactKindEntry {
                 descriptor: OsArtifactDescriptor {
                     kind: workflow::S_WORKFLOW_SCHEMA.into(),
-                    name: "Workflow".into(),
+                    label: LocalizedLabel::native("Workflow", "Workflow"),
                     source_format: workflow::S_WORKFLOW_SCHEMA.into(),
                     component_kind: "workflow".into(),
                     dimension: "data".into(),
@@ -4548,7 +4549,7 @@ pub mod registry {
             ArtifactKindEntry {
                 descriptor: OsArtifactDescriptor {
                     kind: space::S_SPACE_SCHEMA.into(),
-                    name: "Space".into(),
+                    label: LocalizedLabel::native("Space", "Space"),
                     source_format: space::S_SPACE_SCHEMA.into(),
                     component_kind: "space".into(),
                     dimension: "data".into(),
@@ -4568,7 +4569,7 @@ pub mod registry {
             ArtifactKindEntry {
                 descriptor: OsArtifactDescriptor {
                     kind: space::S_COLLECTION_SCHEMA.into(),
-                    name: "Collection".into(),
+                    label: LocalizedLabel::native("Collection", "Sammlung"),
                     source_format: space::S_COLLECTION_SCHEMA.into(),
                     component_kind: "collection".into(),
                     dimension: "data".into(),
@@ -4624,7 +4625,7 @@ pub mod registry {
     pub fn os_artifact_descriptor(kind: &str) -> OsArtifactDescriptor {
         RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map_or_else(|| OsArtifactDescriptor {
             kind: kind.into(),
-            name: kind.into(),
+            label: LocalizedLabel::data(kind),
             source_format: kind.into(),
             component_kind: "panel".into(),
             dimension: "unknown".into(),

@@ -181,9 +181,9 @@
     "solarThermalKwhA": 1200.0
   },
   "climate": {
-    "childId": "din18599-climate-5e913c6dbbe501b5",
+    "childId": "din18599-climate-36af55c7f03468dc",
     "target": {
-      "artifactId": "din18599-climate-5e913c6dbbe501b5",
+      "artifactId": "din18599-climate-36af55c7f03468dc",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

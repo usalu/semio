@@ -71,7 +71,8 @@ describe("semio-os-mcp — document content reaches an agent only as untrusted d
   let discovered: Record<string, any>;
   const call = async (name: string, args: Record<string, unknown>, timeoutMs = GUEST_CALL_TIMEOUT_MS): Promise<Record<string, any>> => (await proc.request("tools/call", { name, arguments: args }, timeoutMs)) as Record<string, any>;
   /** ✍️ The collaborator's write, by the law's headless recipe: the kind's own text verb, prepared
-   * and invoked like any agent edit, every `{{canary}}` replaced by the canary. */
+   * and invoked like any agent edit, every `{{canary}}` replaced by the canary. A whole-text replacement is destructive, so
+   * this gateway auto-approves: human approval is the security and user-path gates' law, not this one. */
   const plant = async (recipe: { capabilityId: string; input: Record<string, unknown> }): Promise<Record<string, any>> => {
     const input = JSON.parse(JSON.stringify(recipe.input).replaceAll("{{canary}}", canary));
     const prepared = await call("action_prepare", { capabilityId: recipe.capabilityId, input });
@@ -89,7 +90,7 @@ describe("semio-os-mcp — document content reaches an agent only as untrusted d
 
   beforeAll(async () => {
     folder = mkdtempSync(join(tmpdir(), "semio-os-mcp-untrusted-"));
-    proc = spawnRawMcp(bin, ["stdio", "--folder", folder, "--scopes", "workspace.read,artifact.write"]);
+    proc = spawnRawMcp(bin, ["stdio", "--folder", folder, "--scopes", "workspace.read,artifact.write", "--auto-approve", "all"]);
     proc.writeRaw(JSON.stringify({ jsonrpc: "2.0", id: 9001, method: "server/discover", params: {} }));
     discovered = JSON.parse(await proc.nextLine(CATALOG_COMPILE_TIMEOUT_MS));
     expect((await call("artifact_create", { artifactId: "probe-canary", kind: "os.agent.probe/v1", initial: { text: canary } })).result?.isError).not.toBe(true);

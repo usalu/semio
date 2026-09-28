@@ -1,0 +1,8 @@
+{
+  "schema": "semio.stdio.table-arena-headroom/v1",
+  "revision": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "cases": [
+    { "id": "csv-editable-headers", "rows": 40, "width": 4, "editableHeaders": true, "headroom": ["controls", "third", "half", "complete"] },
+    { "id": "tsv-read-only-headers", "rows": 40, "width": 3, "editableHeaders": false, "headroom": ["controls", "half", "complete"] }
+  ]
+}

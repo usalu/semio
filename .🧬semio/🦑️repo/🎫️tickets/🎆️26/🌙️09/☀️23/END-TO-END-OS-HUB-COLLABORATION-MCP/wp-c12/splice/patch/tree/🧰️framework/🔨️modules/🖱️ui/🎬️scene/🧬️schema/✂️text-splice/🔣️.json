@@ -11,7 +11,8 @@
     "applications",
     "concurrent",
     "rebases",
-    "offsets"
+    "offsets",
+    "hostTyping"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -102,6 +103,36 @@
           "minimum": 0
         }
       }
+    },
+    "view": {
+      "$comment": "What a splice-typing host's editor shows after a scene or a refusal (scalar selection), or null when it already shows it.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "text",
+            "anchor",
+            "caret"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "anchor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "caret": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "properties": {
@@ -355,6 +386,149 @@
           "scalar": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      }
+    },
+    "hostTyping": {
+      "$comment": "A splice-typing host over one window (TS reference: textEditorSpliceHostV1 / sendTextEditorSpliceV1 / receiveTextEditorSceneV1 / refuseTextEditorSpliceV1): `local` = the editor now shows this text with a collapsed caret; `send` = the ONE splice the host sends for everything typed since its last send, numbered `seq`; `scene` = the window published this text having applied the host's splices up to `applied`; `refuse` = the window refused splice `refuse`. `show` is what the editor shows afterwards (null: unchanged), `unapplied` the sequence numbers still in flight.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "note",
+          "init",
+          "events"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "init": {
+            "type": "object",
+            "required": [
+              "buffer",
+              "applied"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "buffer": {
+                "type": "string"
+              },
+              "applied": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "local",
+                    "caret"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "local": {
+                      "type": "string"
+                    },
+                    "caret": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "send"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "send": {
+                      "type": "object",
+                      "required": [
+                        "seq",
+                        "splice"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "seq": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "splice": {
+                          "$ref": "#/definitions/splice"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "scene",
+                    "applied",
+                    "show",
+                    "unapplied"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "scene": {
+                      "type": "string"
+                    },
+                    "applied": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "show": {
+                      "$ref": "#/definitions/view"
+                    },
+                    "unapplied": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "refuse",
+                    "show",
+                    "unapplied"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "refuse": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "show": {
+                      "$ref": "#/definitions/view"
+                    },
+                    "unapplied": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            }
           }
         }
       }

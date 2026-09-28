@@ -17,7 +17,7 @@ pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Window
         label: Some(label.into()),
         pressed,
         text: None,
-        on_change: puzzle2d_action("setSelectableKind", Some(json!({ "kind": granularity }))),
+        on_change: puzzle2d_action("setSelectableKind", Some(semio_framework_plugin::dsl_value!({ "kind": granularity }))),
     };
     WindowMeasure::Group {
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-select"),

@@ -3562,18 +3562,6 @@ impl ArtifactEditor for SequencePlayApp {
             .collect()
     }
 
-    /// 📥️ Admits the whole-document replacement `reset_sequence_document_effect` emits. The trait
-    /// default owns no retained initialization authority, so the host refuses the app's own archive
-    /// with `artifact-store.persisted-initializer-refused` AFTER the guest has already accepted the
-    /// verb — which is what every `setActiveExample` would hit without this.
-    fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, SEQUENCE_DOCUMENT_SCHEMA, operation, generation))
-    }
-
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(SequenceRetainedArtifactJobFactory::new(&controller))?;
@@ -3628,6 +3616,7 @@ impl ArtifactEditor for SequencePlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if persistent_route {
             Box::new(SequencePersistentWork::new(tool_id, &operation_context))

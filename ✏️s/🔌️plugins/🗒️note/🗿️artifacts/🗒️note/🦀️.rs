@@ -104,7 +104,7 @@ where
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: NOTE_DIALECT.artifact_kind.into(),
-        name: "Note".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Note", "Notiz"),
         source_format: "note.document".into(),
         component_kind: "note".into(),
         dimension: "2d".into(),
@@ -347,13 +347,8 @@ pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTe
 /// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
 /// content alone) so two distinct blocks never collide on the same child slot.
 pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
-    use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    block_id.hash(&mut hasher);
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("note-text-{content_hash:016x}");
+    let child_id = store::content_id("note-text", format!("{block_id}\u{1f}{content_json}").as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
     NoteTextChild { handle: store::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
@@ -1381,8 +1376,6 @@ pub mod editor {
             pub mod engagement_submit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖊️ink-apply-events/🦀️.rs"]
             pub mod ink_apply_events;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️load-request/🦀️.rs"]
-            pub mod load_request;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-block/🦀️.rs"]
             pub mod move_block;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigator-engagement-input/🦀️.rs"]

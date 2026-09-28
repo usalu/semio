@@ -583,7 +583,7 @@ mod plugin_builder_contract_tests {
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
                 interaction_hover: std::sync::Arc::new(InteractionHoverState::new()),
                 context: None,
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [5; 32] },
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [5; 32], authoring_seed: "authoring-seed-test".into() },
                 completion,
             },
             test_retained_command_id,
@@ -604,7 +604,7 @@ mod plugin_builder_contract_tests {
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
                 interaction_hover: std::sync::Arc::new(InteractionHoverState::new()),
                 context: None,
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32] },
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32], authoring_seed: "authoring-seed-test".into() },
                 completion,
             },
             test_retained_command_id,
@@ -2528,18 +2528,23 @@ mod plugin_builder_contract_tests {
         //    none of them — it has no interaction topology and no window kit to mint them. A verb
         //    here is registered but undeclared, so `require_ui_safe_declaration` refuses it by name
         //    before its factory is ever reached.
-        // 2. `setActiveUtility`, which the builder injects as a Migrated action whenever the app
-        //    declares utilities and which `handle_action_invocation` routes DIRECTLY to
-        //    `dispatch_emit` — it is deliberately served without a tool factory, so a missing
-        //    registration is not the dead-action defect it would be for any other migrated verb.
+        // 2. Migrated verbs the framework serves without a tool factory, so a missing registration
+        //    is not the dead-action defect it would be for any other migrated verb: `setActiveUtility`
+        //    (injected whenever the app declares utilities; `handle_action_invocation` routes it
+        //    DIRECTLY to `dispatch_emit`) and `cancelTypedOperation` (every app's operation-progress
+        //    cancel; the head of `dispatch_action` routes it DIRECTLY to `dispatch_operation_cancellation`).
         let framework_registered_without_declaration: std::collections::BTreeSet<String> =
             ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
-        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["setActiveUtility"].into_iter().map(String::from).collect();
+        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility"].into_iter().map(String::from).collect();
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
         assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
         assert!(
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
             "the only reason `setActiveUtility` may carry no factory is its direct `dispatch_emit` arm in `handle_action_invocation`"
+        );
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
+            "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"
         );
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(platform_visible, registered, "every activated factory key is joined on the platform bus under this controller, and nothing else is");
@@ -5154,7 +5159,7 @@ mod plugin_builder_contract_tests {
 
         // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
         // instead of replaying anything locally, and does NOT append a new log entry on its own.
-        assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+        assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
         assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
@@ -6661,11 +6666,11 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_scene_that_declares_no_lanes_still_publishes_one_childless_surface() {
-        let scene = semio_framework_ui_scene::TableScene::base("[]", "[]");
-        let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+        let scene = semio_framework_ui_scene::IconRenderScene { request_json: r#"{"meshId":"box"}"#.into(), footer: None, frame_json: None };
+        let (projection, lanes) = project_scene_surface(crate::app::scene_surface("preview", semio_framework_ui_contract::SurfaceKind::IconRender, &scene).unwrap());
         assert!(lanes.is_empty());
         assert_eq!(projection["component"]["type"], "surface");
-        assert_eq!(artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui_scene::TableScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
+        assert_eq!(artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui_scene::IconRenderScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
     }
 
     #[semio_framework_async_macros::async_test]

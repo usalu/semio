@@ -1,6 +1,6 @@
 {
- "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-overlay/🧰️framework/🛍️products/💻️os/tsconfig.json",
+ "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/🧰️framework/🛍️products/💻️os/tsconfig.json",
  "compilerOptions": { "noEmit": true, "incremental": false },
  "include": [],
- "files": ["/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts", "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-sh1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts"]
+ "files": ["/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts", "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts"]
 }

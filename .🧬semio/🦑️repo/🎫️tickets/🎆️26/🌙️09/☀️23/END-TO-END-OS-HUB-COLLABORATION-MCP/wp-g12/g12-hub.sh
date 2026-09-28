@@ -1,13 +1,14 @@
 #!/bin/zsh
-# 🌎️ G12 private hub on a clone of catalog B3 (production mode, loopback, credential sign-in); users from the private env
+# 🌎️ G12 private hub on a clone of a published catalog (G12_CATALOG, default s14-w4-catalog-p24; production mode, loopback, credential
+# sign-in); fresh users (no spaces yet) from the private env
 # files (passwords via stdin only, never argv, never printed).
-#   g12-hub.sh prepare <root-name> <binary>       fresh root under .🧬semio/🌐hub/<root-name> (APFS clone of B3's generation + user1/user2)
+#   g12-hub.sh prepare <root-name> <binary>       fresh root under .🧬semio/🌐hub/<root-name> (APFS clone of the catalog's generation + user1/user2)
 #   g12-hub.sh start <root-name> <port> <binary>  detached hub, pid → <root>.pid, log → s14-g12-logs/<root-name>-<port>.log
 #   g12-hub.sh stop <root-name>                   SIGTERM the recorded pid, wait ≤ 60 s
 set -u
 H="/Users/ueli/Documents/semio/.🧬semio/🌐hub"
 C="$H/s14-g12-credentials"
-SRC="$H/s13-w3-catalog-b3"
+SRC="$H/${G12_CATALOG:-s14-w4-catalog-p24}"
 cmd=$1; shift
 case $cmd in
   prepare)

@@ -137,12 +137,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return cases;
     }
 
+    /** 🧭️ The corpus's `actionIds`, defined once for every language harness (the Rust contract law reads it the same way): every
+     * binding of every node, nodes in ascending id order, duplicates kept — two cells bound to one verb are two reachable actions. */
     function allActionIds(state: ReturnType<InstanceType<typeof UiDocumentStore>["getState"]>): string[] {
-      const ids = new Set<string>();
-      for (const record of state.nodes.values()) {
-        for (const binding of record.bindings ?? []) ids.add(`${binding.action.scope}.${binding.action.name}@${binding.action.version}`);
-      }
-      return [...ids].sort();
+      return [...state.nodes.values()].sort((left, right) => left.id - right.id).flatMap((record) => (record.bindings ?? []).map((binding) => `${binding.action.scope}.${binding.action.name}@${binding.action.version}`));
     }
 
     const cases = loadCorpus();
@@ -195,9 +193,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             if (expected.hidden) expect(aria["aria-hidden"]).toBe(true);
           }
         }
-        if (testCase.expect.actionIds) {
-          expect(allActionIds(state)).toEqual([...testCase.expect.actionIds].sort());
-        }
+        expect(allActionIds(state)).toEqual(testCase.expect.actionIds ?? []);
       });
     }
   });

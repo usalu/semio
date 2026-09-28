@@ -49,7 +49,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.generation".into(),
-        name: "3D Generation".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("3D Generation", "3D-Generierung"),
         source_format: "generation.3d".into(),
         component_kind: "generation3d".into(),
         dimension: "3d".into(),

@@ -27,7 +27,7 @@ pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard:
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: VCS_DIALECT.artifact_kind.into(),
-        name: "VCS Document".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("VCS Document", "VCS-Dokument"),
         source_format: VCS_DOCUMENT_SCHEMA.into(),
         component_kind: "vcs".into(),
         dimension: "data".into(),

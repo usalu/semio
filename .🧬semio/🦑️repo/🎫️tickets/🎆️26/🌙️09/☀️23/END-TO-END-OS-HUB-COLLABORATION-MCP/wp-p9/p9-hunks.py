@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """🧩️ Turns P9's staged edits into an anchored patch set for `patches/p9_patch.py`: every changed region between the
 staged base and the staged edit becomes one `replace()` hunk whose old text is widened with context until it is unique in
-the base file; a file with no base becomes a `create()`. The dry run on the live tree then proves every anchor.
+the base file (change regions ≤ `P9_MERGE` lines apart, default 3, share one hunk, so a peer's edit between
+two of P9's changes keeps both anchors); a file with no base becomes a `create()`. The dry run on the live tree then proves every anchor.
 Usage: p9-hunks.py <patch-name> <docstring-file> <repo-relative path>..."""
 import difflib
+import os
 import sys
 from pathlib import Path
 
@@ -11,6 +13,7 @@ TREE = Path("/Users/ueli/Documents/semio")
 STAGE = TREE / ".🧬semio/🌐hub/s14-p9-stage"
 name, doc_file = sys.argv[1], Path(sys.argv[2])
 files = sys.argv[3:]
+MERGE = int(os.environ.get("P9_MERGE", "3"))
 out = [f'#!/usr/bin/env python3\n"""{doc_file.read_text().rstrip()}\nUsage: {name}.py --dry-run | --write"""\nfrom p9_patch import ROOT, create, finish, replace\n']
 total = 0
 for rel in files:
@@ -28,7 +31,7 @@ for rel in files:
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
         if tag == "equal":
             continue
-        if regions and i1 - regions[-1][1] <= 6:
+        if regions and i1 - regions[-1][1] <= MERGE:
             regions[-1] = (regions[-1][0], i2, regions[-1][2], j2)
         else:
             regions.append((i1, i2, j1, j2))

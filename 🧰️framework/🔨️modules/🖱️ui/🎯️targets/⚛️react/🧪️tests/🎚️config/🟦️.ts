@@ -29,6 +29,7 @@ export default defineConfig({
       "../../../../🧱️elements/🕸️Diagram/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/↕️Collapsible/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/🖼️Panel/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📋️MenuItem/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🖱️ContextMenu/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🧾️Form/🧪️tests/🧩️component/🟦️.tsx",

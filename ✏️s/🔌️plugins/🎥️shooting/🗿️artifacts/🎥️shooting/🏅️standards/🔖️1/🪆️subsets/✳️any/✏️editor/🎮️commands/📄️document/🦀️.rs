@@ -94,20 +94,6 @@ pub mod save_download {
 }
 //#endregion 🔖️SaveDownload
 
-//#region 🔖️LoadRequest
-pub mod load_request {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-    #[dsl(keyword = "load-request")]
-    pub struct LoadRequest {}
-
-    pub fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(109), accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
-    }
-}
-//#endregion 🔖️LoadRequest
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

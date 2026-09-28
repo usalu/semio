@@ -65,7 +65,7 @@ pub const MP3_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standar
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.mp3".into(),
-        name: "Mp3".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Mp3", "Mp3"),
         source_format: STDIO_MP3_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

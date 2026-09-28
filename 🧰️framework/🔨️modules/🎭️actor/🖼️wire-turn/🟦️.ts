@@ -330,6 +330,14 @@ export function scanTypedOperationPages(effects: readonly WireVariant[]): TypedO
   return { kept, pages, acknowledgements: pages.map((page) => page.acknowledgement), terminal, faults };
 }
 
+/** 📬️ What ONE typed-operation result page asks of the host driving an action turn: its acknowledgement — a fault
+ * page's too, since the guest parks the operation until every page lands and an unanswered fault page left the
+ * document's actor unable to take its next action — whether it is the guest's refusal of the action, and whether it
+ * rides the artifact lane. Policy stays with the caller: it refuses the action only after the whole turn is answered. */
+export function typedOperationPageAnswerV1(page: TypedOperationPage): Readonly<{ acknowledgement: TypedOperationAckEvent; refused: boolean; artifact: boolean }> {
+  return { acknowledgement: page.acknowledgement, refused: page.lane === TYPED_OPERATION_LANE_FAULT, artifact: page.lane === TYPED_OPERATION_LANE_ARTIFACT };
+}
+
 /** 🔁️ The bounded poll that keeps a mounted typed operation advancing once no host call is left to
  * drive it: submit one continuation settle, stop the moment the actor reports anything other than
  * `more-work`, and yield between polls so a long drain never starves rendering. `live`/`settle`/
@@ -956,6 +964,7 @@ if (import.meta.vitest) {
       shellFrameBytes,
       shellMessageKind,
       typedOperationAcknowledgements,
+      typedOperationPageAnswerV1,
       typedOperationResult,
       TYPED_OPERATION_ACK_MAGIC,
       TYPED_OPERATION_LANE_FAULT,

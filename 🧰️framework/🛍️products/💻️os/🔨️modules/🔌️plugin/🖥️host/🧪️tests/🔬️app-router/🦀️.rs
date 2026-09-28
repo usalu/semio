@@ -3,7 +3,7 @@ use super::*;
 async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
     semio_framework::ArtifactKindSpec {
         id: id.into(),
-        name: id.into(),
+        label: semio_framework::LocalizedLabel::data(id),
         source_format: id.into(),
         component_kind: "document".into(),
         dimension: "data".into(),

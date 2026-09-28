@@ -1,6 +1,12 @@
 use super::*;
 use crate::schema::snapshot::JsonValue;
 
+/// 🧬️ Registers the document schema json's declaration contributes (`.schema(json_artifact_schema_descriptor())`) — the
+/// registered contract every snapshot edit validates against; a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    semio_framework_schema::register_artifact_schema_descriptors(vec![crate::schema::json_artifact_schema_descriptor()]).expect("the json document schema registers");
+}
+
 #[test]
 fn set_node_requires_a_complete_address_and_value_without_forbidding_empty_text() {
     assert!(json_any_command_from_action(JSON_ANY_KIT_ACTION_ID, None).is_err());
@@ -66,13 +72,14 @@ async fn op_text_roundtrip() {
 async fn editor_declares_all_typed_snapshot_edit_actions() {
     let definition = create_json_editor();
     for action_id in semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS {
-        let action = definition.actions.iter().find(|action| action.id == *action_id).expect("typed snapshot edit action");
+        let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == *action_id).expect("typed snapshot edit action (window-owned actions live on their window kind)");
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
+    register_document_schema();
     for source in ["null", "true", "-123.4500e+9", "\"text %20\\n日本語\"", "[1,false,null]", "{\"answer\":42}"] {
         let snapshot = JsonSnapshot { schema: JsonSnapshot::default().schema, value: JsonValue::String { value: "before".into() } };
         let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
@@ -149,6 +156,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<JsonAnyEdi
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &JsonSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
+    register_document_schema();
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_json_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");

@@ -379,6 +379,31 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
      * (📓️f2-sdk-body-node-ledger.md §10). Under key identity the two containers would share one open state,
      * one window and each other's measurements; under PATH identity they are two windows that happen to name
      * the same entity, and the pick still dispatches the bare key. */
+    it("gives every row's inline control its own DOM id — a node key is unique only among its siblings", () => {
+      const commit = { trigger: "commit", action: { scope: "s.stdio.json@rfc8259/*#editor", name: "set-node", version: 1 }, args: { nodeId: "$", revision: "r" }, capability: null };
+      const edit = (id: number, value: string) => node(id, "edit", { type: "input", kind: "text", value, commit: "blur" }, [], [commit]);
+      const view = mount(
+        [
+          node(1, "framework.window.tree", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
+          node(2, "framework.window.tree-root", { type: "treeSection", label: "", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 2, offset: 0 } }, [3, 4]),
+          treeItem(3, "i=0", "first: 1", {}, [5]),
+          treeItem(4, "i=1", "second: 2", {}, [6]),
+          edit(5, "1"),
+          edit(6, "2"),
+        ],
+        1,
+        () => {},
+      );
+      const inputs = Array.from(view.container.querySelectorAll<HTMLInputElement>("input"));
+      expect(inputs).toHaveLength(2);
+      const ids = inputs.map((input) => input.id);
+      expect(new Set(ids).size).toBe(2);
+      for (const id of ids) {
+        expect(id.endsWith("/edit")).toBe(true);
+        expect(id).not.toBe(`${SURFACE}/edit`);
+      }
+    });
+
     it("gives the same node key under two different parents two independent windows", async () => {
       const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
       const shared = (parent: string, id: number) => [

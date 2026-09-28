@@ -4,7 +4,7 @@
 #[macro_export]
 macro_rules! action_args_json {
     ($($tt:tt)*) => {
-        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))
+        Some(semio_framework::dsl_value!($($tt)*))
     };
 }
 

@@ -1,0 +1,138 @@
+mod agent_lane_preview_tests {
+    use super::*;
+
+    std::thread_local! {
+        static SCRIPTED_CLOCK: std::cell::Cell<(u64, u64)> = const { std::cell::Cell::new((1_000_000, 1)) };
+    }
+
+    /// ⏱️ The harness clock: every read advances it by the case's `clockMicrosPerRead` (0 freezes it).
+    fn scripted_now_us() -> Option<u64> {
+        SCRIPTED_CLOCK.with(|clock| {
+            let (now, stride) = clock.get();
+            clock.set((now + stride, stride));
+            Some(now)
+        })
+    }
+
+    enum ScriptedStep {
+        Progress,
+        Checkpoint,
+        Yield,
+        Complete,
+        Cancelled,
+        Fault(String),
+    }
+
+    /// 🎭️ A job that reports its script, one entry per step, and repeats the last entry forever.
+    struct ScriptedPreviewJob {
+        script: Vec<ScriptedStep>,
+        cursor: usize,
+        closing: bool,
+        released: bool,
+    }
+
+    impl ScriptedPreviewJob {
+        fn payload(cx: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+            cx.payload_from_bytes(stream, bytes).unwrap_or_else(|rejected| {
+                drop(rejected.into_source());
+                semio_framework_job::RetainedJobPayload::empty(stream)
+            })
+        }
+    }
+
+    impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            if cx.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
+            let entry = &self.script[self.cursor.min(self.script.len() - 1)];
+            self.cursor += 1;
+            match entry {
+                ScriptedStep::Progress => semio_framework_job::StepOutcome::PreviewReady(Self::payload(cx, semio_framework_job::JobPayloadStream::Preview, br#"{"en":"Working","de":"Arbeitet"}"#)),
+                ScriptedStep::Checkpoint => {
+                    let applied_progress = self.cursor as u64;
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Self::payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &applied_progress.to_le_bytes()), applied_progress })
+                }
+                ScriptedStep::Yield => semio_framework_job::StepOutcome::Yield,
+                ScriptedStep::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                }),
+                ScriptedStep::Cancelled => semio_framework_job::StepOutcome::Cancelled,
+                ScriptedStep::Fault(detail) => {
+                    let detail = detail.clone();
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: Self::payload(cx, semio_framework_job::JobPayloadStream::Fault, detail.as_bytes()) })
+                }
+            }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            if !self.closing {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            self.released = true;
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.released
+        }
+    }
+
+    fn scripted_step(value: &serde_json::Value) -> ScriptedStep {
+        match (value.as_str(), value.get("fault").and_then(serde_json::Value::as_str)) {
+            (Some("progress"), _) => ScriptedStep::Progress,
+            (Some("checkpoint"), _) => ScriptedStep::Checkpoint,
+            (Some("yield"), _) => ScriptedStep::Yield,
+            (Some("complete"), _) => ScriptedStep::Complete,
+            (Some("cancelled"), _) => ScriptedStep::Cancelled,
+            (None, Some(detail)) => ScriptedStep::Fault(detail.to_string()),
+            _ => panic!("unknown script entry {value}"),
+        }
+    }
+
+    /// ⚖️ LAW: every case of the language-agnostic agent-lane preview fixture answers exactly its verdict when its
+    /// scripted job runs through the real preview driver (a session the driver could not close would answer
+    /// `interactive-job.preview-close` instead).
+    #[test]
+    fn agent_lane_preview_verdicts_match_the_language_agnostic_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🤖️agent-lane-preview-verdicts.json")).expect("agent-lane preview fixture parses");
+        assert_eq!(fixture["budget"]["wallMicros"].as_u64(), Some(AGENT_LANE_PREVIEW_WALL_US), "the fixture states the driver's wall budget");
+        assert_eq!(fixture["budget"]["turns"].as_u64(), Some(AGENT_LANE_PREVIEW_TURNS), "the fixture states the driver's turn budget");
+        let cases = fixture["cases"].as_array().expect("cases");
+        assert!(cases.len() >= 9, "the fixture keeps every verdict's case");
+        for case in cases {
+            let name = case["name"].as_str().expect("case name");
+            let stride = case["clockMicrosPerRead"].as_u64().expect("clock stride");
+            SCRIPTED_CLOCK.with(|clock| clock.set((1_000_000, stride)));
+            let job = ScriptedPreviewJob { script: case["script"].as_array().expect("script").iter().map(scripted_step).collect(), cursor: 0, closing: false, released: false };
+            let cancel = semio_framework_job::root_cancel_token();
+            if case["cancelled"].as_bool() == Some(true) {
+                cancel.cancel_now();
+            }
+            let params = semio_framework_job::BatchJobParams {
+                operation: semio_framework_job::allocate_operation_id(),
+                generation: semio_framework_job::Generation(1),
+                cancel,
+                config: semio_framework_job::BatchDriveConfig { site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
+                now_us: scripted_now_us,
+            };
+            let verdict = drive_agent_lane_preview(job, params, name);
+            let expected = &case["verdict"];
+            match (expected["steps"].as_u64(), &expected["fault"]) {
+                (Some(steps), _) => assert_eq!(verdict.as_ref().map_err(|fault| fault.code.0.clone()), Ok(&steps), "{name}"),
+                (None, fault) => {
+                    let refused = verdict.expect_err(name);
+                    assert_eq!(refused.code.0, fault["code"].as_str().expect("fault code"), "{name}: {}", refused.message);
+                    if let Some(message) = fault["message"].as_str() {
+                        assert_eq!(refused.message, message, "{name}");
+                    }
+                }
+            }
+        }
+    }
+}

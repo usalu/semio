@@ -106,9 +106,9 @@
     }
   ],
   "benchmarks": {
-    "childId": "architect-benchmarks-ebb8ef7bad26edae",
+    "childId": "architect-benchmarks-d495e45cb640f017",
     "target": {
-      "artifactId": "architect-benchmarks-ebb8ef7bad26edae",
+      "artifactId": "architect-benchmarks-d495e45cb640f017",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

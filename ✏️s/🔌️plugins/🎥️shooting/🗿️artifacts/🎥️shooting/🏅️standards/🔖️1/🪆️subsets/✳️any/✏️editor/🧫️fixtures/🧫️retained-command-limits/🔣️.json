@@ -225,12 +225,6 @@
       ]
     },
     {
-      "toolId": "loadRequest",
-      "lanes": [
-        "HostOnly"
-      ]
-    },
-    {
       "toolId": "importAssetRequest",
       "lanes": [
         "HostOnly"
@@ -455,12 +449,6 @@
       "feature": "encode the complete document into retained output pages"
     },
     {
-      "id": "loadRequest",
-      "execution": "bounded",
-      "admission": "Migrated",
-      "feature": "emit exactly one fixed host file-open request"
-    },
-    {
       "id": "importAssetRequest",
       "execution": "bounded",
       "admission": "Migrated",
@@ -485,10 +473,10 @@
     "ownedInterface": "ShootingRetainedCatalogOracle",
     "runtimeDependency": false,
     "expected": {
-      "routes": 38,
-      "bounded": 37,
+      "routes": 37,
+      "bounded": 36,
       "resumable": 1,
-      "migrated": 37,
+      "migrated": 36,
       "failClosed": 1,
       "unique": true
     }

@@ -8,7 +8,7 @@ fn fixture() -> serde_json::Value {
 fn requests(value: &serde_json::Value) -> Vec<semio_framework::kernel::IconRenderExportItem> {
     value["invalid"].as_array().unwrap().iter().map(|item| semio_framework::kernel::IconRenderExportItem {
         filename: item["filename"].as_str().unwrap().into(),
-        request: semio_framework::optional_json_to_dsl(Some(item["request"].clone())).unwrap(),
+        request: semio_framework::DslValue::from(&item["request"]),
     }).collect()
 }
 
@@ -22,7 +22,7 @@ fn icon_export_effect_admits_large_batches_and_scopes_cancellation_to_existing_r
             if scenario["cancelBeforeGroup"].as_u64() == Some(index as u64) { shell.cancel_icon_export(); }
             if index == groups.len() { break; }
             let items = (0..groups[index].as_u64().unwrap()).map(|item| semio_framework::kernel::IconRenderExportItem {
-                filename: format!("{index}-{item}.png"), request: semio_framework::optional_json_to_dsl(Some(fixture["invalid"][0]["request"].clone())).unwrap(),
+                filename: format!("{index}-{item}.png"), request: semio_framework::DslValue::from(&fixture["invalid"][0]["request"]),
             }).collect();
             shell.queue_host_effects("export-queue-law", vec![semio_framework::kernel::Effect::IconRenderExport { items }]);
         }

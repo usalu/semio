@@ -31,7 +31,7 @@ fn handle_toggle(id: &str, icon: &str, label: LabelText, key: &str, pressed: boo
         label: Some(label.into()),
         pressed,
         text: None,
-        on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
+        on_change: lowpoly_window_action("setUtilityParam", Some(dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))]))),
     }
 }
 

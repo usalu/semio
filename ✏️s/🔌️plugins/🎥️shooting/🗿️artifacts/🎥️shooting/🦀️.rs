@@ -36,7 +36,7 @@ pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shoot
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.shooting".into(),
-        name: "2D Shooting".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("2D Shooting", "2D-Aufnahme"),
         source_format: "shooting.scene".into(),
         component_kind: "shooting".into(),
         dimension: "2d".into(),
@@ -461,11 +461,7 @@ pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 /// (`process3d::brep_child_handle`, `gismap::gis_map_drawing_child_handle`). Two callers with
 /// byte-identical content mint the same handle.
 pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    dsl::json::to_json_string(content).hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("shooting-emblem-{content_hash:016x}");
+    let child_id = store::content_id("shooting-emblem", dsl::json::to_json_string(content).as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "shooting-emblem".into(), dialect };
     store::ArtifactChild::new(child_id, target)

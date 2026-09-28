@@ -52,6 +52,16 @@ pub fn replace_page_unicode_text(page: &schema::snapshot::PdfPage, text: &str) -
     content
 }
 
+/// 🔐️ The token an agent's omitted `set-page` revision is admitted against: the addressed page text's own token, as its draft
+/// binding carries it; a missing page is refused exactly as the edit itself would refuse it.
+pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &dsl::DslValue) -> Result<Option<String>, semio_framework_plugin::Fault> {
+    let page_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "page")? as usize;
+    let target = snapshot.pages.get(page_index).ok_or_else(|| {
+        semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
+    })?;
+    Ok(Some(semio_framework_plugin::app::DocumentWindowKit::text_revision(&target.text())))
+}
+
 /// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
 pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<PdfMutation>, semio_framework_plugin::Fault> {
     if item != 0 {
@@ -333,7 +343,7 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.pdf".into(),
-        name: "Pdf".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Pdf", "Pdf"),
         source_format: STDIO_PDF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

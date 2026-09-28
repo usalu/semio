@@ -48,9 +48,9 @@
     }
   },
   "stockSolid": {
-    "childId": "stock-brep-7f66e598ea50b322",
+    "childId": "stock-brep-dc359cd3c4472a4c",
     "target": {
-      "artifactId": "stock-brep-7f66e598ea50b322",
+      "artifactId": "stock-brep-dc359cd3c4472a4c",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -59,9 +59,9 @@
     }
   },
   "steps": {
-    "childId": "steps-flow-5fc7bdd53ad9f6a9",
+    "childId": "steps-flow-f69600c3317e75dd",
     "target": {
-      "artifactId": "steps-flow-5fc7bdd53ad9f6a9",
+      "artifactId": "steps-flow-f69600c3317e75dd",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -131,9 +131,9 @@
   ],
   "toolSolids": [
     {
-      "childId": "tool-step-1-brep-0b3bc21b80751c64",
+      "childId": "tool-step-1-brep-6195cae6ebec0800",
       "target": {
-        "artifactId": "tool-step-1-brep-0b3bc21b80751c64",
+        "artifactId": "tool-step-1-brep-6195cae6ebec0800",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",

@@ -149,3 +149,44 @@ Executors = Opus 5.5 agents, one slice each. Auditors = Sonnet 5 agents, read-on
     pre-validation — window 3 proves every set compile-atomically in the real tree anyway (native lane + wasm lane). Only queue
     an overlay build when it de-risks a large guest set (≥ 20 files or kernel/SDK wide); otherwise keep the patch dry-run clean
     and wait for window 3. Delete your own overlay build-dir as soon as its proof is recorded (record the deletion).
+
+## Session 14c — Second Restart (2026-09-28 16:5x)
+
+- The usage limit cut the fleet at ~14:37 and the desktop app went down with it: every agent, the chain (it had reached rebuild-all
+  attempt 2 components, 12:17 → 14:37), holds and guards died. The app came back at 16:35. launchd cannot run our long jobs (macOS
+  privacy blocks ~/Documents for launchd jobs), so long processes still die with the app — reports and prepared patches are the
+  handover; nothing else survives.
+- **CHAIN RELAUNCHED 2026-09-28 16:55:46** (pid 76013, same command/log `.🧬semio/🌐hub/s14-w4-logs/chain-final.txt`). GUEST FREEZE is
+  ON (rule 2) until W4 reports `final-publish.rc` = 0 and the coordinator writes "WINDOW 3 OPEN". Hub 7800 is DOWN (not restarted:
+  current-tree clients speak channel 19 and cannot use B3 anyway) — the chain restarts 7800 on ALL.
+- Coordinator landed LB2's chain-critical `wp-lb2/lb2-p4-structural-classification.py` at 16:5x (stdio `structural_table_window_kind`
+  stamps its 5 appended rows `Migrated`; without it stdio `plugin()` panics at describe). Proof = the chain's describe step.
+- A **Cursor agent peer** (repo MCP `dev mcp stdio cursor`) is actively editing stdio pdf editors and norm (en1994/din4108) and runs
+  nx tests — work alongside it; re-diff before editing those areas.
+- Disk 78 GiB free (overlay build caches of s19/c13 deleted by the coordinator). Rule 23 stands.
+- Successors are spawned in two waves: wave A now (slices with work before window 3), wave B at WINDOW 3 OPEN. Every successor
+  FIRST reconciles its predecessor's last in-flight step (named in its spawn prompt): finish to compile/tsc-green + rule-20 boot, or
+  cleanly revert its own half-applied hunks; record it.
+24. **WINDOW 3 OPEN (2026-09-28 21:00):** landing runs as TRAINS per `📓️window3-plan.md` — R10 lands T0 (taxonomy/launch,
+    serialized), then the integrator **L1** applies every prepared guest set in train order (T1 SDK core → T2 stdio → T3 apps/shells
+    → T4 host runtime) with one combined native + wasm32 + tsc/boot proof per train and reverts only a culprit set on red. Set owners
+    do NOT apply their prepared guest sets themselves; they keep them dry-run clean, answer L1's relays, fix their reverted sets for
+    the next train and run their laws when asked. Host-only fixes from live verification still land directly (rules 20/22).
+    Hub 7800 = catalog **s14-w4-catalog-p24** (24 packages; fem, flow, mathematical, shooting, lowpoly, forms, norm, imperative,
+    sourcing + demonstrator are NOT on the hub until the next chain republishes all 34).
+
+## 14c lane update (2026-09-28 23:3x)
+- (00:2x reverted to 1 slot: load 147, swap 6.6 GB) Native lane opened to **2 slots** (`/tmp/semio-native-build.slots` = 2; memory 69 % free, swap 0 after the 22:42 reboot). L1 train
+  proofs keep their priority stamps. If swap passes 8 GB the coordinator drops it back to 1. Overlay 1 slot, wasm = L1 trains/chain.
+
+25. **KERNEL PANICS (2026-09-29 01:2x): the machine panicked 4× (22:42, 00:31, 00:41, 00:48) — `watchdog timeout: no checkins
+    from watchdogd in 90 seconds`** (`/Library/Logs/DiagnosticReports/panic-base+socd-*.panic`) = userspace starved under load
+    (our cargo/vite/chrome + the user's VS Code ripgrep indexing ~550 % CPU + GitKraken/VS Code git status + a 5 GB `git
+    index-pack --verify-stat`). Every panic kills every agent, hub, serve and lane. Until the coordinator lifts this:
+    (a) the mutex now caps `CARGO_BUILD_JOBS` at 4 for native/overlay/wasm and holds a granted slot until the 1-min load is
+    < 32 (`FLEET_LOAD_GATE`); (b) ONE heavy job machine-wide at a time (native OR wasm, not both), no parallel serves;
+    (c) never start a serve/hub/browser while a lane job runs unless the job is yours and needs it; (d) ≤ 4 live agents.
+26. **SWEEP 01:14 (2026-09-29):** the recurring EXTERNAL cleanup deleted every gitignored dir inside the ticket (`wp-*/generated/`,
+    `wp-*/w3-backup/`, `wp-*/target/`, `🗑️generated/`) — owners' set backups and captures are GONE. Keep backups, overlays,
+    captures and logs ONLY under `.🧬semio/🌐hub/s14-<slice>-*` (survived). Landed sets' `--revert` state is lost (T1 is
+    green, no revert needed); for T2+ L1's own `l1-land` records (now under the hub dir) are the revert path.

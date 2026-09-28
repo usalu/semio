@@ -2,13 +2,16 @@
  * the way the user perceives it.
  *
  * Per scenario of `🧑‍💻dev/🧫️fixtures/⏱️interaction-latency.json`: the program opened from Home, its target focused, then N
- * trusted inputs (Playwright keyboard/mouse through CDP) at the scenario's interval. Latency of one input = from the event's own
+ * trusted inputs (Playwright keyboard/mouse through CDP) at the scenario's interval — typing, a drag, or hover transitions (the
+ * pointer alternately onto a point whose hover the target paints into `hoverAttribute`, and off it). Latency of one input = from the event's own
  * timestamp to the end of the first frame after it (a capture-phase listener arms `requestAnimationFrame` → `MessageChannel`,
  * which runs after that frame's rAF work and paint). Paints = `renderFrame` calls of every canvas session class the page
  * loaded — the wasm bindings' exported classes and the host elements' own (the 2D canvas host paints in JS) — whose prototypes
  * are wrapped; a scenario that hooks no class fails, since an unmeasured paint count is not a pass. The browser's own Event Timing entries (≥ 16 ms) are the third-party
- * oracle for the input's processing cost.
- * Law: paints per input ≤ the scenario's bound (demand-driven painting, always judged); p95 input → frame ≤ the scenario's
+ * oracle for the input's processing cost. React commits = `onCommitFiberRoot` calls of every renderer (react-dom and the r3f
+ * reconciler) through a minimal DevTools global hook installed before the page's scripts run.
+ * Law: paints per input ≤ the scenario's bound and, when it declares one, React commits per input ≤ its bound (demand-driven
+ * painting and rendering, always judged — ticket 26/09/23 F3: a puzzle3d hover transition cost 20 commits, then 11, now 7); p95 input → frame ≤ the scenario's
  * bound, judged only while the machine's 1-minute load stays ≤ `loadCeilingPerCore` × cores (else the check is `blocked` with
  * the measured values — a timing measured on a saturated machine is not a verdict).
  *
@@ -18,7 +21,7 @@
 import { cpus, loadavg } from "node:os";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { Browser, Page } from "playwright";
+import type { Browser, Locator, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
@@ -26,7 +29,7 @@ import { awaitBeacon, dismissIntroduction, kindOf, windowIds } from "../🧮️p
 
 //#region 🧾️Scenarios
 /** 🎬️ One scenario of the fixture. */
-export type LatencyScenario = Readonly<{ id: string; pluginId: string; appId: string; window: string; target: string; action: "type" | "drag"; inputs: number; intervalMs: number; maxP95Ms: number; maxPaintsPerInput: number }>;
+export type LatencyScenario = Readonly<{ id: string; pluginId: string; appId: string; window: string; target: string; action: "type" | "drag" | "hover"; hoverAttribute?: string; inputs: number; intervalMs: number; maxP95Ms: number; maxPaintsPerInput: number; maxCommitsPerInput?: number }>;
 
 /** 🎬️ The fixture: scenarios and the load ceiling above which timings are not judged. */
 export type LatencyScenarios = Readonly<{ schema: "semio.os-dev.interaction-latency-scenarios/v1"; loadCeilingPerCore: number; scenarios: readonly LatencyScenario[] }>;
@@ -54,6 +57,7 @@ export type LatencyRow = Readonly<{
   inputs: number;
   frames: Readonly<{ n: number; p50: number | null; p95: number | null; max: number | null }>;
   paints: Readonly<{ n: number; perInput: number; p50Ms: number | null; p95Ms: number | null; classes: readonly string[] }>;
+  commits: Readonly<{ n: number; perInput: number }>;
   eventTiming: Readonly<Record<string, { n: number; p95: number | null }>>;
   load: number;
   timingJudged: boolean;
@@ -67,8 +71,14 @@ export type LatencyRow = Readonly<{
 const RESOURCE_TIMING_ENTRIES = 100_000;
 
 const installProbe = (resourceTimingEntries: number): void => {
-  const state = { rows: [] as { t0: number; ms: number }[], events: [] as { name: string; duration: number }[], paints: [] as number[], classes: new Set<string>(), armed: false };
+  const state = { rows: [] as { t0: number; ms: number }[], events: [] as { name: string; duration: number }[], paints: [] as number[], classes: new Set<string>(), commits: 0, armed: false };
   Object.defineProperty(window, "__semioLatency", { value: state });
+  let renderers = 0;
+  const noop = (): void => undefined;
+  Object.defineProperty(window, "__REACT_DEVTOOLS_GLOBAL_HOOK__", {
+    configurable: true,
+    value: { supportsFiber: true, renderers: new Map(), inject: () => ++renderers, checkDCE: noop, onScheduleFiberRoot: noop, onCommitFiberUnmount: noop, onPostCommitFiberRoot: noop, onCommitFiberRoot: () => void (state.armed && (state.commits += 1)) },
+  });
   performance.setResourceTimingBufferSize(resourceTimingEntries);
   for (const type of ["keydown", "pointermove", "pointerdown", "pointerup"]) {
     addEventListener(
@@ -163,9 +173,28 @@ async function openProgram(page: Page, scenario: LatencyScenario): Promise<strin
   return [];
 }
 
+/** 🎯️ A point of `box` whose hover the target paints into `attribute` (scanned on a grid), and one near its corner that hovers
+ * nothing — the two ends of a hover transition. */
+async function hoverPoints(page: Page, target: Locator, box: Readonly<{ x: number; y: number; width: number; height: number }>, attribute: string): Promise<Readonly<{ on: { x: number; y: number }; off: { x: number; y: number } }> | null> {
+  const off = { x: box.x + 4, y: box.y + box.height - 4 };
+  for (let gy = 0.3; gy <= 0.8; gy += 0.05) {
+    for (let gx = 0.2; gx <= 0.8; gx += 0.05) {
+      const on = { x: box.x + box.width * gx, y: box.y + box.height * gy };
+      await page.mouse.move(on.x, on.y);
+      await page.waitForTimeout(120);
+      if (await target.getAttribute(attribute)) {
+        await page.mouse.move(off.x, off.y);
+        await page.waitForTimeout(300);
+        return (await target.getAttribute(attribute)) ? null : { on, off };
+      }
+    }
+  }
+  return null;
+}
+
 async function measureScenario(page: Page, scenario: LatencyScenario, loadCeiling: number): Promise<LatencyRow> {
   const load = +loadavg()[0]!.toFixed(1);
-  const empty: LatencyRow = { id: scenario.id, opened: false, inputs: 0, frames: { n: 0, p50: null, p95: null, max: null }, paints: { n: 0, perInput: 0, p50Ms: null, p95Ms: null, classes: [] }, eventTiming: {}, load, timingJudged: false, status: "fail", violations: ["the program did not open"] };
+  const empty: LatencyRow = { id: scenario.id, opened: false, inputs: 0, frames: { n: 0, p50: null, p95: null, max: null }, paints: { n: 0, perInput: 0, p50Ms: null, p95Ms: null, classes: [] }, commits: { n: 0, perInput: 0 }, eventTiming: {}, load, timingJudged: false, status: "fail", violations: ["the program did not open"] };
   const opened = await openProgram(page, scenario);
   if (opened.length === 0) return empty;
   const windowSelector = scenario.window ? `[id$="${scenario.window}"]` : `[id="${opened[0]}"]`;
@@ -174,22 +203,31 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
   const box = (await target.boundingBox())!;
   const x = box.x + box.width * 0.5;
   const y = box.y + box.height * 0.4;
-  await page.mouse.click(x, y);
+  const hover = scenario.action === "hover" ? await hoverPoints(page, target, box, scenario.hoverAttribute ?? "data-hover-paint-id") : null;
+  if (scenario.action === "hover" && !hover) return { ...empty, opened: true, violations: [`no point of ${scenario.target} whose hover paints ${scenario.hoverAttribute ?? "data-hover-paint-id"}`] };
+  if (scenario.action !== "hover") await page.mouse.click(x, y);
   await page.waitForTimeout(800);
   if (scenario.action === "type") await page.keyboard.press("End");
   const hooked = await hookPaints(page);
   await page.waitForTimeout(1_500);
   await page.evaluate(() => {
-    const state = (window as unknown as { __semioLatency: { rows: unknown[]; events: unknown[]; paints: unknown[]; classes: Set<string>; armed: boolean } }).__semioLatency;
+    const state = (window as unknown as { __semioLatency: { rows: unknown[]; events: unknown[]; paints: unknown[]; classes: Set<string>; commits: number; armed: boolean } }).__semioLatency;
     state.rows.length = 0;
     state.events.length = 0;
     state.paints.length = 0;
     state.classes.clear();
+    state.commits = 0;
     state.armed = true;
   });
   if (scenario.action === "type") {
     for (let index = 0; index < scenario.inputs; index++) {
       await page.keyboard.press(index % 2 === 0 ? "a" : "Backspace");
+      await page.waitForTimeout(scenario.intervalMs);
+    }
+  } else if (hover) {
+    for (let index = 0; index < scenario.inputs; index++) {
+      const point = index % 2 === 0 ? hover.on : hover.off;
+      await page.mouse.move(point.x, point.y);
       await page.waitForTimeout(scenario.intervalMs);
     }
   } else {
@@ -203,20 +241,22 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
   }
   await page.waitForTimeout(1_000);
   const state = await page.evaluate(() => {
-    const probe = (window as unknown as { __semioLatency: { rows: { ms: number }[]; events: { name: string; duration: number }[]; paints: number[]; classes: Set<string>; armed: boolean } }).__semioLatency;
+    const probe = (window as unknown as { __semioLatency: { rows: { ms: number }[]; events: { name: string; duration: number }[]; paints: number[]; classes: Set<string>; commits: number; armed: boolean } }).__semioLatency;
     probe.armed = false;
-    return { frames: probe.rows.map((row) => row.ms), events: probe.events, paints: probe.paints, classes: [...probe.classes] };
+    return { frames: probe.rows.map((row) => row.ms), events: probe.events, paints: probe.paints, classes: [...probe.classes], commits: probe.commits };
   });
-  const inputs = scenario.action === "type" ? scenario.inputs : scenario.inputs + 2;
+  const inputs = scenario.action === "drag" ? scenario.inputs + 2 : scenario.inputs;
   const byEvent: Record<string, number[]> = {};
   for (const entry of state.events) (byEvent[entry.name] ??= []).push(entry.duration);
   const perInput = +(state.paints.length / inputs).toFixed(2);
+  const commitsPerInput = +(state.commits / inputs).toFixed(2);
   const frames = { n: state.frames.length, p50: quantileV1(state.frames, 0.5), p95: quantileV1(state.frames, 0.95), max: quantileV1(state.frames, 1) };
   const timingJudged = load <= loadCeiling;
   const violations = [
     ...(hooked.length > 0 ? [] : ["no canvas session class was hooked, so paints went unmeasured"]),
     ...(state.frames.length >= Math.floor(inputs * 0.8) ? [] : [`only ${state.frames.length} of ${inputs} inputs reached a frame`]),
     ...(perInput <= scenario.maxPaintsPerInput ? [] : [`${perInput} paints per input (bound ${scenario.maxPaintsPerInput})`]),
+    ...(scenario.maxCommitsPerInput === undefined || commitsPerInput <= scenario.maxCommitsPerInput ? [] : [`${commitsPerInput} React commits per input (bound ${scenario.maxCommitsPerInput})`]),
     ...(timingJudged && frames.p95 !== null && frames.p95 > scenario.maxP95Ms ? [`input → frame p95 ${frames.p95} ms (bound ${scenario.maxP95Ms} ms)`] : []),
   ];
   return {
@@ -225,6 +265,7 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
     inputs,
     frames,
     paints: { n: state.paints.length, perInput, p50Ms: quantileV1(state.paints, 0.5), p95Ms: quantileV1(state.paints, 0.95), classes: state.classes },
+    commits: { n: state.commits, perInput: commitsPerInput },
     eventTiming: Object.fromEntries(Object.entries(byEvent).map(([name, values]) => [name, { n: values.length, p95: quantileV1(values, 0.95) }])),
     load,
     timingJudged,
@@ -260,7 +301,7 @@ export async function runInteractionLatency(options: Readonly<{ baseUrl: string;
         rows.push(row);
         options.onRow(row);
       } catch (error) {
-        const row: LatencyRow = { id: scenario.id, opened: false, inputs: 0, frames: { n: 0, p50: null, p95: null, max: null }, paints: { n: 0, perInput: 0, p50Ms: null, p95Ms: null, classes: [] }, eventTiming: {}, load: +loadavg()[0]!.toFixed(1), timingJudged: false, status: "fail", violations: [`measurement failed: ${error instanceof Error ? error.message : String(error)}`.slice(0, 300)] };
+        const row: LatencyRow = { id: scenario.id, opened: false, inputs: 0, frames: { n: 0, p50: null, p95: null, max: null }, paints: { n: 0, perInput: 0, p50Ms: null, p95Ms: null, classes: [] }, commits: { n: 0, perInput: 0 }, eventTiming: {}, load: +loadavg()[0]!.toFixed(1), timingJudged: false, status: "fail", violations: [`measurement failed: ${error instanceof Error ? error.message : String(error)}`.slice(0, 300)] };
         rows.push(row);
         options.onRow(row);
       } finally {
@@ -303,7 +344,7 @@ export async function runInteractionLatencyCli(repoRoot: string, defaultOutDir: 
     await runInteractionLatency({ baseUrl, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), headed: segments.includes("--headed"), signal: controller.signal, onRow: (row) => {
       rows.push(row);
       writeFileSync(reportPath, `${JSON.stringify({ baseUrl, rows }, null, 1)}\n`);
-      console.log(`[interaction-latency] ${row.status.toUpperCase()} ${row.id}: input → frame p50 ${row.frames.p50} / p95 ${row.frames.p95} ms (n ${row.frames.n}), ${row.paints.perInput} paints/input (paint p50 ${row.paints.p50Ms} ms), load ${row.load}${row.violations.length ? ` — ${row.violations.join("; ")}` : ""}`);
+      console.log(`[interaction-latency] ${row.status.toUpperCase()} ${row.id}: input → frame p50 ${row.frames.p50} / p95 ${row.frames.p95} ms (n ${row.frames.n}), ${row.paints.perInput} paints/input (paint p50 ${row.paints.p50Ms} ms), ${row.commits.perInput} commits/input, load ${row.load}${row.violations.length ? ` — ${row.violations.join("; ")}` : ""}`);
     } });
     const failed = rows.filter((row) => row.status === "fail");
     const blocked = rows.filter((row) => row.status === "blocked");
@@ -313,7 +354,7 @@ export async function runInteractionLatencyCli(repoRoot: string, defaultOutDir: 
       check: "interaction-latency",
       status,
       startedAt,
-      measured: Object.fromEntries(rows.flatMap((row) => [[`${row.id}.p95Ms`, row.frames.p95 ?? -1], [`${row.id}.paintsPerInput`, row.paints.perInput]])),
+      measured: Object.fromEntries(rows.flatMap((row) => [[`${row.id}.p95Ms`, row.frames.p95 ?? -1], [`${row.id}.paintsPerInput`, row.paints.perInput], [`${row.id}.commitsPerInput`, row.commits.perInput]])),
       summary: {
         en: `${rows.length - failed.length - blocked.length} pass, ${blocked.length} not timed (load), ${failed.length} fail: ${rows.map(line).join(", ")}`,
         de: `${rows.length - failed.length - blocked.length} bestanden, ${blocked.length} ohne Zeitmessung (Last), ${failed.length} fehlgeschlagen: ${rows.map(line).join(", ")}`,

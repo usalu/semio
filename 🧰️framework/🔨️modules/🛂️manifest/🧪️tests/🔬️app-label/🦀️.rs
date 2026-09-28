@@ -1493,6 +1493,20 @@ async fn app_ref_canonical_json_round_trips_as_camel_case() {
 }
 //#endregion 🔖️SurfaceTests
 
+//#region 🔐️RevisionArguments
+/// 🔐️ A revision a rendered binding carries is optional and hidden, and tells a client what it is: the agent lane omits it
+/// and is admitted against the document's (or the target's) revision at admission (ticket 26/09/23, G12 session 14c).
+#[test]
+fn revision_arguments_are_optional_hidden_and_name_their_scope() {
+    for (def, format) in [(ActionArgDef::document_revision("revision", LocalizedLabel::data("Revision")), "documentRevision"), (ActionArgDef::target_revision("revision", LocalizedLabel::data("Revision")), "targetRevision")] {
+        assert!(!def.required);
+        assert_eq!(def.presentation, Some(super::ArgPresentation::Hidden));
+        assert_eq!(def.json_schema().get("x-semio-format"), Some(&DslValue::String(format.to_string())));
+        assert!(super::missing_required_args(&[def.clone()], &DslValue::Object(Vec::new())).is_empty(), "an omitted revision is never a missing argument");
+    }
+}
+//#endregion 🔐️RevisionArguments
+
 //#region 🎯️ActionSemanticsFixture
 #[test]
 fn catalog_icons_depend_only_on_action_kind_and_explicit_icons_stay_owned() {

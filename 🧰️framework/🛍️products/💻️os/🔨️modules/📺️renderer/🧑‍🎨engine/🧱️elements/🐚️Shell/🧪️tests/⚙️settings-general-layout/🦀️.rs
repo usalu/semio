@@ -494,7 +494,7 @@ fn driver_draft_save_and_reset_republish_every_retained_general_field() {
     for vector in contract["driverWorkflow"].as_array().unwrap() {
         let action = vector["action"].as_str().unwrap();
         let before = shell.panel_documents.get(surface).unwrap().header().expect("General header before driver mutation");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(vector["arguments"].clone())) }))
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(&vector["arguments"])) }))
             .expect("driver preference dispatch");
         let after = shell.panel_documents.get(surface).unwrap().header().expect("General header after driver mutation");
         if after.revision == before.revision || after.generation <= before.generation {

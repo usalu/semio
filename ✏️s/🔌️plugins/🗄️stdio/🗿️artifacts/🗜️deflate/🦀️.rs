@@ -164,7 +164,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.deflate".into(),
-        name: "Deflate".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("Deflate", "Deflate"),
         source_format: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
