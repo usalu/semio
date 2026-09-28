@@ -1,9 +1,7 @@
-/** 🧬️ XlsxArtifact schema. */
-export interface XlsxEntry {
-  name: string;
-  data: number[];
-}
+import type { OpcPackage, XlsxXmlPart } from './📸️snapshot/🟦️.ts';
+
 export interface XlsxArtifact {
   /** @state artifact */ schema: string;
-  /** @state artifact */ entries: XlsxEntry[];
+  /** @state artifact */ opc: OpcPackage;
+  /** @state artifact */ xmlParts: XlsxXmlPart[];
 }

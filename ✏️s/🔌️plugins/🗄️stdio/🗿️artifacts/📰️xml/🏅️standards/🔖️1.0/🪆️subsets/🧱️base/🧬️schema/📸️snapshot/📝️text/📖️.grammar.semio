@@ -27,8 +27,8 @@ comment none
 artifact-mark = "stdio.xml"
 document = artifact-mark snapshot-lit
 
-# `encode_snapshot` -- `[hex(schema),option(root),option(doctype),option(declaration),prolog]`.
-snapshot-lit = "[" hex "," opt-xml-node "," opt-doctype "," opt-declaration "," prolog-list "]"
+# `encode_snapshot` -- `[hex(schema),option(root),option(doctype),option(declaration),prolog,epilog]`.
+snapshot-lit = "[" hex "," opt-xml-node "," opt-doctype "," opt-declaration "," prolog-list "," prolog-list "]"
 
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]` (None) /
 # `[1,<value>]` (Some).
@@ -44,14 +44,14 @@ bool-lit = "0" | "1"
 # XML 1.0 §2.8, not retained source text.
 declaration-lit = "[" hex "," opt-hex "," opt-bool "," bool-lit "]"
 
-# `enc_doctype`: `[hex(name),opt-external-id,[dtd-declaration,...]]`.
-doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
+# `enc_doctype`: `[prolog-position,hex(name),opt-external-id,[dtd-declaration,...]]`.
+doctype-lit = "[" INT "," hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
 opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
 external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
 dtd-declaration-list = dtd-declaration {"," dtd-declaration}*
 dtd-declaration = "E" "[" bool-lit "," hex "," hex "]"
 
-# `enc_prolog`: the bracketed comma list of whole nodes that precede the root element.
+# `enc_prolog`: a bracketed comma list of document-boundary nodes.
 prolog-list = "[" node-item* "]"
 
 # `enc_xml_node` -- single-uppercase-letter tag immediately followed by the bracketed positional

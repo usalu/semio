@@ -47,7 +47,7 @@ impl DocxOutline {
         let mut paragraph_count = 0u32;
         let mut table_count = 0u32;
         let mut word_count = 0u32;
-        walk_blocks(&snapshot.document.body, &mut paragraph_count, &mut table_count, &mut word_count);
+        walk_blocks(&snapshot.project_document().unwrap_or_default().body, &mut paragraph_count, &mut table_count, &mut word_count);
         Self { paragraph_count, table_count, word_count }
     }
 }

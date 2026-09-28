@@ -1,0 +1,117 @@
+{
+  "width": 65,
+  "height": 3,
+  "rectangles": [
+    {
+      "bounds": [
+        1,
+        1,
+        2,
+        1
+      ],
+      "rgba": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "bounds": [
+        63,
+        1,
+        2,
+        1
+      ],
+      "rgba": [
+        0,
+        255,
+        0,
+        255
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "position": [
+        0,
+        0
+      ],
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "position": [
+        1,
+        1
+      ],
+      "rgba": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "position": [
+        2,
+        1
+      ],
+      "rgba": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "position": [
+        62,
+        1
+      ],
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "position": [
+        64,
+        1
+      ],
+      "rgba": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "position": [
+        64,
+        2
+      ],
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "cancel": [
+    "ownership",
+    "upload",
+    "render",
+    "readback",
+    "encode",
+    "close"
+  ],
+  "deliveries": 1
+}

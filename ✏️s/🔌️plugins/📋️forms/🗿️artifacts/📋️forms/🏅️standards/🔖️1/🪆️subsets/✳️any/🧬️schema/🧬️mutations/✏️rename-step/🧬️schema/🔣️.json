@@ -6,13 +6,13 @@
   "additionalProperties": false,
   "required": [
     "id",
-    "newTitle"
+    "new_title"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "newTitle": {
+    "new_title": {
       "type": "string"
     }
   }

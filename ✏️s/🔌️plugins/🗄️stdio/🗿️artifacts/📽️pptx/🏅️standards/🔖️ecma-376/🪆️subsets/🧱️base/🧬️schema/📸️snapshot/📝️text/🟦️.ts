@@ -49,5 +49,5 @@ export const stdioPptxEcma376BaseSnapshotTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parsePptxSnapshotText(value: unknown, at = "$"): PptxSnapshotText {
-  return stdioPptxEcma376BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioPptxEcma376BaseSnapshotTextGuardString(value, `${at}`);
 }

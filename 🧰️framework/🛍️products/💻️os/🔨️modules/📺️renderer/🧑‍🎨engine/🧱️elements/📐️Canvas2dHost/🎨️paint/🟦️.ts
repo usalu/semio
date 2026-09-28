@@ -3,7 +3,10 @@ import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type Pa
 
 type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
 
+export type CanvasCompositingGroup = {readonly id:string;readonly opacity:number;readonly blendMode:string};
+
 export type CanvasSceneNode = {
+  readonly groups?:readonly CanvasCompositingGroup[];
   readonly x?: number;
   readonly y?: number;
   readonly width?: number;
@@ -146,3 +149,54 @@ export function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasSceneN
   ctx.restore();
 }
 
+
+/** 🧩️ Paints isolated group and leaf scopes with viewport-aligned reusable surfaces. */
+export function paintCompositedLayers<T extends CanvasSceneNode>(root:CanvasRenderingContext2D,layers:readonly T[],paint:(ctx:CanvasRenderingContext2D,layer:T,index:number)=>void,allocate:(depth:number,width:number,height:number)=>CanvasRenderingContext2D):void {
+  let previous:readonly CanvasCompositingGroup[]=[];
+  const opened=new Set<string>();
+  const commonDepth=(a:readonly CanvasCompositingGroup[],b:readonly CanvasCompositingGroup[])=>{
+    let depth=0;
+    while(depth<a.length && depth<b.length && a[depth]!.id===b[depth]!.id && a[depth]!.opacity===b[depth]!.opacity && a[depth]!.blendMode===b[depth]!.blendMode) depth++;
+    return depth;
+  };
+  for(const layer of layers) {
+    if(layer.visible===false) continue;
+    const groups=layer.groups??[],common=commonDepth(previous,groups);
+    for(const group of groups.slice(common)) {
+      if(typeof group.id!=="string" || !group.id || opened.has(group.id) || !Number.isFinite(group.opacity) || group.opacity<0 || group.opacity>1 || !Object.hasOwn(BLEND_MODE_TO_COMPOSITE,group.blendMode)) throw new Error("Invalid canvas compositing hierarchy");
+      opened.add(group.id);
+    }
+    if(!Number.isFinite(layer.opacity??1)) throw new Error("Canvas opacity must be finite");
+    previous=groups;
+  }
+  const camera=root.getTransform(),width=root.canvas.width,height=root.canvas.height;
+  const scopes:{group:CanvasCompositingGroup;ctx:CanvasRenderingContext2D}[]=[];
+  const surface=(depth:number)=>{
+    const ctx=allocate(depth,width,height);
+    ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,width,height);
+    ctx.setTransform(camera.a,camera.b,camera.c,camera.d,camera.e,camera.f);
+    return ctx;
+  };
+  const composite=(target:CanvasRenderingContext2D,source:CanvasRenderingContext2D,opacity:number,blendMode:string)=>{
+    target.save();target.setTransform(1,0,0,1,0,0);target.globalAlpha=Math.min(1,Math.max(0,opacity));target.globalCompositeOperation=blendModeToComposite(blendMode);target.drawImage(source.canvas,0,0);target.restore();
+  };
+  const close=()=>{
+    const scope=scopes.pop()!;
+    composite(scopes.at(-1)?.ctx??root,scope.ctx,scope.group.opacity,scope.group.blendMode);
+  };
+  previous=[];
+  for(const [index,layer] of layers.entries()) {
+    if(layer.visible===false) continue;
+    const groups=layer.groups??[],common=commonDepth(previous,groups);
+    while(scopes.length>common) close();
+    for(const group of groups.slice(common)) scopes.push({group,ctx:surface(scopes.length)});
+    const target=scopes.at(-1)?.ctx??root,opacity=layer.opacity??1,blendMode=layer.blendMode??"normal";
+    if(opacity!==1 || blendMode!=="normal") {
+      const ctx=surface(scopes.length);
+      paint(ctx,{...layer,opacity:1,blendMode:"normal"},index);
+      composite(target,ctx,opacity,blendMode);
+    }else paint(target,layer,index);
+    previous=groups;
+  }
+  while(scopes.length) close();
+}

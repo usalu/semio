@@ -1,6 +1,21 @@
 use super::*;
 
 #[test]
+fn icon_render_scene_chrome_uses_the_selected_locale() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
+    for pack in fixture["locales"].as_array().unwrap() {
+        let labels = scene_chrome_labels(pack["locale"] == "de").icon_render;
+        assert_eq!(labels.empty_scene, pack["labels"]["empty"]);
+        assert_eq!(labels.rendering, pack["labels"]["rendering"]);
+        assert_eq!(labels.failed, pack["labels"]["failed"]);
+    }
+}
+
+fn mouse_pointer(id: u64) -> ui_render::PointerInfo {
+    ui_render::PointerInfo { id: ui_render::PointerId(id), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }
+}
+
+#[test]
 fn virtual_file_system_scene_chrome_uses_the_shared_english_and_german_labels() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
     for pack in fixture["chrome"].as_array().expect("chrome packs") {
@@ -451,11 +466,11 @@ pub(super) fn retained_world_sequence_probe(scenario: &str) {
                 let down = matches!(step.as_str().unwrap(), "press" | "secondaryPress");
                 let (x, y) = point(if down { "press" } else { "release" });
                 let button = if step.as_str().unwrap().starts_with("secondary") { 2 } else { 0 };
-                semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), x, y, down, button, PointerModifiers::default()));
+                semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), x, y, down, button, PointerModifiers::default()));
             }
             "move" => {
                 let (x, y) = point("release");
-                semio_framework_async::block_on(interaction.handle_pointer_move(ui_render::PointerId(77), x, y, true, 0, PointerModifiers::default()));
+                semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(77), x, y, true, 0, PointerModifiers::default()));
             }
             "wheel" => {
                 let (x, y) = point("press");
@@ -475,12 +490,12 @@ pub(super) fn retained_world_sequence_probe(scenario: &str) {
                 let paint_rows: Vec<_> = rows.iter().zip(active_documents.iter()).map(|((window, _, _, bounds, _), document)| (window.as_str(), document, *bounds)).collect();
                 interaction.input = paint_tree_pointer_documents(&mut interaction.shell, &paint_rows);
             }
-            "cancel" => interaction.handle_pointer_cancel(ui_render::PointerId(77)),
+            "cancel" => interaction.handle_pointer_cancel(mouse_pointer(77)),
             "foreignPress" | "foreignRelease" => {
                 let (x, y) = point("release");
-                semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(78), x, y, step == "foreignPress", 0, PointerModifiers::default()));
+                semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(78), x, y, step == "foreignPress", 0, PointerModifiers::default()));
             }
-            "foreignCancel" => interaction.handle_pointer_cancel(ui_render::PointerId(78)),
+            "foreignCancel" => interaction.handle_pointer_cancel(mouse_pointer(78)),
             "refresh" | "replace" => {
                 let window = rows.last().expect("the refreshed row remains mounted").0.clone();
                 let key = if step == "replace" { "replacement-world" } else { "world" };
@@ -1314,7 +1329,7 @@ fn normalized_dock_tab_pointer_sequence_promotes_the_drag_before_release() {
     assert!(interaction.shell.dock_drag.as_ref().is_some_and(|drag| drag.payload.kind == DockDragKind::Tab && drag.payload.window_id == "top"));
     assert_eq!(interaction.shell.dock.collect_window_ids(), vec!["top".to_string(), "perspective".to_string()], "promotion derives a ghost without mutating the committed dock");
 
-    interaction.handle_pointer_cancel(pointer.id);
+    interaction.handle_pointer_cancel(pointer);
     assert!(interaction.shell.pending_dock_drag.is_none() && interaction.shell.dock_drag.is_none());
 }
 
@@ -1936,13 +1951,13 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
     let mut interaction = pointer_interaction(shell, input);
     let x = body.x + fixture["pointer"]["down"]["x"].as_f64().unwrap() as f32;
     let y = body.y + fixture["pointer"]["down"]["y"].as_f64().unwrap() as f32;
-    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), x, y, true, 0, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), x, y, true, 0, PointerModifiers::default()));
     let down = crate::collect_fixture_actions(&mut interaction.input);
     if foreign_cancel {
-        interaction.handle_pointer_cancel(ui_render::PointerId(78));
+        interaction.handle_pointer_cancel(mouse_pointer(78));
     }
     let after_foreign_cancel = crate::collect_fixture_actions(&mut interaction.input);
-    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), body.x + body.w + 20.0, body.y + body.h + 20.0, false, 0, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), body.x + body.w + 20.0, body.y + body.h + 20.0, false, 0, PointerModifiers::default()));
     let up = crate::collect_fixture_actions(&mut interaction.input);
     crate::scenes::cancel_canvas_pointer_gesture(&mut interaction.input);
     crate::interpreter::release_scene_pointer(ui_render::PointerId(77));
@@ -1972,9 +1987,9 @@ fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_it
     let start = (body.x + row["start"]["x"].as_f64().unwrap() as f32, body.y + row["start"]["y"].as_f64().unwrap() as f32);
     let end = (body.x + row["end"]["x"].as_f64().unwrap() as f32, body.y + row["end"]["y"].as_f64().unwrap() as f32);
     let button = row["button"].as_i64().unwrap() as i16;
-    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), start.0, start.1, true, button, PointerModifiers::default()));
-    semio_framework_async::block_on(interaction.handle_pointer_move(ui_render::PointerId(77), end.0, end.1, true, button, PointerModifiers::default()));
-    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), end.0, end.1, false, button, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), start.0, start.1, true, button, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(77), end.0, end.1, true, button, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), end.0, end.1, false, button, PointerModifiers::default()));
     let actions = crate::collect_fixture_actions(&mut interaction.input);
     let action_ids = actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>();
     let context_menu_open = interaction.shell.context_menu.is_some();

@@ -445,12 +445,47 @@ fn window_caps_read_the_authored_instance_title() {
 }
 
 #[test]
+fn projection_template_creation_names_each_new_window_and_moving_keeps_its_chrome() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
+    for physical in [false, true] {
+        for instance in fixture["instances"].as_array().unwrap() {
+            let mut shell = split_pane_shell();
+            let template = format!("world-projection:{}", instance["initialProjection"]);
+            let window_id = shell.allocate_window_instance_id("main");
+            if physical {
+                let payload = DockDragPayload { kind: DockDragKind::NewWindow, window_id: window_id.clone(), window_kind_id: "main".into(), template_id: Some(template.clone()), source_path: Vec::new(), tab_index: 0, ghost_label: String::new() };
+                shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: crate::dock::DockSide::Right }) });
+                semio_framework_async::block_on(shell.finish_dock_drag(10.0, 10.0, &InputState::default())).unwrap();
+            } else {
+                assert!(shell.open_display_window("main", Some(&template)));
+            }
+            shell.sync_dock();
+            let (titles, icons) = shell.dock_chrome_maps();
+            assert_eq!(titles.get(&window_id).unwrap(), instance["projectionTitle"].as_str().unwrap(), "template title, physical={physical}");
+            assert_eq!(icons.get(&window_id).unwrap(), instance["projectionIcon"].as_str().unwrap());
+            assert_eq!(titles["pane-top"], "Top");
+            assert_eq!(titles["pane-perspective"], "Perspective");
+            assert!(shell.apply_window_title_host_command(&window_id, "Custom view"));
+            assert!(shell.apply_window_icon_host_command(&window_id, "projection-isometric"));
+            let source_path = shell.dock_stack_path_for(&window_id).unwrap();
+            let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.clone(), window_kind_id: "main".into(), template_id: Some(template), source_path, tab_index: 0, ghost_label: "Custom view".into() };
+            shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: crate::dock::DockSide::Left }) });
+            semio_framework_async::block_on(shell.finish_dock_drag(10.0, 10.0, &InputState::default())).unwrap();
+            shell.sync_dock();
+            let (titles, icons) = shell.dock_chrome_maps();
+            assert_eq!(titles[&window_id], "Custom view");
+            assert_eq!(icons[&window_id], "projection-isometric");
+        }
+    }
+}
+
+#[test]
 fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
     let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
     let mut app = split_pane_app();
     let kind_id = fixture["windowKind"].as_str().unwrap();
-    app.window_kinds[0].id = kind_id.into();
-    app.window_kinds[0].label = LocalizedLabel::native("Puzzle 3D", "Puzzle 3D");
+    app.window_kinds.first_mut().id = kind_id.into();
+    app.window_kinds.first_mut().label = LocalizedLabel::native("Puzzle 3D", "Puzzle 3D");
     let mut singleton = app.window_kinds[0].clone();
     singleton.id = fixture["singleton"]["id"].as_str().unwrap().into();
     singleton.label = LocalizedLabel::native(fixture["singleton"]["en"].as_str().unwrap(), fixture["singleton"]["de"].as_str().unwrap());

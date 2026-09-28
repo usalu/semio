@@ -92,8 +92,8 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
         &semio_framework_ui::wgpu::World3dScene {
             status_json,
             fit_json: Some(fit_json),
-            domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
-            domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
+            domain_id: Some(if marks.components.active() { crate::editor::generation3d::selection::DOMAIN } else { GENERATION_3D_INTERACTION_DOMAIN }.into()),
+            domain_granularity_id: Some(if marks.components.active() { marks.components.granularity.as_str() } else { GENERATION_3D_INTERACTION_GRANULARITY }.into()),
             ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, selection_json, &sun)
         },
         labels.preview_canvas.as_str(),

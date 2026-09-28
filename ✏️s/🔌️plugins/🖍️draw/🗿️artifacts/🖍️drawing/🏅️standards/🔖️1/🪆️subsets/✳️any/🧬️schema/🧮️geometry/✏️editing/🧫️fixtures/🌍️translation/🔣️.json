@@ -1,0 +1,393 @@
+[
+  {
+    "name": "identity",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "delta": [
+      1,
+      0
+    ],
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          9,
+          0
+        ],
+        "to": [
+          11,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rotated-scaled-parent",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      0,
+      2,
+      -4,
+      0,
+      400,
+      300
+    ],
+    "delta": [
+      10,
+      0
+    ],
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          -2.5
+        ],
+        "to": [
+          10,
+          -2.5
+        ]
+      }
+    ]
+  },
+  {
+    "name": "sheared-reflected-parent",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      -2,
+      0,
+      3,
+      4,
+      100,
+      -50
+    ],
+    "delta": [
+      1,
+      1
+    ],
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          7.875,
+          0.25
+        ],
+        "to": [
+          9.875,
+          0.25
+        ]
+      }
+    ]
+  },
+  {
+    "name": "translation-does-not-affect-vectors",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      10000000000.0,
+      -10000000000.0
+    ],
+    "delta": [
+      0,
+      -10
+    ],
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          -10
+        ],
+        "to": [
+          10,
+          -10
+        ]
+      }
+    ]
+  },
+  {
+    "name": "singular-parent",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "delta": [
+      1,
+      0
+    ],
+    "after": null
+  },
+  {
+    "name": "huge-origin-does-not-overflow-a-direction",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          8,
+          0
+        ],
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "points": [
+      {
+        "index": 1,
+        "point": "anchor"
+      }
+    ],
+    "matrix": [
+      2,
+      0,
+      0,
+      4,
+      1.7e+308,
+      1.7e+308
+    ],
+    "delta": [
+      10,
+      0
+    ],
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          2,
+          0
+        ],
+        "ctrl2": [
+          13,
+          0
+        ],
+        "to": [
+          15,
+          0
+        ]
+      }
+    ]
+  }
+]

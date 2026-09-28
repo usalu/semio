@@ -122,6 +122,27 @@ fn a_hidden_node_is_marked_not_dropped() {
     eprintln!("[DEBUG] ui contract accessibility: the decorative node projects as hidden, not absent");
 }
 
+#[test]
+fn only_a_tree_item_with_a_semantic_child_projects_disclosure_state() {
+    let record = |id: u64, key: &str, component: serde_json::Value, children: serde_json::Value| -> crate::UiNodeRecord {
+        serde_json::from_value(serde_json::json!({
+            "id": id,
+            "key": key,
+            "component": component,
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": {},
+            "children": children
+        }))
+        .expect("tree disclosure record")
+    };
+    let leaf = record(1, "outline.orthographic", serde_json::json!({ "type": "treeItem", "label": "Orthographic", "defaultOpen": false }), serde_json::json!([]));
+    let branch = record(2, "outline.parallel", serde_json::json!({ "type": "treeItem", "label": "Parallel", "defaultOpen": false }), serde_json::json!([3]));
+    assert_eq!(accessibility_projection_node(&leaf, 0).expanded, None, "a leaf cannot advertise a disclosure action from defaultOpen alone");
+    assert_eq!(accessibility_projection_node(&branch, 0).expanded, Some(false), "a branch keeps its authored collapsed state");
+}
+
 /// 📶️ Asserts the range semantics a fixture row pins, reading absent keys as null/false.
 pub(crate) fn assert_value_matches(node: &AccessibilityProjectionNode, row: &serde_json::Value) {
     assert_eq!(node.value_min, row["valueMin"].as_f64(), "{} valueMin", node.key);

@@ -120,6 +120,15 @@
 :is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is([data-slot="tree-gutter-slot"] svg, [data-slot="tree-icon"] svg, [data-slot="tree-header-actions"] svg) {
   color: var(--border-emphasized-color);
 }
+[data-slot="tree-label"],
+[data-slot="tree-label"] > * {
+  unicode-bidi: plaintext;
+}
+
+[data-selected="true"] > [data-slot="tree-row-layout"] > [data-slot="tree-row-content"] :is([data-slot="tree-label"], [data-slot="tree-icon"], [data-slot="tree-header-actions"]),
+[data-selected="true"] > [data-slot="tree-row-layout"] > [data-slot="tree-row-content"] :is([data-slot="tree-icon"] svg, [data-slot="tree-header-actions"] svg) {
+  color: var(--active-foreground);
+}
 /* #endregion 🎃️TreeHoverPath */
 
 /* #region 👻️PanelGhost */

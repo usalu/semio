@@ -1,0 +1,106 @@
+{
+  "identity": {
+    "instanceId": 17,
+    "controllerId": "stdio.mp4.editor",
+    "parentDocumentId": "document-7",
+    "windowId": "media:main",
+    "revision": "42",
+    "outputPort": "playback:out",
+    "generation": "3"
+  },
+  "media": {
+    "kind": "audio",
+    "mediaType": "audio/wav",
+    "durationMs": 1000,
+    "positionMs": 250,
+    "selection": [
+      100,
+      900
+    ]
+  },
+  "running": {
+    "progress": [
+      1,
+      2
+    ],
+    "detail": [
+      "Preparing",
+      "Encoding"
+    ]
+  },
+  "output": {
+    "chunks": [
+      [
+        82,
+        73,
+        70,
+        70,
+        36,
+        0,
+        0,
+        0,
+        87,
+        65,
+        86,
+        69,
+        102,
+        109,
+        116,
+        32,
+        16,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        64,
+        31,
+        0,
+        0,
+        64,
+        31,
+        0,
+        0,
+        1,
+        0,
+        8,
+        0,
+        100,
+        97,
+        116,
+        97,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "totalBytes": 44
+  },
+  "requirements": {
+    "autoplay": false,
+    "pollsPerTurn": 1,
+    "chunksPerTurn": 1,
+    "cancelExactHandle": true,
+    "revokeOnRevisionOrUnmount": true,
+    "resetSourceOnRevisionOrUnmount": true,
+    "controls": [
+      "play",
+      "pause",
+      "seek",
+      "selectionStart",
+      "selectionEnd",
+      "cancel"
+    ],
+    "locales": [
+      "en",
+      "de"
+    ],
+    "maximumTotalBytes": 33554432,
+    "maximumPages": 8192
+  }
+}

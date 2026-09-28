@@ -39,7 +39,7 @@ fn mask_mutations_match_json_oracle_and_exact_history() {
 fn mask_mutations_reject_conflicts_and_invalid_assets() {
     let fixture=fixture();let base:RasterSnapshot=dsl::json::from_json_str(&fixture["before"].to_string()).unwrap();
     let mut missing=fixture["reveal"].clone();missing["imageKey"]=serde_json::Value::from("missing");
-    let mut singular=fixture["reveal"].clone();singular["transform"]["scaleX"]=serde_json::Value::from(0);
+    let mut singular=fixture["reveal"].clone();singular["transform"]["a"]=serde_json::Value::from(0);
     for (expected,mask) in [(fixture["reveal"].clone(),fixture["hidden"].clone()),(serde_json::Value::Null,missing),(serde_json::Value::Null,singular)] {
         let mutation:RasterMutation=dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":expected,"mask":mask}).to_string()).unwrap();
         let (diff,messages)=mutation.diff(&base).into_parts();assert!(!messages.is_empty());MutationDiff::retire_cold(diff);

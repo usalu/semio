@@ -93,10 +93,12 @@ fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
 }
 
 fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
+    if patch.transform.is_some()&&(patch.transform_x.is_some()||patch.transform_y.is_some()){return Err(protocol::MutationApplyError::new("mutation.apply.ambiguous-transform","full and partial transforms cannot occur in one patch"));}
+    if let Some(transform)=&patch.transform {semio_framework_pixels::compositing::inverse(transform.as_affine()).map_err(|_|protocol::MutationApplyError::new("mutation.apply.invalid-transform","transform must be invertible"))?;}
     let invalid = match node {
         RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some() || patch.adjustment_parameters.is_some(),
-        RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some() || patch.adjustment_parameters.is_some(),
-        RasterLayerNode::Adjustment { .. } => patch.mask_content.is_some() || patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
+        RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some() || patch.adjustment_parameters.is_some(),
+        RasterLayerNode::Adjustment { .. } => patch.mask_content.is_some() || patch.pixel_content.is_some() || patch.transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
     };
     if let Some(parameters) = &patch.adjustment_parameters {
         if parameters.len()>2 || parameters.iter().enumerate().any(|(index,row)| !matches!(row.parameter.as_str(),"brightness"|"contrast") || row.value.is_some_and(|v| !v.get().is_finite() || !(-1.0..=1.0).contains(&v.get())) || parameters[..index].iter().any(|prior| prior.parameter==row.parameter)) {
@@ -121,15 +123,15 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
         inverse.mask_content = Some(crate::RasterMaskContent { mask: std::mem::replace(mask, content.mask.clone()) });
     }
     match node {
-        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, image_key, .. } => {
+        RasterLayerNode::Pixel { name, visible, locked, opacity, blend_mode, transform, width, height, image_key, .. } => {
             if let Some(content) = &patch.pixel_content {
                 inverse.pixel_content = Some(crate::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
                 *image_key = content.image_key.clone();
                 *width = content.width;
                 *height = content.height;
             }
-            if let Some(value) = &patch.pixel_transform {
-                inverse.pixel_transform = Some(transform.clone());
+            if let Some(value) = &patch.transform {
+                inverse.transform = Some(transform.clone());
                 *transform = value.clone();
             }
             if let Some(value) = &patch.name {
@@ -140,6 +142,7 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 inverse.visible = Some(*visible);
                 *visible = value;
             }
+            if let Some(value)=patch.locked {inverse.locked=Some(*locked);*locked=value;}
             if let Some(value) = patch.opacity {
                 inverse.opacity = Some(*opacity);
                 *opacity = value;
@@ -165,7 +168,8 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 *height = Some(value);
             }
         }
-        RasterLayerNode::Group { name, visible, opacity, blend_mode, transform, .. } => {
+        RasterLayerNode::Group { name, visible, locked, opacity, blend_mode, transform, .. } => {
+            if let Some(value)=&patch.transform {inverse.transform=Some(std::mem::replace(transform,value.clone()));}
             if let Some(value) = &patch.name {
                 inverse.name = Some(name.clone());
                 *name = value.clone();
@@ -174,6 +178,7 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 inverse.visible = Some(*visible);
                 *visible = value;
             }
+            if let Some(value)=patch.locked {inverse.locked=Some(*locked);*locked=value;}
             if let Some(value) = patch.opacity {
                 inverse.opacity = Some(*opacity);
                 *opacity = value;
@@ -191,7 +196,7 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 transform.y = value;
             }
         }
-        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, adjustment_kind, params, .. } => {
+        RasterLayerNode::Adjustment { name, visible, locked, opacity, blend_mode, adjustment_kind, params, .. } => {
             if let Some(parameters)=&patch.adjustment_parameters {
                 inverse.adjustment_parameters=Some(parameters.iter().map(|row| {
                     let previous=params.remove_entry(&row.parameter).map(|mut entry| entry.take().1);
@@ -208,6 +213,7 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 inverse.visible = Some(*visible);
                 *visible = value;
             }
+            if let Some(value)=patch.locked {inverse.locked=Some(*locked);*locked=value;}
             if let Some(value) = patch.opacity {
                 inverse.opacity = Some(*opacity);
                 *opacity = value;
@@ -518,10 +524,17 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     }
     take!(name);
     take!(visible);
+    take!(locked);
     take!(opacity);
     take!(blend_mode);
-    take!(transform_x);
-    take!(transform_y);
+    if let Some(mut transform)=src.transform {
+        if let Some(x)=src.transform_x {transform.x=x;}
+        if let Some(y)=src.transform_y {transform.y=y;}
+        dst.transform=Some(transform);dst.transform_x=None;dst.transform_y=None;
+    }else if let Some(transform)=dst.transform.as_mut(){
+        if let Some(x)=src.transform_x {transform.x=x;}
+        if let Some(y)=src.transform_y {transform.y=y;}
+    }else{take!(transform_x);take!(transform_y);}
     take!(width);
     take!(height);
     if let Some(parameters)=src.adjustment_parameters {
@@ -533,7 +546,6 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     take!(adjustment_kind);
     take!(mask_content);
     take!(pixel_content);
-    take!(pixel_transform);
 }
 
 /// 🧩️ Sequential coalesce of two layer deltas. `apply` runs the phases `removed → patched → moved →

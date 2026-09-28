@@ -264,6 +264,7 @@ fn build_preview_mesh_table(
             let data = match inline {
                 Some(PreviewInlineGeometry::Point { x, y, z }) => Some(preview_eval::point_marker_mesh(x, y, z)),
                 Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(preview_eval::vector_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Mesh { ref preview, .. }) => preview_eval::decode_preview_mesh_pack(preview),
                 // ⏱️ The CHAIN's answer first: a served guest links no geometry kernel at all, so
                 // `flowTessellateResolve`'s mesh pack is the only mesh a viewer can ever paint.
                 // Reaching the in-process kernel is counted, and only a session-free caller (a law

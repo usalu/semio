@@ -804,7 +804,7 @@ fn editor_selection_ids(
     session: &semio_framework_os_flow::FlowEvalSession,
     selected: &[String],
 ) -> Vec<String> {
-    let marks = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
+    let marks = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks { components: Default::default(), hovered: Default::default(), selected: selected.iter().cloned().collect() };
     let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(eval_json, host_snapshot, config, Some(session), &marks);
     selection_json_ids(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(config, "", &payload))
 }

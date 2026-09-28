@@ -58,8 +58,8 @@ let sharedMacrotaskPost: ((run: () => void) => void) | null = null;
 
 /** 📮️ The process-wide unthrottled macrotask port. Native hosts use their immediate queue so
  * continuously posted messages cannot starve timers; browsers share one `MessageChannel`. Built lazily so
- * importing this module costs nothing, and `unref`'d where the host offers it (node keeps a started
- * port ref'd, which would hold a script open forever). */
+ * importing this module costs nothing. Only message ports are unref'd where supported; native
+ * immediates keep an awaited continuation alive until it runs. */
 const macrotaskPort = (): ((run: () => void) => void) => {
   if (sharedMacrotaskPost) return sharedMacrotaskPost;
   const host = globalThis as { process?: { versions?: { node?: string; bun?: string } }; setImmediate?: (run: () => void) => unknown };
@@ -386,7 +386,7 @@ export const runContinuationCase = (testCase: ContinuationCase): ContinuationCas
   return { order, completionMs };
 };
 
-/** ▶️ The same case on the REAL host event loop — the platform's own `MessageChannel` and
+/** ▶️ The same case on the REAL host event loop — the platform's own continuation queue and
  * `setTimeout`, no virtual clock anywhere. It is the independent oracle for
  * {@link runContinuationCase}: if the browser/node event loop and our virtual model disagree about a
  * declared law, the law is wrong. Resolves once every expected callback has run, or rejects at

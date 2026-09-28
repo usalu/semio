@@ -7,7 +7,7 @@ export function maskCoverage(red:number,green:number,blue:number,alpha:number):n
   return Math.round((0.2126*red+0.7152*green+0.0722*blue)*alpha/255);
 }
 
-export type RasterStackTransform={x:number;y:number;scaleX:number;scaleY:number;rotation:number};
+export type RasterStackTransform={x:number;y:number;a:number;b:number;c:number;d:number};
 export type RasterStackMask={enabled:boolean;linked:boolean;invert:boolean;transform:RasterStackTransform;width?:number|null;height?:number|null;imageKey?:string|null};
 type Properties={id:string;visible:boolean;opacity:number;blendMode:CompositeBlend;transform:RasterStackTransform};
 export type RasterStackLayer=Properties&({kind:"pixel";width?:number|null;height?:number|null;imageKey?:string|null;mask?:RasterStackMask|null}|{kind:"group";children:RasterStackLayer[];mask?:RasterStackMask|null}|{kind:"adjustment";adjustmentKind:"brightnessContrast";params:{brightness?:number;contrast?:number}});
@@ -17,11 +17,11 @@ type Preparation={image:PixelImage;coverage:Uint8Array;offset:number};
 const identity:CompositeAffine=[1,0,0,1,0,0];
 const invalid=(message:string):never=>{throw new RangeError(message);};
 function transform(value:RasterStackTransform):CompositeAffine {
-  if(!value||![value.x,value.y,value.scaleX,value.scaleY,value.rotation].every(Number.isFinite))invalid("Layer transform requires finite coordinates");
-  const angle=value.rotation*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
-  const result:CompositeAffine=[c*value.scaleX,s*value.scaleX,-s*value.scaleY,c*value.scaleY,value.x,value.y];
+  if(!value)invalid("Layer transform requires finite coordinates");
+  const result:CompositeAffine=[value.a,value.b,value.c,value.d,value.x,value.y];
   inverse(result);return result;
 }
+
 function centered(value:CompositeAffine,width:number,height:number,sourceWidth:number,sourceHeight:number):CompositeAffine {
   validateExtent(width,height);
   return multiply(value,[width/sourceWidth,0,0,height/sourceHeight,-width/2,-height/2]);

@@ -11,7 +11,7 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{set_cell, set_snapshot};
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell, set_snapshot};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
@@ -41,7 +41,7 @@ pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", stand
 /// of this display order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
-    document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
+    document.project_workbook().map_or_else(|_| Vec::new(), |workbook| workbook.sheets.into_iter().flat_map(|sheet| sheet.cells.into_iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value))).collect())
 }
 
 /// 🔎 Renders one cell value to display text. `SharedString` resolves against this document's own
@@ -56,6 +56,7 @@ pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[St
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
         XlsxCellValue::InlineString(text) => text.clone(),
         XlsxCellValue::Boolean(flag) => flag.to_string(),
+        XlsxCellValue::Error(error) => error.clone(),
         XlsxCellValue::Formula { expr, .. } => format!("={expr}"),
         XlsxCellValue::Empty => String::new(),
     }
@@ -86,9 +87,17 @@ pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
     }
 }
 
-/// 🔐️ Computes the optimistic revision for one exact typed cell value.
-pub(crate) fn xlsx_cell_revision(value: &XlsxCellValue) -> String {
-    semio_framework_plugin::app::DocumentWindowKit::text_revision(&semio_s_artifact_stdio_contract::editing::snapshot_edit_source(value))
+/// 🔐️ Binds a draft to its typed value and the text of its addressed shared-string entry.
+pub(crate) fn xlsx_cell_revision(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+    use semio_framework_plugin::app::DocumentWindowKit;
+    let typed = DocumentWindowKit::text_revision(&semio_s_artifact_stdio_contract::editing::snapshot_edit_source(value));
+    match value {
+        XlsxCellValue::SharedString(index) => match shared_strings.get(*index) {
+            Some(text) => format!("{typed}:{}", DocumentWindowKit::text_revision(text)),
+            None => format!("{typed}:missing"),
+        },
+        _ => typed,
+    }
 }
 //#endregion 🔖️TableProjection
 
@@ -127,13 +136,11 @@ impl protocol::OpBinary for XlsxEditorCommand {
             return Err(malformed("op format", 0, format!("unsupported format {format}")));
         }
         let sheet_len = reader.read_varint_u64().map_err(|e| malformed("op worksheet len", reader.position(), e.to_string()))? as usize;
-        let sheet_name = String::from_utf8(reader.read_bytes(sheet_len).map_err(|e| malformed("op worksheet", reader.position(), e.to_string()))?.to_vec())
-            .map_err(|e| malformed("op worksheet", reader.position(), e.to_string()))?;
+        let sheet_name = String::from_utf8(reader.read_bytes(sheet_len).map_err(|e| malformed("op worksheet", reader.position(), e.to_string()))?.to_vec()).map_err(|e| malformed("op worksheet", reader.position(), e.to_string()))?;
         let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
         let column = reader.read_varint_u64().map_err(|e| malformed("op column", reader.position(), e.to_string()))? as u32;
         let revision_len = reader.read_varint_u64().map_err(|e| malformed("op revision len", reader.position(), e.to_string()))? as usize;
-        let revision = String::from_utf8(reader.read_bytes(revision_len).map_err(|e| malformed("op revision", reader.position(), e.to_string()))?.to_vec())
-            .map_err(|e| malformed("op revision", reader.position(), e.to_string()))?;
+        let revision = String::from_utf8(reader.read_bytes(revision_len).map_err(|e| malformed("op revision", reader.position(), e.to_string()))?.to_vec()).map_err(|e| malformed("op revision", reader.position(), e.to_string()))?;
         let value_len = reader.read_varint_u64().map_err(|e| malformed("op value len", reader.position(), e.to_string()))? as usize;
         let value_bytes = reader.read_bytes(value_len).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
         let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
@@ -210,7 +217,7 @@ impl ArtifactEditor for XlsxEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -225,29 +232,25 @@ impl ArtifactEditor for XlsxEditor {
 
 fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {
     let XlsxEditorCommand::SetCell { sheet_name, row, column, revision, value } = command;
-    let sheet = snapshot.workbook.sheets.iter().find(|sheet| sheet.name == *sheet_name).ok_or_else(|| {
-        Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.sheet-stale"), format!("worksheet '{sheet_name}' no longer exists"))
-    })?;
-    let cell = sheet.cells.iter().find(|cell| cell.row == *row && cell.col == *column).ok_or_else(|| {
-        Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), format!("cell {sheet_name}!{row},{column} no longer exists"))
-    })?;
-    if xlsx_cell_revision(&cell.value) != *revision {
-        return Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-conflict"),
-            format!("cell {sheet_name}!{row},{column} changed before this draft was applied"),
-        ));
+    let workbook = snapshot.project_workbook().map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.projection-invalid"), error.to_string()))?;
+    let sheet = workbook
+        .sheets
+        .iter()
+        .find(|sheet| sheet.name == *sheet_name)
+        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.sheet-stale"), format!("worksheet '{sheet_name}' no longer exists")))?;
+    let cell = sheet
+        .cells
+        .iter()
+        .find(|cell| cell.row == *row && cell.col == *column)
+        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), format!("cell {sheet_name}!{row},{column} no longer exists")))?;
+    let address = xlsx_cell_address(snapshot, sheet_name, *row, *column).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))?;
+    if address.revision != *revision {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-conflict"), format!("cell {sheet_name}!{row},{column} changed before this draft was applied")));
     }
-    Ok(Emit {
-        artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell {
-            sheet_name: sheet_name.clone(),
-            row: *row,
-            col: *column,
-            value: parse_xlsx_cell_value(value),
-        })],
-        description: Some(format!("Set {sheet_name}!{row},{column}")),
-        ..Default::default()
-    })
+    if render_xlsx_cell_value(&cell.value, &workbook.shared_strings) == *value {
+        return Ok(Emit::default());
+    }
+    Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value) })], description: Some(format!("Set {sheet_name}!{row},{column}")), ..Default::default() })
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEditor {
@@ -258,11 +261,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEdi
         }
     }
 
-
-    fn snapshot_edit_mutations(
-        event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent,
-        snapshot: &Self::Snapshot,
-    ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
@@ -290,8 +289,7 @@ pub fn create_xlsx_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::XLSX_EDIT_MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Workbook"))
-        ;
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Workbook"));
     semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

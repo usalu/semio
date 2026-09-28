@@ -25,7 +25,7 @@ pub(crate) fn handle_window(payload: &NextStep, spec: &FormsSnapshot, config: &F
     let steps = forms_steps(spec);
     if index + 1 >= steps.len() { return Ok(config.clone()); }
     let values = effective_try_values(spec, transient).iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
-    Ok(if can_advance(&steps[index], &values) { FormsTryWindowConfig { current_step_index: config.current_step_index + 1 } } else { config.clone() })
+    Ok(if can_advance(&steps[index], &values) { FormsTryWindowConfig { current_step_index: config.current_step_index + 1, ..config.clone() } } else { config.clone() })
 }
 
 pub fn handle(_payload: &NextStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {

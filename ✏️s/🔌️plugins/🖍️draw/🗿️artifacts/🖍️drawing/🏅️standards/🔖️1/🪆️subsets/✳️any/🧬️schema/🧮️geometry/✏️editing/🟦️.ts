@@ -3,7 +3,10 @@ import { parsePathSegment, type PathSegment } from "../../🟦️.ts";
 import { splitCubic, arcGeometry, arcPoint, inverse, type Point, type Matrix } from "../🟦️.ts";
 
 export type PathPoint = "anchor" | "control1" | "control2";
+export interface PathPointRef { readonly index: number; readonly point: PathPoint; }
 export type PathEdit =
+  | { kind: "deletePoints"; points: readonly PathPointRef[] }
+  | { kind: "translate"; points: readonly PathPointRef[]; delta: [number,number] }
   | { kind: "position"; index: number; point: PathPoint; to: [number,number] }
   | { kind: "coordinate"; index: number; point: PathPoint; axis: "x" | "y"; value: number }
   | { kind: "split"; index: number; t: number }
@@ -34,6 +37,39 @@ function contours(segments: PathSegment[]): [number, number][] {
 export function editPath(source: readonly PathSegment[], operation: PathEdit): PathSegment[] {
   const segments = source.map(item => parsePathSegment(item));
   const ranges = contours(segments);
+  if(operation.kind==="translate") return translatePathPoints(segments,operation.points,operation.delta);
+  if (operation.kind === "deletePoints") {
+    if (operation.points.length === 0) return segments;
+    if (operation.points.length > 4096) throw new Error("Point selection exceeds editing capacity");
+    const removed = new Set<number>();
+    for (const {index,point} of operation.points) {
+      if (!Number.isSafeInteger(index) || index<0) throw new Error("Missing path node");
+      const segment = segments[index];
+      if (!segment || segment.kind === "close") throw new Error("Missing path node");
+      if (point === "anchor") {removed.add(index);continue;}
+      const original = source[index]!;
+      if (original.kind === "quad" && point === "control1") {segments[index]={kind:"line",to:[...original.to]};continue;}
+      if (segment.kind !== "cubic" || (point !== "control1" && point !== "control2")) throw new Error("This node has no selected handle");
+      const previous = segments[index-1];
+      if (!previous || previous.kind === "close") throw new Error("Missing previous anchor");
+      if (point === "control1") segment.ctrl1=[...previous.to];
+      else segment.ctrl2=[...segment.to];
+    }
+    const output:PathSegment[]=[];
+    for (const [start,end] of ranges) {
+      const closed=segments[end-1]!.kind==="close";
+      let kept=0;
+      for (let index=start;index<end-(closed?1:0);index++) {
+        if (removed.has(index)) continue;
+        const segment=segments[index]!;
+        if (segment.kind==="close") throw new Error("Invalid contour");
+        output.push(kept++===0?{kind:"move",to:[...segment.to]}:segment);
+      }
+      if (closed && kept>1) output.push({kind:"close"});
+    }
+    return output;
+  }
+
   if (operation.kind === "join") {
     if (operation.index === operation.other) throw new Error("Choose two different endpoints");
     const range = (index:number):[number,number] => {
@@ -126,28 +162,13 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
     } else segments.splice(index, 1);
   } else if (operation.kind === "coordinate" || operation.kind === "position") {
     if(operation.kind==="coordinate" && !["x","y"].includes(operation.axis))throw new Error("Invalid coordinate");
-    if(operation.kind==="position" && (operation.to.length!==2 || !operation.to.every(Number.isFinite)))throw new Error("Invalid coordinate");
-    const coordinates=operation.kind==="position"?operation.to:operation.axis==="x"?[operation.value,undefined]:[undefined,operation.value];
-    if(coordinates.length!==2 || coordinates.some(value=>value!==undefined && !Number.isFinite(value)))throw new Error("Invalid coordinate");
-    if (item.kind === "close") throw new Error("Select an anchor");
-    for(const axis of [0,1] as const) {
-      const value=coordinates[axis];
-      if(value===undefined)continue;
-      if (operation.point === "anchor") {
-        const delta = value - item.to[axis];
-        item.to[axis] = value;
-        if (item.kind === "cubic") item.ctrl2[axis] += delta;
-        if (item.kind === "quad") item.ctrl[axis] += delta;
-        const next = segments[index + 1];
-        if (next?.kind === "cubic") next.ctrl1[axis] += delta;
-        if (next?.kind === "quad") next.ctrl[axis] += delta;
-      } else if (item.kind === "cubic") {
-        if (operation.point === "control1") item.ctrl1[axis] = value;
-        else if (operation.point === "control2") item.ctrl2[axis] = value;
-        else throw new Error("Invalid handle");
-      } else if (item.kind === "quad" && operation.point === "control1") item.ctrl[axis] = value;
-      else throw new Error("This node has no selected handle");
-    }
+    let to=dragPathPoint(item,operation.point,[1,0,0,1,0,0],[0,0],[0,0],false);
+    if(!to)throw new Error("This node has no selected handle");
+    if(operation.kind==="position")to=operation.to;
+    else to[operation.axis==="x"?0:1]=operation.value;
+    const [segment,next]=patchPathPoint(item,segments[index+1],operation.point,to);
+    segments[index]=segment;
+    if(next)segments[index+1]=next;
   } else if (operation.kind === "split") {
     if (!(operation.t > 0 && operation.t < 1)) throw new Error("Split position must be between zero and one");
     const previous = segments[index - 1];
@@ -186,4 +207,73 @@ export function dragPathPoint(segment: PathSegment,point: PathPoint,matrix: Matr
   if(constrained){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0;}
   const result:Point=[local[0]+inverted[0]*dx+inverted[2]*dy,local[1]+inverted[1]*dx+inverted[3]*dy];
   return result.every(Number.isFinite)?result:null;
+}
+
+/** 🩹 Copies only a positioned node and, when needed, its outgoing tangent segment. */
+export function patchPathPoint(segment:PathSegment,next:PathSegment|undefined,point:PathPoint,to:Point):[PathSegment,PathSegment?] {
+  if(to.length!==2 || !to.every(Number.isFinite))throw new Error("Invalid coordinate");
+  const output=parsePathSegment(segment);
+  let following:PathSegment|undefined;
+  if(point==="anchor") {
+    if(output.kind==="close")throw new Error("Select an anchor");
+    const delta:Point=[to[0]-output.to[0],to[1]-output.to[1]];
+    const translate=(value:Point):Point=>[value[0]+delta[0],value[1]+delta[1]];
+    output.to=[...to];
+    if(output.kind==="quad")output.ctrl=translate(output.ctrl);
+    if(output.kind==="cubic")output.ctrl2=translate(output.ctrl2);
+    if(next?.kind==="quad")following={...next,ctrl:translate(next.ctrl)};
+    if(next?.kind==="cubic")following={...next,ctrl1:translate(next.ctrl1)};
+  } else if(output.kind==="cubic" && point==="control1")output.ctrl1=[...to];
+  else if(output.kind==="cubic" && point==="control2")output.ctrl2=[...to];
+  else if(output.kind==="quad" && point==="control1")output.ctrl=[...to];
+  else throw new Error("This node has no selected handle");
+  return [parsePathSegment(output),following?parsePathSegment(following):undefined];
+}
+
+/** 🎯 Returns the nearest anchor or control in world coordinates; anchors win coincident ties. */
+export function pathPointHit(segment:PathSegment,matrix:Matrix,world:Point,tolerance:number):{point:PathPoint;distance:number}|null {
+  if(tolerance<0 || ![...matrix,...world,tolerance].every(Number.isFinite))return null;
+  let nearest:{point:PathPoint;distance:number}|null=null;
+  for(const point of ["anchor","control1","control2"] as const) {
+    const local=dragPathPoint(segment,point,[1,0,0,1,0,0],[0,0],[0,0],false);
+    if(!local)continue;
+    const [a,b,c,d,e,f]=matrix,distance=Math.hypot(a*local[0]+c*local[1]+e-world[0],b*local[0]+d*local[1]+f-world[1]);
+    if(distance<=tolerance && (!nearest || distance<nearest.distance))nearest={point,distance};
+  }
+  return nearest;
+}
+
+/** ↔️ Moves the union of selected coordinates and attached tangents exactly once. */
+function translatePathPoints(segments:PathSegment[],points:readonly PathPointRef[],delta:Point):PathSegment[] {
+  if(points.length===0)throw new Error("Select at least one path point");
+  if(delta.length!==2 || !delta.every(Number.isFinite))throw new Error("Invalid translation");
+  const masks=new Uint8Array(segments.length);
+  for(const target of points) {
+    if(!Number.isSafeInteger(target.index) || target.index<0)throw new Error("Missing path node");
+    const segment=segments[target.index];
+    if(!segment)throw new Error("Missing path node");
+    if(segment.kind==="close")throw new Error("Select a path point");
+    const bit=target.point==="anchor"?1:target.point==="control1" && (segment.kind==="quad" || segment.kind==="cubic")?2:target.point==="control2" && segment.kind==="cubic"?4:0;
+    if(!bit)throw new Error("This node has no selected handle");
+    masks[target.index]!|=bit;
+    if(target.point==="anchor") {
+      masks[target.index]!|=segment.kind==="quad"?2:segment.kind==="cubic"?4:0;
+      const next=segments[target.index+1];
+      if(next?.kind==="quad" || next?.kind==="cubic")masks[target.index+1]!|=2;
+    }
+  }
+  return segments.map((segment,index)=>{
+    const shift=(point:Point,bit:number):Point=>masks[index]!&bit?[point[0]+delta[0],point[1]+delta[1]]:point;
+    if(segment.kind!=="close")segment.to=shift(segment.to,1);
+    if(segment.kind==="quad")segment.ctrl=shift(segment.ctrl,2);
+    if(segment.kind==="cubic") {segment.ctrl1=shift(segment.ctrl1,2);segment.ctrl2=shift(segment.ctrl2,4);}
+    return parsePathSegment(segment);
+  });
+}
+
+/** 🌍️ Translate selected coordinates in document axes without applying the affine origin. */
+export function translateWorldPathPoints(source:readonly PathSegment[],points:readonly PathPointRef[],matrix:Matrix,delta:Point):PathSegment[] {
+  const basis=inverse([matrix[0],matrix[1],matrix[2],matrix[3],0,0]);
+  if(!basis || !matrix.every(Number.isFinite) || !delta.every(Number.isFinite))throw new Error("Cannot move points through a singular or nonfinite transform");
+  return editPath(source,{kind:"translate",points,delta:[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]]});
 }

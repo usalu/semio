@@ -219,5 +219,27 @@
       "branchChevronOnlyForVisibleBranch": true,
       "paintAndHitsShareAcceptedGeneration": true
     }
+  },
+  "displayResolvedOrder": {
+    "direction": "up",
+    "windowKindId": "puzzle3d-main",
+    "topToBottomIds": [
+      "framework.display.windows.puzzle3d-main.kind",
+      "framework.display.windows.puzzle3d-main.projection.parallel.orthographic",
+      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-isometric",
+      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-dimetric",
+      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-trimetric",
+      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric",
+      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-cabinet",
+      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-cavalier",
+      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-military",
+      "framework.display.windows.puzzle3d-main.projection.parallel.oblique",
+      "framework.display.windows.puzzle3d-main.projection.parallel",
+      "framework.display.windows.puzzle3d-main.projection.perspective.one-point",
+      "framework.display.windows.puzzle3d-main.projection.perspective.two-point",
+      "framework.display.windows.puzzle3d-main.projection.perspective.three-point",
+      "framework.display.windows.puzzle3d-main.projection.perspective.curvilinear",
+      "framework.display.windows.puzzle3d-main.projection.perspective"
+    ]
   }
 }

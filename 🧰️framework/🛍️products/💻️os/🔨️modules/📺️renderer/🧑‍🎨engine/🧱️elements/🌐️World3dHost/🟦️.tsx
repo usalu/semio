@@ -92,12 +92,14 @@ import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAIN
 const { useFrame, useLoader, useThree } = sceneHostPort.fiber;
 import {
   GestureRecognizer,
+  parseViewport3dProjectionFramePolicy,
   windowElementId,
   world3dComputeStatusV1,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
   type MergeMode,
   type PluginContextMenuSurfaceTarget,
+  type Viewport3dProjectionFramePolicy,
 } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
@@ -106,7 +108,11 @@ import {
   DEFAULT_MANUAL_LOD,
   frameWorldProjectionPose,
   GLB_MESH_FRAME_ROTATION_X,
+  lodFromCameraDistance,
+  lodGridStepWorld,
+  lodOrbitDistanceForCamera,
   WORLD_MESH_OUTLINE_USER_DATA_KEY,
+  WORLD_REFERENCE_DEFAULT_WIDTH,
   worldProjectionDefaults,
   worldProjectionFamily,
   worldProjectionGumballPlane,
@@ -136,7 +142,7 @@ import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type Su
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
 import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dAnnounceableBrushMeshUrls, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
-import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { runtimeDiagnosticsEnabled, SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { suggestionMenuOwnsWindow, suggestionPopupOwnsWindow, suggestionRowsWithFocus, suggestionSubmenuTarget, useSuggestionSubmenuSearch, withSuggestionSubmenu } from "../🎣️suggestion-submenu/🟦️.ts";
 import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
@@ -166,6 +172,7 @@ type WorldCameraRecord = {
   readonly x?: number;
   readonly y?: number;
   readonly z?: number;
+  readonly projectionFrame?: Viewport3dProjectionFramePolicy;
 };
 
 type WorldMeshRecord = {
@@ -243,6 +250,7 @@ type WorldSelectionRecord = {
   readonly interactionMode?: "model" | "paint";
   readonly gumballTarget?: readonly [number, number, number];
   readonly gumballActive?: boolean;
+  readonly gumballSelectionIds?: readonly string[];
   /** 🎛️ Plugin-authored gumball handle flags (e.g. puzzle3d Move/Rotate). When set, overrides {@link gumballConfigForTransformMode}. */
   readonly gumballConfig?: GumballConfig;
   /** ⚡️ When true the gumball dispatches `translateSelection`/`rotateSelection`/`scaleSelection`
@@ -699,7 +707,7 @@ function createCelebratingConicMaterial(opacity = 1): ShaderMaterial {
 //#endregion 🎉️WorldInstanceCelebrate
 //#endregion WorldMeshPaint
 
-export type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
+export type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean; readonly projectionFrame: Viewport3dProjectionFramePolicy };
 
 /** 📐️ A `camera_json.projection` field is the composed mode ⊗ orientation taxonomy object. */
 function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefined {
@@ -713,7 +721,7 @@ function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefi
   return value as WorldProjectionSpec;
 }
 
-function parseCameraState(cameraJson: string): WorldParsedCameraState {
+export function parseCameraState(cameraJson: string): WorldParsedCameraState {
   try {
     const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number; up?: readonly [number, number, number]; projection?: string | object };
     const position: [number, number, number] = parsed.position ? [parsed.position[0], parsed.position[1], parsed.position[2]] : [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3];
@@ -730,9 +738,10 @@ function parseCameraState(cameraJson: string): WorldParsedCameraState {
       projectionSpec,
       fov: parsed.fov ?? (projectionSpec ? worldProjectionModeFov(projectionSpec) : undefined) ?? 45,
       explicitProjection,
+      projectionFrame: parsed.projectionFrame === undefined ? "content" : parseViewport3dProjectionFramePolicy(parsed.projectionFrame),
     };
   } catch {
-    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
+    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false, projectionFrame: "content" };
   }
 }
 
@@ -748,6 +757,7 @@ export function mergeWorldViewportCamera(base: WorldParsedCameraState, next: Wor
     projectionSpec: next.projectionSpec ?? base.projectionSpec,
     fov: base.fov,
     explicitProjection: base.explicitProjection || next.projection === "perspective" || next.projection === "orthographic",
+    projectionFrame: base.projectionFrame,
   };
 }
 
@@ -762,8 +772,9 @@ export function world3dFitProjectionContent(
   cameraNavigating: boolean,
   hasProjectionSeed: boolean,
   lockContentFrame: boolean = false,
+  projectionFrame: Viewport3dProjectionFramePolicy = "content",
 ): boolean {
-  return !viewportOwned && !cameraNavigating && !lockContentFrame && hasProjectionSeed;
+  return projectionFrame === "content" && !viewportOwned && !cameraNavigating && !lockContentFrame && hasProjectionSeed;
 }
 
 /** 📷️ Scene instances that may move the projection framing bounds — excludes tool-run provisional placements so fill planning never yanks the camera. */
@@ -1067,6 +1078,60 @@ function WorldAutoFit({
   return null;
 }
 
+type WorldAcceptedFrameDiagnosticsProps = {
+  readonly surfaceId: string;
+  readonly windowInstanceId?: string | null;
+  readonly projection: WorldProjectionSpec;
+  readonly cameraTarget: readonly [number, number, number];
+  readonly contentBounds: WorldSceneContentBounds | null;
+  readonly references: readonly WorldReferenceRecord[];
+  readonly lod: WorldLodRecord;
+};
+
+/** @emoji 🩺️ Emits one deduplicated, diagnostics-gated receipt from the actual R3F camera after
+ * projection/framing and LOD frame runners have accepted their inputs. */
+function WorldAcceptedFrameDiagnostics(props: WorldAcceptedFrameDiagnosticsProps): null {
+  const { camera, controls, size } = useThree();
+  const fallbackTarget = useMemo(() => new Vector3(), []);
+  const lastReceiptRef = useRef("");
+  useFrame(() => {
+    if (!runtimeDiagnosticsEnabled()) return;
+    const target = (controls as { readonly target?: Vector3 } | null)?.target ?? fallbackTarget.set(...props.cameraTarget);
+    const orbitDistance = camera.position.distanceTo(target);
+    const lodDistance = lodOrbitDistanceForCamera(camera, orbitDistance, size.height);
+    const automaticLod = props.lod.automaticLod ?? true;
+    const depthVariableLod = props.lod.depthVariableLod ?? false;
+    const manualLod = props.lod.manualLod ?? DEFAULT_MANUAL_LOD;
+    const sceneLod = automaticLod || depthVariableLod ? lodFromCameraDistance(lodDistance, 100) : manualLod;
+    const gridFactor = props.lod.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
+    const receipt = {
+      surfaceId: props.surfaceId,
+      windowInstanceId: props.windowInstanceId ?? null,
+      projection: props.projection,
+      camera: {
+        kind: camera.type,
+        position: camera.position.toArray(),
+        target: target.toArray(),
+        up: camera.up.toArray(),
+        quaternion: camera.quaternion.toArray(),
+        fov: "fov" in camera && typeof camera.fov === "number" ? camera.fov : null,
+        zoom: "zoom" in camera && typeof camera.zoom === "number" ? camera.zoom : 1,
+        near: "near" in camera && typeof camera.near === "number" ? camera.near : null,
+        far: "far" in camera && typeof camera.far === "number" ? camera.far : null,
+      },
+      viewport: { width: size.width, height: size.height, aspect: size.height > 0 ? size.width / size.height : null },
+      contentBounds: props.contentBounds,
+      references: props.references.filter((reference) => !reference.hidden).map((reference) => ({ id: reference.id, origin: reference.origin, widthWorld: reference.widthWorld ?? WORLD_REFERENCE_DEFAULT_WIDTH })),
+      grid: { automaticLod, depthVariableLod, distanceReference: 100, orbitDistance, lodDistance, sceneLod, gridFactor, gridStepWorld: lodGridStepWorld(sceneLod, gridFactor) },
+    };
+    const encoded = JSON.stringify(receipt);
+    if (encoded === lastReceiptRef.current) return;
+    lastReceiptRef.current = encoded;
+    console.info(`[DEBUG] react-world-frame ${encoded}`);
+  });
+  return null;
+}
+
 /** @emoji 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction.
  * `radius` is the BOUNDING-SPHERE radius ({@link world3dBoundsRadius}), not half the longest edge. */
 export function world3dFrameCameraFromBounds(
@@ -1119,7 +1184,7 @@ export function world3dFrameCameraFromInstances(
 
 function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): WorldParsedCameraState {
   if (instances.length === 0) {
-    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
+    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false, projectionFrame: "content" };
   }
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
@@ -1146,6 +1211,7 @@ function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): 
     projection: "perspective",
     fov: 45,
     explicitProjection: false,
+    projectionFrame: "content",
   };
 }
 
@@ -1167,7 +1233,7 @@ function seedPendingWorldProjectionCamera(
         target: sceneCamera.target,
         distance: Math.hypot(sceneCamera.position[0] - sceneCamera.target[0], sceneCamera.position[1] - sceneCamera.target[1], sceneCamera.position[2] - sceneCamera.target[2]) || 600,
       });
-  return { ...pose, fov: worldProjectionModeFov(pendingSpec) ?? sceneCamera.fov, explicitProjection: true };
+  return { ...pose, fov: worldProjectionModeFov(pendingSpec) ?? sceneCamera.fov, explicitProjection: true, projectionFrame: sceneCamera.projectionFrame };
 }
 
 /** @emoji 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
@@ -1197,7 +1263,7 @@ function WorldProjectionContentFrame(props: {
     const { camera, controls: rawControls } = getThree();
     const controls = rawControls as { target: Vector3; update?: () => void } | null;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
-    const framed: WorldParsedCameraState = { ...pose, fov: worldProjectionModeFov(props.spec) ?? props.fov, explicitProjection: true };
+    const framed: WorldParsedCameraState = { ...pose, fov: worldProjectionModeFov(props.spec) ?? props.fov, explicitProjection: true, projectionFrame: "content" };
     const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
     if (ortho.isOrthographicCamera) {
       ortho.left = size.width / -2;
@@ -2517,18 +2583,15 @@ const GUMBALL_TRANSFORM_EPSILON = 1e-6;
 const WORLD_VERTEX_DOT_PX = 6;
 const WORLD_VERTEX_MARK_PX = 11;
 
-/** 🕹️ Leftover/object ids for gumball `translateSelection` — never component face ids. */
+/** 🧷️ Copies the plugin's opaque transform targets so a gesture keeps its initial selection. */
 export function world3dGumballSelectionArgsV1(selection: {
   readonly ids?: readonly string[];
+  readonly gumballSelectionIds?: readonly string[];
   readonly componentIds?: readonly number[];
   readonly selectionMode?: string;
   readonly granularity?: string;
 }): { readonly mode: string; readonly ids: readonly string[] } {
-  // 🧯️ No `componentIds` fallback: those are face/vertex/edge INDICES, so `.map(String)` produced ids
-  // like `"0"`, `"1"` that no `Puzzle3dObject.id` can ever match. The guest collected them, mutated
-  // nothing, and completed with a refusal — a transform that silently did nothing, minted exactly when
-  // the gesture had no object to act on. An empty list is the honest answer, and the caller refuses it.
-  return { mode: selection.selectionMode ?? selection.granularity ?? "object", ids: selection.ids ?? [] };
+  return { mode: selection.selectionMode ?? selection.granularity ?? "object", ids: [...(selection.gumballSelectionIds ?? selection.ids ?? [])] };
 }
 
 /** @emoji 🎛️ Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
@@ -6819,10 +6882,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   /** 📷️ Keep fitting the live content bounds into seeded projection panes (esp. orthographic Top) until the
    * user takes ownership — otherwise tool-placed objects that expand the scene fall outside the one-shot
    * initial frustum and only remain visible in the wider perspective pane. */
-  const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
+  const localProjectionPending = pendingProjectionSpec !== null || externalPendingProjectionSpec !== null || pendingProjectionSpecRef.current !== null;
+  const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? pendingProjectionSpec ?? externalPendingProjectionSpec ?? cameraState.projectionSpec);
   const lockProjectionContentFrame =
     activeUtility === "fill" || instances.some((instance) => instance.provisional) || projectionContentFrameSeededRef.current;
-  const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed, lockProjectionContentFrame);
+  const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed, lockProjectionContentFrame, localProjectionPending ? "content" : cameraState.projectionFrame);
   const autoFitKey = world3dAutoFitKey(fit?.revision ?? 0, sceneCameraAttachJson, autoFitBounds);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
   const autoFitUserMoved = userMovedFitRevision === (fit?.revision ?? 0);
@@ -7005,7 +7069,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       const from = raycastGroundPoint(event.clientX, event.clientY, rect, camera);
       if (!from) return false;
       const pressed = resolveClickInstanceId(instancesRef.current, meshesRef.current, toLocalPoint(event), rect, camera);
-      const objectId = world3dRelocateDragTargetV1(pressed, selectionArgs().ids);
+      const objectId = world3dRelocateDragTargetV1(pressed, selection.ids ?? []);
       const instance = objectId ? instancesRef.current.find((entry) => entry.id === objectId) : undefined;
       if (!objectId || !instance) return false;
       const origin = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
@@ -7016,7 +7080,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setWorldCatalogueDropPreview(node.controllerId, { objectKind, meshUrl, origin });
       return true;
     },
-    [node.controllerId, selectionArgs, toLocalPoint],
+    [node.controllerId, selection.ids, toLocalPoint],
   );
 
   /** 🚚️ Moves the live relocate ghost to the grabbed object's would-be origin — grid-snapped exactly like a
@@ -7654,6 +7718,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             manualLod={lod.manualLod ?? DEFAULT_MANUAL_LOD}
             gridDatum={[0, 0, 0]}
           >
+            <WorldAcceptedFrameDiagnostics
+              surfaceId={node.surfaceId}
+              windowInstanceId={windowInstanceId}
+              projection={worldProjectionSpec}
+              cameraTarget={cameraState.target as [number, number, number]}
+              contentBounds={contentBounds}
+              references={references}
+              lod={lod}
+            />
             <ambientLight color={environment?.ambient?.color ?? "#ffffff"} intensity={environment?.ambient?.intensity ?? 1.15} />
             {environment?.sun?.enabled === true ? (
               <directionalLight

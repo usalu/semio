@@ -20,7 +20,8 @@ pub struct XmlArtifact {
 //#region 🔖️Conversions
 impl Default for XmlArtifact {
     fn default() -> Self {
-        Self::from_snapshot(XmlSnapshot::default())
+        let snapshot = XmlSnapshot::default();
+        Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 }
 
@@ -33,15 +34,18 @@ impl XmlArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_snapshot(snapshot: XmlSnapshot) -> Self {
-        Self { schema: snapshot.schema, doc: snapshot.doc }
+    pub fn from_snapshot(snapshot: XmlSnapshot) -> Result<Self, String> {
+        crate::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
+        Ok(Self { schema: snapshot.schema, doc: snapshot.doc })
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: XmlSnapshot) -> Result<(), String> {
+        crate::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
+        Ok(())
     }
 }
 //#endregion 🔖️Conversions
@@ -115,10 +119,14 @@ pub mod derived_construction {
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() {
+            let mut diagnostics = self.diagnostics;
+            if let Err(error) = crate::schema::snapshot::validate_xml_document_boundaries(&self.snapshot.doc) {
+                diagnostics.push(dsl::Diagnostic::error("stdio.xml.boundary", dsl::TextSpan::at(1, 1), error));
+            }
+            if diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
-                Err(self.diagnostics)
+                Err(diagnostics)
             }
         }
     }
@@ -215,7 +223,13 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
     };
     XmlSnapshot {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }), doctype: Some("<!DOCTYPE catalog>".into()), prolog: Vec::new(), root: Some(root) },
+        doc: XmlDocument {
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
+            doctype: Some("<!DOCTYPE catalog>".into()),
+            prolog: Vec::new(),
+            epilog: Vec::new(),
+            root: Some(root),
+        },
     }
 }
 //#endregion 🔖️DocumentHelpers

@@ -1,7 +1,10 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 
+#[path = "🧭️transforms/🦀️.rs"]
+pub mod transforms;
+
 use crate::standards::v1::subsets::any::schema::snapshot::text::{
-    GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
+    GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT, GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
     GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
@@ -232,6 +235,7 @@ pub const PROCEDURAL_EXAMPLE_BOX_FILLET: &str = "box-fillet-preview";
 pub const PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE: &str = "sphere-box-fuse";
 pub const PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE: &str = "face-sweep-extrude";
 pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
+pub const PROCEDURAL_EXAMPLE_MESH_WORKBENCH: &str = "mesh-workbench";
 pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
@@ -270,6 +274,7 @@ pub fn is_generation3d_example_id(example_id: &str) -> bool {
             | PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE
             | PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE
             | PROCEDURAL_EXAMPLE_RECTANGLE_WIRE
+            | PROCEDURAL_EXAMPLE_MESH_WORKBENCH
             | PROCEDURAL_EXAMPLE_BOX_SHELL
     )
 }
@@ -284,6 +289,7 @@ pub fn example_snapshot(example_id: &str) -> Option<Generation3dSnapshot> {
         PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE => Some(GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT),
         PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
         PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
+        PROCEDURAL_EXAMPLE_MESH_WORKBENCH => Some(GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT),
         PROCEDURAL_EXAMPLE_BOX_SHELL => Some(GENERATION3D_EXAMPLE_BOX_SHELL_TEXT),
         _ => None,
     };
@@ -514,9 +520,9 @@ pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn gumball_scale_params_json(factor: f64) -> String {
+pub fn gumball_scale_params_json(factor: [f64; 3]) -> String {
     dsl::json::to_json_string(&dsl::DslValue::object([
-        ("factor".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(factor))])),
+        ("factor".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("vector".into())), ("x".to_string(), dsl::DslValue::float(factor[0])), ("y".to_string(), dsl::DslValue::float(factor[1])), ("z".to_string(), dsl::DslValue::float(factor[2]))])),
         (
             "center".to_string(),
             dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("point".into())), ("x".to_string(), dsl::DslValue::float(0.0)), ("y".to_string(), dsl::DslValue::float(0.0)), ("z".to_string(), dsl::DslValue::float(0.0))]),
@@ -529,27 +535,34 @@ pub fn gumball_scale_params_json(factor: f64) -> String {
 /// actually evaluates and exports.
 #[cfg(feature = "component-app-assembly")]
 pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
+    if !matches!(operation, "translate" | "rotate" | "scale") { return Err("Unknown transform operation".into()); }
+    let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
+    let selected_id = widget_id_from_instance_id(selected_id);
+    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let source_kind = host.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind), _ => None }).ok_or_else(|| "Select a shape-producing widget".to_string())?;
+    let source_info = infos.get(source_kind).ok_or_else(|| format!("Widget kind {source_kind} is unavailable"))?;
+    let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or_else(|| "The selected output does not contain a shape".to_string())?;
+    let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
+    let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
+    if source_port.cardinality.is_collection() { return Err("Extract a single shape from the list before transforming it".into()); }
     let own_suffix = format!("__gumball_{operation}");
-    if selected_id.ends_with(&own_suffix) && host.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == selected_id) {
-        return Ok(selected_id.to_string());
-    }
+    if selected_id.ends_with(&own_suffix) && source_kind == &transform_kind { return Ok(selected_id.to_string()); }
     let transform_id = gumball_widget_id(selected_id, operation);
-    if host.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
-        return Ok(transform_id);
+    if let Some(widget) = host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == transform_id) {
+        if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && host.host_snapshot.synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
+        return Err("The generated transform identifier is already occupied".into());
     }
+    let transform_info = infos.get(&transform_kind).ok_or_else(|| format!("Transform {transform_kind} is unavailable"))?;
+    let transform_output = transform_info.outputs.first().ok_or_else(|| "Transform output is missing".to_string())?;
     let (source_x, source_y) = host.host_snapshot.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let descriptor = dsl::json::to_json_string(&dsl::DslValue::object([
         ("kind".to_string(), dsl::DslValue::String("neuron".into())),
         ("id".to_string(), dsl::DslValue::String(transform_id.clone())),
-        ("neuronKind".to_string(), dsl::DslValue::String(gumball_xform_kind(operation).into())),
+        ("neuronKind".to_string(), dsl::DslValue::String(transform_kind)),
     ]));
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
-    let outgoing_port = host.host_snapshot.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
-    if let Some(port) = outgoing_port {
-        host.insert_between(selected_id, &port, &transform_id, "geometry", "geometry").map_err(|err| err.to_string())?;
-    } else {
-        host.connect(selected_id, &transform_id).map_err(|err| err.to_string())?;
-    }
+    host.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(|err| err.to_string())?;
+    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == transform_id) { *preview = true; }
     if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
         *preview = false;
     }

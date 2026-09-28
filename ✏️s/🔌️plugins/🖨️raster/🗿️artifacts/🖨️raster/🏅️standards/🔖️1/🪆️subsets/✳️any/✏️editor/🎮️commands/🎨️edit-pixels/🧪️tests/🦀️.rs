@@ -39,7 +39,7 @@ fn edit_pixels_refuses_pixels_inside_a_hidden_group() {
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
     let pixel=crate::standards::v1::subsets::any::schema::create_pixel_layer("Pixels",2,2);
     let id=layer_node_id(&pixel).to_owned();
-    document.layers.push(RasterLayerNode::Group {id:"hidden".into(),name:"Hidden".into(),visible:false,opacity:1.0,blend_mode:"normal".into(),transform:crate::RasterTransform::default(),mask:None,children:vec![pixel]});
+    document.layers.push(RasterLayerNode::Group {id:"hidden".into(),name:"Hidden".into(),visible:false, locked: false,opacity:1.0,blend_mode:"normal".into(),transform:crate::RasterTransform::default(),mask:None,children:vec![pixel]});
     let command=EditPixels {layer_id:id,expected_image_key:None,operation:"{\"kind\":\"invert\"}".into(),selection:None};
     assert!(prepare(&command,&document).is_err());
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
@@ -148,5 +148,54 @@ fn pixel_source_preparation_is_bounded_and_cancellable() {
         assert_eq!(&pixels[32767*4..32769*4],expected.repeat(2));
         assert_eq!(&pixels[..4],if source {&[10,20,30,255]} else {&[0,0,0,0]});
         crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    }
+}
+
+#[test]
+fn protected_pixels_refuse_before_preparation() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    for id in ["locked-pixel","inherited-pixel"] {
+        let command=EditPixels {layer_id:id.into(),expected_image_key:None,operation:r#"{"kind":"invert"}"#.into(),selection:None};
+        assert!(prepare(&command,&document).is_err());
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn pixel_replacement_at_capacity_preserves_shared_assets_and_exact_inverse() {
+    use protocol::Mutation;
+    use crate::standards::v1::subsets::any::schema::{empty_raster_document,snapshot::retire_raster_snapshot};
+    let vectors:serde_json::Value=serde_json::from_str(include_str!("../../../🖼️assets/🔄️replacement/🧫️fixtures/🔣️.json")).unwrap();
+    let capacity=vectors["cases"][0]["input"]["capacity"].as_u64().unwrap() as usize;
+    assert_eq!(capacity,crate::RASTER_OWNED_MAP_CAPACITY);
+    for shared in [false,true] {
+        let mut document=empty_raster_document();
+        let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&RasterImage {width:2,height:2,pixels:[255,255,255,255].repeat(4)}).unwrap()};
+        for index in 0..capacity {let key=if index==0 {"previous".to_owned()}else{format!("unused-{index}")};document.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
+        if let RasterLayerNode::Pixel {image_key,width,height,mask,..}=&mut document.layers[0] {
+            *image_key=Some("previous".into());*width=Some(2);*height=Some(2);
+            if shared {*mask=Some(crate::RasterLayerMask {enabled:true,linked:true,invert:false,width:Some(2),height:Some(2),image_key:Some("previous".into()),transform:Default::default()});}
+        }
+        let before=document.clone();
+        let command=EditPixels {layer_id:layer_node_id(&document.layers[0]).into(),expected_image_key:Some("previous".into()),operation:r#"{"kind":"invert"}"#.into(),selection:None};
+        let (mut job,layer,parent,index)=finish_preparation(&command,&document);
+        while !job.advance(1).unwrap().done {}
+        let mut encoder=PngEncodeJob::new(job.into_result().unwrap()).unwrap();while !encoder.advance().unwrap().done {}
+        let publication=publish(encoder.into_result().unwrap(),layer,parent,index,&document);
+        if shared {assert!(publication.is_err());assert_eq!(document,before);retire_raster_snapshot(document);retire_raster_snapshot(before);continue;}
+        let emit=publication.unwrap();let mut inverses=Vec::new();
+        for mutation in &emit.artifact_mutations {
+            inverses.push(mutation.inverse(&document));
+            let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire_raster_snapshot(std::mem::replace(&mut document,next));
+            assert!(document.assets.len()<=capacity);
+        }
+        assert_eq!(document.assets.len(),capacity);assert!(!document.assets.contains_key("previous"));
+        for inverse in inverses.into_iter().rev().flatten() {
+            let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire_raster_snapshot(std::mem::replace(&mut document,next));inverse.retire_cold();assert!(document.assets.len()<=capacity);
+        }
+        assert_eq!(document,before);
+        for mutation in emit.artifact_mutations {mutation.retire_cold();}
+        retire_raster_snapshot(document);retire_raster_snapshot(before);
     }
 }

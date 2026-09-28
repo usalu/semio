@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/media-transport/v1",
+  "title": "Media Transport Host Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "enum": ["audio", "video"] },
+    "mediaType": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "durationMs": { "type": ["integer", "null"], "minimum": 1 },
+    "positionMs": { "type": "integer", "minimum": 0 },
+    "selectionStartMs": { "type": ["integer", "null"], "minimum": 0 },
+    "selectionEndMs": { "type": ["integer", "null"], "minimum": 1 },
+    "locale": { "enum": ["en", "de"] },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "audio", "video"],
+      "properties": {
+        "play": { "type": "string" },
+        "pause": { "type": "string" },
+        "seek": { "type": "string" },
+        "position": { "type": "string" },
+        "duration": { "type": "string" },
+        "selectionStart": { "type": "string" },
+        "selectionEnd": { "type": "string" },
+        "loading": { "type": "string" },
+        "progress": { "type": "string" },
+        "cancel": { "type": "string" },
+        "unsupported": { "type": "string" },
+        "unknownDuration": { "type": "string" },
+        "audio": { "type": "string" },
+        "video": { "type": "string" }
+      }
+    },
+    "resource": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "controllerId", "outputPort", "revision"],
+          "properties": {
+            "kind": { "const": "artifact-media-export" },
+            "controllerId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "outputPort": { "const": "playback:out" },
+            "revision": { "type": "string", "minLength": 1, "maxLength": 128 }
+          }
+        }
+      ]
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": { "enum": ["ready", "loading", "unsupported"] },
+        "reason": { "type": ["string", "null"], "maxLength": 512 }
+      }
+    },
+    "hostContentHeight": { "type": "number", "minimum": 0, "maximum": 4096 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "durationMs": { "type": "null" } } },
+      "then": { "properties": { "positionMs": { "const": 0 }, "selectionStartMs": { "type": "null" }, "selectionEndMs": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "capability": { "properties": { "status": { "const": "ready" } } } } },
+      "then": { "properties": { "resource": { "type": "object" } } }
+    }
+  ]
+}

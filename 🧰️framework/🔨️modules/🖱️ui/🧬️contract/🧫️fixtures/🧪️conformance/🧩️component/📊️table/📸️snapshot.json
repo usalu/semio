@@ -50,6 +50,24 @@
         "cells": [
           "Atelier Ada",
           "atelier"
+        ],
+        "rowActions": [
+          {
+            "icon": "trash-2",
+            "label": "Remove row",
+            "action": {
+              "trigger": "activate",
+              "action": {
+                "scope": "s.stdio.csv@rfc4180/*#editor",
+                "name": "remove-row",
+                "version": 1
+              },
+              "args": {
+                "row": 12,
+                "revision": "0123456789abcdef"
+              }
+            }
+          }
         ]
       },
       "layout": {
@@ -66,7 +84,12 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {}
+      "accessibility": {},
+      "children": [
+        3,
+        4,
+        5
+      ]
     },
     {
       "id": 2,
@@ -110,6 +133,144 @@
       "style": {},
       "activity": "idle",
       "accessibility": {},
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "s.space.home@1/*#editor",
+            "name": "openSpace",
+            "version": 1
+          },
+          "args": {
+            "spaceId": "sp-2"
+          }
+        }
+      ],
+      "children": [
+        6
+      ]
+    },
+    {
+      "id": 3,
+      "key": "cell-0",
+      "component": {
+        "type": "input",
+        "kind": "text",
+        "value": "Atelier Ada",
+        "commit": "blur"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Name"
+      },
+      "bindings": [
+        {
+          "trigger": "commit",
+          "action": {
+            "scope": "s.stdio.csv@rfc4180/*#editor",
+            "name": "set-cell",
+            "version": 1
+          },
+          "args": {
+            "row": 12,
+            "column": 0,
+            "revision": "0123456789abcdef"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "key": "cell-1",
+      "component": {
+        "type": "input",
+        "kind": "text",
+        "value": "atelier",
+        "commit": "blur"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Kind"
+      },
+      "bindings": [
+        {
+          "trigger": "commit",
+          "action": {
+            "scope": "s.stdio.csv@rfc4180/*#editor",
+            "name": "set-cell",
+            "version": 1
+          },
+          "args": {
+            "row": 12,
+            "column": 1,
+            "revision": "0123456789abcdef"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "key": "row-action-0",
+      "component": {
+        "type": "button",
+        "icon": "trash-2",
+        "label": "Remove row"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Remove row"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "s.stdio.csv@rfc4180/*#editor",
+            "name": "remove-row",
+            "version": 1
+          },
+          "args": {
+            "row": 12,
+            "revision": "0123456789abcdef"
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "key": "row-action-0",
+      "component": {
+        "type": "button",
+        "icon": "folder-open",
+        "label": "Open"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Open"
+      },
       "bindings": [
         {
           "trigger": "activate",

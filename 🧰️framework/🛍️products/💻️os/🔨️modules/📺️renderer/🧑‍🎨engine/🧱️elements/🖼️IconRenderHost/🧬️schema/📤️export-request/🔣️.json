@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Icon Export Request",
+  "type": "object",
+  "required": [
+    "assetUrl",
+    "format",
+    "camera",
+    "width",
+    "height"
+  ],
+  "properties": {
+    "assetUrl": {
+      "type": "string",
+      "minLength": 1
+    },
+    "format": {
+      "enum": [
+        "png",
+        "svg"
+      ]
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "position",
+        "target"
+      ],
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/vector"
+        },
+        "target": {
+          "$ref": "#/$defs/vector"
+        },
+        "up": {
+          "$ref": "#/$defs/vector"
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fov": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 180
+        },
+        "projection": {
+          "enum": [
+            "perspective",
+            "orthographic"
+          ]
+        }
+      }
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "shape": {
+      "enum": [
+        "rectangle",
+        "ellipse"
+      ]
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

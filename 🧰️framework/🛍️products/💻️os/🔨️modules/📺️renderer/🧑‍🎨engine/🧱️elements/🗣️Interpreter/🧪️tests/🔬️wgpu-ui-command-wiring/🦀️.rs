@@ -1664,8 +1664,13 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     let mut scene_node = component_scene_ui(authored_host_id, ui_wgpu::wgpu::SurfaceKind::BlockList);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.controller_id = "block-list-controller".into();
-    scene.block_list =
-        Some(ui_wgpu::wgpu::BlockListScene { steps_json: "[]".into(), palette_json: serde_json::json!([{ "blockKind": "filter", "label": "Filter", "iconId": "funnel" }]).to_string(), selected_id: None, dragging_id: None, domain_id: None });
+    scene.block_list = Some(ui_wgpu::wgpu::BlockListScene {
+        steps_json: serde_json::json!([{ "id": "basics", "title": "Basics", "blocks": [] }]).to_string(),
+        palette_json: serde_json::json!([{ "blockKind": "filter", "label": "Filter", "iconId": "funnel" }]).to_string(),
+        selected_id: None,
+        dragging_id: None,
+        domain_id: None,
+    });
     let node = seed_scene_window_with(window_id, scene_node);
     assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained BlockList target")));
     let host_id = retained_scene_host_id(window_id, node);
@@ -1680,7 +1685,7 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
         key: format!("{host_id}.palette.filter"),
         label: "Filter".into(),
         rect: Rect::new(320.0, 4.0, 100.0, 24.0),
-        action: ActionDescriptor { controller_id: "block-list-controller".into(), action: "addBlock".into(), args: crate::action_args_json!({ "kind": "filter" }) },
+        action: ActionDescriptor { controller_id: "block-list-controller".into(), action: "addBlock".into(), args: crate::action_args_json!({ "stepId": "basics", "kind": "filter" }) },
     };
     crate::scenes::stage_block_list_accessibility_controls(&host_id, vec![add_step.clone(), palette.clone()]);
     crate::scenes::seal_block_list_accessibility_candidates(803);
@@ -1699,6 +1704,7 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     let actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].action, "addBlock");
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("basics"));
     assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("kind")).and_then(semio_framework::DslValue::as_str), Some("filter"));
 
     crate::scenes::stage_block_list_accessibility_controls(&host_id, vec![add_step]);

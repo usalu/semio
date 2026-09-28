@@ -1,12 +1,12 @@
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFrameworkSettingsPanelTab, keybindingCaptureStepV1, type KeybindingCaptureKeyV1, type SettingsHostApi, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
+import { createFrameworkDisplayPanelTabs, createFrameworkSettingsPanelTab, keybindingCaptureStepV1, type DisplayHostApi, type KeybindingCaptureKeyV1, type SettingsHostApi, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import userEvent from "@testing-library/user-event";
-import type { PanelTabLeaf } from "@semio-tech/ui-react";
+import { Tree, type PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
 
@@ -124,6 +124,36 @@ describe("Inline Tree resolution controls", () => {
       expect(resolve).toHaveBeenLastCalledWith(fixture.conflict.id, expected.suffix);
     }
     expect(container.querySelector(".flex.items-center")?.children).toHaveLength(2);
+  });
+});
+
+describe("Display window taxonomy order", () => {
+  it("expands the production bottom-anchored Tree in the neutral top-to-bottom order", () => {
+    const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+    const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const host: DisplayHostApi = {
+      windowKinds: [{ id: fixture.displayResolvedOrder.windowKindId, label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }],
+      namedLayouts: [],
+      userLayouts: [],
+      saveCurrentLayout: vi.fn(),
+      applyNamedLayout: vi.fn(),
+      deleteUserLayout: vi.fn(),
+      layoutSaveLabel: "",
+      setLayoutSaveLabel: vi.fn(),
+    };
+    const leaf = createFrameworkDisplayPanelTabs(() => host).find((tab): tab is PanelTabLeaf => tab.kind === "leaf" && tab.id === "framework.display.windows")!;
+    const source = leaf.trees[0]!.tree;
+    if (!("resolveTree" in source)) throw new Error("the Display windows tab must resolve its live host lazily");
+    const tree = source.resolveTree();
+    const mounted = render(<Tree sections={tree.sections} direction={fixture.displayResolvedOrder.direction} />);
+    for (const label of ["Puzzle 3D", "Parallel", "Axonometric", "Oblique", "Perspective"]) {
+      fireEvent.click(mounted.getByRole("button", { name: label }));
+    }
+    const ids = Array.from(mounted.container.querySelectorAll<HTMLElement>('[role="treeitem"]')).map((row) => row.id);
+    expect(ids).toEqual(fixture.displayResolvedOrder.topToBottomIds);
   });
 });
 

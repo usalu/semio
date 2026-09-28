@@ -5,10 +5,7 @@ fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node()
     assert!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, None).is_err());
     let missing_value = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String("0".into()))]);
     assert!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, Some(&missing_value)).is_err());
-    let args = dsl::DslValue::object([
-        ("nodeId".into(), dsl::DslValue::String("0".into())),
-        ("value".into(), dsl::DslValue::String(String::new())),
-    ]);
+    let args = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String("0".into())), ("revision".into(), dsl::DslValue::String("revision".into())), ("value".into(), dsl::DslValue::String(String::new()))]);
     assert!(matches!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, Some(&args)), Ok(XmlValidEditorCommand::SetNode { value, .. }) if value.is_empty()));
 }
 
@@ -32,17 +29,29 @@ async fn editor_declares_the_tree_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_node_id_roundtrips_root_and_nested() {
-    assert_eq!(decode_node_id("").unwrap(), Vec::<usize>::new());
-    assert_eq!(decode_node_id("0/2").unwrap(), vec![0, 2]);
+    assert_eq!(decode_node_id(main::XML_ROOT_NODE_ID).unwrap(), Vec::<usize>::new());
+    assert_eq!(decode_node_id(&main::encode_node_path(&[0, 2])).unwrap(), vec![0, 2]);
     assert!(decode_node_id("bad").is_err());
+}
+
+#[test]
+fn set_node_rejects_every_noncanonical_address_before_emitting() {
+    let snapshot = XmlSnapshot::default();
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+    for node_id in [String::new(), "0".into(), format!("${separator}{separator}0"), format!("${separator}${separator}0")] {
+        let command = XmlValidEditorCommand::SetNode { node_id, revision: revision.clone(), value: "text".into() };
+        assert!(xml_valid_emit(&command, &snapshot, None).is_err());
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = XmlValidEditorCommand::SetNode { node_id: "0/2".into(), value: "hello world".into() };
+    let command = XmlValidEditorCommand::SetNode { node_id: main::encode_node_path(&[0, 2]), revision: "revision %20 Grüße 🌍".into(), value: "hello world %20 Grüße 🌍".into() };
     let printed = <XmlValidEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <XmlValidEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
+    assert!(<XmlValidEditorCommand as protocol::OpText>::parse_op("set-node node-id=00 revision=€0 value=00").is_err());
 }
 
 //#region 🎬️ExampleSwitchLaws
@@ -92,10 +101,7 @@ async fn the_curated_example_carries_visible_content() {
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
         let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
-        assert_eq!(
-            xml_valid_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"),
-            XmlValidEditorCommand::SetActiveExample { example_id: "demo".into() }
-        );
+        assert_eq!(xml_valid_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), XmlValidEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(xml_valid_command_from_action("noSuchVerb", None).is_err());
 }
@@ -109,9 +115,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<XmlValidEd
 async fn kit_fixture_holding(document: &XmlSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlValidEditor>, _>(async { semio_framework_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else {
-        panic!("the example switch hands the host one whole document")
-    };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
@@ -132,7 +136,8 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&xml_valid_example_snapshot(crate::standards::v1_0::subsets::valid::examples::demo::ID)).await;
-    dispatch_settled(&mut app, "set-node", &[("nodeId", &main::encode_node_path(&[0, 0, 0])), ("value", "Stone Forest")]).await.expect("set-node settles");
+    let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
+    dispatch_settled(&mut app, "set-node", &[("nodeId", &main::encode_node_path(&[0, 0, 0])), ("revision", &revision), ("value", "Stone Forest")]).await.expect("set-node settles");
     let after = app.snapshot().expect("xml snapshot");
     let root = after.doc.root.as_ref().expect("the example keeps its root element");
     assert_eq!(resolve_node(root, &[0, 0, 0]), Some(&XmlNode::Text { text: "Stone Forest".into() }));

@@ -210,6 +210,17 @@
               "directoryName": "🎚️preserves-other-parameters"
             }
           ]
+        },
+        {
+          "mutationId": "change-layer-locked",
+          "sourceMutationDirectoryName": "🔒️change-layer-locked",
+          "mutationDirectoryName": "🔒️change-layer-locked",
+          "scenarios": [
+            {
+              "id": "protects-layer-content",
+              "directoryName": "🔒️protects-layer-content"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -227,7 +238,9 @@
         "remove-layer-asset",
         "change-layer-pixels",
         "change-layer-mask",
-        "change-layer-adjustment-parameter"
+        "change-layer-adjustment-parameter",
+        "change-layer-locked",
+        "change-layer-transform"
       ]
     }
   ],
@@ -543,6 +556,47 @@
             "operation": "change-layer-adjustment-parameter",
             "bridgeVersion": 1,
             "variant": "ChangeLayerAdjustmentParameter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-locked",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-transform",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-transform",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerTransform"
           },
           "oracleRequirements": [
             {

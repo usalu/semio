@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:forms.inspection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope", "ids", "fields"],
+  "properties": {
+    "scope": { "enum": ["form", "step", "question"] },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "fields": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

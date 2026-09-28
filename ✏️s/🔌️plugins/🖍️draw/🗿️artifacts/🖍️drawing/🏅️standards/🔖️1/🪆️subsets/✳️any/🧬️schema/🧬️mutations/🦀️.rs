@@ -30,6 +30,8 @@ pub enum DrawingMutation {
     ReorderLayer(ReorderLayer),
     UpdatePathGeometry(UpdatePathGeometry),
     UpdateText(UpdateText),
+    SetLayerFillRule(SetLayerFillRule),
+    SetGroupIsolation(SetGroupIsolation),
 }
 //#endregion 🔖️Mutations
 pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
@@ -38,7 +40,7 @@ pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mu
 /// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
 pub fn parse_layer_field_input(field: &str, value: &str) -> dsl::DslValue {
     let parsed = dsl::json::parse(value).ok().map(|parsed| dsl::json::to_dsl_value(&parsed));
-    if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
+    if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "fillRule" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
         if let Some(dsl::DslValue::String(text)) = parsed { return dsl::DslValue::String(text); }
         return dsl::DslValue::String(value.into());
     }
@@ -64,10 +66,12 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
             let color = value.as_str()?.strip_prefix('#')?;
             if !matches!(color.len(), 3 | 6) || !color.bytes().all(|byte| byte.is_ascii_hexdigit()) { return None; }
         }
-        "strokeCap" => { if !matches!(value.as_str()?, "butt" | "round" | "square") { return None; } }
-        "strokeJoin" => { if !matches!(value.as_str()?, "miter" | "round" | "bevel") { return None; } }
+        "isolation" => {if !matches!(layer,DrawingLayerNode::Group(_)){return None;}value.as_bool()?;}
+        "fillRule" => { crate::FillRule::parse(value.as_str()?).ok()?; }
+        "strokeCap" => { crate::StrokeCap::parse(value.as_str()?).ok()?; }
+        "strokeJoin" => { crate::StrokeJoin::parse(value.as_str()?).ok()?; }
         "strokeDash" => { crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?; }
-        "blendMode" => { if !matches!(value.as_str()?, "normal" | "multiply" | "screen" | "overlay" | "darken" | "lighten") { return None; } }
+        "blendMode" => { if !crate::DRAWING_BLEND_MODES.contains(&value.as_str()?) { return None; } }
         "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !matches!(value.as_str()?, "union" | "intersect" | "subtract" | "exclude") { return None; } }
         _ => return None,
     }
@@ -102,15 +106,17 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
             });
             replace_layer_fill(layer_id.into(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
         }
+        "isolation" => set_group_isolation(layer_id.into(),value.as_bool()?),
+        "fillRule" => set_layer_fill_rule(layer_id.into(),crate::FillRule::parse(value.as_str()?).ok()?),
         "fillEnabled" => replace_layer_fill(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.fill.clone().unwrap_or(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })) } else { None }),
-        "strokeEnabled" => replace_layer_stroke(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None })) } else { None }),
+        "strokeEnabled" => replace_layer_stroke(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None })) } else { None }),
         "strokeWidth" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" => {
-            let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None });
+            let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
             match field {
                 "strokeWidth" => stroke.width = finite()?,
                 "strokeColor" => stroke.color = hex_to_rgba(value.as_str()?, stroke.color[3]),
-                "strokeCap" => stroke.cap = value.as_str()?.into(),
-                "strokeJoin" => stroke.join = value.as_str()?.into(),
+                "strokeCap" => stroke.cap = crate::StrokeCap::parse(value.as_str()?).ok()?,
+                "strokeJoin" => stroke.join = crate::StrokeJoin::parse(value.as_str()?).ok()?,
                 _ => stroke.dash = crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?,
             }
             replace_layer_stroke(layer_id.into(), Some(stroke))
@@ -287,6 +293,7 @@ pub const KINDS: &[&str] = &[
     "reorder-layer",
     "update-path-geometry",
     "update-text",
+    "set-layer-fill-rule",
 ];
 //#endregion 🔖️Kinds
 
@@ -297,3 +304,7 @@ mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
 
 pub use crate::standards::v1::subsets::transform::schema::mutations::update_path_geometry::mutation::{update_path_geometry, UpdatePathGeometry};
+
+pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_fill_rule::mutation::{set_layer_fill_rule,SetLayerFillRule};
+
+pub use crate::standards::v1::subsets::style::schema::mutations::set_group_isolation::mutation::{set_group_isolation,SetGroupIsolation};

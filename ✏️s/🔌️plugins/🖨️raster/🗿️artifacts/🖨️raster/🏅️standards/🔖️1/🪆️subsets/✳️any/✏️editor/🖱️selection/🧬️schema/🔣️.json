@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raster Layer Selection Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "domainId",
+    "targets",
+    "merge",
+    "method"
+  ],
+  "properties": {
+    "domainId": {
+      "const": "layers"
+    },
+    "targets": {
+      "type": "string"
+    },
+    "merge": {
+      "const": "replace"
+    },
+    "method": {
+      "const": "pick"
+    }
+  }
+}

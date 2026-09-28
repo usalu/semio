@@ -124,6 +124,16 @@ macro_rules! projection_string_enum {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dProjectionKind { Orthographic, Axonometric, Oblique, OnePoint, TwoPoint, ThreePoint, Curvilinear }
 
+/// 📷️ Declares whether the renderer frames scene content or preserves the delivered camera pose.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Viewport3dProjectionFramePolicy {
+    #[default]
+    Content,
+    PreserveCamera,
+}
+
+projection_string_enum!(Viewport3dProjectionFramePolicy, Viewport3dProjectionFramePolicy::Content => "content", Viewport3dProjectionFramePolicy::PreserveCamera => "preserveCamera");
+
 /// 🧭️ Cardinal viewport face shared by orthographic and active orientations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dOrthographicView { Plan, Top, Bottom, Front, Back, Left, Right }

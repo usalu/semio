@@ -1,6 +1,6 @@
 //! 🧬️ DocxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::DocxDocument;
+use crate::schema::snapshot::{DocxDocument, DocxXmlPart};
 use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
@@ -18,7 +18,7 @@ pub struct DocxArtifact {
     pub opc: OpcPackage,
     #[state(artifact)]
     #[value(default)]
-    pub document: DocxDocument,
+    pub xml_parts: Vec<DocxXmlPart>,
 }
 //#endregion Artifact
 
@@ -32,19 +32,19 @@ impl Default for DocxArtifact {
 impl DocxArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> DocxSnapshot {
-        DocxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), document: self.document.clone() }
+        DocxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: DocxSnapshot) -> Self {
-        Self { schema: snapshot.schema, opc: snapshot.opc, document: snapshot.document }
+        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub async fn set_snapshot(&mut self, snapshot: DocxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
-        self.document = snapshot.document;
+        self.xml_parts = snapshot.xml_parts;
     }
 }
 //#endregion Conversions
@@ -136,8 +136,9 @@ pub mod derived_construction {
     impl DocxBuilderConstruction {
         /// ➕️ Appends a paragraph.
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
-            self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            let mut document = self.snapshot.project_document().unwrap_or_default();
+            document.body.push(DocxBlock::Paragraph(paragraph));
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
             self
         }
 
@@ -153,19 +154,21 @@ pub mod derived_construction {
 
         /// ➕️ Appends a table.
         pub fn add_table(mut self, table: DocxTable) -> Self {
-            self.snapshot.document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            let mut document = self.snapshot.project_document().unwrap_or_default();
+            document.body.push(DocxBlock::Table(table));
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
         pub fn add_style(mut self, style: DocxStyle) -> Self {
-            if let Some(existing) = self.snapshot.document.styles.iter_mut().find(|s| s.id == style.id) {
+            let mut document = self.snapshot.project_document().unwrap_or_default();
+            if let Some(existing) = document.styles.iter_mut().find(|existing| existing.id == style.id) {
                 *existing = style;
             } else {
-                self.snapshot.document.styles.push(style);
+                document.styles.push(style);
             }
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
             self
         }
     }
@@ -269,7 +272,13 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
     let mut snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
-    snap.opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
+    snap.xml_parts.push(crate::schema::snapshot::DocxXmlPart {
+        path: "word/numbering.xml".into(),
+        content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml".into(),
+        document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:numbering/>").expect("valid demo numbering XML"),
+    });
+    snap.opc.content_types.set_override("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml");
+    snap.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
     // 🔤️ Path-ascending is the package NORMAL FORM a decode hands back
     // (`semio_s_artifact_stdio_zip`'s decoder canonicalizes member order), so the demo has to be
     // stated in it: `📜️example.docx` IS `encode_docx(this)`, and `demo_subset_integrated_roundtrip`

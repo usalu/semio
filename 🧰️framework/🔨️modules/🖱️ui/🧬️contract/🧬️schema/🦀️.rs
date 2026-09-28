@@ -777,13 +777,25 @@ label: Label,
  */
 columns: Array<Label>,
 /**
+ * ↕️ Artifact-localized name of one logical row.
+ */
+rowLabel: Label | null,
+/**
+ * ↔️ Artifact-localized name of one logical column.
+ */
+columnLabel: Label | null,
+/**
  * 🎬️ Header of the trailing actions column a renderer adds when any row carries row actions.
  */
 actionsLabel: Label | null,
 /**
  * 🪟️ The materialised slice of the logical row list — see [`TreeWindow`].
  */
-window: TreeWindow | null, };"####,
+window: TreeWindow | null,
+/**
+ * ↔️ The materialised slice of the logical column list.
+ */
+columnWindow: TreeWindow | null, };"####,
     },
     SchemaMetadata {
         name: "TableRowProps",

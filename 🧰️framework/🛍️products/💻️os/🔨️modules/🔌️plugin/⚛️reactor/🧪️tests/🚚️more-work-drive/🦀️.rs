@@ -19,6 +19,74 @@ fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🚚️more-work-drive.json")).expect("more-work drive contract fixture")
 }
 
+#[test]
+fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_siblings() {
+    use ui_contract::{Buildable, HasBase, HasChildren};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️late-ui-retirement.json")).unwrap();
+    let limit = fixture["maximumTurns"].as_u64().unwrap() as usize;
+    for case in fixture["cases"].as_array().unwrap() {
+        for _ in 0..limit {
+            if !super::turn::close_late_ui_retirement().unwrap() {
+                break;
+            }
+        }
+        let sibling = case["liveSibling"].as_bool().unwrap().then(|| serde_json::from_value::<ui_contract::UiValue>(fixture["arguments"].clone()).unwrap());
+        let before = ui_contract::ui_value_headroom();
+        let args: ui_contract::UiValue = serde_json::from_value(fixture["arguments"].clone()).unwrap();
+        if case["dropKind"] == "document" {
+            let record = ui_contract::UiNodeRecord {
+                id: ui_contract::UiNodeId(1),
+                key: ui_contract::UiText::try_from_str("late-document").unwrap(),
+                component: ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: ui_contract::UiText::try_from_str("late-arguments").unwrap(), props: args }),
+                layout: Default::default(),
+                style: Default::default(),
+                activity: Default::default(),
+                disabled: false,
+                transition: None,
+                accessibility: Default::default(),
+                bindings: Default::default(),
+                menu: None,
+                children: Default::default(),
+            };
+            let mut builder = ui_contract::UiDocumentBuilder::try_new(1, ui_contract::SurfaceId::try_from("late-ui-retirement").unwrap(), ui_contract::UiRevision(1), Some(record.id), 0).unwrap();
+            builder.try_push(record).unwrap();
+            drop(builder.finish().unwrap());
+        } else if case["dropKind"] == "built" {
+            let action = ui_contract::ActionId::try_v1("test.late-ui-retirement", "edit").unwrap();
+            let child = ui_contract::button(ui_contract::Label(ui_contract::UiText::try_from_str("Edit").unwrap())).try_on_with(ui_contract::Trigger::Activate, action, args).unwrap_or_else(|_| panic!("fixture action binding capacity")).try_build().unwrap();
+            let root = ui_contract::column().try_child(child).unwrap_or_else(|_| panic!("fixture child capacity")).try_build().unwrap();
+            drop(root);
+        } else {
+            drop(args);
+        }
+        assert!(super::turn::close_late_ui_retirement().unwrap(), "{} must keep queued ownership runnable", case["name"]);
+        let mut settled = false;
+        for _ in 0..limit {
+            let pending = super::turn::close_late_ui_retirement().unwrap();
+            let sources = super::turn::TurnMoreWorkSources { ui_retirement: pending, ..Default::default() };
+            assert_eq!(sources.any(), pending);
+            if !pending {
+                settled = true;
+                break;
+            }
+            assert!(sources.names().contains(&"ui_retirement"));
+        }
+        assert!(settled, "{} did not retire", case["name"]);
+        assert_eq!(ui_contract::ui_value_headroom(), before, "{} must return every queued collection and item credit", case["name"]);
+        if let Some(sibling) = sibling {
+            assert_eq!(serde_json::to_value(&sibling).unwrap(), fixture["arguments"], "live sibling is unchanged");
+            drop(sibling);
+        }
+        println!("[DEBUG] late UI retirement {} drained queued owners without holding a live sibling", case["name"]);
+    }
+    for _ in 0..limit {
+        if !super::turn::close_late_ui_retirement().unwrap() {
+            return;
+        }
+    }
+    panic!("final sibling retirement did not settle");
+}
+
 fn number(fixture: &serde_json::Value, key: &str) -> u64 {
     fixture[key].as_u64().unwrap_or_else(|| panic!("the more-work drive contract declares no {key}"))
 }

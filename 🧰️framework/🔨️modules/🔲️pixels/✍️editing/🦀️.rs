@@ -379,47 +379,106 @@ impl PixelEditJob {
     }
 }
 
-pub fn selection_mask(width: u32, height: u32, shape: &SelectionShape) -> Result<Vec<u8>, PixelEditError> {
-    let mut mask = vec![0; validate_extent(width, height)?];
-    match shape {
-        SelectionShape::Box { x, y, width, height, .. } if ![x, y, width, height].iter().all(|v| v.is_finite()) => return Err(PixelEditError::Invalid("Invalid selection box")),
-        SelectionShape::Polygon(points) if !(3..=4096).contains(&points.len()) || !points.iter().flatten().all(|v| v.is_finite()) => return Err(PixelEditError::Invalid("Invalid selection polygon")),
-        _ => {}
-    }
-    for y in 0..height {
-        for x in 0..width {
-            let (px, py) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
-            let inside = match shape {
-                SelectionShape::Box { ellipse, x, y, width, height } => {
-                    let (left, top, w, h) = (x.min(x + width), y.min(y + height), width.abs(), height.abs());
-                    w > 0.0 && h > 0.0 && if *ellipse { ((px - left - w / 2.0) / (w / 2.0)).powi(2) + ((py - top - h / 2.0) / (h / 2.0)).powi(2) <= 1.0 } else { px >= left && px < left + w && py >= top && py < top + h }
-                }
-                SelectionShape::Polygon(points) => {
-                    let mut inside = false;
-                    let mut j = points.len() - 1;
-                    for i in 0..points.len() {
-                        let (a, b) = (points[i], points[j]);
-                        if (a[1] > py) != (b[1] > py) && px < (b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0] {
-                            inside = !inside;
-                        }
-                        j = i;
-                    }
-                    inside
-                }
-            };
-            if inside {
-                mask[(y * width + x) as usize] = 255;
-            }
-        }
-    }
-    Ok(mask)
+/// 🎯️ Owned scanline selection work with row-granted progress and atomic cancellation.
+pub struct PixelSelectionJob {
+    width:u32,
+    height:u32,
+    shape:SelectionShape,
+    mask:Vec<u8>,
+    row:u32,
+    intersections:Vec<f64>,
+    cancelled:bool,
 }
 
-pub fn combine_selections(current: &[u8], next: &[u8], mode: SelectionMerge) -> Result<Vec<u8>, PixelEditError> {
-    if current.len() != next.len() {
-        return Err(PixelEditError::Invalid("Selection extents differ"));
+impl PixelSelectionJob {
+    pub fn new(width:u32,height:u32,shape:SelectionShape)->Result<Self,PixelEditError>{
+        let count=validate_extent(width,height)?;
+        match &shape{
+            SelectionShape::Box{x,y,width,height,..} if ![x,y,width,height].iter().all(|v|v.is_finite())=>return Err(PixelEditError::Invalid("Invalid selection box")),
+            SelectionShape::Polygon(points) if !(3..=4096).contains(&points.len())||!points.iter().flatten().all(|v|v.is_finite())=>return Err(PixelEditError::Invalid("Invalid selection polygon")),
+            _=>{}
+        }
+        let edges=match &shape{SelectionShape::Polygon(points)=>points.len(),_=>0};
+        Ok(Self{width,height,shape,mask:Vec::with_capacity(count),row:0,intersections:Vec::with_capacity(edges),cancelled:false})
     }
-    Ok(current.iter().zip(next).map(|(&a, &b)| match mode { SelectionMerge::Replace => b, SelectionMerge::Add => a.max(b), SelectionMerge::Subtract => a.saturating_sub(b), SelectionMerge::Intersect => a.min(b) }).collect())
+
+    fn fill(mask:&mut [u8],left:f64,right:f64,inclusive:bool){
+        if left.is_nan()||right.is_nan(){return;}
+        let width=mask.len() as f64;let from=(left-0.5).ceil().clamp(0.0,width) as usize;
+        let to=(if inclusive{(right-0.5).floor()+1.0}else{(right-0.5).ceil()}).clamp(from as f64,width) as usize;
+        mask[from..to].fill(255);
+    }
+
+    pub fn advance(&mut self,rows:usize)->Result<PixelProgress,PixelEditError>{
+        if self.cancelled{return Err(PixelEditError::Cancelled);}
+        if !(1..=64).contains(&rows){return Err(PixelEditError::Invalid("Selection grant must be 1–64 rows"));}
+        let end=self.height.min(self.row+rows as u32);
+        while self.row<end{
+            let start=self.mask.len();self.mask.resize(start+self.width as usize,0);let mask=&mut self.mask[start..];let y=f64::from(self.row)+0.5;
+            match &self.shape{
+                SelectionShape::Polygon(points)=>{
+                    self.intersections.clear();let mut previous=points.len()-1;
+                    for (index,a) in points.iter().enumerate(){let b=points[previous];if (a[1]>y)!=(b[1]>y){self.intersections.push((b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]);}previous=index;}
+                    self.intersections.sort_unstable_by(f64::total_cmp);
+                    for pair in self.intersections.chunks_exact(2){Self::fill(mask,pair[0],pair[1],false);}
+                }
+                SelectionShape::Box{ellipse,x,y:top,width,height}=>{
+                    let (left,top,w,h)=(x.min(x+width),top.min(top+height),width.abs(),height.abs());
+                    if w>0.0&&h>0.0&&y>=top&&y<=top+h{
+                        if *ellipse{let radius=w/2.0*(1.0-((y-top-h/2.0)/(h/2.0)).powi(2)).max(0.0).sqrt();Self::fill(mask,left+w/2.0-radius,left+w/2.0+radius,true);}
+                        else if y<top+h{Self::fill(mask,left,left+w,false);}
+                    }
+                }
+            }
+            self.row+=1;
+        }
+        Ok(PixelProgress{completed:self.row as usize,total:self.height as usize,done:self.row==self.height})
+    }
+
+    pub fn result(&self)->Result<&[u8],PixelEditError>{
+        if self.cancelled{return Err(PixelEditError::Cancelled);}
+        if self.row!=self.height{return Err(PixelEditError::Incomplete);}
+        Ok(&self.mask)
+    }
+
+    pub fn into_result(self)->Result<Vec<u8>,PixelEditError>{self.result()?;Ok(self.mask)}
+    pub fn cancel(&mut self){self.cancelled=true;self.mask=Vec::new();self.intersections=Vec::new();}
+}
+
+pub fn selection_mask(width:u32,height:u32,shape:&SelectionShape)->Result<Vec<u8>,PixelEditError>{
+    let mut job=PixelSelectionJob::new(width,height,shape.clone())?;
+    while !job.advance(64)?.done{}
+    job.into_result()
+}
+
+pub struct SelectionCombineJob<'a> {
+    current:Option<&'a [u8]>,
+    next:&'a [u8],
+    mode:SelectionMerge,
+    output:Vec<u8>,
+    cancelled:bool,
+}
+impl<'a> SelectionCombineJob<'a> {
+    pub fn new(current:Option<&'a [u8]>,next:&'a [u8],mode:SelectionMerge)->Result<Self,PixelEditError> {
+        if next.is_empty()||next.len()>MAX_IMAGE_PIXELS||current.is_some_and(|source|source.len()!=next.len()) {return Err(PixelEditError::Invalid("Selection dimensions are invalid"));}
+        Ok(Self {current,next,mode,output:Vec::with_capacity(next.len()),cancelled:false})
+    }
+    pub fn advance(&mut self,pixel_budget:usize)->Result<PixelProgress,PixelEditError> {
+        if self.cancelled {return Err(PixelEditError::Cancelled);}
+        let end=self.next.len().min(self.output.len()+pixel_budget.min(32768));
+        for index in self.output.len()..end {
+            let a=self.current.map_or(0,|source|source[index]);let b=self.next[index];
+            self.output.push(match self.mode {SelectionMerge::Replace=>b,SelectionMerge::Add=>a.max(b),SelectionMerge::Subtract=>a.saturating_sub(b),SelectionMerge::Intersect=>a.min(b)});
+        }
+        Ok(PixelProgress {completed:self.output.len(),total:self.next.len(),done:self.output.len()==self.next.len()})
+    }
+    pub fn cancel(&mut self) {self.cancelled=true;self.output=Vec::new();}
+    pub fn result(&self)->Result<&[u8],PixelEditError> {
+        if self.cancelled {return Err(PixelEditError::Cancelled);}
+        if self.output.len()!=self.next.len() {return Err(PixelEditError::Incomplete);}
+        Ok(&self.output)
+    }
+    pub fn into_result(self)->Result<Vec<u8>,PixelEditError> {self.result()?;Ok(self.output)}
 }
 
 #[cfg(test)]

@@ -1,0 +1,7 @@
+# Embedded GLB Material Parity
+
+Current-source review identifies a remaining Icon path to validate and implement. React's `loadGlbGroup` retains the GLTFLoader scene's materials. `applyIconMaterial` replaces them only when the request supplies a material. Without that override, original primitive base color, metalness, roughness, emissive and textures remain in the scene.
+
+The WGPU retained GLB parser/materializer currently emits geometry, normals, UVs, indices and derived outlines into one mesh. It does not parse the GLB material table or `COLOR_0`, and its mesh schema sets `colors: 0`. The World consumer supplies environment/per-mesh material values. Thus an Icon request without a material cannot currently preserve differently authored primitive materials. The new `SvgFlatLit` shader profile fixes the lighting rule but does not restore absent source material data.
+
+This is a source-confirmed missing data path, not a measured current browser image discrepancy. The next proof should construct a tiny two-primitive GLB with explicit contrasting material factors and vertex color, decode it with the installed actual Three GLTFLoader, and pin those outputs in a neutral contract. A retained primitive-material carrier must preserve per-primitive ownership through decode, publication, retirement and draw preparation; the explicit Icon override must still replace the inherited material. Texture support also remains to be audited at the same boundary. Cross-crate production changes are held until browser build 27 completes.

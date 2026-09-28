@@ -26,3 +26,11 @@ async fn brush_controls_share_color_hardness_and_resolved_german_labels() {
     assert!(children.iter().any(|m| matches!(m, WindowMeasure::Slider { label, value, .. } if label.as_deref() == Some("Härte") && *value == 0.25)));
     assert!(children.iter().any(|m| matches!(m, WindowMeasure::Select { value, items, .. } if value == "#123456" && items.iter().any(|item| item.value == *value))));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn brush_and_eraser_share_localized_mask_target_controls(){
+    let config=RasterConfig{paint_target:"mask".into(),mask_value:96,..Default::default()};
+    for (labels,target,value) in [(&crate::editor::raster::terminology::RasterPlayLabels::NATIVE_EN,"Edit target","Mask value"),(&crate::editor::raster::terminology::RasterPlayLabels::NATIVE_DE,"Bearbeitungsziel","Maskenwert")]{
+        for measure in window_measures(&config,labels){let WindowMeasure::Group{children,..}=measure else{panic!("tool group")};assert!(children.iter().any(|control|matches!(control,WindowMeasure::Select{label,value,..} if label.as_deref()==Some(target)&&value=="mask")));assert!(children.iter().any(|control|matches!(control,WindowMeasure::Slider{label,value:coverage,disabled,..} if label.as_deref()==Some(value)&&*coverage==96.0&&*disabled==Some(false))));}
+    }
+}

@@ -10,7 +10,6 @@
 //! drag payload and stamp no `granularity`.
 
 use crate::editor::forms::config::FormsConfig;
-use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
 use dsl::os_pack::json::{object, Value};
 use semio_framework_plugin::{
@@ -43,7 +42,7 @@ pub fn definition() -> PanelTabDefinition {
 fn kind_row(kind: &str, label: &str, icon: &semio_framework_plugin::IconName) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text(kind)?)])?;
     let drag_data = object([(FORMS_QUESTION_DRAG_MIME.to_string(), Value::String(object([("kind".to_string(), Value::String(kind.to_string()))]).to_string()))]);
-    let mut item = tree_item_with_action_draggable(format!("{FORMS_PLAY_CATALOGUE_ROOT}.{kind}"), label, Some(kind.to_string()), forms_action("addQuestion", Some(args))?, &drag_data)?;
+    let mut item = tree_item_with_action_draggable(format!("{FORMS_PLAY_CATALOGUE_ROOT}.{kind}"), label, Some(kind.to_string()), forms_action("addBlock", Some(args))?, &drag_data)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(crate::editor::forms::ui_text_value(icon.as_str())?);
     }
@@ -58,16 +57,17 @@ fn action_row(id: &str, label: &str, icon: &str, action: (semio_framework_plugin
     Ok(item)
 }
 
-pub fn render(config: &FormsConfig, labels: &FormsLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &FormsConfig, view: &semio_framework_plugin::ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let labels = crate::editor::forms::forms_play_labels(view);
     let contributions = parse_contributions(config);
-    let kinds = catalogue_kinds(&contributions, labels);
+    let kinds = catalogue_kinds(&contributions, view);
     let text_args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text("text")?)])?;
     let action_items = ui_node_list([
         action_row("forms-play-catalogue.add-step", labels.add_step.as_str(), "plus", forms_action("addStep", None)?),
-        action_row("forms-play-catalogue.add-question", labels.add_text_question.as_str(), "type", forms_action("addQuestion", Some(text_args))?),
+        action_row("forms-play-catalogue.add-question", labels.add_text_question.as_str(), "type", forms_action("addBlock", Some(text_args))?),
     ])?;
     PanelTreeBuilder::new(FORMS_PLAY_CATALOGUE_ROOT)?
-        .window_section(windows, FORMS_PLAY_CATALOGUE_KINDS, Some(crate::editor::forms::ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, &kinds, |(kind, label, icon)| kind_row(kind, label, icon))?
+        .window_section(windows, FORMS_PLAY_CATALOGUE_KINDS, Some(crate::editor::forms::ui_label(definition().label.resolve(view.terminology, view.locale))?), true, &kinds, |(kind, label, icon)| kind_row(kind, label, icon))?
         .section(FORMS_PLAY_CATALOGUE_ACTIONS, Some(crate::editor::forms::ui_label(labels.actions.as_str())?), true, action_items)?
         .build()
 }

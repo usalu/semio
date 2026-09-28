@@ -29,7 +29,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📄️ Builds one prefilled text-content draft per page; geometry and every non-text operation remain in Details.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn editable_pages(document: &PdfSnapshot) -> Vec<EditableDocumentPage> {
-    document.pages.iter().enumerate().map(|(page_index, page)| EditableDocumentPage { page_index: page_index as u32, item_index: 0, text: page.text() }).collect()
+    document.pages.iter().enumerate().map(|(page_index, page)| EditableDocumentPage::new(page_index as u32, 0, page.text())).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

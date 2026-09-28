@@ -4320,6 +4320,11 @@ pub mod board_host {
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
         }
 
+        /// 📷️ Reads the accepted viewport pose used by touch and pointer gesture planning.
+        pub fn camera(&self) -> [f64; 3] {
+            [self.camera.x, self.camera.y, self.camera.zoom]
+        }
+
         pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
             self.set_camera_internal(x, y, zoom, true);
         }

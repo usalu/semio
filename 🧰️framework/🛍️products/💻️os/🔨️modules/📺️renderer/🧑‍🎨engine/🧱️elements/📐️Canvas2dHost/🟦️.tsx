@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { drawSceneNode, isDecodedImage, type CanvasSceneNode } from "./🎨️paint/🟦️.ts";
+import { drawSceneNode, paintCompositedLayers, isDecodedImage, type CanvasSceneNode } from "./🎨️paint/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
@@ -317,6 +317,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
   private framingRevision: number | undefined;
   private dpr = 1;
   private readonly imageCache = new Map<string, HTMLImageElement>();
+  private readonly compositeSurfaces:CanvasRenderingContext2D[]=[];
   private panning = false;
   private panStart = { x: 0, y: 0 };
   private panCameraStart = { x: 0, y: 0 };
@@ -445,10 +446,10 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
     ctx.scale(zoom, zoom);
     drawInfiniteCanvasGrid(ctx, this.camera, logicalWidth, logicalHeight, zoom, surface.grid);
-    for (const [index, layer] of layers.entries()) {
+    paintCompositedLayers(ctx,layers,(ctx,layer,index)=>{
       if (layer.segments?.length || layer.text || layer.image?.src) {
         drawSceneNode(ctx, layer, this.imageCache);
-        continue;
+        return;
       }
       if (layer.kind === "image" && layer.dataUrl) {
         const bounds = layerBounds(layer);
@@ -456,7 +457,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
         if (bounds && isDecodedImage(image)) {
           ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
         }
-        continue;
+        return;
       }
       if (layer.kind === "polyline" && layer.points?.length) {
         const seams = layer.seams ?? [];
@@ -473,7 +474,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
           ctx.stroke();
         }
         ctx.setLineDash([]);
-        continue;
+        return;
       }
       const bounds = layerBounds(layer);
       const label = canvasLayerDisplayLabel(layer);
@@ -492,7 +493,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
         ctx.lineTo(x1, y1);
         ctx.stroke();
         ctx.setLineDash([]);
-        continue;
+        return;
       }
       if (bounds) {
         drawBoundsLayer(ctx, layer, bounds, label, hue, zoom);
@@ -501,7 +502,18 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
         ctx.font = `${12 / zoom}px ui-monospace, monospace`;
         ctx.fillText(label, -logicalWidth / 2 + 16, -logicalHeight / 2 + 20 + index * 18);
       }
-    }
+    },(depth,width,height)=>{
+      let target:CanvasRenderingContext2D|undefined=this.compositeSurfaces[depth];
+      if(!target) {
+        const buffer=canvas.ownerDocument.createElement("canvas");
+        target=buffer.getContext("2d")??undefined;
+        if(!target) throw new Error("Canvas compositing surface is unavailable");
+        this.compositeSurfaces[depth]=target;
+      }
+      if(target.canvas.width!==width) target.canvas.width=width;
+      if(target.canvas.height!==height) target.canvas.height=height;
+      return target;
+    });
     if (layers.length === 0) {
       ctx.fillStyle = "rgba(148, 163, 184, 0.7)";
       ctx.font = `${12 / zoom}px ui-monospace, monospace`;

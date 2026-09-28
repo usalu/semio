@@ -169,6 +169,7 @@ impl semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor for Zi
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "set-node", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     ];
     const NATIVE_PAYLOAD_SCHEMA: &'static str = "s.stdio.zip.command.set-node.v1";
+    const NATIVE_CHECKPOINT_RESUME: bool = true;
 
     fn native_edit_work(_tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> {
         Box::new(crate::editor::editing::retained::ArchiveTextWork::<Self>::new(|command| {
@@ -184,6 +185,10 @@ impl semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor for Zi
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
         };
         crate::editor::editing::edit_node(snapshot, node_id, value, revision)
+    }
+
+    fn native_edit_preparation_route(prefix: &'static str) -> Option<semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute<Self::Snapshot, Self::Mutation>> {
+        <crate::editor::zip::base::ZipAnyEditor as semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor>::native_edit_preparation_route(prefix)
     }
 }
 

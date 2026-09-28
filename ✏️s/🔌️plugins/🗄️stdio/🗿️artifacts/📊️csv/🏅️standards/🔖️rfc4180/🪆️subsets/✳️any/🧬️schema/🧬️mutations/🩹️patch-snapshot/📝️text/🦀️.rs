@@ -18,11 +18,12 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
         }
     }
     let mut pairs = value.as_bytes().chunks_exact(2);
-    let decoded = pairs
-        .by_ref()
-        .map(|pair| Ok((nibble(pair[0]).ok_or_else(|| "invalid lowercase hexadecimal".to_string())? << 4) | nibble(pair[1]).ok_or_else(|| "invalid lowercase hexadecimal".to_string())?))
-        .collect::<Result<Vec<_>, String>>()?;
-    if pairs.remainder().is_empty() { Ok(decoded) } else { Err("snapshot patch has odd hexadecimal length".into()) }
+    let decoded = pairs.by_ref().map(|pair| Ok((nibble(pair[0]).ok_or_else(|| "invalid lowercase hexadecimal".to_string())? << 4) | nibble(pair[1]).ok_or_else(|| "invalid lowercase hexadecimal".to_string())?)).collect::<Result<Vec<_>, String>>()?;
+    if pairs.remainder().is_empty() {
+        Ok(decoded)
+    } else {
+        Err("snapshot patch has odd hexadecimal length".into())
+    }
 }
 
 #[cfg(test)]

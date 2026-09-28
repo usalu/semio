@@ -84,7 +84,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
+    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipEntryMetadata};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::add_deflated_entry::AddDeflatedEntry;
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::add_stored_entry::AddStoredEntry;
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::remove_entry::RemoveEntry;
@@ -106,13 +106,24 @@ mod subject {
             "set-snapshot" => ZipIso21320Mutation::SetSnapshot(SetSnapshot {
                 snapshot: ZipSnapshot {
                     schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
-                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes() }).collect(),
+                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes(), ..Default::default() }).collect(),
                     comment: params.str("comment"),
+                    ..Default::default()
                 },
             }),
-            "set-archive-comment" => ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment") }),
-            "add-stored-entry" => ZipIso21320Mutation::AddStoredEntry(AddStoredEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() }, before: params.get("before").map(|_| params.str("before")) }),
-            "add-deflated-entry" => ZipIso21320Mutation::AddDeflatedEntry(AddDeflatedEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() }, before: params.get("before").map(|_| params.str("before")) }),
+            "set-archive-comment" => ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment"), comment_utf8: true }),
+            "add-stored-entry" => ZipIso21320Mutation::AddStoredEntry(AddStoredEntry {
+                entry: ZipEntry {
+                    name: params.str("name"),
+                    data: params.str("content").into_bytes(),
+                    metadata: ZipEntryMetadata { compression_method: 0, ..Default::default() },
+                },
+                before: params.get("before").map(|_| params.str("before")),
+            }),
+            "add-deflated-entry" => ZipIso21320Mutation::AddDeflatedEntry(AddDeflatedEntry {
+                entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes(), ..Default::default() },
+                before: params.get("before").map(|_| params.str("before")),
+            }),
             "remove-entry" => ZipIso21320Mutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
             "rename-entry" => ZipIso21320Mutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
             "set-entry-data" => ZipIso21320Mutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),

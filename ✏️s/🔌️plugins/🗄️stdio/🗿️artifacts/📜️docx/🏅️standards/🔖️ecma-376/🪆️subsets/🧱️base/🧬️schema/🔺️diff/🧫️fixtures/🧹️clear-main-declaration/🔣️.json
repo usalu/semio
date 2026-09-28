@@ -1,0 +1,18 @@
+{
+  "schema": "semio.stdio.docx.canonical-diff-fixture.v1",
+  "mainPart": "word/document.xml",
+  "diff": {
+    "xmlParts": {
+      "modified": [
+        {
+          "key": "word/document.xml",
+          "diff": {
+            "document": {
+              "declaration": null
+            }
+          }
+        }
+      ]
+    }
+  }
+}

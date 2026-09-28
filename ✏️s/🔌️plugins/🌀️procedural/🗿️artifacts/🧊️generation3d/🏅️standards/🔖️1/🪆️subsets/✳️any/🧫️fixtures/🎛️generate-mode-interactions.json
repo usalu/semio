@@ -36,7 +36,7 @@
       "id": "procedural-preview",
       "bodyKey": "procedural.play.preview",
       "surfaceKind": "world3d",
-      "actions": ["setCamera", "setShowMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "translateSelection", "rotateSelection", "scaleSelection"],
+      "actions": ["setCamera", "setShowMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "translateSelection", "rotateSelection", "scaleSelection", "editMeshSelection", "knifeMeshSelection"],
       "utilities": ["move", "rotate", "scale"],
       "rowVerbs": []
     },
@@ -49,6 +49,7 @@
       "rowVerbs": []
     }
   ],
+  "componentEditing": { "window": "procedural-preview", "actions": ["editMeshSelection", "knifeMeshSelection"] },
   "previewParity": ["procedural-preview", "generation3d-generate-preview"],
   "gumballVerbs": ["translateSelection", "rotateSelection", "scaleSelection"],
   "nodeGraphEditOperations": [

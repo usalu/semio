@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/commit-response/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "response"
+  ],
+  "properties": {
+    "response": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "title": "CommitResponse"
+}

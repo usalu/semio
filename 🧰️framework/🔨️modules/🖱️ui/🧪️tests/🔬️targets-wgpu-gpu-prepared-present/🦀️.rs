@@ -328,6 +328,8 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
             DrawMeasureCursor::PassMaterialInstance { pass, draw: 0, instance: 0, translucent: true },
             DrawMeasureCursor::PassTexturedInstance { pass, draw: 0, instance: 0 },
             DrawMeasureCursor::PassLineVertex { pass, draw: 0, vertex: 1 },
+            DrawMeasureCursor::PassSceneClear { pass },
+            DrawMeasureCursor::PassPostprocess { pass },
         ];
         for cursor in cursors {
             assert!(prepared_draw_scalar_uses_world_encoded_attachment(cursor), "every World color family selects the encoded attachment");
@@ -339,6 +341,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: false },
         DrawMeasureCursor::PassShadowBegin(0),
         DrawMeasureCursor::PassShadowInstance { pass: 0, draw: 0, instance: 0 },
+        DrawMeasureCursor::PassBackdropSnapshot { pass: 0 },
     ] {
         assert!(!prepared_draw_scalar_uses_world_encoded_attachment(cursor), "UI and depth-only cursors retain the linear sRGB attachment view");
     }
@@ -360,6 +363,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         "world3d_celebration_pipeline_translucent",
         "world3d_textured_pipeline",
         "world3d_grid_pipeline",
+        "world_postprocess_pipeline",
     ];
     for label in encoded_world_pipelines {
         assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
@@ -367,9 +371,10 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     assert_eq!(
         draw_source.matches("format: world_encoded_format, blend:").count(),
         encoded_world_pipelines.len(),
-        "standard, translucent, painted, celebration, line, textured and procedural-grid pipelines all target the encoded UNORM view exactly once"
+        "standard, translucent, painted, celebration, line, textured, procedural-grid and curvilinear pipelines all target the encoded UNORM view exactly once"
     );
-    assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the WGPU producer declares that its World attachment expects encoded output");
+    assert!(draw_source.contains("if pass.render_profile == SceneRenderProfile3d::SvgFlatLit { 1.0 } else { 0.0 }"), "the WGPU producer carries the explicit SVG face-lighting profile");
+    assert!(draw_source.contains("if pass.shadow.enabled { 1.0 } else { 0.0 }") && draw_source.contains("0.0,\n                1.0,"), "the WGPU producer declares that its World attachment expects encoded output");
 }
 
 /// 🫧 LAW: React's transparent `MeshStandardMaterial` remains front-sided and depth-writing; it is

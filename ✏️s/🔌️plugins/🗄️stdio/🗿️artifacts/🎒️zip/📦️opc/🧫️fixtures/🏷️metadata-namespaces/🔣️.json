@@ -1,0 +1,18 @@
+{
+  "contentTypes": "<ct:Types xmlns:ct=\"http://schemas.openxmlformats.org/package/2006/content-types\"><ct:Default Extension=\"XML\" ContentType=\"application/xml\"/><ct:Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/></ct:Types>",
+  "relationships": "<r:Relationships xmlns:r=\"http://schemas.openxmlformats.org/package/2006/relationships\"><r:Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\" TargetMode=\"Internal\"/></r:Relationships>",
+  "expectedExtension": "XML",
+  "expectedPart": "word/document.xml",
+  "expectedContentType": "application/xml",
+  "invalidContentTypes": [
+    "<Types xmlns=\"urn:wrong\"><Default Extension=\"xml\" ContentType=\"application/xml\"/></Types>",
+    "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"XML\" ContentType=\"application/duplicate\"/></Types>",
+    "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Override PartName=\"/word/document.xml\" ContentType=\"application/xml\"/><Override PartName=\"/word/document.xml\" ContentType=\"application/duplicate\"/></Types>"
+  ],
+  "invalidRelationships": [
+    "<Other xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"/>",
+    "<Relationships xmlns=\"urn:wrong\"/>",
+    "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"same\" Type=\"urn:first\" Target=\"first.xml\"/><Relationship Id=\"same\" Type=\"urn:second\" Target=\"second.xml\"/></Relationships>",
+    "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"urn:test\" Target=\"word/document.xml\" TargetMode=\"Unknown\"/></Relationships>"
+  ]
+}

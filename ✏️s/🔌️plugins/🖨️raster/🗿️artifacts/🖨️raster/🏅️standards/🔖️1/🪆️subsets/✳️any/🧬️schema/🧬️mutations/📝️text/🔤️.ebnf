@@ -36,7 +36,7 @@ layer = pixel layer
 pixel layer = 'pixel', space, id, space, text, space, bool, space, number, space, transform block, space, [ mask block ], space, [ number ], space, [ number ], space, [ 'blend=', text ], space, [ 'image=', id ] ;
 group layer = 'group', space, id, space, text, space, bool, space, number, space, transform block, space, [ mask block ], space, { layer }, space, [ 'blend=', text ] ;
 adjustment layer = 'adjustment', space, id, space, text, space, bool, space, number, space, transform block, space, [ 'blend=', text ], space, [ 'kind=', text ], space, { param } ;
-transform block = 'transform', '{', 'x=', number, space, 'y=', number, space, 'scale-x=', number, space, 'scale-y=', number, space, 'rotation=', number, 'deg', '}' ;
+transform block = 'transform', '{', 'x=', number, space, 'y=', number, space, 'a=', number, space, 'b=', number, space, 'c=', number, space, 'd=', number, '}' ;
 mask block = 'mask', '{', 'enabled=', bool, space, 'linked=', bool, space, 'invert=', bool, space, 'width=', [ number ], space, 'height=', [ number ], '}' ;
 param = ident, '=', text terminal ;
 asset = '{', 'mime=', text, 'data=', text terminal, '}' ;

@@ -4,13 +4,7 @@ use crate::{forms_snapshot_with_state, FormsResultsChild, FormsStructureChild, F
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted forms document snapshot (persistent fields of the artifact). Ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): the inline
-/// `steps: Vec<FormStep>` field is replaced by two fixed composed CHILD slots — this plugin no
-/// longer defines its own bespoke document tree, it composes stdio's `value`/`table` subsets
-/// instead. See `crate::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
-/// for the converters/working-scene this slot pair is built and read through. `#[child(...)]`
-/// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
+/// 📸️ Durable form definition and immutable responses with derived value/table child projections.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "forms")]
@@ -26,6 +20,10 @@ pub struct FormsSnapshot {
     #[value(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
+    pub definition: crate::schema::definition::FormsDefinition,
+    #[state(artifact)]
+    pub responses: Vec<crate::schema::response::FormsResponse>,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub structure: FormsStructureChild,
     #[state(artifact)]
@@ -39,6 +37,8 @@ impl dsl::FromValue for FormsSnapshot {
         let mut id = None;
         let mut version = None;
         let mut title = None;
+        let mut definition = None;
+        let mut responses = None;
         let mut structure = None;
         let mut results = None;
         for (key, value) in dsl::DslValue::into_object(value)? {
@@ -47,12 +47,14 @@ impl dsl::FromValue for FormsSnapshot {
                 "id" if id.is_none() => id = Some(dsl::FromValue::from_value(value)?),
                 "version" if version.is_none() => version = Some(dsl::FromValue::from_value(value)?),
                 "title" if title.is_none() => title = Some(dsl::FromValue::from_value(value)?),
+                "definition" if definition.is_none() => definition = Some(dsl::FromValue::from_value(value)?),
+                "responses" if responses.is_none() => responses = Some(dsl::FromValue::from_value(value)?),
                 "structure" if structure.is_none() => structure = Some(dsl::FromValue::from_value(value)?),
                 "results" if results.is_none() => results = Some(dsl::FromValue::from_value(value)?),
                 _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Forms field {key}"))),
             }
         }
-        let result = Self { schema: schema.ok_or_else(|| dsl::ValueError::new("missing Forms schema"))?, id: id.ok_or_else(|| dsl::ValueError::new("missing Forms id"))?, version: version.ok_or_else(|| dsl::ValueError::new("missing Forms version"))?, title: title.unwrap_or(None), structure: structure.ok_or_else(|| dsl::ValueError::new("missing Forms structure"))?, results: results.ok_or_else(|| dsl::ValueError::new("missing Forms results"))? };
+        let result = Self { schema: schema.ok_or_else(|| dsl::ValueError::new("missing Forms schema"))?, id: id.ok_or_else(|| dsl::ValueError::new("missing Forms id"))?, version: version.ok_or_else(|| dsl::ValueError::new("missing Forms version"))?, title: title.unwrap_or(None), definition: definition.ok_or_else(|| dsl::ValueError::new("missing Forms definition"))?, responses: responses.ok_or_else(|| dsl::ValueError::new("missing Forms responses"))?, structure: structure.ok_or_else(|| dsl::ValueError::new("missing Forms structure"))?, results: results.ok_or_else(|| dsl::ValueError::new("missing Forms results"))? };
         result.validate().map_err(dsl::ValueError::new)?;
         Ok(result)
     }
@@ -63,6 +65,9 @@ impl FormsSnapshot {
     pub fn validate(&self) -> Result<(), String> {
         use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
         if self.schema != "forms.form" { return Err("invalid Forms document marker".into()); }
+        self.definition.validate()?;
+        let mut responses = std::collections::HashSet::new();
+        for response in &self.responses { response.validate()?; if !responses.insert(&response.id) { return Err("duplicate response id".into()); } }
         validate_semio_child_identity(&self.structure.child_id, &self.structure.target, "value")?;
         validate_semio_child_identity(&self.results.child_id, &self.results.target, "table")?;
         Ok(())
@@ -82,3 +87,7 @@ impl Default for FormsSnapshot {
 // `🚪️io/📸️snapshot/{📝️text,💾️binary}` — this facet root keeps only the struct + pure defaults, no
 // codecs (design.md rule: `🧬️schema` is types + pure transforms only). Their round-trip tests moved
 // with them.
+
+#[cfg(test)]
+#[path = "../🧪️tests/💾️persistence/🦀️.rs"]
+mod persistence_tests;

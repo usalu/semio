@@ -1,5 +1,5 @@
 //! 🧰 Shared node addressing for direct XML mutations.
-use crate::schema::snapshot::{XmlDocument, XmlNode};
+use crate::schema::snapshot::{validate_xml_document_boundaries, XmlDocument, XmlNode};
 use crate::XmlSnapshot;
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -22,22 +22,28 @@ impl XmlNodePath {
 pub(crate) fn encode_snapshot(snapshot: &XmlSnapshot) -> String {
     use crate::schema::diff::{enc_declaration, enc_doctype, enc_prolog, enc_str, enc_xml_node, encode_option};
     format!(
-        "[{},{},{},{},{}]",
+        "[{},{},{},{},{},{}]",
         enc_str(&snapshot.schema),
         encode_option(&snapshot.doc.root, enc_xml_node),
         encode_option(&snapshot.doc.doctype, enc_doctype),
         encode_option(&snapshot.doc.declaration, enc_declaration),
-        enc_prolog(&snapshot.doc.prolog)
+        enc_prolog(&snapshot.doc.prolog),
+        enc_prolog(&snapshot.doc.epilog)
     )
 }
 
 pub(crate) fn decode_snapshot(value: &str) -> Result<XmlSnapshot, String> {
     use crate::schema::diff::{dec_declaration, dec_doctype, dec_prolog, dec_str, dec_xml_node, decode_option, split_top_level, strip_brackets};
     let parts = split_top_level(strip_brackets(value)?, ',');
-    let [schema, root, doctype, declaration, prolog] = parts.as_slice() else {
-        return Err(format!("xml snapshot: expected 5 fields, got {}", parts.len()));
+    let [schema, root, doctype, declaration, prolog, epilog] = parts.as_slice() else {
+        return Err(format!("xml snapshot: expected 6 fields, got {}", parts.len()));
     };
-    Ok(XmlSnapshot { schema: dec_str(schema)?, doc: XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)? } })
+    let snapshot = XmlSnapshot {
+        schema: dec_str(schema)?,
+        doc: XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)?, epilog: dec_prolog(epilog)? },
+    };
+    validate_xml_document_boundaries(&snapshot.doc)?;
+    Ok(snapshot)
 }
 
 pub(crate) fn encode_snapshot_binary(snapshot: &XmlSnapshot, output: &mut Vec<u8>) {
@@ -56,6 +62,7 @@ pub(crate) fn encode_snapshot_binary(snapshot: &XmlSnapshot, output: &mut Vec<u8
         enc_declaration_bin(declaration, output);
     }
     enc_prolog_bin(&snapshot.doc.prolog, output);
+    enc_prolog_bin(&snapshot.doc.epilog, output);
 }
 
 pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
@@ -64,5 +71,9 @@ pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Resu
     let root = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
-    Ok(XmlSnapshot { schema, doc: XmlDocument { root, doctype, declaration, prolog: dec_prolog_bin(reader)? } })
+    let prolog = dec_prolog_bin(reader)?;
+    let epilog = dec_prolog_bin(reader)?;
+    let snapshot = XmlSnapshot { schema, doc: XmlDocument { root, doctype, declaration, prolog, epilog } };
+    validate_xml_document_boundaries(&snapshot.doc)?;
+    Ok(snapshot)
 }

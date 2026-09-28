@@ -1,10 +1,80 @@
 {
-  "before":{"schema":"raster.document","id":"mask-document","title":"Mask","assets":{},"layers":[{"kind":"pixel","id":"paint","name":"Paint","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":4,"y":-2,"scaleX":1,"scaleY":1,"rotation":0},"mask":null,"width":32,"height":16,"imageKey":null}]},
-  "reveal":{"enabled":true,"linked":true,"invert":false,"width":32,"height":16,"imageKey":null,"transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0}},
-  "hidden":{"enabled":true,"linked":false,"invert":true,"width":32,"height":16,"imageKey":null,"transform":{"x":4,"y":-2,"scaleX":1,"scaleY":1,"rotation":0}},
-  "cases":[
-    {"name":"Add Reveal Mask","before":null,"after":"reveal"},
-    {"name":"Invert and Unlink Mask","before":"reveal","after":"hidden"},
-    {"name":"Remove Mask","before":"hidden","after":null}
+  "before": {
+    "schema": "raster.document",
+    "id": "mask-document",
+    "title": "Mask",
+    "assets": {},
+    "layers": [
+      {
+        "kind": "pixel",
+        "id": "paint",
+        "name": "Paint",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 4.0,
+          "y": -2.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
+        },
+        "mask": null,
+        "width": 32,
+        "height": 16,
+        "imageKey": null,
+        "locked": false
+      }
+    ]
+  },
+  "reveal": {
+    "enabled": true,
+    "linked": true,
+    "invert": false,
+    "width": 32,
+    "height": 16,
+    "imageKey": null,
+    "transform": {
+      "x": 0.0,
+      "y": 0.0,
+      "a": 1.0,
+      "b": 0.0,
+      "c": 0.0,
+      "d": 1.0
+    }
+  },
+  "hidden": {
+    "enabled": true,
+    "linked": false,
+    "invert": true,
+    "width": 32,
+    "height": 16,
+    "imageKey": null,
+    "transform": {
+      "x": 4.0,
+      "y": -2.0,
+      "a": 1.0,
+      "b": 0.0,
+      "c": 0.0,
+      "d": 1.0
+    }
+  },
+  "cases": [
+    {
+      "name": "Add Reveal Mask",
+      "before": null,
+      "after": "reveal"
+    },
+    {
+      "name": "Invert and Unlink Mask",
+      "before": "reveal",
+      "after": "hidden"
+    },
+    {
+      "name": "Remove Mask",
+      "before": "hidden",
+      "after": null
+    }
   ]
 }

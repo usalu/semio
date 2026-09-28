@@ -37,6 +37,32 @@ fn presentation_fixture() -> Value {
     serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧩️block-list-presentation/🔣️.json"))).expect("shared block-list presentation fixture")
 }
 
+#[test]
+fn authored_selection_targets_support_pointer_and_accessibility() {
+    let fixture = presentation_fixture();
+    let mut node = block_list_scene("form-design", "forms", fixture["steps"].clone(), fixture["palette"].clone());
+    node.block_list.as_mut().unwrap().domain_id = Some("fields".into());
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let plan = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
+    let controls = block_list_accessibility_controls(&plan, bounds, BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" });
+    for case in fixture["selectionCases"].as_array().unwrap() {
+        let control = controls.iter().find(|control| control.label == case["label"].as_str().unwrap()).expect("selectable card");
+        assert_eq!(control.action.action, "interactionSelect");
+        let args = control.action.args.as_ref().unwrap();
+        assert_eq!(args.get("domainId").and_then(semio_framework::DslValue::as_str), Some("fields"));
+        assert_eq!(args.get("merge").and_then(semio_framework::DslValue::as_str), Some("replace"));
+        let targets: Value = serde_json::from_str(args.get("targets").and_then(semio_framework::DslValue::as_str).unwrap()).unwrap();
+        assert_eq!(targets, json!([case["target"]]));
+        assert!(block_list_accessibility_action_is_current(&node, &control.action));
+        let hit = block_list_hit(&node, bounds, control.rect.x + control.rect.w * 0.5, control.rect.y + theme.control_height * 0.5, &theme, UiDriverDrag::Handle).expect("pointer card target");
+        assert_eq!(hit.control_id, control.key);
+        let mut retired = node.clone();
+        retired.block_list.as_mut().unwrap().steps_json = "[]".into();
+        assert!(!block_list_accessibility_action_is_current(&retired, &control.action));
+    }
+}
+
 fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
@@ -185,7 +211,7 @@ fn step_card_draws_a_full_four_sided_border() {
 }
 
 #[test]
-fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_rejects_a_retired_palette_entry() {
+fn shared_palette_target_contract_drives_pointer_drag_and_accessibility_from_the_current_steps() {
     let fixture = presentation_fixture();
     let node = block_list_scene("presentation-block-list", "controller.block-list", fixture["steps"].clone(), fixture["palette"].clone());
     let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
@@ -193,7 +219,25 @@ fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_re
     let plan = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
     let palette = role_rect(&plan, |role| matches!(role, BlockListRole::Palette { kind } if kind == "filter"));
     assert_eq!(palette.y, bounds.y + theme.padding_standard, "the palette begins at React's rail padding without a heading band");
-    assert_eq!(plan.body_range.len(), 0, "an empty scene has no invented empty-copy row");
+    assert!(!plan.body_range.is_empty(), "the shared target fixture carries current steps");
+    for target_case in fixture["targetCases"].as_array().expect("target cases") {
+        let steps = if target_case["steps"] == "empty" { json!([]) } else { fixture["steps"].clone() };
+        let mut candidate = block_list_scene("presentation-block-list", "controller.block-list", steps, fixture["palette"].clone());
+        candidate.block_list.as_mut().expect("block list").selected_id = target_case["selectedId"].as_str().map(str::to_owned);
+        let candidate_plan = block_list_plan(&candidate, bounds, &theme, UiDriverDrag::Handle);
+        assert_eq!(candidate_plan.palette_target_step_id.as_deref(), target_case["expectedStepId"].as_str(), "target case {}", target_case["name"]);
+        let palette_target = candidate_plan.targets.iter().find(|target| matches!(&target.role, BlockListRole::Palette { kind } if kind == "filter")).expect("painted palette row");
+        assert_eq!(
+            palette_target.action.as_ref().and_then(|action| action.args.as_ref()).and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str),
+            target_case["expectedStepId"].as_str(),
+            "pointer action follows the neutral resolver"
+        );
+        if target_case["expectedStepId"].is_null() {
+            assert!(!candidate_plan.targets.iter().any(|target| matches!(target.role, BlockListRole::PaletteHandle { .. })), "an empty list publishes no transfer handle");
+            let point = center(palette_target.rect);
+            assert!(block_list_transfer_start(&candidate, bounds, point.0, point.1, &theme, UiDriverDrag::Surface).is_none(), "an empty list cannot arm surface drag");
+        }
+    }
 
     let locales = fixture["locales"].as_array().expect("locales");
     for (index, (locale, labels)) in locales.iter().zip([BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" }, BlockListChromeLabels { steps: "Schritte", add_step: "Schritt hinzufügen", delete: "Löschen" }]).enumerate()
@@ -213,9 +257,15 @@ fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_re
         seal_block_list_accessibility_candidates(epoch);
         acknowledge_block_list_accessibility_candidates(epoch);
         let controls = accepted_block_list_accessibility_controls(&node.host_id);
-        assert_eq!(controls.len(), fixture["actions"].as_array().expect("actions").len());
         assert_eq!(controls.iter().find(|control| control.key.ends_with(".addStep")).map(|control| control.label.as_str()), locale["addStep"].as_str());
         assert_eq!(controls.iter().find(|control| control.key.ends_with(".palette.filter")).map(|control| control.label.as_str()), Some("Filter"));
+        for deletion in fixture["deletionCases"].as_array().unwrap() {
+            let label = deletion["labels"][locale["locale"].as_str().unwrap()].as_str().unwrap();
+            let control = controls.iter().find(|control| control.label == label).expect("delete control names its exact target");
+            let action = serde_json::to_value(&control.action).unwrap();
+            assert_eq!(action["action"], deletion["action"]);
+            assert_eq!(action["args"], deletion["args"]);
+        }
     }
 
     let mut input = InputState::<ActionDescriptor>::default();
@@ -225,11 +275,16 @@ fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_re
     assert_eq!(actions.len(), 2);
     assert_eq!(actions[0].action, fixture["actions"][0]["action"].as_str().expect("add step action"));
     assert_eq!(actions[1].action, fixture["actions"][1]["action"].as_str().expect("add block action"));
+    assert_eq!(serde_json::to_value(&actions[1]).expect("action value")["args"], fixture["actions"][1]["args"]);
 
     let controller_successor = block_list_scene("presentation-block-list", "controller.successor", fixture["steps"].clone(), fixture["palette"].clone());
     assert!(block_list_accessibility_activate(&controller_successor, "presentation-block-list.palette.filter", &mut input).is_none(), "a successor controller cannot replay the prior accepted action");
 
-    let successor = block_list_scene("presentation-block-list", "controller.block-list", fixture["steps"].clone(), json!([]));
+    let mut target_successor = block_list_scene("presentation-block-list", "controller.block-list", fixture["steps"].clone(), fixture["palette"].clone());
+    target_successor.block_list.as_mut().expect("block list").selected_id = Some("schedule".into());
+    assert!(block_list_accessibility_activate(&target_successor, "presentation-block-list.palette.filter", &mut input).is_none(), "a changed current target cannot replay the prior accepted action");
+
+    let successor = block_list_scene("presentation-block-list", "controller.block-list", json!([]), fixture["palette"].clone());
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -243,5 +298,7 @@ fn localized_empty_block_list_publishes_only_accepted_actionable_controls_and_re
     }
     seal_block_list_accessibility_candidates(902);
     acknowledge_block_list_accessibility_candidates(902);
-    assert!(block_list_accessibility_activate(&successor, "presentation-block-list.palette.filter", &mut input).is_none(), "the accepted successor retires the old palette action");
+    let controls = accepted_block_list_accessibility_controls(&successor.host_id);
+    assert!(!controls.iter().any(|control| control.key.ends_with(".palette.filter")), "an empty list publishes no enabled virtual palette control");
+    assert!(block_list_accessibility_activate(&successor, "presentation-block-list.palette.filter", &mut input).is_none(), "the accepted empty successor retires the old palette action");
 }

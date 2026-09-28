@@ -1,0 +1,22 @@
+{
+  "schema": "semio.stdio.docx.xml-address-namespaces.v1",
+  "partPath": "custom/metadata.xml",
+  "targetPath": [0],
+  "cases": [
+    {
+      "id": "empty-namespace",
+      "xml": "<metadata><field>value</field></metadata>",
+      "expectedName": "{}field"
+    },
+    {
+      "id": "default-namespace",
+      "xml": "<metadata xmlns=\"urn:semio:metadata\"><field>value</field></metadata>",
+      "expectedName": "{urn:semio:metadata}field"
+    },
+    {
+      "id": "unbound-explicit-prefix",
+      "xml": "<metadata><ext:field>value</ext:field></metadata>",
+      "errorContains": "unbound XML namespace prefix"
+    }
+  ]
+}

@@ -222,6 +222,12 @@
           "items": {
             "$ref": "#/$defs/XmlNode"
           }
+        },
+        "epilog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
         }
       }
     },
@@ -348,6 +354,11 @@
         "name"
       ],
       "properties": {
+        "prologPosition": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of prolog nodes preceding this declaration."
+        },
         "name": {
           "type": "string"
         },
@@ -465,6 +476,13 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "quote": {
+          "type": "string",
+          "enum": [
+            "double",
+            "single"
           ]
         }
       }

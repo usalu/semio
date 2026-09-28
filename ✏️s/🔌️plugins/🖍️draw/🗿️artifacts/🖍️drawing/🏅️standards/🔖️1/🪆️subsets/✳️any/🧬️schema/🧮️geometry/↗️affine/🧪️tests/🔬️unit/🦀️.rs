@@ -15,6 +15,7 @@ fn neutral_affine_matrices_roundtrip_without_losing_shear_or_collapsed_axes() {
 #[semio_framework_async_macros::async_test]
 async fn affine_edit_preserves_scene_matrix_and_has_an_exact_inverse() {
     let mut document=crate::schema::default_drawing_document("affine-edit",None);
+    document.layers=vec![crate::schema::create_drawing_shape_layer_rect("Affine rectangle")];
     let layer=crate::schema::layer_id(&document.layers[0]).to_string();
     let before=document.clone();
     let wanted=[-2.0,1.0,3.0,0.5,7.0,8.0];

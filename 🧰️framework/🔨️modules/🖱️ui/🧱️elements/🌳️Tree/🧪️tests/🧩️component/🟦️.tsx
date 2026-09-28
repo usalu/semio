@@ -1,5 +1,5 @@
 // #region 🔌️Adapters
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it, vi } from "vitest";
@@ -8,7 +8,111 @@ import type { TreeWindowRowExtent } from "@semio-tech/framework";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import rowExtentFixture from "../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
 import rowExtentSchema from "../../../../🧬️schema/🌳️tree-window-row-extent/🔣️.json";
+import disclosureCases from "../../🧫️fixtures/♿️disclosure/🔣️.json";
+import actionCases from "../../🧫️fixtures/♿️actions/🔣️.json";
+import focusCases from "../../🧫️fixtures/♿️focus-retention/🔣️.json";
+import disclosureSchema from "../../../../🧬️schema/♿️tree-disclosure/🔣️.json";
 // #endregion 🔌️Adapters
+
+describe("Tree focus retention", () => {
+  const sections = (parent: string, action: string, id: string): TreeDataSection[] => [{id:"focus-section", label:"Nodes", defaultOpen:true, items:[{id:"focus-anchor", label:parent, defaultOpen:true, items:[{id, label:action, onClick:() => {}}]}]}];
+
+  it.each(focusCases)("returns to the surviving ancestor after $id action replacement", async (entry) => {
+    const {getByRole, rerender, unmount} = render(<Tree sections={sections(entry.parent,entry.before,"convert-cubic")} />);
+    getByRole("button", {name:entry.before}).focus();
+    fireEvent.focusOut(getByRole("button", {name:entry.before}), {relatedTarget:null});
+    rerender(<Tree sections={sections(entry.parent,entry.after,"convert-line")} />);
+    await waitFor(() => expect(document.activeElement).toBe(getByRole("button", {name:entry.parent})));
+    unmount();
+  });
+
+  it("does not take focus back from another control", async () => {
+    const {getByRole, rerender, unmount} = render(<><button>Outside</button><Tree sections={sections("Anchor","Convert","convert")} /></>);
+    getByRole("button", {name:"Convert"}).focus();
+    await userEvent.setup().click(getByRole("button", {name:"Outside"}));
+    rerender(<><button>Outside</button><Tree sections={sections("Anchor","Straighten","straighten")} /></>);
+    await Promise.resolve();
+    expect(document.activeElement).toBe(getByRole("button", {name:"Outside"}));
+    unmount();
+  });
+
+  it("leaves an intentional blur alone", async () => {
+    const {getByRole, rerender, unmount} = render(<Tree sections={sections("Anchor","Convert","convert")} />);
+    const button = getByRole("button", {name:"Convert"});
+    button.focus();
+    button.blur();
+    await Promise.resolve();
+    rerender(<Tree sections={sections("Anchor","Straighten","straighten")} />);
+    await Promise.resolve();
+    expect(document.activeElement).toBe(document.body);
+    unmount();
+  });
+
+  it("keeps focus in the tree when its last item disappears", async () => {
+    const {getByRole, rerender, unmount} = render(<Tree sections={sections("Anchor","Convert","convert")} />);
+    getByRole("button", {name:"Convert"}).focus();
+    rerender(<Tree sections={[]} />);
+    await waitFor(() => expect(document.activeElement).toBe(getByRole("tree")));
+    unmount();
+  });
+});
+
+describe("TreeItem keyboard action", () => {
+  it.each(actionCases)("activates $id once per Enter or Space", async (entry) => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    const {getByRole, unmount} = render(<TreeItem id={entry.id} label={<span>{entry.label}</span>} layoutKind={entry.layout as "default" | "property"} activatable onClick={onClick} />);
+    const button = getByRole("button", {name:entry.label});
+    expect(button.classList.contains("bg-transparent")).toBe(true);
+    expect(button.classList.contains("border-0")).toBe(true);
+    await user.tab();
+    expect(document.activeElement).toBe(button);
+    await user.keyboard("{Enter}");
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await user.keyboard(" ");
+    expect(onClick).toHaveBeenCalledTimes(2);
+    unmount();
+  });
+
+  it("leaves passive row labels outside the tab order", () => {
+    const {queryByRole, unmount} = render(<TreeItem id="passive" label="Position" layoutKind="property" expandable={false}><input aria-label="X" /></TreeItem>);
+    expect(queryByRole("button", {name:"Position"})).toBeNull();
+    unmount();
+  });
+});
+
+describe("TreeItem named disclosure", () => {
+  it("validates the neutral branch and leaf contract", () => {
+    expect(new Ajv2020({ strict: true }).compile(disclosureSchema)(disclosureCases)).toBe(true);
+  });
+
+  it.each(disclosureCases.branches)("exposes the row label and expanded state for $id", async (entry) => {
+    const user = userEvent.setup();
+    const {getByRole, container, unmount} = render(
+      <TreeItem id={entry.id} label={<span>{entry.label}</span>} layoutKind={entry.layout as "default" | "property"}>
+        <TreeItem id={entry.id + "-child"} label="Child" />
+      </TreeItem>,
+    );
+    const button = getByRole("button", {name:entry.label});
+    const row = container.querySelector("#" + entry.id)!;
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(row.getAttribute("aria-expanded")).toBe("false");
+    button.focus();
+    await user.keyboard("{Enter}");
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(row.getAttribute("aria-expanded")).toBe("true");
+    await user.keyboard(" ");
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    unmount();
+  });
+
+  it.each(disclosureCases.leaves)("keeps the leaf $id out of disclosure semantics", (entry) => {
+    const {getByRole, queryByRole} = render(<TreeItem id={entry.id} label={entry.label} layoutKind={entry.layout as "default" | "property"} />);
+    const row = getByRole(disclosureCases.expected.leaf.role, {name:entry.label});
+    expect(row.getAttribute("aria-expanded")).toBe(disclosureCases.expected.leaf.expanded);
+    expect(queryByRole("button", {name:entry.label})).toBeNull();
+  });
+});
 
 // #region 🌳️BranchDisclosure
 describe("TreeSection branch disclosure", () => {

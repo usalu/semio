@@ -31,6 +31,118 @@ fn clear_dirty(tree: &mut UiTree, id: NodeId) {
     }
 }
 
+#[test]
+fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation() {
+    let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "row-7",
+        "children": [1, 2],
+        "component": {
+            "type": "tableRow",
+            "cells": ["Ada"],
+            "rowActions": [{
+                "icon": "trash-2",
+                "label": "Remove row",
+                "action": {
+                    "trigger": "activate",
+                    "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
+                    "args": { "row": 7, "revision": "0123456789abcdef" }
+                }
+            }]
+        },
+        "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+    }))
+    .expect("table row fixture");
+    let child: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1,
+        "key": "cell-0",
+        "component": { "type": "input", "kind": "text", "value": "Ada", "commit": "blur" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Name" }
+    }))
+    .expect("cell fixture");
+    let action: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 2,
+        "key": "row-action-0",
+        "component": { "type": "button", "icon": "trash-2", "label": "Remove row" },
+        "bindings": [{
+            "trigger": "activate",
+            "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
+            "args": { "row": 7, "revision": "0123456789abcdef" }
+        }],
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Remove row" }
+    }))
+    .expect("row action fixture");
+    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("table.action").expect("surface"), revision: ui_contract::UiRevision(0), root: row.id, layout_epoch: 0, node_count: 3 };
+    let mut document = UiDocumentTree::new(header).expect("document");
+    document.try_upsert_record(row).expect("row record");
+    document.try_upsert_record(child).expect("cell record");
+    document.try_upsert_record(action).expect("action record");
+    {
+        let row = document.record(ui_contract::UiNodeId(0)).expect("row");
+        let UiNode::Stack(projected) = ui_node_from_record(&document, row, "table.action", "s.stdio.csv@rfc4180/*#editor") else { panic!("a table row with declarative cells projects as a stack") };
+        assert!(projected.activate.is_none(), "focusing or activating an editable row must not run its destructive trailing action");
+    }
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let mut cursor = UiDocumentReconcileCursor::default();
+    cursor.rearm(1);
+    for _ in 0..64 {
+        if matches!(tree.step_document_reconcile(&mut cursor, "table.action", "s.stdio.csv@rfc4180/*#editor"), UiDocumentReconcileStep::Complete) {
+            break;
+        }
+    }
+    let row = tree.document_node(ui_contract::UiNodeId(0)).expect("row mounted");
+    let children = tree.children(row).collect::<Vec<_>>();
+    assert_eq!(children.len(), 2);
+    let UiNode::Button(action) = &tree.node(children[1]).expect("action mounted").spec.0 else { panic!("the row action mounts as its own button") };
+    assert_eq!(action.label.as_str(), "Remove row");
+    assert_eq!(action.action.action, "remove-row");
+    let Some(DslValue::Object(arguments)) = &action.action.args else { panic!("remove address is retained") };
+    assert!(arguments.contains(&("revision".into(), DslValue::String("0123456789abcdef".into()))));
+    assert!(arguments.contains(&("row".into(), DslValue::uint(7))));
+}
+
+#[test]
+fn a_childless_table_row_never_implicitly_activates_its_first_row_action() {
+    let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "legacy-row",
+        "component": {
+            "type": "tableRow",
+            "cells": ["Ada"],
+            "rowActions": [{
+                "icon": "trash-2",
+                "label": "Remove row",
+                "action": {
+                    "trigger": "activate",
+                    "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
+                    "args": { "row": 7, "revision": "0123456789abcdef" }
+                }
+            }]
+        },
+        "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+    }))
+    .expect("childless row fixture");
+    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("table.childless").expect("surface"), revision: ui_contract::UiRevision(0), root: row.id, layout_epoch: 0, node_count: 1 };
+    let mut document = UiDocumentTree::new(header).expect("document");
+    document.try_upsert_record(row).expect("row record");
+    let row = document.record(ui_contract::UiNodeId(0)).expect("row");
+    let UiNode::Button(projected) = ui_node_from_record(&document, row, "table.childless", "s.stdio.csv@rfc4180/*#editor") else { panic!("childless row projects as its legacy button") };
+    assert!(projected.action.action.is_empty(), "the row action is not borrowed as an implicit destructive row activation");
+}
+
 fn any_dirty(tree: &UiTree, id: NodeId) -> bool {
     let node = tree.node(id).unwrap();
     let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY);

@@ -17,6 +17,8 @@ export * from "../../🔨️modules/🖥️platform/🟦️.ts";
 export * from "../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 export { parseViewport2d } from "../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
 export type { Viewport2d } from "../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+export { parseViewport3dProjectionFramePolicy } from "../../🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
+export type { Viewport3dProjectionFramePolicy } from "../../🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
 export * from "../../🔨️modules/🛂️manifest/🟦️.ts";
 export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…

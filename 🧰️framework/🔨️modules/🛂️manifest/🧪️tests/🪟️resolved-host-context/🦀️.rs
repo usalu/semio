@@ -11,6 +11,19 @@
 
 use super::*;
 
+#[test]
+fn extension_inputs_match_the_independent_json_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/🧩️extension-input/🔣️.json")).expect("extension input vectors");
+    for row in fixture["cases"].as_array().expect("cases") {
+        let input = &row["context"];
+        let view: ViewModel = dsl::os_pack::json::from_json_str(&input.to_string()).expect("owned context decoder");
+        let oracle: ViewModel = serde_json::from_value(input.clone()).expect("independent context decoder");
+        assert_eq!(view, oracle);
+        assert_eq!(view.extension_input_json.as_deref(), input["extensionInputJson"].as_str());
+        assert_eq!(view.for_panel().extension_input_json, view.extension_input_json);
+    }
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HostContextFixture {

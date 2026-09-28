@@ -12,10 +12,10 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store::TextE
         .into_iter()
         .map(|table| {
             let rows = dsl::DslValue::Array(table.rows.into_iter().map(dsl::DslValue::Object).collect());
-            ZipEntry { name: format!("{}.json", table.name), data: dsl::json::to_json_string(&rows).into_bytes() }
+            ZipEntry { name: format!("{}.json", table.name), data: dsl::json::to_json_string(&rows).into_bytes(), ..Default::default() }
         })
         .collect::<Vec<_>>();
-    Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: "s.architect.program@1/*".into() })
+    Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: "s.architect.program@1/*".into(), ..Default::default() })
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {

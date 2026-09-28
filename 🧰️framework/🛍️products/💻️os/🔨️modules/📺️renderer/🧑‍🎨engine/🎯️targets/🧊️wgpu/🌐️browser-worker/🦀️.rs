@@ -267,15 +267,15 @@ impl BrowserRendererWorker {
     pub fn reject_asset_response(&mut self) -> Result<bool, JsValue> {
         let Some(owner) = self.asset_fetch.as_ref() else { return Ok(true) };
         let Some(host) = self.host.as_ref() else {
-            let mut owner = self.asset_fetch.take().expect("checked reference owner");
+            let mut owner = self.asset_fetch.take().expect("checked asset owner");
             owner.begin_close();
             self.asset_blocked = Some(owner);
             return Err(js_error("worker-closed", "renderer host is unavailable"));
         };
-        if !host.runtime.reject_renderer_reference_image(owner) {
+        if !host.runtime.reject_renderer_asset(owner) {
             return Ok(false);
         }
-        let mut owner = self.asset_fetch.take().expect("checked reference owner");
+        let mut owner = self.asset_fetch.take().expect("checked asset owner");
         #[cfg(not(target_env = "p2"))]
         host.runtime.discard_staged_reference_image(owner.owner().token());
         owner.begin_close();

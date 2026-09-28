@@ -1,9 +1,9 @@
-//! ✏️ `mp3` edit (any) — Main window: real `MediaWindowKit`
-//! render of the current document (read-only native canvas; typed edits live in Details).
+//! ✏️ `mp3 edit` — localized revision-bound native media transport.
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use crate::standards::mpeg1_layer3::subsets::any::schema::inferences::duration::compute_mp3_duration;
+use semio_framework_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
@@ -13,12 +13,26 @@ pub fn definition() -> WindowKindDefinition {
     MediaWindowKit::window_kind()
 }
 
-/// 🎬️ Duration/position stay at the kit's zero defaults — this format's decoded snapshot does not
-/// model a playable transport position yet (thin v1: the kit's own transport chrome is real, the
-/// per-document duration/position feed is a documented follow-up, not invented here).
+/// 🎬️ Projects inferred timing and exact live identity without claiming an unregistered encoded-byte producer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(_snapshot: &Mp3Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    MediaWindowKit::render(&MediaView { duration_ms: 0, position_ms: 0, kind: MediaKind::Audio })
+pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaResource>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let duration_ms = semio_s_artifact_stdio_contract::media_duration_ms(compute_mp3_duration(snapshot).duration_seconds);
+    let revision = resource.as_ref().map_or_else(|| "0".to_string(), |resource| resource.revision.clone());
+    let reason = match locale { Locale::En => "Encoded playback export is not registered for this app.", Locale::De => "Der kodierte Wiedergabeexport ist für diese App nicht registriert." };
+    MediaWindowKit::render(&MediaView {
+        duration_ms,
+        position_ms: 0,
+        selection_start_ms: None,
+        selection_end_ms: None,
+        kind: MediaKind::Audio,
+        media_type: "audio/mpeg".into(),
+        revision,
+        locale,
+        resource,
+        capability: MediaCapabilityStatus::Unsupported,
+        capability_reason: Some(reason.into()),
+        host_content_height: 88.0,
+    })
 }
 
 #[cfg(test)]

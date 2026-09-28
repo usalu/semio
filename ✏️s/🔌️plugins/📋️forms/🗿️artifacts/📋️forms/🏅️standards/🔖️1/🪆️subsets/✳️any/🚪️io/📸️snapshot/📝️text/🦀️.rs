@@ -47,83 +47,11 @@ impl store::ArtifactDsl for FormsSnapshot {
 /// 📄️ The building-component fixture, handcrafted in the `.forms` DSL.
 pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-/// 📄️ The `default` (Contact) fixture — a minimal single-step form, handcrafted in the shared
-/// `playbook` kernel's own step/block DSL grammar (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM:
-/// this is real authored domain content, loaded via [`parse_playbook_example_dsl`] — NOT
-/// `FormsSnapshot`'s own persisted wire format, whose `structure`/`results` child handles are
-/// content-addressed opaque references that cannot host hand-authored prose).
-pub const DEFAULT_EXAMPLE_TEXT: &str = r##"semio forms.form.dsl v1
-schema=forms.form id=default version="1" title=Contact steps=[ id=contact title=Contact blocks=[ id=name label=Name kind=text required=true placeholder="Your name"
-condition {
-}
-id=email label=Email kind=text required=true placeholder="you@example.com"
-condition {
-}
-id=message label=Message kind=longText placeholder="How can we help?"
-condition {
-}
-] ]"##;
+/// 📇️ The Contact template in the native saved-document format.
+pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/📇️contact/🗣️.dsl.semio");
 
-/// 📄️ The `onboarding` fixture — a multi-step form exercising every built-in question kind and a
-/// conditional block, in the `.forms` DSL.
-pub const ONBOARDING_EXAMPLE_TEXT: &str = r##"semio forms.form.dsl v1
-schema=forms.form id=onboarding version="1" title="Product Onboarding" steps=[ id=profile title=Profile description="Tell us about yourself." blocks=[ id=full-name label="Full name" kind=text required=true default="Alex Example"
-condition {
-}
-id=bio label=Bio kind=longText placeholder="Short introduction"
-condition {
-}
-id=age label=Age kind=number min=13 max=120 default=28
-condition {
-}
-id=avatar label=Avatar kind=image src=""
-condition {
-}
-id=resume label=Resume kind=file accept=".pdf,.doc,.docx"
-condition {
-}
-] id=preferences title=Preferences description="Customize your experience." blocks=[ id=theme-color label="Accent color" kind=color default="#336699"
-condition {
-}
-id=start-date label="Start date" kind=date default="2026-07-01"
-condition {
-}
-id=notifications label="Enable notifications" kind=boolean default=true
-condition {
-}
-id=volume label="Notification volume" kind=slider min=0 max=100 step=5 unit="%" default=60
-condition {
-}
-id=plan label=Plan kind=single required=true default="pro" options=[ value=free label=Free value=pro label=Pro value=team label=Team ]
-condition {
-}
-id=features label=Features kind=multi default=[ "analytics" ] options=[ value=analytics label=Analytics value=automation label=Automation value=collab label=Collaboration ]
-condition {
-}
-id=offset label="Workspace offset" kind=vector step=0.5 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
-condition {
-}
-id=welcome-note label=Welcome kind=note text="Thanks for trying every question kind in one fixture."
-condition {
-}
-] id=advanced title=Advanced blocks=[ id=show-team-size label="Specify team size" kind=boolean default=false
-condition {
-}
-id=team-size label="Team size" kind=slider min=1 max=50 step=1 default=5
-condition {
-  truthy
-  expr {
-    var name=show-team-size
-  }
-}
-id=team-role label="Primary role" kind=single options=[ value=design label=Design value=engineering label=Engineering value=product label=Product ]
-condition {
-  truthy
-  expr {
-    var name=show-team-size
-  }
-}
-] ]"##;
+/// 🌱️ The Onboarding template in the native saved-document format.
+pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌱️onboarding/🗣️.dsl.semio");
 
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot` — `FormsSnapshot`'s OWN persisted wire
 /// format, the derived text of its own `dsl::DslRecord` spec.
@@ -134,33 +62,6 @@ pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
 /// 🖨️ Prints a `FormsSnapshot` back to `.forms` DSL text.
 pub fn print_dsl(document: &FormsSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
-}
-
-/// 🌉 Parses the shared `playbook` kernel's own step/block DSL grammar (the human-authored form
-/// this facet's three example fixtures have always been handcrafted in) into a real, cache-warm
-/// `FormsSnapshot` via [`crate::forms_snapshot_with_state`] — the PERMANENT
-/// loading path for `building_component_spec`/`default_example_spec`/`onboarding_example_spec`
-/// (`🧬️schema/🦀️component.rs`'s `🔖️DocumentHelpers`), never [`parse_dsl`] above.
-///
-/// Why: `parse_dsl` decodes `FormsSnapshot`'s OWN persisted wire format — two content-addressed
-/// `structure`/`results` handles, no step/block content at all (that content lives in the composed
-/// children, resolved through the session-side working-scene cache until a real
-/// `ArtifactView::with_children` seam lands — see `crate::🔖️Composition`'s own
-/// doc). A handle decoded fresh from a *previous* process (or, as here, from hand-authored example
-/// text that was never mint-cached in THIS process) has nothing in the cache to resolve against,
-/// so `forms_steps` would read back empty — the same documented staleness gap every composed
-/// plugin in this ticket carries for undo-past-history. Loading examples through this function
-/// instead sidesteps the gap entirely: it re-derives real step/block content from real playbook
-/// grammar text and mints+caches the children in the SAME call, so the returned snapshot's working
-/// scene is always warm.
-pub fn parse_playbook_example_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
-    let body = match store::semio_format::split_text_preamble(text) {
-        Ok((_, rest)) => rest,
-        Err(_) => text,
-    };
-    let record = dsl::parse(body, &semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-    let spec = semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_from_record(&record)?;
-    Ok(crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, &spec.steps))
 }
 
 //#region 🧪️Tests

@@ -3,6 +3,7 @@
 use crate::editor::playbook::modes::builder::windows::activity as activity_window;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
 use crate::editor::playbook::modes::builder::windows::changes as changes_window;
+use crate::editor::playbook::modes::builder::windows::files as files_window;
 use crate::editor::playbook::modes::builder::windows::source as source_window;
 use crate::editor::playbook::modes::builder::windows::steps as steps_window;
 use semio_framework_plugin::{create_tab_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
@@ -25,6 +26,7 @@ pub fn layout() -> WindowLayout {
             changes_window::PLAYBOOK_PLAY_WINDOW_CHANGES.into(),
             activity_window::PLAYBOOK_PLAY_WINDOW_ACTIVITY.into(),
             source_window::PLAYBOOK_PLAY_WINDOW_SOURCE.into(),
+            files_window::PLAYBOOK_PLAY_WINDOW_FILES.into(),
         ],
         None,
     )

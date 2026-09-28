@@ -20,6 +20,9 @@
 #[path = "♻️retirement/🦀️.rs"]
 pub mod retirement;
 
+#[path = "🧬️retained-clone/🦀️.rs"]
+pub mod retained_clone;
+
 #[path = "🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
 mod ephemeral_transfer;
 pub use ephemeral_transfer::{ArtifactEphemeralTransferPreparationFactory, ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES};

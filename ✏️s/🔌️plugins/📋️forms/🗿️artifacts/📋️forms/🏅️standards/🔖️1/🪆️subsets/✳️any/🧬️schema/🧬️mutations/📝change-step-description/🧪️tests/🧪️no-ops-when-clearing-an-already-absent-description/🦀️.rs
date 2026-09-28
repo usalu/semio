@@ -20,7 +20,7 @@
 //! case's own fixture value and is deliberately arbitrary — `change-step-description` never reads it.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +42,7 @@ fn before() -> FormsSnapshot {
     let FormMutation::ChangeStepDescription(payload) = mutation() else {
         panic!("no-ops-when-clearing-an-already-absent-description's committed mutation must be a change-step-description");
     };
-    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.id.clone(), title: "Basics".into(), description: payload.new_description.clone(), blocks: Vec::new() }]);
+    replace_forms_steps(&mut snapshot, vec![FormStep { id: payload.id.clone(), title: "Basics".into(), description: payload.new_description.clone(), blocks: Vec::new() }]);
     snapshot
 }
 

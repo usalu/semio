@@ -35,3 +35,15 @@ record set-part tag=10
 field payload bytes
 record remove-part tag=11
 field payload bytes
+record replace-xml-node tag=12
+field payload bytes
+record set-paragraph-style tag=13
+field payload bytes
+record insert-table-row tag=14
+field payload bytes
+record remove-table-row tag=15
+field payload bytes
+record insert-xml-node tag=16
+field payload bytes
+record remove-xml-node tag=17
+field payload bytes

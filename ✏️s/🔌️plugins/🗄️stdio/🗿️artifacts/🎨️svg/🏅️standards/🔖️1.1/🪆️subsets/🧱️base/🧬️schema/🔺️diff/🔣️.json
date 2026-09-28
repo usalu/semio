@@ -10,11 +10,17 @@
         "$ref": "#/$defs/XmlNode"
       }
     },
+    "epilog": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/XmlNode"
+      }
+    },
     "declaration": {
       "$ref": "#/$defs/NullableXmlDeclaration"
     },
     "doctype": {
-      "$ref": "#/$defs/NullableString"
+      "$ref": "#/$defs/NullableXmlDoctype"
     },
     "root": {
       "$ref": "#/$defs/SvgNodeDiff"
@@ -72,11 +78,11 @@
         "null"
       ]
     },
-    "NullableString": {
-      "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
-      "type": [
-        "string",
-        "null"
+    "NullableXmlDoctype": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, object = set.",
+      "oneOf": [
+        { "$ref": "../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json#/$defs/XmlDoctype" },
+        { "type": "null" }
       ]
     },
     "SvgAttrModified": {

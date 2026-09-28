@@ -7,7 +7,7 @@ pub fn mask_coverage(pixel:[u8;4])->u8 {
 }
 
 #[derive(Clone,Copy,Debug)]
-pub struct RasterStackTransform {pub x:f64,pub y:f64,pub scale_x:f64,pub scale_y:f64,pub rotation:f64}
+pub struct RasterStackTransform {pub x:f64,pub y:f64,pub a:f64,pub b:f64,pub c:f64,pub d:f64}
 #[derive(Clone,Debug)]
 pub struct RasterStackMask {pub enabled:bool,pub linked:bool,pub invert:bool,pub transform:RasterStackTransform,pub width:Option<u32>,pub height:Option<u32>,pub image_key:Option<String>}
 #[derive(Clone,Debug)]
@@ -19,9 +19,9 @@ pub struct RasterStackResult {pub image:RasterImage,pub origin:[f64;2],pub empty
 struct Preparation {image:Arc<RasterImage>,coverage:Arc<[u8]>,offset:usize}
 struct Planner<'a> {source:&'a BTreeMap<String,Arc<RasterImage>>,images:BTreeMap<String,Arc<RasterImage>>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],commands:usize,coverage_total:usize}
 fn matrix(value:RasterStackTransform)->Result<CompositeAffine,PixelEditError>{
-    if ![value.x,value.y,value.scale_x,value.scale_y,value.rotation].iter().all(|v|v.is_finite()){return Err(PixelEditError::Invalid("Layer transform requires finite coordinates"));}
-    let (s,c)=value.rotation.to_radians().sin_cos();let result=[c*value.scale_x,s*value.scale_x,-s*value.scale_y,c*value.scale_y,value.x,value.y];inverse(result)?;Ok(result)
+    let result=[value.a,value.b,value.c,value.d,value.x,value.y];inverse(result)?;Ok(result)
 }
+
 fn centered(value:CompositeAffine,width:u32,height:u32,source_width:u32,source_height:u32)->Result<CompositeAffine,PixelEditError>{
     validate_extent(width,height)?;
     Ok(multiply(value,[f64::from(width)/f64::from(source_width),0.0,0.0,f64::from(height)/f64::from(source_height),-f64::from(width)/2.0,-f64::from(height)/2.0]))

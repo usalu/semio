@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "current",
+    "hit",
+    "mode"
+  ],
+  "properties": {
+    "current": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "hit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "replace",
+        "toggle",
+        "add"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,5 @@
+# ZIP Checkpoint Contract
+
+The retained archive resolver has no out-of-band mutable owners. Its reconstruction-stable workspace identity identifies the cursor layout; all cursor state is serialized in the schema-owned 96-byte checkpoint. The shared shell validates the captured canonical context digest before invoking restore. A resumed ZIP work item additionally refuses an absent canonical context. Cursor state binds the command (BLAKE3 over node id, NUL, revision, NUL, value) and entry count. The checkpoint has version/magic/flags/bounds checks; malformed restore leaves the prior cursor intact.
+
+The same neutral fixture drives Rust and TypeScript. The TypeScript oracle independently assembles the binary bytes with Node Buffer; native tests drive actual factory checkpoint dispatch and changed-revision refusal. TypeScript run 15 passes; native run 4 is pending. Target resolution remains one entry per turn. ZIP store preparation is still generic/atomic and entry metadata is still lossy; neither limitation is solved by checkpoint support.

@@ -4,10 +4,11 @@ use crate::schema::mutations::{
     InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation,
     SetTextPayload, XmlNodePath,
 };
-use crate::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDeclaration, XmlDocument, XmlNode, XmlQuote};
+use crate::schema::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked, XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlNode, XmlQuote};
 use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
+use semio_framework_plugin::ArtifactBuilder;
 
 #[semio_framework_async_macros::async_test]
 async fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
@@ -46,6 +47,56 @@ async fn codec_round_trip() {
     assert_eq!(decoded, snap);
 }
 
+#[semio_framework_async_macros::async_test]
+async fn snapshot_decoders_and_builder_refuse_invalid_document_boundaries() {
+    let mut invalid = sample_snapshot();
+    invalid.doc.doctype = Some(XmlDoctype { prolog_position: invalid.doc.prolog.len() + 1, name: "root".into(), external_id: None, declarations: Vec::new() });
+
+    let text = crate::schema::mutation_support::encode_snapshot(&invalid);
+    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject an out-of-range doctype position");
+
+    let mut binary = Vec::new();
+    crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
+    assert!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).is_err(), "binary ingress must reject an out-of-range doctype position");
+    assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
+
+    let mut invalid_epilog = sample_snapshot();
+    invalid_epilog.doc.epilog = vec![XmlNode::Element { name: "outside".into(), attrs: Vec::new(), children: Vec::new() }];
+    let text = crate::schema::mutation_support::encode_snapshot(&invalid_epilog);
+    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject a non-miscellaneous epilog node");
+    assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_xml_snapshot_ingress_refuses_unpublishable_declarations() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
+        let mut invalid = sample_snapshot();
+        invalid.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });
+        invalid.doc.declaration =
+            Some(XmlDeclaration { version: "1.0".into(), encoding: Some(case["encoding"].as_str().expect("encoding").into()), standalone: None, quote: if case["quote"] == "single" { XmlQuote::Single } else { XmlQuote::Double } });
+        let expected = case["error"].as_str().expect("error");
+
+        let text = crate::schema::mutation_support::encode_snapshot(&invalid);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).expect_err("structured text ingress"), expected, "{}", case["id"]);
+        let mut binary = Vec::new();
+        crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).expect_err("binary ingress"), expected, "{}", case["id"]);
+        assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
+        assert_eq!(XmlArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
+        let mut artifact = XmlArtifact::default();
+        let before = artifact.clone();
+        assert_eq!(artifact.set_snapshot(invalid.clone()).expect_err("raw artifact replacement"), expected, "{}", case["id"]);
+        assert_eq!(artifact, before, "{} replacement must be atomic", case["id"]);
+        let diff = XmlDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(XmlNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
+        assert!(<XmlDiff as MutationDiff<XmlSnapshot>>::apply(&diff, &sample_snapshot()).is_err(), "{} diff ingress", case["id"]);
+        assert_eq!(xml_document_to_text_checked(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
+    }
+
+    let valid = XmlArtifact::from_snapshot(sample_snapshot()).expect("valid raw artifact conversion");
+    assert!(xml_document_to_text_checked(&valid.to_snapshot().doc).expect("validated artifact renders").contains("hello"));
+}
+
 /// 🗣️ XML 1.0 §2.8 admits `'` and `"` interchangeably in the declaration's pseudo-attributes, so
 /// which one a document uses is its own state and has to survive a parse/write cycle byte for byte
 /// — the divergence `🎨️svg`'s `exact_native_analyzer_text_and_pack_roundtrip` caught against a real
@@ -53,10 +104,7 @@ async fn codec_round_trip() {
 /// declaration nobody quoted explicitly still writes `"`.
 #[semio_framework_async_macros::async_test]
 async fn declaration_quote_style_survives_a_parse_write_cycle() {
-    for (source, expected) in [
-        ("<?xml version='1.0' encoding='UTF-8'?>\n<root/>", XmlQuote::Single),
-        ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root/>", XmlQuote::Double),
-    ] {
+    for (source, expected) in [("<?xml version='1.0' encoding='UTF-8'?>\n<root/>", XmlQuote::Single), ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root/>", XmlQuote::Double)] {
         let doc = xml_document_from_text(source).expect("declaration parses");
         assert_eq!(doc.declaration.as_ref().expect("declaration present").quote, expected, "the delimiter `version` used is the declaration's own");
         assert_eq!(xml_document_to_text(&doc), source, "the declaration is written back with the delimiter it came in with");
@@ -77,7 +125,8 @@ fn sample_snapshot() -> XmlSnapshot {
         doc: XmlDocument {
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() }),
             doctype: None,
-            prolog: Vec::new(),
+            prolog: vec![XmlNode::Comment { text: "before".into() }],
+            epilog: vec![XmlNode::ProcessingInstruction { target: "after".into(), data: "a".into() }],
             root: Some(XmlNode::Element {
                 name: "root".into(),
                 attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }],
@@ -102,7 +151,8 @@ fn sweep_a() -> XmlSnapshot {
         doc: XmlDocument {
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
             doctype: Some("<!DOCTYPE html>".into()),
-            prolog: Vec::new(),
+            prolog: vec![XmlNode::ProcessingInstruction { target: "before".into(), data: "b".into() }],
+            epilog: vec![XmlNode::Comment { text: "after".into() }],
             root: Some(XmlNode::Element {
                 name: "root".into(),
                 attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toRemove".into(), value: "r".into() }, XmlAttr { name: "toModify".into(), value: "old".into() }],
@@ -124,6 +174,7 @@ fn sweep_b() -> XmlSnapshot {
             declaration: None,
             doctype: None,
             prolog: Vec::new(),
+            epilog: Vec::new(),
             root: Some(XmlNode::Element {
                 name: "rootRenamed".into(),
                 attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toModify".into(), value: "new".into() }, XmlAttr { name: "added".into(), value: "a".into() }],
@@ -206,6 +257,7 @@ fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
             declaration: None,
             doctype: None,
             prolog: Vec::new(),
+            epilog: Vec::new(),
             root: Some(XmlNode::Element {
                 name: "root".into(),
                 attrs: Vec::new(),
@@ -382,6 +434,8 @@ async fn field_sweep_law() {
     // tri-state scalars exercise `Some(None)`.
     assert_eq!(diff_ab.declaration, Some(None));
     assert_eq!(diff_ab.doctype, Some(None));
+    assert_eq!(diff_ab.prolog, Some(b.doc.prolog.clone()));
+    assert_eq!(diff_ab.epilog, Some(b.doc.epilog.clone()));
     assert!(diff_ab.root.is_some());
 
     let XmlNodeDiff::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };

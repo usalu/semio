@@ -15,7 +15,7 @@ async fn render_walks_object_and_array_members() {
     let root = section.children.get(0).expect("tree root");
     assert_eq!(root.key.as_str(), JSON_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
     let a = root.children.get(0).expect("child");
-    assert_eq!(a.key.as_str(), "k=a");
+    assert_eq!(a.key.as_str(), "m=0");
     let item0 = a.children.get(0).expect("child");
     assert_eq!(item0.key.as_str(), "i=0", "a node is keyed by its SIBLING segment, never by its path from the root");
 }

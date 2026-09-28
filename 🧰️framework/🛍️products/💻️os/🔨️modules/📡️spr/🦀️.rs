@@ -34,7 +34,7 @@ pub use crate::os_spr::causal::transition::{
 };
 pub use crate::os_spr::channel::{
     decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
-    DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveOwnerRef, DocumentArchivePack, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
+    DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
     INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
 };
 pub use crate::os_spr::command::{

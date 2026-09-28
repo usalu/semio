@@ -11,13 +11,13 @@ for(const fixture of fixtures.cases) test(fixture.name,()=>{
 });
 
 test("nested transforms map painting into the selected layer", () => {
-  const layers=pixelLayers(JSON.stringify({layers:[{kind:"group",id:"g",visible:true,transform:{x:10,y:20,scaleX:2,scaleY:2},children:[{kind:"pixel",id:"p",name:"Pixels",width:20,height:10,transform:{x:3,y:4}}]}]}));
+  const layers=pixelLayers(JSON.stringify({layers:[{kind:"group",id:"g",visible:true,transform:{x:10.0,y:20.0,a:2.0,b:0.0,c:-0.0,d:2.0},children:[{kind:"pixel",id:"p",name:"Pixels",width:20,height:10,transform:{x:3,y:4,a:1,b:0,c:0,d:1}}]}]}));
   expect(layers).toHaveLength(1);
   expect(layerPoint(layers[0]!,18,30)).toEqual([11,6]);
 });
 
 test("the compositor centers pixel layers on their transforms",()=>{
-  const [layer]=pixelLayers(JSON.stringify({layers:[{kind:"pixel",id:"p",width:512,height:256,transform:{x:0,y:0}}]}));
+  const [layer]=pixelLayers(JSON.stringify({layers:[{kind:"pixel",id:"p",width:512,height:256,transform:{x:0,y:0,a:1,b:0,c:0,d:1}}]}));
   expect(layerPoint(layer!,0,0)).toEqual([256,128]);
   expect(layerPoint(layer!,-256,-128)).toEqual([0,0]);
 });
@@ -39,17 +39,17 @@ test("selection bounds use actual mask coverage", async () => {
 });
 
 test("singular transforms reject interaction instead of inventing a location", () => {
-  const layers=pixelLayers(JSON.stringify({layers:[{kind:"pixel",id:"p",transform:{scaleX:0}}]}));
+  const layers=pixelLayers(JSON.stringify({layers:[{kind:"pixel",id:"p",transform:{x:0,y:0,a:0.0,b:0.0,c:-0.0,d:1.0}}]}));
   expect(()=>layerPoint(layers[0]!,0,0)).toThrow();
 });
 
 for(const fixture of fixtures.cases) test(`${fixture.name}: SVG oracle maps the fixture pixel to its world coordinate`,async()=>{
   const layer=fixture.document.layers[0]!;
-  const transform=layer.transform as {x:number;y:number;rotation?:number};
+  const transform=layer.transform as {x:number;y:number;a:number;b:number;c:number;d:number};
   const asset="imageKey" in layer?fixture.assets[layer.imageKey as keyof typeof fixture.assets]:undefined;
   const sx=asset?layer.width/asset.width:1,sy=asset?layer.height/asset.height:1;
   const {x,y,zoom}=fixture.camera;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><g transform="translate(${50-x*zoom} ${50-y*zoom}) scale(${zoom}) translate(${transform.x} ${transform.y}) rotate(${transform.rotation??0}) translate(${-layer.width/2} ${-layer.height/2}) scale(${sx} ${sy})"><rect x="${fixture.pixelPoint[0]!-0.5}" y="${fixture.pixelPoint[1]!-0.5}" width="1" height="1" fill="red"/></g></svg>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><g transform="translate(${50-x*zoom} ${50-y*zoom}) scale(${zoom}) matrix(${transform.a} ${transform.b} ${transform.c} ${transform.d} ${transform.x} ${transform.y}) translate(${-layer.width/2} ${-layer.height/2}) scale(${sx} ${sy})"><rect x="${fixture.pixelPoint[0]!-0.5}" y="${fixture.pixelPoint[1]!-0.5}" width="1" height="1" fill="red"/></g></svg>`;
   const {data}=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   const px=Math.floor(50+(fixture.worldPoint[0]!-x)*zoom),py=Math.floor(50+(fixture.worldPoint[1]!-y)*zoom),at=(py*100+px)*4;
   expect(data[at]).toBe(255);expect(data[at+3]).toBeGreaterThan(200);
@@ -134,4 +134,53 @@ test("selection editing rejects invalid extents before allocating",async()=>{
   await expect(editSelection(3,new Uint8Array(2),"invert")).rejects.toThrow();
   const controller=new AbortController();controller.abort();
   await expect(editSelection(3,undefined,"all",{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
+});
+
+import patch,{type Operation} from "fast-json-patch";
+import revisions from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🖌️stroke-revision/🔣️.json";
+import {pixelGestureRevision} from "../🟦️.ts";
+for(const row of revisions.cases)test("stroke revision "+row.name,()=>{
+  const before=pixelLayers(JSON.stringify(revisions.document))[0];
+  const updated=patch.applyPatch(revisions.document,row.patch as Operation[],true,false).newDocument;
+  const after=pixelLayers(JSON.stringify(updated)).find(layer=>layer.id===row.selected[0]);
+  expect(pixelGestureRevision(before)!==pixelGestureRevision(after)||row.utility!=="paintBrush").toBe(row.cancel);
+});
+
+import maskStrokes from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🎭️mask-stroke/🔣️.json";
+import {Matrix3,Vector2} from "three";
+for(const row of maskStrokes.cases)test("shared mask stroke "+row.name,async()=>{
+  const [layer]=maskLayers(JSON.stringify(row.document),JSON.stringify(row.assets));
+  expect(layer?.target).toBe("mask");expect(layer?.locked).toBe(false);
+  const point=layerPoint(layer!,row.worldPoint[0]!,row.worldPoint[1]!);
+  const owner=row.document.layers[0]!.children[0]!,mask=owner.mask,parent=row.document.layers[0]!.transform;
+  const affine=(t:{a:number;b:number;c:number;d:number;x:number;y:number})=>new Matrix3().set(t.a,t.c,t.x,t.b,t.d,t.y,0,0,1);
+  const matrix=affine(parent);if(mask.linked)matrix.multiply(affine(owner.transform));matrix.multiply(affine(mask.transform));
+  const extent=mask.imageKey?row.assets.m:undefined,width=extent?.width??mask.width??("width" in owner?owner.width:undefined)??512,height=extent?.height??mask.height??("height" in owner?owner.height:undefined)??512;
+  matrix.multiply(new Matrix3().set((mask.width??width)/width,0,-(mask.width??width)/2,0,(mask.height??height)/height,-(mask.height??height)/2,0,0,1));
+  const oracle=new Vector2(row.worldPoint[0],row.worldPoint[1]).applyMatrix3(matrix.invert());
+  for(let i=0;i<2;i++){expect(point[i]!).toBeCloseTo(row.pixelPoint[i]!,10);expect(point[i]!).toBeCloseTo(oracle.toArray()[i]!,10);}
+  expect(JSON.parse(layer!.maskRevision!)).toEqual(mask);
+});
+for(const row of maskStrokes.revisions)test("shared mask revision "+row.name,()=>{
+  const base=maskStrokes.cases[0]!;
+  const [before]=maskLayers(JSON.stringify(base.document),JSON.stringify(base.assets));
+  const updated=patch.applyPatch(base.document,row.patch as Operation[],true,false).newDocument;
+  const [after]=maskLayers(JSON.stringify(updated),JSON.stringify(base.assets));
+  expect(pixelGestureRevision(before)!==pixelGestureRevision(after)).toBe(row.cancel);
+  expect(pixelGestureRevision(after)!==null).toBe(row.admit);
+});
+
+import {restoreSelection} from "../🟦️.ts";
+import sharedSelections from "../../../../../../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures/🎯️pixel-selection/🔣️.json";
+
+for(const row of sharedSelections.cases)test("restores shared coverage: "+row.name,async()=>{
+  const selected=row.selection;
+  expect([...await restoreSelection(selected.spans,selected.width*selected.height)]).toEqual(row.coverage);
+});
+test("restoration rejects invalid spans and yields cancellable progress",async()=>{
+  for(const row of sharedSelections.invalid)if("spans" in row)await expect(restoreSelection(row.spans!,6)).rejects.toThrow();
+  const controller=new AbortController(),progress:number[]=[];
+  await expect(restoreSelection("[[0,65536,255]]",65536,{signal:controller.signal,onProgress:p=>{progress.push(p.completed);controller.abort();}})).rejects.toThrow("Cancelled");
+  expect(progress).toEqual([32768]);
+  expect([...await restoreSelection("[]",4)]).toEqual([0,0,0,0]);
 });

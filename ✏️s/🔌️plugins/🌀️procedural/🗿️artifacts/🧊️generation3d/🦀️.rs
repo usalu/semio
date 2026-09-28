@@ -568,6 +568,8 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapsh
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod examples {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🥽️mesh-workbench/🦀️.rs"]
+    pub mod art_generation3d_mesh_workbench;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🦀️.rs"]
     pub mod art_generation3d_box_fillet_preview;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🦀️.rs"]

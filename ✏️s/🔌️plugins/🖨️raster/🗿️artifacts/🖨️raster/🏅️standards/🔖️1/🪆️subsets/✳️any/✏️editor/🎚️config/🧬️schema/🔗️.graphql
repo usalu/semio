@@ -14,6 +14,17 @@ type RasterConfig {
   brushOpacity: Float! @state(class: CONFIG)
   brushColor: String! @state(class: CONFIG)
   brushHardness: Float! @state(class: CONFIG)
+  paintTarget: String! @state(class: CONFIG)
+  maskValue: Int! @state(class: CONFIG)
+  pixelSelection: RasterPixelSelection @state(class: CONFIG)
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
   camera: RasterCamera! @state(class: CONFIG)
+}
+
+type RasterPixelSelection {
+  layerId: String! @state(class: CONFIG)
+  target: String! @state(class: CONFIG)
+  width: Int! @state(class: CONFIG)
+  height: Int! @state(class: CONFIG)
+  spans: String! @state(class: CONFIG)
 }

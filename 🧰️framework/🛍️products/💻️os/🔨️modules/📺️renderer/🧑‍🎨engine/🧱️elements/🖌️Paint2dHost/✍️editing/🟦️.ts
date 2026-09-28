@@ -1,7 +1,11 @@
 /** 🧭️ Paint surface coordinates and compact selection transport. */
-export type PixelLayer = { id: string; name: string; visible: boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
-type TransformInput={x?:number;y?:number;rotation?:number;scaleX?:number;scaleY?:number};
-type LayerInput = { kind?: string; id?: string; name?: string; visible?: boolean; width?: number; height?: number; imageKey?: string; transform?: TransformInput; mask?:{linked?:boolean;width?:number;height?:number;imageKey?:string;transform?:TransformInput}|null; children?: LayerInput[] };
+export type PixelLayer = { id: string; name: string; visible: boolean; locked:boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
+/** 🖌️ Captures only the target properties that keep an in-flight gesture valid. */
+export function pixelGestureRevision(layer:PixelLayer|undefined):string|null {
+  return !layer||!layer.visible||layer.locked?null:JSON.stringify([layer.id,layer.target,layer.width,layer.height,layer.imageKey,layer.matrix,layer.maskRevision??null]);
+}
+type TransformInput={x:number;y:number;a:number;b:number;c:number;d:number};
+type LayerInput = { kind?: string; id?: string; name?: string; visible?: boolean; locked?:boolean; width?: number; height?: number; imageKey?: string; transform?: TransformInput; mask?:{linked?:boolean;width?:number;height?:number;imageKey?:string;transform?:TransformInput}|null; children?: LayerInput[] };
 const identity = [1,0,0,1,0,0];
 function multiply(a: readonly number[], b: readonly number[]): number[] {
   return [a[0]!*b[0]!+a[2]!*b[1]!,a[1]!*b[0]!+a[3]!*b[1]!,a[0]!*b[2]!+a[2]!*b[3]!,a[1]!*b[2]!+a[3]!*b[3]!,a[0]!*b[4]!+a[2]!*b[5]!+a[4]!,a[1]!*b[4]!+a[3]!*b[5]!+a[5]!];
@@ -12,36 +16,36 @@ export function pixelLayers(json: string,assetExtentsJson="{}"): PixelLayer[] {
 export function maskLayers(json:string,assetExtentsJson="{}"):PixelLayer[] {
   return editableLayers(json,assetExtentsJson,"mask");
 }
-function transform(t:TransformInput={}):number[] {
-  const angle=(t.rotation??0)*Math.PI/180,cos=Math.cos(angle),sin=Math.sin(angle);
-  return [cos*(t.scaleX??1),sin*(t.scaleX??1),-sin*(t.scaleY??1),cos*(t.scaleY??1),t.x??0,t.y??0];
+function transform(t?:TransformInput):number[] {
+  return t?[t.a,t.b,t.c,t.d,t.x,t.y]:[...identity];
 }
+
 function editableLayers(json:string,assetExtentsJson:string,target:"pixels"|"mask"):PixelLayer[] {
   const root = JSON.parse(json) as {layers?:LayerInput[]};
   const assets=JSON.parse(assetExtentsJson) as Record<string,{width?:number;height?:number}>;
   const result:PixelLayer[] = [];
-  const visit = (layers:LayerInput[],parent:readonly number[],visible:boolean,depth:number) => {
+  const visit = (layers:LayerInput[],parent:readonly number[],visible:boolean,locked:boolean,depth:number) => {
     if (depth > 32) throw new Error("Layer nesting exceeds the editor limit");
     for (const layer of layers) {
       const matrix=multiply(parent,transform(layer.transform));
-      const shown=visible && layer.visible !== false;
+      const shown=visible && layer.visible !== false,protectedLayer=locked||layer.locked===true;
       if (target==="pixels" && layer.kind === "pixel" && layer.id) {
         const extent=layer.imageKey?assets[layer.imageKey]:undefined;
         const displayWidth=layer.width ?? extent?.width ?? 512,displayHeight=layer.height ?? extent?.height ?? 512;
         const width=extent?.width ?? displayWidth,height=extent?.height ?? displayHeight;
-        result.push({id:layer.id,name:layer.name ?? layer.id,visible:shown,width,height,imageKey:layer.imageKey ?? null,matrix:multiply(matrix,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target});
+        result.push({id:layer.id,name:layer.name ?? layer.id,visible:shown,locked:protectedLayer,width,height,imageKey:layer.imageKey ?? null,matrix:multiply(matrix,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target});
       }
       if(target==="mask"&&layer.id&&layer.mask&&(layer.kind==="pixel"||layer.kind==="group")) {
         const mask=layer.mask,extent=mask.imageKey?assets[mask.imageKey]:undefined;
         const width=extent?.width??mask.width??(layer.kind==="pixel"?layer.width:undefined)??512,height=extent?.height??mask.height??(layer.kind==="pixel"?layer.height:undefined)??512;
         const displayWidth=mask.width??width,displayHeight=mask.height??height;
         const placement=multiply(mask.linked?matrix:parent,transform(mask.transform));
-        result.push({id:layer.id,name:layer.name??layer.id,visible:shown,width,height,imageKey:mask.imageKey??null,matrix:multiply(placement,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target,maskRevision:JSON.stringify(mask)});
+        result.push({id:layer.id,name:layer.name??layer.id,visible:shown,locked:protectedLayer,width,height,imageKey:mask.imageKey??null,matrix:multiply(placement,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target,maskRevision:JSON.stringify(mask)});
       }
-      if (layer.kind === "group") visit(layer.children ?? [],matrix,shown,depth+1);
+      if (layer.kind === "group") visit(layer.children ?? [],matrix,shown,protectedLayer,depth+1);
     }
   };
-  visit(root.layers ?? [],identity,true,0);
+  visit(root.layers ?? [],identity,true,false,0);
   return result;
 }
 export function layerPoint(layer:PixelLayer,x:number,y:number): readonly [number,number] {
@@ -100,4 +104,26 @@ export async function selectionBounds(mask:Uint8Array,width:number,options:Selec
   },options);
   checkSelectionScan(options);
   return right<0?null:{x:left,y:top,width:right-left+1,height:bottom-top+1};
+}
+
+/** 🎯️ Restores validated span coverage in cancellable, bounded pixel grants. */
+export async function restoreSelection(json:string,count:number,options:SelectionScanOptions={}):Promise<Uint8Array>{
+  checkSelectionScan(options);
+  if(!Number.isInteger(count)||count<1||count>16777216)throw new Error("Selection dimensions are invalid");
+  if(new TextEncoder().encode(json).length>40000)throw new Error("Selection exceeds the transport budget");
+  const spans:unknown=JSON.parse(json);
+  if(!Array.isArray(spans))throw new Error("Selection must contain spans");
+  let previous=0;
+  for(const span of spans){
+    if(!Array.isArray(span)||span.length!==3||!span.every(Number.isSafeInteger))throw new Error("Invalid selection span");
+    const [start,length,value]=span as [number,number,number];
+    if(start<previous||length<1||start+length>count||value<0||value>255)throw new Error("Selection spans overlap or exceed image");
+    previous=start+length;
+  }
+  const result=new Uint8Array(count);let cursor=0;
+  await scanSelection(result,index=>{
+    while(cursor<spans.length&&index>=spans[cursor][0]+spans[cursor][1])cursor++;
+    if(cursor<spans.length&&index>=spans[cursor][0])result[index]=spans[cursor][2];
+  },options);
+  return result;
 }

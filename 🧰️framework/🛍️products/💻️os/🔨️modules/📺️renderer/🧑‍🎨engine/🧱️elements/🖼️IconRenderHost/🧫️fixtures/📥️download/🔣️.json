@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "filename": "Überblick.svg",
+      "mime": "image/svg+xml;charset=utf-8",
+      "encoding": "percent",
+      "value": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"3\" height=\"2\"><title>Überblick</title><path d=\"M0 0h3v2H0z\"/></svg>"
+    },
+    {
+      "filename": "base.svg",
+      "mime": "image/svg+xml",
+      "encoding": "base64",
+      "value": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2\" height=\"1\"><path d=\"M0 0h2v1H0z\"/></svg>"
+    }
+  ]
+}

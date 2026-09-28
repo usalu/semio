@@ -3,13 +3,13 @@
   "$id": "https://semio.tech/schema/playbook/scene-showcase-v1.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "modeId", "windows"],
+  "required": ["schema", "modeId", "windows", "files"],
   "properties": {
     "schema": { "const": "playbook.scene-showcase.v1" },
     "modeId": { "const": "builder" },
     "windows": {
       "type": "array",
-      "minItems": 4,
+      "minItems": 6,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -18,9 +18,81 @@
         "properties": {
           "windowId": { "type": "string", "minLength": 1 },
           "bodyKey": { "type": "string", "pattern": "^playbook\\.play\\." },
-          "surfaceKind": { "enum": ["table", "diffView", "eventFeed", "textEditor"] }
+          "surfaceKind": { "enum": ["block-list", "table", "diff-view", "event-feed", "text-editor", "virtual-file-system"] }
         }
       }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId", "schema", "rows", "initialVisibleRowIds", "initialLevels", "collapsedVisibleRowIds", "collapsedLevels"],
+      "properties": {
+        "surfaceId": { "const": "playbook.play.files" },
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fileNodeKinds", "descriptorKinds", "descriptorColumnIds"],
+          "properties": {
+            "fileNodeKinds": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["root", "step", "block"],
+              "properties": {
+                "root": { "$ref": "#/$defs/fileNodeKind" },
+                "step": { "$ref": "#/$defs/fileNodeKind" },
+                "block": { "$ref": "#/$defs/fileNodeKind" }
+              }
+            },
+            "descriptorKinds": { "type": "object", "maxProperties": 0 },
+            "descriptorColumnIds": { "type": "array", "maxItems": 0 }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/fileRow" }
+        },
+        "initialVisibleRowIds": { "$ref": "#/$defs/nonEmptyIds" },
+        "initialLevels": { "$ref": "#/$defs/levels" },
+        "collapsedVisibleRowIds": { "$ref": "#/$defs/nonEmptyIds" },
+        "collapsedLevels": { "$ref": "#/$defs/levels" }
+      }
+    }
+  },
+  "$defs": {
+    "fileNodeKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "icon", "descriptors"],
+      "properties": {
+        "id": { "enum": ["root", "step", "block"] },
+        "name": { "type": "string", "minLength": 1 },
+        "icon": { "type": "string", "minLength": 1 },
+        "descriptors": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "fileRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fileNodeKindId", "name", "parentId", "hasChildren", "descriptorValues"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "fileNodeKindId": { "enum": ["root", "step", "block"] },
+        "name": { "type": "string", "minLength": 1 },
+        "parentId": { "type": ["string", "null"] },
+        "hasChildren": { "type": "boolean" },
+        "descriptorValues": { "type": "object", "maxProperties": 0 }
+      }
+    },
+    "nonEmptyIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "integer", "minimum": 0 }
     }
   }
 }

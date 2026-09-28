@@ -107,9 +107,13 @@ pub(crate) mod context {
     /// vacuously (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the same admission-vs-publication trap
     /// [`dispatch`] documents for typed commands).
     pub async fn select_graph(app: &mut Generation3dApp, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
+        select_domain(app, crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN, granularity, ids).await
+    }
+
+    pub async fn select_domain(app: &mut Generation3dApp, domain: &str, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
         let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
-        let args: dsl::DslValue = serde_json::json!({ "domainId": crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
+        let args: dsl::DslValue = serde_json::json!({ "domainId": domain, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
         let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
     }
@@ -644,8 +648,8 @@ fn command_ids_are_unique_and_cover_every_row() {
     );
 }
 
-/// ⚖️ LAW: every one of the 29 declared `Generation3dCommand` rows is retained-owned by EXACTLY one
-/// of the three factories — the gesture route, the preview chain's own route and the contributions
+/// ⚖️ LAW: every declared `Generation3dCommand` row is retained-owned by exactly one
+/// factory — the gesture, preview, contributions, or document route
 /// route — with an exact, nonempty publication-lane contract, the shape
 /// `ArtifactToolFactoryRegistry::register` itself enforces
 /// (`🧰️framework/…/🔌️plugin/🦀️.rs:12736-12748`), asserted here so a future command addition that
@@ -657,12 +661,12 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 30);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 32);
     assert_eq!(GENERATION3D_FLOW_EVAL_TOOL_IDS.len(), 5);
     assert_eq!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
     assert_eq!(GENERATION3D_DOCUMENT_IO_TOOL_IDS.len(), 3);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 39, "all four factories' proofs, aggregated");
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 30);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 41, "all four factories' proofs, aggregated");
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 32);
     assert_eq!(Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.len(), 5);
     assert_eq!(Generation3dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
     assert_eq!(Generation3dDocumentIoJobFactory::PUBLICATION_CONTRACTS.len(), 3);
@@ -828,6 +832,8 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "select-upstream-node",
         "select-downstream-node",
         "activate-selection",
+        "edit-mesh-selection",
+        "knife-mesh-selection",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -886,6 +892,8 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SelectUpstreamNode(select_upstream_node::SelectUpstreamNode {}),
         Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {}),
         Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {}),
+        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "extrude".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
+        Generation3dCommand::KnifeMeshSelection(knife_mesh_selection::KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] }),
     ]
 }
 
@@ -1086,7 +1094,7 @@ fn every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mou
     eprintln!("[DEBUG] window-scoped chords: {scoped} rows, modes {mode_ids:?}");
 }
 
-/// ⚖️ LAW: the example picker offers exactly the eight flow-fixture examples, and never the
+/// ⚖️ LAW: the example picker offers the bundled flow-fixture examples, and never the
 /// `✏️editor/📚️examples/🎬️demo-session` leaf. That leaf is a `.cmd.semio` command REPLAY, not a
 /// document carrier, and `setActiveExample`'s only vocabulary is "load a registered example
 /// document" — the same reason `🖨️raster` and `🧩️puzzle` mount and test their `demo-session` leaves
@@ -1096,7 +1104,7 @@ fn every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mou
 fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let offered: Vec<String> = examples().iter().map(|example| example.id().to_string()).collect();
-    assert_eq!(offered.len(), 8, "eight bundled flow examples: {offered:?}");
+    assert_eq!(offered.len(), 9, "nine bundled flow examples: {offered:?}");
     assert!(!offered.iter().any(|id| id == crate::editor::generation3d::examples::demo_session::ID), "the command-replay leaf is not a document example");
     for id in &offered {
         assert!(crate::standards::v1::subsets::any::schema::is_generation3d_example_id(id), "{id} must be a registered generation3d example id");
@@ -1444,7 +1452,7 @@ fn graph_selection_splits_into_node_and_edge_domains() {
     let mut fixture = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
     fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "n".into() });
     fixture.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "note".into(), to: "note".into(), from_port: String::new(), to_port: String::new() });
-    let marks = PreviewInteractionMarks { hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { components: Default::default(), hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
     assert_eq!(marks.graph_selection_domains(&fixture), (vec!["note".to_string()], vec!["wire".to_string()]));
 }
 
@@ -1700,13 +1708,44 @@ fn preview_payload_has_meshes_and_instances() {
 }
 
 #[test]
-fn document_from_mesh_returns_valid_default_snapshot() {
+fn document_from_mesh_rejects_empty_or_invalid_geometry() {
     let _serial = test_serial();
     let mesh = semio_framework_plugin::MeshData::default();
-    let document = generation3d_document_from_mesh(&mesh).expect("dwg mesh import document");
-    let projection: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).expect("parseable projection");
-    assert_eq!(projection.host_snapshot.schema, "flow.host_snapshot");
-    projection.retire_cold();
+    assert!(generation3d_document_from_mesh(&mesh).is_err());
+    for (positions, indices) in [(vec![0.0; 8], vec![0, 1, 2]), (vec![0.0; 9], vec![0, 1, 9]), (vec![f32::NAN; 9], vec![0, 1, 2]), (vec![0.0; 9], vec![0, 1, 1])] {
+        assert!(generation3d_document_from_mesh(&semio_framework_plugin::MeshData { positions, indices, ..Default::default() }).is_err());
+    }
+}
+
+#[test]
+fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
+    let _serial = test_serial();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["meshes"].as_array().unwrap() {
+        let source = &case["mesh"];
+        if source["faces"].as_array().unwrap().iter().any(|face| face.as_array().unwrap().len() != 3) { continue; }
+        let positions = source["vertices"].as_array().unwrap().iter().flat_map(|point| point.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect::<Vec<_>>();
+        let indices = source["faces"].as_array().unwrap().iter().flat_map(|face| face.as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32)).collect::<Vec<_>>();
+        let mesh = semio_framework_plugin::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
+        let document = generation3d_document_from_mesh(&mesh).unwrap();
+        let projection = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).unwrap();
+        let source_fields = crate::standards::v1::subsets::any::io::mesh_bridge::imported_source(&projection).map(|(kind, data)| (kind.to_owned(), data.to_owned()));
+        let has_mesh_output = projection.host_snapshot.synapses.iter().any(|wire| wire.from_port == "meshOut");
+        projection.retire_cold();
+        let (kind, data) = source_fields.unwrap();
+        assert_eq!(kind, "brep.mesh.construct");
+        let imported: Value = serde_json::from_str(&data).unwrap();
+        assert_eq!(imported["faces"], source["faces"]);
+        let imported_positions = imported["vertices"].as_array().unwrap().iter().flat_map(|point| point.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect::<Vec<_>>();
+        assert_eq!(imported_positions, positions);
+        assert!(has_mesh_output);
+        let result = generation3d_mesh_from_document(&protocol::json::to_dsl_value(&document)).unwrap();
+        assert_eq!(result.indices.len(), indices.len());
+        for (actual, expected) in result.indices.iter().zip(&indices) {
+            assert_eq!(&result.positions[*actual as usize * 3..*actual as usize * 3 + 3], &positions[*expected as usize * 3..*expected as usize * 3 + 3]);
+        }
+        eprintln!("[DEBUG] mesh import {}: {} triangles preserved", case["name"], result.indices.len() / 3);
+    }
 }
 
 #[test]
@@ -1762,6 +1801,7 @@ fn all_bundled_examples_emit_preview_meshes() {
         ("sphere-box-fuse", crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
         ("face-sweep-extrude", crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
         ("rectangle-wire-preview", crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
+        ("mesh-workbench", crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH),
         ("box-shell-preview", crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_SHELL),
     ];
     for (label, example_id) in cases {
@@ -1816,6 +1856,27 @@ fn generation3d_io_declares_the_params_and_geometry_ports() {
 fn preview_widget_fixture(id: &str, output_ports: Vec<String>) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
     let widget = semio_framework_artifact_flow_flow::Widget::Neuron { id: id.into(), neuron_kind: "test.multi".into(), params: semio_framework_artifact_flow_flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports, preview: true };
     semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: "flow.host_snapshot".into(), camera: semio_framework_artifact_flow_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![widget], synapses: Vec::new(), layout: Default::default() }
+}
+
+#[test]
+fn mesh_preview_renders_without_a_brep_conversion_in_editor_and_viewer() {
+    let _serial = test_serial();
+    let fixture = preview_widget_fixture("mesh", vec!["meshOut".into()]);
+    let expected = semio_framework::mesh_box(1.0, 1.0, 1.0);
+    let preview = semio_framework_os_flow::brep_geometry::encode_base64(&semio_framework_os_flow::brep_geometry::encode_mesh_pack(&expected).unwrap());
+    let eval_json = json!({"mesh": {"out": {"meshOut": {"$schema": "mesh", "preview": preview}}}}).to_string();
+    let (meshes, instances) = preview_payload_from_eval(&eval_json, &fixture, &Generation3dConfig::default());
+    let meshes: Vec<Value> = serde_json::from_str(&meshes).unwrap();
+    let instances: Vec<Value> = serde_json::from_str(&instances).unwrap();
+    assert_eq!(meshes.len(), 1);
+    assert_eq!(meshes[0]["role"], "solid");
+    assert_eq!(mesh_data_from_json(&meshes[0]["data"]), expected);
+    assert_eq!(instances[0]["id"], "mesh@meshOut#0");
+    let viewer = crate::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &fixture, &Default::default(), None, &Default::default());
+    let viewer_meshes: Vec<Value> = serde_json::from_str(&viewer.meshes_json).unwrap();
+    assert_eq!(mesh_data_from_json(&viewer_meshes[0]["data"]), expected);
+    eprintln!("[DEBUG] direct mesh preview: editor and viewer each publish {} triangles", expected.indices.len() / 3);
+    fixture.retire_cold();
 }
 
 #[test]
@@ -1897,15 +1958,15 @@ fn preview_payload_emits_no_instance_for_a_pure_data_channel() {
 /// own channel, and an instance-level mark covers only itself.
 #[test]
 fn preview_marks_resolve_node_channel_and_instance_ids() {
-    let node = PreviewInteractionMarks { hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
+    let node = PreviewInteractionMarks { components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(node.hovers("multi", "a", 0) && node.hovers("multi", "b", 3));
     assert!(!node.hovers("other", "a", 0));
 
-    let channel = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+    let channel = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(channel.hovers("multi", "b", 0) && channel.hovers("multi", "b", 7));
     assert!(!channel.hovers("multi", "a", 0));
 
-    let instance = PreviewInteractionMarks { hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
+    let instance = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(instance.hovers("multi", "b", 2));
     assert!(!instance.hovers("multi", "b", 1));
 }
@@ -1921,7 +1982,7 @@ fn preview_payload_marks_every_channel_of_a_hovered_node() {
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
     let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
     let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
     assert_eq!(instances.len(), 2);
@@ -1940,7 +2001,7 @@ fn preview_payload_marks_only_the_hovered_channel() {
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
     let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
     let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
     let hovered: Vec<&str> = instances.iter().filter(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)).filter_map(|entry| entry.get("id").and_then(Value::as_str)).collect();
@@ -1952,7 +2013,7 @@ fn preview_payload_marks_only_the_hovered_channel() {
 /// and its port, which is what the node-graph window paints.
 #[test]
 fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
-    let marks = PreviewInteractionMarks { hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
     assert_eq!(marks.hovered_graph_target(), Some(("multi".to_string(), Some("b".to_string()))));
     assert!(marks.graph_highlight_ids().contains(&"multi".to_string()));
     assert_eq!(marks.graph_selection_ids(), vec!["multi".to_string()]);
@@ -1999,7 +2060,7 @@ fn widget_preview_eligibility_covers_neurons_output_previews_and_clusters() {
 //#region 🔖️ExamplesTests
 /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `examples()`, returned by
 /// `Generation3dPlayApp::examples` and stamped by `.editor`, must
-/// carry the same eight ids, in the same order, as the `setActiveExample` select options this app
+/// carry the same ids, in the same order, as the `setActiveExample` select options this app
 /// declares — otherwise the navbar dropdown and the action's own arg picker disagree.
 #[test]
 fn examples_match_set_active_example_select_options() {
@@ -2013,7 +2074,7 @@ fn examples_match_set_active_example_select_options() {
         })
         .expect("setActiveExample must declare a Select arg");
     let example_ids: Vec<String> = examples().into_iter().map(|source| source.id().to_string()).collect();
-    assert_eq!(example_ids.len(), 8);
+    assert_eq!(example_ids.len(), 9);
     assert_eq!(example_ids, select_ids);
 }
 //#endregion 🔖️ExamplesTests
@@ -2979,3 +3040,274 @@ fn staged_argument_actions_declare_no_trailing_ellipsis() {
     assert!(checked > 0, "no staged-argument action was reached — the law would pass vacuously");
 }
 //#endregion 🔤️StagedArgLabelLaw
+
+#[test]
+fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
+    let _serial = test_serial();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["gumball"].as_array().unwrap() {
+        let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+        crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+            let operation = case["operation"].as_str().unwrap();
+            let id = crate::standards::v1::subsets::any::schema::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
+            let transform = host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).unwrap();
+            assert!(matches!(transform, crate::Widget::Neuron { neuron_kind, preview: true, .. } if neuron_kind == case["operator"].as_str().unwrap()));
+            assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.from_port == "meshOut" && wire.to == id && wire.to_port == case["input"].as_str().unwrap()));
+            assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == case["output"].as_str().unwrap() && wire.to == "analysis"));
+            assert_eq!(crate::standards::v1::subsets::any::schema::ensure_gumball_node(host, &id, operation).unwrap(), id);
+        });
+        snapshot.retire_cold();
+    }
+}
+
+#[test]
+fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
+    let _serial = test_serial();
+    let fixture: Value = serde_json::from_str(include_str!("../../🎯️selection/🧫️fixtures/🔣️.json")).unwrap();
+    for operation in ["extrude", "inset", "subdivide", "flip", "deleteFaces", "moveVertices", "loopCut"] {
+        let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+        let group = &fixture["groups"][match operation { "moveVertices" => 1, "loopCut" => 6, _ => 0 }];
+        let ids = group["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().replace("box@", "extrude@")).collect::<Vec<_>>();
+        let payload = edit_mesh_selection::EditMeshSelection { cuts: 1, operation: operation.into(), amount: 0.05, dx: 0.01, dy: 0.0, dz: 0.0 };
+        let outcome = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+            let id = edit_mesh_selection::insert_operation(host, &payload, &ids)?;
+            let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { crate::Widget::Neuron { id: widget_id, params, preview: true, .. } if widget_id == &id => Some(dsl::json::to_json_string(params)), _ => None });
+            let feeds_analysis = host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh");
+            let evaluation = host.evaluate().map_err(|error| error.to_string())?;
+            Ok::<_, String>((id, params, feeds_analysis, evaluation))
+        });
+        snapshot.retire_cold();
+        let (id, params, feeds_analysis, evaluation) = outcome.unwrap();
+        let params: Value = serde_json::from_str(&params.unwrap()).unwrap();
+        let field = match operation { "moveVertices" => "vertices", "loopCut" => "edges", _ => "faces" };
+        let indices: Value = serde_json::from_str(params[field]["value"].as_str().unwrap()).unwrap();
+        assert_eq!(indices, group["components"]);
+        if operation == "loopCut" { assert_eq!(params["cuts"]["value"], 1); }
+        assert!(feeds_analysis);
+        let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
+        assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{operation}: {evaluation}");
+        eprintln!("[DEBUG] mesh component {operation}: selection={indices}, analysis rewired");
+    }
+}
+
+#[test]
+fn mesh_component_gumball_pins_the_complete_component_set() {
+    let _serial = test_serial();
+    let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let fixtures: Value = serde_json::from_str(include_str!("../../🎮️commands/🧭️transforms/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
+    for case in fixtures["cases"].as_array().unwrap() {
+        let pinned: Vec<String> = serde_json::from_value(case["pinned"].clone()).unwrap();
+        let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
+        assert_eq!(transform_commands::validate_component_gesture(&snapshot.host_snapshot, &pinned, &selected).is_ok(), case["valid"].as_bool().unwrap(), "{}", case["name"]);
+    }
+    crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+        let pinned = vec!["extrude@meshOut#0.face.0".into(), "extrude@meshOut#0.face.1".into()];
+        let mut selected = pinned.clone();
+        for operation in ["translate", "rotate", "scale"] {
+            let (id, mode, components) = transform_commands::ensure_component_node(host, &selected, operation).unwrap();
+            selected = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
+            assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &pinned, &selected).is_ok());
+        }
+    });
+    snapshot.retire_cold();
+}
+
+#[test]
+fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
+    let _serial = test_serial();
+    let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+        for operation in ["translate", "rotate", "scale"] {
+            let ids = ["extrude@meshOut#0.face.0".into(), "extrude@meshOut#0.face.0".into()];
+            let (id, mode, components) = transform_commands::ensure_component_node(host, &ids, operation).unwrap();
+            assert_eq!(mode, "face");
+            assert_eq!(components, vec![0]);
+            let selected = [format!("{id}@meshOut#0.face.0")];
+            assert_eq!(transform_commands::ensure_component_node(host, &selected, operation).unwrap().0, id);
+            assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &["extrude@meshOut#0.face.0".into()], &selected).is_ok());
+            assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &["other@meshOut#0.face.0".into()], &selected).is_err());
+            assert!(host.host_snapshot.synapses.iter().any(|wire| wire.to == id && wire.to_port == "mesh" && wire.from_port == "meshOut"));
+            let changed = [format!("{id}@meshOut#0.face.1")];
+            assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &["extrude@meshOut#0.face.0".into()], &changed).is_err());
+            let (next, _, _) = transform_commands::ensure_component_node(host, &changed, operation).unwrap();
+            assert_ne!(next, id);
+            assert!(host.host_snapshot.synapses.iter().any(|wire| wire.to == next && wire.from == id));
+            assert!(transform_commands::ensure_component_node(host, &["extrude@meshOut#1.face.0".into()], operation).is_err());
+        }
+    });
+    snapshot.retire_cold();
+}
+
+#[test]
+fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
+    let _serial = test_serial();
+    let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let evaluation = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap());
+    let marks = PreviewInteractionMarks {
+        components: selection::ComponentSelection { granularity: "face".into(), selected: vec!["extrude@meshOut#0.face.0".into()], hovered: None },
+        ..Default::default()
+    };
+    let cfg = Generation3dConfig::default();
+    let payload = preview_payload(&evaluation, &snapshot.host_snapshot, &cfg, None, &marks);
+    assert!(payload.component_pivot.is_some());
+    let value: Value = serde_json::from_str(&preview_selection_json(&cfg, "translate", &payload)).unwrap();
+    assert_eq!(value["gumballActive"], true);
+    assert_eq!(value["gumballLiveDispatch"], true);
+    assert_eq!(value["gumballTarget"], serde_json::json!(payload.component_pivot.unwrap()));
+    assert_eq!(value["componentIds"], serde_json::json!([0]));
+    assert_eq!(value["gumballSelectionIds"], serde_json::json!(["extrude@meshOut#0.face.0"]));
+    let value: Value = serde_json::from_str(&preview_selection_json(&cfg, "", &payload)).unwrap();
+    assert_eq!(value["gumballActive"], false);
+    let invalid = PreviewInteractionMarks { components: selection::ComponentSelection { selected: vec!["extrude@meshOut#0.face.9999".into()], ..marks.components.clone() }, ..Default::default() };
+    assert!(preview_payload(&evaluation, &snapshot.host_snapshot, &cfg, None, &invalid).component_pivot.is_none());
+    eprintln!("[DEBUG] component gumball: pivot={:?}, live dispatch enabled", payload.component_pivot);
+    snapshot.retire_cold();
+}
+
+#[test]
+fn mesh_component_action_is_scoped_and_publishes_history_and_selection() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let _serial = test_serial();
+    let definition = create_generation3d_app();
+    for kind in &definition.window_kinds {
+        assert_eq!(kind.actions.iter().any(|action| action.id == "editMeshSelection"), kind.id == edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
+        if let Some(action) = kind.actions.iter().find(|action| action.id == "editMeshSelection") {
+            let cuts = action.args.iter().find(|arg| arg.id == "cuts").unwrap();
+            assert!(matches!(cuts.schema, semio_framework::ArgSchema::Number { min: Some(1.0), max: Some(256.0), step: Some(1.0), integer: true, .. }));
+        }
+    }
+    let geometry = definition.interactions.iter().find(|domain| domain.id == selection::DOMAIN).unwrap();
+    assert_eq!(geometry.hierarchy, HierarchyProvider::Flat);
+    assert_eq!(geometry.granularities.iter().map(|level| level.id.as_str()).collect::<Vec<_>>(), vec!["object", "vertex", "edge", "face"]);
+    let publication = Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "editMeshSelection").unwrap();
+    assert_eq!(publication.lanes, &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connections() {
+    let _serial = test_serial();
+    for (operation, granularity) in [("extrude", "face"), ("loopCut", "edge")] {
+        let mut app = app().await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        context::drain_flow_eval_ticks(&mut app).await;
+        context::select_domain(&mut app, selection::DOMAIN, granularity, &[&format!("extrude@meshOut#0.{granularity}.0")]).await;
+        let probe = |app: &context::Generation3dApp| {
+            let snapshot = context::snapshot(app);
+            (snapshot.host_snapshot.widgets.len(), snapshot.host_snapshot.synapses.iter().find(|wire| wire.to == "analysis" && wire.to_port == "mesh").unwrap().from.clone())
+        };
+        let before = probe(&app);
+        let after = (before.0 + 1, format!("extrude__{operation}"));
+        semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
+            &mut app,
+            Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: operation.into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
+            probe, before, after,
+        ).await;
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+        eprintln!("[DEBUG] mesh component {operation}: undo and redo restore the analysis connection");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_component_commands_reject_stale_topology_before_publication() {
+    let _serial = test_serial();
+    let mut app = app().await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+    context::drain_flow_eval_ticks(&mut app).await;
+    context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.999999"]).await;
+    let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+    let (view, _) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
+    let (flow_view, _) = context::shell_views("procedural-main-test", "procedural-preview-test");
+    for command in [
+        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "inset".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
+        Generation3dCommand::KnifeMeshSelection(knife_mesh_selection::KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] }),
+    ] {
+        let result = context::dispatch_with_view(&mut app, command, view.clone()).await;
+        assert!(result.is_err(), "stale topology must reject the command");
+        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+    }
+    let command = Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude@meshOut#0.vertex.999999".into()], dx: 1.0, dy: 0.0, dz: 0.0 });
+    assert!(context::dispatch_with_view(&mut app, command, flow_view).await.is_err());
+    assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    eprintln!("[DEBUG] stale component commands: rejected before artifact publication");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag() {
+    let _serial = test_serial();
+    for operation in ["translate", "rotate", "scale"] {
+        let mut app = app().await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        context::drain_flow_eval_ticks(&mut app).await;
+        let command = || match operation {
+            "translate" => Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], dx: 0.1, dy: 0.0, dz: 0.0 }),
+            "rotate" => Generation3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
+            _ => Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], sx: 1.1, sy: 1.0, sz: 1.0 }),
+        };
+        let view = context::preview_views("mesh-edit", "second").0;
+        context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.1"]).await;
+        let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+        assert!(context::dispatch_with_view(&mut app, command(), view.clone()).await.is_err());
+        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+        context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
+        context::dispatch_with_view(&mut app, command(), view.clone()).await.unwrap();
+        let id = format!("extrude__{operation}Components");
+        context::select_domain(&mut app, selection::DOMAIN, "face", &[&format!("{id}@meshOut#0.face.1")]).await;
+        let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+        assert!(context::dispatch_with_view(&mut app, command(), view).await.is_err());
+        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+        eprintln!("[DEBUG] component {operation}: changed targets rejected before and during the gesture without artifact mutation");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trips_history() {
+    use semio_framework_plugin::artifact_app_laws::meta;
+    let _serial = test_serial();
+    for operation in ["translate", "rotate", "scale"] {
+        let mut app = app().await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        context::drain_flow_eval_ticks(&mut app).await;
+        let args: dsl::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
+        let admitted = app.handle_action("setInteractionGranularity", Some(&args), &meta("local")).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.unwrap();
+        context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
+        let probe = |app: &context::Generation3dApp| {
+            let snapshot = context::snapshot(app);
+            (snapshot.host_snapshot.widgets.len(), snapshot.host_snapshot.synapses.iter().find(|wire| wire.to == "analysis" && wire.to_port == "mesh").unwrap().from.clone())
+        };
+        let before = probe(&app);
+        let id = format!("extrude__{operation}Components");
+        let command = || match operation {
+            "translate" => Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], dx: 0.1, dy: 0.0, dz: 0.0 }),
+            "rotate" => Generation3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
+            _ => Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], sx: 1.1, sy: 1.0, sz: 1.0 }),
+        };
+        for _ in 0..2 {
+            context::dispatch_with_view(&mut app, command(), context::preview_views("mesh-edit", "second").0).await.unwrap();
+            assert_eq!(probe(&app), (before.0 + 1, id.clone()));
+            assert_eq!(app.interaction_state().await.selection.get(selection::DOMAIN).unwrap().ids, vec![format!("{id}@meshOut#0.face.0")]);
+        }
+        let snapshot = context::snapshot(&app);
+        let evaluation = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+            let widget = crate::standards::v1::subsets::any::schema::gumball_widget_json(host, &id).unwrap();
+            let params = widget.get("params").unwrap();
+            let actual = match operation {
+                "translate" => params.get("offset").unwrap().get("x").unwrap().as_f64().unwrap(),
+                "rotate" => params.get("angle").unwrap().get("value").unwrap().as_f64().unwrap(),
+                _ => params.get("factor").unwrap().get("x").unwrap().as_f64().unwrap(),
+            };
+            assert!((actual - if operation == "scale" { 1.21 } else { 0.2 }).abs() < 1e-9);
+            host.evaluate().unwrap()
+        });
+        let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
+        assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{evaluation}");
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
+        assert_eq!(probe(&app), before);
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
+        assert_eq!(probe(&app), (before.0 + 1, id));
+        eprintln!("[DEBUG] component gumball {operation}: repeated drag, retained selection, evaluation, undo/redo");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    }
+}

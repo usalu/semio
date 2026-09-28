@@ -317,7 +317,7 @@ pub use gpu::GpuContext;
 /// `close_abandoned_step`) — it was reachable only as `gpu::PreparedGpuPresentCursor`, so both call
 /// sites failed `E0425`/`E0433` on every target. Same feature gate as `mod gpu` itself.
 #[cfg(feature = "wgpu-engine")]
-pub use gpu::PreparedGpuPresentCursor;
+pub use gpu::{PreparedGpuPresentCursor, PreparedGpuReadback};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
@@ -361,7 +361,7 @@ pub use kernel_3d_scene::{
     mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance,
     rect_contains, rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem,
     Mesh3dItemCursor, Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, ProceduralGrid3d, SceneColorSource3d, SceneDraw3d, SceneInstanceMaterial3d, SceneLighting3d, SceneMaterial3d, SceneMaterialDraw3d,
-    SceneMaterialKind3d, ScenePass3d, SceneShadow3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d, Vec3, Vec3Math, ICON_SHADOW_MAP_SIZE, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH, PROCEDURAL_GRID_SECTION_THICKNESS,
+    SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneMaterialKind3d, ScenePass3d, SceneRenderProfile3d, SceneShadow3d, SceneShadowRole3d, SceneTextureFilter3d, SceneTextureSampler3d, SceneTextureWrap3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, Vec3, Vec3Math, ICON_SHADOW_MAP_SIZE, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH, PROCEDURAL_GRID_SECTION_THICKNESS,
     WORLD_FRAME_BOUNDS_MARGIN, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,
 };
 pub use kernel_3d_scene::{

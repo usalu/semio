@@ -1,0 +1,17 @@
+{
+  "schema": "framework.ui.retained-frame-progress/v1",
+  "sameSizeOriginMove": {
+    "initial": [12, 18, 240, 160],
+    "moved": [112, 118, 240, 160],
+    "expectedAcceptedOrigin": [112, 118]
+  },
+  "sceneBackpressure": {
+    "externalCompleted": [0, 0, 1],
+    "expectedProgress": ["changed", "stable", "changed"]
+  },
+  "publication": {
+    "draw": "acceptedOnly",
+    "hit": "acceptedOnly",
+    "origin": "singleAcceptedViewport"
+  }
+}

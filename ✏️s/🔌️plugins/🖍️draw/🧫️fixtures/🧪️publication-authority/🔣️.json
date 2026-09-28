@@ -178,6 +178,60 @@
           "lanes": [
             "artifact"
           ]
+        },
+        {
+          "id": "nudgeSelectionLeft",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionLeftFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionRight",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionRightFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionUp",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionUpFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionDown",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionDownFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "deleteSelection",
+          "lanes": [
+            "artifact"
+          ]
         }
       ],
       "laws": {

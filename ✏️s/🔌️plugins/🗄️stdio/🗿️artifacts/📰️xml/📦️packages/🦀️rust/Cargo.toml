@@ -31,5 +31,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+quick-xml = "0.39.4"
+semio-framework-ui-scene = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

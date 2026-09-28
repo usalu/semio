@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import { ephemeralBox, type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
+import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 
 /** @emoji 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
 export type { TreeWindowRowExtent };
@@ -1527,6 +1528,7 @@ interface SortableTreeItemProps {
  * TreeItemProps holds the data fields for a TreeItemProps record.
  **/
 interface TreeItemProps {
+  focusPath?: readonly string[];
   label?: React.ReactNode;
   id?: string;
   icon?: React.ReactNode;
@@ -2503,6 +2505,7 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
  * fires. The value column stops propagation, so a header slider keeps its own gesture.
  **/
 export const TreeItem: React.FC<TreeItemProps> = ({
+  focusPath,
   label,
   id,
   icon,
@@ -2553,6 +2556,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   windowRowIndex,
   windowRowExtent,
 }) => {
+  const disclosureLabelId = reactHostPort.useId();
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const controlHint = useControlAccessibleLabel(id);
@@ -2608,6 +2612,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const driverSurfaceDrag = useUiDriverDragSurface();
+  const LeafLabel = activatable && !isExpandable ? "button" : "span";
+  const leafActionClassName = LeafLabel === "button" ? "p-0 border-0 bg-transparent text-start" : undefined;
   const resolvedDragRoles: readonly TreeDragRole[] =
     dragRoles ?? (driverSurfaceDrag ? [] : draggable ? (dragInitiation === "surface" ? [] : deriveTreeDragRoles({ draggable, isDragHandle }, Boolean(transferPointerDown))) : isDragHandle ? ["sort"] : []);
   const effectiveDragInitiation = driverSurfaceDrag ? "surface" : dragInitiation;
@@ -2660,6 +2666,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       <div
         data-dim
         data-slot="tree-property-item"
+        data-tree-focus-path={focusPath ? JSON.stringify(focusPath.slice(-64)) : undefined}
         data-hover-scope
         data-tree-window-row={windowRowIndex}
         style={windowRowStyle}
@@ -2667,6 +2674,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
         aria-selected={isSelected}
+        aria-expanded={isExpandable ? open : undefined}
         data-selected={isSelected ? "true" : undefined}
         data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
@@ -2706,6 +2714,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             isExpandable ? (
               <button
                 type="button"
+                aria-labelledby={disclosureLabelId}
+                aria-expanded={open}
                 className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
                 onClick={(event) => {
                   event.preventDefault();
@@ -2723,14 +2733,16 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={cn(treePropertyHeaderGridClassName, treeInspectorInnerRowClassName)} style={treePropertyHeaderGridStyle}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text", rowEmphasized)}
-              <span
+              <LeafLabel
+                id={disclosureLabelId}
+                type={LeafLabel === "button" ? "button" : undefined}
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text", leafActionClassName)}
                 style={treePresentationLabelStyle}
               >
                 {resolvedLabel as React.ReactNode}
-              </span>
+              </LeafLabel>
             </div>
             <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")} onClick={(event) => event.stopPropagation()}>
               {!isExpandable ? (
@@ -2780,6 +2792,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             <div
               data-dim
               data-slot="tree-item-row"
+              data-tree-focus-path={focusPath ? JSON.stringify(focusPath.slice(-64)) : undefined}
               data-hover-scope
               data-tree-window-row={windowRowIndex}
               style={windowRowStyle}
@@ -2790,6 +2803,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               {...treeRowDragPayloadAttributes(dragData)}
               role="treeitem"
               aria-selected={isSelected}
+              aria-expanded={open}
               data-selected={isSelected ? "true" : undefined}
               data-highlighted={isHighlighted ? "true" : undefined}
               id={id}
@@ -2826,6 +2840,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 extendBranchStem={open && hasChildren}
                 slot={
                   <button
+                    type="button"
+                    aria-labelledby={disclosureLabelId}
+                    aria-expanded={open}
                     className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
                     onClick={(e) => {
                       e.preventDefault();
@@ -2842,7 +2859,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                   <div className={treeHeaderMainClassName}>
                     {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                    <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treePresentationLabelStyle}>
+                    <span id={disclosureLabelId} data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treePresentationLabelStyle}>
                       {resolvedLabel as React.ReactNode}
                     </span>
                   </div>
@@ -2919,6 +2936,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-tree-window-row={windowRowIndex}
         style={windowRowStyle}
         data-tree-row-kind="leaf"
+        data-tree-focus-path={focusPath ? JSON.stringify(focusPath.slice(-64)) : undefined}
         data-activatable={activatable ? "true" : undefined}
         data-draggable={draggable ? "true" : undefined}
         {...treeRowDragPayloadAttributes(dragData)}
@@ -2946,9 +2964,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
-              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && effectiveDragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treePresentationLabelStyle}>
+              <LeafLabel type={LeafLabel === "button" ? "button" : undefined} data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && effectiveDragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass, leafActionClassName)} style={treePresentationLabelStyle}>
                 {resolvedLabel as React.ReactNode}
-              </span>
+              </LeafLabel>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
             {branchCount > 0 && (
@@ -3429,6 +3447,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   return (
     <TreeItem
       id={item.id}
+      focusPath={path}
       label={hasControl ? item.label : getTreeItemLabel(item)}
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}
@@ -4036,6 +4055,10 @@ export const Tree = (({
 
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
   useTreeSelectionPathSync(treeRootRef, resolvedSelectedIds);
+  reactHostPort.useLayoutEffect(() => {
+    const root = treeRootRef.current;
+    return root ? retainTreeFocus(root) : undefined;
+  }, [treeRootRef]);
 
   const orderedSections = direction === "up" ? [...orderedByPreference].reverse() : orderedByPreference;
 
@@ -4046,6 +4069,7 @@ export const Tree = (({
         <div
           ref={treeRootRef}
           data-slot="tree"
+          tabIndex={-1}
           data-tree-presentation={presentation}
           role="tree"
           aria-multiselectable={selectionMode === "multiple" ? true : undefined}

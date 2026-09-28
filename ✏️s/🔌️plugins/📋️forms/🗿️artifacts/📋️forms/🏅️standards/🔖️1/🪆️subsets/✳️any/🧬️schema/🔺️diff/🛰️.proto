@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s.forms.forms.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🛰️.proto";
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🛰️.proto";
 message FormsTitleChange {
   oneof operation {
     string value = 1;
@@ -14,4 +16,6 @@ message FormsDiff {
   FormsTitleChange title = 4;
   semio.os.store.ArtifactChild structure = 5;
   semio.os.store.ArtifactChild results = 6;
+  semio.s.forms.forms.definition.FormsDefinition definition = 7;
+  semio.s.forms.forms.response.FormsResponsesChange responses = 8;
 }

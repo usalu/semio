@@ -2,24 +2,24 @@
 //! document's flattened scene (`flatten_drawing_document_to_scene_nodes`, the same projection the
 //! canvas draws) as one PDF 1.4 page of vector content — path/shape/boolean/trace outlines with solid
 //! fills, axial/radial shading fills, strokes (width, cap, join, dash), layer opacity and blend mode
-//! through ExtGStates, text through Helvetica, and image layers as Flate-encoded RGB XObjects with an
+//! through isolated transparency forms and ExtGStates, text through Helvetica, and image layers as RGB XObjects with an
 //! alpha SMask. The page is the artboard; drawing space (y down) is mapped onto PDF space (y up) by
 //! one base CTM, so every node keeps its own matrix verbatim.
 //!
 //! 🧾️ `IoFidelity::Lossy`: text is limited to Helvetica/WinAnsi (no font embedding), gradient-stop
-//! alpha is folded into the layer opacity. Scene nodes carry composed group and text-origin transforms.
+//! alpha is not represented. Scene nodes carry composed group and text-origin transforms, plus isolated group ancestry.
 //!
 //! 📖️ Why draw writes its own bytes: `s.stdio.pdf`'s snapshots (1.4 and 1.7) are text-only page
 //! models — `encode_pdf` regenerates a content stream FROM `PageDoc.text` and has no path-painting
 //! operator emission — so routing through them would lose every outline. The COS syntax needed here
 //! (object table, classic `xref`, one page tree) is small enough to state locally and exactly.
 
-use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard, DrawingSceneNode};
+use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard, DrawingSceneGroup, DrawingSceneNode};
 use crate::{DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId::ANY };
@@ -44,25 +44,57 @@ impl Serializer<DrawingSnapshot> for DrawingIntoPdf {
 /// 📄️ The whole document as one PDF 1.4 page (the artboard) of vector content — see the module doc.
 pub fn drawing_document_to_pdf(doc: &DrawingSnapshot) -> Result<Vec<u8>, String> {
     let (width, height) = resolve_drawing_artboard(doc).map_or(DEFAULT_PAGE, |artboard| (artboard.width, artboard.height));
-    if !(width.is_finite() && height.is_finite() && width > 0.0 && height > 0.0) {
-        return Err("the drawing artboard has no positive finite size".into());
-    }
-    let mut writer = PdfWriter::default();
-    let mut content = String::new();
-    // 🔃️ Drawing space is y-down; PDF space is y-up: one base CTM flips the page so every node keeps
-    // its own matrix, path and text coordinates verbatim.
-    let _ = writeln!(content, "q 1 0 0 -1 0 {} cm", num(height));
-    for node in flatten_drawing_document_to_scene_nodes(doc) {
-        if !node.visible || node.opacity <= 0.0 {
-            continue;
-        }
-        paint_node(&mut writer, &mut content, doc, &node)?;
-    }
-    content.push_str("Q\n");
-    writer.finish(width, height, content.as_bytes())
+    drawing_scene_to_pdf(doc,&flatten_drawing_document_to_scene_nodes(doc),width,height)
 }
 
-fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapshot, node: &DrawingSceneNode) -> Result<(), String> {
+fn drawing_scene_to_pdf(doc:&DrawingSnapshot,nodes:&[DrawingSceneNode],width:f64,height:f64)->Result<Vec<u8>,String> {
+    if !(width.is_finite() && height.is_finite() && width>0.0 && height>0.0) {
+        return Err("the drawing artboard has no positive finite size".into());
+    }
+    let mut writer=PdfWriter::default();
+    let mut content=PdfContent::default();
+    let mut stack:Vec<(&DrawingSceneGroup,PdfContent)>=Vec::new();
+    let mut opened=BTreeSet::new();
+    let _=writeln!(content.body,"q 1 0 0 -1 0 {} cm",num(height));
+    for node in nodes {
+        let common=stack.iter().zip(&node.groups).take_while(|((group,_),next)|*group==*next).count();
+        while stack.len()>common {close_group(&mut writer,&mut content,&mut stack,width,height)?;}
+        for group in &node.groups[common..] {
+            if group.id.is_empty() || !opened.insert(group.id.as_str()) || !valid_composite(group.opacity,&group.blend_mode) {
+                return Err("Invalid scene compositing hierarchy".into());
+            }
+            stack.push((group,PdfContent::default()));
+        }
+        if !valid_composite(node.opacity,&node.blend_mode) {return Err("Invalid layer compositing properties".into());}
+        if !node.visible || node.opacity==0.0 {continue;}
+        let target=stack.last_mut().map_or(&mut content,|(_,content)|content);
+        if node.opacity!=1.0 || node.blend_mode!="normal" {
+            let mut leaf=PdfContent::default();
+            paint_node(&mut writer,&mut leaf,doc,node)?;
+            let form=writer.transparency_form(width,height,leaf)?;
+            writer.paint_form(target,&form,node.opacity,&node.blend_mode);
+        } else {paint_node(&mut writer,target,doc,node)?;}
+    }
+    while !stack.is_empty() {close_group(&mut writer,&mut content,&mut stack,width,height)?;}
+    content.body.push_str("Q\n");
+    writer.finish(width,height,content)
+}
+
+fn valid_composite(opacity:f64,blend:&str)->bool {
+    opacity.is_finite() && (0.0..=1.0).contains(&opacity) && matches!(blend,"normal"|"multiply"|"screen"|"overlay"|"darken"|"lighten"|"colorDodge"|"colorBurn"|"hardLight"|"softLight"|"difference"|"exclusion"|"hue"|"saturation"|"color"|"luminosity")
+}
+
+fn close_group(writer:&mut PdfWriter,root:&mut PdfContent,stack:&mut Vec<(&DrawingSceneGroup,PdfContent)>,width:f64,height:f64)->Result<(),String> {
+    let (group,content)=stack.pop().expect("an open compositing group");
+    let form=writer.transparency_form(width,height,content)?;
+    let parent=stack.last_mut().map_or(root,|(_,content)|content);
+    writer.paint_form(parent,&form,group.opacity,&group.blend_mode);
+    Ok(())
+}
+
+fn paint_node(writer: &mut PdfWriter, content: &mut PdfContent, doc: &DrawingSnapshot, node: &DrawingSceneNode) -> Result<(), String> {
+    let resources=&mut content.resources;
+    let content=&mut content.body;
     let fill_alpha = match &node.fill {
         Some(FillStyle::Solid { color }) => color[3],
         Some(_) | None => 1.0,
@@ -80,8 +112,9 @@ fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapsho
     if node.transform != [1.0, 0.0, 0.0, 1.0, 0.0, 0.0] {
         let _ = writeln!(content, "{} {} {} {} {} {} cm", num(a), num(b), num(c), num(d), num(e), num(f));
     }
-    let state = writer.ext_g_state((node.opacity * fill_alpha).clamp(0.0, 1.0), (node.opacity * stroke_alpha).clamp(0.0, 1.0), &node.blend_mode);
+    let state = writer.ext_g_state(fill_alpha.clamp(0.0, 1.0), stroke_alpha.clamp(0.0, 1.0), "normal");
     if let Some(state) = state {
+        resources.insert(state.clone());
         let _ = writeln!(content, "/{state} gs");
     }
     if paints_geometry {
@@ -108,6 +141,7 @@ fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapsho
             Some(gradient) => {
                 // 🌈️ Shading fills paint through the outline as a clip, then the outline strokes on top.
                 let shading = writer.shading(gradient)?;
+                resources.insert(shading.clone());
                 content.push_str("q\n");
                 content.push_str(&path);
                 let _ = writeln!(content, "{}", if fill_rule_star { "W* n" } else { "W n" });
@@ -127,9 +161,11 @@ fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapsho
     if let Some(text) = &node.text {
         if !text.content.is_empty() && text.size > 0.0 && (has_fill || has_stroke) {
             let font = writer.helvetica();
+            resources.insert(font.clone());
             if has_stroke { stroke_ops(content, node.stroke.as_ref().expect("stroke checked above")); }
             let gradient = node.fill.as_ref().filter(|fill| has_fill && !matches!(fill, FillStyle::Solid { .. }));
             let shading = gradient.map(|fill| writer.shading(fill)).transpose()?;
+            if let Some(shading)=&shading {resources.insert(shading.clone());}
             let color = match &node.fill { Some(FillStyle::Solid { color }) => *color, _ => [0.0, 0.0, 0.0, 1.0] };
             for (index, line) in semio_s_2d::text::drawing_text_lines(&text.content).enumerate() {
                 if line.is_empty() { continue; }
@@ -148,6 +184,7 @@ fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapsho
     if let Some(image) = &node.image {
         if image.width > 0.0 && image.height > 0.0 {
             if let Some(name) = writer.image(doc, &image.src)? {
+                resources.insert(name.clone());
                 // 🖼️ The unit square's top row is v = 1: under the flipped page a `-h` scale with a
                 // `+h` offset keeps the image upright at the node origin.
                 let _ = writeln!(content, "q {} 0 0 {} 0 {} cm /{name} Do Q", num(image.width), num(-image.height), num(image.height));
@@ -166,15 +203,15 @@ fn fill_paints(fill: &FillStyle) -> bool {
 }
 
 fn stroke_ops(content: &mut String, stroke: &StrokeStyle) {
-    let cap = match stroke.cap.as_str() {
-        "round" => 1,
-        "square" => 2,
-        _ => 0,
+    let cap = match stroke.cap {
+        crate::StrokeCap::Butt => 0,
+        crate::StrokeCap::Round => 1,
+        crate::StrokeCap::Square => 2,
     };
-    let join = match stroke.join.as_str() {
-        "round" => 1,
-        "bevel" => 2,
-        _ => 0,
+    let join = match stroke.join {
+        crate::StrokeJoin::Miter => 0,
+        crate::StrokeJoin::Round => 1,
+        crate::StrokeJoin::Bevel => 2,
     };
     let _ = writeln!(content, "{} {} {} RG {} w {cap} J {join} j", num(stroke.color[0]), num(stroke.color[1]), num(stroke.color[2]), num(stroke.width));
     match stroke.dash.as_deref() {
@@ -338,6 +375,12 @@ fn arc_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation: f64, large_arc: boo
 //#endregion 🔖️Paths
 
 //#region 🔖️Writer
+#[derive(Default)]
+struct PdfContent {
+    body:String,
+    resources:BTreeSet<String>,
+}
+
 /// 🧾️ One PDF file under construction: the object table plus the page's resource dictionaries.
 #[derive(Default)]
 struct PdfWriter {
@@ -347,6 +390,8 @@ struct PdfWriter {
     shadings: Vec<(String, u32)>,
     images: BTreeMap<String, Option<String>>,
     image_objects: Vec<(String, u32)>,
+    form_objects: Vec<(String,u32)>,
+    resource_entries:BTreeMap<String,(&'static str,String)>,
 }
 
 impl PdfWriter {
@@ -367,6 +412,7 @@ impl PdfWriter {
         if self.font.is_none() {
             let number = self.allocate(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".to_vec());
             self.font = Some(number);
+            self.resource_entries.insert("F1".into(),("Font",format!("{number} 0 R")));
         }
         "F1".into()
     }
@@ -380,10 +426,10 @@ impl PdfWriter {
             "overlay" => "Overlay",
             "darken" => "Darken",
             "lighten" => "Lighten",
-            "color-dodge" => "ColorDodge",
-            "color-burn" => "ColorBurn",
-            "hard-light" => "HardLight",
-            "soft-light" => "SoftLight",
+            "colorDodge" => "ColorDodge",
+            "colorBurn" => "ColorBurn",
+            "hardLight" => "HardLight",
+            "softLight" => "SoftLight",
             "difference" => "Difference",
             "exclusion" => "Exclusion",
             "hue" => "Hue",
@@ -400,6 +446,7 @@ impl PdfWriter {
             return Some(name.clone());
         }
         let name = format!("GS{}", self.ext_g_states.len() + 1);
+        self.resource_entries.insert(name.clone(),("ExtGState",dictionary.clone()));
         self.ext_g_states.insert(dictionary, name.clone());
         Some(name)
     }
@@ -415,6 +462,7 @@ impl PdfWriter {
         let number = self.allocate(format!("<< /ShadingType {kind} /ColorSpace /DeviceRGB /Coords [{coords}] /Function {function} 0 R /Extend [true true] >>").into_bytes());
         let name = format!("Sh{}", self.shadings.len() + 1);
         self.shadings.push((name.clone(), number));
+        self.resource_entries.insert(name.clone(),("Shading",format!("{number} 0 R")));
         Ok(name)
     }
 
@@ -491,40 +539,51 @@ impl PdfWriter {
         let number = self.allocate(stream(&format!("/Type /XObject /Subtype /Image /Width {} /Height {} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode{smask_entry}", raster.width, raster.height), &data));
         let name = format!("Im{}", self.image_objects.len() + 1);
         self.image_objects.push((name.clone(), number));
+        self.resource_entries.insert(name.clone(),("XObject",format!("{number} 0 R")));
         self.images.insert(src.to_owned(), Some(name.clone()));
         Ok(Some(name))
     }
 
-    /// 📦️ Catalog, page tree, the one page, its content stream and every resource dictionary, then
-    /// the classic cross-reference table and trailer.
-    fn finish(mut self, width: f64, height: f64, content: &[u8]) -> Result<Vec<u8>, String> {
+    fn transparency_form(&mut self,width:f64,height:f64,content:PdfContent)->Result<String,String> {
+        let resources=self.resources(&content.resources);
+        let data=zlib(content.body.as_bytes())?;
+        let number=self.allocate(stream(&format!("/Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 {} {}] /Group << /S /Transparency /CS /DeviceRGB /I true /K false >> /Resources {resources} /Filter /FlateDecode",num(width),num(height)),&data));
+        let name=format!("Fm{}",self.form_objects.len()+1);
+        self.form_objects.push((name.clone(),number));
+        self.resource_entries.insert(name.clone(),("XObject",format!("{number} 0 R")));
+        Ok(name)
+    }
+
+    fn paint_form(&mut self,content:&mut PdfContent,name:&str,opacity:f64,blend:&str) {
+        content.body.push_str("q\n");
+        if let Some(state)=self.ext_g_state(opacity,opacity,blend) {
+            let _=writeln!(content.body,"/{state} gs");
+            content.resources.insert(state);
+        }
+        let _=writeln!(content.body,"/{name} Do\nQ");
+        content.resources.insert(name.into());
+    }
+
+    fn resources(&self,used:&BTreeSet<String>)->String {
+        let mut kinds:BTreeMap<&str,Vec<String>>=BTreeMap::new();
+        for name in used {
+            let (kind,entry)=self.resource_entries.get(name).expect("a declared PDF paint resource");
+            kinds.entry(kind).or_default().push(format!("/{name} {entry}"));
+        }
+        let mut resources=String::from("<<");
+        for (kind,entries) in kinds {let _=write!(resources," /{kind} << {} >>",entries.join(" "));}
+        resources.push_str(" >>");
+        resources
+    }
+
+    /// 📦️ Catalog, page tree, content and scoped resources, followed by the classic cross-reference table.
+    fn finish(mut self, width: f64, height: f64, content: PdfContent) -> Result<Vec<u8>, String> {
         let catalog = self.reserve();
         let pages = self.reserve();
         let page = self.reserve();
-        let compressed = zlib(content)?;
+        let compressed = zlib(content.body.as_bytes())?;
         let contents = self.allocate(stream("/Filter /FlateDecode", &compressed));
-        let mut resources = String::from("<< /ProcSet [/PDF /Text /ImageC]");
-        if let Some(font) = self.font {
-            let _ = write!(resources, " /Font << /F1 {font} 0 R >>");
-        }
-        if !self.ext_g_states.is_empty() {
-            let mut states: Vec<(&String, &String)> = self.ext_g_states.iter().map(|(dictionary, name)| (name, dictionary)).collect();
-            states.sort();
-            let mut entries = String::new();
-            for (name, dictionary) in states {
-                let _ = write!(entries, " /{name} {dictionary}");
-            }
-            let _ = write!(resources, " /ExtGState <<{entries} >>");
-        }
-        if !self.shadings.is_empty() {
-            let entries = self.shadings.iter().map(|(name, number)| format!("/{name} {number} 0 R")).collect::<Vec<_>>().join(" ");
-            let _ = write!(resources, " /Shading << {entries} >>");
-        }
-        if !self.image_objects.is_empty() {
-            let entries = self.image_objects.iter().map(|(name, number)| format!("/{name} {number} 0 R")).collect::<Vec<_>>().join(" ");
-            let _ = write!(resources, " /XObject << {entries} >>");
-        }
-        resources.push_str(" >>");
+        let resources=self.resources(&content.resources);
         self.set(catalog, format!("<< /Type /Catalog /Pages {pages} 0 R >>").into_bytes());
         self.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>").into_bytes());
         self.set(page, format!("<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 {} {}] /Contents {contents} 0 R /Resources {resources} >>", num(width), num(height)).into_bytes());

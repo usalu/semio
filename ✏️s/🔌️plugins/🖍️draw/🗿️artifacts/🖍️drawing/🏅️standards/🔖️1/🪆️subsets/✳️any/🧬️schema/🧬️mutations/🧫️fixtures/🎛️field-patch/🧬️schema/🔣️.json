@@ -29,7 +29,8 @@
             "visible",
             "locked",
             "fillEnabled",
-            "strokeEnabled"
+            "strokeEnabled",
+            "isolation"
           ]
         },
         "value": {
@@ -140,7 +141,17 @@
             "screen",
             "overlay",
             "darken",
-            "lighten"
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity"
           ]
         }
       },
@@ -274,6 +285,27 @@
         "value"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "fillRule"
+          ]
+        },
+        "value": {
+          "enum": [
+            "evenodd",
+            "nonzero"
+          ]
+        }
+      }
     }
   ]
 }

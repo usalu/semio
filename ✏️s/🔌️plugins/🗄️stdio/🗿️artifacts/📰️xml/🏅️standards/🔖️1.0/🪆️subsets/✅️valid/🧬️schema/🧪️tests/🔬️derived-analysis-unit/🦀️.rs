@@ -9,6 +9,7 @@ mod tests {
                 declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone, ..Default::default() }),
                 doctype: doctype.map(Into::into),
                 prolog: Vec::new(),
+                epilog: Vec::new(),
                 root: Some(XmlNode::Element { name: root_name.into(), attrs: Vec::new(), children: Vec::new() }),
             },
             ..XmlSnapshot::default()

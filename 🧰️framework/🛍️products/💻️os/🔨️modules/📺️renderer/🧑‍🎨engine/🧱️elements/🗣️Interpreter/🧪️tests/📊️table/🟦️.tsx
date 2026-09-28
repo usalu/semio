@@ -6,7 +6,7 @@ type TestSource = { readonly url: string };
  * windows' own spacers, and the keyboard moves one tab stop across rows the host has not streamed yet.
  * Testing Library's role queries are the third-party oracle for the accessibility tree. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { TreeWindowContext, UiDocumentStore, UiNodeView, tableWindowNextRowV1, tableWindowScrollTopForRowV1 } = dependencies;
+  const { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, treeWindowRowHeightPx } = dependencies;
   const { describe, expect, it, afterEach } = vitest;
 
   const { cleanup, fireEvent, render, screen } = await import("@semio-tech/ui-react/test");
@@ -15,14 +15,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
 
   const fixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance/🧩️component/📊️table");
   const snapshot = JSON.parse(readFileSync(join(fixtureDir, "📸️snapshot.json"), "utf8"));
+  const matrixFixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis");
+  const matrixFixture = JSON.parse(readFileSync(join(matrixFixtureDir, "🔣️.json"), "utf8"));
+  const matrixSchema = JSON.parse(readFileSync(join(matrixFixtureDir, "🧬️schema/🔣️.json"), "utf8"));
 
-  function mount(onIntent: (intent: any) => void, windows: unknown = null) {
-    const store = new UiDocumentStore(snapshot.surface);
-    store.loadSnapshot(snapshot);
-    const view = createElement(UiNodeView, { store, id: snapshot.root, context: { store, onAction: () => {}, onIntent } });
+  function mount(onIntent: (intent: any) => void, windows: unknown = null, sourceSnapshot: any = snapshot) {
+    const store = new UiDocumentStore(sourceSnapshot.surface);
+    store.loadSnapshot(sourceSnapshot);
+    const view = createElement(UiNodeView, { store, id: sourceSnapshot.root, context: { store, onAction: () => {}, onIntent } });
     return render(windows ? createElement(TreeWindowContext.Provider, { value: windows }, view) : view);
   }
 
@@ -46,7 +50,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.getAttribute("data-tree-window-length")).toBe("2");
       expect(grid.querySelector<HTMLElement>("[data-tree-window-spacer='leading']")!.style.height).toBe(`${12 * treeRowHeightPx}px`);
       expect(grid.querySelector<HTMLElement>("[data-tree-window-spacer='trailing']")!.style.height).toBe(`${26 * treeRowHeightPx}px`);
-      expect(screen.getByRole("status").textContent).toBe("Rows 13–14 of 40");
+      expect(screen.getByRole("status").textContent).toBe("Rows 13–14 of 40 · 1–2 / 2");
     });
 
     it("keeps one tab stop and fires a row's own activation on Enter", () => {
@@ -64,6 +68,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(document.activeElement).toBe(rows[1]);
     });
 
+    it("renders windowed cell children as accessible local drafts and commits the typed value", () => {
+      const intents: any[] = [];
+      mount((intent) => intents.push(intent));
+      const name = screen.getByRole("textbox", { name: "Name" });
+      expect(name.getAttribute("value")).toBe("Atelier Ada");
+      const row = name.closest<HTMLElement>("[role='row']")!;
+      fireEvent.click(row);
+      fireEvent.doubleClick(row);
+      expect(intents).toEqual([]);
+      fireEvent.doubleClick(name);
+      expect(intents).toEqual([]);
+      fireEvent.change(name, { target: { value: "Atelier Neu" } });
+      fireEvent.blur(name);
+      expect(intents).toHaveLength(1);
+      expect(intents[0].action.name).toBe("set-cell");
+      expect(intents[0].args).toEqual({ row: 12, column: 0, revision: "0123456789abcdef" });
+      expect(intents[0].input).toBe("Atelier Neu");
+      const remove = screen.getByRole("button", { name: "Remove row: Atelier Ada" });
+      remove.focus();
+      expect(document.activeElement).toBe(remove);
+      fireEvent.click(remove);
+      expect(intents).toHaveLength(2);
+      expect(intents[1].action.name).toBe("remove-row");
+      expect(intents[1].args).toEqual({ row: 12, revision: "0123456789abcdef" });
+    });
+
     it("scrolls a row the host has not streamed into view and reports the window it needs", async () => {
       const reports: any[] = [];
       mount(() => {}, { bodyKey: "framework.window.table", openStates: {}, setOpen: () => {}, reportWindows: (requests: unknown, viewportRows: number) => reports.push({ requests, viewportRows }) });
@@ -73,9 +103,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       let scrollTop = 0;
       const rect = (top: number, height: number) => ({ top, bottom: top + height, left: 0, right: 0, width: 0, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
       Object.defineProperty(scroller, "scrollTop", { get: () => scrollTop, set: (value: number) => { scrollTop = value; }, configurable: true });
-      Object.defineProperty(scroller, "clientHeight", { value: 10 * treeRowHeightPx, configurable: true });
+      const viewportHeight = 10 * treeWindowRowHeightPx();
+      Object.defineProperty(scroller, "clientHeight", { value: viewportHeight, configurable: true });
       Object.defineProperty(scroller, "scrollHeight", { value: 40 * treeRowHeightPx, configurable: true });
-      scroller.getBoundingClientRect = () => rect(0, 10 * treeRowHeightPx);
+      scroller.getBoundingClientRect = () => rect(0, viewportHeight);
       container.getBoundingClientRect = () => rect(-scrollTop, 40 * treeRowHeightPx);
       for (const row of Array.from(container.querySelectorAll<HTMLElement>("[data-tree-window-row]"))) {
         const index = Number(row.getAttribute("data-tree-window-row"));
@@ -83,7 +114,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       const rows = Array.from(grid.querySelectorAll<HTMLElement>("[role='row']")).slice(1);
       fireEvent.keyDown(rows[1]!, { key: "End" });
-      expect(scrollTop).toBe((40 - 10) * treeRowHeightPx);
+      expect(scrollTop).toBe(40 * treeRowHeightPx - viewportHeight);
       scroller.dispatchEvent(new Event("scroll"));
       await new Promise((resolve) => setTimeout(resolve, 60));
       const last = reports.at(-1);
@@ -109,6 +140,49 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(tableWindowScrollTopForRowV1(39, 20, 0, 200)).toBe(600);
       expect(tableWindowScrollTopForRowV1(3, 20, 200, 200)).toBe(60);
       expect(tableWindowScrollTopForRowV1(12, 20, 200, 200)).toBe(200);
+    });
+
+    it("windows columns independently and preserves their logical addresses", () => {
+      const validate = new Ajv2020({ strict: true }).compile(matrixSchema);
+      expect(validate(matrixFixture), JSON.stringify(validate.errors)).toBe(true);
+      const wide = structuredClone(snapshot);
+      const table = wide.nodes[0].component;
+      table.columns = matrixFixture.headers;
+      table.rowLabel = "Row";
+      table.columnLabel = "Column";
+      table.columnWindow = { total: matrixFixture.columnTotal, offset: matrixFixture.columnOffset, rowExtent: "standard" };
+      for (const [rowPosition, rowId] of wide.nodes[0].children.entries()) {
+        const row = wide.nodes.find((node: any) => node.id === rowId);
+        row.component.cells = matrixFixture.cells[rowPosition];
+        for (const [cellPosition, childId] of row.children.filter((id: number) => !wide.nodes.find((node: any) => node.id === id)?.key.startsWith("row-action-")).entries()) {
+          const cell = wide.nodes.find((node: any) => node.id === childId);
+          cell.key = `cell-${matrixFixture.columnOffset + cellPosition}`;
+          cell.component.value = matrixFixture.cells[rowPosition][cellPosition];
+          cell.accessibility.label = matrixFixture.headers[cellPosition];
+          cell.bindings[0].args.column = matrixFixture.columnOffset + cellPosition;
+        }
+      }
+      mount(() => {}, null, wide);
+      const grid = screen.getByRole("grid", { name: "Spaces" });
+      expect(grid.getAttribute("aria-colcount")).toBe("1001");
+      expect(Array.from(grid.querySelectorAll<HTMLElement>("[role='columnheader']")).slice(0, 3).map((header) => header.getAttribute("aria-colindex"))).toEqual(["701", "702", "703"]);
+      expect(Array.from(grid.querySelectorAll<HTMLElement>("[role='gridcell'][data-table-column-index]")).slice(0, 3).map((cell) => cell.getAttribute("data-table-column-index"))).toEqual(["700", "701", "702"]);
+      expect(screen.getByRole("status").textContent).toContain("Column: 701–703 / 1000");
+      expect(tableColumnWindowRequestV1("spaces.columns", 1000, 700 * 192, 3 * 192)).toEqual({ nodeKey: "spaces.columns", offset: 699, rows: 5 });
+      expect(tableWindowNextColumnV1("ArrowRight", 702, 1000)).toBe(703);
+      expect(tableWindowNextColumnV1("End", 702, 1000)).toBe(999);
+      expect(tableWindowScrollLeftForColumnV1(703, 192, 700 * 192, 3 * 192)).toBe(701 * 192);
+    });
+
+    it("does not borrow a destructive row action as row activation", () => {
+      const intents: any[] = [];
+      mount((intent) => intents.push(intent));
+      const row = screen.getByRole("textbox", { name: "Name" }).closest<HTMLElement>("[role='row']")!;
+      row.focus();
+      fireEvent.keyDown(row, { key: "Enter" });
+      expect(intents).toEqual([]);
+      fireEvent.click(screen.getByRole("button", { name: "Remove row: Atelier Ada" }));
+      expect(intents.map((intent) => intent.action.name)).toEqual(["remove-row"]);
     });
   });
 }

@@ -23,9 +23,10 @@ message RasterLayerNode {
 message RasterTransform {
   double x = 1;
   double y = 2;
-  double scale_x = 3;
-  double scale_y = 4;
-  double rotation = 5;
+  double a = 3;
+  double b = 4;
+  double c = 5;
+  double d = 6;
 }
 
 message RasterLayerMask {
@@ -49,6 +50,7 @@ message RasterLayerPixel {
   optional uint32 width = 8;
   optional uint32 height = 9;
   optional string image_key = 10;
+  bool locked = 11;
 }
 
 message RasterLayerGroup {
@@ -60,6 +62,7 @@ message RasterLayerGroup {
   RasterTransform transform = 6;
   optional RasterLayerMask mask = 7;
   repeated RasterLayerNode children = 8;
+  bool locked = 9;
 }
 
 message RasterParamEntry { string key = 1; semio.framework.value.DslValue value = 2; }
@@ -72,6 +75,7 @@ message RasterLayerAdjustment {
   RasterTransform transform = 6;
   string adjustment_kind = 7;
   repeated RasterParamEntry params = 8;
+  bool locked = 9;
 }
 
 message RasterImageAsset {

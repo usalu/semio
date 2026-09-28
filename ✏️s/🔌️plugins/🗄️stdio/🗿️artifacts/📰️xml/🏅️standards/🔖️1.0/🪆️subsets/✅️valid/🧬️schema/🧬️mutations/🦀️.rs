@@ -201,7 +201,7 @@ pub fn inverse_xml_valid_mutation(mutation: &XmlValidMutation, base: &XmlSnapsho
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn doctype_diff(doctype: XmlDoctype) -> XmlDiff {
-    XmlDiff { prolog: None, declaration: None, doctype: Some(Some(doctype)), root: None }
+    XmlDiff { prolog: None, epilog: None, declaration: None, doctype: Some(Some(doctype)), root: None }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -222,20 +222,20 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
         },
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id }) => match document_element_name(base) {
             None => rejected("declare-doctype: the document has no document element, so §2.8 gives the DOCTYPE no Name to carry".to_string()),
-            Some(name) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { name: name.to_string(), external_id: external_id.clone(), declarations: base.doc.doctype.as_ref().map(|d| d.declarations.clone()).unwrap_or_default() })),
+            Some(name) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: base.doc.prolog.len(), name: name.to_string(), external_id: external_id.clone(), declarations: base.doc.doctype.as_ref().map(|d| d.declarations.clone()).unwrap_or_default() })),
         },
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name }) => match (document_element_name(base), base.doc.doctype.as_ref()) {
             (None, _) => rejected("rename-document-element: the document has no document element to rename".to_string()),
             (Some(_), None) => rejected("rename-document-element: the document has no DOCTYPE to keep in step with the new name — declare one first".to_string()),
             (Some(_), Some(doctype)) => {
                 let mut diff = diff_at_path(&[], XmlNodeDiff::Element(XmlElementDiff { name: Some(name.clone()), attributes: None, children: None }));
-                diff.doctype = Some(Some(XmlDoctype { name: name.clone(), external_id: doctype.external_id.clone(), declarations: doctype.declarations.clone() }));
+                diff.doctype = Some(Some(XmlDoctype { prolog_position: doctype.prolog_position, name: name.clone(), external_id: doctype.external_id.clone(), declarations: doctype.declarations.clone() }));
                 protocol::MutationOutcome::new(diff)
             }
         },
         XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id }) => match base.doc.doctype.as_ref() {
             None => rejected("set-external-subset: the document has no DOCTYPE to attach an external subset reference to".to_string()),
-            Some(doctype) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { name: doctype.name.clone(), external_id: external_id.clone(), declarations: doctype.declarations.clone() })),
+            Some(doctype) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: doctype.prolog_position, name: doctype.name.clone(), external_id: external_id.clone(), declarations: doctype.declarations.clone() })),
         },
         XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone }) => {
             let next = match (&base.doc.declaration, standalone) {
@@ -243,7 +243,7 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
                 (None, Some(value)) => Some(XmlDeclaration { version: "1.0".to_string(), encoding: None, standalone: Some(*value), ..Default::default() }),
                 (Some(declaration), value) => Some(XmlDeclaration { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: *value, quote: declaration.quote }),
             };
-            protocol::MutationOutcome::new(XmlDiff { prolog: None, declaration: Some(next), doctype: None, root: None })
+            protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: Some(next), doctype: None, root: None })
         }
         XmlValidMutation::DeclareEntity(declare_entity::DeclareEntity { index, parameter, name, value }) => match base.doc.doctype.as_ref() {
             None => rejected("declare-entity: the document has no DOCTYPE, so there is no internal subset to declare an entity in".to_string()),
@@ -252,12 +252,12 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
                 let mut declarations = doctype.declarations.clone();
                 let at = (*index).min(declarations.len());
                 declarations.insert(at, XmlDtdDeclaration::Entity { parameter: *parameter, name: name.clone(), value: value.clone() });
-                protocol::MutationOutcome::new(doctype_diff(XmlDoctype { name: doctype.name.clone(), external_id: doctype.external_id.clone(), declarations }))
+                protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: doctype.prolog_position, name: doctype.name.clone(), external_id: doctype.external_id.clone(), declarations }))
             }
         },
         XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations }) => match base.doc.doctype.as_ref() {
             None => rejected("set-internal-subset: the document has no DOCTYPE, so there is no internal subset to replace".to_string()),
-            Some(doctype) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { name: doctype.name.clone(), external_id: doctype.external_id.clone(), declarations: declarations.clone() })),
+            Some(doctype) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: doctype.prolog_position, name: doctype.name.clone(), external_id: doctype.external_id.clone(), declarations: declarations.clone() })),
         },
         XmlValidMutation::SetText(set_text::SetText { path, text }) => protocol::MutationOutcome::new(diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) })),
     }

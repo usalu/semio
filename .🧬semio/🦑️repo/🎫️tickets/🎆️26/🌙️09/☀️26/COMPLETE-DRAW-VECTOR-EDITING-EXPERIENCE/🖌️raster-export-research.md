@@ -1,0 +1,9 @@
+# Raster Export Investigation
+
+Draw PNG export currently projects to the reduced `s.stdio.semio/v1/drawing` schema, losing gradients, fill rules, full affine shear and isolated group effects before rasterization. Its first-party PNG rasterizer provides solid nonzero fills, butt/miter strokes, PNG image sampling and a 4096-edge cap; text is unpainted. The recently repaired SVG export already bypasses this bridge, so the PNG leaf's claim that it uses the same projection as SVG is stale.
+
+The framework's `pixels/compositing` module already has first-party Rust/TypeScript isolated RGBA blending, masks, sixteen blend modes and cancellable tiled jobs. The `framework/raster` module instead wraps Vello/wgpu and cannot execute in WASI Preview 2 components. A complete PNG fix must preserve Draw scene paint/geometry through a shared first-party vector raster contract and use the existing compositor, rather than continue dropping appearance in the semio bridge. Path coverage, full stroke outlines, gradient sampling, text shaping and image sampling all need that contract; no PNG production change has been made in this turn.
+
+While tracing the formats, found a directly actionable PDF contract bug: authored blend names are camelCase (`colorDodge`, `colorBurn`, `hardLight`, `softLight`), while PDF accepted kebab-case names. The new strict PDF validation would reject those valid drawings, and older PDF code silently emitted Normal for them. Added all sixteen modes to the shared raster corpus for both group isolation and layer fill/stroke isolation, plus native PDF vocabulary assertions, before correcting the writer.
+
+The preceding goal turn was progress: native PDF implementation and tests changed authoritative source. Handles 5483 (native) and 93519 (component) were polled and remain live this turn; no duplicate jobs were started.

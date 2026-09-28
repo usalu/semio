@@ -198,6 +198,9 @@ fn platform_node(window_id: &str, projected: &ui_contract::AccessibilityProjecti
     }
     if let Some(expanded) = projected.expanded {
         node.set_expanded(expanded);
+        if !projected.disabled {
+            node.add_action(if expanded { accesskit::Action::Collapse } else { accesskit::Action::Expand });
+        }
     }
     if let Some(level) = projected.level {
         node.set_level(level);
@@ -285,10 +288,15 @@ pub(crate) fn native_accessibility_tree(publication: &NativeAccessibilityPublica
 /// on a node this tree addresses. Anything else — another action, a node the tree does not know — answers nothing.
 fn action_dispatch(tree: &NativeAccessibilityTree, request: &accesskit::ActionRequest) -> Option<ui_render::DispatchEvent> {
     let target = tree.addresses.get(&request.target_node)?.clone();
+    let supported = tree.update.nodes.iter().find(|(id, _)| *id == request.target_node).is_some_and(|(_, node)| node.supports_action(request.action));
+    if !supported {
+        return None;
+    }
     let event = match (request.action, request.data.as_ref()) {
         (accesskit::Action::Focus, _) => ui_render::AccessibilityEvent::Focus,
         (accesskit::Action::Blur, _) => ui_render::AccessibilityEvent::Blur,
         (accesskit::Action::Click, _) => ui_render::AccessibilityEvent::Activate,
+        (accesskit::Action::Expand | accesskit::Action::Collapse, _) => ui_render::AccessibilityEvent::Activate,
         (accesskit::Action::SetValue, Some(accesskit::ActionData::Value(value))) => ui_render::AccessibilityEvent::Value(value.to_string()),
         _ => return None,
     };

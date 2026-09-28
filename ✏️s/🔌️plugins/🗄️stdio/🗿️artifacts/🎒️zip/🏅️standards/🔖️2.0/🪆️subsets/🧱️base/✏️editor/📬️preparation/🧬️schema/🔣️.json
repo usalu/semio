@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.zip.edit-preparation-bounds",
+  "title": "Zip Edit Preparation Bounds",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageBytes",
+    "largeEntryBytes",
+    "replacementRepeats",
+    "cancelAfterTurns",
+    "minimumCompleteTurns",
+    "maximumCloseTurns"
+  ],
+  "properties": {
+    "pageBytes": { "type": "integer", "minimum": 1 },
+    "largeEntryBytes": { "type": "integer", "minimum": 1 },
+    "replacementRepeats": { "type": "integer", "minimum": 1 },
+    "cancelAfterTurns": { "type": "integer", "minimum": 1 },
+    "minimumCompleteTurns": { "type": "integer", "minimum": 1 },
+    "maximumCloseTurns": { "type": "integer", "minimum": 1 }
+  }
+}

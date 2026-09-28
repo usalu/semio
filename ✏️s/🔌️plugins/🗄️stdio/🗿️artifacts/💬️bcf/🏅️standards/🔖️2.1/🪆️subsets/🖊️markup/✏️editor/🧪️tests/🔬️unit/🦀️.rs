@@ -54,6 +54,18 @@ async fn set_cell_reaches_the_document_through_its_exact_retained_factory() {
 }
 
 #[test]
+fn set_cell_uses_the_compact_topic_markup_leaf_for_modeled_fields() {
+    let source = bcf_example_snapshot(crate::examples::demo::ID);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&source);
+    let emitted = bcf_emit(&BcfAnyEditCommand::SetCell { row: 0, column: 1, revision, value: "Compact title".into() }, &source).expect("compact BCF title edit");
+    assert!(matches!(
+        emitted.artifact_mutations.as_slice(),
+        [BcfMutation::SetTopicMarkup(crate::standards::v2_1::subsets::any::schema::mutations::set_topic_markup::SetTopicMarkup { guid, title: Some(title), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None })]
+        if guid == &source.topics[0].guid && title == "Compact title"
+    ));
+}
+
+#[test]
 fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
     let source = bcf_example_snapshot(crate::examples::demo::ID);
     assert!(bcf_emit(&BcfAnyEditCommand::SetCell { row: 0, column: 0, revision: "stale".into(), value: "x".into() }, &source).is_err());

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "viewport": { "width": 800, "height": 600 },
+  "gestures": {
+    "spread": {
+      "initialCamera": { "x": 0, "y": 0, "zoom": 1 },
+      "down": [
+        { "pointerId": 1, "x": 300, "y": 300 },
+        { "pointerId": 2, "x": 500, "y": 300 }
+      ],
+      "move": [
+        { "pointerId": 1, "x": 200, "y": 300 },
+        { "pointerId": 2, "x": 600, "y": 300 }
+      ],
+      "expectedCamera": { "x": 0, "y": 0, "zoom": 2 }
+    },
+    "translation": {
+      "initialCamera": { "x": 0, "y": 0, "zoom": 1 },
+      "down": [
+        { "pointerId": 1, "x": 300, "y": 300 },
+        { "pointerId": 2, "x": 500, "y": 300 }
+      ],
+      "move": [
+        { "pointerId": 1, "x": 340, "y": 320 },
+        { "pointerId": 2, "x": 540, "y": 320 }
+      ],
+      "expectedCamera": { "x": -40, "y": -20, "zoom": 1 }
+    }
+  },
+  "surfaces": {
+    "board2d": {
+      "transfer": { "cancelSinglePointerLane": true, "syntheticPointerUps": 1 },
+      "moves": { "cameraPublications": 0, "pointerMoves": 0 },
+      "lifts": { "cameraPublications": 1, "pointerUps": 0, "selectionPublications": 0 },
+      "successor": { "firstContactVerdict": "single" }
+    },
+    "tiledMap": {
+      "transfer": { "cancelSinglePointerLane": true, "syntheticPointerUps": 0 },
+      "moves": { "cameraPublications": 0, "pointerMoves": 0 },
+      "lifts": { "cameraPublications": 1, "pointerUps": 0, "selectionPublications": 0 },
+      "successor": { "firstContactVerdict": "single" }
+    }
+  }
+}

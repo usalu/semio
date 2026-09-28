@@ -22,10 +22,7 @@ fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
     let fixture=fixture();
     for row in fixture["cases"].as_array().unwrap() {
         let mut document=document(&row["layers"],&fixture);
-        if let Some(capacity)=row["assetCapacity"].as_u64() {
-            let asset=crate::raster_asset(&document.assets,"blue").unwrap();
-            for index in document.assets.len()..capacity as usize {let key=format!("spare-{index}");document.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
-        }
+        if let Some(capacity)=row["assetCapacity"].as_u64() {fill_assets(&mut document,capacity as usize);}
         let before=document.clone();let rendered=composite(&before);
         let command=MergeDown {layer_id:row["layerId"].as_str().unwrap().into()};
         let (parent,index,layers)=plan(&document,&command.layer_id).unwrap();
@@ -58,4 +55,39 @@ fn unsupported_merge_and_cancel_leave_the_document_intact() {
         let document=document(&layers,&fixture);assert!(plan(&document,invalid["id"].as_str().unwrap()).is_err());retire(document);
     }
     let document=document(&fixture["cases"][0]["layers"],&fixture);let before=document.clone();let mut preparation=prepare(&MergeDown {layer_id:"upper".into()},&document).unwrap();preparation.cancel();assert!(preparation.advance(&document,1).is_err());assert_eq!(document,before);retire(document);retire(before);
+}
+
+fn fill_assets(document:&mut RasterSnapshot,capacity:usize) {
+    let asset=crate::raster_asset(&document.assets,"blue").unwrap();
+    for index in document.assets.len()..capacity {let key=format!("spare-{index}");document.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
+}
+#[semio_framework_async_macros::async_test]
+async fn layer_baking_at_asset_capacity_publishes_and_restores_retained_history() {
+    use crate::editor::raster::{RasterCommand,unit_tests::context};
+    use semio_framework_plugin::PluginApp;
+    let fixture=fixture();
+    for merge in [true,false] {
+        let mut app=context::app().await;
+        let mut source=document(&fixture["cases"][0]["layers"],&fixture);fill_assets(&mut source,fixture["cases"][0]["assetCapacity"].as_u64().unwrap() as usize);
+        let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"bake-capacity",source,None);
+        let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
+        app.load_document_pack(&files).await.unwrap();
+        let before=app.snapshot().unwrap();assert_eq!(before.assets.len(),64);
+        let command=if merge {RasterCommand::MergeDown(MergeDown {layer_id:"upper".into()})} else {RasterCommand::FlattenLayers(super::super::flatten_layers::FlattenLayers {name:"Image".into()})};
+        context::dispatch(&mut app,command).await;
+        let after=app.snapshot().unwrap();assert_eq!(after.layers.len(),if merge {2} else {1});assert_eq!(composite(&after).image,composite(&before).image);
+        context::history(&mut app,"undo").await;let undone=app.snapshot().unwrap();assert_eq!(undone,before);retire(undone);
+        context::history(&mut app,"redo").await;let redone=app.snapshot().unwrap();assert_eq!(redone,after);retire(redone);
+        retire(before);retire(after);
+    }
+}
+
+#[test]
+fn merge_refuses_ancestor_and_descendant_protection() {
+    let fixture=fixture();
+    for row in fixture["protected"].as_array().unwrap() {
+        let document=document(&row["layers"],&fixture);
+        let Err(error)=plan(&document,row["layerId"].as_str().unwrap()) else {panic!("protected merge admitted")};
+        assert!(error.message.contains("raster-layer-locked"));retire(document);
+    }
 }

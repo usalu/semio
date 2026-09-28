@@ -12,12 +12,16 @@
 //! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
 //! artifact's `🧬️schema`.
 
+#[path = "❓️questions/🦀️.rs"]
+pub mod questions;
+
 use crate::editor::forms::commands::{
     add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
     remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
 };
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::modes::blueprint;
+use crate::editor::forms::modes::{blueprint, fill, responses};
+use crate::editor::forms::commands::{export_responses, discard_response};
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::editor::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
@@ -164,17 +168,7 @@ pub fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributio
 
 pub use forms_parse_contributions as parse_contributions;
 
-/// 🗂️ `forms.questionKind` topic payload shape, decoded from the open `TopicContribution`.
-#[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-struct FormsQuestionKindTopicPayload {
-    app_id: String,
-    question_kind: String,
-    label: String,
-    icon_id: String,
-    params_body_key: String,
-    preview_body_key: String,
-}
+use questions::extensions::QuestionKindContribution;
 
 const FORMS_QUESTION_KIND_TOPIC: &str = "forms.questionKind";
 
@@ -190,7 +184,7 @@ fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::T
     if topic_contribution.topic != FORMS_QUESTION_KIND_TOPIC {
         return None;
     }
-    let payload = topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok()?;
+    let payload = topic_contribution.decode::<QuestionKindContribution>().ok()?;
     (payload.question_kind == kind).then_some(QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
 }
 
@@ -202,35 +196,16 @@ fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEn
     })
 }
 
-fn extension_params_value(question: &FormQuestion, values: &Object) -> Value {
-    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new()))
-}
-
-fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
-    let payload = object([
-        ("fixtureSlug".to_string(), Value::from(question.fixture_slug.clone().unwrap_or_else(|| "hexagonal-mushroom-column".into()))),
-        ("params".to_string(), params.clone()),
-        ("questionId".to_string(), Value::from(question.id.clone())),
-        ("controllerId".to_string(), Value::from(FORMS_PLAY_APP_ID)),
-        ("surface".to_string(), Value::from(surface)),
-        ("interactive".to_string(), Value::from(interactive)),
-    ]);
-    dsl::os_pack::json::to_string(&payload)
-}
-
 /// 🧩️ Renders a contributed (extension) question kind as a pair of external slots (params editor +
 /// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
 /// by the try wizard and the inspection panel's kind-specific editor fields.
-pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: questions::extensions::ExtensionSurface<'_>, interactive: bool, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use semio_framework_ui_contract::{self as ui, Buildable, HasBase, HasChildren};
-    // 🔑️ Keyed per question: the caller pushes this node as one sibling among the question rows, and an
-    // unkeyed `try_build` would stamp it `"#0"` (DuplicateSiblingKey with any other unkeyed sibling).
     let key = format!("{}.extension", question.id);
     let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return ui_admit(ui_admit(ui::text(ui_label(format!("Extension unavailable: {}", question.kind))?).try_id(&key))?.try_build());
+        return ui_admit(ui_admit(ui::text(ui_label(format!("{}: {}", labels.extension_unavailable.as_str(), question.kind))?).try_id(&key))?.try_build());
     };
-    let params = extension_params_value(question, values);
-    let payload = extension_render_payload(question, &params, surface, interactive);
+    let payload = questions::extensions::render_payload(question, values, FORMS_PLAY_APP_ID, surface, interactive).to_string();
     let mut column = ui_admit(ui::column().try_id(&key))?;
     for body_key in [&route.params_body_key, &route.preview_body_key] {
         let props = ui_value_map([("bodyKey", ui_value_text(body_key)?), ("paramsJson", ui_value_text(&payload)?)])?;
@@ -243,7 +218,8 @@ pub fn render_extension_question(question: &FormQuestion, values: &Object, contr
 /// 🗂️ Every kind offered by the catalogue/inspector kind selector: the built-in kinds (labeled from
 /// `labels`) followed by every contributed extension kind. Shared by the blueprint builder's palette, the
 /// catalogue panel, and the inspection panel's kind select.
-pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &FormsLabels) -> Vec<(String, String, IconName)> {
+pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], view: &semio_framework_plugin::ViewModel) -> Vec<(String, String, IconName)> {
+    let labels = forms_play_labels(view);
     let mut kinds: Vec<(String, String, IconName)> = FORM_BUILTIN_KINDS
         .iter()
         .map(|kind| {
@@ -271,8 +247,8 @@ pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &Form
             .topic_contribution
             .as_ref()
             .filter(|topic_contribution| topic_contribution.topic == FORMS_QUESTION_KIND_TOPIC)
-            .and_then(|topic_contribution| topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok())
-            .map(|payload| (payload.question_kind, payload.label, IconName::from(payload.icon_id.as_str())));
+            .and_then(|topic_contribution| topic_contribution.decode::<QuestionKindContribution>().ok())
+            .map(|payload| (payload.question_kind, payload.label.resolve(view.terminology, view.locale).to_string(), IconName::from(payload.icon_id.as_str())));
         if let Some(kind) = topic_kind {
             kinds.push(kind);
         }
@@ -390,9 +366,9 @@ mod args_bridge {
             "patchStep" => FormsCommand::PatchStep(decode(action, plain())?),
             "removeStep" => FormsCommand::RemoveStep(decode(action, plain())?),
             "moveStep" => FormsCommand::MoveStep(decode(action, plain())?),
-            "updateForm" => FormsCommand::UpdateForm(decode(action, plain())?),
-            "addQuestion" | "addBlock" => FormsCommand::AddQuestion(decode(action, plain())?),
-            "removeQuestion" | "removeBlock" => FormsCommand::RemoveQuestion(decode(action, fold(args, &[("block_id", "question_id")], &[]))?),
+            "updateForm" => FormsCommand::UpdateForm(decode(action, fold(args, &[("value", "title")], &[]))?),
+            "addBlock" => FormsCommand::AddQuestion(decode(action, plain())?),
+            "removeBlock" => FormsCommand::RemoveQuestion(decode(action, fold(args, &[("block_id", "question_id")], &[]))?),
             "patchQuestions" => FormsCommand::PatchQuestions(decode(action, fold(args, &[], VALUE_JSON))?),
             "patchQuestionOptions" => FormsCommand::PatchQuestionOptions(decode(action, fold(args, &[], VALUE_JSON))?),
             "addQuestionOption" => FormsCommand::AddQuestionOption(decode(action, plain())?),
@@ -400,7 +376,7 @@ mod args_bridge {
             "patchVectorField" => FormsCommand::PatchVectorField(decode(action, fold(args, &[], VALUE_JSON))?),
             "addVectorField" => FormsCommand::AddVectorField(decode(action, plain())?),
             "removeVectorField" => FormsCommand::RemoveVectorField(decode(action, plain())?),
-            "moveQuestion" | "moveBlock" => {
+            "moveBlock" => {
                 // 🧱️ The block-list host sends `{blockId, fromStepId, toStepId, index}`; `position` is
                 // only consulted when `index` is absent, so it defaults to "after".
                 let mut folded = fold(args, &[("block_id", "question_id")], &[]);
@@ -415,6 +391,8 @@ mod args_bridge {
             "setSpecJson" => FormsCommand::SetSpecJson(decode(action, fold(args, &[], &[("document", "json"), ("value", "json")]))?),
             "setActiveExample" => FormsCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")], &[]))?),
             "exportFixture" => FormsCommand::ExportFixture(decode(action, plain())?),
+            "exportResponses" => FormsCommand::ExportResponses(decode(action, plain())?),
+            "discardResponse" => FormsCommand::DiscardResponse(decode(action, plain())?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the forms editor has no command for action '{action}'"))),
         })
     }
@@ -441,8 +419,8 @@ semio_framework_plugin::app_commands! {
         "removeStep" as "remove-step" => remove_step::RemoveStep,
         "moveStep" as "move-step" => move_step::MoveStep,
         "updateForm" as "update-form" => update_form::UpdateForm,
-        "addQuestion" as "add-question" => add_question::AddQuestion,
-        "removeQuestion" as "remove-question" => remove_question::RemoveQuestion,
+        "addBlock" as "add-question" => add_question::AddQuestion,
+        "removeBlock" as "remove-question" => remove_question::RemoveQuestion,
         "patchQuestions" as "patch-questions" => patch_questions::PatchQuestions,
         // 🩹️ `patchQuestionOptions`..`removeVectorField` (rows 18-23) come BEFORE `moveQuestion`/
         // `dropQuestionKind` (rows 24-25) here, even though all 5 live in the same `🎮️commands/*` files —
@@ -455,12 +433,14 @@ semio_framework_plugin::app_commands! {
         "patchVectorField" as "patch-vector-field" => patch_vector_field::PatchVectorField,
         "addVectorField" as "add-vector-field" => add_vector_field::AddVectorField,
         "removeVectorField" as "remove-vector-field" => remove_vector_field::RemoveVectorField,
-        "moveQuestion" as "move-question" => move_question::MoveQuestion,
+        "moveBlock" as "move-question" => move_question::MoveQuestion,
         "dropQuestionKind" as "drop-question-kind" => drop_question_kind::DropQuestionKind,
         "setSpecJson" as "spec-json" => set_spec_json::SetSpecJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "exportFixture" as "export-fixture" => export_fixture::ExportFixture,
         "setTryValueStep" as "try-value-step" => set_try_value_step::SetTryValueStep,
+        "exportResponses" as "export-responses" => export_responses::ExportResponses,
+        "discardResponse" as "discard-response" => discard_response::DiscardResponse,
     }
 }
 
@@ -513,8 +493,8 @@ const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
     "removeStep",
     "moveStep",
     "updateForm",
-    "addQuestion",
-    "removeQuestion",
+    "addBlock",
+    "removeBlock",
     "patchQuestions",
     "patchQuestionOptions",
     "addQuestionOption",
@@ -522,12 +502,14 @@ const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
     "patchVectorField",
     "addVectorField",
     "removeVectorField",
-    "moveQuestion",
+    "moveBlock",
     "dropQuestionKind",
     "setSpecJson",
     "setActiveExample",
     "exportFixture",
     "setTryValueStep",
+    "exportResponses",
+    "discardResponse",
 ];
 const FORMS_RETAINED_PAYLOAD_SCHEMA: &str = "forms.tool-command.v1";
 const FORMS_RETAINED_RAW_BYTES: usize = 16_384;
@@ -540,10 +522,11 @@ fn forms_bounded_contract() -> ToolExecutionContract {
 struct FormsWindowCommandWork {
     tool_id: &'static str,
     completed: bool,
+    response_export: Option<crate::schema::response::export::ResponseExport>,
 }
 
 impl FormsWindowCommandWork {
-    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
+    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false, response_export: None } }
 }
 
 fn forms_try_view<'a>(view: &'a semio_framework_plugin::ViewModel, window_id: &str, window_kind_id: &str) -> Result<&'a semio_framework_plugin::ViewModel, Fault> {
@@ -562,12 +545,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
     fn extent(
         &self,
         command: &FormsCommand,
-        _snapshot: &FormsSnapshot,
+        snapshot: &FormsSnapshot,
         _interaction: &protocol::InteractionState,
         context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
     ) -> Option<usize> {
         if self.completed || command.command_id() != self.tool_id { return None; }
         match command {
+            FormsCommand::ExportResponses(_) => Some(crate::schema::response::export::ResponseExport::work_items(&snapshot.responses)),
             FormsCommand::SetTryValue(_)
             | FormsCommand::SetTryValues(_)
             | FormsCommand::SetTryValueStep(_)
@@ -590,6 +574,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
         let mut emit = Emit::default();
         let mut transient = None;
         match input.command {
+            FormsCommand::ExportResponses(payload) => {
+                if self.response_export.is_none() {
+                    self.response_export = Some(crate::schema::response::export::ResponseExport::new(&payload.format).map_err(Fault::from)?);
+                }
+                let Some(data) = self.response_export.as_mut().expect("admitted response exporter").advance(&input.snapshot.responses) else {
+                    return Ok(ArtifactCommandWorkStep::Progress { stage: "forms-export-responses", preview: br#"{"en":"Exporting answers","de":"Antworten werden exportiert"}"# });
+                };
+                emit = export_responses::download(payload, input.snapshot, data)?;
+            }
             FormsCommand::SetTryValue(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
                 let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
@@ -637,8 +630,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::Submit(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
-                emit = input.command.dispatch(&doc, &cfg)?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let (output, config) = submit::handle_window(input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()), input.operation.canonical_base_revision_hex())?;
+                emit = output;
+                emit.window_config_mutations.push(try_window::config::addressed(view, config)?);
             }
             _ => emit = input.command.dispatch(&doc, &cfg)?,
         }
@@ -650,6 +645,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }),
             None => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(work) = self.response_export.as_mut() { work.cancel(); }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.response_export.as_ref().is_none_or(|work| work.is_empty())
     }
 }
 
@@ -711,15 +714,15 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
         ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "updateForm", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "addQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "removeQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchQuestionOptions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -727,12 +730,14 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
         ArtifactToolPublicationContract { tool_id: "patchVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "moveQuestion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "exportResponses", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "discardResponse", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -933,6 +938,7 @@ pub struct FormsPlayApp;
 
 impl ArtifactEditor for FormsPlayApp {
     type Snapshot = FormsSnapshot;
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Mutation = FormMutation;
     type Config = FormsConfig;
     type ConfigMutation = FormsConfigMutation;
@@ -947,6 +953,10 @@ impl ArtifactEditor for FormsPlayApp {
 
     const DIALECT: Dialect = crate::FORMS_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::forms_genesis_child_pack(snapshot, slot, child_id)
+    }
+
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
         crate::forms_child_restore_projection(snapshot)
     }
@@ -1039,6 +1049,7 @@ impl ArtifactEditor for FormsPlayApp {
             return Err(Fault::from("forms-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
+        let maximum_work_items = if tool_id == "exportResponses" { crate::schema::response::export::ResponseExport::work_items(&request.snapshot.responses) } else { 1 };
         let work = Box::new(FormsWindowCommandWork::new(tool_id));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -1061,7 +1072,7 @@ impl ArtifactEditor for FormsPlayApp {
             },
             FormsCommand::command_id,
             FORMS_RETAINED_RAW_BYTES,
-            1,
+            maximum_work_items,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -1087,8 +1098,8 @@ impl ArtifactEditor for FormsPlayApp {
             "removeStep" => forms_bounded_contract(),
             "moveStep" => forms_bounded_contract(),
             "updateForm" => forms_bounded_contract(),
-            "addQuestion" => forms_bounded_contract(),
-            "removeQuestion" => forms_bounded_contract(),
+            "addBlock" => forms_bounded_contract(),
+            "removeBlock" => forms_bounded_contract(),
             "patchQuestions" => forms_bounded_contract(),
             "patchQuestionOptions" => forms_bounded_contract(),
             "addQuestionOption" => forms_bounded_contract(),
@@ -1096,11 +1107,13 @@ impl ArtifactEditor for FormsPlayApp {
             "patchVectorField" => forms_bounded_contract(),
             "addVectorField" => forms_bounded_contract(),
             "removeVectorField" => forms_bounded_contract(),
-            "moveQuestion" => forms_bounded_contract(),
+            "moveBlock" => forms_bounded_contract(),
             "dropQuestionKind" => forms_bounded_contract(),
             "setSpecJson" => forms_bounded_contract(),
             "setActiveExample" => forms_bounded_contract(),
             "exportFixture" => forms_bounded_contract(),
+            "exportResponses" => forms_bounded_contract(),
+            "discardResponse" => forms_bounded_contract(),
             "setTryValueStep" => forms_bounded_contract(),
         }
     }
@@ -1110,7 +1123,7 @@ impl ArtifactEditor for FormsPlayApp {
     }
 
     fn initial_snapshot() -> FormsSnapshot {
-        crate::schema::building_component_spec()
+        crate::schema::empty_forms_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1196,11 +1209,12 @@ impl ArtifactEditor for FormsPlayApp {
         let config = cfg.snapshot;
         let labels = forms_play_labels(view_state);
         let node = match body_key {
-            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
+            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, None),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
             FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
-            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &[], view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1213,17 +1227,18 @@ impl ArtifactEditor for FormsPlayApp {
         cfg: &ConfigView<'_, FormsConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(view_state);
         let node = match body_key {
-            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
+            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, interaction.selection(FORMS_INTERACTION_FIELDS).ids.first().map(String::as_str)),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
             FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
-            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &interaction.selection(FORMS_INTERACTION_FIELDS).ids, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1261,16 +1276,21 @@ pub fn create_forms_app() -> AppDefinition {
     })
             .icon_id("forms")
             .mode_def(blueprint::definition())
+            .mode_def(fill::definition())
+            .mode_def(responses::definition())
+            .named_layout(fill::layout())
+            .named_layout(responses::layout())
             .default_mode_id(blueprint::FORMS_PLAY_MODE_BLUEPRINT)
             .window_kind_def(builder::definition())
             .window_kind_def(try_window::definition())
+            .window_kind_def(responses::results::definition())
             .default_layout(blueprint::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
-            .mutation("addQuestion", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
-            .mutation("removeQuestion", LocalizedLabel::native("Remove Question", "Frage entfernen"))
+            .mutation("addBlock", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
+            .mutation("removeBlock", LocalizedLabel::native("Remove Question", "Frage entfernen"))
             .mutation("patchQuestions", LocalizedLabel::native("Patch Questions", "Fragen aktualisieren"))
             .mutation("patchQuestionOptions", LocalizedLabel::native("Patch Question Options", "Fragenoptionen aktualisieren"))
             .mutation("addQuestionOption", LocalizedLabel::native("Add Question Option", "Fragenoption hinzufügen"))
@@ -1278,16 +1298,15 @@ pub fn create_forms_app() -> AppDefinition {
             .mutation("patchVectorField", LocalizedLabel::native("Patch Vector Field", "Vektorfeld aktualisieren"))
             .mutation("addVectorField", LocalizedLabel::native("Add Vector Field", "Vektorfeld hinzufügen"))
             .mutation("removeVectorField", LocalizedLabel::native("Remove Vector Field", "Vektorfeld entfernen"))
-            .mutation("moveQuestion", LocalizedLabel::native("Move Question", "Frage verschieben"))
+            .mutation("moveBlock", LocalizedLabel::native("Move Question", "Frage verschieben"))
             .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
             .mutation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
             .mutation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
             .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
             .action_audience("dropQuestionKind", semio_framework_plugin::CapabilityAudience::Agent)
-            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
-            // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Use Form Template", "Formularvorlage verwenden"), ActionKind::Mutation, "panel-left"))
+            .mutation("setSpecJson", LocalizedLabel::native("Import Form Design JSON", "Formularentwurf aus JSON importieren"))
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, LocalizedLabel::native("Set Try Value Step", "Testwert-Schritt festlegen"), ActionKind::View) })
             .action_interactive_job("setTryValue", InteractiveJobClassification::Migrated)
@@ -1296,20 +1315,25 @@ pub fn create_forms_app() -> AppDefinition {
             .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
             .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))
             .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
-            .view_action("submit", LocalizedLabel::native("Submit", "Absenden"))
-            .shell_action("exportFixture", LocalizedLabel::native("Export Fixture", "Fixture exportieren"))
+            .mutation("submit", LocalizedLabel::native("Submit", "Absenden"))
+            .shell_action("exportFixture", LocalizedLabel::native("Export Form", "Formular exportieren"))
+            .shell_action("exportResponses", LocalizedLabel::native("Export Responses", "Antworten exportieren"))
+            .mutation("discardResponse", LocalizedLabel::native("Remove Response", "Antwort entfernen"))
+            .action_args("exportResponses", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("json", LocalizedLabel::data("JSON")), ActionArgOption::new("csv", LocalizedLabel::data("CSV"))]).default_value(&"json")])
+            .action_describe("exportResponses", LocalizedLabel::native("Downloads stored submissions with their original labels and typed answer values.", "Lädt gespeicherte Antworten mit ihren ursprünglichen Bezeichnungen und typisierten Werten herunter."))
+            .action_describe("discardResponse", LocalizedLabel::native("Removes one saved response. Undo restores it.", "Entfernt eine gespeicherte Antwort. Rückgängig stellt sie wieder her."))
             // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
             .action_describe("addStep", LocalizedLabel::native("Appends a new step (a page of questions) to the form.", "Fügt dem Formular einen neuen Schritt (eine Seite mit Fragen) hinzu."))
             .action_use_when("addStep", vec!["add a page to the form".into(), "new step".into()])
-            .action_describe("patchStep", LocalizedLabel::native("Sets one named property of one step — its title, description or visibility condition.", "Setzt eine benannte Eigenschaft eines Schritts — Titel, Beschreibung oder Sichtbarkeitsbedingung."))
+            .action_describe("patchStep", LocalizedLabel::native("Changes a page title or description.", "Ändert den Titel oder die Beschreibung einer Seite."))
             .action_describe("removeStep", LocalizedLabel::native("Removes one step and every question on it from the form.", "Entfernt einen Schritt samt allen darauf liegenden Fragen aus dem Formular."))
             .action_describe("moveStep", LocalizedLabel::native("Reorders one step within the form.", "Ordnet einen Schritt im Formular um."))
-            .action_describe("addQuestion", LocalizedLabel::native("Adds a new question of the given kind to a step of the form.", "Fügt einem Schritt des Formulars eine neue Frage der angegebenen Art hinzu."))
-            .action_use_when("addQuestion", vec!["add a question".into(), "add a multiple choice field".into(), "add a text input to the form".into()])
-            .action_describe("removeQuestion", LocalizedLabel::native("Removes one question from the form by id.", "Entfernt eine Frage anhand ihrer Id aus dem Formular."))
+            .action_describe("addBlock", LocalizedLabel::native("Adds a new question of the given kind to a step of the form.", "Fügt einem Schritt des Formulars eine neue Frage der angegebenen Art hinzu."))
+            .action_use_when("addBlock", vec!["add a question".into(), "add a multiple choice field".into(), "add a text input to the form".into()])
+            .action_describe("removeBlock", LocalizedLabel::native("Removes one question from the form by id.", "Entfernt eine Frage anhand ihrer Id aus dem Formular."))
             .action_describe("patchQuestions", LocalizedLabel::native("Sets one named property on one or more questions — label, help text, required flag, kind or validation.", "Setzt eine benannte Eigenschaft auf einer oder mehreren Fragen — Beschriftung, Hilfetext, Pflichtfeld, Art oder Validierung."))
             .action_use_when("patchQuestions", vec!["rename a question".into(), "make this question required".into()])
-            .action_describe("moveQuestion", LocalizedLabel::native("Reorders one question, within its step or onto another one.", "Ordnet eine Frage um — innerhalb ihres Schritts oder auf einen anderen."))
+            .action_describe("moveBlock", LocalizedLabel::native("Reorders one question, within its step or onto another one.", "Ordnet eine Frage um — innerhalb ihres Schritts oder auf einen anderen."))
             .action_describe("dropQuestionKind", LocalizedLabel::native("Creates a question of the given kind at a drop target in the form outline.", "Erzeugt eine Frage der angegebenen Art an einer Ablagestelle in der Formularübersicht."))
             .action_describe("addQuestionOption", LocalizedLabel::native("Adds one selectable option to a choice question.", "Fügt einer Auswahlfrage eine auswählbare Option hinzu."))
             .action_describe("removeQuestionOption", LocalizedLabel::native("Removes one selectable option from a choice question.", "Entfernt eine auswählbare Option aus einer Auswahlfrage."))
@@ -1317,19 +1341,19 @@ pub fn create_forms_app() -> AppDefinition {
             .action_describe("addVectorField", LocalizedLabel::native("Adds one component field to a vector-valued question.", "Fügt einer vektorwertigen Frage ein Komponentenfeld hinzu."))
             .action_describe("removeVectorField", LocalizedLabel::native("Removes one component field from a vector-valued question.", "Entfernt ein Komponentenfeld aus einer vektorwertigen Frage."))
             .action_describe("patchVectorField", LocalizedLabel::native("Sets one named property of a vector-valued question's component field.", "Setzt eine benannte Eigenschaft eines Komponentenfelds einer vektorwertigen Frage."))
-            .action_describe("updateForm", LocalizedLabel::native("Sets the form's own top-level properties — its title, description and submission settings.", "Setzt die Eigenschaften des Formulars selbst — Titel, Beschreibung und Absendeeinstellungen."))
-            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole form with one of the plugin's declared playground examples.", "Ersetzt das gesamte Formular durch eines der deklarierten Beispiele des Plugins."))
-            .action_describe("setSpecJson", LocalizedLabel::native("Loads a whole form specification from JSON text.", "Lädt eine vollständige Formularspezifikation aus JSON-Text."))
-            .action_describe("exportFixture", LocalizedLabel::native("Hands the form specification to the host as a downloadable JSON fixture.", "Übergibt die Formularspezifikation dem Host als herunterladbares JSON-Fixture."))
+            .action_describe("updateForm", LocalizedLabel::native("Changes the form title.", "Ändert den Formulartitel."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the form design with a template. Existing answers stay with this form.", "Ersetzt den Formularentwurf durch eine Vorlage. Vorhandene Antworten bleiben in diesem Formular."))
+            .action_describe("setSpecJson", LocalizedLabel::native("Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.", "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."))
+            .action_describe("exportFixture", LocalizedLabel::native("Downloads a Forms document containing its design and saved answers.", "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."))
             .action_describe("submit", LocalizedLabel::native("Submits the answers currently entered in the form preview.", "Sendet die aktuell in der Formularvorschau eingegebenen Antworten ab."))
             // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
-            .action_destructive("removeQuestion")
+            .action_destructive("removeBlock")
+            .action_destructive("discardResponse")
             .action_destructive("removeQuestionOption")
             .action_destructive("removeStep")
             .action_destructive("removeVectorField")
             .action_destructive("setActiveExample")
             .action_destructive("setSpecJson")
-            .action_destructive("exportFixture")
             // 🖱️ Preview-runner input plumbing — the form preview feeds these, agents never do.
             .action_audience("setTryValue", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::CapabilityAudience::Input)
@@ -1348,8 +1372,8 @@ pub fn create_forms_app() -> AppDefinition {
             .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("updateForm", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addQuestion", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeQuestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchQuestions", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchQuestionOptions", InteractiveJobClassification::Migrated)
             .action_interactive_job("addQuestionOption", InteractiveJobClassification::Migrated)
@@ -1357,13 +1381,15 @@ pub fn create_forms_app() -> AppDefinition {
             .action_interactive_job("patchVectorField", InteractiveJobClassification::Migrated)
             .action_interactive_job("addVectorField", InteractiveJobClassification::Migrated)
             .action_interactive_job("removeVectorField", InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveQuestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
             .action_interactive_job("dropQuestionKind", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSpecJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportResponses", InteractiveJobClassification::Migrated)
+            .action_interactive_job("discardResponse", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create/switch actions.
-            .action_args("addQuestion", vec![
+            .action_args("addBlock", vec![
                 ActionArgDef::select(
                     "kind",
                     LocalizedLabel::native("Kind", "Art"),
@@ -1372,8 +1398,9 @@ pub fn create_forms_app() -> AppDefinition {
                 .default_value(&"text"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard")),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Template", "Vorlage"), vec![
+                    ActionArgOption::new("", LocalizedLabel::native("Blank Form", "Leeres Formular")),
+                    ActionArgOption::new("default", LocalizedLabel::native("Contact", "Kontakt")),
                     ActionArgOption::new("onboarding", LocalizedLabel::native("Onboarding", "Einführung")),
                     ActionArgOption::new("building-component", LocalizedLabel::native("Building Component", "Baukomponente")),
                 ]).default_value(&"default"),

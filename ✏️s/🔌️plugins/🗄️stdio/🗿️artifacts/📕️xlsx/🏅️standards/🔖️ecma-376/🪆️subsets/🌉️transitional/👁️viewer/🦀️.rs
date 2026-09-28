@@ -6,7 +6,6 @@
 //! anything from the sibling mutation-capable surface (viewer-purity policy — this file stays
 //! greppable-clean of that surface's own module path).
 
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view::windows::main;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
@@ -18,32 +17,6 @@ use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, 
 /// surface.
 pub const XLSX_TRANSITIONAL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
 //#endregion 🔖️Dialect
-
-//#region 🔖️TableProjection
-/// 🧮 Read-only twin of the sibling mutation-capable surface's own cell-flattening helper — see
-/// that file's doc comment for the flattening rationale. Duplicated rather than shared (viewer
-/// purity).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
-    document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
-}
-
-/// 🔎 Read-only twin of the sibling mutation-capable surface's own cell-value renderer.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
-    match value {
-        XlsxCellValue::Number(n) => format!("{n}"),
-        XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
-        XlsxCellValue::InlineString(text) => text.clone(),
-        XlsxCellValue::Boolean(flag) => flag.to_string(),
-        XlsxCellValue::Formula { expr, cached } => match cached {
-            Some(cached) => format!("={expr} ({})", render_xlsx_cell_value(cached, shared_strings)),
-            None => format!("={expr}"),
-        },
-        XlsxCellValue::Empty => String::new(),
-    }
-}
-//#endregion 🔖️TableProjection
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant —
@@ -98,9 +71,9 @@ impl ArtifactViewer for XlsxTransitionalViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

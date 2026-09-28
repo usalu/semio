@@ -24,10 +24,12 @@ start mutation
 mutation = set-layer-visible / set-layer-locked / set-layer-opacity / set-layer-blend-mode
      / rename-layer / update-layer-transform / replace-layer-fill / replace-layer-stroke
      / set-layer-boolean-operation / update-layer-trace-params / create-layer / duplicate-layer
-     / delete-layer / reorder-layer
+     / delete-layer / reorder-layer / set-layer-fill-rule
 
 set-layer-visible = "set-layer-visible" SP id SP bool
 set-layer-locked = "set-layer-locked" SP id SP bool
+set-layer-fill-rule = "set-layer-fill-rule" SP id SP fill-rule
+fill-rule = "evenodd" / "nonzero"
 set-layer-opacity = "set-layer-opacity" SP id SP number
 set-layer-blend-mode = "set-layer-blend-mode" SP id SP text
 rename-layer = "rename-layer" SP id SP text
@@ -41,9 +43,11 @@ duplicate-layer = "duplicate-layer" SP id
 delete-layer = "delete-layer" SP id
 reorder-layer = "reorder-layer" SP id SP opt-id SP number
 
-transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "rad" "}"
+transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "shear=" number SP "rotation=" number "rad" "}"
 trace-params-block = "params" "{" "threshold=" number SP "simplify-epsilon=" number "}"
-stroke-block = "stroke" "{" "color=" number4 SP "width=" number SP "cap=" text SP "join=" text opt-dash "}"
+stroke-block = "stroke" "{" "color=" number4 SP "width=" number SP "cap=" stroke-cap SP "join=" stroke-join opt-dash "}"
+stroke-cap = "butt" / "round" / "square"
+stroke-join = "miter" / "round" / "bevel"
 opt-dash = (SP "dash=" number-list)?
 
 # `fill`/`layer` reuse the same `FillStyle`/`DrawingLayerNode` DSL shapes `drawing.document` defines —

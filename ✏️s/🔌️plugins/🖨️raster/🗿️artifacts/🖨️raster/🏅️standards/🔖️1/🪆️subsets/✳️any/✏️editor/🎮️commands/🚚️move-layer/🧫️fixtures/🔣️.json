@@ -12,16 +12,18 @@
         "opacity": 1,
         "blendMode": "normal",
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         },
         "mask": null,
         "width": 2,
         "height": 2,
-        "imageKey": null
+        "imageKey": null,
+        "locked": false
       },
       {
         "kind": "group",
@@ -31,11 +33,12 @@
         "opacity": 1,
         "blendMode": "normal",
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         },
         "mask": null,
         "children": [
@@ -47,16 +50,18 @@
             "opacity": 1,
             "blendMode": "normal",
             "transform": {
-              "x": 0,
-              "y": 0,
-              "scaleX": 1,
-              "scaleY": 1,
-              "rotation": 0
+              "x": 0.0,
+              "y": 0.0,
+              "a": 1.0,
+              "b": 0.0,
+              "c": 0.0,
+              "d": 1.0
             },
             "mask": null,
             "width": 2,
             "height": 2,
-            "imageKey": null
+            "imageKey": null,
+            "locked": false
           },
           {
             "kind": "pixel",
@@ -66,16 +71,18 @@
             "opacity": 1,
             "blendMode": "normal",
             "transform": {
-              "x": 0,
-              "y": 0,
-              "scaleX": 1,
-              "scaleY": 1,
-              "rotation": 0
+              "x": 0.0,
+              "y": 0.0,
+              "a": 1.0,
+              "b": 0.0,
+              "c": 0.0,
+              "d": 1.0
             },
             "mask": null,
             "width": 2,
             "height": 2,
-            "imageKey": null
+            "imageKey": null,
+            "locked": false
           },
           {
             "kind": "group",
@@ -85,16 +92,19 @@
             "opacity": 1,
             "blendMode": "normal",
             "transform": {
-              "x": 0,
-              "y": 0,
-              "scaleX": 1,
-              "scaleY": 1,
-              "rotation": 0
+              "x": 0.0,
+              "y": 0.0,
+              "a": 1.0,
+              "b": 0.0,
+              "c": 0.0,
+              "d": 1.0
             },
             "mask": null,
-            "children": []
+            "children": [],
+            "locked": false
           }
-        ]
+        ],
+        "locked": false
       },
       {
         "kind": "pixel",
@@ -104,16 +114,18 @@
         "opacity": 1,
         "blendMode": "normal",
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         },
         "mask": null,
         "width": 2,
         "height": 2,
-        "imageKey": null
+        "imageKey": null,
+        "locked": false
       },
       {
         "kind": "pixel",
@@ -123,16 +135,18 @@
         "opacity": 1,
         "blendMode": "normal",
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         },
         "mask": null,
         "width": 2,
         "height": 2,
-        "imageKey": null
+        "imageKey": null,
+        "locked": false
       }
     ]
   },

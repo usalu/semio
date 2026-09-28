@@ -6,6 +6,51 @@ use semio_framework_plugin::{app::TypedOperationResultLane, PluginApp};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use store::{ArtifactPack, SpaceMember};
 
+/// 🪟️ Reads the actual main window's public geometry after the owning app settles.
+async fn published_host_snapshot(app: &mut FlowApp) -> serde_json::Value {
+    let rendered = render(app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
+    let scene: ui_wgpu::wgpu::NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&rendered).expect("Flow main scene");
+    serde_json::from_str(scene.host_snapshot_json.as_deref().expect("Flow geometry publication")).expect("Flow host snapshot JSON")
+}
+
+/// 🔌️ The physical renderer's narrow connect/disconnect rows must round-trip through the real owner.
+#[semio_framework_async_macros::async_test]
+async fn node_graph_wire_connect_and_disconnect_republish_the_owner_assigned_synapse() {
+    let mut app = flow_app_closing().await;
+    let initial = published_host_snapshot(&mut app).await;
+    let initial_edges = initial["synapses"].as_array().expect("initial synapses");
+    let matches_edge = |edge: &serde_json::Value| edge["from"] == "slider" && edge["fromPort"] == "number" && edge["to"] == "add" && edge["toPort"] == "b";
+    assert!(!initial_edges.iter().any(matches_edge), "the physical specimen starts with the target input free");
+    let content_id = app.snapshot().unwrap().content.child_id.clone();
+    let connect = dsl::DslValue::from(serde_json::json!({
+        "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }]
+    }));
+    app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect")).await.expect("wire connect admission");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire connect publication");
+    assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let connected = published_host_snapshot(&mut app).await;
+    let edges = connected["synapses"].as_array().unwrap();
+    assert_eq!(edges.len(), initial_edges.len() + 1);
+    let matches: Vec<_> = edges.iter().filter(|edge| matches_edge(edge)).collect();
+    assert_eq!(matches.len(), 1, "one renderer gesture persists exactly one owner edge");
+    let id = matches[0]["id"].as_str().filter(|id| !id.is_empty()).expect("owner assigned synapse identity").to_owned();
+    let content = content_snapshot(&app).await;
+    assert!(content.edges.iter().any(|edge| edge.id == id && edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"));
+    let disconnect = dsl::DslValue::from(serde_json::json!({ "operations": [{ "operation": "disconnect", "synapseId": id }] }));
+    app.handle_action("nodeGraphEdit", Some(&disconnect), &meta("renderer-wire-disconnect")).await.expect("wire disconnect admission");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire disconnect publication");
+    assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let disconnected = published_host_snapshot(&mut app).await;
+    let remaining = disconnected["synapses"].as_array().unwrap();
+    assert_eq!(remaining.len(), initial_edges.len());
+    assert!(initial_edges.iter().all(|edge| remaining.contains(edge)), "disconnect preserves every pre-existing synapse");
+    assert!(!remaining.iter().any(matches_edge));
+    assert_eq!(disconnected["layout"], initial["layout"], "wire edits do not move widgets");
+    assert_eq!(app.snapshot().unwrap().content.child_id, content_id);
+    assert!(!content_snapshot(&app).await.edges.iter().any(|edge| edge.id == id));
+}
+
+
 async fn content_snapshot(app: &FlowApp) -> SemioFlowSnapshot {
     let parent = app.snapshot().expect("Flow parent snapshot");
     SemioFlowSnapshot::decode_pack(&app.child_store("content", &parent.content.child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("Flow content child snapshot")

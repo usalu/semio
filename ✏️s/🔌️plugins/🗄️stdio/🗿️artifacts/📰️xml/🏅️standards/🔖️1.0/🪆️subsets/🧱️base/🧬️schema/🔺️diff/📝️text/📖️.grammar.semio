@@ -18,7 +18,9 @@ comment none
 # the framework's built-in `hex` MACRO -- see the mandatory-macro rationale in
 # `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 (a hand-rolled `{INT|IDENT}*` production never
 # backtracks and would silently swallow a following bareword literal like `declaration`/`doctype`).
-document = declaration-tok? doctype-tok? root-tok?
+document = prolog-tok? epilog-tok? declaration-tok? doctype-tok? root-tok?
+prolog-tok = "prolog" "=" "[" node-item* "]"
+epilog-tok = "epilog" "=" "[" node-item* "]"
 declaration-tok = "declaration" "=" opt-declaration
 doctype-tok = "doctype" "=" opt-doctype
 root-tok = "root" "=" node-diff
@@ -36,7 +38,7 @@ bool-lit = "0" | "1"
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
 declaration-lit = "[" hex "," opt-hex "," opt-bool "," bool-lit "]"
 opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
-doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
+doctype-lit = "[" INT "," hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
 opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
 external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
 dtd-declaration-list = dtd-declaration {"," dtd-declaration}*
@@ -55,10 +57,10 @@ opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
 
 # `enc_attrs_diff`/`dec_attrs_diff` -- `[removed];[modified];[added]`, name-keyed
 # (`📖️grammar-recipe.md` §1.4's name-keyed collection-triple shape).
-attrs-diff-body = "[" attr-removed-item* "]" ";" "[" attr-modified-item* "]" ";" "[" attr-added-item* "]"
+attrs-diff-body = "[" attr-removed-item* "]" ";" "[" attr-modified-item* "]" ";" "[" attr-added-item* "]" ";" "[" attr-order-item* "]"
 attr-removed-item = hex ","?
 attr-modified-item = hex ":" hex ","?
-attr-added-item = INT ":" hex ":" hex ","?
+attr-added-item = hex ":" hex ","?
 
 # `enc_children_diff`/`dec_children_diff` -- `[removed];[modified];[added]`, index-keyed.
 children-diff-body = "[" child-removed-item* "]" ";" "[" child-modified-item* "]" ";" "[" child-added-item* "]"
@@ -72,3 +74,4 @@ child-added-item = INT ":" xml-node ","?
 xml-node = "E" "[" hex "," "[" attr-item* "]" "," "[" node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
 attr-item = "[" hex "," hex "]" ","?
 node-item = xml-node ","?
+attr-order-item = hex ","?

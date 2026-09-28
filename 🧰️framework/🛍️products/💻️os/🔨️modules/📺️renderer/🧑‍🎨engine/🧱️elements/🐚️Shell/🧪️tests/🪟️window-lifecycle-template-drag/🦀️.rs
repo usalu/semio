@@ -8,6 +8,59 @@ fn fixture() -> Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
 }
 
+#[test]
+fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🪟️empty-dock-notice/🔣️.json")).unwrap();
+    for locale in fixture["locales"].as_array().unwrap() {
+        for viewport in fixture["viewports"].as_array().unwrap() {
+            let mut shell = shell();
+            shell.locale_id = locale["id"].as_str().unwrap().into();
+            shell.dock.root = DockNode::Stack { windows: vec![], active: String::new() };
+            shell.dock.active_window_id = None;
+            shell.active_window_id = None;
+            let theme = Theme::default();
+            let bounds = Rect::new(20.0, 40.0, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
+            let mut draw = DrawList::default();
+            let mut atlas = FontAtlas::builtin();
+            let icons = IconAtlas::default();
+            let mut input = InputState::<ActionDescriptor>::default();
+            let mut cursor = ShellChromeChildCursor::default();
+            let mut overlay = None;
+            let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+            let mut complete = false;
+            for _ in 0..1_024 {
+                let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
+                complete = shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources);
+                let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
+                assert!(after.saturating_sub(before) <= 1, "each grant paints at most one notice glyph");
+                if complete { break; }
+            }
+            assert!(complete);
+            assert!(shell.dock_window_plan.is_empty());
+            assert!(!shell.dock_drop_bodies.is_empty());
+            assert!(input.staged_hits().is_empty(), "prose adds no phantom window or scroll target");
+            let glyphs: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).collect();
+            assert!(!glyphs.is_empty(), "the empty dock paints its localized instruction");
+            assert!(glyphs.iter().all(|glyph| glyph.color == [theme.text_muted.r, theme.text_muted.g, theme.text_muted.b, theme.text_muted.a]));
+            let text = locale["text"].as_str().unwrap();
+            let notice_bounds = bounds.inset(theme.panel_inset);
+            assert_eq!(text, shell_chrome_string("display.emptyShell", shell.locale_id == "de"));
+            let layout = empty_dock_notice_lines(&mut atlas, notice_bounds, &theme, shell.locale_id == "de");
+            let tolerance = fixture["centerTolerance"].as_f64().unwrap() as f32;
+            for (_, rect) in &layout {
+                assert!((rect.x + rect.w * 0.5 - notice_bounds.x - notice_bounds.w * 0.5).abs() <= tolerance);
+            }
+            let first = layout.first().unwrap().1;
+            let last = layout.last().unwrap().1;
+            assert!(((first.y + last.y + last.h) * 0.5 - notice_bounds.y - notice_bounds.h * 0.5).abs() <= tolerance);
+            let lines = atlas.wrap_lines(text, notice_bounds.w, theme.font_size_body);
+            assert_eq!(lines.len() > 1, viewport["wraps"].as_bool().unwrap());
+            let glyph_count: usize = lines.iter().map(|range| text[range.clone()].trim_end_matches(ui_wgpu::wgpu::text::is_wrap_space).chars().count()).sum();
+            assert_eq!(glyphs.len(), glyph_count);
+        }
+    }
+}
+
 fn shell() -> ShellState {
     super::panel_anchor_model_tests::host_test_shell()
 }

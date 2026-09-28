@@ -1,3 +1,5 @@
+import type {SetGroupIsolation} from "../../../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🦠️mutation/🟦️.ts";
+import type {SetLayerFillRule} from "../../../🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🟦️.ts";
 /** 🧩️ Drawing direct-mutation discriminated union — mirrors the Rust `DrawingMutation` dispatch enum
  * (sibling `🦀️.rs`, `#[serde(tag = "mutation", rename_all = "camelCase")]`), same
  * declaration order and camelCase discriminant per variant. Same shape as the jack reference
@@ -64,8 +66,8 @@ export interface ReplaceLayerFill {
 export interface StrokeStyle {
   color: [number, number, number, number];
   width: number;
-  cap: string;
-  join: string;
+  cap: import("../🖊️stroke/🟦️.ts").StrokeCap;
+  join: import("../🖊️stroke/🟦️.ts").StrokeJoin;
   dash?: number[];
 }
 
@@ -122,4 +124,6 @@ export type DrawingMutation =
   | ({ mutation: "deleteLayer" } & DeleteLayer)
   | ({ mutation: "reorderLayer" } & ReorderLayer)
   | ({ mutation: "updatePathGeometry" } & UpdatePathGeometry)
-  | ({ mutation: "updateText" } & UpdateText);
+  | ({ mutation: "updateText" } & UpdateText)
+  | ({ mutation: "setLayerFillRule" } & SetLayerFillRule)
+  | ({ mutation: "setGroupIsolation" } & SetGroupIsolation);

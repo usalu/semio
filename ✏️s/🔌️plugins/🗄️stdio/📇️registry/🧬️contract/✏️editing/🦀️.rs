@@ -848,7 +848,91 @@ impl RetainedTextCopy {
         }
         self.complete = false;
         self.reserved = false;
-        Some(unsafe { String::from_utf8_unchecked(std::mem::take(&mut self.bytes)) })
+        String::from_utf8(std::mem::take(&mut self.bytes)).ok()
+    }
+
+    pub fn take_partial_bytes(&mut self) -> Vec<u8> {
+        self.complete = false;
+        self.reserved = false;
+        std::mem::take(&mut self.bytes)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.bytes.is_empty() {
+            if maximum_bytes == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let released_bytes = maximum_bytes.min(self.bytes.len());
+            self.bytes.truncate(self.bytes.len() - released_bytes);
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+        }
+        if self.bytes.capacity() != 0 {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.bytes = Vec::new();
+            self.reserved = false;
+            self.complete = false;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        self.reserved = false;
+        self.complete = false;
+        InteractiveJobCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.bytes.is_empty() && self.bytes.capacity() == 0 && !self.reserved && !self.complete
+    }
+}
+
+/// 🧵️ Copies one immutable byte owner through fixed grants and supports the same bounded
+/// cancellation cleanup as [`RetainedTextCopy`].
+#[derive(Default)]
+pub struct RetainedBytesCopy {
+    bytes: Vec<u8>,
+    reserved: bool,
+    complete: bool,
+}
+
+impl RetainedBytesCopy {
+    pub fn advance(&mut self, source: &[u8], maximum_bytes: usize) -> Result<Option<usize>, String> {
+        if maximum_bytes == 0 {
+            return Ok(None);
+        }
+        if !self.reserved {
+            self.bytes.try_reserve_exact(source.len()).map_err(|_| "retained byte allocation admission failed")?;
+            self.reserved = true;
+            self.complete = source.is_empty();
+            return Ok(Some(0));
+        }
+        if self.complete {
+            return Ok(Some(0));
+        }
+        let start = self.bytes.len();
+        let count = maximum_bytes.min(source.len().checked_sub(start).ok_or("retained byte source changed during copy")?);
+        self.bytes.extend_from_slice(&source[start..start + count]);
+        self.complete = self.bytes.len() == source.len();
+        Ok(Some(count))
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.complete
+    }
+
+    pub fn take(&mut self) -> Option<Vec<u8>> {
+        if !self.complete {
+            return None;
+        }
+        self.complete = false;
+        self.reserved = false;
+        Some(std::mem::take(&mut self.bytes))
+    }
+
+    pub fn take_partial(&mut self) -> Vec<u8> {
+        self.complete = false;
+        self.reserved = false;
+        std::mem::take(&mut self.bytes)
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
@@ -1063,6 +1147,14 @@ fn bounded_native_edit_reduce<E: BoundedNativeEditingEditor>(
     E::native_edit_mutations(command, snapshot)
 }
 
+pub fn admit_bounded_native_command<C: OpBinary>(command: &C, maximum_bytes: usize) -> Result<usize, Fault> {
+    let encoded = command.encode_op().map_err(|error| edit_fault("bounded-native-edit.command-encoding", error.to_string()))?;
+    if encoded.len() > maximum_bytes {
+        return Err(edit_fault("bounded-native-edit.command-too-large", format!("bounded native edit command is {} bytes; maximum is {maximum_bytes}", encoded.len())));
+    }
+    Ok(encoded.len())
+}
+
 pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request: ArtifactOwnedToolJobRequest<EditorApp<E>>) -> Result<Option<ToolOperationSpec>, Fault> {
     if !E::NATIVE_TOOL_IDS.contains(&request.tool_id.as_str()) {
         return Ok(None);
@@ -1070,6 +1162,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
     if E::command_id(&request.command) != request.tool_id {
         return Err(edit_fault("bounded-native-edit.tool-mismatch", "bounded native edit command does not match its addressed tool"));
     }
+    admit_bounded_native_command(request.command.as_ref(), E::NATIVE_MAXIMUM_RAW_BYTES)?;
     let tool_id = E::command_id(&request.command);
     let operation = AppOperationContext {
         app_instance_id: request.app_instance_id,

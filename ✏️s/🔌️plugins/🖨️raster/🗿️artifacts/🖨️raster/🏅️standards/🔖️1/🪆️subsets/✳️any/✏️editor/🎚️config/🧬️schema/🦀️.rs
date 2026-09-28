@@ -1,5 +1,6 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
+pub use crate::editor::raster::selection::RasterPixelSelection;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -13,6 +14,12 @@ pub struct RasterConfig {
     pub brush_color: String,
     #[state(config)]
     pub brush_hardness: f64,
+    #[state(config)]
+    pub paint_target:String,
+    #[state(config)]
+    pub mask_value:u32,
+    #[state(config)]
+    pub pixel_selection:Option<RasterPixelSelection>,
     #[state(config)]
     pub composite_viewport: Option<RasterConfigViewportSize>,
     #[state(config)]

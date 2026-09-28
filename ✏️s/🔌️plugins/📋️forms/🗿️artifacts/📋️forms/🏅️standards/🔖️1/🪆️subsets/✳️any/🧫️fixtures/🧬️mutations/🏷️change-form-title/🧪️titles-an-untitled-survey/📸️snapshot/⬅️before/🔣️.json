@@ -23,5 +23,9 @@
         "subset": "table"
       }
     }
-  }
+  },
+  "definition": {
+    "steps": []
+  },
+  "responses": []
 }

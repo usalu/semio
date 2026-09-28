@@ -18,6 +18,8 @@ export interface RasterCompositeViewModel {
   brushOpacity: number;
   brushColor: string;
   brushHardness: number;
+  readonly paintTarget:"pixels"|"mask";
+  readonly maskValue:number;
 }
 
 export const RASTER_PLAY_WINDOW_COMPOSITE = "raster-composite" as const;

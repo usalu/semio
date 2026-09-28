@@ -4,13 +4,13 @@
 //! `semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text}` —
 //! neither is reimplemented here. This module owns exactly two typed metadata channels
 //! (`[Content_Types].xml` and every `*.rels` file) plus the verbatim byte payload of every other
-//! part — nothing observed in a real package is ever dropped.
+//! part. Metadata XML extension nodes and archive headers need their own retained representation.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{validate_xml_document_boundaries, xml_document_from_text, xml_document_to_text_checked, XmlAttr, XmlDocument, XmlNode};
 
 //#region 🔖️Error
 /// ⚠️ Typed OPC decode/encode failure — an unreadable or non-conformant container never silently
@@ -123,8 +123,14 @@ fn opc_node_to_text(node: &XmlNode, out: &mut String) {
 /// 📝️ Deterministically materializes logical OPC XML using the compact ECMA-376 convention.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
+    xml_document_to_opc_text_checked(doc).expect("valid OPC XML document boundaries")
+}
+
+/// 📝️ Deterministically materializes validated logical OPC XML using the compact ECMA-376 convention.
+pub fn xml_document_to_opc_text_checked(doc: &XmlDocument) -> Result<String, String> {
+    validate_xml_document_boundaries(doc)?;
     if doc.doctype.is_some() {
-        return xml_document_to_text(doc);
+        return xml_document_to_text_checked(doc);
     }
     let mut out = String::new();
     if let Some(declaration) = &doc.declaration {
@@ -149,7 +155,10 @@ pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
     if let Some(root) = &doc.root {
         opc_node_to_text(root, &mut out);
     }
-    out
+    for node in &doc.epilog {
+        opc_node_to_text(node, &mut out);
+    }
+    Ok(out)
 }
 //#endregion 🔖️Constants
 
@@ -166,7 +175,7 @@ pub struct OpcPart {
 //#endregion 🔖️Part
 
 //#region 🔖️ContentTypes
-/// 🏷️ Typed `[Content_Types].xml`: `Default` entries key by lowercase extension (no dot),
+/// 🏷️ Typed `[Content_Types].xml`: `Default` entries retain extension spelling (no dot),
 /// `Override` entries key by absolute part name (`/word/document.xml`). Overrides win.
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -178,6 +187,22 @@ pub struct OpcContentTypes {
 }
 
 impl OpcContentTypes {
+    fn validate_identities(&self) -> Result<(), OpcError> {
+        let mut extensions = HashSet::new();
+        for (extension, _) in &self.defaults {
+            if !extensions.insert(extension.to_ascii_lowercase()) {
+                return Err(OpcError::MalformedContentTypes(format!("duplicate default extension: {extension}")));
+            }
+        }
+        let mut parts = HashSet::new();
+        for (part, _) in &self.overrides {
+            if !parts.insert(part) {
+                return Err(OpcError::MalformedContentTypes(format!("duplicate content type override: {part}")));
+            }
+        }
+        Ok(())
+    }
+
     /// 🔎️ Resolves the content type for `part_path` (no leading `/`): override by exact part
     /// name first, else default by extension. `None` when neither applies — the caller decides
     /// whether that is fatal.
@@ -188,7 +213,7 @@ impl OpcContentTypes {
             return Some(ct);
         }
         let ext = part_path.rsplit('.').next()?.to_ascii_lowercase();
-        self.defaults.iter().find(|(e, _)| *e == ext).map(|(_, ct)| ct.as_str())
+        self.defaults.iter().find(|(e, _)| e.eq_ignore_ascii_case(&ext)).map(|(_, ct)| ct.as_str())
     }
 
     /// ✍️ Inserts or replaces the `Override` entry for `part_path`.
@@ -206,7 +231,7 @@ impl OpcContentTypes {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_default(&mut self, extension: &str, content_type: &str) {
         let ext = extension.to_ascii_lowercase();
-        if let Some(existing) = self.defaults.iter_mut().find(|(e, _)| *e == ext) {
+        if let Some(existing) = self.defaults.iter_mut().find(|(e, _)| e.eq_ignore_ascii_case(&ext)) {
             existing.1 = content_type.to_string();
         } else {
             self.defaults.push((ext, content_type.to_string()));
@@ -224,6 +249,7 @@ impl OpcContentTypes {
         }
         XmlDocument {
             prolog: Vec::new(),
+            epilog: Vec::new(),
             root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
             doctype: None,
             declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
@@ -233,29 +259,26 @@ impl OpcContentTypes {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
         let root = doc.root.as_ref().ok_or(OpcError::MissingContentTypes)?;
-        let XmlNode::Element { name, children, .. } = root else {
+        let XmlNode::Element { name, attrs: root_attrs, children } = root else {
             return Err(OpcError::MalformedContentTypes("root is not an element".into()));
         };
-        if name != "Types" {
+        if !metadata_element_name(name, root_attrs, &[], "Types", CONTENT_TYPES_NS) {
             return Err(OpcError::MalformedContentTypes(format!("expected <Types>, got <{name}>")));
         }
         let mut out = OpcContentTypes::default();
         for child in children {
             let XmlNode::Element { name, attrs, .. } = child else { continue };
-            match name.as_str() {
-                "Default" => {
-                    let ext = find_attr(attrs, "Extension").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
-                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
-                    out.defaults.push((ext.to_ascii_lowercase(), ct.to_string()));
-                }
-                "Override" => {
-                    let part = find_attr(attrs, "PartName").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
-                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
-                    out.overrides.push((part.to_string(), ct.to_string()));
-                }
-                _ => {}
+            if metadata_element_name(name, attrs, root_attrs, "Default", CONTENT_TYPES_NS) {
+                let ext = find_attr(attrs, "Extension").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
+                let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
+                out.defaults.push((ext.to_string(), ct.to_string()));
+            } else if metadata_element_name(name, attrs, root_attrs, "Override", CONTENT_TYPES_NS) {
+                let part = find_attr(attrs, "PartName").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
+                let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
+                out.overrides.push((part.to_string(), ct.to_string()));
             }
         }
+        out.validate_identities()?;
         Ok(out)
     }
 }
@@ -263,6 +286,15 @@ impl OpcContentTypes {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
+}
+
+fn metadata_element_name(name: &str, attrs: &[XmlAttr], inherited: &[XmlAttr], local: &str, namespace: &str) -> bool {
+    let (prefix, actual) = name.split_once(':').map_or((None, name), |(prefix, local)| (Some(prefix), local));
+    if actual != local {
+        return false;
+    }
+    let binding = prefix.map_or_else(|| "xmlns".into(), |prefix| format!("xmlns:{prefix}"));
+    find_attr(attrs, &binding).or_else(|| find_attr(inherited, &binding)) == Some(namespace)
 }
 //#endregion 🔖️ContentTypes
 
@@ -283,6 +315,21 @@ pub struct OpcRelationship {
     pub rel_type: String,
     pub target: String,
     pub target_mode: OpcTargetMode,
+}
+
+/// 🆔️ Reserves the lowest available relationship identity in one owner namespace.
+pub fn fresh_relationship_id(taken: &mut Vec<String>) -> String {
+    let occupied: HashSet<&str> = taken.iter().map(String::as_str).collect();
+    let mut number = 1usize;
+    let id = loop {
+        let candidate = format!("rId{number}");
+        if !occupied.contains(candidate.as_str()) {
+            break candidate;
+        }
+        number += 1;
+    };
+    taken.push(id.clone());
+    id
 }
 
 /// 📍 The `*.rels` part path that carries `owner`'s relationships (`""` = package root ->
@@ -357,6 +404,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
         .collect();
     XmlDocument {
         prolog: Vec::new(),
+        epilog: Vec::new(),
         root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
         doctype: None,
         declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
@@ -367,13 +415,16 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
 fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
     let malformed = |detail: String| OpcError::MalformedRelationships { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| malformed("empty document".into()))?;
-    let XmlNode::Element { children, .. } = root else {
+    let XmlNode::Element { name, attrs: root_attrs, children } = root else {
         return Err(malformed("root is not an element".into()));
     };
+    if !metadata_element_name(name, root_attrs, &[], "Relationships", RELATIONSHIPS_NS) {
+        return Err(malformed(format!("expected package Relationships root, got <{name}>")));
+    }
     let mut out = Vec::new();
     for child in children {
         let XmlNode::Element { name, attrs, .. } = child else { continue };
-        if name != "Relationship" {
+        if !metadata_element_name(name, attrs, root_attrs, "Relationship", RELATIONSHIPS_NS) {
             continue;
         }
         let id = find_attr(attrs, "Id").ok_or_else(|| malformed("<Relationship> missing Id".into()))?.to_string();
@@ -381,19 +432,31 @@ fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelati
         let target = find_attr(attrs, "Target").ok_or_else(|| malformed("<Relationship> missing Target".into()))?.to_string();
         let target_mode = match find_attr(attrs, "TargetMode") {
             Some("External") => OpcTargetMode::External,
-            _ => OpcTargetMode::Internal,
+            None | Some("Internal") => OpcTargetMode::Internal,
+            Some(mode) => return Err(malformed(format!("invalid relationship target mode: {mode}"))),
         };
         out.push(OpcRelationship { id, rel_type, target, target_mode });
     }
+    validate_relationship_identities(&out, part)?;
     Ok(out)
+}
+
+fn validate_relationship_identities(relationships: &[OpcRelationship], part: &str) -> Result<(), OpcError> {
+    let mut ids = HashSet::new();
+    for relationship in relationships {
+        if !ids.insert(relationship.id.as_str()) {
+            return Err(OpcError::MalformedRelationships { part: part.into(), detail: format!("duplicate relationship identity: {}", relationship.id) });
+        }
+    }
+    Ok(())
 }
 //#endregion 🔖️Relationships
 
 //#region 🔖️Package
 /// 📦️ A fully decoded OPC package: every non-metadata part verbatim, plus the two typed
 /// metadata channels (content types, relationships-by-owner) that `docx`/`xlsx`/`pptx` interpret
-/// semantically on top of. Lossless by construction — `parts ∪ content_types ∪ relationships`
-/// covers every zip entry a real package can contain.
+/// semantically on top of. Content-part payloads remain verbatim; metadata tables retain their
+/// declared semantic fields.
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct OpcPackage {
@@ -452,6 +515,14 @@ impl OpcPackage {
         self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal });
     }
 
+    /// 🧷️ Adds a relationship without overwriting any owner-local identity.
+    pub fn add_generated_relationship(&mut self, owner: &str, rel_type: &str, target: &str) -> String {
+        let mut taken = self.relationships_for(owner).iter().map(|relationship| relationship.id.clone()).collect();
+        let id = fresh_relationship_id(&mut taken);
+        self.add_relationship(owner, &id, rel_type, target);
+        id
+    }
+
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
     /// an absolute part path. `None` when no such relationship exists.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -461,12 +532,18 @@ impl OpcPackage {
     }
 }
 
-/// 📦️ Decode OPC container bytes (a real zip archive) into a typed, lossless `OpcPackage`.
+/// 📦️ Decode OPC container bytes (a real zip archive) into a typed `OpcPackage`.
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
-/// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
+/// relationship list, or a verbatim content `OpcPart`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let zip = crate::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let mut paths = HashSet::with_capacity(zip.entries.len());
+    for entry in &zip.entries {
+        if !paths.insert(entry.name.as_str()) {
+            return Err(OpcError::Malformed(format!("duplicate package member: {}", entry.name)));
+        }
+    }
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
@@ -498,31 +575,23 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
 /// 📦️ Re-encode an `OpcPackage` as OPC container bytes: `[Content_Types].xml` and every owner's
 /// `*.rels` file are regenerated from the typed tables (never carried as stray verbatim parts —
 /// see `decode_opc`), every content part is re-emitted deflated via the zip artifact's real
-/// codec. The generic OPC writer chooses one deterministic, path-sorted logical normal form;
-/// format serializers that define a standard-specific member sequence call the same writer with
-/// their semantic path-order policy.
+/// codec. Content parts retain their authored sequence; format serializers can supply a
+/// standard-specific member sequence through `encode_opc_with_path_order`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
-    encode_opc_with_path_order(pkg, |paths| {
-        paths.sort();
-        if let Some(index) = paths.iter().position(|path| path == CONTENT_TYPES_PART) {
-            let content_types = paths.remove(index);
-            paths.insert(0, content_types);
-        }
-    })
+    encode_opc_with_package_order(pkg)
 }
 
 /// 📦️ Re-encode an OPC package with metadata entries first and every remaining entry in the
-/// package's authoritative part order. This is the lossless OOXML path: central-directory order
-/// is preserved by `decode_opc`, and an untouched package can therefore be emitted without a
-/// semantic part-order rewrite.
+/// package's authoritative content-part order. Metadata members use their declared package order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         let mut ordered = Vec::with_capacity(paths.len());
+        let mut pending: std::collections::HashSet<String> = std::mem::take(paths).into_iter().collect();
         let mut take = |path: String| {
-            if let Some(index) = paths.iter().position(|candidate| candidate == &path) {
-                ordered.push(paths.remove(index));
+            if let Some(path) = pending.take(&path) {
+                ordered.push(path);
             }
         };
         take(CONTENT_TYPES_PART.into());
@@ -539,8 +608,9 @@ pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcErr
             take(part.path.clone());
         }
 
-        paths.sort();
-        ordered.append(paths);
+        let mut remaining: Vec<String> = pending.into_iter().collect();
+        remaining.sort();
+        ordered.append(&mut remaining);
         *paths = ordered;
     })
 }
@@ -548,35 +618,52 @@ pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcErr
 /// 🧭 Re-encodes an OPC package after applying a caller-owned deterministic path order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
+    pkg.content_types.validate_identities()?;
+    for (owner, relationships) in &pkg.relationships {
+        validate_relationship_identities(relationships, &rels_part_path_for(owner))?;
+    }
+    for part in &pkg.parts {
+        if pkg.content_types.resolve(&part.path) != Some(part.content_type.as_str()) {
+            return Err(OpcError::Malformed(format!("content type disagrees with metadata for part: {}", part.path)));
+        }
+    }
     let mut payloads = HashMap::<String, Vec<u8>>::new();
-    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
+    let ct_text = xml_document_to_opc_text_checked(&pkg.content_types.to_xml()).map_err(|detail| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail })?;
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
 
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
     owners.sort();
     for owner in owners {
         let rels = &pkg.relationships[owner];
-        if rels.is_empty() {
-            continue;
-        }
         let path = rels_part_path_for(owner);
-        let text = xml_document_to_opc_text(&relationships_to_xml(rels));
-        payloads.insert(path, text.into_bytes());
+        if owner_for_rels_path(&path).as_ref() != Some(owner) {
+            return Err(OpcError::Malformed(format!("invalid relationship owner: {owner}")));
+        }
+        let text = xml_document_to_opc_text_checked(&relationships_to_xml(rels)).map_err(|detail| OpcError::Xml { part: path.clone(), detail })?;
+        if payloads.insert(path.clone(), text.into_bytes()).is_some() {
+            return Err(OpcError::Malformed(format!("duplicate relationship part: {path}")));
+        }
     }
 
     for part in &pkg.parts {
+        if part.path == CONTENT_TYPES_PART || part.path.ends_with(".rels") || payloads.contains_key(&part.path) {
+            return Err(OpcError::Malformed(format!("ambiguous content part: {}", part.path)));
+        }
         payloads.insert(part.path.clone(), part.bytes.clone());
     }
 
     let mut entries = Vec::with_capacity(payloads.len());
     let mut new_paths: Vec<String> = payloads.keys().cloned().collect();
     order(&mut new_paths);
+    if new_paths.len() != payloads.len() {
+        return Err(OpcError::Malformed("package member order must include every path exactly once".into()));
+    }
     for path in &new_paths {
-        let data = payloads.remove(path).expect("known OPC payload");
-        entries.push(ZipEntry { name: path.clone(), data });
+        let data = payloads.remove(path).ok_or_else(|| OpcError::Malformed(format!("unknown or repeated package member in order: {path}")))?;
+        entries.push(ZipEntry { name: path.clone(), data, ..Default::default() });
     }
 
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone(), ..Default::default() };
     crate::standards::v2_0::subsets::base::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
 }
 

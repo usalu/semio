@@ -63,6 +63,7 @@
           "anyOf": [
             {
               "type": "array",
+              "maxItems": 65535,
               "items": {
                 "type": "integer",
                 "minimum": 0,

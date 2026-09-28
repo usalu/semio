@@ -658,6 +658,14 @@ pub struct TableProps {
     pub label: Label,
     /// 🗂️ The column headers, in cell order.
     pub columns: crate::UiFixedList<Label>,
+    /// ↕️ Domain name for one logical row, localized by the artifact (for example Row or Frame).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub row_label: Option<Label>,
+    /// ↔️ Domain name for one logical column, localized by the artifact (for example Column or Channel).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub column_label: Option<Label>,
     /// 🎬️ Header of the trailing actions column a renderer adds when any row carries row actions.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -666,6 +674,11 @@ pub struct TableProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<TreeWindow>,
+    /// ↔️ The materialised slice of the logical column list. `columns` and every row's `cells`
+    /// contain exactly this slice and retain their logical indices through `offset`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub column_window: Option<TreeWindow>,
 }
 
 /// 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order and

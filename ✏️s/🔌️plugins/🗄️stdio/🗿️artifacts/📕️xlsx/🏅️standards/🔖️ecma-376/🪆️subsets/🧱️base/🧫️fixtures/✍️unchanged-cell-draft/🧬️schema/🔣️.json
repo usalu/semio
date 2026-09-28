@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sharedStrings", "cases", "sharedStringConflict"],
+  "properties": {
+    "sharedStrings": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+    "cases": {
+      "type": "array", "minItems": 10,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "value", "draft", "reference", "referenceKind"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "value": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/snapshot.json#/$defs/XlsxCellValue"},
+          "draft": {"type": "string"},
+          "reference": {"type": "string"},
+          "referenceKind": {"enum": ["string", "number", "boolean", "empty"]},
+          "formula": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "sharedStringConflict": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "replacement", "draft"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "replacement": {"type": "string"},
+        "draft": {"type": "string"}
+      }
+    }
+  }
+}

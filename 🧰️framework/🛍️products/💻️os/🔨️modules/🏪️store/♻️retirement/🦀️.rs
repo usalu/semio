@@ -71,7 +71,7 @@ macro_rules! artifact_retire_struct {
     };
 }
 
-artifact_retire_leaf!(bool, u8, u16, u32, u64, usize, i8, i16, i32, i64, f32, f64);
+artifact_retire_leaf!((), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
 
 struct Bytes(ManuallyDrop<Vec<u8>>);
 impl RetirementCursor for Bytes {
@@ -176,15 +176,15 @@ impl<T: RetireOwned> RetireOwned for Box<T> {
 }
 impl<T: RetireOwned, U: RetireOwned> RetireOwned for (T, U) {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        artifact_retirement_sequence![self.0, self.1]
+        sequence(vec![deferred(self.0), deferred(self.1)])
     }
 }
 impl<T: RetireOwned, U: RetireOwned, V: RetireOwned> RetireOwned for (T, U, V) {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        artifact_retirement_sequence![self.0, self.1, self.2]
+        sequence(vec![deferred(self.0), deferred(self.1), deferred(self.2)])
     }
 }
-impl RetireOwned for [u8; 32] {
+impl<T: Copy + Send + 'static, const N: usize> RetireOwned for [T; N] {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         leaf(self)
     }
@@ -207,6 +207,24 @@ impl Drop for Sequence {
 }
 pub fn sequence(fields: Vec<Box<dyn RetirementCursor>>) -> Box<dyn RetirementCursor> {
     Box::new(Sequence(ManuallyDrop::new(fields)))
+}
+
+struct Deferred<T: RetireOwned>(Option<T>);
+impl<T: RetireOwned> RetirementCursor for Deferred<T> {
+    fn close_step(&mut self, _: usize) -> RetirementStep {
+        self.0.take().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+impl<T: RetireOwned> Drop for Deferred<T> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.0.is_none(), "deferred owned value retired before terminal-empty");
+    }
+}
+pub fn deferred<T: RetireOwned>(value: T) -> Box<dyn RetirementCursor> {
+    Box::new(Deferred(Some(value)))
 }
 
 struct ValueRetirement(ManuallyDrop<Option<crate::DslValue>>);

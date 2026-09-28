@@ -60,5 +60,33 @@
       "encoding": "lowercase ASCII BLAKE3 hexadecimal",
       "input": "nodeId + NUL + revision + NUL + value"
     }
+  ],
+  "prefixItems": [
+    {
+      "const": 90
+    },
+    {
+      "const": 65
+    },
+    {
+      "const": 84
+    },
+    {
+      "const": 49
+    },
+    {
+      "const": 1
+    },
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "const": 0
+    },
+    {
+      "const": 0
+    }
   ]
 }

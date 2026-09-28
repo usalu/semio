@@ -174,7 +174,7 @@ impl ArtifactEditor for SvgAnyEditor {
             }),
             SvgAnyEditCommand::SetPixelRegion { source } => {
                 let Ok(snapshot) = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
-                if snapshot.doc.prolog != doc.snapshot.doc.prolog {
+                if snapshot.doc.prolog != doc.snapshot.doc.prolog || snapshot.doc.epilog != doc.snapshot.doc.epilog {
                     return Ok(Emit::default());
                 }
                 let (Some(XmlNode::Element { name: current_name, attrs: current_attrs, children: current_children }), Some(XmlNode::Element { name, attrs, children })) = (&doc.snapshot.doc.root, &snapshot.doc.root) else {

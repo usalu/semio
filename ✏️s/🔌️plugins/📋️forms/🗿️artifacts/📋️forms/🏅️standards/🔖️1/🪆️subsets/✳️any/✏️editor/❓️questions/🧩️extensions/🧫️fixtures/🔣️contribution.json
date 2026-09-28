@@ -1,0 +1,42 @@
+{
+  "payload": {
+    "appId": "s.playbook.procedural@1/*#editor",
+    "questionKind": "buildingComponent",
+    "label": {
+      "native": {
+        "en": "Building Component",
+        "de": "Bauteil"
+      },
+      "reuse": {
+        "en": "Reusable Component",
+        "de": "Wiederverwendbares Bauteil"
+      }
+    },
+    "iconId": "building",
+    "defaultValueJson": "{\"height\":6,\"radius\":0.5,\"sides\":6}",
+    "paramsBodyKey": "params",
+    "previewBodyKey": "preview"
+  },
+  "cases": [
+    {
+      "locale": "en",
+      "terminology": "native",
+      "expected": "Building Component"
+    },
+    {
+      "locale": "de",
+      "terminology": "native",
+      "expected": "Bauteil"
+    },
+    {
+      "locale": "en",
+      "terminology": "reuse",
+      "expected": "Reusable Component"
+    },
+    {
+      "locale": "de",
+      "terminology": "reuse",
+      "expected": "Wiederverwendbares Bauteil"
+    }
+  ]
+}

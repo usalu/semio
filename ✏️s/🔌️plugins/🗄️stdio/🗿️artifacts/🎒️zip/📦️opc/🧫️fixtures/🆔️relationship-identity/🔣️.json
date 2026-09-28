@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "taken": [],
+      "expected": [
+        "rId1",
+        "rId2"
+      ]
+    },
+    {
+      "taken": [
+        "rId1",
+        "rId2",
+        "rId4"
+      ],
+      "expected": [
+        "rId3",
+        "rId5"
+      ]
+    },
+    {
+      "taken": [
+        "RID1",
+        "rId01",
+        "named",
+        "rId18446744073709551615"
+      ],
+      "expected": [
+        "rId1",
+        "rId2"
+      ]
+    }
+  ]
+}

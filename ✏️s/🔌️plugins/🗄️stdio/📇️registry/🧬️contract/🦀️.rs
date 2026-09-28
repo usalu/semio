@@ -1137,6 +1137,33 @@ pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowK
     definition
 }
 
+pub const ADD_TABLE_ROW_ACTION_ID: &str = "add-row";
+pub const REMOVE_TABLE_ROW_ACTION_ID: &str = "remove-row";
+pub const ADD_TABLE_COLUMN_ACTION_ID: &str = "add-column";
+pub const REMOVE_TABLE_COLUMN_ACTION_ID: &str = "remove-column";
+pub const SET_TABLE_HEADER_ACTION_ID: &str = "set-header";
+
+/// 🧱️ Declares direct structural table edits beside revision-addressed cell editing.
+pub fn structural_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
+    use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, LocalizedLabel};
+    let revision = || ActionArgDef::text("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")).required();
+    let mut definition = revision_addressed_table_window_kind();
+    definition.actions.extend([
+        ActionDefinition::bounded_catalog(ADD_TABLE_ROW_ACTION_ID, LocalizedLabel::native("Add row", "Zeile hinzufügen"), ActionKind::Mutation).with_args(vec![revision()]).in_palette(false),
+        ActionDefinition::bounded_catalog(REMOVE_TABLE_ROW_ACTION_ID, LocalizedLabel::native("Remove row", "Zeile entfernen"), ActionKind::Mutation)
+            .with_args(vec![ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(), revision()])
+            .in_palette(false),
+        ActionDefinition::bounded_catalog(ADD_TABLE_COLUMN_ACTION_ID, LocalizedLabel::native("Add column", "Spalte hinzufügen"), ActionKind::Mutation).with_args(vec![revision()]).in_palette(false),
+        ActionDefinition::bounded_catalog(REMOVE_TABLE_COLUMN_ACTION_ID, LocalizedLabel::native("Remove column", "Spalte entfernen"), ActionKind::Mutation)
+            .with_args(vec![ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(), revision()])
+            .in_palette(false),
+        ActionDefinition::bounded_catalog(SET_TABLE_HEADER_ACTION_ID, LocalizedLabel::native("Set header", "Spaltenkopf setzen"), ActionKind::Mutation)
+            .with_args(vec![ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(), revision(), ActionArgDef::text("value", LocalizedLabel::native("Header", "Spaltenkopf")).min_length(0).required()])
+            .in_palette(false),
+    ]);
+    definition
+}
+
 /// 🎯️ The complete ordinal address published by one revision-guarded table cell.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WindowKitRevisionedCellEdit {
@@ -1172,20 +1199,106 @@ pub fn window_kit_canonical_revision(revision: [u8; 32]) -> String {
     encoded
 }
 
+/// 📍️ Builds one complete revision-guarded ordinal cell address without materializing its table.
+pub fn window_kit_revisioned_cell_arguments(row: usize, column: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.cell-arguments", "cell argument map capacity"))?;
+    arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "row argument capacity"))?;
+    arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "column argument capacity"))?;
+    arguments
+        .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
+        .map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "revision argument capacity"))?;
+    Ok(UiValue::Map(arguments.finish()))
+}
+
+/// 📍️ Builds one revision-only structural table address.
+pub fn window_kit_revision_arguments(revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.revision-arguments", "argument map capacity"))?;
+    arguments
+        .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
+        .map_err(|_| PluginAssemblyError::new("stdio.table.revision-arguments", "revision argument capacity"))?;
+    Ok(UiValue::Map(arguments.finish()))
+}
+
+/// 📍️ Builds one row- or column-indexed structural table address.
+pub fn window_kit_indexed_revision_arguments(index_name: &str, index: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.indexed-arguments", "argument map capacity"))?;
+    arguments.try_insert(index_name.into(), UiValue::Number(index as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.indexed-arguments", "index argument capacity"))?;
+    arguments
+        .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
+        .map_err(|_| PluginAssemblyError::new("stdio.table.indexed-arguments", "revision argument capacity"))?;
+    Ok(UiValue::Map(arguments.finish()))
+}
+
+/// 🧱️ Adds localized structural controls and a windowed header editor around a table body.
+pub fn render_structural_table(
+    table: semio_framework_plugin::BuiltNode,
+    header_count: usize,
+    mut header: impl FnMut(usize) -> String,
+    editable_headers: bool,
+    controller_id: &str,
+    revision: &str,
+    locale: semio_framework_plugin::Locale,
+    windows: &semio_framework_plugin::TreeWindows<'_>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    use semio_framework_plugin::app::{editable_table_window_row, table_row_action, TableWindowKit, WindowedEditableTableCell};
+    use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, Trigger};
+    use semio_framework_ui_contract::{self as ui, Label as UiLabel};
+    let labels = match locale {
+        semio_framework_plugin::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
+        semio_framework_plugin::Locale::En => ("Add row", "Add column", "Headers", "Header", "Actions", "Remove column"),
+    };
+    let action = |name: &str| ActionId::try_v1(controller_id, name).ok_or_else(|| PluginAssemblyError::new("stdio.table.action", format!("invalid action {name}")));
+    let add_row = ui::button(UiLabel::try_from(labels.0).map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button label admission"))?)
+        .try_id("add-row")
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button id admission"))?
+        .try_on_with(Trigger::Activate, action(ADD_TABLE_ROW_ACTION_ID)?, window_kit_revision_arguments(revision)?)
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button binding admission"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button admission"))?;
+    let add_column = ui::button(UiLabel::try_from(labels.1).map_err(|_| PluginAssemblyError::new("stdio.table.add-column", "button label admission"))?)
+        .try_id("add-column")
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-column", "button id admission"))?
+        .try_on_with(Trigger::Activate, action(ADD_TABLE_COLUMN_ACTION_ID)?, window_kit_revision_arguments(revision)?)
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-column", "button binding admission"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("stdio.table.add-column", "button admission"))?;
+    let toolbar = ui::row()
+        .try_id("structure-actions")
+        .map_err(|_| PluginAssemblyError::new("stdio.table.toolbar", "toolbar id admission"))?
+        .try_children([add_row, add_column])
+        .map_err(|_| PluginAssemblyError::new("stdio.table.toolbar", "toolbar child admission"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("stdio.table.toolbar", "toolbar admission"))?;
+    let mut children = vec![toolbar];
+    children.push(TableWindowKit::render_indexed_rows_with_id(windows, "stdio-table-headers", labels.2, &[labels.3], Some(labels.4), header_count, |column| {
+        let remove = table_row_action("trash-2", labels.5, (action(REMOVE_TABLE_COLUMN_ACTION_ID)?, Some(window_kit_indexed_revision_arguments("column", column, revision)?)))?;
+        let value = header(column);
+        let cell = if editable_headers {
+            WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?)
+        } else {
+            WindowedEditableTableCell::read_only(value, labels.3)
+        };
+        editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove])
+    })?);
+    children.push(table);
+    ui::column()
+        .try_id("stdio-structural-table")
+        .map_err(|_| PluginAssemblyError::new("stdio.table.root", "root id admission"))?
+        .try_children(children)
+        .map_err(|_| PluginAssemblyError::new("stdio.table.root", "root child admission"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("stdio.table.root", "root admission"))
+}
+
 /// 📊️ Binds every present table cell to its row, column, and shared snapshot revision.
 pub fn window_kit_revisioned_editable_cells(rows: &[Vec<String>], action_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::app::EditableTableCell>> {
-    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
-    let revision = UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?;
     rows.iter()
         .enumerate()
         .flat_map(|(row, cells)| cells.iter().enumerate().map(move |(column, _)| (row, column)))
-        .map(|(row, column)| {
-            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.cell-arguments", "cell argument map capacity"))?;
-            arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "row argument capacity"))?;
-            arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "column argument capacity"))?;
-            arguments.try_insert("revision".into(), UiValue::Text(revision.clone())).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "revision argument capacity"))?;
-            Ok(semio_framework_plugin::app::EditableTableCell::new(row, column, action_id, UiValue::Map(arguments.finish())))
-        })
+        .map(|(row, column)| Ok(semio_framework_plugin::app::EditableTableCell::new(row, column, action_id, window_kit_revisioned_cell_arguments(row, column, revision)?)))
         .collect()
 }
 
@@ -1251,6 +1364,26 @@ pub fn require_window_kit_document_revision(text: &str, revision: &str, code: &'
         return Ok(());
     }
     Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "the saved document text changed while the local draft was open"))
+}
+
+/// 🎬️ Projects the exact live app/document/revision/generation authority into a media transport resource.
+pub fn media_transport_resource<P>(doc: &semio_framework_plugin::ArtifactView<'_, P>, controller_id: &str) -> Option<semio_framework_plugin::app::MediaResource> {
+    let operation = doc.render_operation()?;
+    Some(semio_framework_plugin::app::MediaResource {
+        controller_id: controller_id.to_string(),
+        app_instance_id: operation.app_instance_id,
+        parent_document_id: doc.parent_document_id()?.to_string(),
+        output_port: semio_framework_plugin::app::MEDIA_PLAYBACK_OUTPUT_PORT.to_string(),
+        revision: operation.base_revision.0.to_string(),
+        generation: operation.generation.0.to_string(),
+    })
+}
+
+/// ⏱️ Converts a positive finite inferred duration into the host's exact safe millisecond domain.
+pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
+    const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+    let milliseconds = duration_seconds * 1_000.0;
+    (milliseconds.is_finite() && milliseconds > 0.0 && milliseconds <= MAX_SAFE_INTEGER).then(|| milliseconds.round().max(1.0) as u64)
 }
 
 /// 🧬️ The whole-document load an example switch hands the host. Whole-document replacement is not an

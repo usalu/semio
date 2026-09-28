@@ -6,6 +6,10 @@ import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch } from "
 
 const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json() as {
   base: SnapshotValue;
+  positionedInsertions: { key: string; index: number; keys: string[] }[];
+  invalidPositions: number[];
+  intrinsicObjectOrder: { before: SnapshotValue; key: string; index: number; expectedKeys: string[] }[];
+  intrinsicRenames: { before: SnapshotValue; from: string; key: string }[];
   cases: { id: string; event: SnapshotEditEvent; oracle: Operation[] }[];
   rejected: { id: string; event: SnapshotEditEvent }[];
   large: { bytes: number; fill: number; metadataPath: string; value: string; maximumPatchBytes: number };
@@ -28,6 +32,21 @@ const schema = await Bun.file(new URL("../🧬️schema/🔣️.json", import.me
 const validate = new Ajv({ strict: true }).compile(schema);
 
 describe("compact snapshot patches", () => {
+  test("intrinsic object ordering preserves numeric keys and exact inverse values", () => {
+    for (const row of fixture.intrinsicObjectOrder) {
+      const patch = { edits: [{ path: [row.key], edit: { operation: "insertAt" as const, value: "Inserted", index: row.index } }] };
+      const after = applySnapshotPatch(row.before, patch);
+      expect(Object.keys(after as object)).toEqual(row.expectedKeys);
+      expect(after).toEqual(applyPatch(structuredClone(row.before), [{ op: "add", path: `/${row.key}`, value: "Inserted" }]).newDocument);
+      expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(row.before, patch)))).toBe(JSON.stringify(row.before));
+    }
+    for (const row of fixture.intrinsicRenames) {
+      const patch = prepareSnapshotPatch(row.before, { operation: "renameKey", path: `/${row.from}`, key: row.key });
+      const after = applySnapshotPatch(row.before, patch);
+      expect(after).toEqual(applyPatch(structuredClone(row.before), [{ op: "move", from: `/${row.from}`, path: `/${row.key}` }]).newDocument);
+      expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(row.before, patch)))).toBe(JSON.stringify(row.before));
+    }
+  });
   for (const [family, row] of Object.entries(fixture.nativePilots)) test(`${family} native patch schema and large field match independent oracles`, async () => {
     const before = applyPatch(structuredClone(row.before), [{ op: "replace", path: row.largeValuePath, value: "x".repeat(row.largeValueBytes) }], true, true, false).newDocument;
     const patch = prepareSnapshotPatch(before, row.event);
@@ -51,6 +70,18 @@ describe("compact snapshot patches", () => {
     expect(check(mutation), JSON.stringify(check.errors)).toBe(true);
   });
 
+  test("positioned object insertion preserves the authored key order and rejects invalid positions", () => {
+    for (const row of fixture.positionedInsertions) {
+      const patch = { edits: [{ path: ["metadata", row.key], edit: { operation: "insertAt" as const, value: "Inserted", index: row.index } }] };
+      expect(validate(patch)).toBe(true);
+      const after = applySnapshotPatch(fixture.base, patch) as Record<string, SnapshotValue>;
+      expect(Object.keys(after.metadata as object)).toEqual(row.keys);
+      expect(after).toEqual(applyPatch(structuredClone(fixture.base), [{ op: "add", path: `/metadata/${row.key}`, value: "Inserted" }]).newDocument);
+      expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(fixture.base, patch)))).toBe(JSON.stringify(fixture.base));
+    }
+    for (const index of fixture.invalidPositions) expect(() => applySnapshotPatch(fixture.base, { edits: [{ path: ["metadata", "bad"], edit: { operation: "insertAt", value: "Rejected", index } }] })).toThrow();
+    expect(() => applySnapshotPatch(fixture.base, { edits: [{ path: ["list", "0"], edit: { operation: "insertAt", value: "Rejected", index: 0 } }] })).toThrow();
+  });
   test("moves resolve the destination parent after removal", () => {
     const row = fixture.shiftedParent;
     const patch = prepareSnapshotPatch(row.before, row.event);
@@ -81,6 +112,7 @@ describe("compact snapshot patches", () => {
     const oracle = applyPatch(structuredClone(before), row.oracle, true, true, false).newDocument;
     expect(actual).toEqual(oracle);
     expect(applySnapshotPatch(actual, inverse)).toEqual(before);
+    expect(JSON.stringify(applySnapshotPatch(actual, inverse))).toBe(JSON.stringify(before));
     expect(before).toEqual(fixture.base);
   });
 

@@ -35,8 +35,10 @@ import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 //#region 🔖️BlockListHost
 //#region BlockListHost
 //#region Types
-type BlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };
-type StepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly BlockRecord[] };
+type SelectionTarget = { readonly granularity: string; readonly id: string };
+type SelectionContext = { readonly domainId?: string; readonly selectedId?: string };
+type BlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string; readonly target?: SelectionTarget };
+type StepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly BlockRecord[]; readonly target?: SelectionTarget };
 type PaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: IconName };
 const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
 //#endregion Types
@@ -44,6 +46,17 @@ const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
 //#region Helpers
 function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, controllerId: string, action: string, args: Record<string, unknown>): void {
   onAction({ controllerId, action, args });
+}
+
+function blockListPaletteTargetStepId(steps: readonly StepRecord[], selectedId?: string): string | undefined {
+  const current = steps.filter((step) => typeof step.id === "string" && step.id.length > 0 && Array.isArray(step.blocks));
+  if (selectedId) {
+    const selectedStep = current.find((step) => step.id === selectedId);
+    if (selectedStep) return selectedStep.id;
+    const selectedBlockParent = current.find((step) => step.blocks.some((block) => block?.id === selectedId));
+    if (selectedBlockParent) return selectedBlockParent.id;
+  }
+  return current[0]?.id;
 }
 //#endregion Helpers
 
@@ -54,7 +67,7 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style: React.CSSProperties = { transform: DndCSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...(surfaceDrag ? listeners : {})}>
+    <div ref={setNodeRef} style={style} {...(surfaceDrag ? { ...attributes, ...listeners } : {})}>
       {children({ attributes, listeners: surfaceDrag ? undefined : listeners, style })}
     </div>
   );
@@ -62,19 +75,32 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
 //#endregion SortableRow
 
 //#region Block
-function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function SelectionLabel({ id, target, selection, controllerId, onAction, children }: { readonly id: string; readonly target?: SelectionTarget; readonly selection: SelectionContext; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly children: React.ReactNode }) {
+  if (!selection.domainId || !target) return <div className="min-w-0 flex-1">{children}</div>;
+  return <button
+    type="button"
+    aria-pressed={selection.selectedId === id}
+    className="min-w-0 flex-1 rounded text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    onClick={(event) => {
+      event.stopPropagation();
+      dispatchBlockListAction(onAction, controllerId, "interactionSelect", { domainId: selection.domainId, targets: JSON.stringify([target]), merge: "replace", method: "pick" });
+    }}
+  >{children}</button>;
+}
+
+function BlockCard({ block, stepId, controllerId, onAction, selection }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
   const surfaceDrag = useUiDriverDragSurface();
   const deleteLabel = useLabel("ui.common.delete");
   return (
     <SortableRow id={block.id}>
       {({ attributes, listeners }) => (
-        <div className={cn("semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
+        <div className={cn("semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single", selection.selectedId === block.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
           {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium">{block.label}</div>
-            <div className="truncate text-xs text-muted-foreground">{block.kind}</div>
-          </div>
-          <Button aria-label={deleteLabel} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
+          <SelectionLabel id={block.id} target={block.target} selection={selection} controllerId={controllerId} onAction={onAction}>
+            <span className="block truncate text-xs font-medium">{block.label}</span>
+            <span aria-hidden="true" className="block truncate text-xs text-muted-foreground">{block.kind}</span>
+          </SelectionLabel>
+          <Button aria-label={`${deleteLabel}: ${block.label}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
         </div>
       )}
     </SortableRow>
@@ -83,7 +109,7 @@ function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: 
 //#endregion Block
 
 //#region Step
-function StepCard({ step, palette, controllerId, onAction }: { readonly step: StepRecord; readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function StepCard({ step, palette, controllerId, onAction, selection }: { readonly step: StepRecord; readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
   const surfaceDrag = useUiDriverDragSurface();
   const deleteLabel = useLabel("ui.common.delete");
   const blockIds = useMemo(() => step.blocks.map((block) => block.id), [step.blocks]);
@@ -100,7 +126,7 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
     <SortableRow id={step.id}>
       {({ attributes, listeners }) => (
         <div
-          className={cn("semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single", surfaceDrag && "cursor-grab active:cursor-grabbing")}
+          className={cn("semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single", selection.selectedId === step.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")}
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();
@@ -115,15 +141,17 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
         >
           <div className="flex items-center gap-2">
             {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-            <div className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</div>
-            <Button aria-label={deleteLabel} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
+            <SelectionLabel id={step.id} target={step.target} selection={selection} controllerId={controllerId} onAction={onAction}>
+              <span className="block truncate text-sm font-medium">{step.title}</span>
+            </SelectionLabel>
+            <Button aria-label={`${deleteLabel}: ${step.title}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
           </div>
           {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
           <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
             <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-1">
                 {step.blocks.map((block) => (
-                  <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} />
+                  <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} selection={selection} />
                 ))}
               </div>
             </SortableContext>
@@ -136,29 +164,37 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
 //#endregion Step
 
 //#region Palette
-function PaletteEntryRow({ entry, controllerId, onAction }: { readonly entry: PaletteEntryRecord; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { readonly entry: PaletteEntryRecord; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const surfaceDrag = useUiDriverDragSurface();
   const { armed, arm } = useNativeDragArm();
+  const enabled = targetStepId !== undefined;
   return (
     <div
-      draggable={surfaceDrag || armed}
+      draggable={enabled && (surfaceDrag || armed)}
       onDragStart={(event) => {
+        if (!enabled) {
+          event.preventDefault();
+          return;
+        }
         event.dataTransfer.setData(PALETTE_DRAG_MIME, entry.blockKind);
         event.dataTransfer.effectAllowed = "copy";
       }}
-      className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", surfaceDrag && "cursor-grab active:cursor-grabbing")}
+      className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", enabled && surfaceDrag && "cursor-grab active:cursor-grabbing")}
     >
-      {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
+      {!surfaceDrag && enabled ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
       <button
         type="button"
+        disabled={!enabled}
         className="flex min-w-0 flex-1 items-center gap-1 text-left"
         data-block-kind={entry.blockKind}
         aria-label={entry.label}
-        onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
+        onClick={() => {
+          if (targetStepId) dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: targetStepId, kind: entry.blockKind });
+        }}
         onKeyDown={(event) => {
-          if (event.key !== "Enter" && event.key !== " ") return;
+          if (!targetStepId || (event.key !== "Enter" && event.key !== " ")) return;
           event.preventDefault();
-          dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind });
+          dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: targetStepId, kind: entry.blockKind });
         }}
       >
         <Icon icon={entry.iconId} size="small" />
@@ -168,11 +204,11 @@ function PaletteEntryRow({ entry, controllerId, onAction }: { readonly entry: Pa
   );
 }
 
-function PalettePanel({ palette, controllerId, onAction }: { readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function PalettePanel({ palette, targetStepId, controllerId, onAction }: { readonly palette: readonly PaletteEntryRecord[]; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
     <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
       {palette.map((entry) => (
-        <PaletteEntryRow key={entry.blockKind} entry={entry} controllerId={controllerId} onAction={onAction} />
+        <PaletteEntryRow key={entry.blockKind} entry={entry} targetStepId={targetStepId} controllerId={controllerId} onAction={onAction} />
       ))}
     </div>
   );
@@ -210,6 +246,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
     }
   }, [scene]);
   const stepIds = useMemo(() => steps.map((step) => step.id), [steps]);
+  const paletteTargetStepId = useMemo(() => blockListPaletteTargetStepId(steps, scene?.selectedId), [scene?.selectedId, steps]);
   const stepsLabel = useLabel("ui.blockList.steps");
   const addStepLabel = useLabel("ui.blockList.addStep");
   const emptyLabel = useLabel("ui.host.emptyScene");
@@ -262,13 +299,13 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
           <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
             <div className="flex flex-col gap-2">
               {steps.map((step) => (
-                <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} />
+                <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} selection={{ domainId: scene.domainId, selectedId: scene.selectedId }} />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       </div>
-      <PalettePanel palette={palette} controllerId={node.controllerId} onAction={onAction} />
+      <PalettePanel palette={palette} targetStepId={paletteTargetStepId} controllerId={node.controllerId} onAction={onAction} />
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}

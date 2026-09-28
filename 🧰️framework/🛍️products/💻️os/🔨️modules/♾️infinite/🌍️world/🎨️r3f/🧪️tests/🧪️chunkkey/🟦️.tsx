@@ -1,7 +1,10 @@
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../🟦️.tsx").WorldR3fTestDependencies, source: TestSource): Promise<void> {
-  const { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb } = dependencies;
+  const { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, WorldOrbitCameraViewRigSeedApply, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, mountWorldReferencePose, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb } = dependencies;
   type OrbitCameraViewId = import("../../🟦️.tsx").OrbitCameraViewId;
   type ProjectionGizmoHit = import("../../🟦️.tsx").ProjectionGizmoHit;
   type WorldNavigationSnapshot = import("../../🟦️.tsx").WorldNavigationSnapshot;
@@ -10,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type WorldReferenceProps = import("../../🟦️.tsx").WorldReferenceProps;
   type WorldVolumeProps = import("../../🟦️.tsx").WorldVolumeProps;
 
-  const { describe, expect, it } = vitest;
+  const { describe, expect, it, vi } = vitest;
 
   describe("chunkKey", () => {
     it("buckets origins by chunk size", () => {
@@ -312,20 +315,50 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("shouldApplyOrbitCameraViewRigSeed", () => {
-    it("applies only when the seed token changes", () => {
+    it("applies when the seed token changes and stays idle for the same mounted rig", () => {
       const token = orbitCameraViewRigApplyToken("win-a:3", "perspective");
-      expect(shouldApplyOrbitCameraViewRigSeed(null, token)).toBe(true);
-      expect(shouldApplyOrbitCameraViewRigSeed(token, token)).toBe(false);
-      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:4", "perspective"))).toBe(true);
-      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:3", "orthographic"))).toBe(true);
+      const camera = {};
+      const controls = {};
+      expect(shouldApplyOrbitCameraViewRigSeed(null, token, null, camera, null, controls)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, token, camera, camera, controls, controls)).toBe(false);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:4", "perspective"), camera, camera, controls, controls)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:3", "orthographic"), camera, camera, controls, controls)).toBe(true);
     });
 
-    it("re-applies when orbit controls become ready after the rig camera mounts", () => {
-      const beforeControls = `${orbitCameraViewRigApplyToken("preview", "perspective")}:controls:0`;
-      const afterControls = `${orbitCameraViewRigApplyToken("preview", "perspective")}:controls:1`;
-      expect(shouldApplyOrbitCameraViewRigSeed(null, beforeControls)).toBe(true);
-      expect(shouldApplyOrbitCameraViewRigSeed(beforeControls, afterControls)).toBe(true);
-      expect(shouldApplyOrbitCameraViewRigSeed(afterControls, afterControls)).toBe(false);
+    it("re-applies the same seed to replacement camera and controls instances", () => {
+      const token = orbitCameraViewRigApplyToken("preview", "perspective");
+      const cameraA = {};
+      const cameraB = {};
+      const controlsA = {};
+      const controlsB = {};
+      expect(shouldApplyOrbitCameraViewRigSeed(token, token, cameraA, cameraA, controlsA, controlsB)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, token, cameraA, cameraB, controlsA, controlsA)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, token, cameraB, cameraB, controlsB, controlsB)).toBe(false);
+    });
+
+    it("restores the accepted pose when mounted camera and controls instances are replaced", async () => {
+      (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+      const container = document.createElement("div");
+      const root = createRoot(container);
+      const state = { position: [8, 9, 10] as const, target: [4, 5, 6] as const, up: [0, 1, 0] as const, zoom: 3, projection: "perspective" as const };
+      const cameraA = new ThreePerspectiveCamera();
+      const controlsA = { target: new Vector3(), update: vi.fn() };
+      const invalidate = vi.fn();
+      await act(async () => root.render(createElement(WorldOrbitCameraViewRigSeedApply, { camera: cameraA, controls: controlsA, invalidate, state, seedKey: "accepted:7" })));
+      expect(cameraA.position.toArray()).toEqual([8, 9, 10]);
+      expect(controlsA.target.toArray()).toEqual([4, 5, 6]);
+
+      const cameraB = new ThreePerspectiveCamera();
+      const controlsB = { target: new Vector3(), update: vi.fn() };
+      await act(async () => root.render(createElement(WorldOrbitCameraViewRigSeedApply, { camera: cameraB, controls: controlsB, invalidate, state, seedKey: "accepted:7" })));
+      expect(cameraB.position.toArray()).toEqual([8, 9, 10]);
+      expect(controlsB.target.toArray()).toEqual([4, 5, 6]);
+
+      const controlsC = { target: new Vector3(), update: vi.fn() };
+      await act(async () => root.render(createElement(WorldOrbitCameraViewRigSeedApply, { camera: cameraB, controls: controlsC, invalidate, state, seedKey: "accepted:7" })));
+      expect(controlsC.target.toArray()).toEqual([4, 5, 6]);
+      expect(invalidate).toHaveBeenCalledTimes(3);
+      await act(async () => root.unmount());
     });
   });
 
@@ -686,6 +719,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("frameWorldProjectionPose", () => {
     it("centers top orthographic on reference bounds and fits width in the viewport", () => {
+      expect(worldSceneContentBounds([], [{ origin: [0, 0, 0] }])).toEqual({ center: [0, 0, 0], halfExtent: [5, 5, 0.5] });
       const bounds = worldSceneContentBounds([], [{ origin: [7, 0, 0.01], widthWorld: 50 }]);
       expect(bounds).toEqual({ center: [7, 0, 0.01], halfExtent: [25, 25, 0.5] });
       const state = frameWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.35 });
@@ -915,6 +949,23 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("applyWorldReferenceTransform", () => {
+    it("applies the authored pose when async media mounts the group after the empty first render", () => {
+      const reference: WorldReferenceProps = {
+        id: "forest-reference",
+        source: { url: "/forest.png", mediaKind: "image" },
+        origin: [7, 0, 0.01],
+        orientation: [0, 0, 0, 1],
+        scale: [2, 3, 4],
+      };
+      expect(mountWorldReferencePose(null, reference)).toBeNull();
+      const lateGroup = new Object3D();
+      expect(mountWorldReferencePose(lateGroup as import("three").Group, reference)).toBe(lateGroup);
+      lateGroup.updateMatrixWorld(true);
+      expect(lateGroup.position.toArray()).toEqual([7, 0, 0.01]);
+      expect(lateGroup.scale.toArray()).toEqual([2, 3, 4]);
+      expect(new Vector3().setFromMatrixPosition(lateGroup.matrixWorld).toArray()).toEqual([7, 0, 0.01]);
+    });
+
     it("writes gumball pose onto reference props", () => {
       const base: WorldReferenceProps = {
         id: "ref-a",

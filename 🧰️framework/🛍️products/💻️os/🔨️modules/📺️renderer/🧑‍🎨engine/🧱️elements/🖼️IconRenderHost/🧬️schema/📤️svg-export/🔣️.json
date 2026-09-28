@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Icon SVG Export",
+  "type": "object",
+  "required": ["width", "height", "shape", "background", "camera", "geometry", "lighting", "material", "expected"],
+  "properties": {
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "shape": { "enum": ["rectangle", "ellipse"] },
+    "background": { "type": ["string", "null"] },
+    "camera": {
+      "type": "object",
+      "required": ["position", "target", "up", "fov"],
+      "properties": {
+        "position": { "$ref": "#/$defs/vec3" },
+        "target": { "$ref": "#/$defs/vec3" },
+        "up": { "$ref": "#/$defs/vec3" },
+        "fov": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 180 }
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["positions", "normals", "indices"],
+      "properties": {
+        "positions": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/vec3" } },
+        "normals": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/vec3" } },
+        "indices": { "type": "array", "minItems": 3, "items": { "type": "integer", "minimum": 0 } }
+      },
+      "additionalProperties": false
+    },
+    "lighting": {
+      "type": "object",
+      "required": ["ambientColor", "ambientIntensity", "sunColor", "sunIntensity", "sunDirection"],
+      "properties": {
+        "ambientColor": { "type": "string" },
+        "ambientIntensity": { "type": "number" },
+        "sunColor": { "type": "string" },
+        "sunIntensity": { "type": "number" },
+        "sunDirection": { "$ref": "#/$defs/vec3" }
+      },
+      "additionalProperties": false
+    },
+    "material": {
+      "type": "object",
+      "required": ["color", "emissive", "metalness", "roughness", "stroke"],
+      "properties": {
+        "color": { "type": "string" },
+        "emissive": { "type": "string" },
+        "metalness": { "type": "number" },
+        "roughness": { "type": "number" },
+        "stroke": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "expected": {
+      "type": "object",
+      "required": ["fill", "stroke", "pathCount", "probes"],
+      "properties": {
+        "fill": { "type": "string" },
+        "stroke": { "type": "string" },
+        "pathCount": { "type": "integer", "minimum": 1 },
+        "probes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["position", "rgba"],
+            "properties": {
+              "position": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0 } },
+              "rgba": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "vec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+  }
+}

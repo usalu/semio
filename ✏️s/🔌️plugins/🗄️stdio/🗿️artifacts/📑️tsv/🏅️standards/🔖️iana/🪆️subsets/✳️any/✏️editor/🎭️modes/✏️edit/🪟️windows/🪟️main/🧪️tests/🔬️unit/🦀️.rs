@@ -2,27 +2,33 @@ use super::*;
 use semio_framework_plugin::Component;
 
 #[semio_framework_async_macros::async_test]
-async fn definition_declares_a_table_window() {
+async fn definition_declares_a_structurally_editable_table_window() {
     let def = definition();
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
+    for action in ["set-cell", "add-row", "remove-row", "add-column", "remove-column"] {
+        assert!(def.actions.iter().any(|candidate| candidate.id == action), "missing {action}");
+    }
+    assert!(!def.actions.iter().any(|candidate| candidate.id == "set-header"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_lists_one_row_per_record() {
-    let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
-    let node = render_revisioned(&document, "store-revision").expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
-    // 📑️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
-    // `{id, <column id>: cell}` records keyed by column position.
-    let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
-    assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "Column 1" }), serde_json::json!({ "id": "1", "label": "Column 2" })]);
-    let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
-    assert_eq!(rows[0]["0"]["kind"], "editableText");
-    assert_eq!(rows[0]["0"]["value"], "a");
-    assert_eq!(rows[0]["1"]["value"], "b");
-    assert_eq!(rows[0]["1"]["action"]["args"]["row"], 0);
-    assert_eq!(rows[0]["1"]["action"]["args"]["column"], 1);
-    assert_eq!(rows[0]["1"]["action"]["args"]["revision"], "store-revision");
+async fn render_keeps_every_record_as_windowed_editable_data() {
+    let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["name".into(), "role".into()], vec!["ada".into(), "engineer".into()]], trailing_newline: false, line_ending: Default::default() };
+    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::De, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    assert!(matches!(node.component, Component::Container(_)));
+    let json = serde_json::to_string(&node).expect("declarative table json");
+    for witness in ["name", "role", "ada", "engineer", "Spalte 1", "Spalte 2", "store-revision", "set-cell", "Zeile hinzufügen", "Spalte hinzufügen", "Zeile entfernen"] {
+        assert!(json.contains(witness), "missing {witness} in {json}");
+    }
+    assert!(!json.contains("set-header"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn render_keeps_a_single_record_editable_instead_of_hiding_it_as_a_header() {
+    let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["only-row".into()]], trailing_newline: false, line_ending: Default::default() };
+    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let json = serde_json::to_string(&node).expect("declarative table json");
+    assert!(json.contains("only-row"));
+    assert!(json.contains("Column 1"));
 }

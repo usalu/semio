@@ -1,5 +1,5 @@
 {
-  "schema": "framework.world3d.glb-outline/v1",
+  "schema": "framework.world3d.glb-outline/v2",
   "thresholdAngleDegrees": 1,
   "outlineScale": 1.001,
   "positionWeldPrecisionDecimals": 4,
@@ -9,6 +9,12 @@
     "publication": "meshAndOutlineTogether",
     "cancellation": "retirePartialWithoutPublication"
   },
+  "iconStrokeCases": [
+    { "id": "absent", "stroke": null, "enabled": true, "color": "#000000" },
+    { "id": "color", "stroke": "#12a4ef", "enabled": true, "color": "#12a4ef" },
+    { "id": "none", "stroke": "none", "enabled": false, "color": null },
+    { "id": "transparent", "stroke": " transparent ", "enabled": false, "color": null }
+  ],
   "cases": [
     {
       "id": "coplanar-indexed-square",
@@ -46,4 +52,3 @@
     }
   ]
 }
-

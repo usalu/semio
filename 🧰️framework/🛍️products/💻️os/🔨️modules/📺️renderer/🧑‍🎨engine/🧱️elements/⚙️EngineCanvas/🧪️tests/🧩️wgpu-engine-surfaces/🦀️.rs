@@ -20,6 +20,7 @@ use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, Su
 
 const ENGINE_SURFACES_FIXTURE: &str = include_str!("../../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
 const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
+const SURFACE_PINCH_FIXTURE: &str = include_str!("../../../../🧫️fixtures/🤏️surface-pinch/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(ENGINE_SURFACES_FIXTURE).expect("committed engine-surface fixture parses")
@@ -815,6 +816,84 @@ fn tiled_map_cancel_separates_pan_camera_settle_from_marquee_selection() {
     assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 140.0, 140.0, &mut input), Ok(false));
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
     drop_engine_surface(surface_id);
+}
+
+#[test]
+fn board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer_rules() {
+    let _guard = engine_surface_law_guard();
+    let contract: Value = serde_json::from_str(SURFACE_PINCH_FIXTURE).expect("surface pinch contract");
+    let fixture = fixture();
+    let bounds = Rect {
+        x: 0.0,
+        y: 0.0,
+        w: contract["viewport"]["width"].as_f64().expect("viewport width") as f32,
+        h: contract["viewport"]["height"].as_f64().expect("viewport height") as f32,
+    };
+    let spread = &contract["gestures"]["spread"];
+    let points = |key: &str| {
+        spread[key]
+            .as_array()
+            .expect("gesture points")
+            .iter()
+            .map(|point| (ui_render::PointerId(point["pointerId"].as_u64().expect("pointer id")), point["x"].as_f64().expect("x") as f32, point["y"].as_f64().expect("y") as f32))
+            .collect::<Vec<_>>()
+    };
+    let down = points("down");
+    let moves = points("move");
+
+    let mut map_scene = tiled_map_scene("touch-map-host", &fixture);
+    map_scene.controller_id = "touch.map".into();
+    let map_frame = paint_retained_surface_scene(&map_scene, bounds);
+    let map_id = map_frame.owner.host_id.clone();
+    let map_window = map_frame.owner.window_id.clone();
+    assert!(tiled_map_set_camera_silent(&map_id, [0.0, 0.0, 10.0]));
+    assert!(!crate::scenes::tiled_map_touch_pointer_down(&map_id, bounds, down[0].0, down[0].1, down[0].2));
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&map_frame.owner, "touch.map", bounds, down[0].1, down[0].2, 0, false, false, "rectangle", &mut InputState::default()), Ok(true));
+    assert!(crate::scenes::tiled_map_drag_active(&map_id));
+    assert!(crate::scenes::tiled_map_touch_pointer_down(&map_id, bounds, down[1].0, down[1].1, down[1].2));
+    assert!(!crate::scenes::tiled_map_drag_active(&map_id), "map transfer drops marquee without a synthetic pointer-up");
+    assert!(crate::scenes::tiled_map_touch_pointer_move(&map_id, bounds, moves[0].0, moves[0].1, moves[0].2));
+    assert!(crate::scenes::tiled_map_touch_pointer_move(&map_id, bounds, moves[1].0, moves[1].1, moves[1].2));
+    let map_camera = tiled_map_camera(&map_id).expect("map camera");
+    close_camera(map_camera, [0.0, 0.0, 20.0]);
+    let mut map_input = InputState::default();
+    assert_eq!(crate::scenes::tiled_map_touch_pointer_up_into(&map_id, "touch.map", down[0].0, &mut map_input), Ok(true));
+    assert!(crate::collect_fixture_actions(&mut map_input).is_empty(), "the first lift is silent");
+    assert_eq!(crate::scenes::tiled_map_touch_pointer_up_into(&map_id, "touch.map", down[1].0, &mut map_input), Ok(true));
+    let map_actions = crate::collect_fixture_actions(&mut map_input);
+    assert_eq!(map_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setCamera"]);
+    assert!(!crate::scenes::tiled_map_touch_pointer_down(&map_id, bounds, ui_render::PointerId(3), 400.0, 300.0), "the successor touch is a fresh single-pointer lane");
+
+    let mut board_scene = board2d_scene("touch-board-host", &fixture);
+    board_scene.controller_id = "touch.board".into();
+    let board_frame = paint_retained_surface_scene(&board_scene, bounds);
+    let board_id = board_frame.owner.host_id.clone();
+    let board_window = board_frame.owner.window_id.clone();
+    assert!(puzzle_board_set_camera_silent(&board_id, [0.0, 0.0, 1.0]));
+    assert!(!crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, down[0].0, down[0].1, down[0].2));
+    crate::scenes::puzzle_board_pointer_down(&board_id, bounds, down[0].1, down[0].2, 0, false, false);
+    assert!(crate::scenes::board2d_drag_active(&board_id));
+    assert!(crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, down[1].0, down[1].1, down[1].2));
+    assert!(!crate::scenes::board2d_drag_active(&board_id), "board transfer cancels the area-select lane and synthesizes its one pointer-up");
+    assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[0].0, moves[0].1, moves[0].2));
+    assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[1].0, moves[1].1, moves[1].2));
+    close_camera(puzzle_board_camera(&board_id).expect("board camera"), [0.0, 0.0, 2.0]);
+    let mut board_input = InputState::default();
+    assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[0].0, &mut board_input), Ok(true));
+    assert!(crate::collect_fixture_actions(&mut board_input).is_empty(), "the first board lift is silent");
+    assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[1].0, &mut board_input), Ok(true));
+    let board_actions = crate::collect_fixture_actions(&mut board_input);
+    assert_eq!(board_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setCamera"]);
+    assert!(!crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, ui_render::PointerId(3), 400.0, 300.0), "the successor board touch is fresh");
+
+    close_retained_surface_fixture(&map_window);
+    close_retained_surface_fixture(&board_window);
+}
+
+fn close_camera(actual: [f64; 3], expected: [f64; 3]) {
+    for axis in 0..3 {
+        assert!((actual[axis] - expected[axis]).abs() < 1.0e-8, "camera axis {axis}: expected {}, got {}", expected[axis], actual[axis]);
+    }
 }
 
 #[test]

@@ -6,6 +6,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import Ajv2020 from "ajv/dist/2020.js";
+import { compile } from "@tailwindcss/node";
+import { chromium } from "playwright";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { cleanup, render } from "@semio-tech/ui-react/test";
@@ -30,7 +32,7 @@ type ToggleCase = {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json"), "utf8")) as { readonly cases: readonly ToggleCase[] };
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json"), "utf8")) as { readonly cases: readonly ToggleCase[]; readonly checkboxPaint: { readonly availableWidth: number; readonly availableHeight: number; readonly controlSide: number; readonly outlineWidth: number; readonly checkedStates: readonly boolean[] } };
 const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️retained-toggle-semantics/🔣️.json"), "utf8"));
 const { computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
@@ -69,6 +71,36 @@ afterEach(() => {
 });
 
 describe("retained Toggle semantics", () => {
+  it("keeps checked TreeCheckbox paint inside the same compact control without a selection outline", async () => {
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      const stylesPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
+      const compiler = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
+      const sample = fixture.cases.find(row => row.component.appearance === "checkbox")!;
+      for (const checked of fixture.checkboxPaint.checkedStates) {
+        const element = renderInterpreter({ ...sample, component: { ...sample.component, on: checked } }, 0);
+        const wrapper = element.parentElement!;
+        const classes = [...new Set([wrapper, ...wrapper.querySelectorAll("[class]")].flatMap(node => [...node.classList]))];
+        await page.setContent(`<div class="semio-scope" style="width:${fixture.checkboxPaint.availableWidth}px;height:${fixture.checkboxPaint.availableHeight}px">${wrapper.outerHTML}</div>`);
+        await page.addStyleTag({ content: compiler.build(classes) });
+        const observed = await page.locator('input[type="checkbox"]').evaluate(input => {
+          const controlStyle = getComputedStyle(input);
+          const wrapperStyle = getComputedStyle(input.parentElement!);
+          return { checked: (input as HTMLInputElement).checked, width: input.getBoundingClientRect().width, outline: controlStyle.outlineStyle === "none" ? 0 : Number.parseFloat(controlStyle.outlineWidth), wrapperOutline: wrapperStyle.outlineStyle === "none" ? 0 : Number.parseFloat(wrapperStyle.outlineWidth), wrapperShadow: wrapperStyle.boxShadow };
+        });
+        expect(observed.checked).toBe(checked);
+        expect(observed.width).toBeCloseTo(fixture.checkboxPaint.controlSide, 1);
+        expect(observed.outline).toBe(fixture.checkboxPaint.outlineWidth);
+        expect(observed.wrapperOutline).toBe(fixture.checkboxPaint.outlineWidth);
+        expect(observed.wrapperShadow).toBe("none");
+        cleanup();
+      }
+    } finally {
+      await browser.close();
+    }
+  }, 90_000);
+
   it("validates the language-neutral appearance and state-channel corpus", () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);

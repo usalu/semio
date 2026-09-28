@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/forms/question-kind-contribution",
+  "title": "Forms Question Kind Contribution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appId",
+    "questionKind",
+    "label",
+    "iconId",
+    "paramsBodyKey",
+    "previewBodyKey"
+  ],
+  "properties": {
+    "appId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "questionKind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iconId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "paramsBodyKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "previewBodyKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultValueJson": {
+      "type": "string"
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "reuse"
+      ],
+      "properties": {
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "reuse": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

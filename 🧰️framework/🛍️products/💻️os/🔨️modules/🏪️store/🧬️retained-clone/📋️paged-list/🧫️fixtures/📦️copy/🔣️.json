@@ -1,0 +1,19 @@
+{
+  "maximumEntries": 1024,
+  "entryCount": 513,
+  "valuePrefix": "page-β-日本語-",
+  "grant": {
+    "maximumItems": 5,
+    "maximumCopyBytes": 32,
+    "maximumCapacityBytes": 4096,
+    "maximumDepth": 64
+  },
+  "cancellationAfterEntries": 173,
+  "expected": {
+    "ordered": true,
+    "sourcePreserved": true,
+    "copyRequiresMultipleTurns": true,
+    "closeRequiresMultipleTurns": true,
+    "terminalEmpty": true
+  }
+}

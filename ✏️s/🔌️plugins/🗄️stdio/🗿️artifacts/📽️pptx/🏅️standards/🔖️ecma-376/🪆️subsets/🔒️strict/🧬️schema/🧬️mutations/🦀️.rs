@@ -105,18 +105,8 @@ pub enum PptxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `PptxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `pptx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-main-namespace",
-    "set-drawing-namespace",
-    "set-relationship-base",
-    "set-conformance-attribute",
-    "remove-conformance-attribute",
-    "insert-vml-part",
-    "remove-vml-part",
-    "insert-alternate-content",
-    "remove-alternate-content",
-];
+pub const KINDS: &[&str] =
+    &["set-snapshot", "set-main-namespace", "set-drawing-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -285,7 +275,7 @@ fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &st
     if modified.is_empty() {
         return PptxDiff::default();
     }
-    PptxDiff { opc: Some(PptxOpcDiff { content_types: None, parts: None, relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }) }), ..Default::default() }
+    PptxDiff { opc: Some(PptxOpcDiff { comment: None, content_types: None, parts: None, relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }) }), ..Default::default() }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
@@ -344,7 +334,7 @@ fn overrides_diff(base: &PptxSnapshot, path: &str, content_type: Option<&str>) -
         (false, Some(content_type)) => NamedTripleDiff { added: vec![(key, content_type.to_string())], ..Default::default() },
         (false, None) => return None,
     };
-    Some(PptxOpcDiff { content_types: Some(PptxOpcContentTypesDiff { defaults: None, overrides: Some(entries) }), parts: None, relationships: None })
+    Some(PptxOpcDiff { comment: None, content_types: Some(PptxOpcContentTypesDiff { defaults: None, overrides: Some(entries) }), parts: None, relationships: None })
 }
 
 /// 🧩️ The canonical markup-compatibility fallback this vocabulary inserts.

@@ -1,4 +1,4 @@
-import type { XmlDocument } from '../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseXmlDocument, type XmlDocument } from '../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 
 /** 🧬️ Full logical SVG artifact state. */
 export interface SvgArtifact {
@@ -57,6 +57,6 @@ export function parseSvgArtifact(value: unknown, at = "$"): SvgArtifact {
   const row = stdioSvg11BaseArtifactGuardObject(value, at);
   return {
     schema: stdioSvg11BaseArtifactGuardString(row["schema"], `${at}.schema`),
-    doc: stdioSvg11BaseArtifactGuardObject(row["doc"], `${at}.doc`),
+    doc: parseXmlDocument(row["doc"], `${at}.doc`),
   };
 }

@@ -27,7 +27,7 @@ use std::collections::HashMap;
 
 #[path = "✍️gesture/🦀️.rs"]
 mod gesture;
-pub use gesture::PixelStrokeCommand;
+pub use gesture::{PaintStrokeCommand,PaintTarget};
 
 #[path = "🧩️compositing/🦀️.rs"]
 mod compositing;
@@ -45,6 +45,9 @@ enum LayerNodeJson {
         #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
+        #[serde(default)]
+        #[value(default)]
+        locked: bool,
         #[serde(default = "default_opacity")]
         #[value(default = "default_opacity")]
         opacity: f32,
@@ -66,6 +69,9 @@ enum LayerNodeJson {
         #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
+        #[serde(default)]
+        #[value(default)]
+        locked: bool,
         #[serde(default = "default_opacity")]
         #[value(default = "default_opacity")]
         opacity: f32,
@@ -105,32 +111,12 @@ fn default_opacity() -> f32 {
     1.0
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, PartialEq, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-struct TransformJson {
-    #[serde(default)]
-    #[value(default)]
-    x: f64,
-    #[serde(default)]
-    #[value(default)]
-    y: f64,
-    #[serde(default = "default_one")]
-    #[value(default = "default_one")]
-    scale_x: f64,
-    #[serde(default = "default_one")]
-    #[value(default = "default_one")]
-    scale_y: f64,
-    #[serde(default)]
-    #[value(default)]
-    rotation: f64,
-}
+struct TransformJson {x:f64,y:f64,a:f64,b:f64,c:f64,d:f64}
 
-fn default_one() -> f64 {
-    1.0
-}
-
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, PartialEq, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct MaskJson {
@@ -151,7 +137,7 @@ struct MaskJson {
     height: Option<u32>,
 }
 
-fn default_transform()->TransformJson {TransformJson {x:0.0,y:0.0,scale_x:1.0,scale_y:1.0,rotation:0.0}}
+fn default_transform()->TransformJson {TransformJson {x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0}}
 
 #[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -171,15 +157,14 @@ struct DocumentJson {
 
 #[derive(Clone)]
 enum LayerNode {
-    Pixel { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
-    Group { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
+    Pixel { id: String, visible: bool, locked: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
+    Group { id: String, visible: bool, locked: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
     Adjustment { visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
 }
 
 #[derive(Clone)]
 struct MaskState {
-    enabled: bool,
-    invert: bool,
+    descriptor: MaskJson,
     width: u32,
     height: u32,
 }
@@ -212,29 +197,29 @@ fn blend_from_str(raw: &str) -> BlendMode {
 }
 
 fn affine_from_json(t: &TransformJson) -> Affine {
-    let (sin_r, cos_r) = t.rotation.to_radians().sin_cos();
-    Affine::new([t.scale_x * cos_r, t.scale_x * sin_r, -t.scale_y * sin_r, t.scale_y * cos_r, t.x, t.y])
+    Affine::new([t.a,t.b,t.c,t.d,t.x,t.y])
 }
 
-fn parse_mask(m: &MaskJson) -> MaskState {
-    MaskState { enabled: m.enabled, invert: m.invert, width: m.width.unwrap_or(512), height: m.height.unwrap_or(512) }
+fn parse_mask(descriptor:MaskJson,width:u32,height:u32)->MaskState {
+    MaskState {width:descriptor.width.unwrap_or(width),height:descriptor.height.unwrap_or(height),descriptor}
 }
 
 fn parse_layer(raw: LayerNodeJson) -> LayerNode {
     match raw {
-        LayerNodeJson::Pixel { id, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => LayerNode::Pixel {
+        LayerNodeJson::Pixel { id, visible, locked, opacity, blend_mode, transform, mask, width, height, image_key, .. } => LayerNode::Pixel {
             id,
             visible,
+            locked,
             opacity: opacity.clamp(0.0, 1.0),
             blend: blend_from_str(&blend_mode),
             transform: affine_from_json(&transform),
             width: width.unwrap_or(512),
             height: height.unwrap_or(512),
             image_key,
-            mask: mask.map(|m| parse_mask(&m)),
+            mask: mask.map(|m| parse_mask(m,width.unwrap_or(512),height.unwrap_or(512))),
         },
-        LayerNodeJson::Group { id, visible, opacity, blend_mode, transform, mask, children, .. } => {
-            LayerNode::Group { id, visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), transform: affine_from_json(&transform), children: children.into_iter().map(parse_layer).collect(), mask: mask.map(|m| parse_mask(&m)) }
+        LayerNodeJson::Group { id, visible, locked, opacity, blend_mode, transform, mask, children, .. } => {
+            LayerNode::Group { id, visible, locked, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), transform: affine_from_json(&transform), children: children.into_iter().map(parse_layer).collect(), mask: mask.map(|m| parse_mask(m,512,512)) }
         }
         LayerNodeJson::Adjustment { visible, opacity, blend_mode, adjustment_kind, params, .. } => LayerNode::Adjustment { visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), kind: adjustment_kind, params },
     }
@@ -399,12 +384,14 @@ pub struct RasterHost {
     /// 🕹️ (c) Preview/Effect — selection ids, read from the framework's `DomainSelection` via
     /// [`RasterHost::sync_interaction`].
     selected_ids: Vec<String>,
-    paint_gesture: Option<gesture::PixelGesture>,
-    pixel_edit: Option<PixelStrokeCommand>,
+    paint_gesture: Option<gesture::PaintGesture>,
+    paint_edit: Option<PaintStrokeCommand>,
     /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     panning: bool,
     brush_color: [u8; 4],
     brush_hardness: f32,
+    paint_target: PaintTarget,
+    mask_value: u8,
     /// 🖐️ (c) Preview/Effect — pan interpolation anchor, discarded on release.
     pan_last: Option<Point>,
     /// 👁️ (c) Preview/Effect — selection-chrome visibility toggle, UI rendering only.
@@ -448,8 +435,10 @@ impl RasterHost {
             panning: false,
             brush_color: [40, 120, 220, 255],
             brush_hardness: 1.0,
+            paint_target: PaintTarget::Pixels,
+            mask_value: 255,
             paint_gesture: None,
-            pixel_edit: None,
+            paint_edit: None,
             pan_last: None,
             show_selection_chrome: true,
             theme_clear,
@@ -503,8 +492,8 @@ impl RasterHost {
             self.pan_last = Some(Point::new(sx, sy));
             return;
         }
-        if button == 0 && matches!(self.active_utility.as_str(), "paintBrush" | "paintEraser") && self.pixel_edit.is_none() {
-            self.paint_gesture = gesture::PixelGesture::begin(self, self.screen_to_world(sx, sy));
+        if button == 0 && matches!(self.active_utility.as_str(), "paintBrush" | "paintEraser") && self.paint_edit.is_none() {
+            self.paint_gesture = gesture::PaintGesture::begin(self, self.screen_to_world(sx, sy));
         }
     }
 
@@ -528,7 +517,7 @@ impl RasterHost {
         self.pan_last = None;
         if let Some(mut gesture) = self.paint_gesture.take() {
             gesture.push(self.screen_to_world(sx, sy));
-            self.pixel_edit = gesture.finish(self.brush_size, self.brush_opacity, self.brush_color, self.brush_hardness, self.active_utility == "paintEraser");
+            self.paint_edit = gesture.finish(self.brush_size, self.brush_opacity, self.brush_color, self.brush_hardness, self.active_utility == "paintEraser",self.mask_value);
         }
     }
 
@@ -538,8 +527,10 @@ impl RasterHost {
         self.paint_gesture = None;
     }
 
-    pub fn pixel_edit(&self) -> Option<&PixelStrokeCommand> { self.pixel_edit.as_ref() }
-    pub fn take_pixel_edit(&mut self) -> Option<PixelStrokeCommand> { self.pixel_edit.take() }
+    pub fn paint_edit(&self) -> Option<&PaintStrokeCommand> { self.paint_edit.as_ref() }
+    pub fn take_paint_edit(&mut self) -> Option<PaintStrokeCommand> { self.paint_edit.take() }
+    pub fn set_paint_target(&mut self,target:PaintTarget){if self.paint_target!=target{self.paint_target=target;self.invalidate_paint_gesture();}}
+    pub fn set_mask_value(&mut self,value:u8){self.mask_value=value;}
     pub fn set_brush_color(&mut self, color: [u8; 4]) { self.brush_color = color; }
     pub fn set_brush_hardness(&mut self, hardness: f32) { self.brush_hardness = hardness.clamp(0.0, 1.0); }
 
@@ -548,8 +539,13 @@ impl RasterHost {
     pub fn sync_document_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         self.document = parse_document(json)?;
         self.refresh_image_extents();
+        self.invalidate_paint_gesture();
         self.composite.invalidate();
         Ok(())
+    }
+
+    fn invalidate_paint_gesture(&mut self){
+        if self.paint_gesture.as_ref().is_some_and(|gesture|!gesture.matches(self)){self.paint_gesture=None;}
     }
 
     fn refresh_image_extents(&mut self){
@@ -575,6 +571,7 @@ impl RasterHost {
         let raw = rgba.into_raw();
         self.buffers.paint.insert(key.clone(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
         self.refresh_image_extents();
+        self.invalidate_paint_gesture();
         self.composite.invalidate();
         Ok(())
     }
@@ -587,11 +584,13 @@ impl RasterHost {
         let raw = rgba.into_raw();
         self.buffers.paint.insert(key.to_string(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
         self.refresh_image_extents();
+        self.invalidate_paint_gesture();
         self.composite.invalidate();
         Ok(())
     }
 
     pub fn set_active_utility(&mut self, utility: &str) {
+        if self.active_utility!=utility {self.paint_gesture=None;}
         self.active_utility = utility.to_string();
     }
 
@@ -608,6 +607,7 @@ impl RasterHost {
     /// render time instead of pushed arbitrarily by app code.
     pub fn sync_interaction(&mut self, selected_ids: &[String], hovered_id: Option<&str>) {
         self.selected_ids = selected_ids.to_vec();
+        self.invalidate_paint_gesture();
         self.hovered_id = hovered_id.map(str::to_string);
     }
 
@@ -663,7 +663,7 @@ impl RasterHost {
             if isolated.is_none_or(|id| id == gesture.command.layer_id) {
                 let world = cam * gesture.world;
                 let alpha = (self.brush_opacity * f32::from(self.brush_color[3])).round() as u8;
-                let color = if self.active_utility == "paintEraser" { Color::from_rgba8(255, 255, 255, alpha) } else { Color::from_rgba8(self.brush_color[0], self.brush_color[1], self.brush_color[2], alpha) };
+                let color = if self.paint_target==PaintTarget::Mask {let value=if self.active_utility=="paintEraser"{0}else{self.mask_value};Color::from_rgba8(value,value,value,alpha)} else if self.active_utility == "paintEraser" { Color::from_rgba8(255, 255, 255, alpha) } else { Color::from_rgba8(self.brush_color[0], self.brush_color[1], self.brush_color[2], alpha) };
                 let mut path = BezPath::new();
                 if let Some(point) = gesture.points.first() {
                     path.move_to((point[0], point[1]));
@@ -964,8 +964,8 @@ pub struct RasterHostRetirement {
     active_utility: String,
     hovered_id: Option<String>,
     selected_ids: Vec<String>,
-    paint_gesture: Option<gesture::PixelGesture>,
-    pixel_edit: Option<PixelStrokeCommand>,
+    paint_gesture: Option<gesture::PaintGesture>,
+    paint_edit: Option<PaintStrokeCommand>,
     released: bool,
 }
 
@@ -985,15 +985,17 @@ impl RasterHostRetirement {
             panning: _,
             brush_color: _,
             brush_hardness: _,
+            paint_target: _,
+            mask_value: _,
             paint_gesture,
-            pixel_edit,
+            paint_edit,
             pan_last: _,
             show_selection_chrome: _,
             theme_clear: _,
             checkerboard_light_cell: _,
             checkerboard_dark_cell: _,
         } = host;
-        Self { layers,stack,composite,paint,active_utility,hovered_id,selected_ids,paint_gesture,pixel_edit,released:false }
+        Self { layers,stack,composite,paint,active_utility,hovered_id,selected_ids,paint_gesture,paint_edit,released:false }
     }
 
     fn close_layer_step(&mut self) -> bool {
@@ -1019,9 +1021,9 @@ impl RasterHostRetirement {
         if !self.close_layer_step() || !Self::close_map_step(&mut self.paint) || self.selected_ids.pop().is_some() {
             return false;
         }
-        if self.paint_gesture.as_mut().is_some_and(|gesture| !gesture.close_step()) || self.pixel_edit.as_mut().is_some_and(|command| !command.close_step()) { return false; }
+        if self.paint_gesture.as_mut().is_some_and(|gesture| !gesture.close_step()) || self.paint_edit.as_mut().is_some_and(|command| !command.close_step()) { return false; }
         self.paint_gesture = None;
-        self.pixel_edit = None;
+        self.paint_edit = None;
         if self.active_utility.pop().is_some() || self.hovered_id.as_mut().is_some_and(|id| id.pop().is_some()) { return false; }
         self.hovered_id = None;
         self.released = true;
@@ -1029,7 +1031,7 @@ impl RasterHostRetirement {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.released && self.layers.is_empty() && self.stack.is_empty() && self.paint.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none() && self.paint_gesture.is_none() && self.pixel_edit.is_none()
+        self.released && self.layers.is_empty() && self.stack.is_empty() && self.paint.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none() && self.paint_gesture.is_none() && self.paint_edit.is_none()
     }
 }
 

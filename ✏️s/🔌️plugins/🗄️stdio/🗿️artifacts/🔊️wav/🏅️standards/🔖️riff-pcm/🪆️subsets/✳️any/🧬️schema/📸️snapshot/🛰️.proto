@@ -1,7 +1,15 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_wav.snapshot;
+message WavFmt { uint32 audio_format = 1; uint32 channels = 2; uint32 sample_rate = 3; uint32 byte_rate = 4; uint32 block_align = 5; uint32 bits_per_sample = 6; bytes ext = 7; }
+message WavData { string kind = 1; repeated double value = 2; }
+message RiffChunk { string fourcc = 1; bytes data = 2; uint32 pad_byte = 3; }
+message WavChunkRef { string kind = 1; uint64 value = 2; }
 message WavSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  WavFmt fmt = 2;
+  WavData data = 3;
+  uint32 fmt_pad_byte = 4;
+  uint32 data_pad_byte = 5;
+  repeated RiffChunk other_chunks = 6;
+  repeated WavChunkRef chunk_order = 7;
 }

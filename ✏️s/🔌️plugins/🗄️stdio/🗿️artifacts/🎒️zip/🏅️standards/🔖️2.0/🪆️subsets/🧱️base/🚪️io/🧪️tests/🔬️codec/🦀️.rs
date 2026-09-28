@@ -1,4 +1,5 @@
 use super::*;
+use std::io::Read;
 
 //#region Fixtures
 /// 🏗️ Hand-assembles a real ZIP byte stream exercising: stored + deflate methods, a
@@ -44,7 +45,7 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
         let offset = locals.len() as u32;
         let mut local = Vec::new();
         local.extend_from_slice(&u32_le(SIG_LOCAL));
-        local.extend_from_slice(&u16_le(20));
+        local.extend_from_slice(&u16_le(if e.force_zip64_sentinel { 45 } else { 20 }));
         local.extend_from_slice(&u16_le(e.flags));
         local.extend_from_slice(&u16_le(e.method));
         local.extend_from_slice(&u16_le(0x1234)); // dos time
@@ -72,7 +73,7 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
 
         let mut cen = Vec::new();
         cen.extend_from_slice(&u32_le(SIG_CENTRAL));
-        cen.extend_from_slice(&u16_le(20));
+        cen.extend_from_slice(&u16_le(if e.force_zip64_sentinel { 45 } else { 20 }));
         cen.extend_from_slice(&u16_le(20));
         cen.extend_from_slice(&u16_le(e.flags));
         cen.extend_from_slice(&u16_le(e.method));
@@ -125,38 +126,37 @@ fn crc32_known_vector() {
 
 #[test]
 fn zip_store_round_trip() {
+    let stored = ZipEntryMetadata { compression_method: 0, ..Default::default() };
     let snap = ZipSnapshot {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        entries: vec![ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), ..Default::default() }, ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], ..Default::default() }],
+        entries: vec![ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), metadata: stored.clone() }, ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], metadata: stored }],
         comment: String::new(),
+        ..Default::default()
     };
     let bytes = encode_zip(&snap).expect("encode store");
     let decoded = decode_zip(&bytes).expect("decode store");
-    assert_eq!(decoded.entries.len(), 2);
-    assert_eq!(decoded.entries[0].name, "a.txt");
-    assert_eq!(decoded.entries[0].data, b"hello");
-    assert_eq!(decoded.entries[1].data, vec![0, 1, 2, 3, 255]);
+    assert_eq!(decoded, snap);
 }
 
 #[test]
 fn zip_deflate_round_trip() {
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec() }], comment: String::new() };
+    let snap = ZipSnapshot {
+        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec(), ..Default::default() }],
+        comment: String::new(),
+        ..Default::default()
+    };
     let bytes = encode_zip(&snap).expect("encode deflate");
     let decoded = decode_zip(&bytes).expect("decode deflate");
-    assert_eq!(decoded.entries[0].data, snap.entries[0].data);
+    assert_eq!(decoded, snap);
 }
 
 #[test]
 fn codec_round_trip() {
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new(), ..Default::default() };
     let pack = store::ArtifactPack::encode_pack(&snap);
     let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
-    // Byte round-tripping through the on-disk format legitimately normalizes metadata that
-    // was never set (flags gain the UTF-8 bit, version fields gain their defaults) — see
-    // `encode_zip`'s doc comment. The content-level invariant is name + data.
-    assert_eq!(decoded.entries.len(), snap.entries.len());
-    assert_eq!(decoded.entries[0].name, snap.entries[0].name);
-    assert_eq!(decoded.entries[0].data, snap.entries[0].data);
+    assert_eq!(decoded, snap);
 }
 
 /// 🧪️ Rich synthetic archive: mixed stored+deflate, UTF-8 name, CP437 name, a
@@ -171,7 +171,7 @@ fn decode_rich_synthetic_archive() {
                 data: b"stored payload, no compression".to_vec(),
                 method: 0,
                 flags: 0x0800, // utf8
-                extra: Vec::new(),
+                extra: vec![0xFE, 0xCA, 3, 0, 1, 2, 3],
                 comment: b"a stored entry".to_vec(),
                 use_descriptor: false,
                 force_zip64_sentinel: false,
@@ -233,10 +233,180 @@ fn decode_rich_synthetic_archive() {
 
     assert_eq!(member("stored.txt"), b"stored payload, no compression".to_vec());
     assert_eq!(member("café-\u{1F600}.txt"), b"deflate me please, this text should compress reasonably well well well".to_vec());
-    // 0xE9 in CP437 decodes to 'é'
+    // 0x82 in CP437 decodes to 'é'.
     assert_eq!(member("caf\u{00e9}.txt"), b"legacy codepage name entry".to_vec());
     assert_eq!(member("streamed.bin"), b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec());
     assert_eq!(member("huge-in-theory.bin"), b"tiny payload but declared via a ZIP64 extra field for test purposes".to_vec());
+    assert_eq!(decode_zip(&encode_zip(&snap).expect("encode retained rich metadata")).expect("redecode retained rich metadata"), snap);
+}
+
+#[test]
+fn header_fidelity_fixture_survives_exactly_and_matches_independent_zip_reader() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️header-fidelity/🔣️.json")).expect("neutral ZIP header fixture");
+    let bytes = |at: &serde_json::Value| at.as_array().expect("byte array").iter().map(|value| value.as_u64().expect("byte") as u8).collect::<Vec<_>>();
+    let number = |at: &serde_json::Value| at.as_u64().expect("number");
+    let directory = &fixture["directory"];
+    let unicode = &fixture["unicodeMember"];
+    let binary_comment = &fixture["binaryCommentMember"];
+    let directory_flags = number(&directory["flags"]) as u16;
+    let unicode_flags = number(&unicode["flags"]) as u16;
+    let snapshot = ZipSnapshot {
+        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        entries: vec![
+            ZipEntry {
+                name: directory["name"].as_str().expect("directory name").into(),
+                data: Vec::new(),
+                metadata: ZipEntryMetadata {
+                    compression_method: number(&directory["compressionMethod"]) as u16,
+                    local: ZipLocalHeaderMetadata {
+                        version_needed: number(&directory["versionNeeded"]) as u16,
+                        flags: directory_flags,
+                        modified_time: number(&directory["modifiedTime"]) as u16,
+                        modified_date: number(&directory["modifiedDate"]) as u16,
+                        extra_fields: vec![ZipExtraField { id: number(&directory["localExtraId"]) as u16, data: bytes(&directory["localExtraData"]) }],
+                        unicode_path_legacy_name: None,
+                    },
+                    central: ZipCentralHeaderMetadata {
+                        version_made_by: number(&directory["versionMadeBy"]) as u16,
+                        version_needed: number(&directory["versionNeeded"]) as u16,
+                        flags: directory_flags,
+                        modified_time: number(&directory["modifiedTime"]) as u16,
+                        modified_date: number(&directory["modifiedDate"]) as u16,
+                        extra_fields: vec![ZipExtraField { id: number(&directory["centralExtraId"]) as u16, data: bytes(&directory["centralExtraData"]) }],
+                        unicode_path_legacy_name: None,
+                        comment: directory["comment"].as_str().expect("directory comment").into(),
+                        unicode_comment_legacy: None,
+                        internal_attributes: number(&directory["internalAttributes"]) as u16,
+                        external_attributes: number(&directory["externalAttributes"]) as u32,
+                    },
+                    data_descriptor_signature: false,
+                },
+            },
+            ZipEntry {
+                name: unicode["name"].as_str().expect("Unicode member name").into(),
+                data: bytes(&unicode["data"]),
+                metadata: ZipEntryMetadata {
+                    compression_method: number(&unicode["compressionMethod"]) as u16,
+                    local: ZipLocalHeaderMetadata {
+                        version_needed: number(&unicode["versionNeeded"]) as u16,
+                        flags: unicode_flags,
+                        modified_time: number(&unicode["modifiedTime"]) as u16,
+                        modified_date: number(&unicode["modifiedDate"]) as u16,
+                        extra_fields: vec![
+                            ZipExtraField { id: number(&unicode["localExtraId"]) as u16, data: bytes(&unicode["localExtraData"]) },
+                            ZipExtraField { id: EXTRA_UNICODE_PATH, data: Vec::new() },
+                        ],
+                        unicode_path_legacy_name: Some(bytes(&unicode["legacyName"])),
+                    },
+                    central: ZipCentralHeaderMetadata {
+                        version_made_by: number(&unicode["versionMadeBy"]) as u16,
+                        version_needed: number(&unicode["versionNeeded"]) as u16,
+                        flags: unicode_flags,
+                        modified_time: number(&unicode["modifiedTime"]) as u16,
+                        modified_date: number(&unicode["modifiedDate"]) as u16,
+                        extra_fields: vec![
+                            ZipExtraField { id: number(&unicode["centralExtraId"]) as u16, data: bytes(&unicode["centralExtraData"]) },
+                            ZipExtraField { id: EXTRA_UNICODE_PATH, data: Vec::new() },
+                            ZipExtraField { id: EXTRA_UNICODE_COMMENT, data: Vec::new() },
+                        ],
+                        unicode_path_legacy_name: Some(bytes(&unicode["legacyName"])),
+                        comment: unicode["comment"].as_str().expect("Unicode member comment").into(),
+                        unicode_comment_legacy: Some(bytes(&unicode["legacyComment"])),
+                        internal_attributes: number(&unicode["internalAttributes"]) as u16,
+                        external_attributes: number(&unicode["externalAttributes"]) as u32,
+                    },
+                    data_descriptor_signature: unicode["dataDescriptorSignature"].as_bool().expect("descriptor signature"),
+                },
+            },
+            ZipEntry {
+                name: binary_comment["name"].as_str().expect("binary-comment member name").into(),
+                data: Vec::new(),
+                metadata: ZipEntryMetadata {
+                    compression_method: number(&binary_comment["compressionMethod"]) as u16,
+                    local: ZipLocalHeaderMetadata {
+                        version_needed: number(&binary_comment["versionNeeded"]) as u16,
+                        flags: number(&binary_comment["flags"]) as u16,
+                        modified_time: number(&binary_comment["modifiedTime"]) as u16,
+                        modified_date: number(&binary_comment["modifiedDate"]) as u16,
+                        ..Default::default()
+                    },
+                    central: ZipCentralHeaderMetadata {
+                        version_made_by: number(&binary_comment["versionMadeBy"]) as u16,
+                        version_needed: number(&binary_comment["versionNeeded"]) as u16,
+                        flags: number(&binary_comment["flags"]) as u16,
+                        modified_time: number(&binary_comment["modifiedTime"]) as u16,
+                        modified_date: number(&binary_comment["modifiedDate"]) as u16,
+                        comment: binary_comment["comment"].as_str().expect("binary member comment").into(),
+                        ..Default::default()
+                    },
+                    data_descriptor_signature: false,
+                },
+            },
+        ],
+        comment: fixture["archiveComment"].as_str().expect("archive comment").into(),
+        comment_utf8: fixture["archiveCommentUtf8"].as_bool().expect("archive comment encoding"),
+    };
+
+    let encoded = encode_zip(&snapshot).expect("encode complete header state");
+    assert_eq!(decode_zip(&encoded).expect("save and reopen complete header state"), snapshot);
+
+    let extra_record = |id: u16, data: Vec<u8>| {
+        let mut bytes = Vec::with_capacity(data.len() + 4);
+        bytes.extend_from_slice(&id.to_le_bytes());
+        bytes.extend_from_slice(&(data.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(&data);
+        bytes
+    };
+    let expected_local_directory_extra = extra_record(number(&directory["localExtraId"]) as u16, bytes(&directory["localExtraData"]));
+    let mut local_reader = std::io::Cursor::new(&encoded);
+    let local_directory = zip::read::read_zipfile_from_stream(&mut local_reader).expect("independent local-header reader").expect("local directory entry");
+    assert_eq!(local_directory.name(), directory["name"].as_str().expect("directory name"));
+    assert_eq!(local_directory.extra_data(), Some(expected_local_directory_extra.as_slice()));
+    drop(local_directory);
+
+    let mut oracle = zip::ZipArchive::new(std::io::Cursor::new(&encoded)).expect("independent ZIP reader");
+    assert_eq!(oracle.comment(), &[0x82]);
+    let directory_oracle = oracle.by_index(0).expect("directory entry");
+    assert_eq!(directory_oracle.name(), "folder/");
+    assert!(directory_oracle.is_dir());
+    assert_eq!(directory_oracle.compression(), zip::CompressionMethod::Stored);
+    assert_eq!(directory_oracle.version_made_by(), (2, 0));
+    assert_eq!(directory_oracle.unix_mode(), Some((number(&directory["externalAttributes"]) as u32) >> 16));
+    let expected_central_directory_extra = extra_record(number(&directory["centralExtraId"]) as u16, bytes(&directory["centralExtraData"]));
+    assert_eq!(directory_oracle.extra_data(), Some(expected_central_directory_extra.as_slice()));
+    drop(directory_oracle);
+    let mut member_oracle = oracle.by_index(1).expect("Unicode member");
+    assert_eq!(member_oracle.name(), "résumé/δ.txt");
+    assert_eq!(member_oracle.comment(), "Kommentar 🎒");
+    assert_eq!(member_oracle.compression(), zip::CompressionMethod::Deflated);
+    let mut oracle_data = Vec::new();
+    member_oracle.read_to_end(&mut oracle_data).expect("oracle member payload");
+    assert_eq!(oracle_data, snapshot.entries[1].data);
+    drop(member_oracle);
+    let binary_comment_oracle = oracle.by_index(2).expect("binary-comment member");
+    assert_eq!(binary_comment_oracle.comment(), binary_comment["comment"].as_str().expect("binary member comment"));
+    let comment_bytes = bytes(&binary_comment["commentBytes"]);
+    assert!(encoded.windows(comment_bytes.len()).any(|window| window == comment_bytes), "wire retains the exact NUL/high-byte CP437 comment");
+
+    let mut renamed = snapshot.clone();
+    renamed.entries[1].name = "renamed/δ.txt".into();
+    let renamed_wire = encode_zip(&renamed).expect("rename regenerates Unicode path extras");
+    assert_eq!(decode_zip(&renamed_wire).expect("reopen renamed Unicode member"), renamed);
+}
+
+#[test]
+fn serialization_validation_refuses_stale_or_unencodable_header_state() {
+    let mut entry = ZipEntry { name: "plain.txt".into(), data: Vec::new(), ..Default::default() };
+    entry.metadata.local.flags = 0;
+    entry.metadata.central.flags = 0;
+    entry.name = "δ.txt".into();
+    let snapshot = ZipSnapshot { entries: vec![entry.clone()], ..Default::default() };
+    assert!(matches!(encode_zip(&snapshot), Err(ZipError::Utf8 { .. })));
+
+    entry.metadata.local.extra_fields.push(ZipExtraField { id: EXTRA_UNICODE_PATH, data: vec![1] });
+    entry.metadata.local.unicode_path_legacy_name = Some(b"plain.txt".to_vec());
+    let stale = ZipSnapshot { entries: vec![entry], ..Default::default() };
+    assert!(matches!(encode_zip(&stale), Err(ZipError::Malformed(_))));
 }
 
 #[test]
@@ -281,8 +451,8 @@ async fn deterministic_logical_round_trip() {
     use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
-    let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec() };
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into() };
+    let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec(), ..Default::default() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into(), ..Default::default() };
 
     let bytes = encode_zip(&snap).expect("encode full metadata");
     let decoded = decode_zip(&bytes).expect("decode full metadata");
@@ -331,6 +501,16 @@ async fn deterministic_logical_round_trip() {
     let opc = crate::opc::decode_opc(archive_bytes).expect("decode logical OPC package");
     let canonical_opc = crate::opc::encode_opc(&opc).expect("materialize deterministic OPC package");
     assert_eq!(crate::opc::decode_opc(&canonical_opc).expect("redecode deterministic OPC package"), opc);
+    let mut oracle = zip::ZipArchive::new(std::io::Cursor::new(&canonical_opc)).expect("independent OPC archive reader");
+    let mut parts = Vec::new();
+    for index in 0..oracle.len() {
+        let entry = oracle.by_index(index).expect("independent OPC member");
+        if opc.parts.iter().any(|part| part.path == entry.name()) {
+            parts.push(entry.name().to_string());
+        }
+    }
+    assert_eq!(parts, opc.parts.iter().map(|part| part.path.clone()).collect::<Vec<_>>());
+    eprintln!("[DEBUG] OPC save/reopen preserved {} content parts in authored order", parts.len());
 }
 
 #[test]
@@ -345,18 +525,18 @@ fn encode_rejects_would_be_zip64_entry_size() {
     for i in 0..=0xFFFFu32 {
         entries.push(ZipEntry { name: format!("f{i}"), data: Vec::new(), ..Default::default() });
     }
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new(), ..Default::default() };
     let err = encode_zip(&snap).expect_err("more than 0xFFFF entries requires ZIP64");
     assert_eq!(err, ZipError::UnsupportedZip64Write);
 }
 
 #[test]
 fn sniff_recognizes_real_magic_and_rejects_garbage() {
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new(), ..Default::default() };
     let real = encode_zip(&snap).expect("encode");
     assert_eq!(sniff_zip_bytes(&real), SniffConfidence::High);
 
-    let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new() }).unwrap();
+    let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new(), ..Default::default() }).unwrap();
     assert_eq!(sniff_zip_bytes(&empty_archive), SniffConfidence::High);
 
     assert_eq!(sniff_zip_bytes(b"not a zip at all, just prose"), SniffConfidence::Low);

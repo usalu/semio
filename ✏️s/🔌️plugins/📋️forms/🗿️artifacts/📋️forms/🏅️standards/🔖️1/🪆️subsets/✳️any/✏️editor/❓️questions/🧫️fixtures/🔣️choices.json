@@ -1,0 +1,390 @@
+{
+  "cases": [
+    {
+      "name": "rename selected single choice",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "value",
+      "value": "first",
+      "after": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "first",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "first"
+      }
+    },
+    {
+      "name": "rename selected multiple choice",
+      "before": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "a",
+          "b"
+        ]
+      },
+      "option": "a",
+      "field": "value",
+      "value": "first",
+      "after": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "first",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "first",
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "duplicate value rejected",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "value",
+      "value": "b",
+      "error": "duplicate-option"
+    },
+    {
+      "name": "empty value rejected",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "value",
+      "value": "",
+      "error": "invalid-value"
+    },
+    {
+      "name": "label does not change value",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "label",
+      "value": "First",
+      "after": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "First"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      }
+    },
+    {
+      "name": "remove clears single default",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "remove",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ]
+      }
+    },
+    {
+      "name": "remove filters multiple defaults",
+      "before": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "a",
+          "b"
+        ]
+      },
+      "option": "a",
+      "field": "remove",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "deselect multiple default",
+      "before": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "a",
+          "b"
+        ]
+      },
+      "option": "a",
+      "field": "default",
+      "value": false,
+      "after": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "select multiple default idempotent",
+      "before": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "a",
+          "b"
+        ]
+      },
+      "option": "a",
+      "field": "default",
+      "value": true,
+      "after": {
+        "id": "q",
+        "kind": "multi",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "invalid multiple default toggle",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "a",
+      "field": "default",
+      "value": true,
+      "error": "invalid-value"
+    },
+    {
+      "name": "stale option is no-op",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      },
+      "option": "deleted",
+      "field": "remove",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "single",
+        "label": "Choice",
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          }
+        ],
+        "default": "a"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DocxTableRunProjectionFixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "xml",
+    "blocks",
+    "paths",
+    "expectedName"
+  ],
+  "properties": {
+    "xml": {
+      "type": "string",
+      "minLength": 1
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "expectedName": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

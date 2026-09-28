@@ -6,7 +6,7 @@ fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::
 fn mask_paint_preserves_source_and_settings_and_restores_history() {
     let fixtures:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for fixture in std::iter::once(&fixtures).chain(fixtures["coverageCases"].as_array().unwrap().iter()) {
-    for (kind,shared) in [("pixel",false),("pixel",true),("group",false)] {
+    for (kind,shared,full) in [("pixel",false,false),("pixel",true,false),("group",false,false),("pixel",false,true),("pixel",true,true),("group",false,true)] {
         let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
         let mut layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind(kind);
         let id=layer_node_id(&layer).to_owned();
@@ -14,9 +14,11 @@ fn mask_paint_preserves_source_and_settings_and_restores_history() {
         let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
         document.assets.insert("coverage".into(),crate::mint_raster_asset_child("coverage",&asset)).unwrap();
         let (RasterLayerNode::Pixel {mask,..}|RasterLayerNode::Group {mask,..})=&mut layer else {panic!("mask owner")};
-        *mask=Some(RasterLayerMask {enabled:false,linked:false,invert:true,width:Some(6),height:Some(2),image_key:Some("coverage".into()),transform:crate::RasterTransform {x:2.0,y:3.0,rotation:30.0,..Default::default()}});
+        *mask=Some(RasterLayerMask {enabled:false,linked:false,invert:true,width:Some(6),height:Some(2),image_key:Some("coverage".into()),transform:crate::RasterTransform {x:2.0,y:3.0,a:0.8660254037844386,b:0.5,c:-0.5,d:0.8660254037844386}});
         if shared {if let RasterLayerNode::Pixel {image_key,..}=&mut layer {*image_key=Some("coverage".into());}}
         document.layers.push(layer);
+        if full {for index in 1..crate::RASTER_OWNED_MAP_CAPACITY {let key=format!("unused-{index}");document.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}}
+
         let command=EditMask {layer_id:id,expected_mask:dsl::json::to_json_string(layer_mask(&document.layers[0]).unwrap()),operation:fixture["operation"].to_string(),selection:Some(fixture["selection"].to_string())};
         for invalid in fixture["invalidOperations"].as_array().unwrap() {assert!(prepare(&EditMask {operation:invalid.to_string(),..command.clone()},&document).is_err());}
         assert!(prepare(&EditMask {expected_mask:"{}".into(),..command.clone()},&document).is_err());
@@ -31,7 +33,9 @@ fn mask_paint_preserves_source_and_settings_and_restores_history() {
         assert_eq!(serde_json::to_value(&job.result().unwrap().pixels).unwrap(),fixture["expectedRgba"]);
         let mut encoder=PngEncodeJob::new(job.into_result().unwrap()).unwrap();
         while !encoder.advance().unwrap().done {}
-        let emit=publish(encoder.into_result().unwrap(),&candidate,&document).unwrap();
+        let publication=publish(encoder.into_result().unwrap(),&candidate,&document);
+        if full&&shared {assert!(publication.is_err());assert_eq!(document,before);retire(document);retire(before);continue;}
+        let emit=publication.unwrap();
         let mut inverses=Vec::new();
         for mutation in &emit.artifact_mutations {
             inverses.push(mutation.inverse(&document));
@@ -74,4 +78,15 @@ fn blank_mask_preparation_is_bounded_and_cancels_without_publication() {
     assert!(matches!(work.close_step(1,262144),semio_framework_job::InteractiveJobCloseStep::Complete));
     assert!(work.terminal_is_empty());assert!(document.assets.is_empty());
     assert!(layer_mask(&document.layers[0]).unwrap().image_key.is_none());retire(document);
+}
+
+#[test]
+fn mask_preparation_refuses_own_and_inherited_protection() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    for id in ["locked-pixel","inherited-pixel","locked-group"] {
+        let command=EditMask {layer_id:id.into(),expected_mask:"null".into(),operation:r#"{"kind":"alphaFill","alpha":0,"opacity":1}"#.into(),selection:None};
+        let Err(error)=prepare(&command,&document) else {panic!("protected mask admitted")};assert!(error.message.contains("raster-layer-locked"));
+    }
+    retire(document);
 }

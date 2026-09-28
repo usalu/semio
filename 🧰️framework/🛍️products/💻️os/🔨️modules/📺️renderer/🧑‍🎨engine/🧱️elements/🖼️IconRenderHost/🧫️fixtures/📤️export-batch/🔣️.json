@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "invalid": [
+    {
+      "filename": "null.png",
+      "request": null
+    },
+    {
+      "filename": "zero.png",
+      "request": {
+        "assetUrl": "/mesh/probe.glb",
+        "format": "png",
+        "camera": {
+          "position": [
+            0,
+            0,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ]
+        },
+        "width": 0,
+        "height": 3
+      }
+    }
+  ],
+  "expected": {
+    "completed": 0,
+    "failed": 2,
+    "phase": "failed",
+    "cancelPhase": "cancelled",
+    "remainingAfterCancel": 0
+  },
+  "labels": {
+    "en": {
+      "cancel": "Cancel",
+      "close": "Close"
+    },
+    "de": {
+      "cancel": "Abbrechen",
+      "close": "Schließen"
+    }
+  },
+  "queueCases": [
+    {
+      "name": "large-request",
+      "groups": [
+        96
+      ],
+      "cancelBeforeGroup": null,
+      "expected": {
+        "admitted": 96,
+        "failed": 96,
+        "discarded": 0,
+        "phase": "failed"
+      }
+    },
+    {
+      "name": "combined-requests",
+      "groups": [
+        39,
+        73
+      ],
+      "cancelBeforeGroup": null,
+      "expected": {
+        "admitted": 112,
+        "failed": 112,
+        "discarded": 0,
+        "phase": "failed"
+      }
+    },
+    {
+      "name": "cancel-large-request",
+      "groups": [
+        96
+      ],
+      "cancelBeforeGroup": 1,
+      "expected": {
+        "admitted": 96,
+        "failed": 0,
+        "discarded": 96,
+        "phase": "cancelled"
+      }
+    },
+    {
+      "name": "request-during-retirement",
+      "groups": [
+        96,
+        73
+      ],
+      "cancelBeforeGroup": 1,
+      "expected": {
+        "admitted": 169,
+        "failed": 73,
+        "discarded": 96,
+        "phase": "failed"
+      }
+    }
+  ]
+}

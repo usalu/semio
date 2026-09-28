@@ -1,26 +1,11 @@
 //! 🔘️ 🔘️ Forms play app commands command — `patch-question-options`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::parse_value_json;
-use crate::schema::update_block_operation;
+use crate::editor::forms::questions::patch_choice;
+use crate::schema::locate_question;
 use crate::{op::FormMutation, FormsSnapshot};
-use dsl::os_pack::json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️Shell
-fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
-    update_block_operation(spec, question_id, |question| {
-        let mut options = question.options.take().unwrap_or_default();
-        if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
-            if field == "label" {
-                option.label = raw_value.as_str().unwrap_or("").to_string();
-            }
-        }
-        question.options = Some(options);
-    })
-}
-//#endregion 🔖️Shell
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-question-options")]
@@ -32,9 +17,15 @@ pub struct PatchQuestionOptions {
 }
 
 pub fn handle(payload: &PatchQuestionOptions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    let spec = doc.snapshot;
-    let raw_value = parse_value_json(&payload.value_json);
-    let operations: Vec<FormMutation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();
+    let raw_value = dsl::os_pack::json::parse(&payload.value_json).map_err(|_| Fault::from("forms.choice.invalid-json"))?;
+    let mut operations = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for id in &payload.question_ids {
+        if !seen.insert(id) { continue; }
+        let Some(location) = locate_question(doc.snapshot, id) else { continue; };
+        let next = patch_choice(&location.question, &payload.option_value, &payload.field, &raw_value).map_err(|error| Fault::from(format!("forms.choice.{error}")))?;
+        if next != location.question { operations.push(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: next })); }
+    }
     if operations.is_empty() {
         return Ok(Emit::default());
     }

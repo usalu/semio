@@ -137,13 +137,13 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&source).await;
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     let args = dsl::DslValue::object([
-        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
+        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(0))),
         ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
         ("revision".into(), dsl::DslValue::String(revision)),
         ("value".into(), dsl::DslValue::String("Oak Board".into())),
     ]);
     dispatch_settled(&mut app, "set-cell", args).await.expect("set-cell settles");
-    assert_eq!(app.snapshot().expect("tsv snapshot").records[1][1], "Oak Board");
+    assert_eq!(app.snapshot().expect("tsv snapshot").records[0][1], "Oak Board");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -156,3 +156,42 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
     assert!(tsv_emit(&TsvEditorCommand::SetCell { row: 0, column: u32::MAX, revision, value: "x".into() }, &source).is_err());
 }
 //#endregion 🪟️KitVerbLaws
+
+#[test]
+fn structural_command_codecs_roundtrip_unicode_addresses() {
+    for command in [
+        TsvEditorCommand::AddRow { revision: "rév %20".into() },
+        TsvEditorCommand::RemoveRow { row: 7, revision: "rév %20".into() },
+        TsvEditorCommand::AddColumn { revision: "rév %20".into() },
+        TsvEditorCommand::RemoveColumn { column: 3, revision: "rév %20".into() },
+    ] {
+        let encoded = <TsvEditorCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
+        assert_eq!(<TsvEditorCommand as protocol::OpBinary>::decode_op(&encoded).expect("decode"), command);
+    }
+}
+
+#[test]
+fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
+    fn apply(snapshot: &mut TsvSnapshot, command: TsvEditorCommand) {
+        let mut emitted = tsv_emit(&command, snapshot).expect("structural edit");
+        assert_eq!(emitted.artifact_mutations.len(), 1);
+        let mutation = emitted.artifact_mutations.pop().expect("one mutation");
+        crate::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation(snapshot, &mutation);
+    }
+    let mut snapshot = TsvSnapshot::default();
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, TsvEditorCommand::AddColumn { revision });
+    assert_eq!(snapshot.records, vec![vec![String::new()]]);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, TsvEditorCommand::SetCell { row: 0, column: 0, revision, value: "Ada".into() });
+    assert_eq!(snapshot.records[0][0], "Ada");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, TsvEditorCommand::AddRow { revision });
+    assert_eq!(snapshot.records.len(), 2);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, TsvEditorCommand::RemoveRow { row: 1, revision });
+    assert_eq!(snapshot.records.len(), 1);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, TsvEditorCommand::RemoveColumn { column: 0, revision });
+    assert!(snapshot.records[0].is_empty());
+}

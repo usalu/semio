@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.docx.canonical-xml-authority-fixture.v1",
+  "parts": [
+    {
+      "path": "custom/main/document.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><?semio keep?><w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:ext=\"urn:semio:fixture\" ext:root=\"keep-root\"><w:body><w:bookmarkStart w:id=\"7\" w:name=\"before\"/><w:p w:rsidR=\"AAAA\" ext:marker=\"paragraph\"><w:pPr><w:pStyle w:val=\"Body\"/><ext:pKeep ext:value=\"keep-p\"/></w:pPr><w:hyperlink r:id=\"rLink\"><w:r w:rsidRPr=\"BBBB\" ext:marker=\"hyperlink-run\"><w:rPr><w:b/><w:color w:val=\"FF0000\"/><ext:rKeep ext:value=\"keep-r\"/></w:rPr><w:t xml:space=\"preserve\">Hello 🌍</w:t><w:drawing><ext:graphic ext:value=\"keep-drawing\"/></w:drawing></w:r></w:hyperlink><w:proofErr w:type=\"spellStart\"/></w:p><ext:between ext:value=\"keep-between\"/><w:tbl ext:marker=\"table\"><w:tblPr><w:tblStyle w:val=\"Grid\"/><ext:tableKeep/></w:tblPr><w:tr><w:trPr><ext:rowKeep/></w:trPr><w:tc><w:tcPr><w:tcW w:w=\"2400\" w:type=\"dxa\"/><ext:cellKeep/></w:tcPr><w:p><w:r><w:t>Existing cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:bookmarkEnd w:id=\"7\"/><w:sectPr><ext:sectionKeep/></w:sectPr></w:body></w:document>"
+    },
+    {
+      "path": "custom/styles/styles.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><w:styles xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:ext=\"urn:semio:fixture\" ext:root=\"keep-styles-root\"><ext:before/><w:style w:type=\"paragraph\" w:styleId=\"Body\" ext:marker=\"style-body\"><w:name w:val=\"Body\"/><w:basedOn w:val=\"Normal\"/><ext:styleKeep ext:value=\"keep-style\"/></w:style><w:style w:type=\"paragraph\" w:styleId=\"Quote\"><w:name w:val=\"Quote\"/></w:style><ext:after/></w:styles>"
+    }
+  ],
+  "edits": [
+    {
+      "id": "hyperlink-run-text",
+      "partPath": "custom/main/document.xml",
+      "targetMarker": "hyperlink-run",
+      "kind": "setText",
+      "value": "Edited 🚀"
+    },
+    {
+      "id": "hyperlink-run-bold",
+      "partPath": "custom/main/document.xml",
+      "targetMarker": "hyperlink-run",
+      "kind": "setRunBold",
+      "value": false
+    },
+    {
+      "id": "paragraph-style",
+      "partPath": "custom/main/document.xml",
+      "targetMarker": "paragraph",
+      "kind": "setParagraphStyle",
+      "value": "Quote"
+    },
+    {
+      "id": "table-row",
+      "partPath": "custom/main/document.xml",
+      "targetMarker": "table",
+      "kind": "insertTableRow",
+      "value": {
+        "index": 1,
+        "cells": ["New ßeta"]
+      }
+    }
+  ],
+  "preservedMarkers": [
+    "keep-root",
+    "keep-p",
+    "keep-r",
+    "keep-drawing",
+    "keep-between",
+    "keep-table",
+    "keep-row",
+    "keep-cell",
+    "keep-styles-root",
+    "keep-style"
+  ]
+}

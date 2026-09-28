@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/framework/icon-render-svg-lighting-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "profile", "cases"],
+  "properties": {
+    "schema": { "const": "framework.icon-render.svg-lighting/v1" },
+    "profile": { "const": "svgFlatLit" },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "normal", "lightDirection", "ambient", "sun", "material", "expectedFill"],
+        "properties": {
+          "id": { "enum": ["front-low-parameters", "front-high-parameters", "back-facing-sun", "oblique-sun"] },
+          "normal": { "$ref": "#/$defs/vector" },
+          "lightDirection": { "$ref": "#/$defs/vector" },
+          "ambient": { "$ref": "#/$defs/light" },
+          "sun": { "$ref": "#/$defs/light" },
+          "material": { "$ref": "#/$defs/material" },
+          "expectedFill": { "type": "string", "pattern": "^rgb\\([0-9]+,[0-9]+,[0-9]+\\)$" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["color", "intensity"],
+      "properties": { "color": { "type": "string" }, "intensity": { "type": "number", "minimum": 0 } }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["color", "metalness", "roughness", "emissive", "emissiveIntensity"],
+      "properties": {
+        "color": { "type": "string" },
+        "metalness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "roughness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "emissive": { "type": "string" },
+        "emissiveIntensity": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

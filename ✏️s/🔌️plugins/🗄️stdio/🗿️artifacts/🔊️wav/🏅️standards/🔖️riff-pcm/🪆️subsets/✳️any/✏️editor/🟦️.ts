@@ -7,3 +7,4 @@ export const WAV_EDITOR_DIALECT = { artifactKind: "s.stdio.wav", standard: "riff
 export const WAV_EDIT_MODE_ID = "edit" as const;
 
 export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";
+export * from "./🎮️commands/🔊️edit-audio/🟦️";

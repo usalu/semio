@@ -495,10 +495,14 @@ fn button_record(id: u64, key: &str, action: &str, version: u64) -> serde_json::
 }
 
 fn extension_record(id: u64, key: &str) -> serde_json::Value {
+    extension_record_with(id, key, "body.inspector", serde_json::Value::Null)
+}
+
+fn extension_record_with(id: u64, key: &str, extension: &str, props: serde_json::Value) -> serde_json::Value {
     serde_json::json!({
         "id": id,
         "key": key,
-        "component": { "type": "extension", "extension": "body.inspector", "props": null },
+        "component": { "type": "extension", "extension": extension, "props": props },
         "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
         "style": {},
         "activity": "idle",
@@ -636,6 +640,34 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
     assert_eq!(slot.app_id, "note");
     assert_eq!(slot.body_key, "body.inspector");
     retire(tree);
+}
+
+#[test]
+fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).expect("media transport reservation fixture");
+    assert_eq!(fixture["reservedExtensionId"].as_str(), Some(crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID));
+    for (index, vector) in fixture["cases"].as_array().expect("fixture cases").iter().enumerate() {
+        let mut tree = UiTree::new();
+        let mut cursor = UiDocumentReconcileCursor::default();
+        let root = container_record(0, "panel", &[1]);
+        let extension_id = vector["extensionId"].as_str().expect("extension id");
+        let extension = extension_record_with(1, "media-slot", extension_id, vector["props"].clone());
+        tree.publish_document(tiny_document("note.play.navigator", 20 + index as u64, &root, Some(&extension)));
+        cursor.rearm(11);
+        for _ in 0..4096 {
+            match tree.step_document_reconcile(&mut cursor, "note.play.navigator", "note") {
+                UiDocumentReconcileStep::Pending => {}
+                UiDocumentReconcileStep::Complete => break,
+                terminal => panic!("media vector {} failed: {terminal:?}", vector["name"]),
+            }
+        }
+        let node = tree.document_node(UiNodeId(1)).and_then(|node| tree.node(node)).expect("media extension mounted");
+        let crate::wgpu::component::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("media transport must remain an external host slot") };
+        assert_eq!(slot.body_key, extension_id, "the reserved address remains the stable slot identity");
+        assert_eq!(slot.host_status.as_deref(), vector["expectedHostStatus"].as_str(), "{}", vector["name"]);
+        assert_eq!(slot.params_json, serde_json::to_string(&vector["props"]).expect("fixture props serialize"), "hostContentHeight and future decoder inputs survive untouched");
+        retire(tree);
+    }
 }
 //#endregion 🎬️IntentStamping
 

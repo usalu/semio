@@ -4,7 +4,8 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/🧫️fixtures/**/*"
     ]
   },
   "targets": {

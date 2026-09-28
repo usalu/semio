@@ -301,9 +301,9 @@ async fn parses_semio_example_document() {
 async fn empty_document_background_layer_has_identity_scale() {
     let document = empty_raster_document();
     let json = document_sync_json(&document);
-    assert!(json.contains(r#""scaleX":1.0"#), "expected identity scale in {json}");
-    assert!(json.contains(r#""scaleY":1.0"#), "expected identity scale in {json}");
-    assert!(!json.contains(r#""scaleX":0.0"#), "layer must not collapse to zero size");
+    assert!(json.contains(r#""a":1.0"#), "expected identity scale in {json}");
+    assert!(json.contains(r#""d":1.0"#), "expected identity scale in {json}");
+    assert!(!json.contains(r#""a":0.0"#), "layer must not collapse to zero size");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -524,7 +524,7 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     base.layers = vec![RasterLayerNode::Pixel {
         id: "bg".into(),
         name: "Background".into(),
-        visible: true,
+        visible: true, locked: false,
         opacity: 1.0,
         blend_mode: "normal".into(),
         transform: crate::RasterTransform::default(),
@@ -670,11 +670,15 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetBrushOpacity(set_brush_opacity::SetBrushOpacity { value: 0.5 }),
         RasterCommand::SetBrushColor(set_brush_color::SetBrushColor { value: "#e07020".into() }),
         RasterCommand::SetBrushHardness(set_brush_hardness::SetBrushHardness { value: 0.25 }),
+        RasterCommand::SetPaintTarget(set_paint_target::SetPaintTarget{value:"mask".into()}),
+        RasterCommand::SetMaskValue(set_mask_value::SetMaskValue{value:96}),
+        RasterCommand::SetPixelSelection(set_pixel_selection::SetPixelSelection{selection:Some(crate::editor::raster::config::RasterPixelSelection{layer_id:"l1".into(),target:"pixels".into(),width:2,height:2,spans:"[]".into()}),expected_image_key:None}),
         RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
         RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
         RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() }),
         RasterCommand::EditPixels(edit_pixels::EditPixels { layer_id: "l1".into(), expected_image_key: None, operation: "{\"kind\":\"invert\"}".into(), selection: None }),
+        RasterCommand::ExportPng(export_png::ExportPng {}),
         RasterCommand::FlattenLayers(flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
         RasterCommand::MergeDown(merge_down::MergeDown {layer_id:"l1".into()}),
         RasterCommand::EditMask(edit_mask::EditMask {layer_id:"l1".into(),expected_mask:"{}".into(),operation:r#"{"kind":"alphaStroke","points":[[0.5,0.5]],"size":1,"opacity":1,"hardness":1,"alpha":0}"#.into(),selection:None}),
@@ -682,22 +686,20 @@ fn every_command() -> Vec<RasterCommand> {
     ]
 }
 
-/// ⚖️ LAW: raster's retained route table, its publication contracts, its bounded-first-step proofs,
-/// `RasterCommand::TOOL_JOB_IDS` and the catalog's `Migrated` classifications are the SAME
-/// fifteen ids — the exact join `validate_tool_job_rows` demands
-/// (`interactive-job.catalog-authority` / `interactive-job.catalog-incomplete`). Mirrors block2d's
-/// `retained_route_dispositions_are_exact_and_exhaustive`.
+/// ⚖️ Every command has one exact factory proof and publication lane; PNG export is resumable and host-only.
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
-    use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
+    use semio_framework::{ToolCancellationPolicy, ToolExecutionShape,ToolJobFactory};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 22);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 22);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 22);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 25);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 26);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 25);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
-    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().collect();
+    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().chain(["exportPng"]).collect();
+    assert_eq!(media_export::RasterDownloadJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract().shape,ToolExecutionShape::Resumable);
+    assert_eq!(media_export::RasterDownloadJobFactory::PUBLICATION_CONTRACTS[0].lanes,&[ArtifactToolPublicationLane::HostOnly]);
     assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
     assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
 
@@ -745,7 +747,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
         .map(|action| action.id.as_str())
         .collect();
-    assert_eq!(RasterCommand::TOOL_JOB_IDS.iter().copied().filter(|tool_id| migrated_ids.contains(tool_id)).collect::<BTreeSet<_>>(), retained, "every bounded-first-step proof entry must be Migrated, and every Migrated tool-job row must be proven");
+    assert_eq!(RasterCommand::TOOL_JOB_IDS.iter().copied().filter(|tool_id| migrated_ids.contains(tool_id)).collect::<BTreeSet<_>>(), retained, "every registered proof must be Migrated, and every Migrated tool-job row must be proven");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -761,7 +763,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 22, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 26, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -777,6 +779,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         .into_iter()
         .map(|command| {
             let keyword: &'static str = match &command {
+                RasterCommand::ExportPng(_) => "export-png",
                 RasterCommand::AddLayer(_) => "add-layer",
                 RasterCommand::DropLayerKind(_) => "drop-layer-kind",
                 RasterCommand::SetLayerVisible(_) => "set-layer-visible",
@@ -790,6 +793,9 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
                 RasterCommand::SetBrushOpacity(_) => "brush-opacity",
                 RasterCommand::SetBrushColor(_) => "brush-color",
                 RasterCommand::SetBrushHardness(_) => "brush-hardness",
+                RasterCommand::SetPaintTarget(_)=>"paint-target",
+                RasterCommand::SetMaskValue(_)=>"mask-value",
+                RasterCommand::SetPixelSelection(_)=>"pixel-selection",
                 RasterCommand::SetCompositeViewport(_) => "composite-viewport",
                 RasterCommand::SetCamera(_) => "camera",
                 RasterCommand::SetCameraZoom(_) => "camera-zoom",
@@ -1274,4 +1280,40 @@ async fn merge_down_retained_publication_keeps_other_layers_and_round_trips_hist
     context::history(&mut app,"undo").await;let undone=app.snapshot().unwrap();assert_eq!(undone,before);retire_raster_snapshot(undone);
     context::history(&mut app,"redo").await;let redone=app.snapshot().unwrap();assert_eq!(redone,after);retire_raster_snapshot(redone);
     retire_raster_snapshot(before);retire_raster_snapshot(after);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn protection_controls_publish_and_restore_retained_history() {
+    use crate::standards::v1::subsets::any::schema::{layer_locked,layer_node_id,snapshot::retire_raster_snapshot};
+    let mut app=context::app().await;
+    context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
+    let before=app.snapshot().unwrap();let id=layer_node_id(before.layers.last().unwrap()).to_owned();
+    context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.clone(),field:"locked".into(),value:"true".into()})).await;
+    let after=app.snapshot().unwrap();assert!(layer_locked(crate::standards::v1::subsets::any::schema::find_layer(&after.layers,&id).unwrap()));
+    context::history(&mut app,"undo").await;
+    let undone=app.snapshot().unwrap();assert_eq!(undone,before);retire_raster_snapshot(undone);
+    context::history(&mut app,"redo").await;
+    let redone=app.snapshot().unwrap();assert_eq!(redone,after);retire_raster_snapshot(redone);
+    context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.clone(),field:"locked".into(),value:"false".into()})).await;
+    let unlocked=app.snapshot().unwrap();assert_eq!(unlocked,before);retire_raster_snapshot(unlocked);
+    retire_raster_snapshot(before);retire_raster_snapshot(after);
+}
+
+#[test]
+fn structural_commands_refuse_protected_sources_and_destination_parents() {
+    use protocol::Mutation;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
+    let config=RasterConfig::default();let cfg=semio_framework_plugin::ConfigView {snapshot:&config,window:None};
+    for case in fixture["cases"].as_array().unwrap() {
+        let id=case["id"].as_str().unwrap();let accepted=case["expected"]["structural"].as_bool().unwrap();
+        for outcome in [delete_layer::handle(&delete_layer::DeleteLayer {layer_id:id.into()},&doc,&cfg),move_layer::handle(&move_layer::MoveLayer {layer_id:id.into(),target_row_id:"outside".into(),drop_position:"before".into()},&doc,&cfg)] {
+            assert_eq!(outcome.is_ok(),accepted,"{id}");if let Ok(emit)=outcome {for operation in emit.artifact_mutations {operation.retire_cold();}}
+        }
+    }
+    for (target,position) in [("locked-group","inside"),("inherited-pixel","before")] {
+        assert!(move_layer::handle(&move_layer::MoveLayer {layer_id:"outside".into(),target_row_id:target.into(),drop_position:position.into()},&doc,&cfg).is_err());
+    }
+    drop(doc);crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }

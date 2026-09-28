@@ -1,0 +1,271 @@
+{
+  "$schema": "../../../../🧬️schema/🔀️projection-pane/🔣️.json",
+  "windowId": "pane-top",
+  "windowSegment": "paneTop",
+  "paneId": "framework.worldOrbit.projection.paneTop",
+  "selectedTemplateId": "three-point",
+  "body": {
+    "anchor": "bottom-right",
+    "widthPx": 300,
+    "role": "tree",
+    "inline": "rtl",
+    "direction": "down"
+  },
+  "rows": [
+    {
+      "templateId": "parallel",
+      "id": "framework.worldOrbit.projection.paneTop.parallel",
+      "label": "Parallel",
+      "icon": "projection-parallel",
+      "depth": 0,
+      "disclosure": true,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "parallel"
+        }
+      }
+    },
+    {
+      "templateId": "orthographic",
+      "id": "framework.worldOrbit.projection.paneTop.orthographic",
+      "label": "Orthographic",
+      "icon": "projection-orthographic",
+      "depth": 1,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "orthographic"
+        }
+      }
+    },
+    {
+      "templateId": "axonometric",
+      "id": "framework.worldOrbit.projection.paneTop.axonometric",
+      "label": "Axonometric",
+      "icon": "projection-axonometric",
+      "depth": 1,
+      "disclosure": true,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "axonometric"
+        }
+      }
+    },
+    {
+      "templateId": "axonometric-isometric",
+      "id": "framework.worldOrbit.projection.paneTop.axonometricIsometric",
+      "label": "Isometric",
+      "icon": "projection-isometric",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "axonometric-isometric"
+        }
+      }
+    },
+    {
+      "templateId": "axonometric-dimetric",
+      "id": "framework.worldOrbit.projection.paneTop.axonometricDimetric",
+      "label": "Dimetric",
+      "icon": "projection-dimetric",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "axonometric-dimetric"
+        }
+      }
+    },
+    {
+      "templateId": "axonometric-trimetric",
+      "id": "framework.worldOrbit.projection.paneTop.axonometricTrimetric",
+      "label": "Trimetric",
+      "icon": "projection-trimetric",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "axonometric-trimetric"
+        }
+      }
+    },
+    {
+      "templateId": "oblique",
+      "id": "framework.worldOrbit.projection.paneTop.oblique",
+      "label": "Oblique",
+      "icon": "projection-oblique",
+      "depth": 1,
+      "disclosure": true,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "oblique"
+        }
+      }
+    },
+    {
+      "templateId": "oblique-cabinet",
+      "id": "framework.worldOrbit.projection.paneTop.obliqueCabinet",
+      "label": "Cabinet",
+      "icon": "projection-oblique-cabinet",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "oblique-cabinet"
+        }
+      }
+    },
+    {
+      "templateId": "oblique-cavalier",
+      "id": "framework.worldOrbit.projection.paneTop.obliqueCavalier",
+      "label": "Cavalier",
+      "icon": "projection-oblique-cavalier",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "oblique-cavalier"
+        }
+      }
+    },
+    {
+      "templateId": "oblique-military",
+      "id": "framework.worldOrbit.projection.paneTop.obliqueMilitary",
+      "label": "Military",
+      "icon": "projection-oblique-military",
+      "depth": 2,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "oblique-military"
+        }
+      }
+    },
+    {
+      "templateId": "perspective",
+      "id": "framework.worldOrbit.projection.paneTop.perspective",
+      "label": "Perspective",
+      "icon": "projection-perspective",
+      "depth": 0,
+      "disclosure": true,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "perspective"
+        }
+      }
+    },
+    {
+      "templateId": "one-point",
+      "id": "framework.worldOrbit.projection.paneTop.onePoint",
+      "label": "1-Point",
+      "icon": "projection-one-point",
+      "depth": 1,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "one-point"
+        }
+      }
+    },
+    {
+      "templateId": "two-point",
+      "id": "framework.worldOrbit.projection.paneTop.twoPoint",
+      "label": "2-Point",
+      "icon": "projection-two-point",
+      "depth": 1,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "two-point"
+        }
+      }
+    },
+    {
+      "templateId": "three-point",
+      "id": "framework.worldOrbit.projection.paneTop.threePoint",
+      "label": "3-Point",
+      "icon": "projection-three-point",
+      "depth": 1,
+      "disclosure": false,
+      "selected": true,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "three-point"
+        }
+      }
+    },
+    {
+      "templateId": "curvilinear",
+      "id": "framework.worldOrbit.projection.paneTop.curvilinear",
+      "label": "Curvilinear",
+      "icon": "projection-curvilinear",
+      "depth": 1,
+      "disclosure": false,
+      "selected": false,
+      "action": {
+        "controllerId": "framework",
+        "action": "setWorldProjectionTemplate",
+        "args": {
+          "windowId": "pane-top",
+          "templateId": "curvilinear"
+        }
+      }
+    }
+  ]
+}

@@ -55,8 +55,8 @@ fn raster_document_json() -> String {
     json!({
         "schema": "raster.document",
         "layers": [
-            { "kind": "pixel", "id": "base", "visible": true, "opacity": 1.0, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "mask": null, "width": 64, "height": 64 },
-            { "kind": "pixel", "id": "overlay", "visible": true, "opacity": 0.5, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "mask": null, "width": 64, "height": 64 }
+            { "kind": "pixel", "id": "base", "visible": true, "opacity": 1.0, "blendMode": "normal", "transform": {"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0}, "mask": null, "width": 64, "height": 64 },
+            { "kind": "pixel", "id": "overlay", "visible": true, "opacity": 0.5, "blendMode": "normal", "transform": {"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0}, "mask": null, "width": 64, "height": 64 }
         ]
     })
     .to_string()
@@ -75,6 +75,7 @@ fn paint2d_scene(surface_id: &str, active_utility: &str, selection: &[&str]) -> 
         brush_opacity: 0.8,
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
+        paint_target:"pixels".into(),mask_value:255,pixel_selection_json:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),
@@ -227,7 +228,7 @@ fn paint2d_wheel_republishes_the_host_camera_as_set_camera() {
 }
 
 #[test]
-fn paint2d_navigator_view_mode_refuses_every_pointer_route() {
+fn paint2d_navigator_view_mode_refuses_unarmed_editing_pointer_routes() {
     let _serialized = engine_surface_law_guard();
     let surface_id = "paint2d-navigator";
     drop_engine_surface(surface_id);
@@ -241,8 +242,7 @@ fn paint2d_navigator_view_mode_refuses_every_pointer_route() {
     let mut input = InputState::<ActionDescriptor>::default();
     assert!(!paint2d_pointer_button_into(&scene, bounds, 100.0, 100.0, true, 0, false, false, &mut input).expect("bounded"));
     assert!(!paint2d_pointer_move_into(&scene, bounds, 100.0, 100.0, &mut input).expect("bounded"));
-    assert!(!paint2d_wheel_into(&scene, bounds, 100.0, 100.0, -120.0, &mut input).expect("bounded"));
-    assert!(drain(&mut input).is_empty(), "the navigator pane is a read-only overview, exactly as React's `if (isNavigator || !session) return`");
+    assert!(drain(&mut input).is_empty(), "Navigator editing is inert; camera gestures have their own routes");
 
     drop_engine_surface(surface_id);
 }
@@ -799,6 +799,40 @@ fn paint2d_navigator_middle_drag_pans_the_content_camera() {
 
     drop_engine_surface(surface_id);
 }
+
+#[test]
+fn paint2d_navigator_wheel_matches_the_mounted_react_camera_contract() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🖌️Paint2dHost/🧫️fixtures/🧭️navigator-camera/🔣️.json")).expect("neutral Navigator camera fixture");
+    for sample in fixture["cases"].as_array().expect("camera cases") {
+        let surface_id = sample["id"].as_str().expect("case identity");
+        drop_engine_surface(surface_id);
+        let mut scene = paint2d_scene(surface_id, "brush", &[]);
+        let paint = scene.paint_2d.as_mut().expect("Paint scene");
+        paint.view_mode = "navigator".into();
+        paint.camera_json = sample["camera"].to_string();
+        paint.composite_viewport_json = (!sample["viewport"].is_null()).then(|| sample["viewport"].to_string());
+        let dimension = |index: usize| sample["surface"][index].as_f64().expect("surface dimension") as f32;
+        let bounds = Rect { x: dimension(0), y: dimension(1), w: dimension(2), h: dimension(3) };
+        assert!(sync_engine_scene(&scene, "navigator-wheel", bounds, &Theme::default()));
+        let fit_camera = with_raster_host_mut(surface_id, |host| host.camera_json()).expect("Navigator host");
+        let mut input = InputState::<ActionDescriptor>::default();
+        assert!(paint2d_wheel_into(&scene, bounds, sample["point"][0].as_f64().unwrap() as f32, sample["point"][1].as_f64().unwrap() as f32, sample["deltaY"].as_f64().unwrap() as f32, &mut input).expect("bounded camera publish"));
+        let actions = drain(&mut input);
+        assert_eq!(actions.len(), 1, "{surface_id}");
+        let action = &actions[0];
+        assert_eq!(action.action, "setCamera");
+        assert_eq!(action.controller_id, "raster");
+        let args = action.args.as_ref().and_then(dsl::DslValue::as_object).expect("camera action arguments");
+        let camera = args.iter().find(|(key, _)| key == "camera").and_then(|(_, value)| value.as_object()).expect("nested camera");
+        for key in ["x", "y", "zoom"] {
+            let actual = camera.iter().find(|(name, _)| name == key).and_then(|(_, value)| value.as_f64()).expect("camera coordinate");
+            assert!((actual - sample["expected"][key].as_f64().unwrap()).abs() < 1e-9, "{surface_id}: {key} = {actual}");
+        }
+        assert_eq!(with_raster_host_mut(surface_id, |host| host.camera_json()).unwrap(), fit_camera, "the Navigator retains its own document-fit camera");
+        drop_engine_surface(surface_id);
+    }
+}
 //#endregion Paint2dMarqueeAndNavigatorTests
 
 /// 🪟️ The retained paint binds exact editor tokens, and document retirement preserves sibling hosts.
@@ -833,4 +867,20 @@ fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibl
     assert_eq!(text(&painted_b.owner.host_id).as_deref(), law["expect"]["siblingText"].as_str());
     close_retained_surface_fixture(window_a);
     close_retained_surface_fixture(window_b);
+}
+
+#[test]
+fn paint2d_mask_stroke_publishes_the_shared_target_and_exact_revision(){
+    let _serialized=engine_surface_law_guard();
+    let fixture:Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["assets"].as_object().unwrap().is_empty()){
+        let surface_id=format!("paint2d-mask-{}",case["name"].as_str().unwrap());drop_engine_surface(&surface_id);
+        let mut scene=paint2d_scene(&surface_id,"paintBrush",&["p"]);let paint=scene.paint_2d.as_mut().unwrap();paint.document_sync_json=case["document"].to_string();paint.paint_target="mask".into();paint.mask_value=96;
+        let bounds=Rect{x:0.0,y:0.0,w:640.0,h:480.0};assert!(sync_engine_scene(&scene,"law-window",bounds,&Theme::default()));
+        let (x,y)=with_raster_host_mut(&surface_id,|host|host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap())).unwrap();
+        let mut input=InputState::<ActionDescriptor>::default();assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,true,0,false,false,&mut input).unwrap());assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,false,0,false,false,&mut input).unwrap());
+        let actions=drain(&mut input);assert_eq!(actions.len(),1);assert_eq!(actions[0].action,"editMask");let fields=action_fields(&actions[0]);let get=|key:&str|fields.iter().find(|(field,_)|field==key).unwrap().1.as_str();assert_eq!(get("layerId"),"p");
+        let revision:Value=serde_json::from_str(get("expectedMask")).unwrap();assert!(revision["imageKey"].is_null());assert_eq!(revision["linked"],true);assert_eq!(revision["invert"],true);assert_eq!(revision["enabled"],false);
+        let operation:Value=serde_json::from_str(get("operation")).unwrap();assert_eq!(operation["kind"],"alphaStroke");assert_eq!(operation["alpha"],96);for index in 0..2{assert_eq!(operation["points"][0][index].as_f64(),case["pixelPoint"][index].as_f64());}assert!(with_raster_host_mut(&surface_id,|host|host.paint_edit().is_none()).unwrap());drop_engine_surface(&surface_id);
+    }
 }

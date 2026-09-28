@@ -55,12 +55,20 @@ pub fn edit_node(snapshot: &ZipSnapshot, node_id: &str, value: &str, revision: &
         return Ok(if snapshot.comment == value {
             Emit::default()
         } else {
-            Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: value.into() })], description: Some("Set archive comment".into()), ..Default::default() }
+            Emit {
+                artifact_mutations: vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment {
+                    comment: value.into(),
+                    comment_utf8: crate::standards::v2_0::subsets::base::io::archive_comment_utf8_after_edit(snapshot.comment_utf8, value),
+                })],
+                description: Some("Set archive comment".into()),
+                ..Default::default()
+            }
         });
     }
     let mut cursor = retained::ArchiveTextCursor::default();
+    cursor.bind(snapshot, node_id, value, revision)?;
     loop {
-        if let Some(emit) = cursor.advance(snapshot, node_id, value, revision)? {
+        if let Some(emit) = cursor.advance_bound(snapshot, node_id, value, revision)? {
             return Ok(emit);
         }
     }

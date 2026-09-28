@@ -1,0 +1,199 @@
+{
+  "layers": [
+    {
+      "kind": "group",
+      "id": "container",
+      "name": "container",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 40.0,
+        "y": -12.0,
+        "a": 1.696096192312852,
+        "b": 1.0598385284664098,
+        "c": -0.26495963211660245,
+        "d": 0.424024048078213
+      },
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "locked-pixel",
+          "name": "locked-pixel",
+          "visible": true,
+          "locked": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "width": 1,
+          "height": 1
+        },
+        {
+          "kind": "pixel",
+          "id": "editable-pixel",
+          "name": "editable-pixel",
+          "visible": true,
+          "locked": false,
+          "opacity": 0.4,
+          "blendMode": "normal",
+          "transform": {
+            "x": 8.0,
+            "y": 5.0,
+            "a": 0.9659258262890683,
+            "b": -0.25881904510252074,
+            "c": 0.25881904510252074,
+            "d": 0.9659258262890683
+          },
+          "width": 1,
+          "height": 1,
+          "imageKey": "shared-image",
+          "mask": {
+            "enabled": true,
+            "linked": false,
+            "invert": true,
+            "width": 1,
+            "height": 1,
+            "imageKey": "shared-mask",
+            "transform": {
+              "x": 2.0,
+              "y": -3.0,
+              "a": 0.9781476007338057,
+              "b": 0.20791169081775931,
+              "c": -0.41582338163551863,
+              "d": 1.9562952014676114
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "group",
+      "id": "locked-group",
+      "name": "locked-group",
+      "visible": true,
+      "locked": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "inherited-pixel",
+          "name": "inherited-pixel",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "width": 1,
+          "height": 1
+        }
+      ]
+    },
+    {
+      "kind": "adjustment",
+      "id": "locked-adjustment",
+      "name": "locked-adjustment",
+      "visible": true,
+      "locked": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "adjustmentKind": "brightnessContrast",
+      "params": {
+        "brightness": 0.2,
+        "contrast": -0.3
+      }
+    },
+    {
+      "kind": "pixel",
+      "id": "outside",
+      "name": "outside",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "width": 1,
+      "height": 1
+    }
+  ],
+  "cases": [
+    {
+      "id": "container",
+      "parentId": null,
+      "index": 1
+    },
+    {
+      "id": "locked-pixel",
+      "parentId": "container",
+      "index": 1
+    },
+    {
+      "id": "editable-pixel",
+      "parentId": "container",
+      "index": 2
+    },
+    {
+      "id": "locked-group",
+      "parentId": null,
+      "index": 2
+    },
+    {
+      "id": "locked-adjustment",
+      "parentId": null,
+      "index": 3
+    },
+    {
+      "id": "outside",
+      "parentId": null,
+      "index": 4
+    }
+  ],
+  "invalid": [
+    {
+      "id": "inherited-pixel",
+      "error": "raster-layer-locked"
+    },
+    {
+      "id": "missing",
+      "error": "raster-layer-not-found"
+    }
+  ]
+}

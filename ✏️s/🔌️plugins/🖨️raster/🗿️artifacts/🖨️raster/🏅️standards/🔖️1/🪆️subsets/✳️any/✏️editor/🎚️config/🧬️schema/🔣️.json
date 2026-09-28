@@ -9,7 +9,9 @@
     "brushOpacity",
     "camera",
     "brushColor",
-    "brushHardness"
+    "brushHardness",
+    "paintTarget",
+    "maskValue"
   ],
   "properties": {
     "brushSize": {
@@ -39,6 +41,24 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1,
+      "x-semio-state": "config"
+    },
+    "paintTarget": {
+      "type": "string",
+      "enum": [
+        "pixels",
+        "mask"
+      ],
+      "x-semio-state": "config"
+    },
+    "maskValue": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "config"
+    },
+    "pixelSelection": {
+      "$ref": "#/$defs/RasterPixelSelection",
       "x-semio-state": "config"
     }
   },
@@ -83,6 +103,48 @@
         "height": {
           "type": "number",
           "format": "double"
+        }
+      }
+    },
+    "RasterPixelSelection": {
+      "title": "RasterPixelSelection",
+      "description": "Completed coverage in intrinsic target coordinates. Absent means unrestricted; an empty spans array means no selected pixels. Image content revisions do not change completed coverage.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layerId",
+        "target",
+        "width",
+        "height",
+        "spans"
+      ],
+      "properties": {
+        "layerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "pixels",
+            "mask"
+          ]
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "spans": {
+          "type": "string",
+          "maxLength": 40000,
+          "description": "JSON triples [start,length,coverage], ordered and non-overlapping; extent at most 16777216 pixels; positive lengths and byte coverage."
         }
       }
     }

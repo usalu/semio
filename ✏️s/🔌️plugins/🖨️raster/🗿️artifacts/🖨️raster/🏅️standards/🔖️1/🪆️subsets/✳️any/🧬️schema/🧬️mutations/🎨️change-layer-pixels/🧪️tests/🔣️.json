@@ -9,16 +9,18 @@
         "opacity": 0.5,
         "blendMode": "multiply",
         "transform": {
-          "x": -40,
-          "y": 10,
-          "scaleX": 2,
-          "scaleY": 1,
-          "rotation": 20
+          "x": -40.0,
+          "y": 10.0,
+          "a": 1.8793852415718169,
+          "b": 0.6840402866513374,
+          "c": -0.3420201433256687,
+          "d": 0.9396926207859084
         },
         "mask": null,
         "width": null,
         "height": null,
-        "imageKey": null
+        "imageKey": null,
+        "locked": false
       }
     ],
     "schema": "s.raster.raster",

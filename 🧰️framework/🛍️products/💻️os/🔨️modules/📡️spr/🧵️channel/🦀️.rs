@@ -21,8 +21,48 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 18;
+pub const CHANNEL_VERSION: u32 = 19;
 //#endregion 🔖️Version
+
+//#region 🔖️MediaExportWire
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MediaExportHandleWire {
+    pub app_instance_id: u32,
+    pub parent_document_id: String,
+    pub operation_id: u64,
+    pub base_revision: u64,
+    pub generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MediaExportStateWire {
+    Running,
+    Complete,
+    Cancelled,
+    Failed,
+}
+
+impl MediaExportStateWire {
+    fn wire(self) -> u8 {
+        match self {
+            Self::Running => 0,
+            Self::Complete => 1,
+            Self::Cancelled => 2,
+            Self::Failed => 3,
+        }
+    }
+
+    fn from_wire(value: u8) -> Result<Self, crate::os_spr::ProtocolError> {
+        match value {
+            0 => Ok(Self::Running),
+            1 => Ok(Self::Complete),
+            2 => Ok(Self::Cancelled),
+            3 => Ok(Self::Failed),
+            _ => Err(malformed("media export state", 0, "unknown state")),
+        }
+    }
+}
+//#endregion 🔖️MediaExportWire
 
 //#region 🔖️ChildPackEntry
 /// @emoji 🧸️ One owned child's whole persisted envelope, as it travels between host and guest.
@@ -1750,6 +1790,79 @@ impl PagedRouteFieldsDecode {
     }
 }
 
+#[derive(Debug, Default)]
+struct PagedMediaExportHandleDecode {
+    stage: u8,
+    app_instance_id: u32,
+    parent_document_id: Option<String>,
+    operation_id: u64,
+    base_revision: u64,
+    rejected: Option<Vec<u8>>,
+}
+
+impl PagedMediaExportHandleDecode {
+    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<MediaExportHandleWire>, crate::Fault> {
+        match self.stage {
+            0 => {
+                self.app_instance_id = u32::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.media-export-app-instance"), "media export app instance exceeds u32"))?;
+                self.stage = 1;
+                Ok(None)
+            }
+            1 => {
+                let bytes = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.parent_document_id = match String::from_utf8(bytes) {
+                    Ok(value) => Some(value),
+                    Err(error) => {
+                        self.rejected = Some(error.into_bytes());
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
+                    }
+                };
+                self.stage = 2;
+                Ok(None)
+            }
+            2 => {
+                self.operation_id = reader.read_varint()?;
+                self.stage = 3;
+                Ok(None)
+            }
+            3 => {
+                self.base_revision = reader.read_varint()?;
+                self.stage = 4;
+                Ok(None)
+            }
+            4 => Ok(Some(MediaExportHandleWire {
+                app_instance_id: self.app_instance_id,
+                parent_document_id: self.parent_document_id.take().expect("retained media export parent document id"),
+                operation_id: self.operation_id,
+                base_revision: self.base_revision,
+                generation: reader.read_varint()?,
+            })),
+            _ => unreachable!("media export handle decoder completed once"),
+        }
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if let Some(bytes) = self.rejected.as_ref() {
+            if bytes.len() > maximum_bytes {
+                return (false, 0);
+            }
+            let bytes = self.rejected.take().expect("rejected media export field");
+            let released = bytes.len();
+            drop(bytes);
+            return (false, released);
+        }
+        let Some(parent_document_id) = self.parent_document_id.take() else { return (true, 0) };
+        let bytes = parent_document_id.into_bytes();
+        if bytes.len() > maximum_bytes {
+            self.parent_document_id = Some(String::from_utf8(bytes).expect("retained media export document id remains UTF-8"));
+            return (false, 0);
+        }
+        let released = bytes.len();
+        drop(bytes);
+        (false, released)
+    }
+}
+
 #[derive(Debug)]
 enum PagedAppCommandDecodeState {
     Header,
@@ -1778,6 +1891,10 @@ enum PagedAppCommandDecodeState {
     ReadDocumentArchive { seq: u64 },
     LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
+    MediaExportSubmitPort { seq: u64 },
+    MediaExportSubmitDocument { seq: u64, port: Option<String> },
+    MediaExportSubmitRevision { seq: u64, port: Option<String>, expected_parent_document_id: Option<String> },
+    MediaExportHandle { seq: u64, kind: u8, decode: PagedMediaExportHandleDecode },
     RejectedFields { fields: Vec<Vec<u8>> },
     Terminal,
     Faulted,
@@ -1863,6 +1980,9 @@ impl DecodedAppCommandOwner {
             (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => Some(std::mem::take(prepared_child_ops)),
             (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
             (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => Some(std::mem::take(group_id).into_bytes()),
+            (0, AppCommand::SubmitMediaExport { port, .. }) => Some(std::mem::take(port).into_bytes()),
+            (1, AppCommand::SubmitMediaExport { expected_parent_document_id, .. }) => Some(std::mem::take(expected_parent_document_id).into_bytes()),
+            (0, AppCommand::PollMediaExport { handle, .. }) | (0, AppCommand::CancelMediaExport { handle, .. }) | (0, AppCommand::TakeMediaExportChunk { handle, .. }) => Some(std::mem::take(&mut handle.parent_document_id).into_bytes()),
             _ => None,
         };
         if let Some(field) = field {
@@ -1889,6 +2009,9 @@ impl DecodedAppCommandOwner {
                     (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => *prepared_child_ops = field,
                     (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
                     (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => *group_id = String::from_utf8(field).expect("decoded transaction group id remains valid UTF-8"),
+                    (0, AppCommand::SubmitMediaExport { port, .. }) => *port = String::from_utf8(field).expect("decoded media export port remains valid UTF-8"),
+                    (1, AppCommand::SubmitMediaExport { expected_parent_document_id, .. }) => *expected_parent_document_id = String::from_utf8(field).expect("decoded media export parent document id remains valid UTF-8"),
+                    (0, AppCommand::PollMediaExport { handle, .. }) | (0, AppCommand::CancelMediaExport { handle, .. }) | (0, AppCommand::TakeMediaExportChunk { handle, .. }) => handle.parent_document_id = String::from_utf8(field).expect("decoded media export parent document id remains valid UTF-8"),
                     _ => unreachable!("decoded command close field has an exact restoration target"),
                 }
                 return (false, 0, 0);
@@ -1951,6 +2074,8 @@ impl PagedAppCommandDecodeCursor {
                     32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
                     33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
                     34..=36 => PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind: tag },
+                    37 => PagedAppCommandDecodeState::MediaExportSubmitPort { seq },
+                    38..=40 => PagedAppCommandDecodeState::MediaExportHandle { seq, kind: tag, decode: PagedMediaExportHandleDecode::default() },
                     tag if route_field_plan(tag).is_some() => {
                         PagedAppCommandDecodeState::RouteFields { seq, decode: PagedRouteFieldsDecode::new(tag, route_field_plan(tag).expect("route field plan was just matched")) }
                     }
@@ -2137,6 +2262,58 @@ impl PagedAppCommandDecodeCursor {
                     _ => unreachable!("archive operation command tag was admitted exactly"),
                 })
             }
+            PagedAppCommandDecodeState::MediaExportSubmitPort { seq } => {
+                let bytes = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                let port = match String::from_utf8(bytes) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export port is not valid UTF-8"));
+                    }
+                };
+                self.state = PagedAppCommandDecodeState::MediaExportSubmitDocument { seq, port: Some(port) };
+                None
+            }
+            PagedAppCommandDecodeState::MediaExportSubmitDocument { seq, mut port } => {
+                let bytes = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(bytes) => bytes,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::MediaExportSubmitDocument { seq, port };
+                        return Err(fault);
+                    }
+                };
+                let expected_parent_document_id = match String::from_utf8(bytes) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![port.take().expect("retained media export port").into_bytes(), error.into_bytes()] };
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
+                    }
+                };
+                self.state = PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, port, expected_parent_document_id: Some(expected_parent_document_id) };
+                None
+            }
+            PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, mut port, mut expected_parent_document_id } => Some(AppCommand::SubmitMediaExport {
+                seq,
+                port: port.take().expect("retained media export port"),
+                expected_parent_document_id: expected_parent_document_id.take().expect("retained media export parent document id"),
+                expected_base_revision: self.reader.read_varint()?,
+            }),
+            PagedAppCommandDecodeState::MediaExportHandle { seq, kind, mut decode } => match decode.step(&mut self.reader) {
+                Ok(Some(handle)) => Some(match kind {
+                    38 => AppCommand::PollMediaExport { seq, handle },
+                    39 => AppCommand::CancelMediaExport { seq, handle },
+                    40 => AppCommand::TakeMediaExportChunk { seq, handle },
+                    _ => unreachable!("media export operation tag was admitted exactly"),
+                }),
+                Ok(None) => {
+                    self.state = PagedAppCommandDecodeState::MediaExportHandle { seq, kind, decode };
+                    None
+                }
+                Err(fault) => {
+                    self.state = PagedAppCommandDecodeState::MediaExportHandle { seq, kind, decode };
+                    return Err(fault);
+                }
+            },
             PagedAppCommandDecodeState::RejectedFields { fields } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { fields };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
@@ -2175,6 +2352,8 @@ impl PagedAppCommandDecodeCursor {
                     }
                     AppCommand::TransactionCommit { txn_id, .. } | AppCommand::TransactionRollback { txn_id, .. } => vec![txn_id.into_bytes()],
                     AppCommand::TransactionUndo { group_id, .. } | AppCommand::TransactionRedo { group_id, .. } => vec![group_id.into_bytes()],
+                    AppCommand::SubmitMediaExport { port, expected_parent_document_id, .. } => vec![port.into_bytes(), expected_parent_document_id.into_bytes()],
+                    AppCommand::PollMediaExport { handle, .. } | AppCommand::CancelMediaExport { handle, .. } | AppCommand::TakeMediaExportChunk { handle, .. } => vec![handle.parent_document_id.into_bytes()],
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
@@ -2196,6 +2375,12 @@ impl PagedAppCommandDecodeCursor {
             }
         }
         if let PagedAppCommandDecodeState::RouteFields { decode, .. } = &mut self.state {
+            let (empty, released) = decode.close_step(maximum_bytes);
+            if !empty || released != 0 {
+                return (false, released);
+            }
+        }
+        if let PagedAppCommandDecodeState::MediaExportHandle { decode, .. } = &mut self.state {
             let (empty, released) = decode.close_step(maximum_bytes);
             if !empty || released != 0 {
                 return (false, released);
@@ -2244,6 +2429,22 @@ impl PagedAppCommandDecodeCursor {
                 let bytes = text.into_bytes();
                 if bytes.len() > maximum_bytes {
                     *retained = Some(String::from_utf8(bytes).expect("retained window config identity remains valid UTF-8"));
+                    return (false, 0);
+                }
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        if let Some(retained) = match &mut self.state {
+            PagedAppCommandDecodeState::MediaExportSubmitDocument { port, .. } => Some(port),
+            PagedAppCommandDecodeState::MediaExportSubmitRevision { port, expected_parent_document_id, .. } => Some(if port.is_some() { port } else { expected_parent_document_id }),
+            _ => None,
+        } {
+            if let Some(text) = retained.take() {
+                let bytes = text.into_bytes();
+                if bytes.len() > maximum_bytes {
+                    *retained = Some(String::from_utf8(bytes).expect("retained media export identity remains valid UTF-8"));
                     return (false, 0);
                 }
                 let released = bytes.len();
@@ -2504,6 +2705,24 @@ pub enum AppCommand {
         seq: u64,
         operation: u64,
     },
+    SubmitMediaExport {
+        seq: u64,
+        port: String,
+        expected_parent_document_id: String,
+        expected_base_revision: u64,
+    },
+    PollMediaExport {
+        seq: u64,
+        handle: MediaExportHandleWire,
+    },
+    CancelMediaExport {
+        seq: u64,
+        handle: MediaExportHandleWire,
+    },
+    TakeMediaExportChunk {
+        seq: u64,
+        handle: MediaExportHandleWire,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -2715,6 +2934,26 @@ pub enum AppFrame {
         in_reply_to: u64,
         status: DocumentArchiveLoadStatus,
     },
+    MediaExportSubmitted {
+        in_reply_to: u64,
+        handle: MediaExportHandleWire,
+    },
+    MediaExportStatus {
+        in_reply_to: u64,
+        handle: MediaExportHandleWire,
+        state: MediaExportStateWire,
+        applied_progress: u64,
+        checkpoint_available: bool,
+        mime_type: String,
+        total_bytes: u64,
+        detail: String,
+    },
+    MediaExportChunk {
+        in_reply_to: u64,
+        handle: MediaExportHandleWire,
+        data: Vec<u8>,
+        terminal: bool,
+    },
 }
 //#endregion 🔖️AppFrame
 
@@ -2919,6 +3158,33 @@ impl CommandPageWriter {
         }
         PagedCommand::try_from_pages(self.pages).map_err(|(fault, _pages)| fault)
     }
+}
+
+fn write_media_export_handle_paged(out: &mut CommandPageWriter, handle: &MediaExportHandleWire) -> Result<(), crate::Fault> {
+    out.varint(u64::from(handle.app_instance_id))?;
+    out.string(&handle.parent_document_id)?;
+    out.varint(handle.operation_id)?;
+    out.varint(handle.base_revision)?;
+    out.varint(handle.generation)
+}
+
+fn write_media_export_handle(out: &mut Vec<u8>, handle: &MediaExportHandleWire) {
+    crate::os_spr::write_varint_u64(out, u64::from(handle.app_instance_id));
+    crate::os_spr::write_str(out, &handle.parent_document_id);
+    crate::os_spr::write_varint_u64(out, handle.operation_id);
+    crate::os_spr::write_varint_u64(out, handle.base_revision);
+    crate::os_spr::write_varint_u64(out, handle.generation);
+}
+
+fn read_media_export_handle(bytes: &[u8], pos: &mut usize) -> Result<MediaExportHandleWire, crate::os_spr::ProtocolError> {
+    let app_instance_id = u32::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("media export app instance", *pos as u64, "app instance exceeds u32"))?;
+    Ok(MediaExportHandleWire {
+        app_instance_id,
+        parent_document_id: crate::os_spr::read_str(bytes, pos)?,
+        operation_id: crate::os_spr::read_varint_u64(bytes, pos)?,
+        base_revision: crate::os_spr::read_varint_u64(bytes, pos)?,
+        generation: crate::os_spr::read_varint_u64(bytes, pos)?,
+    })
 }
 
 /// 📄️ Produces the exact pre-admitted page owner consumed by reactor command batches.
@@ -3173,6 +3439,24 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(36)?;
             out.varint(*seq)?;
             out.varint(*operation)?;
+        }
+        AppCommand::SubmitMediaExport { seq, port, expected_parent_document_id, expected_base_revision } => {
+            out.byte(37)?;
+            out.varint(*seq)?;
+            out.string(port)?;
+            out.string(expected_parent_document_id)?;
+            out.varint(*expected_base_revision)?;
+        }
+        AppCommand::PollMediaExport { seq, handle } | AppCommand::CancelMediaExport { seq, handle } | AppCommand::TakeMediaExportChunk { seq, handle } => {
+            let tag = match command {
+                AppCommand::PollMediaExport { .. } => 38,
+                AppCommand::CancelMediaExport { .. } => 39,
+                AppCommand::TakeMediaExportChunk { .. } => 40,
+                _ => unreachable!(),
+            };
+            out.byte(tag)?;
+            out.varint(*seq)?;
+            write_media_export_handle_paged(&mut out, handle)?;
         }
         AppCommand::Presence { .. } => unreachable!(),
     }
@@ -3433,6 +3717,22 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
         34 => AppCommand::PollDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         35 => AppCommand::CancelDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         36 => AppCommand::AcknowledgeDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        37 => AppCommand::SubmitMediaExport {
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            port: crate::os_spr::read_str(bytes, &mut pos)?,
+            expected_parent_document_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            expected_base_revision: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+        },
+        38..=40 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let handle = read_media_export_handle(bytes, &mut pos)?;
+            match tag {
+                38 => AppCommand::PollMediaExport { seq, handle },
+                39 => AppCommand::CancelMediaExport { seq, handle },
+                40 => AppCommand::TakeMediaExportChunk { seq, handle },
+                _ => unreachable!(),
+            }
+        }
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -3632,6 +3932,29 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, status.total);
             crate::os_spr::write_bytes(&mut out, &status.fault);
         }
+        AppFrame::MediaExportSubmitted { in_reply_to, handle } => {
+            out.push(28);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_media_export_handle(&mut out, handle);
+        }
+        AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail } => {
+            out.push(29);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_media_export_handle(&mut out, handle);
+            out.push(state.wire());
+            crate::os_spr::write_varint_u64(&mut out, *applied_progress);
+            crate::os_spr::write_bool(&mut out, *checkpoint_available);
+            crate::os_spr::write_str(&mut out, mime_type);
+            crate::os_spr::write_varint_u64(&mut out, *total_bytes);
+            crate::os_spr::write_str(&mut out, detail);
+        }
+        AppFrame::MediaExportChunk { in_reply_to, handle, data, terminal } => {
+            out.push(30);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_media_export_handle(&mut out, handle);
+            crate::os_spr::write_bytes(&mut out, data);
+            crate::os_spr::write_bool(&mut out, *terminal);
+        }
     }
     out
 }
@@ -3734,6 +4057,28 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             let fault = crate::os_spr::read_bytes(bytes, &mut pos)?;
             AppFrame::DocumentArchiveLoad { in_reply_to, status: DocumentArchiveLoadStatus { operation, state, completed, total, fault } }
         }
+        28 => AppFrame::MediaExportSubmitted {
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            handle: read_media_export_handle(bytes, &mut pos)?,
+        },
+        29 => {
+            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let handle = read_media_export_handle(bytes, &mut pos)?;
+            let state = MediaExportStateWire::from_wire(*bytes.get(pos).ok_or_else(|| malformed("media export state", pos as u64, "truncated"))?)?;
+            pos += 1;
+            let applied_progress = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let checkpoint_available = crate::os_spr::read_bool(bytes, &mut pos)?;
+            let mime_type = crate::os_spr::read_str(bytes, &mut pos)?;
+            let total_bytes = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let detail = crate::os_spr::read_str(bytes, &mut pos)?;
+            AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail }
+        }
+        30 => AppFrame::MediaExportChunk {
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            handle: read_media_export_handle(bytes, &mut pos)?,
+            data: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            terminal: crate::os_spr::read_bool(bytes, &mut pos)?,
+        },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     if pos != bytes.len() {

@@ -1,0 +1,178 @@
+{
+  "segments": [
+    {
+      "kind": "move",
+      "to": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "cubic",
+      "ctrl1": [
+        3,
+        8
+      ],
+      "ctrl2": [
+        7,
+        8
+      ],
+      "to": [
+        10,
+        0
+      ]
+    },
+    {
+      "kind": "line",
+      "to": [
+        10,
+        10
+      ]
+    },
+    {
+      "kind": "close"
+    }
+  ],
+  "cases": [
+    {
+      "name": "inclusive-anchors",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        10,
+        0
+      ],
+      "indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "reverse-drag",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "start": [
+        10,
+        10
+      ],
+      "end": [
+        9,
+        -1
+      ],
+      "indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "handles-alone-do-not-select-anchors",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "start": [
+        2,
+        7
+      ],
+      "end": [
+        8,
+        9
+      ],
+      "indices": []
+    },
+    {
+      "name": "shear-and-rotation",
+      "matrix": [
+        0,
+        2,
+        -3,
+        1,
+        40,
+        20
+      ],
+      "start": [
+        9,
+        39
+      ],
+      "end": [
+        41,
+        51
+      ],
+      "indices": [
+        1,
+        2
+      ]
+    }
+  ],
+  "merges": [
+    {
+      "current": [
+        "a",
+        "b"
+      ],
+      "hits": [
+        "b",
+        "c",
+        "c"
+      ],
+      "mode": "replace",
+      "expected": [
+        "b",
+        "c"
+      ]
+    },
+    {
+      "current": [
+        "a",
+        "b"
+      ],
+      "hits": [
+        "b",
+        "c",
+        "c"
+      ],
+      "mode": "add",
+      "expected": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "current": [
+        "a",
+        "b"
+      ],
+      "hits": [
+        "b",
+        "c",
+        "c"
+      ],
+      "mode": "toggle",
+      "expected": [
+        "a",
+        "c"
+      ]
+    }
+  ]
+}

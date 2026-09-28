@@ -7,14 +7,20 @@
     "prolog": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "snapshot.json#/$defs/XmlNode"
+      }
+    },
+    "epilog": {
+      "type": "array",
+      "items": {
+        "$ref": "snapshot.json#/$defs/XmlNode"
       }
     },
     "declaration": {
       "$ref": "#/$defs/NullableXmlDeclaration"
     },
     "doctype": {
-      "$ref": "#/$defs/NullableString"
+      "$ref": "#/$defs/NullableXmlDoctype"
     },
     "root": {
       "$ref": "#/$defs/XmlNodeDiff"
@@ -28,11 +34,11 @@
         "null"
       ]
     },
-    "NullableString": {
-      "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
-      "type": [
-        "string",
-        "null"
+    "NullableXmlDoctype": {
+      "description": "Tri-state: absent key = unchanged, null = cleared, object = set.",
+      "oneOf": [
+        { "$ref": "snapshot.json#/$defs/XmlDoctype" },
+        { "type": "null" }
       ]
     },
     "XmlAttrModified": {
@@ -53,15 +59,10 @@
     "XmlAttrAdded": {
       "type": "object",
       "required": [
-        "index",
         "name",
         "value"
       ],
       "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
         "name": {
           "type": "string"
         },
@@ -72,11 +73,6 @@
     },
     "XmlAttributesDiff": {
       "type": "object",
-      "required": [
-        "removed",
-        "modified",
-        "added"
-      ],
       "properties": {
         "removed": {
           "type": "array",
@@ -95,6 +91,13 @@
           "items": {
             "$ref": "#/$defs/XmlAttrAdded"
           }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -132,11 +135,6 @@
     },
     "XmlChildrenDiff": {
       "type": "object",
-      "required": [
-        "removed",
-        "modified",
-        "added"
-      ],
       "properties": {
         "removed": {
           "type": "array",

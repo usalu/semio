@@ -253,3 +253,232 @@ ISO stored/deflated insertion payloads and their reference oracle now also accep
 Native ZIP run 2 ended after 9m10s with one compile error in the new cursor: ArtifactOwnedToolJobContext is exported under `semio_framework_plugin::app`, not the crate root. Corrected the exact type path. The replacement is the whole ZIP native package with component-app-assembly (session 61632, `zip-native-all-current-3.log`), covering new codec/ISO/order changes in addition to primary editor laws. No native ZIP assertions have passed yet.
 
 Shared Details test E0283/E0515 diagnostics reported by the other application-law chat were repaired by the owner (explicit DslValue and owned UiText). The single native contract replacement is session 73383, `schema-constraint-contract-current-5.log`; no pass assumed while pending.
+
+## ZIP Native Execution and Checkpoint Repair — 2026-09-27
+
+- Native ZIP run 3 reached assertions: **14 passed, 3 failed, 76 not run** due fail-fast. Failures: independent ZIP reader/order save law and both registered editor retained dispatch laws. All exposed the same actual Unicode corruption: `folder/β.txt` reopened as `folder/╬▓.txt`; writer emitted UTF-8 bytes without general-purpose bit 11. The encoder now sets bit 11 for non-ASCII names in local and central headers. This repair has not yet passed native validation.
+- Full catalog component run 8 failed during in-flight DOCX helper signature/dependency edits; core reports those source diagnostics corrected. A passing full catalog build has not yet occurred.
+- Added schema-owned 96-byte ZIP cursor checkpoint, matching Rust/TypeScript implementations, command digest and entry-count binding, stable reconstructed workspace identity, malformed-checkpoint rejection, and canonical-context requirement for resumed native work. Both dialect factories opt in through the new shared capability flag. The runtime already validates captured context digest, including canonical revision, before restoring work.
+- TypeScript checkpoint RED: run 13 used an incorrect Nx project name (no tests); run 14 with the actual `@semio-tech/stdio-zip` target failed because `checkpoint`/`restore` were absent. After implementation, uncached run 15 **passed 9 tests / 69 assertions**, including independent Node Buffer layout, resumed output, malformed payloads and changed-command rejection, with strict TypeScript checks.
+- Native action-bus test now reconstructs the actual registered ZIP factory after a one-member checkpoint, checks that resume does not rescan the first member, checks exact output, rejects another canonical revision, and drains retained owners. This is authored, not yet passed.
+- Native ZIP run 4 is active as session 66509, log `🗑️generated/zip-native-all-current-4.log`. No native resume success is claimed until its assertions run.
+
+## Additional Validation — Archive Payloads and Browser Readiness
+
+- Uncached ZIP run 16 was intentionally red: schema accepted negative/out-of-range byte values. Snapshot and diff schemas now constrain payload bytes to integers 0–255; TypeScript guards match and sparse added entries reuse the canonical entry parser, including omitted empty data defaults. Uncached run 17 passed 10 tests / 90 assertions; run 18 adds AJV checkpoint validation and an independent JSON Patch post-state check and passed 10 tests / 92 assertions. Logs remain under generated. Native byte parsing already uses `u8`; a dedicated neutral fixture native check is still to be added.
+- Full catalog component retry 9 started as session 17746 after the shared helper/DOCX source checkpoint stabilized. Its completion is pending.
+- A temporary background browser tab inspected the existing port 6013. It loads **semio · puzzle · 3d**, not a current stdio editor preview. Console warned of 59 staged modules behind source or unactivated, including stdio. No current editor interaction acceptance can be inferred. The temporary tab was closed without changing the app. Port 6212 is not listening.
+
+## Exact Object-Key Undo and Native ZIP Harness
+
+- Shared native contract run 6 found a real compact-patch inverse defect: escaped key restoration appended instead of restoring original order. Root owns the repair described in `🔍️research/🧬compact-object-order-2026-09-27.md`.
+- Schema-owned `insertAt` and matching Rust/TypeScript implementation now retain object slots for rename and undo. Added first-party `ValueEdit::InsertAt` and exhaustive derive handling; arrays refuse object-positioned insertion. The TypeScript RED run (`patch-key-order-red.log`) exercised exact serialized order, and run 2 passed 80/259. Expanded positioned insertion native laws are authored, not yet executed.
+- Native ZIP run 4 failed at compilation of the new factory law (14 errors): missing InteractiveJob trait import and private completion construction/consumption methods. Added feature-gated `ArtifactToolCompletion::test_new` and `test_take_emit` under the existing artifact-app-testing feature, keeping production authority unchanged, and imported the trait. Native ZIP run 5 now active, session 23785; no native resume success claimed.
+- ZIP native tests additionally check insertion-anchor text/binary replay and reject the neutral invalid byte values. These await run 5.
+
+- Expanded compact patch TypeScript run 3 **passed 81 tests / 276 assertions** (uncached), including position 0/middle/end, exact key-order undo, native-pilot mutation schema references, independent patch oracle, and rejection of array-position misuse/out-of-range/fractional indices. Rust syntax parsing passed; native execution remains pending.
+
+## Current Integration Gates — 2026-09-27
+
+- ZIP TypeScript current20 passed 10 tests / 94 assertions, zero failures (uncached Nx; `zip-primary-text-fixture-20.log`).
+- Full optimized component current9 failed after 22m43s before linking: Semio mesh args incorrectly derived Copy over String; BREP protocol error offset used usize; the Semio audio WAV export initializer omitted new snapshot fields. Root fixed Copy and offset; media execution repaired both external WAV snapshot literal consumers. No complete component runtime claim follows from these repairs. Current10 reruns the same isolated component target after repairs.
+- Whole shared native contract current9 passed 44/44 tests, zero skipped, 8m22s (`schema-constraint-contract-current-9.log`, execution worker reported result). This covers native Details, constraints, publication bounds and positioned object-insertion/inverse laws. Broader editor families remain separately unverified.
+- ZIP native current5 remains active. Current component build and ZIP native tests may not include subsequently edited source; exact source timing must be checked before final validation.
+
+ZIP native current5 reached assertions: 58 passed, 1 failed, 37 not run (96 total), 11m49s. The failure is exact OPC save/reopen equality: generic `encode_opc` sorted content paths and changed the decoded `parts` vector. The source repair delegates the generic writer to its existing package-order writer; standard-specific explicit order remains available. The existing committed neutral OPC archive now also checks saved content-member order using independent `zip::ZipArchive`. The existing equality assertion remains intact. Current6 will validate this repair and the remaining 37 tests.
+
+ZIP native current6 passed **96/96**, zero skipped, 5m01s. This is real native assertion coverage after the Unicode header and checkpoint harness fixes, including the full factory resume test and committed OPC save/reopen. Full end-user browser validation remains separate. The package-order implementation also uses set lookups instead of repeated vector searches/removals when materializing path order.
+
+The independent Terra fidelity audit found a type-semantics error in compact InsertAt: the generic postcondition incorrectly required insertion order for HashMap/BTreeMap and JS numeric keys. The schema now explicitly preserves each container's intrinsic ordering; sequence position remains exact for ordered DslValue objects. Neutral numeric insertions and two-step key renames were added with fast-json-patch/json_patch oracles, exact native inverse equality, and repeated HashMap reconstruction. TypeScript red run observed 81 passing / 1 failing (numeric key 1); the repair removes only the false generic position postcondition, retaining range, presence, candidate and parent checks. Whole native contract current10 has started to validate the added cases.
+
+TypeScript intrinsic-order green1 passed **82 tests / 289 assertions**, zero failures after the observed red run. Native contract current10 remains pending. Full component current10 stopped before linking with a DOCX borrowed canonical-value lifetime error (7m58s); the DOCX execution worker owns its repair. CSV's first table-native compile found a test-only missing `pack` alias, repaired by its worker; run-many continues other table families before rerunning CSV. These compilation results do not establish editor runtime behavior.
+
+## Integration Checkpoint — Shared Compile Failures
+
+- Full catalog component current 11 failed before linking on ten in-flight JSON editor/shared-tree API mismatches. The text execution owner is completing the matching callers and definitions. No full catalog component success is claimed.
+- Shared native contract current 10 failed before any tests on `HostMediaHandlerDescriptor: Clone` and `EditableTreeNode` requiring `UiValue: Clone`. The root restored the descriptor's required `Clone` derive at its exact definition; the text owner owns the tree change. The new intrinsic map native regression remains unexecuted.
+- Preview current 3 progressed beyond launcher setup to the stdio component build, then failed on the same three shared framework errors. This corrects the earlier provisional assumption that it was another watcher bootstrap failure. No browser server or browser acceptance was established.
+- ZIP native current 6 remains the last completed ZIP native result: 96 tests passed. Shared native current 9 remains the last completed shared contract result: 44 tests passed. New source edits require fresh evidence.
+
+## Coherent Tree Source Retry and OPC Regression Fixtures
+
+Text owner confirmed the move-only editable tree API, JSON/XML render callers, and source revision arities are coherent. Root resumed full component current12 and shared native contract current11. The DOCX owner resumed its focused native current3. Root preview current4 directly invokes the authored concrete Nx `dev-stdio-csv-react-dev` target on port6212, retaining its preparation and activation dependencies without the outer workspace watch bootstrap. None of these pending runs count as passing tests.
+
+Root added neutral OPC publication fixtures and four native laws before changing the codec. They exercise duplicate content/metadata paths, invalid path-order permutations (drop, repeat, unknown, extra), explicit empty relationship parts, and duplicate ZIP members during decode. Positive save/reopen checks inspect member order and empty relationship presence with the independent `zip` reader. `opc-publication-red-1.log` is the focused pre-fix run; outcome pending.
+
+## DOCX Copy Cursor Execution
+
+DOCX focused native current3 completed: 2 `post_copy` tests passed, 120 skipped, after 19m47s including shared build queue time. These prove paged copy of a large OPC sibling and bounded cancellation retirement. They do not exercise the registered host action or the Store sealing route. Root then launched `docx-registered-route-native-1.log` through the existing Nx target, selecting `registered_page_draft` with captured runtime output. That next result is pending.
+
+### Root Native And Browser Checkpoint — 2026-09-27
+
+- Shared contract current11: failed before assertions after 37m35s because the newly added Details first-paint fixture was placed one directory too deep. File moved to the established Details fixture root; current12 is running.
+- OPC publication red1: failed before assertions after 36m50s, incorrect fixture include plus ZIP metadata consumers mid-edit. This is not an observed assertion-red run. Include repaired; publication guards implemented after test authorship.
+- CSV preview4: all build/activation dependencies completed, browser6212 loaded actual Demo after its initial module graph loaded. Unicode/newline cell edit and Undo were visible; Redo failed UI argument admission and Details was empty. Source projection refactor and regression authored; fresh browser proof is pending.
+
+## CSV Rebuild And Late UI Retirement Checkpoint
+
+The fresh CSV activation current5 is running through the existing Nx activation target against the already running6212 preview. It includes the new declarative windowed TableRow input children/CSV structural controls, top-level Details projection and end-of-turn queued UI retirement. The full-catalog component12 remains in its separate ticket target/build directory; neither job replaces the other. The focused late-UI-retirement native law is queued. These are running checks, not passing results.
+
+## 2026-09-28 Integration Checkpoint
+
+CSV activation5 failed before activation with two E0308 errors in the new structural toolbar: kernel labels passed to UI-contract buttons. Text execution corrected those conversions; activation6 is running. DOCX registered-route native1 ended after54m39 before assertions with the same contract crate/two-error signature; the route did not run. Root late-UI native1, shared contract12 and full component12 remain running. The full component12 uses Semio rlib built before the new StructuralPreparation/Mesh/BREP cursors; it cannot validate those new sources. Core execution started a fresh focused Semio structural-copy lane. Its shared TypeScript/Ajv suite passed82 tests/305 assertions,8.7s (worker report and retained log).
+
+Two execution workers initially failed with service usage-limit errors; text continuation resumed and fixed the Label mismatch. A Terra read-only audit occupies the other slot and found TSV incorrectly consuming its first data row as a header; text execution is repairing that. Media continuation could not start while all four slots were occupied; its unverified metadata work remains preserved.
+
+## Shared Contract Current 12 — 2026-09-28
+
+The uncached native shared artifact contract job completed successfully: 46 tests passed, none skipped, Nextest 1.668 s, total Nx duration 44 min 29 s. Log: `🗑️generated/schema-constraint-contract-current-12.log`. This includes the compiled shared Details first-paint regression. Later concurrent TSV and explicit row-action changes require their own current-source validation; this result is not browser acceptance. CSV activation 6 and late UI retirement native regression remain running.
+
+## Foundation Audit and PPTX Diff Tag — 2026-09-28
+
+Terra rotation was rejected by the collaboration thread limit; root reviewed the foundation source independently and assigned blockers to the resumed Sol worker. The derive check failed on unsupported `--no-run` before compilation. See `🔍️research/🧬retained-clone-root-audit-2026-09-28.md`.
+
+The office schema worker found `PptxShapeDiff` discriminator `kind` collided with placeholder payload field `kind`. Root authored a neutral placeholder-kind fixture, direct value/serde oracle, full text/binary diff+inverse regression, and renamed the discriminator to `shapeKind`. Rustfmt passed; the new law has not run. Existing PPTX comment filter does not cover it.
+
+ZIP TypeScript current suite reported 12 tests / 100 assertions passing, including CP437-to-Unicode archive comment editing. Combined current ZIP/OPC native execution remains queued as worker session 12826.
+
+## Late UI Retirement Native 1 — 2026-09-28
+
+This focused run failed before assertions after 41 min 19 s. OS kernel reported unresolved imports of the concurrently added `RetainedClone` and `RetireOwned` derive exports. It does not test the late UI retirement behavior. Root notified the foundation owner and will retry after a coherent derive/kernel source checkpoint. Log: `🗑️generated/late-ui-retirement-native-1.log`.
+
+The earlier IAB acceptance tab no longer exists in the browser session. Fresh activation will use a new local tab and repeat the complete browser acceptance sequence; previous edit/undo observations remain historical evidence only.
+
+Root added `metadata_namespaces_and_identity_constraints_survive_independent_zip_reopen` plus neutral `OPC/metadata-namespaces` fixture before its source repair. Native execution is pending; rustfmt/scoped diff-check passed. No OpcPackage field shape changed.
+
+Foundation owner reported a coherent corrected source checkpoint covering the root audit blockers and queued the supported focused kernel law run (`retained-clone-kernel-native-1.log`, session53501). Root started late-UI native2 from this checkpoint. Both remain unverified. The full component12 is still inside its final plugin rustc invocation; no linked module exists yet, so the precise compiler/link phase is not confirmed.
+
+## Full Component Deadline And Office Test Compilation — 2026-09-28
+
+Full-catalog component current12 stopped at the configured two-hour build budget (Nx 120 min 3 s), while compiling the final stdio plugin. No linked WASM or component size/function result exists. Its error text incorrectly prints the default 1,200,000 ms although this run used `SEMIO_BUILD_BUDGET_MS=7200000`. This is a build-time outcome, not a component-capacity finding. Log: `🗑️generated/full-catalog-component-current-12.log`.
+
+DOCX archive-comment native1 failed before assertions (39 min 19 s) because the new test referenced an unavailable `pack` crate alias. Root corrected all three office tests to the existing `protocol::os_pack::json` export; DOCX retry2 is running. XLSX and PPTX native1 also failed before assertions (46 min 36 s and 46 min 46 s): their test helpers require the plugin's explicit `artifact-app-testing` dev feature, and three PPTX editor test modules lacked the `PptxSlide` import. Root added those test-only declarations. XLSX comment retry2 and PPTX handcrafted-diff retry2 are running; the PPTX filter includes both archive comment and placeholder discriminator laws.
+
+The office schema checkpoint's TypeScript/Ajv test passed (6 snapshots, 4 diffs), and WAV's natural-editing TypeScript suite passed (7 tests, 23 assertions), as recorded in the worker reports. Neither result establishes native or browser editing behavior. A fresh Terra read-only Office schema audit is active.
+
+Full component current13 reuses its isolated build directory with an explicit four-hour budget after current12 spent 120 minutes without producing the final module. Artifact size and browser function gates remain unchanged. Root corrected the misleading timeout diagnostic to say the configured deadline rather than print the default constant. This run is a pending capacity diagnostic, not an accepted editor build.
+
+Root added OPC authored-metadata publication validation and a neutral four-case regression: duplicate defaults/overrides/relationships and disagreement between content-part type and metadata. Rustfmt and scoped diff checks passed. ZIP native current7 is the media worker's live session12826; unlike prior runs it was not initially redirected, and the worker will retain its final output in the ticket. No native result yet.
+
+## Office Audit Repairs And Native Route Result
+
+The Terra Office schema audit completed with two actionable findings: stale DOCX/XLSX public artifact JSON/TypeScript roots and DOCX nested optional clear decoding. Text execution owns the public facets. Root added explicit present-null decoding to `DocxParagraphDiff.style` and `DocxStyleDiff.based_on`, matching the existing PPTX pattern; a neutral unchanged/clear/set fixture now drives value, text, binary, inverse, and independent serde JSON assertions. Rustfmt and scoped diff checks passed; native execution remains pending. The old bold-only test explanation no longer claims null cannot be represented.
+
+DOCX registered-route native2 reached its assertion and failed (0 passed, 1 failed, 125 skipped) after 53 min 15 s. Its expected snapshot omitted OPC state populated during real file opening; core execution corrected the expected baseline to the fully opened document while retaining full snapshot comparisons for edit and undo. Semio structural native1 failed before assertions after 36 min 34 s on a transient missing cancellation-action identifier in the shared plugin; current source contains the definition and app-scope reexport. Neither failed run is a pass.
+
+Full component13 failed before link after 10 min 41 s on the ZIP archive-comment canonical boolean helper forcing a static lifetime into an invariant borrowed canonical-value tree. Media execution generalized that helper's lifetime, verified the sole ZIP occurrence, and root launched component14 at the same four-hour budget. Foundation native1 failed before assertions after 24 min 59 s on a newly mounted ordered-map test include encountered before the test file existed; the file is now present and the owner launched native2. None of these results establishes a passing component or foundation.
+
+## 2026-09-28 — DOCX Replay and Build Checkpoint
+
+- `docx-archive-comment-native-2.log`: native archive-comment regression passed, 1 run / 127 filtered, total Nx 31m18s. This does not cover later XML property or null-clear changes.
+- `docx-all-native-current-3.log`: full DOCX lib suite with component-app-assembly started in session 30840 after the five retained XML property fields and optional-clear repair. Pending.
+- `full-catalog-component-current-14.log`: failed in 5m8s before publication because the in-flight UI TableProps lacked row_label and column_label used by the runtime. Text/Office owner notified; no component result exists.
+- `stdio-csv-activation-current-6.log`: failed in 74m50s before activation, unresolved RetainedClone/RetireOwned derive exports from a mixed source checkpoint. Current derive source has the exports; a coherent rerun is still required. No fresh browser acceptance is claimed.
+- ZIP native current7 failed fail-fast: 14 passed, 1 failed, 49 not run. The duplicate-name fixture was rejected by the now-stricter production ZIP encoder before reaching OPC decoding. The test now uses the independent ZIP writer plus explicit equal-length local/central filename corruption; runtime rerun pending.
+
+- `xlsx-archive-comment-native-2.log`: archive-comment regression passed 1/113. `pptx-handcrafted-diff-native-2.log`: all four selected codec laws passed, including placeholder-kind and archive-comment. `late-ui-retirement-native-2.log`: late-owner turn/headroom law passed 1/855 with DEBUG output. These runs validate their selected native paths only.
+- DOCX all current3 failed during argument forwarding before compilation (`--nocapture` reached the script without cargo arguments). Current4 uses the explicit Nx `--args` carrier for features/lib/test arguments. Pending.
+
+- `docx-all-native-current-4.log` failed in 1m48s and `xml-all-native-current-1.log` failed in 33s in the shared retained-clone API transition, before either artifact suite compiled. Core owner has the failures; no further broad retry will start until its coherent checkpoint. These logs do not validate the newly added XML attribute-order law.
+
+## 2026-09-28 — Renderer Integration and Current Native Queue
+
+- XML all2, DOCX all5 and full component15 stopped before artifact tests/publication on a non-exhaustive SceneMaterialKind3d::Authored match in raster_keep_step. The renderer coordinator has now confirmed source repairs covering texture retention, measurement, retirement and encoding. Source confirmation is not a native pass.
+- Root restarted XML all3/session19600, DOCX all6/session61276, WAV all9/session94622, ZIP all8/session31996, and full component16/session85994. Exact logs use those names under generated. CSV activation7/session73578 remains its existing active run.
+- Kernel retained-clone native3 reached current library compilation but failed two generic derive fixtures. The owner repaired generated helper where-clauses. Native4 reached runtime and exposed progress stalls; it remains under investigation. Source/oracle check5 passed, but bounded-copy foundation runtime acceptance is not complete.
+
+## XML Refusal Matrix and Current Build Checkpoint — 2026-09-28
+
+The neutral malformed-child fixture now supplies an explicit base and named case for every validation branch: missing/duplicate removals, missing/duplicate modifications, remove/modify conflict, null child replacement, duplicate additions, final-length insertion, and node-kind mismatch. The existing native law replays each malformed diff directly and through the text and binary fragment codecs, asserting refusal leaves the original fragment unchanged. Formatting and scoped diff checking passed; the authored assertions have not run yet.
+
+XML native 3, DOCX native 6, WAV native 9, ZIP native 8, full component 16, and CSV activation 7 remain active without a reported new error. Shared native lock contention is observable; separate compilation processes are making progress. Retained-clone native 5 is owned by the execution worker, with source/oracle check 7 green and runtime confirmation pending.
+
+## Relationship Identity and XML Native Checkpoint
+
+XML native 3 reached real execution: 14 passed and 1 failed before fail-fast skipped the remaining 91. The failing rendered-source law searched for escaped JSON settings in the outer UI JSON even though the surface now carries packed typed scene bytes. The repair decodes `TextEditorScene` and checks the actual action, root address, revision, explicit commit, and locale labels; the equivalent JSON law was corrected too. Both continue checking visible natural content. XML native 4 reruns the full suite with no fail-fast; no result is claimed yet.
+
+The DOCX save-part fixture now also removes required main/styles relationships while preserving occupied rId1/rId2/rId4 on both owners. OPC owns one fresh-relationship ID allocator, reused by DOCX, XLSX, and PPTX, and missing required relationships reserve an unused owner-local ID. Native save/reopen and language-neutral identity laws are authored but not yet executed. This fixes the concrete audit finding without overwriting existing relationship identities.
+
+## Canonical XML Cut In Flight
+
+The DOCX execution worker has begun replacing the persisted semantic duplicate with canonical XML parts. DOCX native 6 consequently failed before tests while compiling mixed old consumers/new snapshot fields (116 errors); this is an in-flight source checkpoint, not an assertion result. Root holds the next DOCX/full-current-source retry until that cut is coherent. The XML worker is separately implementing document epilog and doctype position fidelity and coordinating its narrower type changes with DOCX.
+
+XLSX base, strict, and transitional viewers now share a lazy row/column projection and explicit locale. The authored neutral cross-sheet/column-window law and all three viewer render laws await the next coherent family native run. See `🔍️research/🧬xlsx-windowed-viewer-2026-09-28.md` for exact limits.
+
+## Source Freeze Gate — 2026-09-28
+
+- Retained clone source/Ajv/oracle check9: passed; choices3, payload2097152, cancellation9, orderedMap71, growth49, preparation5. This does not replace the pending native lifecycle run.
+- XML boundary implementation: source parse/public TS authored-boundary guard passes recorded in its implementation report; no new native assertion result.
+- Core native5: failed before assertions on missing fixture include and private registry test path; owner repaired both.
+- DOCX6 and full component16: failed before assertions/linking against in-flight canonical DOCX interfaces.
+- WAV9: failed before assertions against in-flight core generic preparation.
+- ZIP8: own Cargo child interrupted after native lock diagnosis; no assertions completed.
+- XLSX viewer fixture TypeScript current1: running. Native Calamine projection comparison authored and pending.
+
+XLSX TypeScript package test current1 completed successfully in 13.0 seconds through the existing Bun/Nx target. Package build/export/type consumer checks and the strict Ajv viewer fixture contract passed. The new native Calamine/window projection assertion remains unrun.
+
+## Full Catalog Production Retry 17
+
+DOCX owner declared the production/library API frozen and the previous three component16 compile errors source-fixed. Root started isolated optimized full-catalog component17 through the existing Bun/Nx target, session31064, log `🗑️generated/stdio-editor-component-full-current-17.log`. It compiles production `--lib`; DOCX test-only fixture conversion continues separately. No linked/validated component is available from this run yet. Renderer coordination chat was notified of the source checkpoint and the remaining independent audit/validation caveats.
+
+Office public-facets TypeScript current6 failed after36 successful dependency tasks because the XML snapshot TypeScript attribute parser incorrectly returned `prologPosition` in `XmlAttr` (TS2353). XML owner removed the misplaced field. Current7 was launched to verify corrected typing and the expanded9 public subset facets; DOCX snapshot/diff fixture conversion is still pending, so a subsequent schema failure is expected until that migration finishes. No current Office gate pass is claimed.
+
+Root interrupted its own stale XML4 Cargo child68281 after verifying the exact package command. The run began before the new quick-xml test dependency and completed no native assertions. XML5 will start after the independent audit repairs; core6 and full17 remain active.
+
+Office public-facets current7 failed during the expanded public type proof: PPTX base artifact parser returned raw object records for typed OPC, XML parts, and presentation fields (TS2739/TS2322/TS2741). XML/PPTX owner is repairing genuine typed parsing. Root added explicit PPTX strict/transitional artifact type reexports and9-subset coverage. No fresh Office contract pass yet.
+
+Retained-clone source/oracle10 passed in820ms, including the explicit8KiB-vs4KiB refusal law. Native Store execution remains pending in core6. The refusal prevents an endless blocked loop; it is not proof that large artifact editing is complete.
+
+## Current Canonical Editing Validation
+
+Full optimized component17 failed before linking on two DOCX strict/transitional `OpcPart` imports; the DOCX owner repaired both. Full18 is held until the new addressed DOCX mutation and retained preparation cut is coherent. No current linked full catalog exists.
+
+Retained-clone native6 emitted test-source authority, canonical-JSON, composition, and close-helper bound errors. Its owner repaired these and verified the old Cargo process ended. Native7 is running (session69173, generated retained-clone-kernel-native-7.log); no assertion result yet.
+
+Office TypeScript8 failed during strict PPTX guard compilation on three literal-narrowing errors. Root changed the `never` refusal helper from an inferred const-arrow binding to a function declaration; retry9 is running (session28451). XML native5 is running (session78471) after XML/SVG ingress and PPTX boundary facet repairs. The PPTX package Nx check passed independently, but it did not establish the stricter global Office gate.
+
+Root authored XLSX no-change draft and referenced shared-string conflict fixtures/laws across all three editors, plus an independent Calamine law. Rustfmt parses changed files, all native fixture includes resolve, and the relevant diff check passes. XLSX TypeScript fixture1 (session97899) and native3 (session45205) are running. No native/runtime claim is made from these source checks. CSV activation7 remains active without a fresh acceptance candidate.
+
+XLSX TypeScript fixture1 passed (20.7s), including ten unchanged-draft cases and the referenced shared-string conflict fixture. Native3 is still pending. Office TypeScript9 cleared strict compilation and failed Ajv compilation because XMLDiff used three `../snapshot.json` references that resolved outside its `base` schema URI. Root repaired all three references to `snapshot.json`. Retry10 waits for the XML worker’s next ingress/facet checkpoint.
+
+## XML Sparse Diff and Native Compile Checkpoint — 2026-09-28
+
+- Office TypeScript10 reached runtime after strict type checks, then failed exact DOCX fixture parity because the shared XML guard inserted omitted empty triple arrays. TypeScript11 failed at the newly authored Ajv harness because its metadata keyword was not registered; corrected. TypeScript12 reproduced the sparse-array defect against the new language-neutral fixture.
+- The shared XML diff interfaces and parsers now preserve omitted removed/modified/added fields and reject explicit null arrays. Office TypeScript13 passed the existing Bun/Nx target and all 36 dependency tasks (36 cache hits), 1m44. Runtime debug evidence reports six snapshots, five diffs, nine public artifact facets, four optional clears, five XML property diffs, and three document-boundary routes. The added fixture also verifies six sparse cases and six explicit-null refusals against Ajv.
+- Office TypeScript14 is active with three additional malformed PPTX XML-attribute refusal paths (snapshot/diff/setSnapshot). It is not yet reported as passing.
+- XML native5 failed before assertions after20m27: two snapshot fixture include paths, BuiltChildren.first(), and the following scene decode borrow mismatch. The owner corrected both fixture paths. Root corrected XML and JSON natural-source tests to get(0) and an explicit decode borrow; the complete rustc diagnostic was read from the XML Cargo fingerprint. XML6 waits for the raw-constructor source checkpoint.
+- Retained-clone native7, XLSX native3, and CSV activation7 remain active. The kernel test compiler is running; the other jobs are waiting for shared compilation units. No native success or fresh browser candidate is claimed.
+
+Office TypeScript14 completed green in1m08 through the existing Bun/Nx target, with 36 cached dependency tasks. Debug output now explicitly confirms sparseXml=6/6, boundaryRoutes=3, and attributeRefusals=3 in addition to the six snapshots/five diffs/nine public facets/four optional clears/five XML property diffs. No further TypeScript rerun is needed until a relevant source change.
+
+## Canonical Source Cut and Retained Runtime Result
+
+Retained-clone native7 completed after28m14 and ran20 tests:16 passed,4 failed. The failing laws are derived clone progress (>10,000 turns), production SnapshotRead lease terminal registry accounting, the oversized contiguous allocation refusal path returning zero-progress Progress, and real Store lifecycle success refusing the 4096-byte grant. Core execution owns these repairs; its earlier source/fixture checks are not substitutes for this native result.
+
+At the coherent DOCX/XML production checkpoint root started XML native6(session12069), DOCX native7(session1616), and optimized full-catalog component18(session43016). Their source cut includes mounted addressed DOCX run edits and fallible checked XML/SVG raw constructors/writers. The DOCX route currently admits only2KiB/128-item/depth32 owners; ordinary large-document editing remains an explicit implementation gap requiring paged XML/OPC owners. The renderer coordination chat received the source checkpoint. Terra independently audits current canonical boundaries while the two Sol lanes repair native clone laws and extend canonical DOCX commands.
+
+## Public Address Contract and Matrix Label Repair
+
+Office TypeScript15 reproduced the missing public `parseDocxXmlAddress` export before its implementation. The new standalone address schema/guard is shared by addressed DOCX mutation schemas. Office TypeScript16 passed42.6s; TypeScript17 passed54.0s after adding the shared leaf-schema references and public forward/inverse type proof. Both ran the existing Bun/Nx target, with36 dependency cache hits. Runtime debug explicitly reports `docxAddresses=3/17`; accepted/rejected values agree with Ajv and the parser.
+
+XLSX native3 failed before assertions after34m09 on12 diagnostics representing one repeated source issue: six matrix surfaces imported locale `Label` while TableWindowKit requires UI contract `Label`. Root added the explicit first-party `UiLabel` plugin export and updated the XLSX base/strict/trans editors, base viewer (shared by subset viewers), CSV editor, and TSV editor. XLSX native4 is active(session84467), log `🗑️generated/xlsx-native-current-4.log`; no pass claimed. Core native8 is active(session97522), log `🗑️generated/retained-clone-kernel-native-8.log`, after the first four runtime repair source changes. Root separately flagged a possible last-owner destruction gap in the new retained source alias; core execution owns confirmation/repair.
+
+The frozen DOCX/XML Terra audit found one P2: strict/transitional set-page omit the base retained work and early owner admission. Text execution is assigned the shared work extraction. Audited XML/SVG raw boundaries and PPTX facet placement showed no new source finding; native/runtime verification remains pending.
+
+## Office and XLSX Fixture Checkpoint — 28 September
+
+Office TypeScript current18 completed successfully in 34.2 seconds through `bun x --no-install nx run @semio-tech/stdio-js:test` (37 tasks; 36 dependency-cache hits). The suite now validates all eight canonical DOCX addressed mutation leaf schemas against all three valid and seventeen invalid neutral addresses, rejects negative/fractional/unsafe structural indices, compiles the eight public mutation variants, and validates five newly authored canonical XLSX save fixtures with strict Ajv. The existing Office/XML round-trip and boundary checks remained green. This is schema/type evidence, not native mutation or browser proof.
+
+XLSX native current4 was deliberately stopped by the root only after verifying the owned Cargo process 33806 was still queued with no children; no compilation or assertions ran. The XLSX authority migration is now in progress, so the next native capture will be current5 after a coherent source checkpoint.
+
+Two new native XLSX laws were authored in the existing base editor unit module: independent ZIP/Quick-XML/Calamine validation of the fixture packages, and no-op save preservation of all XML events, binary bytes, and custom part identities. They have not run. Development-only `zip`6 and `quick-xml`0.42 dependencies were added; no runtime dependency was added.
+
+Full-catalog component current18 ended after 24m21s with one DOCX wasm32 compiler error: the cross-language maximum-safe-integer constant was typed as `usize`, exceeding the target’s 32-bit range. Root changed the constant to `u64` and widened each native path index for comparison. This repair is source-only until the next component build; no linked full catalog was produced. The next full capture waits for the in-progress canonical XLSX source checkpoint.
+
+Root authored the DOCX nested-table projection regression before repairing the paragraph-only top-level helper. Five neutral text/path expectations, one independent Quick-XML native law, and three subset main-window EN/DE laws are now present. No new native or browser success is claimed. See `🔍️research/🧬docx-table-primary-projection-repair-2026-09-28.md`.
+
+## Shared Document TypeScript Address Parity
+
+The document-window neutral fixture already included an artifact-owned static address, but its TypeScript test ignored that field and the TypeScript helper discarded it. Root first expanded the existing fixture law to assert the complete arguments map and independent nested ownership. `bun x --no-install nx run @semio-tech/plugin-window-kits:test -- --run -t renderDocument` failed as expected with one missing-arguments assertion (run1). After the helper accepted optional explicit arguments and returned a deep-owned copy, the same registered task passed 2 tests with 10 unrelated tests skipped in 1.2 seconds (run2). Ordinal text targets receive page/item/text-revision arguments; canonical targets preserve only the artifact-provided map. Rust already consumes the same fixture. Package typecheck is currently running separately and has no result yet.
+
+The registered window-kits package typecheck finished in 20.9 seconds with three current media-integration errors: two missing Component-union narrowings in media fixture tests and a number-only sequence assumption in the renderer backbone envelope test after media sequences became exact bigint. Both owning execution lanes received exact diagnostics. No document-draft TypeScript diagnostic was reported, but the package check is not green yet.

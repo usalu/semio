@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "name": "Create a Page When the Form Is Empty",
+      "input": { "definition": { "steps": [] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": null, "newStepId": "page" },
+      "event": { "mutation": "createStep", "step": { "id": "page", "title": "Inputs", "blocks": [{ "id": "q", "kind": "text", "label": "Name" }] }, "index": null },
+      "patch": [{ "op": "add", "path": "/steps/0", "value": { "id": "page", "title": "Inputs", "blocks": [{ "id": "q", "kind": "text", "label": "Name" }] } }]
+    },
+    {
+      "name": "Use the First Existing Page",
+      "input": { "definition": { "steps": [{ "id": "a", "title": "A", "blocks": [] }, { "id": "b", "title": "B", "blocks": [] }] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": null, "newStepId": "page" },
+      "event": { "mutation": "createBlock", "step_id": "a", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
+      "patch": [{ "op": "add", "path": "/steps/0/blocks/0", "value": { "id": "q", "kind": "text", "label": "Name" } }]
+    },
+    {
+      "name": "Respect the Requested Page",
+      "input": { "definition": { "steps": [{ "id": "a", "title": "A", "blocks": [] }, { "id": "b", "title": "B", "blocks": [] }] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": "b", "newStepId": "page" },
+      "event": { "mutation": "createBlock", "step_id": "b", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
+      "patch": [{ "op": "add", "path": "/steps/1/blocks/0", "value": { "id": "q", "kind": "text", "label": "Name" } }]
+    },
+    {
+      "name": "Reject a Missing Requested Page",
+      "input": { "definition": { "steps": [] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": "missing", "newStepId": "page" },
+      "error": "missing-step"
+    },
+    {
+      "name": "Reject a Duplicate Question Identity",
+      "input": { "definition": { "steps": [{ "id": "a", "title": "A", "blocks": [{ "id": "q", "kind": "text", "label": "Existing" }] }] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": "a", "newStepId": "page" },
+      "error": "duplicate-question"
+    }
+  ]
+}

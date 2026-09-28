@@ -1,0 +1,15 @@
+{
+  "ownerId": "forms:12:window:fill",
+  "pluginId": "playbook-module-procedural",
+  "appId": "s.playbook.procedural@1/*#editor",
+  "controllerId": "s.playbook.procedural@1/*#editor",
+  "modeId": "edit",
+  "bodyKey": "params",
+  "windowKindId": "playbook-module-procedural-params",
+  "windowId": "extension",
+  "viewState": { "locale": "de", "terminology": "native" },
+  "slots": [
+    { "key": "column-a.params", "props": { "bodyKey": "params", "paramsJson": "{\"questionId\":\"column-a\",\"params\":{\"height\":6},\"windowId\":\"fill-a\"}" } },
+    { "key": "column-b.params", "props": { "bodyKey": "params", "paramsJson": "{\"questionId\":\"column-b\",\"params\":{\"height\":9},\"windowId\":\"fill-b\"}" } }
+  ]
+}

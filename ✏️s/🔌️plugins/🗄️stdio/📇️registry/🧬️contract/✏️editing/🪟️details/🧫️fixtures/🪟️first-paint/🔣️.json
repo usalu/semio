@@ -1,0 +1,20 @@
+{
+  "snapshot": {
+    "schema": "test.table-details",
+    "headers": ["name", "note"],
+    "rows": [["alpha", "plain"], ["Doe, John", "He said \"hi\""]]
+  },
+  "schema": {
+    "type": "object",
+    "required": ["schema", "headers", "rows"],
+    "additionalProperties": false,
+    "properties": {
+      "schema": {"const": "test.table-details"},
+      "headers": {"type": "array", "items": {"type": "string"}},
+      "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}
+    }
+  },
+  "firstPaintFields": ["schema", "headers", "rows"],
+  "foldedPath": ["rows", 1, 1],
+  "repeatCount": 32
+}

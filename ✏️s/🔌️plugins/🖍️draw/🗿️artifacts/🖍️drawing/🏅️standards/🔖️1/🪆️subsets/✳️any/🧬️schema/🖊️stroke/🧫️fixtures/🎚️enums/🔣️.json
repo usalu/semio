@@ -1,0 +1,18 @@
+[
+  {"kind":"cap","value":"butt","valid":true},
+  {"kind":"cap","value":"round","valid":true},
+  {"kind":"cap","value":"square","valid":true},
+  {"kind":"cap","value":"miter","valid":false},
+  {"kind":"cap","value":"","valid":false},
+  {"kind":"cap","value":"Round","valid":false},
+  {"kind":"cap","value":null,"valid":false},
+  {"kind":"cap","value":0,"valid":false},
+  {"kind":"join","value":"miter","valid":true},
+  {"kind":"join","value":"round","valid":true},
+  {"kind":"join","value":"bevel","valid":true},
+  {"kind":"join","value":"butt","valid":false},
+  {"kind":"join","value":"miter-clip","valid":false},
+  {"kind":"join","value":"","valid":false},
+  {"kind":"join","value":null,"valid":false},
+  {"kind":"join","value":{},"valid":false}
+]

@@ -91,7 +91,14 @@ fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
             }
         })
         .collect();
-    SemioValue::Map { entries: vec![entry("name", str_value(&doctype.name)), entry("externalId", external_id), entry("declarations", SemioValue::List { items: declarations })] }
+    SemioValue::Map {
+        entries: vec![
+            entry("prologPosition", SemioValue::Int { lexeme: doctype.prolog_position.to_string() }),
+            entry("name", str_value(&doctype.name)),
+            entry("externalId", external_id),
+            entry("declarations", SemioValue::List { items: declarations }),
+        ],
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -103,6 +110,7 @@ pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
             entry("doctype", doc.doctype.as_ref().map_or(SemioValue::Null, semio_value_of_doctype)),
             entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }),
             entry("root", doc.root.as_ref().map_or(SemioValue::Null, semio_value_of_node)),
+            entry("epilog", SemioValue::List { items: doc.epilog.iter().map(semio_value_of_node).collect() }),
         ],
     }
 }

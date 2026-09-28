@@ -18,6 +18,10 @@ use super::fixture_mutations::{
     timestamped::{SetN as TimestampedSetN, TimestampedMutation},
     validated::{RestoreN as ValidatedRestoreN, SetN as ValidatedSetN, ValidatedMutation},
 };
+use super::retained_clone::{
+    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef,
+    preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory},
+};
 
 pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
     assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
@@ -207,11 +211,7 @@ impl SerdeOneItemPublicationOracle {
     }
 
     fn freshness(base_generation: u64, live_generation: u64, base_revision: u64, live_revision: u64) -> &'static str {
-        if base_generation == live_generation && base_revision == live_revision {
-            "accepted"
-        } else {
-            "fault"
-        }
+        if base_generation == live_generation && base_revision == live_revision { "accepted" } else { "fault" }
     }
 
     fn retry(&self, attempts: u8, acknowledged: bool) -> &'static str {
@@ -1632,7 +1632,7 @@ fixture_member_factory!(DemoMutation);
 fixture_member_factory!(ValidatedMutation);
 fixture_member_factory!(SeverityMutation);
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
 #[dsl(id = "demo.doc", extension = "demo")]
 pub(crate) struct DemoSnapshot {
     pub(super) n: Option<i32>,
@@ -2215,10 +2215,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                     }]),
                     lane: None,
                 }],
-                composition: Some(crate::os_spr::HistoryComposition {
-                    owner: Some(("parent".into(), "slot".into(), "member-retained".into())),
-                    dialect: Some(("s.test.member".into(), "1".into(), "*".into())),
-                }),
+                composition: Some(crate::os_spr::HistoryComposition { owner: Some(("parent".into(), "slot".into(), "member-retained".into())), dialect: Some(("s.test.member".into(), "1".into(), "*".into())) }),
                 ..Default::default()
             };
             retained.stage_history(history).unwrap_or_else(|_| panic!("raw decoded model stays owned before typed hydration"));
@@ -3080,6 +3077,510 @@ pub(super) fn demo_closable_store_owners() -> DocumentStoreOwners<DemoSnapshot, 
     DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DemoRetainedCloneEditMode {
+    Apply,
+    Reject,
+    Fault,
+    OverBudget,
+}
+
+struct DemoRetainedCloneEdit {
+    mode: DemoRetainedCloneEditMode,
+}
+
+struct DemoRetainedCloneEditCursor {
+    mode: DemoRetainedCloneEditMode,
+    phase: u8,
+    inverse: Option<Vec<DemoMutation>>,
+    active_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
+    type Cursor = DemoRetainedCloneEditCursor;
+
+    fn preflight(&self, _mutation: &DemoMutation, _description: Option<&str>, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        if self.mode == DemoRetainedCloneEditMode::Reject {
+            return Err("retained clone fixture rejects before owner transfer".into());
+        }
+        Ok(ArtifactStoreOneItemFootprint::for_one_invertible_item(65_536))
+    }
+
+    fn begin(&self) -> Self::Cursor {
+        DemoRetainedCloneEditCursor { mode: self.mode, phase: 0, inverse: None, active_retirement: None, cancelled: false, closing: false }
+    }
+}
+
+impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor {
+    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: &DemoMutation, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
+        if self.cancelled || self.closing || grant.maximum_items == 0 {
+            return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
+        }
+        if self.mode == DemoRetainedCloneEditMode::OverBudget {
+            return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress {
+                copied_items: grant.maximum_items.saturating_add(1),
+                copied_bytes: grant.maximum_copy_bytes.saturating_add(1),
+                retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1),
+            }));
+        }
+        if self.phase == 0 {
+            self.phase = 1;
+            return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0 }));
+        }
+        if self.mode == DemoRetainedCloneEditMode::Fault {
+            return Err("retained clone fixture edit fault".into());
+        }
+        let retained_capacity_bytes = std::mem::size_of::<DemoMutation>();
+        let copied_bytes = std::mem::size_of::<DemoSnapshot>();
+        if grant.maximum_capacity_bytes < retained_capacity_bytes || grant.maximum_copy_bytes < copied_bytes {
+            return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
+        }
+        let base = base.get();
+        let outcome = mutation.diff(base);
+        if outcome.worst_level().is_some_and(|level| level >= crate::os_dsl::Severity::Error) {
+            return Err("retained clone fixture mutation rejected against its immutable base".into());
+        }
+        let next = outcome.diff().apply(base).map_err(|error| error.to_string())?;
+        let inverse = mutation.inverse(base);
+        if inverse.len() != 1 {
+            return Err("retained clone fixture expected one exact inverse row".into());
+        }
+        *post = next;
+        self.inverse = Some(inverse);
+        self.phase = 2;
+        Ok(RetainedCloneEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes }))
+    }
+
+    fn take_inverse(&mut self) -> Option<Vec<DemoMutation>> {
+        (self.phase == 2).then(|| self.inverse.take()).flatten()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) -> bool {
+        let started = !self.closing;
+        self.closing = true;
+        started
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if !self.closing || maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        if let Some(retirement) = self.active_retirement.as_mut() {
+            let step = retirement.close_step(1, maximum_bytes)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !retirement.terminal_is_empty() {
+                return Err("retained clone fixture mutation retirement completed with a live owner".into());
+            }
+            self.active_retirement = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(inverse) = self.inverse.as_mut() {
+            if let Some(mutation) = inverse.pop() {
+                self.active_retirement = Some(DemoMutationRetirementFactory.retire_owned(mutation));
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            self.inverse = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.inverse.is_none() && self.active_retirement.is_none()
+    }
+}
+
+fn retained_clone_preparation_factory(mode: DemoRetainedCloneEditMode) -> Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> {
+    Arc::new(RetainedClonePreparationFactory::new(Arc::new(DemoRetainedCloneEdit { mode }), Arc::new(DemoMutationRetirementFactory), Arc::new(DemoSnapshotRetirementFactory), 64).expect("retained clone preparation fixture factory"))
+}
+
+impl ArtifactCanonicalJson for DemoMutation {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        let value = match self {
+            DemoMutation::SetN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+                [("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("setN"))), ("n", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(value.n))))].into_iter(),
+            )),
+            DemoMutation::DeleteN(_) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new([("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("deleteN")))].into_iter())),
+            DemoMutation::AddN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+                [("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("addN"))), ("delta", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(value.delta))))].into_iter(),
+            )),
+            DemoMutation::RestoreN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+                [
+                    ("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("restoreN"))),
+                    ("n", value.n.map_or(ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::Null), |n| ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(n))))),
+                ]
+                .into_iter(),
+            )),
+        };
+        Ok(Some(value))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
+struct RetainedTextSnapshot {
+    text: String,
+}
+
+impl crate::os_schema_composition::ArtifactCompositionFields for RetainedTextSnapshot {
+    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
+impl ArtifactPack for RetainedTextSnapshot {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        <crate::os_dsl::DslValue as ArtifactPack>::encode_pack_with(&self.to_value(), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        Self::from_value(<crate::os_dsl::DslValue as ArtifactPack>::decode_pack_with(bytes, options)?).map_err(|error| PackError::Schema(error.to_string()))
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+struct RetainedTextDiff {
+    text: Option<String>,
+}
+
+impl MutationDiff<RetainedTextSnapshot> for RetainedTextDiff {
+    fn apply(&self, base: &RetainedTextSnapshot) -> crate::os_spr::MutationApplyResult<RetainedTextSnapshot> {
+        Ok(RetainedTextSnapshot { text: self.text.clone().unwrap_or_else(|| base.text.clone()) })
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.text.is_some() {
+            self.text = other.text;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct SetRetainedText {
+    text: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned)]
+#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+enum RetainedTextMutation {
+    SetRetainedText(SetRetainedText),
+}
+
+impl crate::os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMutation {
+    type Diff = RetainedTextDiff;
+    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <DemoMutation as crate::os_spr::Mutation<DemoSnapshot>>::DESCRIPTORS;
+
+    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+        &<Self as crate::os_spr::Mutation<RetainedTextSnapshot>>::DESCRIPTORS[0]
+    }
+
+    fn diff(&self, _base: &RetainedTextSnapshot) -> crate::os_spr::MutationOutcome<RetainedTextDiff> {
+        let Self::SetRetainedText(value) = self;
+        crate::os_spr::MutationOutcome::new(RetainedTextDiff { text: Some(value.text.clone()) })
+    }
+
+    fn inverse(&self, base: &RetainedTextSnapshot) -> Vec<Self> {
+        vec![Self::SetRetainedText(SetRetainedText { text: base.text.clone() })]
+    }
+
+    fn conflict_target(&self) -> Vec<String> {
+        vec!["text".into()]
+    }
+}
+
+impl OpText for RetainedTextMutation {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        serde_json::from_str(line).map_err(|error| crate::os_dsl::__rt::field_error(error.to_string()))
+    }
+
+    fn print_op(&self) -> String {
+        serde_json::to_string(self).expect("retained text fixture mutation serializes")
+    }
+}
+
+impl OpBinary for RetainedTextMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        Ok(self.print_op().into_bytes())
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: error.valid_up_to() as u64, detail: error.to_string() })?;
+        Self::parse_op(text).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: 0, detail: error.to_string() })
+    }
+}
+
+impl ArtifactCanonicalJson for RetainedTextMutation {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        let Self::SetRetainedText(value) = self;
+        Ok(Some(ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+            [("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("setRetainedText"))), ("text", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String(&value.text)))].into_iter(),
+        ))))
+    }
+}
+
+struct RetainedTextEdit;
+
+struct RetainedTextEditCursor {
+    closing: bool,
+}
+
+impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEdit {
+    type Cursor = RetainedTextEditCursor;
+
+    fn preflight(&self, _mutation: &RetainedTextMutation, _description: Option<&str>, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        Ok(ArtifactStoreOneItemFootprint::for_one_invertible_item(16_384))
+    }
+
+    fn begin(&self) -> Self::Cursor {
+        RetainedTextEditCursor { closing: false }
+    }
+}
+
+impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEditCursor {
+    fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: &RetainedTextMutation, _grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
+        Err("retained text edit must not run after contiguous-capacity refusal".into())
+    }
+
+    fn take_inverse(&mut self) -> Option<Vec<RetainedTextMutation>> {
+        None
+    }
+
+    fn cancel(&mut self) {}
+
+    fn begin_close(&mut self) -> bool {
+        let started = !self.closing;
+        self.closing = true;
+        started
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        Ok(if self.closing { SnapshotRetirementStep::Complete } else { SnapshotRetirementStep::Blocked })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+}
+
+fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M>(publication: &mut ArtifactStoreBatchPublication<P, M>, grant: ArtifactStoreOneItemGrant) -> usize {
+    publication.begin_close();
+    for turn in 1..10_000 {
+        match publication.close_step(grant).expect("retained clone publication closes") {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1, "one close turn releases at most one retained frontier");
+                assert!(released_bytes <= grant.maximum_bytes, "one close turn stays inside its byte grant");
+            }
+            SnapshotRetirementStep::Blocked => {}
+            SnapshotRetirementStep::Complete => {
+                assert!(publication.terminal_is_empty());
+                return turn;
+            }
+        }
+    }
+    panic!("retained clone publication did not reach terminal empty");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
+    let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
+    for (index, row) in fixture["cases"].as_array().expect("lifecycle cases").iter().enumerate() {
+        let initial = row["initial"].as_i64().expect("initial") as i32;
+        let value = row["value"].as_i64().expect("value") as i32;
+        let kind = row["kind"].as_str().expect("kind");
+        let mode = match kind {
+            "rejection" => DemoRetainedCloneEditMode::Reject,
+            "fault" => DemoRetainedCloneEditMode::Fault,
+            "overBudget" => DemoRetainedCloneEditMode::OverBudget,
+            _ => DemoRetainedCloneEditMode::Apply,
+        };
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None)).await;
+        store.install_document_store_owners_exact(demo_closable_store_owners());
+        let generation = store.generation_now();
+        let revision = store.content_revision_now();
+        let factory = retained_clone_preparation_factory(mode);
+        let admitted = store.begin_apply_batch(
+            semio_framework_job::OperationId(index as u64 + 1),
+            generation,
+            revision,
+            "retained-clone-fixture".into(),
+            vec![DemoMutation::SetN(SetN { n: value })],
+            Some(row["id"].as_str().expect("case id").to_string()),
+            HistoryLane::Document,
+            Some(&factory),
+        );
+        let mut published = false;
+        let mut terminal_empty = true;
+        if kind == "rejection" {
+            assert!(admitted.is_err(), "{} rejects before a SnapshotRead owner is transferred", row["id"]);
+        } else {
+            let mut publication = admitted.unwrap_or_else(|rejected| panic!("{} admission: {}", row["id"], rejected.reason));
+            let interrupt = row["interruptAfterTurns"].as_u64().expect("interrupt turns") as usize;
+            for _ in 0..interrupt {
+                match store.advance_apply_batch(&mut publication, grant) {
+                    Ok(ArtifactStoreOneItemAdvance::Published(_)) => {
+                        published = true;
+                        break;
+                    }
+                    Ok(_) => {}
+                    Err(error) if kind == "fault" => {
+                        assert!(error.to_string().contains("fixture edit fault"));
+                        break;
+                    }
+                    Err(error) => panic!("{} interrupted prefix: {error}", row["id"]),
+                }
+            }
+            match kind {
+                "success" => {
+                    for _ in 0..4_096 {
+                        match store.advance_apply_batch(&mut publication, grant).expect("retained clone success turn") {
+                            ArtifactStoreOneItemAdvance::Published(_) => {
+                                published = true;
+                                break;
+                            }
+                            ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::Blocked => {}
+                            ArtifactStoreOneItemAdvance::AwaitingAck(_) | ArtifactStoreOneItemAdvance::Complete => panic!("success reached a terminal state before publishing"),
+                        }
+                    }
+                    assert!(published, "success publishes within its declared retained turn envelope");
+                    assert!(publication.acknowledge());
+                }
+                "cancel" => assert!(store.cancel_apply_batch(&mut publication)),
+                "stale" => {
+                    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: initial + 1 })], description: Some("superseding edit".into()) }).await.expect("superseding edit publishes");
+                    let error = match store.advance_apply_batch(&mut publication, grant) {
+                        Err(error) => error,
+                        Ok(_) => panic!("retained clone publication must reject its stale base"),
+                    };
+                    assert!(error.to_string().contains("stale"));
+                }
+                "fault" => {
+                    let mut faulted = publication.fault().is_some();
+                    for _ in 0..4_096 {
+                        match store.advance_apply_batch(&mut publication, grant) {
+                            Err(error) => {
+                                assert!(error.to_string().contains("fixture edit fault"));
+                                faulted = true;
+                                break;
+                            }
+                            Ok(ArtifactStoreOneItemAdvance::Published(_)) => panic!("faulting edit published"),
+                            Ok(_) => {}
+                        }
+                    }
+                    assert!(faulted, "fault case reaches its injected retained edit fault");
+                    publication.begin_close();
+                }
+                "overBudget" => {
+                    let mut refusal = None;
+                    for _ in 0..4_096 {
+                        match store.advance_apply_batch(&mut publication, grant) {
+                            Err(error) => {
+                                refusal = Some(error);
+                                break;
+                            }
+                            Ok(ArtifactStoreOneItemAdvance::Published(_)) => panic!("over-budget retained edit published"),
+                            Ok(_) => {}
+                        }
+                    }
+                    let error = refusal.expect("over-budget retained edit is refused before publication");
+                    assert!(error.to_string().contains("exceeded its retained clone"));
+                    publication.begin_close();
+                }
+                _ => {}
+            }
+            let close_turns = close_retained_clone_preparation_publication(&mut publication, grant);
+            assert!(close_turns > 1, "the retained owner lifecycle remains interruptible through terminal close");
+            terminal_empty = publication.terminal_is_empty();
+        }
+        let actual = serde_json::json!({
+            "published": published,
+            "value": store.snapshot_ref().n,
+            "history": store.applied_edit_ids().len(),
+            "terminalEmpty": terminal_empty,
+        });
+        assert_eq!(actual, row["expected"], "{} matches the language-neutral lifecycle oracle", row["id"]);
+        if kind == "success" {
+            store.dispatch(ArtifactCommand::Undo).await.expect("retained clone publication undo");
+            assert_eq!(store.snapshot_ref().n, Some(initial));
+            store.dispatch(ArtifactCommand::Redo).await.expect("retained clone publication redo");
+            assert_eq!(store.snapshot_ref().n, Some(value));
+        }
+        close_demo_artifact_store(&mut store);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_store_grant() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
+    let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
+    let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
+    let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
+    let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
+    let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None)).await;
+    store.install_document_store_owners_exact(DocumentStoreOwners::new(
+        Arc::new(retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+        Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+        Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
+        Box::new(ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()),
+    ));
+    let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
+        RetainedClonePreparationFactory::new(Arc::new(RetainedTextEdit), Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()), Arc::new(retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()), 64)
+            .expect("retained text preparation factory"),
+    );
+    let mut publication = store
+        .begin_apply_batch(
+            semio_framework_job::OperationId(41),
+            store.generation_now(),
+            store.content_revision_now(),
+            "retained-text-capacity".into(),
+            vec![RetainedTextMutation::SetRetainedText(SetRetainedText { text: "y".into() })],
+            Some("contiguous capacity refusal".into()),
+            HistoryLane::Document,
+            Some(&factory),
+        )
+        .expect("the operation-wide footprint is admitted before per-turn contiguous allocation");
+    let mut refusal = None;
+    for _ in 0..8 {
+        match store.advance_apply_batch(&mut publication, grant) {
+            Err(error) => {
+                refusal = Some(error);
+                break;
+            }
+            Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::Blocked) => {}
+            Ok(_) => panic!("oversized contiguous owner reached an invalid state before refusal"),
+        }
+    }
+    let error = refusal.expect("an 8 KiB contiguous string cannot be allocated under a 4 KiB turn grant");
+    assert!(error.to_string().contains(expected_code), "capacity refusal exposes the stable language-neutral code: {error}");
+    assert_eq!(store.snapshot_ref(), &initial);
+    assert!(store.applied_edit_ids().is_empty());
+    assert!(close_retained_clone_preparation_publication(&mut publication, grant) > 1);
+    for _ in 0..65_536 {
+        match SpaceMember::close_owned_step(&mut store, 1, grant.maximum_bytes).expect("retained text store closes") {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= grant.maximum_bytes);
+            }
+            SnapshotRetirementStep::Blocked => {}
+            SnapshotRetirementStep::Complete => {
+                assert!(SpaceMember::close_owned_terminal_is_empty(&store));
+                return;
+            }
+        }
+    }
+    panic!("retained text store did not close within its bounded turn envelope");
+}
+
 fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublication<DemoSnapshot, DemoMutation>) {
     for _ in 0..16 {
         let step = publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 8 }).expect("ephemeral publication closes");
@@ -3307,11 +3808,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
 async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gesture_and_accepts_the_invertible_one() {
     const ITEMS: usize = 3;
     let mutations = || (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
-    assert_eq!(
-        ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }.merged(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }).work_items,
-        2,
-        "a merged declaration sums the items' rows"
-    );
+    assert_eq!(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }.merged(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }).work_items, 2, "a merged declaration sums the items' rows");
 
     let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
     under.install_document_store_owners_exact(demo_closable_store_owners());
@@ -3338,11 +3835,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     let staged = exact.envelope.vcs.edits.last().expect("staged gesture edit");
     assert_eq!(staged.forwards.len(), ITEMS);
     assert_eq!(staged.inverse.len(), ITEMS);
-    assert_eq!(
-        staged.forwards.len() + staged.inverse.len(),
-        ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items * ITEMS,
-        "the merged invertible declaration is exactly the rows the gesture folds"
-    );
+    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items * ITEMS, "the merged invertible declaration is exactly the rows the gesture folds");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut exact);
@@ -3720,8 +4213,7 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
     let factory = DemoEphemeralPreparationFactory::admissible();
     let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
-    let mut publication =
-        transient.begin_publish_one(semio_framework_job::OperationId(41), 0, DemoMutation::SetN(SetN { n: 4 }), Some(&factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("ephemeral publication admits");
+    let mut publication = transient.begin_publish_one(semio_framework_job::OperationId(41), 0, DemoMutation::SetN(SetN { n: 4 }), Some(&factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("ephemeral publication admits");
     let mut seen = publication.progress();
     let mut check = |next: ArtifactStoreOneItemCheckpoint, seen: &mut ArtifactStoreOneItemCheckpoint, phase: &str| {
         assert!(
@@ -5612,7 +6104,13 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     let mut store = ArtifactStore::new(fresh()).await;
     let generation = store.generation();
     let mut dangling = fresh();
-    dangling.transitions.push(crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("missing".into())] }, &ArtifactId("demo".into()), &ActorId("local".into()), Vec::new(), HybridLogicalTimestamp::new(0, 1)));
+    dangling.transitions.push(crate::os_spr::history_transition_envelope(
+        &crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("missing".into())] },
+        &ArtifactId("demo".into()),
+        &ActorId("local".into()),
+        Vec::new(),
+        HybridLogicalTimestamp::new(0, 1),
+    ));
     assert!(matches!(store.reset(dangling).await, Err(VcsError::ValidationFailed(message)) if message.contains("missing")), "a transition naming an unknown operation cannot be folded");
     assert_eq!(store.generation(), generation, "failed reset must preserve the live store");
 }
@@ -6454,7 +6952,13 @@ async fn document_text_rejects_missing_metadata_and_dangling_transitions_without
     let missing_metadata = files.ops.lines().filter(|line| !line.starts_with("metadata ")).collect::<Vec<_>>().join("\n");
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata).await, Err(error) if error.message.contains("no metadata records")));
 
-    let dangling = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("unknown-edit".into())] }, &ArtifactId("strict-text".into()), &ActorId("local".into()), Vec::new(), HybridLogicalTimestamp::new(0, 1));
+    let dangling = crate::os_spr::history_transition_envelope(
+        &crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("unknown-edit".into())] },
+        &ArtifactId("strict-text".into()),
+        &ActorId("local".into()),
+        Vec::new(),
+        HybridLogicalTimestamp::new(0, 1),
+    );
     let dangling_text = format!("{}\n{}", files.ops.trim_end(), ops_line_from_transition(&dangling).expect("transition line").print_op());
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &dangling_text).await, Err(error) if error.message.contains("unknown operation unknown-edit")));
 }
@@ -6678,7 +7182,8 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
             description: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
             inverse: Vec::new(),
-            meta: None, lane: None,
+            meta: None,
+            lane: None,
         }],
         ..Default::default()
     };
@@ -7685,18 +8190,10 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
     }
     impl MemberDirectory for FixtureDirectory {
         async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-            if artifact_id == "linked-doc" {
-                Some(self.member.document_pack_bytes().await)
-            } else {
-                None
-            }
+            if artifact_id == "linked-doc" { Some(self.member.document_pack_bytes().await) } else { None }
         }
         async fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-            if artifact_id == "linked-doc" {
-                Some(self.member.pack_at_checkpoint(checkpoint_id).await)
-            } else {
-                None
-            }
+            if artifact_id == "linked-doc" { Some(self.member.pack_at_checkpoint(checkpoint_id).await) } else { None }
         }
     }
 

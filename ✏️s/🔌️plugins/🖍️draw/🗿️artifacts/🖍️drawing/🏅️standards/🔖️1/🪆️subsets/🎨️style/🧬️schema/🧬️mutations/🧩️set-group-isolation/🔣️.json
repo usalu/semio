@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation",
+  "semanticKind": "set-group-isolation",
+  "displayName": "Set Group Isolation",
+  "emoji": "🧩️",
+  "aggregateVariant": "SetGroupIsolation",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-group-isolation",
+  "binaryTag": 17,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

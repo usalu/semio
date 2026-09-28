@@ -13,14 +13,16 @@
       "transform": {
         "x": 0.0,
         "y": 0.0,
-        "scaleX": 1.0,
-        "scaleY": 1.0,
-        "rotation": 0.0
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "mask": null,
       "width": 512,
       "height": 512,
-      "imageKey": null
+      "imageKey": null,
+      "locked": false
     },
     {
       "kind": "pixel",
@@ -32,14 +34,16 @@
       "transform": {
         "x": 0.0,
         "y": 0.0,
-        "scaleX": 1.0,
-        "scaleY": 1.0,
-        "rotation": 0.0
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "mask": null,
       "width": 512,
       "height": 512,
-      "imageKey": null
+      "imageKey": null,
+      "locked": false
     }
   ]
 }

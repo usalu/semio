@@ -1,0 +1,35 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "shape-a",
+        "patch": {
+          "visible": null,
+          "locked": null,
+          "name": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformJson": null,
+          "fillJson": null,
+          "strokeJson": null,
+          "booleanOperation": null,
+          "traceParamsJson": null,
+          "layerJson": null,
+          "pathSegments": null,
+          "textContent": null,
+          "textSize": null,
+          "fillRule": "nonzero"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "assets": null,
+  "artboard": null
+}

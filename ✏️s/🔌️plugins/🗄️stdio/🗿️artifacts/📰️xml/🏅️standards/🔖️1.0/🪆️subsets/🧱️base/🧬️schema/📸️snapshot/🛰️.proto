@@ -55,13 +55,14 @@ message XmlExternalId {
   string system_id = 3;
 }
 message XmlDtdEntity { bool parameter = 1; string name = 2; string value = 3; }
-message XmlDoctype { string name = 1; optional XmlExternalId external_id = 2; repeated XmlDtdEntity declarations = 3; }
+message XmlDoctype { string name = 1; optional XmlExternalId external_id = 2; repeated XmlDtdEntity declarations = 3; uint64 prolog_position = 4; }
 
 message XmlDocument {
   optional XmlNode root = 1;
   optional XmlDoctype doctype = 2;
   optional XmlDeclaration declaration = 3;
   repeated XmlNode prolog = 4;
+  repeated XmlNode epilog = 5;
 }
 
 message XmlSnapshot {

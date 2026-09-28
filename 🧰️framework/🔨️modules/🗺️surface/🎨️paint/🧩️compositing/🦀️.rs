@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_pixels::{compositing::{layers::{RasterStackContent,RasterStackInput,RasterStackJob,RasterStackLayer,RasterStackMask,RasterStackResult,RasterStackTransform},CompositeBlend},editing::PixelProgress,RasterImage as PixelImage};
 use std::collections::BTreeMap;
 
-fn transform(value:&TransformJson)->RasterStackTransform {RasterStackTransform {x:value.x,y:value.y,scale_x:value.scale_x,scale_y:value.scale_y,rotation:value.rotation}}
+fn transform(value:&TransformJson)->RasterStackTransform {RasterStackTransform {x:value.x,y:value.y,a:value.a,b:value.b,c:value.c,d:value.d}}
 fn mask(value:&Option<MaskJson>)->Option<RasterStackMask>{value.as_ref().map(|m|RasterStackMask {enabled:m.enabled,linked:m.linked,invert:m.invert,width:m.width,height:m.height,image_key:m.image_key.clone(),transform:transform(&m.transform)})}
 pub(super) fn layers(source:&[LayerNodeJson])->Result<Vec<RasterStackLayer>,String>{
     fn visit(source:&[LayerNodeJson],depth:usize,nodes:&mut usize)->Result<Vec<RasterStackLayer>,String>{
@@ -11,9 +11,9 @@ pub(super) fn layers(source:&[LayerNodeJson])->Result<Vec<RasterStackLayer>,Stri
         source.iter().map(|layer|{
             *nodes+=1;if *nodes>1024{return Err("Layer count exceeds compositor budget".into());}
             let (id,visible,opacity,blend,placement,mask,content)=match layer{
-                LayerNodeJson::Pixel {id,visible,opacity,blend_mode,transform,mask:layer_mask,width,height,image_key}=>
+                LayerNodeJson::Pixel {id,visible,locked:_,opacity,blend_mode,transform,mask:layer_mask,width,height,image_key}=>
                     (id,*visible,*opacity,blend_mode,transform,mask(layer_mask),RasterStackContent::Pixel {width:*width,height:*height,image_key:image_key.clone()}),
-                LayerNodeJson::Group {id,visible,opacity,blend_mode,transform,mask:layer_mask,children}=>
+                LayerNodeJson::Group {id,visible,locked:_,opacity,blend_mode,transform,mask:layer_mask,children}=>
                     (id,*visible,*opacity,blend_mode,transform,mask(layer_mask),RasterStackContent::Group(visit(children,depth+1,nodes)?)),
                 LayerNodeJson::Adjustment {id,visible,opacity,blend_mode,transform,adjustment_kind,params}=>{
                     if adjustment_kind!="brightnessContrast"{return Err(format!("Unsupported adjustment {adjustment_kind}"));}
@@ -63,7 +63,7 @@ impl RetainedComposite {
                         let Some(mask)=layer.mask.take() else{layers.clear();return};
                         let image=mask.image_key.as_ref().and_then(|key|buffers.get(key));
                         let width=mask.width.or_else(||image.map(|i|i.width)).unwrap_or(512);let height=mask.height.or_else(||image.map(|i|i.height)).unwrap_or(512);
-                        let identity=RasterStackTransform {x:0.0,y:0.0,scale_x:1.0,scale_y:1.0,rotation:0.0};
+                        let identity=RasterStackTransform {x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0};
                         let child=RasterStackLayer {id:key.into(),visible:true,opacity:1.0,blend_mode:CompositeBlend::Normal,transform:mask.transform,mask:Some(RasterStackMask {enabled:true,linked:true,invert:mask.invert,width:Some(width),height:Some(height),image_key:mask.image_key,transform:identity}),content:RasterStackContent::Pixel {width:Some(width),height:Some(height),image_key:Some(key.into())}};
                         if !mask.linked{layer.transform=identity;}layer.opacity=1.0;layer.blend_mode=CompositeBlend::Normal;layer.content=RasterStackContent::Group(vec![child]);return;
                     }

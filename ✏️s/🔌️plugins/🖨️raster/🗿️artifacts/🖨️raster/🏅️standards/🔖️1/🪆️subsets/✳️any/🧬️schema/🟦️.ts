@@ -17,6 +17,7 @@ export interface RasterLayerPixel {
   id: string;
   name: string;
   visible: boolean;
+  locked: boolean;
   opacity: number;
   blendMode: string;
   transform: RasterTransform;
@@ -31,6 +32,7 @@ export interface RasterLayerGroup {
   id: string;
   name: string;
   visible: boolean;
+  locked: boolean;
   opacity: number;
   blendMode: string;
   transform: RasterTransform;
@@ -43,6 +45,7 @@ export interface RasterLayerAdjustment {
   id: string;
   name: string;
   visible: boolean;
+  locked: boolean;
   opacity: number;
   blendMode: string;
   transform: RasterTransform;
@@ -53,9 +56,10 @@ export interface RasterLayerAdjustment {
 export interface RasterTransform {
   x: number;
   y: number;
-  scaleX: number;
-  scaleY: number;
-  rotation: number;
+  a: number;
+  b: number;
+  c: number;
+  d: number;
 }
 
 export interface RasterLayerMask {
@@ -154,6 +158,7 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
     id: rasterRasterArtifactGuardString(row["id"], `${at}.id`),
     name: rasterRasterArtifactGuardString(row["name"], `${at}.name`),
     visible: rasterRasterArtifactGuardBoolean(row["visible"], `${at}.visible`),
+    locked: rasterRasterArtifactGuardBoolean(row["locked"], `${at}.locked`),
     opacity: rasterRasterArtifactGuardNumber(row["opacity"], `${at}.opacity`),
     blendMode: rasterRasterArtifactGuardString(row["blendMode"], `${at}.blendMode`),
     transform: parseRasterTransform(row["transform"], `${at}.transform`),
@@ -192,9 +197,10 @@ export function parseRasterTransform(value: unknown, at = "$"): RasterTransform 
   return {
     x: rasterRasterArtifactGuardNumber(row["x"], `${at}.x`),
     y: rasterRasterArtifactGuardNumber(row["y"], `${at}.y`),
-    scaleX: rasterRasterArtifactGuardNumber(row["scaleX"], `${at}.scaleX`),
-    scaleY: rasterRasterArtifactGuardNumber(row["scaleY"], `${at}.scaleY`),
-    rotation: rasterRasterArtifactGuardNumber(row["rotation"], `${at}.rotation`),
+    a: rasterRasterArtifactGuardNumber(row["a"], `${at}.a`),
+    b: rasterRasterArtifactGuardNumber(row["b"], `${at}.b`),
+    c: rasterRasterArtifactGuardNumber(row["c"], `${at}.c`),
+    d: rasterRasterArtifactGuardNumber(row["d"], `${at}.d`),
   };
 }
 
@@ -217,4 +223,18 @@ export function parseRasterViewportSize(value: unknown, at = "$"): RasterViewpor
     width: rasterRasterArtifactGuardNumber(row["width"], `${at}.width`),
     height: rasterRasterArtifactGuardNumber(row["height"], `${at}.height`),
   };
+}
+
+export type LayerProtectionNode={id:string;locked:boolean;children?:readonly LayerProtectionNode[]};
+export type LayerProtection={locked:boolean;inherited:boolean;descendant:boolean;editable:boolean;structural:boolean;canChangeLock:boolean};
+export function layerProtection(layers:readonly LayerProtectionNode[],id:string):LayerProtection|null {
+  const lockedBelow=(nodes:readonly LayerProtectionNode[]):boolean=>nodes.some(node=>node.locked||lockedBelow(node.children??[]));
+  const visit=(nodes:readonly LayerProtectionNode[],inherited:boolean):LayerProtection|null=>{
+    for(const node of nodes) {
+      if(node.id===id) {const descendant=lockedBelow(node.children??[]),editable=!node.locked&&!inherited;return {locked:node.locked,inherited,descendant,editable,structural:editable&&!descendant,canChangeLock:!inherited};}
+      const found=visit(node.children??[],inherited||node.locked);if(found)return found;
+    }
+    return null;
+  };
+  return visit(layers,false);
 }

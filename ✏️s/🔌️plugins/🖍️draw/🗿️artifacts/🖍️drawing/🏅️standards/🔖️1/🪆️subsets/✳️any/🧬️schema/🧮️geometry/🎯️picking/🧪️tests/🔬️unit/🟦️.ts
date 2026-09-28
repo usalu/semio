@@ -40,3 +40,26 @@ test("curve picking yields with bounded storage and refuses unresolved geometry"
   expect(cursor.contains(true,true)).toBe(false);
   expect(cursor.maximumDepth).toBeLessThanOrEqual(33);
 });
+
+import shapes from "../../🧫️fixtures/🔷️shapes/🔣️.json";
+import {shapeSegment} from "../../../🔀️conversion/🟦️.ts";
+for(const sample of shapes)test(`primitive picking: ${sample.name}`,()=>{
+  const cursor=new PathHitCursor(sample.point as Point,sample.matrix as Matrix,sample.radius,.001);
+  let steps=0;while(!cursor.stepWith(index=>shapeSegment(sample.kind,sample.geometry,index)))expect(++steps).toBeLessThan(100000);
+  expect(cursor.contains(sample.fill,sample.stroke)).toBe(sample.expected);
+  const [a,b,c,d,e,f]=sample.matrix,matrix=new Matrix3().set(a!,c!,e!,b!,d!,f!,0,0,1);
+  const p=new Vector2(...sample.point).applyMatrix3(matrix.invert()),g=sample.geometry;
+  if(sample.kind==="circle"||sample.kind==="ellipse"){
+    const rx=sample.kind==="circle"?g.r!:g.rx!,ry=sample.kind==="circle"?g.r!:g.ry!;
+    expect(new Vector2((p.x-g.cx!)/rx,(p.y-g.cy!)/ry).lengthSq()<=1).toBe(sample.expected);
+  }else if(sample.kind==="line"){
+    const line=new Line3(new Vector3(g.x1!,g.y1!,0),new Vector3(g.x2!,g.y2!,0)),q=new Vector3(p.x,p.y,0);
+    expect(line.closestPointToPoint(q,true,new Vector3()).distanceTo(q)<=sample.radius).toBe(sample.expected);
+  }else if(sample.kind==="polygon"){
+    const points=g.points!.map(v=>new Vector2(...v)),cross=(a:Vector2,b:Vector2)=>(b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);
+    expect(ShapeUtils.triangulateShape(points,[]).some(face=>{const[a,b,c]=face.map(i=>points[i]!);const signs=[cross(a!,b!),cross(b!,c!),cross(c!,a!)];return signs.every(v=>v>=0)||signs.every(v=>v<=0);})).toBe(sample.expected);
+  }else{
+    const corners=[[g.x!,g.y!],[g.x!+g.width!,g.y!],[g.x!+g.width!,g.y!+g.height!],[g.x!,g.y!+g.height!]];
+    expect(corners.some((a,i)=>{const b=corners[(i+1)%4]!;const line=new Line3(new Vector3(...a,0),new Vector3(...b,0)),q=new Vector3(p.x,p.y,0);return line.closestPointToPoint(q,true,new Vector3()).distanceTo(q)<=sample.radius;})).toBe(sample.expected);
+  }
+});

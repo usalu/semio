@@ -112,12 +112,16 @@ mod subject {
             "set-snapshot" => ZipMutation::SetSnapshot(SetSnapshot {
                 snapshot: ZipSnapshot {
                     schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
-                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes() }).collect(),
+                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes(), ..Default::default() }).collect(),
                     comment: params.str("comment"),
+                    ..Default::default()
                 },
             }),
-            "set-archive-comment" => ZipMutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment") }),
-            "add-entry" => ZipMutation::AddEntry(AddEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() }, before: params.get("before").map(|_| params.str("before")) }),
+            "set-archive-comment" => ZipMutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment"), comment_utf8: true }),
+            "add-entry" => ZipMutation::AddEntry(AddEntry {
+                entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes(), ..Default::default() },
+                before: params.get("before").map(|_| params.str("before")),
+            }),
             "remove-entry" => ZipMutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
             "rename-entry" => ZipMutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
             "set-entry-data" => ZipMutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
@@ -133,7 +137,9 @@ mod subject {
     fn invert_zip_mutation(original: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {
         match mutation {
             ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(SetSnapshot { snapshot: original.clone() })],
-            ZipMutation::SetArchiveComment(_) => vec![ZipMutation::SetArchiveComment(SetArchiveComment { comment: original.comment.clone() })],
+            ZipMutation::SetArchiveComment(_) => {
+                vec![ZipMutation::SetArchiveComment(SetArchiveComment { comment: original.comment.clone(), comment_utf8: original.comment_utf8 })]
+            }
             ZipMutation::AddEntry(AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(RemoveEntry { name: entry.name.clone() })],
             ZipMutation::RemoveEntry(RemoveEntry { name }) => original.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipMutation::AddEntry(AddEntry { entry: original.entries[index].clone(), before: original.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default(),
             ZipMutation::RenameEntry(RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })],

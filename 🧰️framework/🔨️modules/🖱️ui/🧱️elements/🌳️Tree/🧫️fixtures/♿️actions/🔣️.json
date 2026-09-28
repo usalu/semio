@@ -1,0 +1,6 @@
+[
+  {"id":"curve-en","label":"Convert to Curve","layout":"default"},
+  {"id":"curve-de","label":"In Kurve umwandeln","layout":"default"},
+  {"id":"split-en","label":"Split Segment","layout":"property"},
+  {"id":"split-de","label":"Segment teilen","layout":"property"}
+]

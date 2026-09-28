@@ -40,7 +40,10 @@ mod value_round_trip_tests {
                 step: None,
                 accept: None,
                 on_change: act("change"),
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                on_submit: None,
+                on_abort: None,
+                on_repeat_last: None,
+                presence: UiPresence::default(),
                 menu: None,
             }),
             UiControlNode::Select(UiSelectNode {
@@ -66,7 +69,9 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_item_node_round_trips() {
-        let value = UiTreeItemNode { window: None, granularity: None,
+        let value = UiTreeItemNode {
+            window: None,
+            granularity: None,
             id: "item1".into(),
             label: Label::data("Item"),
             description: Some("desc".into()),
@@ -79,7 +84,8 @@ mod value_round_trip_tests {
             drag_data: None,
             items: None,
             control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None })),
-            inline_toolbar: None, detail: None,
+            inline_toolbar: None,
+            detail: None,
             dimmed: Some(false),
             menu: Some(UiMenuRef { id: "menu-1".into(), args: None }),
         };
@@ -88,7 +94,8 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_section_and_tree_node_round_trip() {
-        let section = UiTreeSectionNode { header_toolbar: None, window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
+        let section =
+            UiTreeSectionNode { header_toolbar: None, window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
         assert_eq!(UiTreeSectionNode::from_value(section.clone().to_value()).expect("valid DslValue decodes"), section);
 
         let tree = UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };
@@ -114,7 +121,7 @@ mod value_round_trip_tests {
         let entry = BlockPaletteEntry { block_kind: "note".into(), label: "Note".into(), icon_id: IconName::Save };
         assert_eq!(BlockPaletteEntry::from_value(entry.to_value()).expect("valid DslValue decodes"), entry);
 
-        let slot = UiExternalSlotNode { plugin_id: "plugin-1".into(), app_id: "app-1".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None };
+        let slot = UiExternalSlotNode { plugin_id: "plugin-1".into(), app_id: "app-1".into(), body_key: "body".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default(), menu: None };
         assert_eq!(UiExternalSlotNode::from_value(slot.to_value()).expect("valid DslValue decodes"), slot);
     }
 

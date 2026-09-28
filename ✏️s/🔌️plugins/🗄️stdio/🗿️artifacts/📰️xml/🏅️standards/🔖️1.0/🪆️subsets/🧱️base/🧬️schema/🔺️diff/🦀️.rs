@@ -19,7 +19,7 @@
 //! svg, not importable from here across the artifact boundary, so this file declares its own copies
 //! for `📰️xml`'s own crate-visibility scope).
 
-use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
+use crate::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
 use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -35,13 +35,17 @@ pub struct XmlDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub prolog: Option<Vec<XmlNode>>,
-    /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
+    /// 🧹 Logical document-epilog nodes.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub epilog: Option<Vec<XmlNode>>,
+    /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub declaration: Option<Option<XmlDeclaration>>,
     /// 📜️ Tri-state: `None` = unchanged, `Some(None)` = doctype removed, `Some(Some(s))` = set.
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub doctype: Option<Option<XmlDoctype>>,
     /// 🌳 `None` = root subtree unchanged; `Some(diff)` = the root changed (recursive, possibly
     /// down to a deeply nested leaf via `diff_at_path`, or a wholesale `Replace` incl. root
@@ -51,6 +55,11 @@ pub struct XmlDiff {
     pub root: Option<XmlNodeDiff>,
 }
 //#endregion 🔖️Diff
+
+/// 🏳️ Keeps present null values distinct from omitted fields during sparse replay.
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+}
 
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `XmlNode` it targets.
@@ -88,10 +97,13 @@ pub struct XmlElementDiff {
 
 /// 🏷️ Name-keyed, ORDER-preserving attribute triple. Deliberately a Vec-based triple (not a
 /// `HashMap`) -- XML attribute order is not semantically meaningful per the spec but IS
-/// significant for byte-preserving round-trips, so it must survive the diff/apply cycle.
+/// significant for byte-preserving round-trips; `order` is the sole final placement authority.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttributesDiff {
+    /// 🧭 Complete final attribute identity order for every nonempty edit.
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub order: Vec<String>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<String>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -110,7 +122,6 @@ pub struct XmlAttrModified {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttrAdded {
-    pub index: usize,
     pub name: String,
     pub value: String,
 }
@@ -126,6 +137,50 @@ pub struct XmlChildrenDiff {
     pub modified: Vec<XmlChildModified>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<XmlChildAdded>,
+}
+
+impl XmlChildrenDiff {
+    /// 🌱️ Diffs an embedded ordered XML fragment using the XML artifact's recursive algebra.
+    pub fn between(base: &[XmlNode], other: &[XmlNode]) -> Option<Self> {
+        between_children(base, other)
+    }
+
+    /// 🧩️ Validates all addressed children before changing an embedded XML fragment.
+    pub fn apply_to(&self, children: &mut Vec<XmlNode>) -> MutationApplyResult<()> {
+        validate_xml_children(children, self)?;
+        *children = apply_children_diff(children, self);
+        Ok(())
+    }
+
+    /// ↩️ Restores the exact previous fragment after this diff is applied.
+    pub fn inverse(&self, base: &[XmlNode]) -> Self {
+        inverse_children_diff(base, self)
+    }
+
+    /// 🔗️ Composes the next fragment edit into this edit.
+    pub fn absorb(&mut self, next: Self) {
+        *self = absorb_children_diff(std::mem::take(self), &next);
+    }
+
+    /// 📝️ Encodes a fragment diff using the native XML text grammar.
+    pub fn encode_text(&self) -> String {
+        enc_children_diff(self)
+    }
+
+    /// 📖️ Decodes a fragment diff using the native XML text grammar.
+    pub fn decode_text(text: &str) -> Result<Self, String> {
+        dec_children_diff(text)
+    }
+
+    /// 📦️ Appends a fragment diff using the native XML binary grammar.
+    pub fn encode_binary(&self, output: &mut Vec<u8>) {
+        enc_children_diff_bin(self, output);
+    }
+
+    /// 🔓️ Reads a fragment diff from a caller-owned binary frame.
+    pub fn decode_binary(reader: &mut store::ByteReader<'_>) -> Result<Self, String> {
+        dec_children_diff_bin(reader)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -155,7 +210,7 @@ pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
     for &index in path.iter().rev() {
         node_diff = XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: vec![XmlChildModified { index, diff: node_diff }], added: Vec::new() }) });
     }
-    XmlDiff { prolog: None, declaration: None, doctype: None, root: Some(node_diff) }
+    XmlDiff { prolog: None, epilog: None, declaration: None, doctype: None, root: Some(node_diff) }
 }
 //#endregion 🔖️DiffAtPath
 
@@ -169,6 +224,9 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
         if let Some(prolog) = &self.prolog {
             next.doc.prolog = prolog.clone();
         }
+        if let Some(epilog) = &self.epilog {
+            next.doc.epilog = epilog.clone();
+        }
         if let Some(declaration) = &self.declaration {
             next.doc.declaration = declaration.clone();
         }
@@ -178,12 +236,16 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
         if let Some(node_diff) = &self.root {
             next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
+        validate_xml_document_boundaries(&next.doc).map_err(|detail| MutationApplyError::new("mutation.apply.invalid-document-boundary", detail))?;
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
         if other.prolog.is_some() {
             self.prolog = other.prolog;
+        }
+        if other.epilog.is_some() {
+            self.epilog = other.epilog;
         }
         if other.declaration.is_some() {
             self.declaration = other.declaration;
@@ -226,6 +288,9 @@ fn validate_xml_node(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> MutationA
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_xml_attrs(base: &[XmlAttr], diff: &XmlAttributesDiff) -> MutationApplyResult<()> {
+    if diff.removed.is_empty() && diff.modified.is_empty() && diff.added.is_empty() && diff.order.is_empty() {
+        return Ok(());
+    }
     for (position, name) in diff.removed.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == *name) {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist"));
@@ -244,14 +309,14 @@ fn validate_xml_attrs(base: &[XmlAttr], diff: &XmlAttributesDiff) -> MutationApp
     }
     let final_len = base.len() - diff.removed.len() + diff.added.len();
     for (position, added) in diff.added.iter().enumerate() {
-        if added.index > final_len
-            || diff.added[..position].iter().any(|candidate| candidate.index == added.index)
-            || base.iter().any(|attr| attr.name == added.name)
-            || diff.removed.contains(&added.name)
-            || diff.modified.iter().any(|candidate| candidate.name == added.name)
-        {
+        if (base.iter().any(|attr| attr.name == added.name) && !diff.removed.contains(&added.name)) || diff.added[..position].iter().any(|candidate| candidate.name == added.name) || diff.modified.iter().any(|candidate| candidate.name == added.name) {
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting"));
         }
+    }
+    let expected: std::collections::HashSet<&str> = base.iter().filter(|attr| !diff.removed.contains(&attr.name)).map(|attr| attr.name.as_str()).chain(diff.added.iter().map(|attr| attr.name.as_str())).collect();
+    let ordered: std::collections::HashSet<&str> = diff.order.iter().map(String::as_str).collect();
+    if diff.order.len() != final_len || ordered.len() != final_len || ordered != expected {
+        return Err(MutationApplyError::new("mutation.apply.invalid-order", "attribute order must name every final identity exactly once"));
     }
     Ok(())
 }
@@ -278,12 +343,15 @@ fn validate_xml_children(base: &[XmlNode], diff: &XmlChildrenDiff) -> MutationAp
         if !modified.insert(entry.index) {
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated"));
         }
+        if matches!(&entry.diff, XmlNodeDiff::Replace { node: None }) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-replacement", "child replacement requires a node; removal uses the removed collection"));
+        }
         validate_xml_node(Some(&base[entry.index]), &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
     let final_len = base.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
-        if entry.index > final_len || !added.insert(entry.index) {
+        if entry.index >= final_len || !added.insert(entry.index) {
             return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated"));
         }
     }
@@ -325,21 +393,17 @@ fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_attrs_diff(attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> Vec<XmlAttr> {
-    let mut out: Vec<XmlAttr> = attrs
-        .iter()
-        .filter(|a| !diff.removed.contains(&a.name))
-        .map(|a| match diff.modified.iter().find(|m| m.name == a.name) {
-            Some(m) => XmlAttr { name: a.name.clone(), value: m.value.clone() },
-            None => a.clone(),
-        })
-        .collect();
-    let mut additions: Vec<&XmlAttrAdded> = diff.added.iter().collect();
-    additions.sort_by_key(|a| a.index);
-    for add in additions {
-        let at = add.index.min(out.len());
-        out.insert(at, XmlAttr { name: add.name.clone(), value: add.value.clone() });
+    if diff.removed.is_empty() && diff.modified.is_empty() && diff.added.is_empty() && diff.order.is_empty() {
+        return attrs.to_vec();
     }
-    out
+    let mut values: std::collections::HashMap<String, String> = attrs.iter().filter(|attr| !diff.removed.contains(&attr.name)).map(|attr| (attr.name.clone(), attr.value.clone())).collect();
+    for entry in &diff.modified {
+        values.insert(entry.name.clone(), entry.value.clone());
+    }
+    for entry in &diff.added {
+        values.insert(entry.name.clone(), entry.value.clone());
+    }
+    diff.order.iter().map(|name| XmlAttr { name: name.clone(), value: values.remove(name).expect("validated attribute identity order") }).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -375,6 +439,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     fn inverse(&self, base: &XmlSnapshot) -> Self {
         XmlDiff {
             prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
+            epilog: self.epilog.as_ref().map(|_| base.doc.epilog.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
@@ -384,6 +449,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     fn between(base: &XmlSnapshot, other: &XmlSnapshot) -> Self {
         XmlDiff {
             prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
+            epilog: if base.doc.epilog != other.doc.epilog { Some(other.doc.epilog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
             root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
@@ -391,7 +457,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.prolog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 
@@ -429,11 +495,10 @@ fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> XmlAt
     for name in &diff.removed {
         if let Some(idx) = base_attrs.iter().position(|a| &a.name == name) {
             let original = &base_attrs[idx];
-            added.push(XmlAttrAdded { index: idx, name: original.name.clone(), value: original.value.clone() });
+            added.push(XmlAttrAdded { name: original.name.clone(), value: original.value.clone() });
         }
     }
-    added.sort_by_key(|a| a.index);
-    XmlAttributesDiff { removed, modified, added }
+    XmlAttributesDiff { removed, modified, added, order: base_attrs.iter().map(|attr| attr.name.clone()).collect() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -499,15 +564,15 @@ fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<XmlAttributesDif
         }
     }
     let mut added = Vec::new();
-    for (i, o) in other.iter().enumerate() {
+    for o in other {
         if !base.iter().any(|b| b.name == o.name) {
-            added.push(XmlAttrAdded { index: i, name: o.name.clone(), value: o.value.clone() });
+            added.push(XmlAttrAdded { name: o.name.clone(), value: o.value.clone() });
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+    if base == other {
         None
     } else {
-        Some(XmlAttributesDiff { removed, modified, added })
+        Some(XmlAttributesDiff { removed, modified, added, order: other.iter().map(|attr| attr.name.clone()).collect() })
     }
 }
 
@@ -614,12 +679,11 @@ fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDi
     a
 }
 
-/// 🏷️ Name-keyed absorb -- simpler than the index-keyed children case since attribute NAME (not
-/// position) is the stable identity; only `added.index` needs any position bookkeeping at all,
-/// approximated (not fully index-transported like children) since attribute order carries no
-/// spec-mandated meaning, only round-trip fidelity.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🔗️ Composes attribute identity changes and retains the last complete final order.
 fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: &XmlAttributesDiff) -> XmlAttributesDiff {
+    if b.removed.is_empty() && b.modified.is_empty() && b.added.is_empty() && b.order.is_empty() {
+        return a;
+    }
     let a_added_names: std::collections::HashSet<String> = a.added.iter().map(|x| x.name.clone()).collect();
     let mut removed = a.removed.clone();
     let mut annihilated: Vec<String> = Vec::new();
@@ -650,13 +714,11 @@ fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: &XmlAttributesDiff) -> XmlAttr
         match added.iter_mut().find(|x| x.name == ba.name) {
             Some(existing) => {
                 existing.value = ba.value.clone();
-                existing.index = ba.index;
             }
             None => added.push(ba.clone()),
         }
     }
-    added.sort_by_key(|x| x.index);
-    XmlAttributesDiff { removed, modified, added }
+    XmlAttributesDiff { removed, modified, added, order: b.order.clone() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -878,13 +940,7 @@ fn dec_attr(s: &str) -> Result<XmlAttr, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
-    format!(
-        "[{},{},{},{}]",
-        enc_str(&d.version),
-        encode_option(&d.encoding, |v| enc_str(v)),
-        encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),
-        enc_quote(d.quote),
-    )
+    format!("[{},{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }), enc_quote(d.quote),)
 }
 
 /// 🗣️ `XmlQuote` as the 1/0 flag the declaration frame carries (`1` = the `'` spelling), the same
@@ -928,13 +984,13 @@ pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
         })
         .collect::<Vec<_>>()
         .join(",");
-    format!("[{},{},[{}]]", enc_str(&doctype.name), external, declarations)
+    format!("[{},{},{},[{}]]", doctype.prolog_position, enc_str(&doctype.name), external, declarations)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name, external, declarations] = parts.as_slice() else {
-        return Err(format!("doctype: expected 3 fields, got {}", parts.len()));
+    let [prolog_position, name, external, declarations] = parts.as_slice() else {
+        return Err(format!("doctype: expected 4 fields, got {}", parts.len()));
     };
     let external_id = decode_option(external, |value| {
         let (tag, rest) = value.split_at(1);
@@ -957,10 +1013,11 @@ pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
             }
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlDoctype { name: dec_str(name)?, external_id, declarations })
+    Ok(XmlDoctype { prolog_position: parse_usize(prolog_position)?, name: dec_str(name)?, external_id, declarations })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, doctype.prolog_position as u64);
     write_str_lp(out, &doctype.name);
     match &doctype.external_id {
         None => out.push(0),
@@ -988,6 +1045,7 @@ pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
+    let prolog_position = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
     let name = read_str_lp(reader)?;
     let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
         0 => None,
@@ -1003,7 +1061,7 @@ pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlD
             tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
         }
     }
-    Ok(XmlDoctype { name, external_id, declarations })
+    Ok(XmlDoctype { prolog_position, name, external_id, declarations })
 }
 /// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]` (comment)
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
@@ -1160,13 +1218,14 @@ pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
 fn enc_attrs_diff(d: &XmlAttributesDiff) -> String {
     let removed = d.removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), enc_str(&m.value))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), enc_str(&a.value))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
+    let added = d.added.iter().map(|a| format!("{}:{}", enc_str(&a.name), enc_str(&a.value))).collect::<Vec<_>>().join(",");
+    let order = d.order.iter().map(|name| enc_str(name)).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}];[{order}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
+    let sections = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s, order_s] = sections.as_slice() else { return Err(format!("attrs diff: expected 4 sections, got {}", sections.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
@@ -1180,12 +1239,12 @@ fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
-            let (name, value) = rest.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
-            Ok(XmlAttrAdded { index: parse_usize(idx)?, name: dec_str(name)?, value: dec_str(value)? })
+            let (name, value) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
+            Ok(XmlAttrAdded { name: dec_str(name)?, value: dec_str(value)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlAttributesDiff { removed, modified, added })
+    let order = split_top_level(strip_brackets(order_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    Ok(XmlAttributesDiff { removed, modified, added, order })
 }
 
 /// 🌳 Recursive: `XmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text, `R`=Replace) since,
@@ -1342,9 +1401,12 @@ fn enc_attrs_diff_bin(diff: &XmlAttributesDiff, out: &mut Vec<u8>) {
     }
     store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
     for entry in &diff.added {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
         write_str_lp(out, &entry.name);
         write_str_lp(out, &entry.value);
+    }
+    store::pack_rt::write_varint_u64(out, diff.order.len() as u64);
+    for name in &diff.order {
+        write_str_lp(out, name);
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1364,12 +1426,16 @@ fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttribute
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let name = read_str_lp(reader)?;
         let value = read_str_lp(reader)?;
-        added.push(XmlAttrAdded { index, name, value });
+        added.push(XmlAttrAdded { name, value });
     }
-    Ok(XmlAttributesDiff { removed, modified, added })
+    let order_count = reader.read_varint_u64().map_err(|error| error.to_string())?;
+    let mut order = Vec::with_capacity(order_count as usize);
+    for _ in 0..order_count {
+        order.push(read_str_lp(reader)?);
+    }
+    Ok(XmlAttributesDiff { removed, modified, added, order })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1422,6 +1488,9 @@ fn print_xml_diff(d: &XmlDiff) -> String {
     if let Some(v) = &d.prolog {
         tokens.push(format!("prolog={}", enc_prolog(v)));
     }
+    if let Some(v) = &d.epilog {
+        tokens.push(format!("epilog={}", enc_prolog(v)));
+    }
     if let Some(v) = &d.declaration {
         tokens.push(format!("declaration={}", encode_option(v, enc_declaration)));
     }
@@ -1442,6 +1511,8 @@ fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("prolog=") {
             d.prolog = Some(dec_prolog(rest)?);
+        } else if let Some(rest) = token.strip_prefix("epilog=") {
+            d.epilog = Some(dec_prolog(rest)?);
         } else if let Some(rest) = token.strip_prefix("declaration=") {
             d.declaration = Some(decode_option(rest, dec_declaration)?);
         } else if let Some(rest) = token.strip_prefix("doctype=") {
@@ -1482,6 +1553,9 @@ impl protocol::DiffCodec for XmlDiff {
         if self.prolog.is_some() {
             flags |= 0b1000;
         }
+        if self.epilog.is_some() {
+            flags |= 0b1_0000;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(declaration) = &self.declaration {
             out.push(if declaration.is_some() { 1 } else { 0 });
@@ -1500,6 +1574,9 @@ impl protocol::DiffCodec for XmlDiff {
         }
         if let Some(prolog) = &self.prolog {
             enc_prolog_bin(prolog, &mut out);
+        }
+        if let Some(epilog) = &self.epilog {
+            enc_prolog_bin(epilog, &mut out);
         }
         Ok(out)
     }
@@ -1522,7 +1599,8 @@ impl protocol::DiffCodec for XmlDiff {
         };
         let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
         let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?) } else { None };
-        Ok(XmlDiff { prolog, declaration, doctype, root })
+        let epilog = if flags & 0b1_0000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff epilog", reader.position(), e))?) } else { None };
+        Ok(XmlDiff { prolog, epilog, declaration, doctype, root })
     }
 }
 //#endregion 🔖️TopLevel
@@ -1553,9 +1631,10 @@ pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
         doctype: Some("<!DOCTYPE root>".into()),
         declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
         prolog: Vec::new(),
+        epilog: Vec::new(),
     });
-    let b = snapshot(XmlDocument { root: Some(elem("root", vec![("width", "20"), ("height", "30")], vec![elem("other", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new() });
-    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() });
+    let b = snapshot(XmlDocument { root: Some(elem("root", vec![("width", "20"), ("height", "30")], vec![elem("other", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
+    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
 
     vec![XmlDiff::default(), XmlDiff::between(&a, &b), XmlDiff::between(&b, &a), XmlDiff::between(&a, &c), XmlDiff::between(&c, &a)]
 }

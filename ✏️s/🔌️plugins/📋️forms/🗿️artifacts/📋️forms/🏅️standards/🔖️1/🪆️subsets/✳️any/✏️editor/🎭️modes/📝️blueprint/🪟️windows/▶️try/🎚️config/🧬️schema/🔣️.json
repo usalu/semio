@@ -4,8 +4,21 @@
   "title": "FormsTryWindowConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["currentStepIndex"],
+  "required": [
+    "currentStepIndex"
+  ],
   "properties": {
-    "currentStepIndex": { "type": "integer", "minimum": 0, "x-semio-state": "window-config" }
+    "currentStepIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "window-config"
+    },
+    "submittedResponseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "window-config"
+    }
   }
 }

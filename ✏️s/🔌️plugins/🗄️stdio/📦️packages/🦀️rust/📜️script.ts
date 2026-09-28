@@ -38,7 +38,7 @@ type CatalogControl = { readonly cancelled: () => boolean; readonly remainingMs:
 
 function assertControlled(control: CatalogControl): void {
   if (control.cancelled()) throw new Error("stdio catalog-root cancelled");
-  if (control.remainingMs() <= 0) throw new Error(`stdio catalog-root exceeded ${CATALOG_DEADLINE_MS}ms deadline`);
+  if (control.remainingMs() <= 0) throw new Error("stdio catalog-root exceeded its configured deadline");
 }
 
 async function runControlled(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
@@ -58,7 +58,7 @@ async function runControlled(command: string, args: string[], cwd: string, env: 
     await new Promise((wake) => setTimeout(wake, Math.min(100, Math.max(1, control.remainingMs()))));
     if (control.cancelled() || control.remainingMs() <= 0) {
       terminateOwnedChildTree(child);
-      throw new Error(control.cancelled() ? "stdio catalog-root cancelled" : `stdio catalog-root exceeded ${CATALOG_DEADLINE_MS}ms deadline`);
+      throw new Error(control.cancelled() ? "stdio catalog-root cancelled" : "stdio catalog-root exceeded its configured deadline");
     }
   }
   if (failure) throw failure;

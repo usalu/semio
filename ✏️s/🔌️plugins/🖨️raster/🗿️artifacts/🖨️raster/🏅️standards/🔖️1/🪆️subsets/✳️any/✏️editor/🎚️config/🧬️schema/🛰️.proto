@@ -31,5 +31,16 @@ message RasterConfig {
   string brush_color = 7;
   // @state config
   double brush_hardness = 8;
+  string paint_target = 9;
+  uint32 mask_value = 10;
+  optional RasterPixelSelection pixel_selection = 11;
   // @state config
+}
+
+message RasterPixelSelection {
+  string layer_id = 1;
+  string target = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  string spans = 5;
 }

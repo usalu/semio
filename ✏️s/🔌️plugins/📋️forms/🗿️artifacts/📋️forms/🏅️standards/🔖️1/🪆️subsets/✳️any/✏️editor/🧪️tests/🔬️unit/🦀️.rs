@@ -1,16 +1,16 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
+    pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ An app instance with its concrete command registry and retained job proofs, bound to the
     /// live runtime instance `meta("local")` addresses — without the binding every `dispatch_typed`
     /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
     /// instance").
     pub async fn forms_app() -> OwnedFormsApp {
-        let mut app = new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests).await;
         app.bind_instance_id(meta("local").instance_id).await;
         OwnedFormsApp(app)
     }
@@ -116,7 +116,7 @@ pub(crate) mod context {
                 semio_framework_os_kernel::DslValue::object([
                     ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
                     ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
-                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("label".to_string(), dsl::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil"))),
                     ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
                     ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
                     ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
@@ -128,7 +128,7 @@ pub(crate) mod context {
     /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
     /// directly without going through a full document.
     pub fn building_component_question() -> FormQuestion {
-        let mut question = add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        let mut question = crate::editor::forms::questions::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
@@ -259,16 +259,15 @@ async fn every_command_round_trips_through_text_and_binary() {
     }
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id for most rows, except the documented divergences copied VERBATIM from the
-/// pre-migration `forms_protocol::FormsCommand`'s own `#[dsl(key = ..)]` attributes (host-pushed
-/// `spec-json`/`active-example` keys — preserving these exactly is what makes the wire format
-/// byte-identical across the migration; see TEMPLATE.md §5.1).
+/// ⚖️ Every command prints its declared domain keyword, including question operations invoked by block-list gestures.
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
         let expected = match id {
+            "addBlock" => "add-question".to_string(),
+            "removeBlock" => "remove-question".to_string(),
+            "moveBlock" => "move-question".to_string(),
             "setContributions" => "contributions".to_string(),
             "setTryValue" => "try-value".to_string(),
             "setTryValues" => "try-values".to_string(),
@@ -315,6 +314,8 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
         FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
         FormsCommand::ExportFixture(export_fixture::ExportFixture {}),
         FormsCommand::SetTryValueStep(set_try_value_step::SetTryValueStep { app_id: "1".into(), document_id: "document".into(), operation_id: "1".into(), generation: 1, cursor: 64, target_index: 128, base_revision: "0".repeat(64), ..Default::default() }),
+        FormsCommand::ExportResponses(export_responses::ExportResponses { format: "json".into() }),
+        FormsCommand::DiscardResponse(discard_response::DiscardResponse { id: "response-1".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -323,7 +324,7 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
     let json = dsl::os_pack::json::to_json_string(&create_forms_app());
-    for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, try_window::FORMS_PLAY_WINDOW_TRY] {
+    for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, try_window::FORMS_PLAY_WINDOW_TRY, responses::results::WINDOW] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(blueprint::FORMS_PLAY_MODE_BLUEPRINT), "mode missing from the manifest");
@@ -334,12 +335,17 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn app_has_blueprint_and_try_windows_only() {
+async fn app_has_authoring_preview_and_response_windows() {
     let definition = create_forms_app();
-    assert_eq!(definition.window_kinds.len(), 2);
+    assert_eq!(definition.window_kinds.len(), 3);
     assert_eq!(definition.window_kinds[0].id, builder::FORMS_PLAY_WINDOW_BLUEPRINT);
     assert_eq!(definition.window_kinds[1].id, try_window::FORMS_PLAY_WINDOW_TRY);
+    assert_eq!(definition.window_kinds[2].id, responses::results::WINDOW);
     assert_eq!(definition.modes[0].id, blueprint::FORMS_PLAY_MODE_BLUEPRINT);
+    assert_eq!(definition.modes[1].id, fill::MODE);
+    assert_eq!(definition.modes[1].layout_id.as_deref(), Some(fill::LAYOUT));
+    assert_eq!(definition.modes[2].id, responses::MODE);
+    assert!(definition.named_layouts.iter().any(|layout| layout.id == fill::LAYOUT));
 }
 //#endregion 🔖️ManifestSanity
 
@@ -402,23 +408,32 @@ async fn add_question_materializes_kind_default() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn initial_document_seeds_building_component_fixture() {
+async fn initial_document_starts_with_a_blank_editable_form() {
     let app = forms_app().await;
     let spec = app.snapshot().expect("projection");
-    assert!(!crate::schema::flatten_questions(&spec).is_empty());
-    assert!(crate::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
+    assert_eq!(spec.definition.steps.len(), 1);
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🌱️blank/🔣️.json")).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&spec.definition)).unwrap(), expected);
+    assert!(crate::schema::flatten_questions(&spec).is_empty());
+    assert!(spec.responses.is_empty());
+    let mut app = app;
+    dispatch(&mut app, FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None })).await;
+    assert_eq!(crate::schema::flatten_questions(&app.snapshot().unwrap()).len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_falls_back_without_contribution() {
-    let node = render_extension_question(&building_component_question(), &Object::new(), &[], "try", true);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
-    assert!(json.contains("Extension unavailable"));
+    for (locale, expected) in [(semio_framework_plugin::Locale::En, "Extension unavailable"), (semio_framework_plugin::Locale::De, "Erweiterung nicht verfügbar")] {
+        let view = semio_framework_plugin::ViewModel { locale, ..Default::default() };
+        let node = render_extension_question(&building_component_question(), &Object::new(), &[], questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&view));
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
+        assert!(json.contains(expected));
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_emits_external_slot_when_contribution_registered() {
-    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), "try", true);
+    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::default()));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
@@ -434,14 +449,14 @@ async fn extension_question_emits_external_slot_when_topic_contribution_register
             semio_framework_os_kernel::DslValue::object([
                 ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
                 ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
-                ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                ("label".to_string(), dsl::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil"))),
                 ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
                 ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
                 ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
             ]),
         )),
     }];
-    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, "try", true);
+    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::default()));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
@@ -457,15 +472,14 @@ async fn catalogue_kinds_includes_topic_contributed_kinds() {
             semio_framework_os_kernel::DslValue::object([
                 ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
                 ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
-                ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                ("label".to_string(), dsl::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil"))),
                 ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
                 ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
                 ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
             ]),
         )),
     }];
-    let labels = forms_play_labels(&semio_framework_plugin::ViewModel::default());
-    let kinds = catalogue_kinds(&contributions, labels);
+    let kinds = catalogue_kinds(&contributions, &semio_framework_plugin::ViewModel::default());
     assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
 }
 
@@ -480,7 +494,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// `interactive-job.catalog-authority` at construction before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits() {
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize), _, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, (usize, usize), _, _>(
         "mem://forms-convergence",
         || async { semio_framework_plugin::App { definition: create_forms_app(), examples: Vec::new() } },
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
@@ -546,3 +560,18 @@ async fn forms_io_declares_dictionary_out_port() {
     assert!(all_ports.iter().any(|port| port.id == "artifact:out"));
 }
 //#endregion 🔖️MediaPorts
+
+/// 🌐️ Contributed field labels resolve from the same explicit axes as built-in fields.
+#[semio_framework_async_macros::async_test]
+async fn contributed_question_labels_follow_selected_axes() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../❓️questions/🧩️extensions/🧫️fixtures/🔣️contribution.json")).unwrap();
+    let payload = dsl::json::from_json_str(&vectors["payload"].to_string()).unwrap();
+    let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
+    for case in vectors["cases"].as_array().unwrap() {
+        let view = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), terminology: semio_framework_plugin::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap(), ..Default::default() };
+        let expected = vectors["payload"]["label"][case["terminology"].as_str().unwrap()][case["locale"].as_str().unwrap()].as_str().unwrap();
+        assert_eq!(expected, case["expected"].as_str().unwrap());
+        let kinds = catalogue_kinds(&contributions, &view);
+        assert_eq!(kinds.iter().find(|(kind, _, _)| kind == "buildingComponent").map(|(_, label, _)| label.as_str()), Some(expected));
+    }
+}

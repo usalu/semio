@@ -22,7 +22,20 @@ message DrawingArtifact {
 
 message DrawingLayerNode {
   string kind = 1;
+  DrawingAttributes attributes = 2;
 }
+
+enum StrokeCap { STROKE_CAP_BUTT = 0; STROKE_CAP_ROUND = 1; STROKE_CAP_SQUARE = 2; }
+enum StrokeJoin { STROKE_JOIN_MITER = 0; STROKE_JOIN_ROUND = 1; STROKE_JOIN_BEVEL = 2; }
+message StrokeStyle {
+  repeated double color = 1;
+  double width = 2;
+  StrokeCap cap = 3;
+  StrokeJoin join = 4;
+  repeated double dash = 5;
+}
+enum FillRule { FILL_RULE_EVENODD = 0; FILL_RULE_NONZERO = 1; }
+message DrawingAttributes { optional StrokeStyle stroke = 1; FillRule fill_rule = 2; }
 
 message DrawingImageAsset {
   string mime = 1;

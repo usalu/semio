@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "target": "pixels",
+      "value": 0
+    },
+    {
+      "target": "mask",
+      "value": 0
+    },
+    {
+      "target": "mask",
+      "value": 96
+    },
+    {
+      "target": "mask",
+      "value": 255
+    }
+  ],
+  "invalidTargets": [
+    "",
+    "layer",
+    "MASK"
+  ],
+  "invalidValues": [
+    -1,
+    0.5,
+    256
+  ]
+}

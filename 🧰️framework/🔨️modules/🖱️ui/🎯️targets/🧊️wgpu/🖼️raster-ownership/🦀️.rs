@@ -18,6 +18,7 @@ pub enum SceneRasterProfile {
     ReferenceImageMapNoColorSpace,
     ReferenceCanvasSrgb,
     MeshPaintMapNoColorSpace,
+    MeshBaseColorSrgb,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -434,7 +435,7 @@ impl SceneRasterPool {
         }
         let mesh_profile_is_valid = match descriptor.profile {
             SceneRasterProfile::MeshPaintMapNoColorSpace => descriptor.mesh.is_some_and(|mesh| mesh.mesh_revision > 0 && mesh.uv_revision > 0 && mesh.uv_count > 0),
-            SceneRasterProfile::ReferenceImageMapNoColorSpace | SceneRasterProfile::ReferenceCanvasSrgb => descriptor.mesh.is_none(),
+            SceneRasterProfile::ReferenceImageMapNoColorSpace | SceneRasterProfile::ReferenceCanvasSrgb | SceneRasterProfile::MeshBaseColorSrgb => descriptor.mesh.is_none(),
         };
         if !mesh_profile_is_valid {
             return SceneRasterBegin::Refused("scene raster mesh seal is missing or invalid for its profile");
@@ -502,6 +503,7 @@ impl SceneRasterPool {
             SceneRasterProfile::ReferenceImageMapNoColorSpace => 1,
             SceneRasterProfile::ReferenceCanvasSrgb => 2,
             SceneRasterProfile::MeshPaintMapNoColorSpace => 3,
+            SceneRasterProfile::MeshBaseColorSrgb => 4,
         });
         if let Some(mesh) = descriptor.mesh {
             content.mix_word(mesh.mesh_revision);

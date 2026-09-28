@@ -1,0 +1,7 @@
+{
+  "schema": "semio.stdio.docx.identical-run-displacement.v1",
+  "partPath": "word/document.xml",
+  "targetPath": [0, 0, 1],
+  "beforeXml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:t>same</w:t></w:r><w:r><w:t>same</w:t></w:r><w:r><w:t>same</w:t></w:r></w:p></w:body></w:document>",
+  "displacedXml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:t>same</w:t></w:r><w:r><w:t>same</w:t></w:r><w:r><w:t>same</w:t></w:r><w:r><w:t>same</w:t></w:r></w:p></w:body></w:document>"
+}

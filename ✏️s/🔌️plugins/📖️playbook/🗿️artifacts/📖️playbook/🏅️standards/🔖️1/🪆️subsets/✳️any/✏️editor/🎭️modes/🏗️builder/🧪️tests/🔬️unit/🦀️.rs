@@ -9,6 +9,7 @@ async fn the_default_tab_stack_lists_every_authored_scene_window() {
         changes_window::PLAYBOOK_PLAY_WINDOW_CHANGES,
         activity_window::PLAYBOOK_PLAY_WINDOW_ACTIVITY,
         source_window::PLAYBOOK_PLAY_WINDOW_SOURCE,
+        files_window::PLAYBOOK_PLAY_WINDOW_FILES,
     ] {
         assert!(json.contains(window), "layout must reference {window}: {json}");
     }

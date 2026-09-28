@@ -70,7 +70,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -95,7 +141,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -1454,6 +1546,27 @@
           "paramsBodyKey": "params",
           "previewBodyKey": "preview"
         }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "defaultValueJson": "{\"height\":6,\"radius\":0.5,\"sides\":6}",
+          "iconId": "building",
+          "label": {
+            "native": {
+              "de": "Bauteil",
+              "en": "Building Component"
+            },
+            "reuse": {
+              "de": "Bauteil",
+              "en": "Building Component"
+            }
+          },
+          "paramsBodyKey": "params",
+          "previewBodyKey": "preview",
+          "questionKind": "buildingComponent"
+        }
       }
     ],
     "commands": [],
@@ -1467,7 +1580,7 @@
   },
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -1504,12 +1617,33 @@
           "paramsBodyKey": "params",
           "previewBodyKey": "preview"
         }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "defaultValueJson": "{\"height\":6,\"radius\":0.5,\"sides\":6}",
+          "iconId": "building",
+          "label": {
+            "native": {
+              "de": "Bauteil",
+              "en": "Building Component"
+            },
+            "reuse": {
+              "de": "Bauteil",
+              "en": "Building Component"
+            }
+          },
+          "paramsBodyKey": "params",
+          "previewBodyKey": "preview",
+          "questionKind": "buildingComponent"
+        }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "1bf976f968b97379f44b2d0c15d0703661224e8a5378e42b3538ad06c06af54a",
-    "coreWasmSha256": "87728a3f2c4af8c204538b01a84d6484ffac431b2d91119394d763aec1a8cbbc",
-    "descriptorSha256": "3e9a94a0e90a10c9b3b94e06e3372c0cbe40586066db23b0968e9d33157ea740"
+    "wasmSha256": "42efd19ecab8379c2e42a0d9924644fdad8f498ccf6bf3527ccdff5c57d6f8bc",
+    "coreWasmSha256": "890f5c1e303288527fea388ece5827c13165febcd1aaac5b21285faea0c41a4d",
+    "descriptorSha256": "2eb76ad54ade41e942eff22c981dab5070ce1bcc90b3f698e87ec2c0242bbac7"
   }
 }

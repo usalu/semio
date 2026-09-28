@@ -21,7 +21,10 @@
           "booleanOperation": null,
           "traceParamsJson": null,
           "layerJson": null,
-          "pathSegments": null
+          "pathSegments": null,
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null
         }
       }
     ],

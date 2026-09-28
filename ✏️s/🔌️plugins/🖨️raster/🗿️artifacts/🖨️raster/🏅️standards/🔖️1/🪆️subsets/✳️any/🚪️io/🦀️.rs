@@ -155,7 +155,7 @@ fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, St
     let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_DRAWING_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(svg_bytes) = composed.payload else { return Err("s.stdio.svg composer returned a non-binary payload".into()) };
     let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("{error:?}"))?;
-    Ok(semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml(&svg_snapshot.doc))
+    semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml(&svg_snapshot.doc)
 }
 
 /// 🚪️ Dispatches a decoded foreign pixel snapshot (`PngSnapshot`/`BmpSnapshot`/`GifSnapshot`/
@@ -240,7 +240,7 @@ use semio_framework_pixels::{editing::validate_extent,RasterImage};
 use std::{collections::BTreeMap,sync::Arc};
 
 fn stack_transform(value:&RasterTransform)->RasterStackTransform {
-    RasterStackTransform {x:value.x,y:value.y,scale_x:value.scale_x,scale_y:value.scale_y,rotation:value.rotation}
+    RasterStackTransform {x:value.x,y:value.y,a:value.a,b:value.b,c:value.c,d:value.d}
 }
 
 /// 🌉️ Resolves materialized asset children once; geometry and mask coverage belong to the shared stack job.

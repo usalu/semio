@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/validation.json",
+  "title": "FormsAnswerError",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "questionId",
+    "code"
+  ],
+  "properties": {
+    "questionId": {
+      "type": "string"
+    },
+    "code": {
+      "enum": [
+        "required",
+        "type",
+        "range",
+        "step",
+        "option",
+        "date",
+        "color",
+        "vector"
+      ]
+    }
+  }
+}

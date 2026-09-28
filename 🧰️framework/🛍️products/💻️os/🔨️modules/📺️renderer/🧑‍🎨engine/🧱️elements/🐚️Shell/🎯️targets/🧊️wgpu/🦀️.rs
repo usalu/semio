@@ -1623,6 +1623,9 @@ fn assert_shell_chrome_build_state_is_send() {
 }
 //#endregion 🔖️ChromeThreadBoundary
 
+#[path = "📤️icon-export/🦀️.rs"]
+mod icon_export;
+
 //#region 🧵️ShellDetached
 /// 🧵️ One request the shell hands off and never waits on: the future owns everything it touches and
 /// runs on the shared pool (native) or the page's executor (browser), and the frame pump only asks,
@@ -3978,6 +3981,7 @@ pub struct ShellState {
     /// 🚪️ The ONE document open in flight or settled, advanced by the frame pump
     /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
     pub document_opening: Option<ShellDocumentOpening>,
+    icon_export: Option<icon_export::IconExportBatch>,
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease
@@ -4071,6 +4075,8 @@ pub struct ShellState {
     pub window_actions_documents: HashMap<String, UiDocumentLease>,
     /// 🔎️ Each live window instance's projected Search pane document — the same region's twin.
     pub window_search_documents: HashMap<String, UiDocumentLease>,
+    /// 🔀️ Each live World window instance's retained Projection tree — the bottom-right Pane body.
+    pub window_projection_documents: HashMap<String, UiDocumentLease>,
     /// 🔎️ Per-window possibles-chevron state — React's `Search` `possiblesExpanded`
     /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10771`), so absent = collapsed.
     pub search_possibles_open: HashMap<String, bool>,
@@ -4862,7 +4868,7 @@ pub(crate) fn window_measures_owner(surface_id: &str) -> Option<&str> {
 
 /// 🪟️ Resolves only the reserved pane identities to their concrete application window.
 fn window_pane_owner(surface_id: &str) -> Option<&str> {
-    [semio_framework::UiRefreshSection::Measures.body_key(), semio_framework::UiRefreshSection::Engagements.body_key(), WINDOW_SEARCH_BODY_KEY]
+    [semio_framework::UiRefreshSection::Measures.body_key(), semio_framework::UiRefreshSection::Engagements.body_key(), WINDOW_SEARCH_BODY_KEY, WINDOW_PROJECTION_BODY_KEY]
         .into_iter()
         .find_map(|suffix| surface_id.strip_suffix(suffix).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty()))
 }
@@ -5862,7 +5868,7 @@ impl PanelProjection<'_> {
 /// 🎛️ A nested tree leaf that carries only an Activate verb (no control, no further children) is
 /// React's inline resolution/control slot, not another expandable row.
 fn tree_item_is_inline_action_leaf(item: &UiTreeItemNode) -> bool {
-    item.action.is_some() && item.control.is_none() && item.items.as_ref().map_or(true, |items| items.is_empty())
+    item.action.is_some() && item.control.is_none() && item.default_open.is_none() && item.items.as_ref().map_or(true, |items| items.is_empty())
 }
 
 /// 👁️✏️ Byte-identical to React's `DEFAULT_APP_NONE_VALUE` (`📌️ChromePanels/🟦️.tsx`) — the
@@ -5925,6 +5931,7 @@ fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
 /// template id, which is byte-identical to React's growing `idPrefix`
 /// (`framework.display.windows.<kind>.projection.parallel.axonometric.axonometric-isometric`).
 /// `cursor` walks the flat table once; `depth` is the level this call materialises.
+/// Each level is pre-reversed for the bottom-anchored Display tree's up-flow layout.
 fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8, cursor: &mut usize) -> Vec<UiTreeItemNode> {
     let mut rows = Vec::new();
     while let Some(template) = WORLD_PROJECTION_TEMPLATES.get(*cursor) {
@@ -5937,7 +5944,7 @@ fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8,
             *cursor += 1;
             continue;
         }
-        let id = format!("{prefix}.{}", template.id);
+        let id = format!("{prefix}.{}", semio_framework::element_id_segment(template.id));
         *cursor += 1;
         let children = world_projection_template_rows(&id, window_kind_id, depth + 1, cursor);
         rows.push(UiTreeItemNode {
@@ -5951,6 +5958,7 @@ fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8,
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
         });
     }
+    rows.reverse();
     rows
 }
 
@@ -6826,6 +6834,7 @@ impl ShellState {
             inference_port_status: None,
             plugin_install: None,
             document_opening: None,
+            icon_export: None,
             #[cfg(not(target_arch = "wasm32"))]
             document_execution_target_lease: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -6861,6 +6870,7 @@ impl ShellState {
             window_engagements: HashMap::new(),
             window_actions_documents: HashMap::new(),
             window_search_documents: HashMap::new(),
+            window_projection_documents: HashMap::new(),
             search_possibles_open: HashMap::new(),
             window_measures_documents: HashMap::new(),
             window_measures_minted: HashMap::new(),
@@ -7183,6 +7193,7 @@ impl ShellState {
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
                 panel_json: Some(Self::panel_json(&panel_state)?),
+                extension_input_json: None,
                 session_identity: None,
                 locale: self.active_locale(),
                 terminology: self.active_terminology(),
@@ -7227,6 +7238,7 @@ impl ShellState {
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
                     panel_json: None,
+                    extension_input_json: None,
                     session_identity: None,
                     locale: self.active_locale(),
                     terminology: self.active_terminology(),
@@ -7547,6 +7559,7 @@ impl ShellState {
 
     fn sync_dock(&mut self) {
         if let Some(session) = &self.session {
+            let owner=(session.plugin_id.clone(),session.instance_id,session.app.id.clone());
             let incoming_layout = self.layout_override.as_ref().or(session.app.default_layout.as_ref());
             let roster = Self::session_window_instances(session, &self.dock).into_iter().map(|instance| instance.id).collect::<Vec<_>>();
             let owner_changed = self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id, app_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id || app_id != &session.app.id);
@@ -7587,15 +7600,27 @@ impl ShellState {
             if owner_changed {
                 self.world_projection_template.clear();
             }
+            let retired_projection_documents: Vec<String> = self
+                .window_projection_documents
+                .keys()
+                .filter(|window_id| owner_changed || !live.contains(*window_id))
+                .cloned()
+                .collect();
+            for window_id in retired_projection_documents {
+                let previous = self.window_projection_documents.remove(&window_id);
+                if let Err(error) = self.retire_one_surface_document(previous) {
+                    self.error = Some(error);
+                }
+            }
             self.world_projection_template.retain(|window_id, _| live.contains(window_id));
-            self.window_icon_overrides.retain(|window_id, icon| icon.plugin_id == session.plugin_id && icon.app_id == session.app.id && icon.app_instance_id == session.instance_id && live.contains(window_id));
-            self.window_title_overrides.retain(|window_id, title| title.plugin_id == session.plugin_id && title.app_id == session.app.id && title.app_instance_id == session.instance_id && live.contains(window_id));
+            self.window_icon_overrides.retain(|window_id, icon| icon.plugin_id == owner.0 && icon.app_id == owner.2 && icon.app_instance_id == owner.1 && live.contains(window_id));
+            self.window_title_overrides.retain(|window_id, title| title.plugin_id == owner.0 && title.app_id == owner.2 && title.app_instance_id == owner.1 && live.contains(window_id));
             for window_id in live {
                 if let Some(template_id) = self.dock.window_template_id(&window_id) {
                     self.world_projection_template.entry(window_id).or_insert_with(|| template_id.to_string());
                 }
             }
-            self.dock_instance_owner = Some((session.plugin_id.clone(), session.instance_id, session.app.id.clone()));
+            self.dock_instance_owner = Some(owner);
         } else {
             self.world_projection_template.clear();
             self.window_icon_overrides.clear();
@@ -8074,6 +8099,7 @@ impl ShellState {
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
                                 panel_json: None,
+                                extension_input_json: None,
                                 session_identity: self.session_identity_view(),
                                 locale: self.active_locale(),
                                 terminology: self.active_terminology(),
@@ -8182,11 +8208,11 @@ impl ShellState {
         }
     }
 
-    /// 🪟️ Every window instance this frame's layout names: the dock plan's bodies plus the open
-    /// panels' tabs. This is the retention authority for engine surfaces — it is recomputed by
-    /// `plan_dock_windows` on every chrome walk and does not depend on which bodies repainted.
+    /// 🪟️ Every declared window instance, including siblings hidden by a focused/maximized view.
+    /// The committed dock is the retention authority; the paint plan deliberately omits hidden
+    /// siblings and therefore cannot decide that their engine owners have closed.
     fn live_window_ids(&self) -> Vec<String> {
-        self.dock_window_plan.iter().map(|(window_id, _)| window_id.clone()).chain(self.panel_documents.keys().cloned()).collect()
+        self.dock.collect_window_ids().into_iter().chain(self.panel_documents.keys().cloned()).collect()
     }
 
     /// 🕸️ Mirrors the engine surfaces a paint pass attached into `node_graph_states` /
@@ -8602,6 +8628,9 @@ impl ShellState {
                 semio_framework::kernel::Effect::DownloadMediaExport { filename, mime_type, data, encoding } => {
                     download_media_export(&filename, &mime_type, &data, encoding.as_deref());
                 }
+                semio_framework::kernel::Effect::IconRenderExport { items } => {
+                    self.enqueue_icon_export(items);
+                }
                 // 📤️ Every plugin's IMPORT door. This arm did not exist either, and the only
                 // `requestFileOpen` reader this shell had read it out of a document MUTATION payload
                 // no producer in the repo emits — so `Import Document…` reached the guest, the guest
@@ -8991,8 +9020,7 @@ impl ShellState {
     ///
     /// 🔃️ React pre-reverses every template level to cancel the bottom-anchored `Tree`'s own
     /// per-level reversal, so what it RENDERS is: the plain kind leaf, then Parallel, then
-    /// Perspective. This renderer's panel tree does not reverse, so the same reading order is written
-    /// directly — kind leaf first, templates in declaration order.
+    /// Perspective. The retained bottom-anchored tree uses that same up-flow layout and authored order.
     ///
     /// 🖱️ React's rows are drag SOURCES (`COMPOSE_WINDOW_TEMPLATE_MIME`) with no click handler. The
     /// retained Tree carries that same payload into the dock's tab/split/root-split drop resolver.
@@ -9009,17 +9037,19 @@ impl ShellState {
         let mut sections: Vec<UiTreeSectionNode> = Vec::new();
         for kind in session.app.window_kinds.iter() {
             let label = kind.label.resolve(terminology, locale).to_string();
-            let mut items = vec![UiTreeItemNode {
+            let mut items = if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
+                world_projection_template_rows(&format!("framework.display.windows.{}.projection", kind.id), &kind.id, 0, &mut 0)
+            } else {
+                Vec::new()
+            };
+            items.push(UiTreeItemNode {
                 id: format!("framework.display.windows.{}.kind", kind.id),
                 label: Label::data(label.clone()),
                 icon_id: Some(kind.icon_id.clone()),
                 draggable: Some(true),
                 drag_data: Some(window_template_drag_data(&kind.id, None)),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
-            }];
-            if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
-                items.extend(world_projection_template_rows(&format!("framework.display.windows.{}.projection", kind.id), &kind.id, 0, &mut 0));
-            }
+            });
             sections.push(UiTreeSectionNode { header_toolbar: None, id: format!("framework.display.windows.{}", kind.id), label: Some(Label::data(label)), default_open: Some(false), presence: UiPresence::default(), items, window: None });
         }
         display_panel_body("framework.display.windows.panel", sections)
@@ -10011,16 +10041,22 @@ impl ShellState {
         if !self.dock.apply_drop(&payload, &zone) {
             return false;
         }
-        if let Some(template_id) = template_id {
-            self.world_projection_template.insert(instance_id.clone(), template_id.to_string());
-            if let Some(icon_id) = world_projection_icon_id_v1(template_id) {
-                let _ = self.apply_window_icon_host_command(&instance_id, icon_id);
-            }
-        }
+        self.seed_new_window_projection(&instance_id, template_id);
         self.active_window_id = Some(instance_id.clone());
         self.persist_dock_layout();
         self.commit_window_topology_publication(&instance_id, &body_key, None);
         true
+    }
+
+    /// 🏷️ Seeds a newly transferred window's projection chrome, as React's ShellHost drop handler does.
+    fn seed_new_window_projection(&mut self, window_id: &str, template_id: Option<&str>) {
+        let Some(template_id) = template_id else { return };
+        self.world_projection_template.insert(window_id.to_string(), template_id.to_string());
+        let Some(selected) = world_projection_template_selection_id(template_id) else { return };
+        let effective = match selected { "parallel" => "orthographic", "axonometric" => "axonometric-isometric", "oblique" => "oblique-cavalier", "perspective" => "three-point", other => other };
+        let template = world_projection_template(effective);
+        let _ = self.apply_window_title_host_command(window_id, template.label);
+        let _ = self.apply_window_icon_host_command(window_id, template.icon_id);
     }
 
     /// 🔌️ Drops a resident plugin — React's `uninstallPlugin`. The session's OWN program is never
@@ -11464,6 +11500,17 @@ impl ShellState {
                     if let Some(window_id) = args.get("window").and_then(Value::as_str) {
                         let open = self.search_possibles_open.get(window_id).copied().unwrap_or(false);
                         self.search_possibles_open.insert(window_id.to_string(), !open);
+                    }
+                    return Ok(());
+                }
+                // 🔀️ One retained Projection Tree row. Both pointer Activate and Enter/Space emit
+                // this exact action, so the camera, selected row, icon, title and AX snapshot advance
+                // through one accepted per-window boundary.
+                "setWorldProjectionTemplate" => {
+                    let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
+                    if let (Some(window_id), Some(template_id)) = (args.get("windowId").and_then(Value::as_str), args.get("templateId").and_then(Value::as_str)) {
+                        let (window_id, template_id) = (window_id.to_string(), template_id.to_string());
+                        self.select_world_projection_template(&window_id, &template_id)?;
                     }
                     return Ok(());
                 }
@@ -13534,6 +13581,7 @@ impl ShellState {
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: Some(Self::panel_json(&panel_state)?),
+            extension_input_json: None,
             session_identity: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
@@ -13597,6 +13645,7 @@ impl ShellState {
             active_window_kind_id: Some(landing_window_id.clone()),
             active_utility_id: None,
             panel_json: None,
+            extension_input_json: None,
             session_identity: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
@@ -13953,6 +14002,7 @@ impl ShellState {
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: None,
+            extension_input_json: None,
             session_identity: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
@@ -14101,7 +14151,7 @@ impl ShellChromeBuildState {
 
     fn clear_sibling_pane_focus(&mut self, surface: &str) {
         let owner = window_pane_owner(surface).unwrap_or(surface);
-        for sibling in [owner.to_string(), window_measures_surface_id(owner), window_actions_surface_id(owner), window_search_surface_id(owner)] {
+        for sibling in [owner.to_string(), window_measures_surface_id(owner), window_actions_surface_id(owner), window_search_surface_id(owner), window_projection_surface_id(owner)] {
             if sibling != surface {
                 self.clear_content_focus(&sibling);
             }
@@ -14778,11 +14828,8 @@ impl ShellState {
                 }
                 return Ok(());
             }
-            if let Some(template_id) = drag.payload.template_id.as_ref() {
-                self.world_projection_template.insert(drag.payload.window_id.clone(), template_id.clone());
-                if let Some(icon_id) = world_projection_icon_id_v1(template_id) {
-                    let _ = self.apply_window_icon_host_command(&drag.payload.window_id, icon_id);
-                }
+            if drag.payload.kind == DockDragKind::NewWindow {
+                self.seed_new_window_projection(&drag.payload.window_id, drag.payload.template_id.as_deref());
             }
             self.active_window_id = Some(drag.payload.window_id.clone());
             self.dock.sync_active_window(&drag.payload.window_id);
@@ -15428,6 +15475,18 @@ impl ShellState {
         if !self.presented_chrome_accessibility.iter().any(|node| node.node_id == target.node_id && node.key == target.node_key) {
             return Ok(false);
         }
+        if target.node_key == icon_export::CONTROL_ID {
+            match event {
+                ui_render::AccessibilityEvent::Activate => self.cancel_icon_export(),
+                ui_render::AccessibilityEvent::Focus => {
+                    input.blur_input();
+                    self.accessibility_focused_control_id = Some(target.node_key.clone());
+                }
+                ui_render::AccessibilityEvent::Blur => self.accessibility_focused_control_id = None,
+                ui_render::AccessibilityEvent::Value(_) => return Ok(false),
+            }
+            return Ok(true);
+        }
         let palette_kind = match self.overlay_state {
             OverlayState::Search => Some(ShellPaletteKind::Search),
             OverlayState::Find => Some(ShellPaletteKind::Find),
@@ -15597,7 +15656,7 @@ impl ShellState {
         // instance in the middle (React's `framework.window.<segment>.<pane>.<verb>`), so a
         // `starts_with` arm cannot name them. See [`WindowPaneChip::control_id`].
         if let Some((window_id, chip)) = self.window_pane_chip_target(id) {
-            self.toggle_window_pane_chip(&window_id, chip);
+            self.toggle_window_pane_chip(&window_id, chip)?;
             return Ok(true);
         }
         // 🔼️ A `Select` popup's scroll chevron (`{select}.scroll.up`/`.down`). Answered BEFORE the
@@ -15719,38 +15778,6 @@ impl ShellState {
             // ONE id on both sides of the fold (`Pane`'s `chromeToggleId = toggleId ?? childElementId(id,
             // "pane", "fold")`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10006`), flipping the pane's own local
             // `folded` state and nothing else.
-            id if id.starts_with("shell.projection.template.") => {
-                if let Some((window_id, template_id)) = id.trim_start_matches("shell.projection.template.").split_once("::") {
-                    let effective_id = match template_id {
-                        "parallel" => "orthographic",
-                        "axonometric" => "axonometric-isometric",
-                        "oblique" => "oblique-cavalier",
-                        "perspective" => "three-point",
-                        other => other,
-                    };
-                    let (window_id, template) = (window_id.to_string(), world_projection_template(effective_id));
-                    if !self.apply_window_title_host_command(&window_id, template.label) {
-                        return Ok(true);
-                    }
-                    let (id, mode) = (template.id.to_string(), template.mode);
-                    self.world_projection_template.insert(window_id.clone(), id);
-                    let _ = self.apply_window_icon_host_command(&window_id, template.icon_id);
-                    // 🔀️ React's switch is view state ONLY on the plugin's side — no `setProjection`
-                    // exists to dispatch (`handleProjectionKindChange`'s own comment) — but it DOES
-                    // remount the pane's camera, and the pose that remount settles on rides the
-                    // ordinary `setCamera`. So the press moves the orbit and then queues the same
-                    // zero-delta camera intent a wheel settle queues, which publishes that pose
-                    // through the bounded interaction lane. Both halves, or the chip changes an icon
-                    // and nothing else.
-                    if let Some(world) = self.world3d_state_for_window_mut(&window_id) {
-                        if infinite_world::world::apply_world3d_projection_mode(world, mode) {
-                            let settle = WorldInteractionIntent::wheel(0.0, 0.0, 0.0, &ui_wgpu::wgpu::PointerModifiers::default());
-                            let _ = enqueue_world3d_events(world, [settle]);
-                        }
-                    }
-                }
-                return Ok(true);
-            }
             "ui.search.toggle" => {
                 self.search_open = !self.search_open;
                 self.find_open = false;
@@ -16208,7 +16235,7 @@ impl ShellState {
         // generation3d preview does, publishing `computing:true` on every sample of a 140 s window in
         // which nothing evaluated at all (`📓️wgpu-progress-visibility-2026-09-14.md` §3.1).
         let computing = self.live_compute_surfaces().any(|(surface_id, _)| !self.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        crate::interpreter::ui_document_close_pending() || settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
+        self.icon_export.as_ref().is_some_and(icon_export::IconExportBatch::running) || crate::interpreter::ui_document_close_pending() || settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
     }
 
     /// ⏳️ Every live World3d surface whose own published status says its producer is working, with
@@ -16234,6 +16261,7 @@ impl ShellState {
     /// what pays for [`Self::refresh_ui`] honouring `UiDirtyScope` without withdrawing compute from a
     /// solve the UI has nothing to do with.
     pub async fn settle_pump_step(&mut self) -> ShellSettleStep {
+        self.advance_icon_export();
         let step = self.settle_pump_step_inner().await;
         // 🩺️ One line per CLASS transition plus a heartbeat, never one per step: `Drained` and
         // `Crossed` alternate every frame of a converging edit and a line apiece would bury the
@@ -18350,6 +18378,19 @@ mod retained_chrome_text_laws;
 #[path = "../../🧪️tests/🔬️wgpu-shell-chrome-parity/🦀️.rs"]
 mod shell_chrome_parity_tests;
 
+/// 🪟️ Centers the localized Mode notice using the same line boxes as the React empty dock.
+fn empty_dock_notice_lines(atlas: &mut FontAtlas, bounds: Rect, theme: &Theme, german: bool) -> Vec<(std::ops::Range<usize>, Rect)> {
+    let text = shell_chrome_string("display.emptyShell", german);
+    let lines = atlas.wrap_lines(text, bounds.w, theme.font_size_body);
+    let height = ui_wgpu::wgpu::text::line_height(theme.font_size_body);
+    let top = bounds.y + (bounds.h - height * lines.len() as f32) * 0.5;
+    lines.into_iter().enumerate().map(|(index, mut range)| {
+        range.end = range.start + text[range.clone()].trim_end_matches(ui_wgpu::wgpu::text::is_wrap_space).len();
+        let width = atlas.measure_text(&text[range.clone()], theme.font_size_body).0;
+        (range, Rect::new(bounds.x + (bounds.w - width) * 0.5, top + index as f32 * height + (height - theme.font_size_body) * 0.5, width, theme.font_size_body))
+    }).collect()
+}
+
 fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
         draw.push_textured([x, y, size, size], uv, color);
@@ -20117,23 +20158,44 @@ fn world_projection_initial_seed(template_id: &str) -> Option<Viewport3dProjecti
     WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id).copied().map(WorldProjectionTemplate::spec).or_else(|| decoded_world_projection_template(template_id))
 }
 
-/// 📐️ The width of the whole projection column — the widest indented row, so every level reads
-/// against one trailing edge instead of each row hugging the pane's on its own, which is what React's
-/// `Tree` block layout gives the same taxonomy.
-pub(crate) fn world_projection_column_width(atlas: &mut FontAtlas, theme: &Theme) -> f32 {
-    WORLD_PROJECTION_TEMPLATES
-        .iter()
-        .map(|template| {
-            let item = ChromeGroupItem { control_id: "", icon_id: Some(template.icon_id), label: Some(template.label), active: false, disabled: false, kind: HitKind::DropdownItem };
-            f32::from(template.depth) * theme.tree_indent_per_level + retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0)
-        })
-        .fold(0.0_f32, f32::max)
-}
-
 /// 🔀️ The template row `id` names, or the default one for an id no template declares.
 pub(crate) fn world_projection_template(id: &str) -> &'static WorldProjectionTemplate {
     let id = world_projection_template_selection_id(id).unwrap_or(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID);
     WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == id).or_else(|| WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == WORLD_PROJECTION_DEFAULT_TEMPLATE_ID)).expect("the default projection template is declared")
+}
+
+/// 🔀️ Materializes React's nested Projection Tree for one exact window pane. Row ids follow
+/// `childElementId(paneId, template.id)` at every level. Nesting is structural; React deliberately
+/// keeps every row id directly qualified by the pane rather than encoding its ancestor path.
+fn world_projection_pane_rows(prefix: &str, window_id: &str, selected_id: &str, depth: u8, cursor: &mut usize) -> Vec<UiTreeItemNode> {
+    let mut rows = Vec::new();
+    while let Some(template) = WORLD_PROJECTION_TEMPLATES.get(*cursor) {
+        if template.depth < depth {
+            break;
+        }
+        if template.depth > depth {
+            *cursor += 1;
+            continue;
+        }
+        let id = format!("{prefix}.{}", template.id);
+        *cursor += 1;
+        let children = world_projection_pane_rows(prefix, window_id, selected_id, depth + 1, cursor);
+        rows.push(UiTreeItemNode {
+            id,
+            label: Label::data(template.label),
+            icon_id: IconName::from_str(template.icon_id),
+            presence: UiPresence { selected: template.id == selected_id, ..UiPresence::default() },
+            default_open: Some(true),
+            action: Some(ActionDescriptor {
+                controller_id: "framework".into(),
+                action: "setWorldProjectionTemplate".into(),
+                args: crate::action_args_json!({ "windowId": window_id.to_string(), "templateId": template.id }),
+            }),
+            items: (!children.is_empty()).then_some(children),
+            ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+        });
+    }
+    rows
 }
 
 /// 📐️ The box one pane overlay chip occupies inside a window body — React's `anchorPositionStyle`
@@ -20294,7 +20356,7 @@ impl ShellState {
     /// centred command palette (the `ui.search.toggle` / `⌘K` overlay). React's Search chip opens a
     /// window-scoped `Pane` and focuses its input; it never opens the shell overlay, so the wgpu chip
     /// raised a surface React does not raise (`📓️w12d-pane-chip-ids-and-projection-toggle.md` §2).
-    fn toggle_window_pane_chip(&mut self, window_id: &str, chip: WindowPaneChip) {
+    fn toggle_window_pane_chip(&mut self, window_id: &str, chip: WindowPaneChip) -> Result<(), String> {
         if self.dock.activate_window(window_id) {
             self.active_window_id = Some(window_id.to_string());
         }
@@ -20310,6 +20372,12 @@ impl ShellState {
             WindowPaneChip::Projection => {
                 let folded = self.projection_pane_folded(window_id);
                 self.projection_pane_folded.insert(window_id.to_string(), !folded);
+                if folded {
+                    self.refresh_window_projection_document(window_id)?;
+                } else {
+                    let previous = self.window_projection_documents.remove(window_id);
+                    self.retire_one_surface_document(previous)?;
+                }
             }
             WindowPaneChip::Actions => {
                 let folded = self.window_actions_folded(window_id);
@@ -20320,6 +20388,7 @@ impl ShellState {
                 self.search_panel_folded.insert(window_id.to_string(), !folded);
             }
         }
+        Ok(())
     }
 
     /// 🖼️ The icon ONE pane chip wears this frame — [`WindowPaneChip::icon_id`] for every fixed one,
@@ -20462,10 +20531,90 @@ impl ShellState {
         true
     }
 
-    /// 🔀️ One paint opportunity of ONE pane's UNFOLDED Projection pane — React's
-    /// `WorldProjectionKindSwitch` tree (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx:1991`) as a column of rows
-    /// above the `Projection` chip, on the pane's bottom-right corner, one row per
-    /// [`WORLD_PROJECTION_TEMPLATES`] entry in React's own depth-first order.
+    /// 🔀️ React's `WorldProjectionKindSwitch` as one retained Tree document. The generic Tree owns
+    /// the full-width rows, icons, disclosure chevrons and AX hierarchy; Projection adds only the
+    /// canonical taxonomy and exact per-window action payload.
+    fn build_window_projection_ui(&self, window_id: &str) -> UiNode {
+        let pane_id = format!("{WORLD_PROJECTION_PANE_PARENT}.{}", semio_framework::element_id_segment(window_id));
+        let selected = self.world_projection_template_id(window_id);
+        let mut cursor = 0;
+        let items = world_projection_pane_rows(&pane_id, window_id, selected, 0, &mut cursor);
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(format!("{pane_id}.body")),
+            children: vec![UiNode::Tree(UiTreeNode {
+                presentation: Default::default(),
+                sections: vec![UiTreeSectionNode {
+                    header_toolbar: None,
+                    id: format!("{pane_id}.projection-modes"),
+                    label: None,
+                    default_open: Some(true),
+                    presence: UiPresence::default(),
+                    items,
+                    window: None,
+                }],
+                presence: UiPresence::default(),
+                drop_action: None,
+                menu: None,
+                interaction_domain: None,
+            })],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 🔀️ Rebuilds one Projection document through the same revision-keyed shell ingress as Actions,
+    /// Search and Measures. The prior lease retires before the replacement is admitted.
+    fn refresh_window_projection_document(&mut self, window_id: &str) -> Result<(), String> {
+        let surface = window_projection_surface_id(window_id);
+        let records = panel_ui_scroll_records(&surface, &self.build_window_projection_ui(window_id))?;
+        let previous = self.window_projection_documents.remove(window_id);
+        self.retire_one_surface_document(previous)?;
+        let document = self.publish_surface_records(&surface, records)?;
+        self.window_projection_documents.insert(window_id.to_string(), document);
+        Ok(())
+    }
+
+    /// 🔀️ Applies one live Projection Tree row through the same view-state and camera path as the
+    /// former bespoke row, then republishes the retained Tree so selection and AX stay atomic.
+    fn select_world_projection_template(&mut self, window_id: &str, template_id: &str) -> Result<(), String> {
+        if self.world3d_host_id_for_window(window_id).is_none() {
+            return Ok(());
+        }
+        let effective_id = match template_id {
+            "parallel" => "orthographic",
+            "axonometric" => "axonometric-isometric",
+            "oblique" => "oblique-cavalier",
+            "perspective" => "three-point",
+            other => other,
+        };
+        let template = world_projection_template(effective_id);
+        if !self.apply_window_title_host_command(window_id, template.label) {
+            return Ok(());
+        }
+        self.world_projection_template.insert(window_id.to_string(), template.id.to_string());
+        let _ = self.apply_window_icon_host_command(window_id, template.icon_id);
+        if let Some(world) = self.world3d_state_for_window_mut(window_id) {
+            infinite_world::world::apply_world3d_projection_mode(world, template.mode);
+        }
+        self.refresh_window_projection_document(window_id)
+    }
+
+    /// 📐️ The Projection pane's 300px bottom-right body, ending above its own chip and growing up.
+    fn window_projection_rect(window_id: &str, body: Rect, theme: &Theme) -> Rect {
+        let width = WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0));
+        let bottom = body.y + body.h - theme.panel_inset - theme.control_height - theme.gap_standard;
+        let available = (bottom - body.y - theme.panel_inset).max(0.0);
+        let height = crate::interpreter::retained_content_height(&window_projection_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
+        Rect::new(body.x + body.w - theme.panel_inset - width, bottom - height, width, height)
+    }
+
+    /// 🔀️ One paint opportunity of ONE pane's UNFOLDED retained Projection Tree.
     ///
     /// 🧭️ Selecting a row is VIEW STATE and dispatches nothing, which is React's own rule for this
     /// pane verbatim: `handleProjectionKindChange` only sets `externalPendingProjectionSpec`, because
@@ -20475,60 +20624,79 @@ impl ShellState {
     /// `OrbitController` does not carry yet (`♾️infinite/🌍️world/🦀️.rs`'s
     /// `WORLD3D_PERSPECTIVE_CAMERA_ZOOM`) — the World3d lane's gap, not this one's.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    fn paint_window_projection_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
+    fn paint_window_projection_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        window_id: &str,
+        window_rect: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         if self.projection_pane_folded(window_id) || self.world3d_host_id_for_window(window_id).is_none() || !surface_fits_overlay(theme, window_rect) {
             return true;
         }
-        let Some(template) = WORLD_PROJECTION_TEMPLATES.get(cursor.scalar) else { return true };
-        let selected = self.world_projection_template_id(window_id) == template.id;
-        let control_id = format!("shell.projection.template.{window_id}::{}", template.id);
-        let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(template.icon_id), label: Some(template.label), active: selected, disabled: false, kind: HitKind::DropdownItem };
-        // 📐️ The column is measured ONCE per unfolded body and carried in the cursor. It walks all
-        // 15 labels, so re-deriving it on every row spent 225 `FontAtlas::measure_text` calls inside
-        // one worker turn to answer the same number 15 times — the cost `📓️w6a` §"Boot cost" warned
-        // about and the first suspect `📓️w8b` §7.2 named.
-        if cursor.x <= 0.0 {
-            cursor.x = world_projection_column_width(atlas, theme);
-        }
-        if cursor.rect.is_none() {
-            let Some(width) = retained_chrome_group_item_width(atlas, theme, &item) else {
-                self.error = Some("Shell projection row exceeded the retained chrome boundary".to_string());
-                return true;
-            };
-            let row_h = theme.control_height;
-            let indent = f32::from(template.depth) * theme.tree_indent_per_level;
-            // 🧭️ The pane grows UP from its own chip, so the last row sits one row above the chip's
-            // top edge and the tree reads top-down in React's declared order, each level indented by
-            // the same per-level step React's `Tree` uses. A pane too short for the whole taxonomy
-            // CLAMPS to its own inset instead of abandoning the body: React's `Pane` gives its tree
-            // `overflow-auto` and still paints (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Pane` body), and
-            // bailing on the first row is how a body paints nothing at all.
-            let chip_top = window_rect.y + window_rect.h - theme.panel_inset - row_h;
-            let rows = (((chip_top - window_rect.y - theme.panel_inset) / row_h).floor().max(0.0) as usize).min(WORLD_PROJECTION_TEMPLATES.len());
-            if cursor.scalar >= rows {
+        if !self.window_projection_documents.contains_key(window_id) {
+            if let Err(error) = self.refresh_window_projection_document(window_id) {
+                self.error = Some(error);
                 return true;
             }
-            let y = chip_top - (rows - cursor.scalar) as f32 * row_h;
-            let column_x = (window_rect.x + window_rect.w - theme.panel_inset - cursor.x).max(window_rect.x + theme.panel_inset);
-            cursor.rect = Some(Rect::new(column_x + indent, y, width, row_h));
         }
-        let Some(rect) = cursor.rect else { return true };
-        if cursor.depth == 0 {
-            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+        let Some(document) = self.window_projection_documents.remove(window_id) else { return true };
+        let surface = window_projection_surface_id(window_id);
+        crate::interpreter::set_ui_document_flow(&surface, ui_contract::UiFlow { inline: ui_contract::FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
+        if cursor.document.phase_name() == "viewport" {
+            let selected_key = format!(
+                "{surface}/{WORLD_PROJECTION_PANE_PARENT}.{}.{}",
+                semio_framework::element_id_segment(window_id),
+                semio_framework::element_id_segment(self.world_projection_template_id(window_id))
+            );
+            if let Ok(header) = document.header() {
+                let _ = crate::interpreter::stamp_ui_document_tree_selected_item(&surface, header.generation, &selected_key);
+            }
         }
-        draw.begin_glass_content(cursor.depth - 1);
-        let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);
-        draw.end_glass_content();
-        match step {
-            RetainedChromeGroupStep::Pending => return false,
-            RetainedChromeGroupStep::Complete => {}
-            RetainedChromeGroupStep::Fault => self.error = Some("Shell projection row exceeded the retained glyph boundary".to_string()),
+        let rect = Self::window_projection_rect(window_id, window_rect, theme);
+        if !cursor.flag && cursor.document.layout_is_accepted() && cursor.rect.is_some_and(|previous| previous != rect) {
+            cursor.document.restart_viewport_after_host_reflow();
         }
-        input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
-        cursor.rect = None;
-        cursor.depth = 0;
-        cursor.scalar += 1;
-        false
+        cursor.rect = Some(rect);
+        if !cursor.flag && cursor.document.phase_name() == "paint" {
+            draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
+            cursor.flag = true;
+        }
+        let controller = self.document_controller_id();
+        let complete = {
+            let scroll_offsets = &mut self.scroll_offsets;
+            let collapsed_sections = &mut self.collapsed_sections;
+            let open_selects = &mut self.open_selects;
+            let widget_maps = &mut self.widget_maps_staging;
+            let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.locale_id == "de"), world3d_states: &mut self.world3d_states, world_resources, window_id: surface.as_str() };
+            let viewport_height_for_widgets = draw.screen_height();
+            let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
+            ctx.pick_clip = Some(rect);
+            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+        };
+        self.window_projection_documents.insert(window_id.to_string(), document);
+        if complete {
+            self.clear_document_paint_fault(&surface);
+        } else {
+            cursor.scalar = cursor.scalar.saturating_add(1);
+            if !cursor.document.terminal_is_fault() && cursor.scalar < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
+                return false;
+            }
+            Self::debug_log(&format!(
+                "[DEBUG] wgpu-shell projection paint {surface} exhausted {WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES} opportunities parked-in={}",
+                cursor.document.phase_name()
+            ));
+            self.record_document_paint_fault(&surface);
+        }
+        push_chrome_group_border(draw, rect, theme);
+        self.register_retained_body_hits(&surface, rect, input);
+        true
     }
 }
 
@@ -20555,9 +20723,17 @@ pub(crate) fn window_actions_surface_id(window_id: &str) -> String {
 /// has no `UiRefreshSection` of its own and takes the engagements key with its own suffix.
 pub(crate) const WINDOW_SEARCH_BODY_KEY: &str = "framework.section.engagements.search";
 
+/// 🔀️ Reserved retained surface suffix for the World Projection pane's Tree body.
+pub(crate) const WINDOW_PROJECTION_BODY_KEY: &str = "framework.worldOrbit.projection.body";
+
 /// 🔎️ The retained engine surface one window instance's SEARCH pane body paints into.
 pub(crate) fn window_search_surface_id(window_id: &str) -> String {
     format!("{window_id}/{WINDOW_SEARCH_BODY_KEY}")
+}
+
+/// 🔀️ The retained Tree surface owned by one World window instance's Projection pane.
+pub(crate) fn window_projection_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{WINDOW_PROJECTION_BODY_KEY}")
 }
 
 /// 📐️ React's `PANE_DEFAULT_SIZE` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9912`) — every `Pane` that
@@ -24635,6 +24811,8 @@ impl Default for ShellUtilityPath {
 
 #[derive(Default)]
 struct ShellChromeChildCursor {
+    empty_notice_lines: Vec<(std::ops::Range<usize>, Rect)>,
+    empty_notice_text: &'static str,
     phase: u16,
     item: usize,
     scalar: usize,
@@ -24690,6 +24868,7 @@ enum ShellChromeFramePhase {
     /// 🚪️ The frame-pumped document open's band — phase, step, elapsed time and its cancel control —
     /// painted under the plugin-install band while the guest instantiates and loads the document.
     DocumentOpen,
+    IconExport,
     TreeDrag,
     TutorialGesture,
     Error,
@@ -24780,6 +24959,7 @@ impl ShellChromeFramePhase {
             Self::TransientNotice => "TransientNotice",
             Self::PluginInstall => "PluginInstall",
             Self::DocumentOpen => "DocumentOpen",
+            Self::IconExport => "IconExport",
             Self::TreeDrag => "TreeDrag",
             Self::TutorialGesture => "TutorialGesture",
             Self::Error => "Error",
@@ -25071,6 +25251,12 @@ impl ShellState {
             }
             ShellChromeFramePhase::DocumentOpen => {
                 if !self.render_document_opening_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::IconExport);
+            }
+            ShellChromeFramePhase::IconExport => {
+                if !self.render_icon_export_step(&mut cursor.child, overlay, atlas, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::TreeDrag);
@@ -25803,7 +25989,7 @@ impl ShellState {
             }
             3 => {
                 let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
-                    cursor.phase = 5;
+                    cursor.phase = if self.dock.collect_window_ids().is_empty() { 14 } else { 5 };
                     return false;
                 };
                 let Some(window) = UiText::try_from_str(&window_id) else {
@@ -25935,7 +26121,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                if !self.paint_window_projection_step(cursor, draw, atlas, icons, input, theme, &window_id, window_rect) {
+                if !self.paint_window_projection_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -25977,6 +26163,35 @@ impl ShellState {
                 cursor.flag = false;
                 cursor.item += 1;
                 cursor.phase = 3;
+            }
+            14 => {
+                let german = self.locale_id == "de";
+                if cursor.group_phase == 0 {
+                    cursor.empty_notice_text = shell_chrome_string("display.emptyShell", german);
+                    cursor.empty_notice_lines = empty_dock_notice_lines(atlas, bounds.inset(theme.panel_inset), theme, german);
+                    cursor.item = 0;
+                    cursor.glyph.reset();
+                    cursor.group_phase = 1;
+                    return false;
+                }
+                let Some((range, rect)) = cursor.empty_notice_lines.get(cursor.item) else {
+                    cursor.empty_notice_lines.clear();
+                    cursor.group_phase = 0;
+                    cursor.phase = 5;
+                    return false;
+                };
+                let text = &cursor.empty_notice_text[range.clone()];
+                match paint_retained_glyph_step_flowed(text, *rect, theme.font_size_body, theme.text_muted, RetainedTextFlow::Clip, atlas, draw, &mut cursor.glyph) {
+                    RetainedGlyphStep::Pending => {}
+                    RetainedGlyphStep::Complete => {
+                        cursor.glyph.reset();
+                        cursor.item += 1;
+                    }
+                    RetainedGlyphStep::Fault => {
+                        self.error = Some("Empty dock notice exceeded the retained glyph boundary".into());
+                        cursor.phase = 5;
+                    }
+                }
             }
             5 => {
                 if !(self.space_mode && self.spawned_ui.is_some()) {
@@ -29761,6 +29976,7 @@ fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
             collapse: shell_chrome_string("common.collapse", is_de),
         },
         block_list: BlockListChromeLabels { steps: shell_chrome_string("blockList.steps", is_de), add_step: shell_chrome_string("blockList.addStep", is_de), delete: shell_chrome_string("common.delete", is_de) },
+        icon_render: crate::scenes::IconRenderChromeLabels { empty_scene: shell_chrome_string("host.emptyScene", is_de), rendering: shell_chrome_string("host.rendering", is_de), failed: shell_chrome_string("host.iconRenderFailed", is_de) },
     }
 }
 
@@ -29770,6 +29986,14 @@ fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
 /// `ui.display.tab.windows`). Unknown keys fall back to the key itself rather than inventing text.
 fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     match (key, is_de) {
+        ("host.emptyScene", false) => "No scene",
+        ("host.emptyScene", true) => "Keine Szene",
+        ("host.rendering", false) => "Rendering…",
+        ("host.rendering", true) => "Wird gerendert…",
+        ("host.iconRenderFailed", false) => "Icon rendering failed",
+        ("host.iconRenderFailed", true) => "Symbol konnte nicht gerendert werden",
+        ("display.emptyShell", false) => "Drag windows from Display in the navbar, or restore a saved layout.",
+        ("display.emptyShell", true) => "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
         // 🖥️ React's `ui.display.*` block (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`), verbatim on both sides.
         ("display.saveLayout", false) => "Save layout",
         ("display.saveLayout", true) => "Layout speichern",
@@ -29843,6 +30067,24 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("plugin.install.failed", true) => "Plugin konnte nicht geladen werden",
         ("plugin.install.cancel", false) => "Cancel",
         ("plugin.install.cancel", true) => "Abbrechen",
+        ("icon.export.loading", false) => "Loading export",
+        ("icon.export.loading", true) => "Export wird geladen",
+        ("icon.export.preparing", false) => "Preparing export",
+        ("icon.export.preparing", true) => "Export wird vorbereitet",
+        ("icon.export.rendering", false) => "Rendering export",
+        ("icon.export.rendering", true) => "Export wird gerendert",
+        ("icon.export.closing", false) => "Releasing export resources",
+        ("icon.export.closing", true) => "Export-Ressourcen werden freigegeben",
+        ("icon.export.saving", false) => "Saving export",
+        ("icon.export.saving", true) => "Export wird gespeichert",
+        ("icon.export.complete", false) => "Export complete",
+        ("icon.export.complete", true) => "Export abgeschlossen",
+        ("icon.export.cancelled", false) => "Export cancelled",
+        ("icon.export.cancelled", true) => "Export abgebrochen",
+        ("icon.export.failed", false) => "Export failed",
+        ("icon.export.failed", true) => "Export fehlgeschlagen",
+        ("icon.export.cancel", false) => "Cancel",
+        ("icon.export.cancel", true) => "Abbrechen",
         ("document.open.resolving", false) => "Resolving the hub's component for",
         ("document.open.resolving", true) => "Hub-Komponente wird ermittelt für",
         ("document.open.resolving.lease", false) => "asking the hub which component runs it",
@@ -30639,12 +30881,12 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: 
             return;
         }
     };
-    let request = serde_json::json!({ "op": "download-media-export", "filename": filename, "mimeType": mime_type }).to_string();
-    let filename = filename.to_string();
-    let length = bytes.len();
+    let (filename, mime_type) = (filename.to_string(), mime_type.to_string());
     crate::spawn_app_task(async move {
-        match host_io_call(&request, Some(&bytes)).await {
-            Ok(_) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell download presented name={filename} bytes={length}")),
+        let length = bytes.len();
+        match present_media_export_bytes(filename.clone(), mime_type, bytes).await {
+            Ok(true) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell download presented name={filename} bytes={length}")),
+            Ok(false) => {}
             Err(error) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell download {filename} not presented: {error}")),
         }
     });
@@ -30660,18 +30902,45 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: 
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
-    let extension = mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat");
-    if let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, [extension])).await.into_iter().next() {
-        use std::fs as system_fs;
-        // ⬇️ The kernel's own contract, not a local base64 branch with a silent text fallback: a
-        // malformed binary export must refuse loudly rather than write the base64 text to disk.
-        match semio_framework::kernel::media_export_bytes(data, encoding) {
-            Ok(bytes) => {
-                let _ = system_fs::write(path, bytes);
-            }
-            Err(error) => eprintln!("[DEBUG] wgpu-shell download {filename} refused: {error}"),
+    let bytes = match semio_framework::kernel::media_export_bytes(data, encoding) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            ShellState::debug_log(&format!("[DEBUG] wgpu-shell download {filename} refused: {error}"));
+            return;
         }
+    };
+    if let Err(error) = present_media_export_bytes(filename.to_string(), mime_type.to_string(), bytes).await {
+        ShellState::debug_log(&format!("[DEBUG] wgpu-shell download {filename} not presented: {error}"));
     }
+}
+
+/// 📦️ Presents accepted bytes without a base64 roundtrip; false means the user cancelled.
+#[cfg(target_arch = "wasm32")]
+pub(crate) async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
+    present_media_export_bytes_cancellable(filename, mime_type, bytes, CancelToken::root_now()).await
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
+    if cancel.is_cancelled_now() { return Ok(false); }
+    let request = serde_json::json!({ "op": "download-media-export", "filename": filename, "mimeType": mime_type }).to_string();
+    host_io_call(&request, Some(&bytes)).await.map(|_| true)
+}
+
+/// 💾️ Writes accepted bytes only after the native save dialog returns a destination.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
+    present_media_export_bytes_cancellable(filename, mime_type, bytes, CancelToken::root_now()).await
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
+    if cancel.is_cancelled_now() { return Ok(false); }
+    let extension = std::path::Path::new(&filename).extension().and_then(|value| value.to_str()).unwrap_or_else(|| mime_type.rsplit_once('/').map(|(_, value)| value).unwrap_or("dat"));
+    let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(&filename, [extension])).await.into_iter().next() else { return Ok(false) };
+    if cancel.is_cancelled_now() { return Ok(false); }
+    std::fs::write(path, bytes).map_err(|error| error.to_string())?;
+    Ok(true)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -32232,6 +32501,17 @@ impl ShellState {
                         });
                     }
                 }
+            }
+            if let Some(export) = self.icon_export.as_ref() {
+                let mut status = chrome_status_accessibility_node(nodes.len() as u64 + 1, "shell.icon-export.progress", export.message(self.locale_id == "de"));
+                let (done, total) = export.counts();
+                status.role = "progressbar".into();
+                status.value_min = Some(0.0);
+                status.value_max = Some(total as f64);
+                status.value_now = Some(done as f64);
+                status.value_text = status.label.clone();
+                status.busy = export.running();
+                nodes.push(status);
             }
             for (key, label) in self.footer_status_chips() {
                 if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY && !nodes.iter().any(|node| node.key == key) {

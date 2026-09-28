@@ -1,9 +1,8 @@
-/** 🧬️ DocxArtifact schema. */
-export interface DocxEntry {
-  name: string;
-  data: number[];
-}
+import type { DocxXmlPart, OpcPackage } from './📸️snapshot/🟦️.ts';
+
+/** 🧬️ Complete materialized DOCX artifact state. */
 export interface DocxArtifact {
   /** @state artifact */ schema: string;
-  /** @state artifact */ entries: DocxEntry[];
+  /** @state artifact */ opc: OpcPackage;
+  /** @state artifact */ xmlParts: DocxXmlPart[];
 }

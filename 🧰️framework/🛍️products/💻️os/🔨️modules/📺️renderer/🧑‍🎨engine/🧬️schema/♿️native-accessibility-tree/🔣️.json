@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["schema", "title", "windows", "expected", "roles", "actions"],
   "definitions": {
-    "action": { "enum": ["Click", "Focus", "Blur", "SetValue", "ScrollIntoView"] },
+    "action": { "enum": ["Click", "Focus", "Blur", "SetValue", "Expand", "Collapse", "ScrollIntoView"] },
     "window": {
       "type": "object",
       "additionalProperties": false,

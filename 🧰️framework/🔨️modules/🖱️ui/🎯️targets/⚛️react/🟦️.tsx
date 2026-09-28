@@ -275,10 +275,10 @@ export function isTransparentIconBackground(background?: string): boolean {
   return !background || background === "transparent";
 }
 
-function iconRenderStrokeEnabled(stroke?: string): boolean {
-  if (!stroke) return true;
+export function resolveIconRenderStroke(stroke?: string): string | null {
+  if (!stroke) return "#000000";
   const normalized = stroke.trim().toLowerCase();
-  return normalized !== "transparent" && normalized !== "none";
+  return normalized === "transparent" || normalized === "none" ? null : stroke;
 }
 
 function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): void {
@@ -349,8 +349,8 @@ function applyIconMaterial(group: THREE.Object3D, material?: IconRenderRequest["
       obj.receiveShadow = true;
     });
   }
-  const stroke = material?.stroke ?? "#000000";
-  if (iconRenderStrokeEnabled(stroke)) {
+  const stroke = resolveIconRenderStroke(material?.stroke);
+  if (stroke) {
     applyIconMeshEdgeBorders(group, stroke);
   }
 }
@@ -477,11 +477,21 @@ async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: nu
 export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, height: number): string {
   const clipId = "semio-icon-ellipse-clip";
   if (svgMarkup.includes(`id="${clipId}"`)) return svgMarkup;
-  const openMatch = svgMarkup.match(/^<svg([^>]*)>/i);
+  const openMatch = svgMarkup.match(/^<svg\b([^>]*?)(\/?)>/i);
   const closeIdx = svgMarkup.lastIndexOf("</svg>");
-  if (!openMatch || closeIdx < 0) return svgMarkup;
-  const clipDef = `<clipPath id="${clipId}"><ellipse cx="${width / 2}" cy="${height / 2}" rx="${width / 2}" ry="${height / 2}"/></clipPath>`;
-  let body = svgMarkup.slice(openMatch[0].length, closeIdx);
+  if (!openMatch || (closeIdx < 0 && openMatch[2] !== "/")) return svgMarkup;
+  const parsed = openMatch[1].match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1].trim().split(/[\s,]+/).map(Number);
+  const [x, y, boxWidth, boxHeight] = parsed?.length === 4 && parsed.every(Number.isFinite) && parsed[2] > 0 && parsed[3] > 0 ? parsed : [0, 0, width, height];
+  const clipDef = `<clipPath id="${clipId}"><ellipse cx="${x + boxWidth / 2}" cy="${y + boxHeight / 2}" rx="${boxWidth / 2}" ry="${boxHeight / 2}"/></clipPath>`;
+  let background = "";
+  const attributes = openMatch[1].replace(/\sstyle\s*=\s*(["'])(.*?)\1/i, (_attribute, quote: string, value: string) => {
+    const style = value.replace(/(?:^|;)\s*background-color\s*:\s*([^;]+);?/i, (_declaration, color: string) => {
+      background = color.trim().replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+      return ";";
+    }).replace(/^;+|;+$/g, "").trim();
+    return style ? ` style=${quote}${style}${quote}` : "";
+  });
+  let body = openMatch[2] === "/" ? "" : svgMarkup.slice(openMatch[0].length, closeIdx);
   let defs = "";
   const defsMatch = body.match(/^<defs[^>]*>[\s\S]*?<\/defs>/i);
   if (defsMatch) {
@@ -490,7 +500,8 @@ export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, hei
   } else {
     defs = `<defs>${clipDef}</defs>`;
   }
-  return `<svg${openMatch[1]}>${defs}<g clip-path="url(#${clipId})">${body}</g></svg>`;
+  const fill = background ? `<rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" fill="${background}"/>` : "";
+  return `<svg${attributes}>${defs}<g clip-path="url(#${clipId})">${fill}${body}</g></svg>`;
 }
 
 async function clipIconPngDataUrlToEllipse(dataUrl: string, width: number, height: number): Promise<string> {
@@ -555,7 +566,7 @@ export function iconShotFrameStyle(width: number, height: number): React.CSSProp
 
 /** @emoji 🖼️ Frame mask class for an icon shot shape. */
 export function iconShotFrameClass(shape: IconRenderShape): string {
-  return shape === "ellipse" ? "rounded-full" : "rounded-none";
+  return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
 /** @emoji 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
@@ -2975,6 +2986,7 @@ export const uiChromeTranslationBundles = {
           noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
           canvasUnavailable: { label: { normal: "Leinwand nicht verfügbar", beginner: "Leinwand nicht verfügbar" } },
           rendering: { label: { normal: "Wird gerendert…", beginner: "Wird gerendert…" } },
+          iconRenderFailed: { label: { normal: "Symbol konnte nicht gerendert werden", beginner: "Symbol konnte nicht gerendert werden" } },
           documentPlaceholder: { label: { normal: "Dokument", beginner: "Dokument" } },
           languageDocument: { label: { normal: "{{language}}-Dokument", beginner: "{{language}}-Dokument" } },
           iconShot: { label: { normal: "Symbolbild", beginner: "Symbolbild" } },
@@ -3899,6 +3911,7 @@ export const uiChromeTranslationBundles = {
           noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
           canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
           rendering: { label: { normal: "Rendering…", beginner: "Rendering…" } },
+          iconRenderFailed: { label: { normal: "Icon rendering failed", beginner: "Icon rendering failed" } },
           documentPlaceholder: { label: { normal: "Artifact", beginner: "Artifact" } },
           languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
           iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },

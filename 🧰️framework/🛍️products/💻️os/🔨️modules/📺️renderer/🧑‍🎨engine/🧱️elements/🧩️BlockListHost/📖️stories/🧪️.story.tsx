@@ -4,8 +4,7 @@
 // editor is pure `dnd-kit` + declarative JSON, so a story-local reducer round-trips `addStep`/`removeStep`/
 // `moveStep`/`addBlock`/`removeBlock`/`moveBlock` for real.
 // Summary: `reduceStoryBlockListAction` mirrors `🧩️BlockListHost`'s dispatched actions (`framework/os/renderer/js/react/index.tsx`).
-// Clicking a palette entry's `addBlock` (no `stepId` — `PalettePanel`'s click handler only ever sends `{ kind }`)
-// targets the *last* step, matching the only sane host-app default when the plugin protocol itself doesn't say which step.
+// Clicking a palette entry's `addBlock` carries the exact current `stepId` resolved by the host.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -67,7 +66,7 @@ function reduceStoryBlockListAction(state: StoryBlockListState, descriptor: Acti
     }
     case "addBlock": {
       const kind = String(args.kind ?? "");
-      const targetStepId = typeof args.stepId === "string" ? args.stepId : state.steps[state.steps.length - 1]?.id;
+      const targetStepId = typeof args.stepId === "string" ? args.stepId : undefined;
       if (!targetStepId || !kind) return state;
       const blockCounter = state.blockCounter + 1;
       const block: StoryBlock = { id: `block-${blockCounter}`, label: storyPaletteLabel(state.palette, kind), kind };
@@ -160,7 +159,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🧩️ Two steps, a palette of three block kinds — "Add Step" (`addStep`), a palette click (`addBlock`, targets the last step), a block's delete button (`removeBlock`), and drag-reorder (`moveStep`/`moveBlock`) all round-trip. */
+/** 🧩️ Two steps, a palette of three block kinds — "Add Step" (`addStep`), a palette click (`addBlock`, targets the first current step), a block's delete button (`removeBlock`), and drag-reorder (`moveStep`/`moveBlock`) all round-trip. */
 export const Editable: Story = {
   args: { initialSteps: STORY_INITIAL_STEPS },
 };

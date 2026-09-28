@@ -2,11 +2,11 @@ use super::*;
 use crate::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 fn pixel_layer(id: &str) -> RasterLayerNode {
-    RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }
+    RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }
 }
 
 fn group_layer(id: &str, children: Vec<RasterLayerNode>) -> RasterLayerNode {
-    RasterLayerNode::Group { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children }
+    RasterLayerNode::Group { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children }
 }
 
 fn snapshot(layers: Vec<RasterLayerNode>) -> RasterSnapshot {

@@ -10,6 +10,7 @@ use crate::engine_canvas;
 use crate::interpreter::FrameworkWidgetContext;
 use crate::shell::{try_push_find_item, ShellFindItem};
 use base64::Engine;
+use semio_framework::interaction::gesture::{apply_pinch_to_camera, Camera2d, GesturePointer, GestureRecognizer, GestureVerdict, ZoomBounds};
 use semio_framework::IconName;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -595,6 +596,7 @@ struct SceneSurfaceState {
     map_last_hover_json: Option<String>,
     map_interaction_owner: Option<crate::interpreter::ScenePointerTarget>,
     map_hover_owner: Option<crate::interpreter::ScenePointerTarget>,
+    touch_gesture: GestureRecognizer,
     ink_camera: Option<(f64, f64, f64)>,
     ink_overrides: BTreeMap<String, Value>,
     ink_marquee_points: Vec<(f32, f32)>,
@@ -819,6 +821,9 @@ impl SceneSurfaceRetirement {
             return false;
         }
         let state = &mut self.owner.value;
+        if state.touch_gesture.retire_step() {
+            return false;
+        }
         for reply in [&mut state.host_temporal.candidate, &mut state.host_temporal.queued_candidate, &mut state.host_temporal.accepted] {
             if retire_host_temporal_reply(reply, &mut self.text) {
                 return false;
@@ -3317,9 +3322,17 @@ pub struct BlockListChromeLabels {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct IconRenderChromeLabels {
+    pub empty_scene: &'static str,
+    pub rendering: &'static str,
+    pub failed: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SceneChromeLabels {
     pub virtual_file_system: VirtualFileSystemChromeLabels,
     pub block_list: BlockListChromeLabels,
+    pub icon_render: IconRenderChromeLabels,
 }
 
 impl SceneChromeLabels {
@@ -3327,6 +3340,7 @@ impl SceneChromeLabels {
         Self {
             virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
             block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
+            icon_render: IconRenderChromeLabels { empty_scene: "No scene", rendering: "Rendering…", failed: "Icon rendering failed" },
         }
     }
 }
@@ -3437,7 +3451,11 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         5 => {
-            if !engine_canvas::advance_raster_composite(scene) {
+            let progress = engine_canvas::advance_raster_composite(scene);
+            if cursor.observe_external_progress(progress.completed).is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            if !progress.done {
                 return ui_wgpu::wgpu::ScenePaintStep::Pending;
             }
             if !engine_canvas::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
@@ -3669,7 +3687,9 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     world3d_surface_debug_log(scene, bounds, ctx, state);
     // 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
     // reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
-    crate::interpreter::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(state));
+    if semio_framework_trace::runtime_diagnostics_enabled() {
+        crate::interpreter::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(state));
+    }
     cursor.finish()
 }
 
@@ -3678,6 +3698,9 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
 /// only way to tell "no surface" from "a surface with no meshes" on 6118, where `eprintln!` is a
 /// no-op inside the frame Worker.
 fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &FrameworkWidgetContext<'_>, state: &infinite_world::world::World3dState) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
     let payload = match scene.world_3d.as_ref() {
         Some(world) => {
             format!(
@@ -3711,13 +3734,14 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
         ),
         None => "pass=none".to_string(),
     };
+    let visual = infinite_world::world::world3d_live_camera_json(state);
     // 📐️ The ORIGIN belongs in this trace as much as the size: every pointer, wheel and pick the
     // surface receives is admitted by `bounds.contains(x, y)` in PAGE space, so a rect reported only
     // as `WxH` cannot be told apart from the same rect at the wrong origin — which is the shape a
     // silently undispatched hover/select/orbit takes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     // `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.5).
     debug_log_diagnostic(&format!(
-        "[DEBUG] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {} {payload}",
+        "[DEBUG] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {} visual={} {payload}",
         scene.surface_id,
         scene.pane_id,
         bounds.w.round(),
@@ -3725,7 +3749,8 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
         bounds.x.round(),
         bounds.y.round(),
         state.ingest_census(),
-        state.mesh_geometry_census()
+        state.mesh_geometry_census(),
+        visual
     ));
 }
 
@@ -4583,6 +4608,14 @@ struct BlockListBlockJson {
     id: String,
     label: String,
     kind: String,
+    #[serde(default)]
+    target: Option<BlockListSelectionTargetJson>,
+}
+
+#[derive(Deserialize, serde::Serialize)]
+struct BlockListSelectionTargetJson {
+    granularity: String,
+    id: String,
 }
 
 /// 🧩️ Mirrors `playbook::PlaybookStep`'s renderer-relevant fields.
@@ -4590,6 +4623,8 @@ struct BlockListBlockJson {
 struct BlockListStepJson {
     id: String,
     title: String,
+    #[serde(default)]
+    target: Option<BlockListSelectionTargetJson>,
     #[serde(default)]
     description: Option<String>,
     #[serde(default)]
@@ -4614,7 +4649,7 @@ enum BlockListPaint {
     AddStep,
     StepCard { title: String, description: Option<String>, selected: bool, leading_inset: f32, surface_grip: bool },
     BlockRow { label: String, kind: String, selected: bool, leading_inset: f32, surface_grip: bool },
-    IconButton { icon: &'static str },
+    IconButton { icon: &'static str, target_label: String },
     DragHandle { icon: &'static str },
     PaletteEntry { icon_id: String, label: String, leading_inset: f32 },
 }
@@ -4647,6 +4682,7 @@ struct BlockListPlan {
     header: Rect,
     body: Rect,
     palette_rect: Rect,
+    palette_target_step_id: Option<String>,
     targets: Vec<BlockListTarget>,
     body_range: std::ops::Range<usize>,
 }
@@ -4659,9 +4695,27 @@ fn block_list_action(scene: &UiComponentSceneNode, action: &str, args: Value) ->
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
+fn block_list_selection_action(scene: &UiComponentSceneNode, target: Option<&BlockListSelectionTargetJson>) -> Option<ActionDescriptor> {
+    let domain = scene.block_list.as_ref()?.domain_id.as_deref().filter(|id| !id.is_empty())?;
+    let target = target.filter(|target| !target.id.is_empty() && !target.granularity.is_empty())?;
+    Some(block_list_action(scene, "interactionSelect", json!({ "domainId": domain, "targets": json!([target]).to_string(), "merge": "replace", "method": "pick" })))
+}
+
 fn block_list_handle_rect(row: Rect, theme: &Theme) -> Rect {
     let size = theme.control_height_small.min(row.h).min(row.w.max(0.0));
     Rect::new(row.x + theme.padding_standard, row.y + (theme.control_height.min(row.h) - size) * 0.5, size.min((row.w - theme.padding_standard).max(0.0)), size)
+}
+
+fn block_list_palette_target_step_id<'a>(steps: &'a [BlockListStepJson], selected_id: Option<&str>) -> Option<&'a str> {
+    if let Some(selected_id) = selected_id {
+        if let Some(step) = steps.iter().find(|step| step.id == selected_id) {
+            return Some(step.id.as_str());
+        }
+        if let Some(step) = steps.iter().find(|step| step.blocks.iter().any(|block| block.id == selected_id)) {
+            return Some(step.id.as_str());
+        }
+    }
+    steps.first().map(|step| step.id.as_str())
 }
 
 fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, driver_drag: UiDriverDrag) -> BlockListPlan {
@@ -4677,6 +4731,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
     let palette: Vec<BlockListPaletteEntryJson> = scene.block_list.as_ref().map(|list| serde_json::from_str(&list.palette_json).unwrap_or_default()).unwrap_or_default();
     let selected_id = scene.block_list.as_ref().and_then(|list| list.selected_id.clone());
     let selected_id = selected_id.as_deref();
+    let palette_target_step_id = block_list_palette_target_step_id(&steps, selected_id).map(str::to_owned);
 
     let mut targets = Vec::new();
     targets.push(BlockListTarget {
@@ -4700,7 +4755,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
         targets.push(BlockListTarget {
             rect: step_rect,
             control_id: format!("{}.step.{}", scene.host_id, step.id),
-            action: None,
+            action: block_list_selection_action(scene, step.target.as_ref()),
             paint: BlockListPaint::StepCard { title: step.title.clone(), description: step.description.clone(), selected: selected_id == Some(step.id.as_str()), leading_inset, surface_grip: driver_drag == UiDriverDrag::Surface },
             role: BlockListRole::Step { step_id: step.id.clone(), index: step_index },
         });
@@ -4709,7 +4764,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
             rect: Rect::new(step_rect.x + step_rect.w - pad - btn_w, btn_y, btn_w, theme.control_height_small),
             control_id: format!("{}.step.{}.remove", scene.host_id, step.id),
             action: Some(block_list_action(scene, "removeStep", json!({ "stepId": step.id }))),
-            paint: BlockListPaint::IconButton { icon: "trash-2" },
+            paint: BlockListPaint::IconButton { icon: "trash-2", target_label: step.title.clone() },
             role: BlockListRole::Action,
         });
         if driver_drag == UiDriverDrag::Handle {
@@ -4729,7 +4784,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
             targets.push(BlockListTarget {
                 rect: block_rect,
                 control_id: format!("{}.block.{}", scene.host_id, block.id),
-                action: None,
+                action: block_list_selection_action(scene, block.target.as_ref()),
                 paint: BlockListPaint::BlockRow { label: block.label.clone(), kind: block.kind.clone(), selected: selected_id == Some(block.id.as_str()), leading_inset: block_leading_inset, surface_grip: driver_drag == UiDriverDrag::Surface },
                 role: BlockListRole::Block { step_id: step.id.clone(), block_id: block.id.clone(), index: block_index },
             });
@@ -4738,7 +4793,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
                 rect: Rect::new(block_rect.x + block_rect.w - pad - btn_w, block_btn_y, btn_w, theme.control_height_small),
                 control_id: format!("{}.block.{}.remove", scene.host_id, block.id),
                 action: Some(block_list_action(scene, "removeBlock", json!({ "stepId": step.id, "blockId": block.id }))),
-                paint: BlockListPaint::IconButton { icon: "trash-2" },
+                paint: BlockListPaint::IconButton { icon: "trash-2", target_label: block.label.clone() },
                 role: BlockListRole::Action,
             });
             if driver_drag == UiDriverDrag::Handle {
@@ -4763,11 +4818,15 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
         targets.push(BlockListTarget {
             rect: palette_row,
             control_id: format!("{}.palette.{}", scene.host_id, entry.block_kind),
-            action: Some(block_list_action(scene, "addBlock", json!({ "kind": entry.block_kind }))),
-            paint: BlockListPaint::PaletteEntry { icon_id: entry.icon_id.clone(), label: entry.label.clone(), leading_inset: if driver_drag == UiDriverDrag::Handle { palette_handle_rect.w + theme.gap_standard } else { 0.0 } },
+            action: palette_target_step_id.as_ref().map(|step_id| block_list_action(scene, "addBlock", json!({ "stepId": step_id, "kind": entry.block_kind }))),
+            paint: BlockListPaint::PaletteEntry {
+                icon_id: entry.icon_id.clone(),
+                label: entry.label.clone(),
+                leading_inset: if driver_drag == UiDriverDrag::Handle && palette_target_step_id.is_some() { palette_handle_rect.w + theme.gap_standard } else { 0.0 },
+            },
             role: BlockListRole::Palette { kind: entry.block_kind.clone() },
         });
-        if driver_drag == UiDriverDrag::Handle {
+        if driver_drag == UiDriverDrag::Handle && palette_target_step_id.is_some() {
             targets.push(BlockListTarget {
                 rect: palette_handle_rect,
                 control_id: format!("{}.palette.{}.drag", scene.host_id, entry.block_kind),
@@ -4778,7 +4837,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
         }
         py += row_h + theme.gap_standard;
     }
-    BlockListPlan { header, body, palette_rect, targets, body_range: body_start..body_end }
+    BlockListPlan { header, body, palette_rect, palette_target_step_id, targets, body_range: body_start..body_end }
 }
 
 fn block_list_source_rect(plan: &BlockListPlan, role: &BlockListRole) -> Option<Rect> {
@@ -4815,7 +4874,7 @@ fn block_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32,
         (BlockListRole::BlockHandle { step_id, block_id, index }, UiDriverDrag::Handle) | (BlockListRole::Block { step_id, block_id, index }, UiDriverDrag::Surface) => {
             SceneListTransferSource::BlockListBlock { step_id: step_id.clone(), block_id: block_id.clone(), index: *index }
         }
-        (BlockListRole::PaletteHandle { kind }, UiDriverDrag::Handle) | (BlockListRole::Palette { kind }, UiDriverDrag::Surface) => {
+        (BlockListRole::PaletteHandle { kind }, UiDriverDrag::Handle) | (BlockListRole::Palette { kind }, UiDriverDrag::Surface) if plan.palette_target_step_id.is_some() => {
             SceneListTransferSource::BlockListPalette { kind: kind.clone(), mime: BLOCK_LIST_PALETTE_DRAG_MIME.to_string(), payload: kind.clone() }
         }
         _ => return None,
@@ -4835,6 +4894,7 @@ fn block_list_source_is_current(scene: &UiComponentSceneNode, source: &SceneList
         SceneListTransferSource::BlockListPalette { kind, mime, payload } => {
             mime == BLOCK_LIST_PALETTE_DRAG_MIME
                 && payload == kind
+                && block_list_palette_target_step_id(&steps, scene.block_list.as_ref().and_then(|list| list.selected_id.as_deref())).is_some()
                 && scene.block_list.as_ref().and_then(|list| serde_json::from_str::<Vec<BlockListPaletteEntryJson>>(&list.palette_json).ok()).is_some_and(|palette| palette.iter().any(|entry| &entry.block_kind == kind))
         }
         SceneListTransferSource::TableRow { .. } => false,
@@ -4923,7 +4983,7 @@ fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockL
             draw_text(ctx, label, rect.x + pad + leading_inset, rect.y + row_h * 0.65, theme.font_size_small, if *selected { theme.active_foreground } else { theme.text });
             draw_text(ctx, kind, rect.x + rect.w * 0.5, rect.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
         }
-        BlockListPaint::IconButton { icon } => {
+        BlockListPaint::IconButton { icon, .. } => {
             render_widget(&WidgetNode::Button { id: Some(target.control_id.clone()), icon_id: Some((*icon).into()), label: String::new(), event: target.action.clone() }, rect, ctx);
         }
         BlockListPaint::DragHandle { icon } => {
@@ -4955,9 +5015,11 @@ fn block_list_accessibility_controls(plan: &BlockListPlan, bounds: Rect, labels:
             let action = target.action.clone().filter(|_| visible)?;
             let label = match &target.paint {
                 BlockListPaint::AddStep => labels.add_step.to_string(),
-                BlockListPaint::IconButton { .. } => labels.delete.to_string(),
+                BlockListPaint::IconButton { target_label, .. } => format!("{}: {target_label}", labels.delete),
                 BlockListPaint::PaletteEntry { label, .. } => label.clone(),
-                BlockListPaint::StepCard { .. } | BlockListPaint::BlockRow { .. } | BlockListPaint::DragHandle { .. } => return None,
+                BlockListPaint::StepCard { title, .. } => title.clone(),
+                BlockListPaint::BlockRow { label, .. } => label.clone(),
+                BlockListPaint::DragHandle { .. } => return None,
             };
             Some(BlockListAccessibilityControl { key: target.control_id.clone(), label, rect: target.rect, action })
         })
@@ -5026,13 +5088,22 @@ fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, acti
     let palette: Vec<BlockListPaletteEntryJson> = serde_json::from_str(&list.palette_json).unwrap_or_default();
     let arg = |key: &str| action.args.as_ref().and_then(|args| args.get(key)).and_then(semio_framework::DslValue::as_str);
     match action.action.as_str() {
+        "interactionSelect" => steps.iter().any(|step| {
+            block_list_selection_action(scene, step.target.as_ref()).as_ref() == Some(action)
+                || step.blocks.iter().any(|block| block_list_selection_action(scene, block.target.as_ref()).as_ref() == Some(action))
+        }),
         "addStep" => true,
         "removeStep" => arg("stepId").is_some_and(|step_id| steps.iter().any(|step| step.id == step_id)),
         "removeBlock" => match (arg("stepId"), arg("blockId")) {
             (Some(step_id), Some(block_id)) => steps.iter().any(|step| step.id == step_id && step.blocks.iter().any(|block| block.id == block_id)),
             _ => false,
         },
-        "addBlock" => arg("kind").is_some_and(|kind| palette.iter().any(|entry| entry.block_kind == kind)),
+        "addBlock" => match (arg("stepId"), arg("kind")) {
+            (Some(step_id), Some(kind)) => {
+                block_list_palette_target_step_id(&steps, list.selected_id.as_deref()) == Some(step_id) && palette.iter().any(|entry| entry.block_kind == kind)
+            }
+            _ => false,
+        },
         _ => false,
     }
 }
@@ -9788,6 +9859,83 @@ fn write_tiled_map_hover(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>
     reservation.publish_with(commit)
 }
 
+fn touch_pointer_down(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
+    let mut verdict = GestureVerdict::Single;
+    mutate_scene_state(host_id, |state| {
+        verdict = state.touch_gesture.down(GesturePointer { id: pointer_id.0, x, y });
+    });
+    verdict
+}
+
+fn touch_pointer_move(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
+    let mut verdict = GestureVerdict::Single;
+    mutate_scene_state(host_id, |state| {
+        verdict = state.touch_gesture.move_to(GesturePointer { id: pointer_id.0, x, y });
+    });
+    verdict
+}
+
+fn touch_pointer_up(host_id: &str, pointer_id: ui_render::PointerId) -> GestureVerdict {
+    let mut verdict = GestureVerdict::Single;
+    mutate_scene_state(host_id, |state| {
+        verdict = state.touch_gesture.up(pointer_id.0);
+    });
+    verdict
+}
+
+fn pinch_camera(current: [f64; 3], step: semio_framework::interaction::gesture::PinchStep, viewport: [f64; 2], bounds: ZoomBounds) -> [f64; 3] {
+    let camera = apply_pinch_to_camera(Camera2d { x: current[0], y: current[1], zoom: current[2] }, step, viewport, bounds);
+    [camera.x, camera.y, camera.zoom]
+}
+
+/// 🤏️ Transfers a map's first-touch lane to pinch ownership when contact two lands.
+pub fn tiled_map_touch_pointer_down(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    match touch_pointer_down(host_id, pointer_id, sx, sy) {
+        GestureVerdict::Single => false,
+        GestureVerdict::PinchBegin(_) => {
+            clear_tiled_map_interaction(host_id);
+            true
+        }
+        _ => true,
+    }
+}
+
+/// 🤏️ Applies one silent map pinch step; the single-pointer lane stays suppressed while latched.
+pub fn tiled_map_touch_pointer_move(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    match touch_pointer_move(host_id, pointer_id, sx, sy) {
+        GestureVerdict::Single => false,
+        GestureVerdict::Pinch(step) => {
+            if let Some(current) = engine_canvas::tiled_map_camera(host_id) {
+                let next = pinch_camera(
+                    current,
+                    step,
+                    [inner.w as f64, inner.h as f64],
+                    ZoomBounds { min: framework_surface_tiled_map::tiled_map::MAP_CAMERA_ZOOM_MIN, max: framework_surface_tiled_map::tiled_map::MAP_CAMERA_ZOOM_MAX },
+                );
+                engine_canvas::tiled_map_set_camera_silent(host_id, next);
+            }
+            true
+        }
+        _ => true,
+    }
+}
+
+/// 🏁️ Suppresses pinch lifts and publishes exactly one settled map camera on the final lift.
+pub fn tiled_map_touch_pointer_up_into(
+    host_id: &str,
+    controller_id: &str,
+    pointer_id: ui_render::PointerId,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    match touch_pointer_up(host_id, pointer_id) {
+        GestureVerdict::Single => Ok(false),
+        GestureVerdict::PinchEnd => engine_canvas::tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true),
+        _ => Ok(true),
+    }
+}
+
 pub fn tiled_map_pointer_down_into(
     owner: &crate::interpreter::ScenePointerTarget,
     controller_id: &str,
@@ -10041,6 +10189,23 @@ struct IconRenderCameraFields {
     fov: Option<f64>,
     #[serde(default)]
     up: Option<[f64; 3]>,
+    #[serde(default)]
+    projection: IconRenderProjection,
+}
+
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+enum IconRenderProjection {
+    #[default]
+    Perspective,
+    Orthographic,
+}
+
+#[derive(Deserialize)]
+struct IconRenderFitFields {
+    enabled: bool,
+    #[serde(default)]
+    padding: Option<f64>,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -10073,6 +10238,8 @@ struct IconRenderMaterialFields {
     emissive: Option<String>,
     #[serde(default)]
     emissive_intensity: Option<f64>,
+    #[serde(default)]
+    stroke: Option<String>,
 }
 
 #[derive(Clone, Copy, Deserialize)]
@@ -10091,6 +10258,8 @@ struct IconRenderRequestFields {
     format: IconRenderFormat,
     camera: IconRenderCameraFields,
     #[serde(default)]
+    fit: Option<IconRenderFitFields>,
+    #[serde(default)]
     lights: Option<IconRenderLightsFields>,
     width: f64,
     height: f64,
@@ -10108,21 +10277,50 @@ fn icon_render_default_zoom() -> f64 {
     1.0
 }
 
-fn icon_render_camera_json(camera: &IconRenderCameraFields) -> String {
+fn icon_render_camera_json(request: &IconRenderRequestFields, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> String {
+    let camera = &request.camera;
+    let parallel = camera.projection == IconRenderProjection::Orthographic;
     let fov = camera.fov.unwrap_or(50.0).max(1.0);
-    let zoom = if camera.zoom.abs() > 1e-6 { camera.zoom } else { 1.0 };
-    let effective_fov = if (zoom - 1.0).abs() > 1e-6 {
+    let mut zoom = if camera.zoom.abs() > 1e-6 { camera.zoom } else { 1.0 };
+    let mut position = camera.position;
+    let mut target = camera.target;
+    if let Some((fit, (minimum, maximum))) = request.fit.as_ref().filter(|fit| fit.enabled).zip(subject_bounds) {
+        let radius = (0..3).map(|axis| (f64::from(maximum[axis]) - f64::from(minimum[axis])).powi(2)).sum::<f64>().sqrt() * 0.5;
+        if radius.is_finite() && radius > 0.0 {
+            let padding = fit.padding.unwrap_or(1.25).max(1.0);
+            let mut direction = [0, 1, 2].map(|axis| position[axis] - target[axis]);
+            if direction.iter().map(|value| value * value).sum::<f64>() < 1e-12 {
+                direction = [1.0, -1.0, 0.85];
+            }
+            let length = direction.iter().map(|value| value * value).sum::<f64>().sqrt();
+            let distance = if parallel {
+                zoom = (request.width.min(request.height) * 0.5 / (radius * padding).max(0.5)).max(1e-3);
+                if length > 1e-6 { length } else { (radius * 4.0).max(2.0) }
+            } else {
+                let vertical = (fov.to_radians() * 0.5).clamp(0.02, 1.5);
+                let horizontal = (vertical.tan() * (request.width / request.height).max(0.05)).atan().clamp(0.02, 1.5);
+                (radius.max(1e-4) / vertical.min(horizontal).sin() * padding).max(0.5)
+            };
+            target = [0, 1, 2].map(|axis| (f64::from(minimum[axis]) + f64::from(maximum[axis])) * 0.5);
+            position = [0, 1, 2].map(|axis| target[axis] + direction[axis] / length * distance);
+        }
+    }
+    let effective_fov = if !parallel && (zoom - 1.0).abs() > 1e-6 {
         let half = (fov * 0.5).to_radians();
         (2.0 * (half.tan() / zoom).atan()).to_degrees()
     } else {
         fov
     };
     let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
+    let mode = if parallel { json!({ "kind": "orthographic" }) } else { json!({ "kind": "threePoint", "fov": effective_fov }) };
     json!({
-        "position": camera.position,
-        "target": camera.target,
+        "position": position,
+        "target": target,
         "up": up,
         "fov": effective_fov,
+        "zoom": if parallel { zoom * preview_scale } else { 1.0 },
+        "projection": { "mode": mode, "orientation": { "type": "free" } },
+        "projectionFrame": "preserveCamera",
     })
     .to_string()
 }
@@ -10141,18 +10339,18 @@ fn icon_render_environment_json(request: &IconRenderRequestFields) -> String {
         "shadow": { "enabled": request.shadow_enabled.unwrap_or(false) },
     });
     if let Some(object) = value.as_object_mut() {
-        if let Some(material) = &request.material {
-            object.insert(
-                "material".into(),
-                json!({
-                    "color": material.color.as_deref().unwrap_or("#9aa0ab"),
-                    "metalness": material.metalness,
-                    "roughness": material.roughness,
-                    "emissive": material.emissive,
-                    "emissiveIntensity": material.emissive_intensity,
-                }),
-            );
-        }
+        let material = request.material.as_ref();
+        object.insert(
+            "material".into(),
+            json!({
+                "color": material.map(|material| material.color.as_deref().unwrap_or("#9aa0ab")),
+                "metalness": material.and_then(|material| material.metalness),
+                "roughness": material.and_then(|material| material.roughness),
+                "emissive": material.and_then(|material| material.emissive.as_deref()),
+                "emissiveIntensity": material.and_then(|material| material.emissive_intensity),
+                "stroke": material.and_then(|material| material.stroke.as_deref()).unwrap_or("#000000"),
+            }),
+        );
         if let Some(background) = &request.background {
             object.insert("background".into(), json!(background));
         }
@@ -10161,7 +10359,9 @@ fn icon_render_environment_json(request: &IconRenderRequestFields) -> String {
 }
 
 fn icon_render_shadow_profile(request: &IconRenderRequestFields) -> infinite_world::world::World3dShadowProfile {
-    if matches!(request.format, IconRenderFormat::Png) && request.material.is_some() {
+    if matches!(request.format, IconRenderFormat::Svg) {
+        infinite_world::world::World3dShadowProfile::IconSvg
+    } else if request.material.is_some() {
         infinite_world::world::World3dShadowProfile::IconPng
     } else {
         infinite_world::world::World3dShadowProfile::Unshadowed
@@ -10175,31 +10375,55 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
     draw_text(ctx, message, bounds.x + (bounds.w - width) * 0.5, bounds.y + bounds.h * 0.5, size, theme.text_muted);
 }
 
+fn icon_render_footer_layout(bounds: Rect, footer: Option<&str>, atlas: &mut ui_wgpu::wgpu::FontAtlas, size: f32) -> (f32, Vec<std::ops::Range<usize>>) {
+    let Some(footer) = footer.filter(|footer| !footer.is_empty()) else { return (0.0, Vec::new()) };
+    let lines = atlas.wrap_lines(footer, (bounds.w - 24.0).max(0.0), size);
+    (lines.len() as f32 * ui_wgpu::wgpu::text::line_height(size) + 8.0, lines)
+}
+
+fn icon_render_frame(bounds: Rect, width: f64, height: f64, footer_height: f32) -> Rect {
+    let width = width.max(1.0) as f32;
+    let height = height.max(1.0) as f32;
+    let body_height = (bounds.h - footer_height).max(0.0);
+    let scale = (bounds.w / width).min(body_height / height).max(0.0);
+    Rect::new(bounds.x + (bounds.w - width * scale) * 0.5, bounds.y + (body_height - height * scale) * 0.5, width * scale, height * scale)
+}
+
+fn icon_render_content_frame(frame: Rect) -> Rect {
+    Rect::new(frame.x + 2.0, frame.y + 2.0, (frame.w - 4.0).max(0.0), (frame.h - 4.0).max(0.0))
+}
+
+fn icon_render_badge_layout(frame: Rect, text: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> Rect {
+    let preferred = atlas.measure_text_face(TextFace::Mono, text, 10.0).0 + 8.0;
+    let minimum = text.split_whitespace().map(|word| atlas.measure_text_face(TextFace::Mono, word, 10.0).0).fold(0.0_f32, f32::max) + 8.0;
+    let width = (frame.w - 8.0).max(minimum).min(preferred);
+    let height = atlas.wrap_lines_face(TextFace::Mono, text, width - 8.0, 10.0).len() as f32 * 15.0;
+    Rect::new(frame.x + frame.w - width - 6.0, frame.y + frame.h - height - 6.0, width, height)
+}
+
+fn with_icon_render_mask(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, shape: &str, paint: impl FnOnce(&mut FrameworkWidgetContext<'_>)) {
+    ctx.draw.push_scissor(frame);
+    let first_layer = ctx.draw.layers.len().saturating_sub(1);
+    let first_instance = ctx.draw.layers.last().map_or(0, |layer| layer.ui_instances.len());
+    paint(ctx);
+    if shape == "ellipse" {
+        for (index, layer) in ctx.draw.layers.iter_mut().enumerate().skip(first_layer) {
+            for instance in layer.ui_instances.iter_mut().skip(if index == first_layer { first_instance } else { 0 }) {
+                instance.clip_ellipse = [frame.x, frame.y, frame.w, frame.h];
+            }
+        }
+    }
+    ctx.draw.pop_scissor();
+}
+
 /// 🖼️ React's shot is an OFFSCREEN render through `iconRenderPort`, so its host has three visible
 /// states: the error text, the finished `<img>`, and `ui.host.rendering` while the promise is in
 /// flight (`🖼️IconRenderHost/🟦️.tsx:55-61`). This twin draws the GLB straight into the frame, so it
 /// used to have exactly one — a silently EMPTY shot frame for the whole time the mesh was being
 /// fetched, and forever if the fetch never landed. The residency of the one subject mesh is the
 /// same predicate: no lease yet is "rendering", a recorded snapshot fault is the error arm.
-/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
-fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
-    let Some(icon_render) = &scene.icon_render else {
-        return render_icon_render_empty(bounds, ctx, "No shot");
-    };
-    let Ok(request) = serde_json::from_str::<IconRenderRequestFields>(&icon_render.request_json) else {
-        return render_icon_render_empty(bounds, ctx, "No shot");
-    };
-
-    let shape = request.shape.clone().unwrap_or_else(|| "rectangle".into());
-    let width = request.width.max(1.0) as f32;
-    let height = request.height.max(1.0) as f32;
-    let fit_scale = (bounds.w / width).min(bounds.h / height).max(0.01);
-    let frame_w = width * fit_scale;
-    let frame_h = height * fit_scale;
-    let frame = Rect::new(bounds.x + (bounds.w - frame_w) * 0.5, bounds.y + (bounds.h - frame_h) * 0.5, frame_w, frame_h);
-
-    let asset_url = crate::mesh_assets::mesh_asset_transport_url(&request.asset_url);
-    let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&asset_url);
+/// 🎬️ Shared preview and export scene construction at the requested camera scale.
+fn icon_render_world_scene(request: &IconRenderRequestFields, asset_url: &str, mesh_id: &str, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> ui_wgpu::wgpu::World3dScene {
     let instances_json = json!([{
         "id": "icon-render-subject",
         "meshId": mesh_id,
@@ -10209,24 +10433,39 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     }])
     .to_string();
     let mut synthetic_world = semio_framework_plugin::world3d_scene(
-        icon_render_camera_json(&request.camera),
-        semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&asset_url)),
+        icon_render_camera_json(request, subject_bounds, preview_scale),
+        semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&asset_url.to_string())),
         instances_json,
         semio_framework_plugin::default_world3d_selection(),
         &semio_framework_plugin::WorldSunConfig::default(),
     );
-    synthetic_world.environment_json = Some(icon_render_environment_json(&request));
+    synthetic_world.environment_json = Some(icon_render_environment_json(request));
+    synthetic_world.presentation_json = Some(json!({ "showGrid": false, "showGizmo": false, "interactive": false, "viewportMask": if request.shape.as_deref() == Some("ellipse") { "ellipse" } else { "rectangle" }, "clear": "transparent", "sourceAspect": request.width.max(1.0) / request.height.max(1.0) }).to_string());
 
-    let synthetic_scene = UiComponentSceneNode {
+    synthetic_world
+}
+
+/// 📤️ Wraps the shared Icon request scene in the exact component envelope consumed by World3d.
+fn icon_render_world_component_scene(
+    request: &IconRenderRequestFields,
+    asset_url: &str,
+    mesh_id: &str,
+    subject_bounds: Option<([f32; 3], [f32; 3])>,
+    preview_scale: f64,
+    host_id: String,
+    surface_id: String,
+    controller_id: String,
+) -> UiComponentSceneNode {
+    UiComponentSceneNode {
         presence: UiPresence::default(),
-        host_id: scene.host_id.clone(),
-        surface_id: scene.surface_id.clone(),
-        controller_id: scene.controller_id.clone(),
+        host_id,
+        surface_id,
+        controller_id,
         component_kind: SurfaceKind::World3d,
         pane_id: None,
         binding_id: None,
         canvas_2d: None,
-        world_3d: Some(synthetic_world),
+        world_3d: Some(icon_render_world_scene(request, asset_url, mesh_id, subject_bounds, preview_scale)),
         node_graph: None,
         text_editor: None,
         table: None,
@@ -10241,31 +10480,50 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         event_feed: None,
         block_list: None,
         menu: None,
+    }
+}
+
+/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
+fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
+    let Some(icon_render) = &scene.icon_render else {
+        return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
+    };
+    let Ok(request) = serde_json::from_str::<IconRenderRequestFields>(&icon_render.request_json) else {
+        return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
     };
 
+    let shape = request.shape.clone().unwrap_or_else(|| "rectangle".into());
+    let (footer_height, _) = icon_render_footer_layout(bounds, icon_render.footer.as_deref(), ctx.atlas, ctx.theme.font_size_small);
+    let frame = icon_render_frame(bounds, request.width, request.height, footer_height);
+    let content_frame = icon_render_content_frame(frame);
+
+    let asset_url = crate::mesh_assets::mesh_asset_transport_url(&request.asset_url);
+    let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&asset_url);
     let surface_id = scene.surface_id.clone();
     let controller_id = scene.controller_id.clone();
     let Some(state) = hosts.world3d_states.get_or_insert_with(scene.host_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
-        return render_icon_render_empty(bounds, ctx, "No shot");
+        return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
     };
-    infinite_world::world::render_world_3d(&synthetic_scene, frame, ctx, state, hosts.world_resources, icon_render_shadow_profile(&request));
-    let status = icon_render_status(state.mesh_lease(&mesh_id).is_some(), state.snapshot_fault().is_some());
-    if status != IconRenderStatus::Ready {
-        let failed = status == IconRenderStatus::Failed;
-        let color = if failed { ctx.theme.error } else { ctx.theme.text_muted };
-        let message = if failed { ICON_RENDER_FAILED_MESSAGE } else { ICON_RENDER_RENDERING_MESSAGE };
-        render_icon_render_status(ctx, frame, message, color);
+    let subject_bounds = state.mesh_lease(&mesh_id).and_then(|mesh| mesh.aabb().ok());
+    let synthetic_scene = icon_render_world_component_scene(
+        &request,
+        &asset_url,
+        &mesh_id,
+        subject_bounds,
+        f64::from(content_frame.w) / request.width.max(1.0),
+        scene.host_id.clone(),
+        scene.surface_id.clone(),
+        scene.controller_id.clone(),
+    );
+
+    infinite_world::world::render_world_3d(&synthetic_scene, content_frame, ctx, state, hosts.world_resources, icon_render_shadow_profile(&request));
+    let status = icon_render_subject_status(state, &mesh_id, &asset_url);
+    if let Some(message) = icon_render_status_message(status, hosts.chrome_labels.icon_render) {
+        let color = if status == IconRenderStatus::Failed { ctx.theme.error } else { ctx.theme.text_muted };
+        with_icon_render_mask(ctx, content_frame, &shape, |ctx| render_icon_render_status(ctx, content_frame, message, color));
     }
     paint_icon_render_chrome(ctx, bounds, frame, &request, &shape, icon_render.footer.as_deref());
 }
-
-/// 🖼️ React's `renderingLabel` (`ui.host.rendering`). Hard-coded English like this region's existing
-/// `"No shot"`: the wgpu scene painters carry no `useLabel` equivalent yet, a divergence that belongs
-/// to whoever wires `LocalizedLabel` into scene chrome, not to this arm.
-const ICON_RENDER_RENDERING_MESSAGE: &str = "Rendering…";
-/// 🖼️ React shows `iconRenderPort.render`'s own rejection message; this twin has no per-asset error
-/// string to show, only the state's snapshot fault, so it names the failure instead of inventing one.
-const ICON_RENDER_FAILED_MESSAGE: &str = "Shot failed";
 
 /// 🖼️ The three states React's `IconRenderHost` shows, resolved from the ONE subject mesh's residency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -10289,6 +10547,18 @@ fn icon_render_status(mesh_resident: bool, faulted: bool) -> IconRenderStatus {
     }
 }
 
+fn icon_render_subject_status(state: &infinite_world::world::World3dState, mesh_id: &str, url: &str) -> IconRenderStatus {
+    icon_render_status(state.mesh_lease(mesh_id).is_some(), state.snapshot_fault().is_some() || infinite_world::world::world3d_asset_url_missed(state, url))
+}
+
+fn icon_render_status_message(status: IconRenderStatus, labels: IconRenderChromeLabels) -> Option<&'static str> {
+    match status {
+        IconRenderStatus::Ready => None,
+        IconRenderStatus::Rendering => Some(labels.rendering),
+        IconRenderStatus::Failed => Some(labels.failed),
+    }
+}
+
 /// 🖼️ Centres one status line inside the shot frame, over the (empty) world draw — React puts the
 /// same text inside `IconShotFrame`, not beside it.
 fn render_icon_render_status(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, message: &str, color: Rgba) {
@@ -10304,26 +10574,42 @@ fn render_icon_render_status(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, 
 fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, frame: Rect, request: &IconRenderRequestFields, shape: &str, footer: Option<&str>) {
     let theme = ctx.theme;
     let hair = 2.0_f32;
-    ctx.draw.push_solid([frame.x, frame.y, frame.w, hair], theme.accent);
-    ctx.draw.push_solid([frame.x, frame.y + frame.h - hair, frame.w, hair], theme.accent);
-    ctx.draw.push_solid([frame.x, frame.y, hair, frame.h], theme.accent);
-    ctx.draw.push_solid([frame.x + frame.w - hair, frame.y, hair, frame.h], theme.accent);
+    if shape == "ellipse" {
+        let centre = [frame.x + frame.w * 0.5, frame.y + frame.h * 0.5];
+        let outer = [frame.w * 0.5, frame.h * 0.5];
+        let inner = [(outer[0] - hair).max(0.0), (outer[1] - hair).max(0.0)];
+        let point = |angle: f32, radius: [f32; 2]| [centre[0] + radius[0] * angle.cos(), centre[1] + radius[1] * angle.sin()];
+        for segment in 0..128 {
+            let start = std::f32::consts::TAU * segment as f32 / 128.0;
+            let end = std::f32::consts::TAU * (segment + 1) as f32 / 128.0;
+            ctx.draw.push_triangle_fan(&[point(start, outer), point(end, outer), point(end, inner), point(start, inner)], theme.accent);
+        }
+    } else {
+        ctx.draw.push_solid([frame.x, frame.y, frame.w, hair], theme.accent);
+        ctx.draw.push_solid([frame.x, frame.y + frame.h - hair, frame.w, hair], theme.accent);
+        ctx.draw.push_solid([frame.x, frame.y, hair, frame.h], theme.accent);
+        ctx.draw.push_solid([frame.x + frame.w - hair, frame.y, hair, frame.h], theme.accent);
+    }
 
     let badge = format!("{}×{} · {}", request.width.round() as i64, request.height.round() as i64, shape);
-    let badge_size = theme.font_size_small;
-    let (badge_text_w, badge_text_h) = ctx.atlas.measure_text(&badge, badge_size);
-    let pad = 4.0;
-    let badge_w = badge_text_w + pad * 2.0;
-    let badge_h = badge_text_h + pad * 2.0;
-    let badge_x = frame.x + frame.w - badge_w - 4.0;
-    let badge_y = frame.y + frame.h - badge_h - 4.0;
-    ctx.draw.push_rounded([badge_x, badge_y, badge_w, badge_h], theme.background.with_alpha(0.8), 2.0);
-    draw_text(ctx, &badge, badge_x + pad, badge_y + pad + badge_text_h * 0.8, badge_size, theme.text_muted);
+    let badge_rect = icon_render_badge_layout(frame, &badge, ctx.atlas);
+    with_icon_render_mask(ctx, icon_render_content_frame(frame), shape, |ctx| {
+        ctx.draw.push_solid([badge_rect.x, badge_rect.y, badge_rect.w, badge_rect.h], theme.background.with_alpha(0.8));
+        for (index, range) in ctx.atlas.wrap_lines_face(TextFace::Mono, &badge, badge_rect.w - 8.0, 10.0).into_iter().enumerate() {
+            draw_text_face(ctx, TextFace::Mono, badge[range].trim_end(), badge_rect.x + 4.0, badge_rect.y + 12.5 + index as f32 * 15.0, 10.0, theme.text_muted);
+        }
+    });
 
     if let Some(footer) = footer {
         let footer_size = theme.font_size_small;
-        let footer_w = ctx.atlas.measure_text(footer, footer_size).0;
-        draw_text(ctx, footer, bounds.x + (bounds.w - footer_w) * 0.5, bounds.y + bounds.h - 8.0, footer_size, theme.text_muted);
+        let (height, lines) = icon_render_footer_layout(bounds, Some(footer), ctx.atlas, footer_size);
+        let line_height = ui_wgpu::wgpu::text::line_height(footer_size);
+        for (index, range) in lines.into_iter().enumerate() {
+            let text = &footer[range];
+            let width = ctx.atlas.measure_text(text, footer_size).0;
+            let baseline = bounds.y + bounds.h - height + index as f32 * line_height + (line_height + footer_size) * 0.5;
+            draw_text(ctx, text, bounds.x + (bounds.w - width) * 0.5, baseline, footer_size, theme.text.with_alpha(0.6));
+        }
     }
 }
 
@@ -10335,6 +10621,9 @@ fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, 
 //#endregion IconRender
 
 //#region IconRenderTests
+#[path = "../../../🖼️IconRenderHost/🎯️targets/🧊️wgpu/📤️export/🦀️.rs"]
+pub(crate) mod icon_export;
+
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-icon-render/🦀️.rs"]
 mod icon_render_tests;
@@ -10351,6 +10640,54 @@ pub struct Board2dSurface {
 
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
     engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
+}
+
+/// 🤏️ Transfers a board's first-touch lane to pinch ownership when contact two lands.
+pub fn puzzle_board_touch_pointer_down(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    match touch_pointer_down(surface_id, pointer_id, sx, sy) {
+        GestureVerdict::Single => false,
+        GestureVerdict::PinchBegin(_) => {
+            engine_canvas::puzzle_board_yield_to_pinch(surface_id, sx, sy);
+            true
+        }
+        _ => true,
+    }
+}
+
+/// 🤏️ Applies one silent board pinch step; the single-pointer lane stays suppressed while latched.
+pub fn puzzle_board_touch_pointer_move(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    match touch_pointer_move(surface_id, pointer_id, sx, sy) {
+        GestureVerdict::Single => false,
+        GestureVerdict::Pinch(step) => {
+            if let Some(current) = engine_canvas::puzzle_board_camera(surface_id) {
+                let next = pinch_camera(
+                    current,
+                    step,
+                    [inner.w as f64, inner.h as f64],
+                    ZoomBounds { min: infinite_canvas::BOARD_CAMERA_ZOOM_MIN, max: infinite_canvas::BOARD_CAMERA_ZOOM_MAX },
+                );
+                engine_canvas::puzzle_board_set_camera_silent(surface_id, next);
+            }
+            true
+        }
+        _ => true,
+    }
+}
+
+/// 🏁️ Suppresses pinch lifts and publishes exactly one settled board camera on the final lift.
+pub fn puzzle_board_touch_pointer_up_into(
+    surface_id: &str,
+    controller_id: &str,
+    pointer_id: ui_render::PointerId,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    match touch_pointer_up(surface_id, pointer_id) {
+        GestureVerdict::Single => Ok(false),
+        GestureVerdict::PinchEnd => engine_canvas::puzzle_board_publish_camera_into(surface_id, controller_id, input).map(|_| true),
+        _ => Ok(true),
+    }
 }
 
 pub fn puzzle_board_pointer_move_into(

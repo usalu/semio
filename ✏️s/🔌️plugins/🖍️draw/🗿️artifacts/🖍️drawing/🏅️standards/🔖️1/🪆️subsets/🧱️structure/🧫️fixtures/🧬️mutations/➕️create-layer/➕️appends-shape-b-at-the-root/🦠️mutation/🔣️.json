@@ -14,9 +14,11 @@
       "scaleX": 1.0,
       "scaleY": 1.0,
       "rotation": 0.0,
-      "shear": 0
+      "shear": 0.0
     },
-    "attributes": {},
+    "attributes": {
+      "fillRule": "evenodd"
+    },
     "shapeKind": "circle",
     "circle": {
       "cx": 40.0,

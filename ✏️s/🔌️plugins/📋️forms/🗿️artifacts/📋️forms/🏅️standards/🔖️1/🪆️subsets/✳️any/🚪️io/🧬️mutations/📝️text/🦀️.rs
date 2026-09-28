@@ -11,6 +11,7 @@ use crate::mutations::{
     delete_step::mutation::DeleteStep, move_block_to_step::mutation::MoveBlockToStep, rename_step::mutation::RenameStep, reorder_step::mutation::ReorderStep, replace_block::mutation::ReplaceBlock,
 };
 use crate::{FormQuestion, FormStep};
+use crate::mutations::{commit_response::mutation::CommitResponse, discard_response::mutation::DiscardResponse};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -143,6 +144,8 @@ fn print_forms_mutation(mutation: &FormMutation) -> String {
         FormMutation::DeleteBlock(p) => format!("delete-block step-id={} id={}", enc_str(&p.step_id), enc_str(&p.id)),
         FormMutation::MoveBlockToStep(p) => format!("move-block-to-step step-id={} block-id={} to-step-id={} index={}", enc_str(&p.step_id), enc_str(&p.block_id), enc_str(&p.to_step_id), enc_usize(p.index)),
         FormMutation::ReplaceBlock(p) => format!("replace-block step-id={} block={}", enc_str(&p.step_id), enc_block(&p.block)),
+        FormMutation::CommitResponse(p) => format!("commit-response response={} index={}", enc_str(&dsl::json::to_json_string(&p.response)), enc_opt_usize(&p.index)),
+        FormMutation::DiscardResponse(p) => format!("discard-response id={}", enc_str(&p.id)),
         FormMutation::ChangeFormTitle(p) => format!("change-form-title new-title={}", enc_opt_str(&p.new_title)),
     }
 }
@@ -162,6 +165,8 @@ fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
         "move-block-to-step" => Ok(FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: dec_str(&arg("step-id")?)?, block_id: dec_str(&arg("block-id")?)?, to_step_id: dec_str(&arg("to-step-id")?)?, index: dec_usize(&arg("index")?)? })),
         "replace-block" => Ok(FormMutation::ReplaceBlock(ReplaceBlock { step_id: dec_str(&arg("step-id")?)?, block: dec_block(&arg("block")?)? })),
         "change-form-title" => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: dec_opt_str(&arg("new-title")?)? })),
+        "commit-response" => Ok(FormMutation::CommitResponse(CommitResponse { response: dsl::json::from_json_str(&dec_str(&arg("response")?)?).map_err(|error| error.to_string())?, index: dec_opt_usize(&arg("index")?)? })),
+        "discard-response" => Ok(FormMutation::DiscardResponse(DiscardResponse { id: dec_str(&arg("id")?)? })),
         other => Err(format!("forms mutation: unknown keyword {other:?}")),
     }
 }
@@ -232,6 +237,8 @@ impl protocol::OpBinary for FormMutation {
             FormMutation::MoveBlockToStep(_) => 7,
             FormMutation::ReplaceBlock(_) => 8,
             FormMutation::ChangeFormTitle(_) => 9,
+            FormMutation::CommitResponse(_) => 10,
+            FormMutation::DiscardResponse(_) => 11,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -271,6 +278,11 @@ impl protocol::OpBinary for FormMutation {
                 write_str_bin(&mut out, &p.step_id);
                 write_str_bin(&mut out, &enc_block(&p.block));
             }
+            FormMutation::CommitResponse(p) => {
+                write_str_bin(&mut out, &dsl::json::to_json_string(&p.response));
+                write_opt_usize_bin(&mut out, &p.index);
+            }
+            FormMutation::DiscardResponse(p) => write_str_bin(&mut out, &p.id),
             FormMutation::ChangeFormTitle(p) => write_opt_str_bin(&mut out, &p.new_title),
         }
         Ok(out)
@@ -330,6 +342,13 @@ impl protocol::OpBinary for FormMutation {
                 Ok(FormMutation::ReplaceBlock(ReplaceBlock { step_id, block }))
             }
             9 => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: read_opt_str_bin(&mut reader).map_err(|e| malformed("new_title", reader.position(), e))? })),
+            10 => {
+                let text = read_str_bin(&mut reader).map_err(|e| malformed("response", reader.position(), e))?;
+                let response = dsl::json::from_json_str(&text).map_err(|e| malformed("response", reader.position(), e.to_string()))?;
+                let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(FormMutation::CommitResponse(CommitResponse { response, index }))
+            }
+            11 => Ok(FormMutation::DiscardResponse(DiscardResponse { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }

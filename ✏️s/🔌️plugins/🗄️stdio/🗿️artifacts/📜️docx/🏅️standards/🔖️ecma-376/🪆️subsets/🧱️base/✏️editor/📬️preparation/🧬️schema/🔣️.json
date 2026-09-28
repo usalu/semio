@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["ownerBytes", "ownerItems", "ownerDepth", "turnBytes", "refusedTextBytes", "recognizedMutations"],
+  "properties": {
+    "ownerBytes": { "type": "integer", "const": 2048 },
+    "ownerItems": { "type": "integer", "const": 128 },
+    "ownerDepth": { "type": "integer", "const": 32 },
+    "turnBytes": { "type": "integer", "const": 4096 },
+    "refusedTextBytes": { "type": "integer", "minimum": 2049 },
+    "recognizedMutations": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "prefixItems": [
+        { "const": "setRunText" },
+        { "const": "replaceXmlNode" },
+        { "const": "setRunFormatting" },
+        { "const": "setParagraphStyle" },
+        { "const": "insertTableRow" },
+        { "const": "removeTableRow" },
+        { "const": "insertXmlNode" },
+        { "const": "removeXmlNode" }
+      ],
+      "items": false
+    }
+  },
+  "additionalProperties": false
+}

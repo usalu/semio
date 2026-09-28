@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "invalid",
+    "expected",
+    "labels",
+    "queueCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "filename",
+          "request"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "request": {}
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "completed",
+        "failed",
+        "phase",
+        "cancelPhase",
+        "remainingAfterCancel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "completed": {
+          "const": 0
+        },
+        "failed": {
+          "const": 2
+        },
+        "phase": {
+          "const": "failed"
+        },
+        "cancelPhase": {
+          "const": "cancelled"
+        },
+        "remainingAfterCancel": {
+          "const": 0
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "object",
+          "required": [
+            "cancel",
+            "close"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cancel": {
+              "type": "string"
+            },
+            "close": {
+              "type": "string"
+            }
+          }
+        },
+        "de": {
+          "type": "object",
+          "required": [
+            "cancel",
+            "close"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cancel": {
+              "type": "string"
+            },
+            "close": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "queueCases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "groups",
+          "cancelBeforeGroup",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "groups": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "cancelBeforeGroup": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "admitted",
+              "failed",
+              "discarded",
+              "phase"
+            ],
+            "properties": {
+              "admitted": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "discarded": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "phase": {
+                "enum": [
+                  "failed",
+                  "cancelled"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

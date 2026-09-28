@@ -1,9 +1,6 @@
-//! 🔺️ WavDiff — sparse per-field RIFF/WAVE diff. `WavSnapshot` has exactly three top-level
-//! fields (`fmt`, `data`, `other_chunks`), none independently nullable (unlike deflate's
-//! `dict_id`), so every field here is a plain `Option<T>` "changed or not" slot — the same
-//! "Scalars: LWW" shape `DeflateDiff` uses, adapted to wav's own value types.
+//! 🔺️ WavDiff — sparse per-field RIFF/WAVE diff, including the complete chunk sequence.
 
-use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -16,7 +13,13 @@ pub struct WavDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<WavData>,
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fmt_pad_byte: Option<u8>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub data_pad_byte: Option<u8>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub other_chunks: Option<Vec<RiffChunk>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub chunk_order: Option<Vec<WavChunkRef>>,
 }
 
 impl MutationDiff<WavSnapshot> for WavDiff {
@@ -28,8 +31,17 @@ impl MutationDiff<WavSnapshot> for WavDiff {
         if let Some(v) = &self.data {
             next.data = v.clone();
         }
+        if let Some(v) = self.fmt_pad_byte {
+            next.fmt_pad_byte = v;
+        }
+        if let Some(v) = self.data_pad_byte {
+            next.data_pad_byte = v;
+        }
         if let Some(v) = &self.other_chunks {
             next.other_chunks = v.clone();
+        }
+        if let Some(v) = &self.chunk_order {
+            next.chunk_order = v.clone();
         }
         Ok(next)
     }
@@ -40,21 +52,30 @@ impl MutationDiff<WavSnapshot> for WavDiff {
         if other.data.is_some() {
             self.data = other.data;
         }
+        if other.fmt_pad_byte.is_some() {
+            self.fmt_pad_byte = other.fmt_pad_byte;
+        }
+        if other.data_pad_byte.is_some() {
+            self.data_pad_byte = other.data_pad_byte;
+        }
         if other.other_chunks.is_some() {
             self.other_chunks = other.other_chunks;
+        }
+        if other.chunk_order.is_some() {
+            self.chunk_order = other.chunk_order;
         }
     }
 }
 
 impl DiffAlgebra<WavSnapshot> for WavDiff {
     fn between(base: &WavSnapshot, other: &WavSnapshot) -> Self {
-        WavDiff { fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()), data: (base.data != other.data).then(|| other.data.clone()), other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()) }
+        WavDiff { fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()), data: (base.data != other.data).then(|| other.data.clone()), fmt_pad_byte: (base.fmt_pad_byte != other.fmt_pad_byte).then_some(other.fmt_pad_byte), data_pad_byte: (base.data_pad_byte != other.data_pad_byte).then_some(other.data_pad_byte), other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()), chunk_order: (base.chunk_order != other.chunk_order).then(|| other.chunk_order.clone()) }
     }
     fn inverse(&self, base: &WavSnapshot) -> Self {
-        WavDiff { fmt: self.fmt.as_ref().map(|_| base.fmt.clone()), data: self.data.as_ref().map(|_| base.data.clone()), other_chunks: self.other_chunks.as_ref().map(|_| base.other_chunks.clone()) }
+        WavDiff { fmt: self.fmt.as_ref().map(|_| base.fmt.clone()), data: self.data.as_ref().map(|_| base.data.clone()), fmt_pad_byte: self.fmt_pad_byte.map(|_| base.fmt_pad_byte), data_pad_byte: self.data_pad_byte.map(|_| base.data_pad_byte), other_chunks: self.other_chunks.as_ref().map(|_| base.other_chunks.clone()), chunk_order: self.chunk_order.as_ref().map(|_| base.chunk_order.clone()) }
     }
     fn is_empty(&self) -> bool {
-        self.fmt.is_none() && self.data.is_none() && self.other_chunks.is_none()
+        self.fmt.is_none() && self.data.is_none() && self.fmt_pad_byte.is_none() && self.data_pad_byte.is_none() && self.other_chunks.is_none() && self.chunk_order.is_none()
     }
 }
 
@@ -75,8 +96,24 @@ pub fn diff_set_data(data: WavData) -> WavDiff {
 }
 /// 🧩 Builds a set-other-chunks diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
-    WavDiff { other_chunks: Some(chunks), ..Default::default() }
+pub fn diff_set_other_chunks(base: &WavSnapshot, chunks: Vec<RiffChunk>) -> WavDiff {
+    let mut referenced = vec![false; chunks.len()];
+    let mut chunk_order = Vec::with_capacity(base.chunk_order.len().max(chunks.len() + 2));
+    for reference in &base.chunk_order {
+        match reference {
+            WavChunkRef::Other(index) => {
+                let Ok(index) = usize::try_from(*index) else { continue };
+                if index >= chunks.len() { continue; }
+                referenced[index] = true;
+                chunk_order.push(reference.clone());
+            }
+            _ => chunk_order.push(reference.clone()),
+        }
+    }
+    for (index, was_referenced) in referenced.into_iter().enumerate() {
+        if !was_referenced { chunk_order.push(WavChunkRef::Other(index as u64)); }
+    }
+    WavDiff { other_chunks: Some(chunks), chunk_order: (chunk_order != base.chunk_order).then_some(chunk_order), ..Default::default() }
 }
 //#endregion 🔖️Diff
 
@@ -207,20 +244,32 @@ fn dec_wav_data(s: &str) -> Result<WavData, String> {
 /// contains `,`/`[`/`]`/`;` in practice, so it's safe as a bare top-level token.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_riff_chunk(c: &RiffChunk) -> String {
-    format!("[{},{}]", c.fourcc, hex_encode(&c.data))
+    format!("[{},{},{}]", c.fourcc, hex_encode(&c.data), c.pad_byte)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
-    if parts.len() != 2 {
-        return Err(format!("riff chunk: expected 2 fields, got {}", parts.len()));
+    if parts.len() != 3 {
+        return Err(format!("riff chunk: expected 3 fields, got {}", parts.len()));
     }
-    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1])? })
+    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1])?, pad_byte: parts[2].parse::<u8>().map_err(|error| error.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
     format!("[{}]", chunks.iter().map(enc_riff_chunk).collect::<Vec<_>>().join(";"))
+}
+
+fn enc_chunk_order(order: &[WavChunkRef]) -> String {
+    format!("[{}]", order.iter().map(|reference| match reference { WavChunkRef::Format => "f".to_string(), WavChunkRef::Samples => "d".to_string(), WavChunkRef::Other(index) => format!("o{index}") }).collect::<Vec<_>>().join(";"))
+}
+
+fn dec_chunk_order(s: &str) -> Result<Vec<WavChunkRef>, String> {
+    split_top_level(strip_brackets(s)?, ';').into_iter().filter(|part| !part.is_empty()).map(|part| match part {
+        "f" => Ok(WavChunkRef::Format),
+        "d" => Ok(WavChunkRef::Samples),
+        other => other.strip_prefix('o').ok_or_else(|| format!("chunk order: unknown reference {other:?}")).and_then(|index| index.parse::<u64>().map(WavChunkRef::Other).map_err(|error| error.to_string())),
+    }).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
@@ -239,8 +288,17 @@ fn print_wav_diff(d: &WavDiff) -> String {
     if let Some(v) = &d.data {
         tokens.push(format!("data={}", enc_wav_data(v)));
     }
+    if let Some(v) = d.fmt_pad_byte {
+        tokens.push(format!("fmt-pad-byte={v}"));
+    }
+    if let Some(v) = d.data_pad_byte {
+        tokens.push(format!("data-pad-byte={v}"));
+    }
     if let Some(v) = &d.other_chunks {
         tokens.push(format!("other-chunks={}", enc_riff_chunks(v)));
+    }
+    if let Some(v) = &d.chunk_order {
+        tokens.push(format!("chunk-order={}", enc_chunk_order(v)));
     }
     tokens.join(" ")
 }
@@ -255,8 +313,14 @@ fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
             d.fmt = Some(dec_wav_fmt(rest)?);
         } else if let Some(rest) = token.strip_prefix("data=") {
             d.data = Some(dec_wav_data(rest)?);
+        } else if let Some(rest) = token.strip_prefix("fmt-pad-byte=") {
+            d.fmt_pad_byte = Some(rest.parse::<u8>().map_err(|error| error.to_string())?);
+        } else if let Some(rest) = token.strip_prefix("data-pad-byte=") {
+            d.data_pad_byte = Some(rest.parse::<u8>().map_err(|error| error.to_string())?);
         } else if let Some(rest) = token.strip_prefix("other-chunks=") {
             d.other_chunks = Some(dec_riff_chunks(rest)?);
+        } else if let Some(rest) = token.strip_prefix("chunk-order=") {
+            d.chunk_order = Some(dec_chunk_order(rest)?);
         } else {
             return Err(format!("wav diff: unknown token {token:?}"));
         }

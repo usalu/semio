@@ -130,6 +130,8 @@ pub struct DrawingInferrer;
 #[value(rename_all = "camelCase")]
 pub struct DrawingSceneNode {
     pub id: String,
+    #[value(default)]
+    pub groups: Vec<DrawingSceneGroup>,
     pub transform: [f64; 6],
     pub segments: Vec<PathSegment>,
     #[value(skip_serializing_if = "Option::is_none")]
@@ -145,6 +147,15 @@ pub struct DrawingSceneNode {
     pub text: Option<DrawingSceneText>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub image: Option<DrawingSceneImage>,
+}
+
+/// 🧩️ One isolated ancestor compositing scope; leaf matrices already include its transform.
+#[derive(Clone,Debug,PartialEq,dsl::ToValue,dsl::FromValue)]
+#[value(rename_all="camelCase")]
+pub struct DrawingSceneGroup {
+    pub id:String,
+    pub opacity:f64,
+    pub blend_mode:String,
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
@@ -230,6 +241,7 @@ pub fn create_drawing_path_layer(name: &str, segments: Vec<PathSegment>) -> Draw
 
 pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Group(DrawingGroupBody {
+        isolation:false,
         base: DrawingLayerBase {
             id: create_drawing_id("group", name.as_bytes()),
             name: name.into(),
@@ -309,7 +321,7 @@ pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
             opacity: 1.0,
             blend_mode: "normal".into(),
             transform: default_drawing_transform(),
-            attributes: DrawingAttributes { fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
+            attributes: DrawingAttributes { fill_rule: crate::FillRule::Evenodd, fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
         },
         x: 0.0,
         y: 0.0,
@@ -481,74 +493,57 @@ pub fn layer_to_path_segments(layer: &DrawingLayerNode) -> Vec<PathSegment> {
     }
 }
 
-fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<PathSegment> {
-    let k = 0.552_284_749_8;
-    let crx = rx * k;
-    let cry = ry * k;
-    vec![
-        PathSegment::Move { to: [cx, cy - ry] },
-        PathSegment::Cubic { ctrl1: [cx + crx, cy - ry], ctrl2: [cx + rx, cy - cry], to: [cx + rx, cy] },
-        PathSegment::Cubic { ctrl1: [cx + rx, cy + cry], ctrl2: [cx + crx, cy + ry], to: [cx, cy + ry] },
-        PathSegment::Cubic { ctrl1: [cx - crx, cy + ry], ctrl2: [cx - rx, cy + cry], to: [cx - rx, cy] },
-        PathSegment::Cubic { ctrl1: [cx - rx, cy - cry], ctrl2: [cx - crx, cy - ry], to: [cx, cy - ry] },
-        PathSegment::Close,
-    ]
+fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> [PathSegment;6] {
+    let arc=|to|PathSegment::Arc {rx:rx.abs(),ry:ry.abs(),rotation:0.0,large_arc:false,sweep:(rx>=0.0)==(ry>=0.0),to};
+    [PathSegment::Move {to:[cx,cy-ry]},arc([cx+rx,cy]),arc([cx,cy+ry]),arc([cx-rx,cy]),arc([cx,cy-ry]),PathSegment::Close]
 }
 
-fn shape_to_path_segments(shape: &DrawingShapeBody) -> Vec<PathSegment> {
+/// 🔷️ Reads one primitive contour segment without cloning a polygon.
+pub fn shape_path_segment(shape:&DrawingShapeBody,index:usize)->Option<PathSegment> {
     match shape.shape_kind.as_str() {
-        "rect" => shape.rect.as_ref().map(|rect| {
-            vec![
-                PathSegment::Move { to: [rect.x, rect.y] },
-                PathSegment::Line { to: [rect.x + rect.width, rect.y] },
-                PathSegment::Line { to: [rect.x + rect.width, rect.y + rect.height] },
-                PathSegment::Line { to: [rect.x, rect.y + rect.height] },
-                PathSegment::Close,
-            ]
-        }),
-        "line" => shape.line.as_ref().map(|line| vec![PathSegment::Move { to: [line.x1, line.y1] }, PathSegment::Line { to: [line.x2, line.y2] }]),
-        "polygon" => shape.polygon.as_ref().and_then(|polygon| {
-            if polygon.points.is_empty() {
-                return None;
-            }
-            let mut segments = vec![PathSegment::Move { to: polygon.points[0] }];
-            for point in polygon.points.iter().skip(1) {
-                segments.push(PathSegment::Line { to: *point });
-            }
-            segments.push(PathSegment::Close);
-            Some(segments)
-        }),
-        "ellipse" => shape.ellipse.as_ref().map(|ellipse| ellipse_path_segments(ellipse.cx, ellipse.cy, ellipse.rx, ellipse.ry)),
-        "circle" => shape.circle.as_ref().map(|circle| ellipse_path_segments(circle.cx, circle.cy, circle.r, circle.r)),
-        _ => None,
+        "rect"=>shape.rect.as_ref().and_then(|r|[
+            PathSegment::Move {to:[r.x,r.y]},PathSegment::Line {to:[r.x+r.width,r.y]},
+            PathSegment::Line {to:[r.x+r.width,r.y+r.height]},PathSegment::Line {to:[r.x,r.y+r.height]},PathSegment::Close,
+        ].get(index).cloned()),
+        "line"=>shape.line.as_ref().and_then(|l|[PathSegment::Move {to:[l.x1,l.y1]},PathSegment::Line {to:[l.x2,l.y2]}].get(index).cloned()),
+        "polygon"=>shape.polygon.as_ref().and_then(|p|p.points.get(index).map(|to|if index==0 {PathSegment::Move {to:*to}}else{PathSegment::Line {to:*to}}).or_else(||(!p.points.is_empty()&&index==p.points.len()).then_some(PathSegment::Close))),
+        "ellipse"=>shape.ellipse.as_ref().and_then(|e|ellipse_path_segments(e.cx,e.cy,e.rx,e.ry).get(index).cloned()),
+        "circle"=>shape.circle.as_ref().and_then(|c|ellipse_path_segments(c.cx,c.cy,c.r,c.r).get(index).cloned()),
+        _=>None,
     }
-    .unwrap_or_default()
+}
+
+fn shape_to_path_segments(shape:&DrawingShapeBody)->Vec<PathSegment> {
+    let mut index=0;
+    std::iter::from_fn(||{let segment=shape_path_segment(shape,index);index+=1;segment}).collect()
 }
 
 pub fn drawing_layer_world_bounds(layer: &DrawingLayerNode) -> Option<(f64, f64, f64, f64)> {
-    fn bounds(layer: &DrawingLayerNode, parent: [f64; 6]) -> Option<(f64, f64, f64, f64)> {
-        let matrix = geometry::multiply(parent, drawing_transform_to_matrix(&layer_base(layer).transform));
-        if let DrawingLayerNode::Group(group) = layer {
-            return group.children.iter().filter_map(|child| bounds(child, matrix)).reduce(|a, b| {
-                let x = a.0.min(b.0);
-                let y = a.1.min(b.1);
-                (x, y, (a.0+a.2).max(b.0+b.2)-x, (a.1+a.3).max(b.1+b.3)-y)
-            });
-        }
-        let rectangle = match layer {
-            DrawingLayerNode::Text(text) => {
-                let [width, height] = semio_s_2d::text::drawing_text_fallback_extent(&text.content, text.size);
-                Some((text.x, text.y, width.max(8.0), height.max(8.0)))
-            },
-            DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
-            _ => None,
-        };
-        let segments = if let Some((x, y, w, h)) = rectangle {
-            vec![PathSegment::Move { to: [x,y] }, PathSegment::Line { to: [x+w,y] }, PathSegment::Line { to: [x+w,y+h] }, PathSegment::Line { to: [x,y+h] }, PathSegment::Close]
-        } else { layer_to_path_segments(layer) };
-        path_segments_bounds_with_matrix(&segments, matrix)
+    drawing_layer_bounds_with_parent(layer,[1.0,0.0,0.0,1.0,0.0,0.0])
+}
+
+/// 🌍️ Measures complete geometry in the coordinate system of its ancestor matrix.
+pub fn drawing_layer_bounds_with_parent(layer: &DrawingLayerNode, parent: [f64;6]) -> Option<(f64,f64,f64,f64)> {
+    let matrix = geometry::multiply(parent, drawing_transform_to_matrix(&layer_base(layer).transform));
+    if let DrawingLayerNode::Group(group) = layer {
+        return group.children.iter().filter_map(|child| drawing_layer_bounds_with_parent(child, matrix)).reduce(|a, b| {
+            let x = a.0.min(b.0);
+            let y = a.1.min(b.1);
+            (x, y, (a.0+a.2).max(b.0+b.2)-x, (a.1+a.3).max(b.1+b.3)-y)
+        });
     }
-    bounds(layer, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+    let rectangle = match layer {
+        DrawingLayerNode::Text(text) => {
+            let [width, height] = semio_s_2d::text::drawing_text_fallback_extent(&text.content, text.size);
+            Some((text.x, text.y, width.max(8.0), height.max(8.0)))
+        },
+        DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
+        _ => None,
+    };
+    let segments = if let Some((x, y, w, h)) = rectangle {
+        vec![PathSegment::Move { to: [x,y] }, PathSegment::Line { to: [x+w,y] }, PathSegment::Line { to: [x+w,y+h] }, PathSegment::Line { to: [x,y+h] }, PathSegment::Close]
+    } else { layer_to_path_segments(layer) };
+    path_segments_bounds_with_matrix(&segments, matrix)
 }
 
 fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
@@ -569,6 +564,7 @@ fn transform_world_point(transform: &DrawingTransform, x: f64, y: f64) -> (f64, 
 fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> DrawingSceneNode {
     DrawingSceneNode {
         id: base.id.clone(),
+        groups:Vec::new(),
         transform: drawing_transform_to_matrix(&base.transform),
         segments,
         fill: base.attributes.fill.clone(),
@@ -576,7 +572,7 @@ fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> D
         opacity: base.opacity,
         blend_mode: base.blend_mode.clone(),
         visible: base.visible,
-        fill_rule: Some("evenodd".into()),
+        fill_rule: Some(base.attributes.fill_rule.as_str().into()),
         text: None,
         image: None,
     }
@@ -589,7 +585,7 @@ pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<Dra
 /// ↔️ Preview world-space transforms through the same group traversal as the committed scene.
 pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, transformation: Option<&(Vec<String>,[f64;6])>) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
@@ -602,7 +598,10 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
             let first = out.len();
             match layer {
                 DrawingLayerNode::Group(group) => {
-                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), transformation, out);
+                    let isolated=group.isolation || base.opacity!=1.0 || base.blend_mode!="normal";
+                    if isolated {groups.push(DrawingSceneGroup {id:base.id.clone(),opacity:base.opacity,blend_mode:base.blend_mode.clone()});}
+                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), transformation, groups, out);
+                    if isolated {groups.pop();}
                     continue;
                 }
                 DrawingLayerNode::Boolean(boolean) => {
@@ -627,6 +626,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                 }
                 DrawingLayerNode::Text(text) => out.push(DrawingSceneNode {
                     id: text.base.id.clone(),
+                    groups:Vec::new(),
                     transform: geometry::multiply(drawing_transform_to_matrix(&text.base.transform), [1.0, 0.0, 0.0, 1.0, text.x, text.y]),
                     segments: Vec::new(),
                     fill: text.base.attributes.fill.clone(),
@@ -642,6 +642,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     let src = doc.assets.get(&image.image_key).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
                     out.push(DrawingSceneNode {
                         id: image.base.id.clone(),
+                        groups:Vec::new(),
                         transform: drawing_transform_to_matrix(&image.base.transform),
                         segments: Vec::new(),
                         fill: image.base.attributes.fill.clone(),
@@ -662,10 +663,10 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     out.push(scene_node_for_path(base, segments));
                 }
             }
-            for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); }
+            for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); node.groups=groups.clone(); }
         }
     }
-    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], transformation, &mut out);
+    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], transformation, &mut Vec::new(), &mut out);
     out
 }
 
@@ -1234,3 +1235,6 @@ pub mod stroke;
 
 #[path = "🎨️fill/🦀️.rs"]
 pub mod fill;
+
+#[path = "🎨️fill/🌀️rule/🦀️.rs"]
+pub mod fill_rule;

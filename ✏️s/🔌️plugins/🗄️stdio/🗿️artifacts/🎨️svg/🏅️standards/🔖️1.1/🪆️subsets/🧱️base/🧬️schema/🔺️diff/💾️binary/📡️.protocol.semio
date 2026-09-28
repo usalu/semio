@@ -8,7 +8,7 @@ start record
 # shortcut (`../../🦀️.rs`'s old `DiffCodec::encode_diff` -- per the P2-W0 census, 100% of
 # stdio's `DiffCodec` impls were still on this shortcut). `format u8` + `flags u8` (bit0 =
 # `declaration` present, bit1 = `doctype` present, bit2 = `root` present, bit3 = `prolog`
-# present) as two REAL fixed fields, individually protocol-walked.
+# present, bit4 = `epilog` present) as two REAL fixed fields, individually protocol-walked.
 #
 # Past that header, `declaration`/`doctype`/`root` (whichever `flags` marks present, in that FIXED
 # order) are bundled into ONE opaque trailing `bytes` chain rather than three separately-declared

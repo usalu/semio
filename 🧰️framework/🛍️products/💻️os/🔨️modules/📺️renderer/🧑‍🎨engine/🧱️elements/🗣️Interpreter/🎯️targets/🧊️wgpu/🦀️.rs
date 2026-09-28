@@ -3697,6 +3697,12 @@ pub(crate) fn set_ui_document_flow(window_id: &str, flow: ui_contract::UiFlow) {
     UI_ENGINE.with(|cell| cell.borrow_mut().set_window_flow(window_id, flow));
 }
 
+/// 🎯️ Stamps one reconciled Tree candidate's host-owned selected row through the retained presence
+/// channel. Structural document records stay immutable and a stale document generation is refused.
+pub(crate) fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, selected_key: &str) -> bool {
+    UI_ENGINE.with(|cell| cell.borrow_mut().stamp_tree_selected_item(window_id, generation, selected_key))
+}
+
 pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
@@ -3877,6 +3883,7 @@ pub(crate) fn render_ui_document_step(
                 }
             }
             UiDocumentFramePhase::Paint => {
+                let progress_before = engine.paint_frame_progress(window_id);
                 let document_generation = engine.tree_revision(window_id).unwrap_or(generation);
                 let mut scene_host = FrameworkSceneHost {
                     input: ctx.input,
@@ -3906,8 +3913,12 @@ pub(crate) fn render_ui_document_step(
                         cursor.phase = UiDocumentFramePhase::Layout;
                     }
                     ui_wgpu::wgpu::UiFrameStep::Pending => {
-                        cursor.stalled = cursor.stalled.saturating_add(1);
-                        if cursor.stalled % UI_DOCUMENT_PAINT_STALL_NOTICE == 0 {
+                        if engine.paint_frame_progress(window_id) != progress_before {
+                            cursor.stalled = 0;
+                        } else {
+                            cursor.stalled = cursor.stalled.saturating_add(1);
+                        }
+                        if cursor.stalled > 0 && cursor.stalled % UI_DOCUMENT_PAINT_STALL_NOTICE == 0 {
                             document_debug_log(&format!("[DEBUG] ui-doc paint stalled window={window_id} opportunities={} {}", cursor.stalled, engine.paint_stall_census(window_id)));
                         }
                     }
@@ -6211,6 +6222,15 @@ fn accessibility_window_is_visible(window_id: &str) -> bool {
 pub(crate) fn published_accessibility_nodes_for_test(window_id: &str) -> Vec<ui_contract::AccessibilityProjectionNode> {
     let dump = UI_ENGINE.with(|cell| build_accessibility_dump(&cell.borrow(), None));
     dump.windows.into_iter().find(|window| window.window_id == window_id).map(|window| window.nodes).unwrap_or_default()
+}
+
+#[cfg(test)]
+pub(crate) fn candidate_tree_item_selected_for_test(window_id: &str, key: &str) -> Option<bool> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let tree = engine.candidate_tree(window_id)?;
+        ui_wgpu::wgpu::accessibility::accessibility_projection(tree).into_iter().find(|node| node.key == key).and_then(|node| node.selected)
+    })
 }
 
 #[cfg(test)]

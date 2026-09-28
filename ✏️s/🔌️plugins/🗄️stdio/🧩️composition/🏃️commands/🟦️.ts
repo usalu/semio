@@ -1,6 +1,7 @@
 import { BundleScript } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { buildStdioComposition, checkStdioComposition } from "../🏗️build/🟦️.ts";
 import { testStdioComposition } from "../../🧪️tests/🧩️composition-consumption/🟦️.ts";
+import { testStdioOfficeSchemaContracts } from "../../🧪️tests/📚️office-schema-contract/🟦️.ts";
 
 /** 📦️ Builds the Stdio composition package. */
 export class StdioCompositionBuildScript extends BundleScript {
@@ -20,5 +21,6 @@ export class StdioCompositionCheckScript extends BundleScript {
 export class StdioCompositionTestScript extends BundleScript {
   async run(): Promise<void> {
     await testStdioComposition(this.root);
+    testStdioOfficeSchemaContracts();
   }
 }

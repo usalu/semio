@@ -30,6 +30,7 @@ semio-framework-trace = { workspace = true }
 # job-protocol types used by the browser and native presentation module build clean on wasm32).
 # Workspace-internal — `bun ./📜️script.ts verify dependencies` stays 238→238.
 semio-framework-job = { workspace = true }
+semio-framework-pixels = { path = "../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 flow = { path = "../../../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 framework_surface_node_graph = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }

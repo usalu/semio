@@ -21,7 +21,7 @@ const COMPOSITE_SCENE: Paint2dScene = {
   selectionJson: "[]",
   activeUtility: "selectMarquee",
   brushSize: 24,
-  brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
+  brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
   viewMode: "composite",
 };
 

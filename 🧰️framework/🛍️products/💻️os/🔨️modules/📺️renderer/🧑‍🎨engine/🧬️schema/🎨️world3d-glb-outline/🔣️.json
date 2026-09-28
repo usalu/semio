@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/framework/world3d-glb-outline-v1.json",
+  "$id": "https://semio.tech/schema/framework/world3d-glb-outline-v2.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "thresholdAngleDegrees", "outlineScale", "positionWeldPrecisionDecimals", "semanticEdgeIds", "derivation", "cases"],
+  "required": ["schema", "thresholdAngleDegrees", "outlineScale", "positionWeldPrecisionDecimals", "semanticEdgeIds", "derivation", "iconStrokeCases", "cases"],
   "properties": {
-    "schema": { "const": "framework.world3d.glb-outline/v1" },
+    "schema": { "const": "framework.world3d.glb-outline/v2" },
     "thresholdAngleDegrees": { "const": 1 },
     "outlineScale": { "const": 1.001 },
     "positionWeldPrecisionDecimals": { "const": 4 },
@@ -18,6 +18,22 @@
         "workUnit": { "const": "oneTrianglePerStep" },
         "publication": { "const": "meshAndOutlineTogether" },
         "cancellation": { "const": "retirePartialWithoutPublication" }
+      }
+    },
+    "iconStrokeCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "stroke", "enabled", "color"],
+        "properties": {
+          "id": { "enum": ["absent", "color", "none", "transparent"] },
+          "stroke": { "type": ["string", "null"] },
+          "enabled": { "type": "boolean" },
+          "color": { "type": ["string", "null"] }
+        }
       }
     },
     "cases": {
@@ -66,4 +82,3 @@
     }
   }
 }
-

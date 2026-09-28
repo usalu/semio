@@ -1,8 +1,32 @@
 #!/usr/bin/env bun
-/** forms TypeScript package */
+/** 📋️ Forms TypeScript contract and authoring verification. */
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 class TestScript extends BundleScript {
-  run(): void { console.log("[DEBUG] forms ts ok"); }
+  async run(): Promise<void> {
+    const { testFormsDocumentContractOracle, testFormsMutationSchemas, testFormsDesignImport } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+    testFormsDocumentContractOracle();
+    await testFormsDesignImport();
+    await testFormsMutationSchemas();
+    const { testFormsInspectionAuthoring } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️authoring/🟦️.ts");
+    testFormsInspectionAuthoring();
+    const { testFormsQuestionPatches } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧪️tests/🔬️patches/🟦️.ts");
+    testFormsQuestionPatches();
+    const { testFormsQuestionPlacement } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📍️placement/🧪️tests/🟦️.ts");
+    testFormsQuestionPlacement();
+    const { testFormsExtensionInputs } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧩️extensions/🧪️tests/🟦️.ts");
+    testFormsExtensionInputs();
+    const { testFormsVisibility } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🫥️visibility/🧪️tests/🔬️editing/🟦️.ts");
+    testFormsVisibility();
+    const { testFormsPersistence } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts");
+    testFormsPersistence();
+    const { testFormsResponses, testFormsSubmission } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🧪️tests/🔬️events/🟦️.ts");
+    testFormsResponses();
+    const { testFormsValidation } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/🟦️.ts");
+    testFormsValidation();
+    await testFormsSubmission();
+    const { testFormsResponseExport } = await import("../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/📤️export/🧪️tests/🟦️.ts");
+    testFormsResponseExport();
+  }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

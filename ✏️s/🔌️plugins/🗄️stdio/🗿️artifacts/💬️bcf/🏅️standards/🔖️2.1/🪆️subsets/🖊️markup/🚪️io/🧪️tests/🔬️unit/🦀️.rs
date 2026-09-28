@@ -113,6 +113,7 @@ async fn folder_without_markup_becomes_raw_parts() {
         schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
         entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() }],
         comment: String::new(),
+        ..Default::default()
     };
     let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).unwrap();
     let decoded = decode_bcf(&bytes).unwrap();

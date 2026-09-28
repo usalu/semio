@@ -6,10 +6,10 @@
   "additionalProperties": false,
   "required": [
     "id",
-    "stepId"
+    "step_id"
   ],
   "properties": {
-    "stepId": {
+    "step_id": {
       "type": "string"
     },
     "id": {

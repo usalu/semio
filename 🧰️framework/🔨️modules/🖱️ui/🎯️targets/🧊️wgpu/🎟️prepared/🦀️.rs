@@ -2067,7 +2067,7 @@ impl PreparedRenderInput {
         Ok(())
     }
 
-    fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if let Some(upload) = self.uploads.last_mut() {
             let retained = match upload {
                 #[cfg(test)]
@@ -2414,6 +2414,8 @@ pub(crate) enum DrawMeasureCursor {
     LayerRaster { layer: usize, raster: usize, overlay: bool },
     LayerRasterKey { layer: usize, raster: usize, byte: usize, overlay: bool },
     PassHeader(usize),
+    PassBackdropSnapshot { pass: usize },
+    PassSceneClear { pass: usize },
     PassShadowBegin(usize),
     PassShadowInstance { pass: usize, draw: usize, instance: usize },
     PassDraw { pass: usize, draw: usize, translucent: bool },
@@ -2431,7 +2433,7 @@ pub(crate) enum DrawMeasureCursor {
     PassMaterialTextureKey { pass: usize, draw: usize, byte: usize, translucent: bool },
     PassMaterialInstance { pass: usize, draw: usize, instance: usize, translucent: bool },
     PassMaterialInstanceKey { pass: usize, draw: usize, instance: usize, byte: usize, translucent: bool },
-    PassCurvilinear { pass: usize },
+    PassPostprocess { pass: usize },
     Glass(usize),
     Complete,
 }
@@ -2669,8 +2671,17 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 };
-                let next = if value.shadow.enabled && value.shadow_draws.iter().any(|draw| draw.shadow_role.casts && !draw.instances.is_empty()) { DrawMeasureCursor::PassShadowBegin(pass) } else { Self::next_after_shadow(draw, pass) };
+                let next = if value.viewport_mask == crate::wgpu::kernel_3d_scene::SceneViewportMask3d::Ellipse { DrawMeasureCursor::PassBackdropSnapshot { pass } } else { Self::next_after_scene_prelude(draw, pass) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassBackdropSnapshot { pass } => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, Self::next_after_scene_prelude(draw, pass)),
+            DrawMeasureCursor::PassSceneClear { pass } => {
+                let next = if draw.scene_passes[pass].shadow.enabled && draw.scene_passes[pass].shadow_draws.iter().any(|draw| draw.shadow_role.casts && !draw.instances.is_empty()) {
+                    DrawMeasureCursor::PassShadowBegin(pass)
+                } else {
+                    Self::next_after_shadow(draw, pass)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<[f32; 4]>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassShadowBegin(pass) => {
                 let next = Self::first_shadow_instance(draw, pass).unwrap_or_else(|| Self::next_after_shadow(draw, pass));
@@ -2765,7 +2776,7 @@ impl PreparedRenderJob {
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte, translucent } => {
-                let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.scene_passes[pass].material_draws[draw_index].material else { unreachable!("only painted material draws measure a texture key") };
+                let texture_key = draw.scene_passes[pass].material_draws[draw_index].material.texture_key().expect("only textured material draws measure a texture key");
                 let next = if byte + 1 < texture_key.len() {
                     DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: byte + 1, translucent }
                 } else if draw.scene_passes[pass].material_draws[draw_index].instances.is_empty() {
@@ -2785,7 +2796,7 @@ impl PreparedRenderJob {
                 let next = if byte + 1 < key.len() { DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent } } else { Self::next_material_instance(draw, pass, draw_index, instance, translucent) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
-            DrawMeasureCursor::PassCurvilinear { pass } => {
+            DrawMeasureCursor::PassPostprocess { pass } => {
                 let next = Self::next_after_scene_pass_content(draw, pass);
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::SceneCurvilinear3d>(), ..PreparedRenderUsage::default() }, next)
             }
@@ -2854,10 +2865,21 @@ impl PreparedRenderJob {
     }
 
     fn next_after_scene_pass(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if draw.scene_passes.get(pass).is_some_and(|value| value.curvilinear.is_some()) {
-            return DrawMeasureCursor::PassCurvilinear { pass };
+        if draw.scene_passes.get(pass).is_some_and(|value| value.curvilinear.is_some() || value.viewport_mask == crate::wgpu::kernel_3d_scene::SceneViewportMask3d::Ellipse) {
+            return DrawMeasureCursor::PassPostprocess { pass };
         }
         Self::next_after_scene_pass_content(draw, pass)
+    }
+
+    fn next_after_scene_prelude(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        let value = &draw.scene_passes[pass];
+        if value.clear_color.is_some() {
+            DrawMeasureCursor::PassSceneClear { pass }
+        } else if value.shadow.enabled && value.shadow_draws.iter().any(|draw| draw.shadow_role.casts && !draw.instances.is_empty()) {
+            DrawMeasureCursor::PassShadowBegin(pass)
+        } else {
+            Self::next_after_shadow(draw, pass)
+        }
     }
 
     fn next_after_scene_pass_content(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
@@ -2925,7 +2947,7 @@ impl PreparedRenderJob {
     fn next_material_after_keys(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass].material_draws[draw_index];
         match &value.material {
-            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } if !texture_key.is_empty() => DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: 0, translucent },
+            material if material.texture_key().is_some_and(|texture_key| !texture_key.is_empty()) => DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: 0, translucent },
             _ if value.instances.is_empty() => Self::next_material_draw(draw, pass, draw_index, translucent),
             _ => DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance: 0, translucent },
         }

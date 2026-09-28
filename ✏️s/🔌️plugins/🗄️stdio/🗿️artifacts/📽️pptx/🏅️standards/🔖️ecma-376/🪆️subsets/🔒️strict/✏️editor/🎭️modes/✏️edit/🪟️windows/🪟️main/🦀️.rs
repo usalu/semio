@@ -45,7 +45,7 @@ fn editable_pages(document: &PptxSnapshot) -> Vec<EditableDocumentPage> {
         .slides
         .iter()
         .enumerate()
-        .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape_text(shape).map(|text| EditableDocumentPage { page_index: page_index as u32, item_index: item_index as u32, text })))
+        .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape_text(shape).map(|text| EditableDocumentPage::new(page_index as u32, item_index as u32, text))))
         .collect()
 }
 

@@ -1,0 +1,215 @@
+{
+  "steps": [
+    {
+      "id": "inputs",
+      "title": "Inputs",
+      "blocks": [
+        {
+          "id": "name",
+          "label": "Name",
+          "kind": "text"
+        },
+        {
+          "id": "size",
+          "label": "Size",
+          "kind": "number"
+        },
+        {
+          "id": "colour",
+          "label": "Colour",
+          "kind": "single"
+        },
+        {
+          "id": "offset",
+          "label": "Offset",
+          "kind": "vector"
+        },
+        {
+          "id": "geometry",
+          "label": "Geometry",
+          "kind": "buildingComponent"
+        }
+      ]
+    },
+    {
+      "id": "finish",
+      "title": "Finish",
+      "blocks": []
+    }
+  ],
+  "cases": [
+    {
+      "name": "empty selection edits form",
+      "selected": [],
+      "expected": {
+        "scope": "form",
+        "ids": [],
+        "fields": [
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "stale selection edits form",
+      "selected": [
+        "deleted"
+      ],
+      "expected": {
+        "scope": "form",
+        "ids": [],
+        "fields": [
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "selected step edits its metadata",
+      "selected": [
+        "step:inputs"
+      ],
+      "expected": {
+        "scope": "step",
+        "ids": [
+          "inputs"
+        ],
+        "fields": [
+          "title",
+          "description"
+        ]
+      }
+    },
+    {
+      "name": "text question editor",
+      "selected": [
+        "name"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "name"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "placeholder",
+          "default",
+          "condition"
+        ]
+      }
+    },
+    {
+      "name": "number question editor",
+      "selected": [
+        "size"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "size"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "default",
+          "min",
+          "max",
+          "step",
+          "unit",
+          "condition"
+        ]
+      }
+    },
+    {
+      "name": "choice editor",
+      "selected": [
+        "colour"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "colour"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "default",
+          "options",
+          "condition"
+        ]
+      }
+    },
+    {
+      "name": "vector editor",
+      "selected": [
+        "offset"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "offset"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "schema",
+          "step",
+          "fields",
+          "condition"
+        ]
+      }
+    },
+    {
+      "name": "extension editor",
+      "selected": [
+        "geometry"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "geometry"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "fixtureSlug",
+          "params",
+          "condition"
+        ]
+      }
+    },
+    {
+      "name": "mixed selection exposes shared fields",
+      "selected": [
+        "size",
+        "name",
+        "size",
+        "deleted"
+      ],
+      "expected": {
+        "scope": "question",
+        "ids": [
+          "name",
+          "size"
+        ],
+        "fields": [
+          "label",
+          "kind",
+          "description",
+          "required",
+          "default",
+          "condition"
+        ]
+      }
+    }
+  ]
+}

@@ -8,9 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCell {
-    pub(crate) sheet_name: String,
-    pub(crate) row: u32,
-    pub(crate) col: u32,
+    pub(crate) address: cell_address::XlsxCellAddress,
     pub(crate) value: XlsxCellValue,
 }
 
@@ -27,7 +25,9 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {
         protocol::LocalizedLabel::native("Set cell", "Zelle setzen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        let mut target = vec!["xmlParts".into(), self.address.part_path.clone(), "document".into(), "root".into()];
+        target.extend(self.address.node_path.iter().map(usize::to_string));
+        target
     }
 }
 //#endregion 🔖️Payload

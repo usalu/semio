@@ -371,6 +371,24 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
     });
 
+    describe("icon export wire decoding", () => {
+      it("preserves every packed export item in both renderer doors and rejects malformed envelopes", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🖼️IconRenderHost/🧫️fixtures/📡️export-wire/🔣️.json");
+        const { default: schema } = await import("../../🧱️elements/🖼️IconRenderHost/🧬️schema/📡️export-wire/🔣️.json");
+        const { default: Ajv2020 } = await import("ajv/dist/2020");
+        const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
+        const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+        for (const sample of fixture.cases) {
+          expect(validate(sample.items), sample.name).toBe(sample.valid);
+          const wire = { tag: "icon-render-export", val: { items: encodePackValue(sample.items) } };
+          for (const decode of [wireEffectToFriendly, (effect: WireVariant) => sharedDecode(effect, decodePackWire)]) {
+            if (sample.valid) expect(decode(wire), sample.name).toEqual({ iconRenderExport: { items: sample.items } });
+            else expect(() => decode(wire), sample.name).toThrow("icon-export.items-invalid");
+          }
+        }
+      });
+    });
+
     describe("host effect address decoding", () => {
       it("reads every request-carrying effect out of its nested WIT params record", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
@@ -1125,9 +1143,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       identity: { appInstanceId: instanceId, generation: "1", revision: "0".repeat(64), documentRevision: "0".repeat(64), topologyRevision: "0".repeat(64) },
       state: { selection: {}, activeMode: {}, activeGranularity: {} },
     });
+    const unexpectedMediaRequest = async (): Promise<never> => { throw new Error("Transaction fixture received an unexpected media request"); };
+    const unexpectedMediaRequests = { submitMediaExport: unexpectedMediaRequest, pollMediaExport: unexpectedMediaRequest, cancelMediaExport: unexpectedMediaRequest, takeMediaExportChunk: unexpectedMediaRequest };
   
     function fakeHandle(pluginId: string, calls: string[], commitOrder: string[], options: FakeHandleOptions = {}): PluginWasmHandle {
       return {
+        ...unexpectedMediaRequests,
         pluginId,
         manifest: {} as unknown as PluginManifest,
         createApp: async () => 0,
@@ -1432,6 +1453,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const router = new ArtifactMutationRouter();
         router.registerOwner("s.chain.doc", "s.chain#step");
         const chainHandle: PluginWasmHandle = {
+          ...unexpectedMediaRequests,
           pluginId: "chain-plugin",
           manifest: {} as unknown as PluginManifest,
           createApp: async () => 0,
@@ -1704,6 +1726,72 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         try { await handle.readHistory(99); } catch (error) { raised = error; }
         expect(String(raised)).toContain("no channel for instance 99");
         expect(isPluginInstanceRetiredV1(raised), "nothing ever created instance 99 — that is a bug, not a teardown race").toBe(false);
+      });
+
+      it("resumable media export forwarding preserves exact ownership and rejects foreign receipts", async () => {
+        const { decodeAppCommand } = await import("@semio-tech/framework-os");
+        const { readFile } = await import("node:fs/promises");
+        const { URL: FileURL } = await import("node:url");
+        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire-v19/🔣️.json", source.url), "utf8"));
+        const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
+        const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
+        const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+        const commands: import("@semio-tech/framework-os").AppCommandValue[] = [];
+        let replyHandle = authority;
+        let replyKind: "normal" | "missing" | "fault" = "normal";
+        const lease = {
+          handle: {
+            manifest: { pluginId: "media-fixture", apps: [] } as unknown as import("@semio-tech/framework").PluginManifest,
+            createApp: async () => authority.app_instance_id,
+            destroyApp: async () => {},
+            takeSegmentedDownloadChunk: async () => undefined,
+            enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
+              const frames = events.map((bytes) => {
+                const command = decodeAppCommand(bytes);
+                commands.push(command);
+                const seq = BigInt(Object.values(command)[0]!.seq);
+                if (replyKind === "missing") return encodeAppFrame({ Done: { in_reply_to: Number(seq) } });
+                if (replyKind === "fault") return encodeAppFrame({ Error: { in_reply_to: Number(seq), fault: [99], report: [] } });
+                if ("SubmitMediaExport" in command) return encodeAppFrame({ MediaExportSubmitted: { in_reply_to: seq, handle: replyHandle } });
+                if ("CancelMediaExport" in command) return encodeAppFrame({ Done: { in_reply_to: Number(seq) } });
+                if ("TakeMediaExportChunk" in command) return encodeAppFrame({ MediaExportChunk: { in_reply_to: seq, handle: replyHandle, data: [0, 128, 255], terminal: true } });
+                return encodeAppFrame({ MediaExportStatus: { in_reply_to: seq, ...status, handle: replyHandle } });
+              });
+              broadcast.push({ instanceId, frames });
+            },
+            outcomes: broadcast.stream,
+            dispose: async () => {},
+          },
+          release: async () => {},
+        };
+        const handle = await adaptPluginHandle("media-fixture", lease);
+        const instanceId = await handle.createApp("media-editor");
+        try {
+          expect(await handle.submitMediaExport(instanceId, "playback:out", authority.parent_document_id, authority.base_revision)).toEqual(authority);
+          expect(await handle.pollMediaExport(instanceId, authority)).toEqual(status);
+          expect(await handle.cancelMediaExport(instanceId, authority)).toBeUndefined();
+          expect(await handle.takeMediaExportChunk(instanceId, authority)).toEqual({ handle: authority, data: new Uint8Array([0, 128, 255]), terminal: true });
+          expect(commands).toEqual([
+            { SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: authority.parent_document_id, expected_base_revision: authority.base_revision } },
+            { PollMediaExport: { seq: 2n, handle: authority } }, { CancelMediaExport: { seq: 3n, handle: authority } }, { TakeMediaExportChunk: { seq: 4n, handle: authority } },
+          ]);
+          for (const field of ["app_instance_id", "parent_document_id", "operation_id", "base_revision", "generation"] as const) {
+            const value = authority[field];
+            replyHandle = { ...authority, [field]: typeof value === "string" ? "foreign-document" : typeof value === "bigint" ? value - 1n : value - 1 };
+            for (const operation of [handle.pollMediaExport, handle.takeMediaExportChunk]) await expect(operation(instanceId, authority)).rejects.toThrow("media-export.authority-mismatch");
+            if (field === "app_instance_id" || field === "parent_document_id" || field === "base_revision") await expect(handle.submitMediaExport(instanceId, "playback:out", authority.parent_document_id, authority.base_revision)).rejects.toThrow("media-export.authority-mismatch");
+          }
+          replyHandle = authority;
+          const count = commands.length;
+          for (const operation of [handle.pollMediaExport, handle.cancelMediaExport, handle.takeMediaExportChunk]) await expect(operation(instanceId, { ...authority, app_instance_id: instanceId + 1 })).rejects.toThrow("media-export.authority-mismatch");
+          expect(commands).toHaveLength(count);
+          for (const kind of ["missing", "fault"] as const) {
+            replyKind = kind;
+            await expect(handle.submitMediaExport(instanceId, "playback:out", authority.parent_document_id, authority.base_revision)).rejects.toThrow(kind === "missing" ? "media-export.missing-reply" : "media-export.failed");
+          }
+        } finally {
+          await handle.dispose();
+        }
       });
 
       it("adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient", async () => {

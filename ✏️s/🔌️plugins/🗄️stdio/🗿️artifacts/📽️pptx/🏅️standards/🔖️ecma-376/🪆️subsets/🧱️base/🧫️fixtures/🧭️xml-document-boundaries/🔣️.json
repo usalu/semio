@@ -1,0 +1,197 @@
+{
+  "snapshot": {
+    "schema": "s.stdio.pptx.ecma-376.base",
+    "opc": {
+      "parts": [],
+      "contentTypes": {
+        "defaults": [],
+        "overrides": []
+      },
+      "relationships": {},
+      "comment": ""
+    },
+    "xmlParts": [
+      {
+        "path": "ppt/presentation.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+        "document": {
+          "declaration": {
+            "version": "1.0",
+            "encoding": "UTF-8",
+            "quote": "single"
+          },
+          "prolog": [
+            {
+              "kind": "comment",
+              "text": "before doctype"
+            },
+            {
+              "kind": "processingInstruction",
+              "target": "office",
+              "data": "before-root"
+            }
+          ],
+          "doctype": {
+            "prologPosition": 1,
+            "name": "p:presentation",
+            "externalId": {
+              "kind": "system",
+              "systemId": "presentation.dtd"
+            },
+            "declarations": [
+              {
+                "kind": "entity",
+                "parameter": false,
+                "name": "title",
+                "value": "Boundary Deck"
+              }
+            ]
+          },
+          "root": {
+            "kind": "element",
+            "name": "p:presentation",
+            "attrs": [],
+            "children": []
+          },
+          "epilog": [
+            {
+              "kind": "processingInstruction",
+              "target": "office",
+              "data": "after-root"
+            },
+            {
+              "kind": "comment",
+              "text": "after root"
+            }
+          ]
+        }
+      }
+    ],
+    "presentation": {
+      "slides": []
+    }
+  },
+  "diff": {
+    "xmlParts": [
+      {
+        "path": "ppt/presentation.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+        "document": {
+          "declaration": {
+            "version": "1.0",
+            "encoding": "UTF-8",
+            "quote": "single"
+          },
+          "prolog": [
+            {
+              "kind": "comment",
+              "text": "before doctype"
+            },
+            {
+              "kind": "processingInstruction",
+              "target": "office",
+              "data": "before-root"
+            }
+          ],
+          "doctype": {
+            "prologPosition": 1,
+            "name": "p:presentation",
+            "declarations": []
+          },
+          "root": {
+            "kind": "element",
+            "name": "p:presentation",
+            "attrs": [],
+            "children": []
+          },
+          "epilog": [
+            {
+              "kind": "comment",
+              "text": "after root"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "setSnapshot": {
+    "mutation": "setSnapshot",
+    "snapshot": {
+      "schema": "s.stdio.pptx.ecma-376.base",
+      "opc": {
+        "parts": [],
+        "contentTypes": {
+          "defaults": [],
+          "overrides": []
+        },
+        "relationships": {},
+        "comment": ""
+      },
+      "xmlParts": [
+        {
+          "path": "ppt/presentation.xml",
+          "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+          "document": {
+            "declaration": {
+              "version": "1.0",
+              "encoding": "UTF-8",
+              "quote": "single"
+            },
+            "prolog": [
+              {
+                "kind": "comment",
+                "text": "before doctype"
+              },
+              {
+                "kind": "processingInstruction",
+                "target": "office",
+                "data": "before-root"
+              }
+            ],
+            "doctype": {
+              "prologPosition": 1,
+              "name": "p:presentation",
+              "externalId": {
+                "kind": "system",
+                "systemId": "presentation.dtd"
+              },
+              "declarations": [
+                {
+                  "kind": "entity",
+                  "parameter": false,
+                  "name": "title",
+                  "value": "Boundary Deck"
+                }
+              ]
+            },
+            "root": {
+              "kind": "element",
+              "name": "p:presentation",
+              "attrs": [],
+              "children": []
+            },
+            "epilog": [
+              {
+                "kind": "processingInstruction",
+                "target": "office",
+                "data": "after-root"
+              },
+              {
+                "kind": "comment",
+                "text": "after root"
+              }
+            ]
+          }
+        }
+      ],
+      "presentation": {
+        "slides": []
+      }
+    }
+  },
+  "invalidXmlAttribute": {
+    "name": "lang",
+    "value": "de",
+    "prologPosition": 0
+  }
+}

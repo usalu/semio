@@ -155,6 +155,7 @@
         "remove-block",
         "set-block-content",
         "set-run-text",
+        "replace-xml-node",
         "set-run-formatting",
         "insert-style",
         "remove-style",
@@ -430,6 +431,23 @@
             "operation": "set-run-text",
             "bridgeVersion": 1,
             "variant": "SetRunText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-xml-node",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": ["applied", "rejected"],
+          "productionDispatch": {
+            "operation": "replace-xml-node",
+            "bridgeVersion": 1,
+            "variant": "ReplaceXmlNode"
           },
           "oracleRequirements": [
             {

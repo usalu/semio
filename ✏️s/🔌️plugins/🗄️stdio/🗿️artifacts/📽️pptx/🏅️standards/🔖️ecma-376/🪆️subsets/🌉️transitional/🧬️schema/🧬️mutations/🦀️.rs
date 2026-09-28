@@ -250,7 +250,7 @@ fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &st
     if modified.is_empty() {
         return PptxDiff::default();
     }
-    PptxDiff { opc: Some(PptxOpcDiff { content_types: None, parts: None, relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }) }), ..Default::default() }
+    PptxDiff { opc: Some(PptxOpcDiff { comment: None, content_types: None, parts: None, relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }) }), ..Default::default() }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.

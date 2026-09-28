@@ -52,3 +52,73 @@ fn pointer_drag_uses_full_affine_ancestors_and_preserves_press_offset() {
         for axis in 0..2 {assert!((actual[axis]-expected[axis]).abs()<1e-10,"{}",row["name"]);}
     }
 }
+
+#[test]
+fn gesture_position_preview_copies_only_adjacent_segments() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    for row in cases.as_array().unwrap().iter().filter(|row|row["name"].as_str().unwrap().starts_with("position-") && row["error"]!=true) {
+        let source:Vec<PathSegment>=serde_json::from_value(row["before"].clone()).unwrap();
+        let operation:PathEdit=serde_json::from_value(row["operation"].clone()).unwrap();
+        let PathEdit::Position {index,point,to}=operation else {panic!("Expected position fixture")};
+        let saved=source.clone();
+        let (segment,next)=patch_path_point(&source[index],source.get(index+1),point,to).unwrap();
+        let mut preview=source.clone();preview[index]=segment;
+        if let Some(next)=next {preview[index+1]=next;}
+        assert_geometry(&serde_json::to_value(&preview).unwrap(),&row["after"]);
+        assert_eq!(preview,edit_path(&source,&operation).unwrap());
+        assert_eq!(source,saved);
+        assert!(patch_path_point(&source[index],source.get(index+1),point,[f64::INFINITY,0.0]).is_err());
+    }
+    assert!(patch_path_point(&PathSegment::Close,None,PathPoint::Anchor,[0.0,0.0]).is_err());
+    assert!(patch_path_point(&PathSegment::Line {to:[0.0,0.0]},None,PathPoint::Control1,[0.0,0.0]).is_err());
+}
+
+#[test]
+fn node_picking_names_nearest_point_with_anchor_priority() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️point-hit/🔣️.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let segment=serde_json::from_value(row["segment"].clone()).unwrap();
+        let matrix=serde_json::from_value(row["matrix"].clone()).unwrap();
+        let world=serde_json::from_value(row["world"].clone()).unwrap();
+        let result=path_point_hit(&segment,matrix,world,row["tolerance"].as_f64().unwrap());
+        assert_eq!(serde_json::to_value(result.map(|(point,_)|point)).unwrap(),row["point"],"{}",row["name"]);
+        assert!(path_point_hit(&segment,matrix,world,-1.0).is_none());
+    }
+}
+
+#[test]
+fn multi_point_translation_matches_shared_cases_atomically() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/↔️points/🔣️.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let source:Vec<PathSegment>=serde_json::from_value(row["before"].clone()).unwrap();
+        let saved=source.clone();
+        let operation:PathEdit=serde_json::from_value(row["operation"].clone()).unwrap();
+        let actual=edit_path(&source,&operation);
+        assert_eq!(source,saved);
+        if row["error"]==true {assert!(actual.is_err(),"{}",row["name"]);continue;}
+        let actual=actual.unwrap();
+        assert_geometry(&serde_json::to_value(&actual).unwrap(),&row["after"]);
+        let mut reordered=row["operation"].clone();
+        reordered["points"].as_array_mut().unwrap().reverse();
+        assert_eq!(edit_path(&source,&serde_json::from_value(reordered).unwrap()).unwrap(),actual);
+        let mut reversed=row["operation"].clone();
+        for value in reversed["delta"].as_array_mut().unwrap() {*value=(-value.as_f64().unwrap()).into();}
+        assert_eq!(edit_path(&actual,&serde_json::from_value(reversed).unwrap()).unwrap(),source);
+        let value=dsl::ToValue::to_value(&operation);
+        assert_eq!(<PathEdit as dsl::FromValue>::from_value(value).unwrap(),operation);
+    }
+}
+
+#[test]
+fn world_point_nudges_follow_the_complete_affine_basis() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌍️translation/🔣️.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let source:Vec<PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();
+        let saved=source.clone();
+        let points=serde_json::from_value::<Vec<PathPointRef>>(row["points"].clone()).unwrap();
+        let actual=translate_world_path_points(&source,&points,serde_json::from_value(row["matrix"].clone()).unwrap(),serde_json::from_value(row["delta"].clone()).unwrap());
+        if row["after"].is_null() {assert!(actual.is_err());} else {assert_eq!(actual.unwrap(),serde_json::from_value::<Vec<PathSegment>>(row["after"].clone()).unwrap(),"{}",row["name"]);}
+        assert_eq!(source,saved);
+    }
+    eprintln!("[DEBUG] world point nudges match neutral affine fixtures");
+}

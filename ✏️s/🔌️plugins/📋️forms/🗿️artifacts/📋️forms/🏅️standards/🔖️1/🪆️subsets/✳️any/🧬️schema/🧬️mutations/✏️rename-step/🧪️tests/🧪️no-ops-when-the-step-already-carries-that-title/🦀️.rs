@@ -18,7 +18,7 @@
 //! straight from the committed payload — that identity is precisely the collision the guard tests.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title/📸️snapshot/➡️after/🔣️.json");
@@ -40,7 +40,7 @@ fn before() -> FormsSnapshot {
     let FormMutation::RenameStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-already-carries-that-title's committed mutation must be a rename-step");
     };
-    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.id.clone(), title: payload.new_title.clone(), description: None, blocks: Vec::new() }]);
+    replace_forms_steps(&mut snapshot, vec![FormStep { id: payload.id.clone(), title: payload.new_title.clone(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 

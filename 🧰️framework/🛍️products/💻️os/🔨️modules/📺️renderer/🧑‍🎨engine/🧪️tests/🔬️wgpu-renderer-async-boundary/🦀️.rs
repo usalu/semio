@@ -462,6 +462,12 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     assert!(ready);
     let materialize = cursor.glb_materialize.as_ref().expect("retained GLB materializer");
     let lease = materialize.lease.expect("generation-witnessed paged GLB mesh");
+    let schema = lease.schema().expect("the outline and vertex streams seal together");
+    assert_eq!((schema.vertices, schema.indices, schema.edges, schema.edge_ids), (4, 6, 4, 0));
+    let outline_points = (0..schema.edges).flat_map(|index| lease.edge(index).expect("sealed outline edge")).collect::<Vec<_>>();
+    for point in [[1.0, -3.0, 2.0], [2.001, -3.0, 2.0], [1.0, -3.0, 3.001], [2.001, -3.0, 3.001]] {
+        assert_eq!(outline_points.iter().filter(|actual| actual.iter().zip(point).all(|(actual, expected)| (*actual - expected).abs() < 0.00001)).count(), 2, "the primitive-local outline scale precedes node and world transforms");
+    }
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut indices = Vec::new();
@@ -533,6 +539,98 @@ fn close_owned_decoder_fixture(mut authority: WorldAssetIoAuthority, mut probe: 
         }
     }
     assert!(authority.terminal_is_empty());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex_colors() {
+    let bytes = include_bytes!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material/🧊️two-primitive.glb");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material/🔣️.json")).expect("neutral GLB material fixture");
+    let mut authority = WorldAssetIoAuthority::default();
+    authority.reserve(1, 1, WorldAssetRequestKind::Glb, "two-primitive.glb", bytes.len()).unwrap();
+    let mut owner = authority.take_next().unwrap();
+    for page in bytes.chunks(257) {
+        owner.push_page(WorldAssetResponsePage::try_from_owned(page.to_vec()).unwrap()).unwrap();
+    }
+    owner.seal().unwrap();
+    authority.return_owner(owner).unwrap();
+    let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed material response");
+    let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    for turn in 0..262_144 {
+        match probe.step() {
+            RendererAssetProbeStep::Pending => {}
+            RendererAssetProbeStep::Ready => break,
+            RendererAssetProbeStep::Reject(detail) => panic!("neutral GLB material asset was refused at turn {turn}: {detail}"),
+            RendererAssetProbeStep::Fault(detail) => panic!("neutral GLB material asset faulted at turn {turn}: {detail}"),
+        }
+    }
+    let materialize = probe.glb_materialize.as_ref().expect("materializer owner");
+    assert!(matches!(materialize.phase, GlbMaterializePhase::Ready));
+    let mesh = materialize.lease.expect("sealed material mesh");
+    assert_eq!(mesh.schema().unwrap().colors, 6, "a mixed primitive bank expands missing COLOR_0 values to neutral white");
+    let appearance = materialize.appearance.as_ref().expect("geometry and material appearance seal together");
+    assert_eq!(appearance.texture_count(), 1);
+    assert_eq!(appearance.primitives().len(), law["cases"].as_array().unwrap().len());
+    let blend = &appearance.primitives()[0];
+    assert_eq!((blend.first_index, blend.index_count), (0, 3));
+    assert_eq!(blend.material.base_color, [0.8, 0.2, 0.1, 0.75]);
+    assert_eq!(blend.material.emissive, [0.1, 0.05, 0.02]);
+    assert_eq!((blend.material.metalness, blend.material.roughness), (0.65, 0.2));
+    assert!(blend.material.double_sided && blend.material.preserve_vertex_color);
+    assert_eq!(blend.material.alpha, ui_wgpu::wgpu::SceneMaterialAlpha3d::Blend);
+    let mask = &appearance.primitives()[1];
+    assert_eq!((mask.first_index, mask.index_count), (3, 3));
+    assert_eq!(mask.material.alpha, ui_wgpu::wgpu::SceneMaterialAlpha3d::Mask);
+    assert_eq!(mask.material.alpha_cutoff, 0.37);
+    assert!(mask.material.base_color_texture.as_deref().is_some_and(|key| key.ends_with(":texture:0")));
+    assert_eq!(
+        mask.material.texture_sampler,
+        ui_wgpu::wgpu::SceneTextureSampler3d {
+            wrap_u: ui_wgpu::wgpu::SceneTextureWrap3d::ClampToEdge,
+            wrap_v: ui_wgpu::wgpu::SceneTextureWrap3d::MirrorRepeat,
+            mag_filter: ui_wgpu::wgpu::SceneTextureFilter3d::Linear,
+            min_filter: ui_wgpu::wgpu::SceneTextureFilter3d::Nearest,
+        }
+    );
+    let asset = probe.take_ready_mesh_asset().expect("ready material asset transfers into request-owned Icon preparation");
+    probe.finish_ready_mesh();
+    let request = serde_json::json!({
+        "assetUrl": "two-primitive.glb",
+        "format": "png",
+        "camera": { "projection": "perspective", "position": [3.0, -4.0, 2.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "zoom": 1.0, "fov": 50.0 },
+        "fit": { "enabled": true, "padding": 1.25 },
+        "width": 64,
+        "height": 32,
+        "shape": "ellipse"
+    })
+    .to_string();
+    let mut preparation = crate::scenes::icon_export::IconExportScenePreparation::new(request, asset).expect("request-owned Icon scene admits the full material asset");
+    assert_eq!(preparation.dimensions(), (64, 32));
+    assert_eq!(preparation.format(), crate::scenes::icon_export::IconExportFormat::Png);
+    for turn in 0..262_144 {
+        match preparation.advance() {
+            Ok(true) => break,
+            Ok(false) => {}
+            Err(fault) => panic!("request-owned Icon scene preparation faulted at turn {turn}: {fault}"),
+        }
+    }
+    assert!(preparation.terminal(), "request-owned Icon scene preparation reaches its accepted boundary");
+    let mut prepared = preparation.take_prepared().expect("the exact prepared scene owner is published once");
+    assert_eq!(prepared.dimensions(), (64, 32));
+    assert_eq!(prepared.format(), crate::scenes::icon_export::IconExportFormat::Png);
+    let mut packet = prepared.take_packet().expect("prepared scene transfers one packet while retaining its World owner");
+    let uploads = packet.uploads();
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(ui_wgpu::wgpu::PreparedRenderUpload::Mesh { .. }))));
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(ui_wgpu::wgpu::PreparedRenderUpload::SceneRaster { .. }))));
+    while !packet.retire_step() {}
+    prepared.begin_close();
+    for _ in 0..262_144 {
+        if prepared.close_step() {
+            break;
+        }
+    }
+    assert!(prepared.terminal_is_empty(), "packet retirement lets the retained World asset close to exact terminal empty");
+    close_owned_decoder_fixture(authority, probe);
 }
 
 /// 🛑️ One worker grant decodes one page, and cancellation returns that exact owner before disposal.
@@ -1920,7 +2018,7 @@ const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bo
 #[test]
 fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     use infinite_world::world::{
-        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
+        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
         take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
     };
 
@@ -1974,12 +2072,13 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
         }
     }
     assert!(ready, "the GLB decode must reach Ready");
-    let lease = probe.take_ready_mesh_lease().expect("the decoded mesh lease");
-    publish_world3d_asset_mesh_lease(&mut state, url, lease).expect("the decoded GLB publishes under the url's own mesh id");
+    let asset = probe.take_ready_mesh_asset().expect("the decoded mesh and appearance asset");
+    publish_world3d_asset_mesh(&mut state, url, asset).expect("the decoded GLB publishes under the url's own mesh id");
 
     let resident = state.mesh_lease("mesh:🧊️probe").expect("the mesh is resident under `mesh_id_from_url`, the id the wire names it by");
     let schema = resident.schema().expect("resident mesh schema");
     assert_eq!((schema.vertices, schema.indices), (3, 3), "the resident mesh carries real positions and indices, not an empty placeholder");
+    assert_eq!((schema.edges, schema.edge_ids), (3, 0), "derived render outlines carry no selectable semantic edge identities");
     let mut positions = Vec::new();
     let mut cursor = resident.cursor(Mesh3dField::Positions).unwrap();
     while let Some(Mesh3dItem::Vec3(value)) = cursor.read_next().unwrap() {
@@ -2050,8 +2149,8 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
         }
         assert!(steps < 1_000_000, "no Ready within the step ceiling");
     }
-    let lease = probe.take_ready_mesh_lease().unwrap();
-    publish_world3d_asset_mesh_lease(&mut state, url, lease).unwrap();
+    let asset = probe.take_ready_mesh_asset().unwrap();
+    publish_world3d_asset_mesh(&mut state, url, asset).unwrap();
     let resident = state.mesh_lease("mesh:🧊️capsule_J").unwrap();
     let schema = resident.schema().unwrap();
     assert_eq!((schema.vertices, schema.indices, schema.uvs), (1_472, 5_250, 1_472), "the whole export lands, every primitive welded into one mesh");

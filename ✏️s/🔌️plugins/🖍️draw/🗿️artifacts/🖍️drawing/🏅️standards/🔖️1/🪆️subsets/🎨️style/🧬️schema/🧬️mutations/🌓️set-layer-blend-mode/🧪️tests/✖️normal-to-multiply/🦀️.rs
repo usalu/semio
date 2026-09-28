@@ -33,10 +33,9 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "set-layer-blend-mode/normal-to-multiply: applied state differs from committed after-snapshot");
 }
 
-/// 🖌️ `blend_mode` is a free-form String in this schema, not a closed enum: the diff builder
-/// compares it for equality and writes it verbatim, with no vocabulary check of its own.
+/// 🖌️ A canonical blend change preserves opacity.
 #[semio_framework_async_macros::async_test]
-async fn blend_mode_is_written_verbatim() {
+async fn canonical_blend_mode_preserves_opacity() {
     let base = before();
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation()).expect("set-layer-blend-mode applies");
@@ -88,7 +87,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: one `patched` entry setting `blendMode` to the
-/// payload's free-form string verbatim. No vocabulary normalization happens on the way into the diff.
+/// payload's canonical mode. No vocabulary normalization happens on the way into the diff.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
@@ -118,4 +117,22 @@ async fn committed_diff_applies_to_after() {
     let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-layer-blend-mode/normal-to-multiply: committed diff did not carry before to after");
+}
+
+#[test]
+fn invalid_blend_edits_are_rejected_without_changing_the_document() {
+    use protocol::MutationDiff;
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let original = before();
+    for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
+        let mode = case["patch"]["value"].as_str().unwrap();
+        let accepted = case["accepted"].as_bool().unwrap();
+        let mutation = crate::mutations::set_layer_blend_mode("shape-a".into(), mode.into());
+        let mut document = original.clone();
+        assert_eq!(apply_drawing_mutation(&mut document, &mutation).is_ok(), accepted, "{mode}");
+        let delta = crate::diff::diff_set_layer_blend_mode("shape-a", mode);
+        assert_eq!(delta.apply(&original).is_ok(), accepted, "{mode}");
+        if !accepted { assert_eq!(document, original); }
+    }
+    eprintln!("[DEBUG] semantic blend edits and raw field diffs reject invalid modes atomically");
 }

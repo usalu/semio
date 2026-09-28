@@ -7,7 +7,7 @@ use semio_framework_os_kernel as vcs;
 use store::{create_document_envelope, ArtifactCommand};
 
 fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
-    RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
+    RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
 }
 
 /// 🖼️ Real, decodable 1x1 RGBA PNGs (not arbitrary placeholder bytes) — `add-layer-asset` now
@@ -47,6 +47,7 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() }),
         RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),
         RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }),
+        RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:"l1".into(),expected:false,locked:true}),
         RasterMutation::ChangeLayerVisible(change_layer_visible::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
         RasterMutation::ChangeLayerOpacity(change_layer_opacity::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
         RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
@@ -55,6 +56,7 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
         RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: ABC_ASSET_PNG.to_vec() } }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: "asset-1".into() }),
+        RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
         RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
         RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
     ]
@@ -76,7 +78,7 @@ async fn every_variant_round_trips_via_inverse() {
     base.layers.push(RasterLayerNode::Adjustment {
         id: "adjust-1".into(),
         name: "Curves".into(),
-        visible: true,
+        visible: true, locked: false,
         opacity: 1.0,
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
@@ -114,7 +116,7 @@ async fn rename_and_change_layer_visible_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn reorder_layer_into_group_round_trip() {
     let mut snapshot = empty_raster_snapshot();
-    snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
+    snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
     snapshot.layers.push(pixel_layer("l1", "Base"));
     let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
     let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
@@ -125,7 +127,7 @@ async fn reorder_layer_into_group_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn resize_layer_is_a_graceful_no_op_on_a_group() {
     let mut snapshot = empty_raster_snapshot();
-    snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
+    snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
     let mutation = RasterMutation::ResizeLayer(resize_layer::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
     let outcome = mutation.diff(&snapshot);
     assert_eq!(outcome.diff(), &RasterDiff::default());
@@ -174,7 +176,7 @@ fn representative_raster_document() -> RasterSnapshot {
             RasterLayerNode::Pixel {
                 id: "pixel-1".into(),
                 name: "Pixel One".into(),
-                visible: true,
+                visible: true, locked: false,
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
@@ -186,16 +188,16 @@ fn representative_raster_document() -> RasterSnapshot {
             RasterLayerNode::Group {
                 id: "group-1".into(),
                 name: "Group / Nested".into(),
-                visible: false,
+                visible: false, locked: false,
                 opacity: 0.5,
                 blend_mode: "screen".into(),
-                transform: RasterTransform { x: 1.0, y: -2.0, scale_x: 1.5, scale_y: 0.5, rotation: 12.0 },
+                transform: RasterTransform {x:1.0,y:-2.0,a:1.5,b:0.25,c:-0.5,d:0.75},
                 mask: None,
                 children: vec![
                     RasterLayerNode::Pixel {
                         id: "pixel-2".into(),
                         name: "Child Pixel".into(),
-                        visible: true,
+                        visible: true, locked: false,
                         opacity: 0.75,
                         blend_mode: "multiply".into(),
                         transform: RasterTransform::default(),
@@ -204,10 +206,10 @@ fn representative_raster_document() -> RasterSnapshot {
                         height: None,
                         image_key: None,
                     },
-                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
+                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
                 ],
             },
-            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
+            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     }
 }
@@ -314,7 +316,7 @@ fn adjustment_layer_with_params(id: &str) -> RasterLayerNode {
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first law parameter fits the owned map");
     params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second law parameter fits the owned map");
-    RasterLayerNode::Adjustment { id: id.into(), name: "Brighten".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params }
+    RasterLayerNode::Adjustment { id: id.into(), name: "Brighten".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params }
 }
 
 /// 🧊️ A displaced replay projection MUST be retired, never dropped. The framework's history fold
@@ -331,7 +333,7 @@ fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
     projection.layers.push(RasterLayerNode::Group {
         id: "grp".into(),
         name: "Nested".into(),
-        visible: true,
+        visible: true, locked: false,
         opacity: 1.0,
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),

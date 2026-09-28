@@ -11,7 +11,8 @@
     "oracles",
     "publication",
     "publicationOutcomes",
-    "displayBranchPublication"
+    "displayBranchPublication",
+    "displayResolvedOrder"
   ],
   "properties": {
     "schemaVersion": {
@@ -454,6 +455,22 @@
             "branchChevronOnlyForVisibleBranch": { "const": true },
             "paintAndHitsShareAcceptedGeneration": { "const": true }
           }
+        }
+      }
+    },
+    "displayResolvedOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "windowKindId", "topToBottomIds"],
+      "properties": {
+        "direction": { "const": "up" },
+        "windowKindId": { "type": "string", "minLength": 1 },
+        "topToBottomIds": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     }

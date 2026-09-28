@@ -2,19 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/diff.json",
   "title": "WavDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Sparse editable RIFF/WAVE state delta.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
-    }
+    "fmt": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavFmt" },
+    "data": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavData" },
+    "fmtPadByte": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "dataPadByte": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "otherChunks": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/RiffChunk" } },
+    "chunkOrder": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavChunkRef" } }
   }
 }

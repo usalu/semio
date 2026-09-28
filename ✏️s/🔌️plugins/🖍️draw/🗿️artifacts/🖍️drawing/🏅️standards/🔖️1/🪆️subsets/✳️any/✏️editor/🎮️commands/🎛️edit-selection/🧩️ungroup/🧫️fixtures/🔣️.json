@@ -1,0 +1,1114 @@
+[
+  {
+    "name": "reflected-sheared-group",
+    "before": [
+      {
+        "id": "back",
+        "kind": "shape",
+        "name": "back",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "shapeKind": "rect",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 10,
+          "y": 20,
+          "scaleX": -2,
+          "scaleY": 3,
+          "rotation": 0,
+          "shear": 1
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": true,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 5,
+              "y": 7,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          },
+          {
+            "id": "b",
+            "kind": "shape",
+            "name": "b",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      },
+      {
+        "id": "front",
+        "kind": "shape",
+        "name": "front",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "shapeKind": "rect",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "order": [
+      "back",
+      "a",
+      "b",
+      "front"
+    ],
+    "selection": [
+      "a",
+      "b"
+    ],
+    "matrices": {
+      "a": [
+        -2,
+        0,
+        1,
+        3,
+        7,
+        41
+      ],
+      "b": [
+        -2,
+        0,
+        1,
+        3,
+        10,
+        20
+      ]
+    },
+    "hidden": []
+  },
+  {
+    "name": "selected-nested-groups",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 10,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "h",
+            "kind": "group",
+            "name": "h",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 5,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "children": [
+              {
+                "id": "a",
+                "kind": "shape",
+                "name": "a",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 2,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "rotation": 0,
+                  "shear": 0
+                },
+                "attributes": {
+                  "fillRule": "evenodd",
+                  "fill": null,
+                  "stroke": null
+                },
+                "shapeKind": "rect",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 10,
+                  "height": 10
+                }
+              }
+            ]
+          },
+          {
+            "id": "b",
+            "kind": "shape",
+            "name": "b",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g",
+      "h"
+    ],
+    "order": [
+      "a",
+      "b"
+    ],
+    "selection": [
+      "a",
+      "b"
+    ],
+    "matrices": {
+      "a": [
+        1,
+        0,
+        0,
+        1,
+        17,
+        0
+      ],
+      "b": [
+        1,
+        0,
+        0,
+        1,
+        10,
+        0
+      ]
+    },
+    "hidden": []
+  },
+  {
+    "name": "hidden-group",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": false,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "order": [
+      "a"
+    ],
+    "selection": [
+      "a"
+    ],
+    "matrices": {
+      "a": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    "hidden": [
+      "a"
+    ]
+  },
+  {
+    "name": "group-opacity-needs-compositing",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 0.5,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "error": true
+  },
+  {
+    "name": "group-blend-needs-compositing",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "multiply",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "error": true
+  },
+  {
+    "name": "mixed-selection",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "kind": "shape",
+        "name": "b",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "shapeKind": "rect",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      }
+    ],
+    "ids": [
+      "g",
+      "b"
+    ],
+    "error": true
+  },
+  {
+    "name": "locked-ancestor",
+    "before": [
+      {
+        "id": "outer",
+        "kind": "group",
+        "name": "outer",
+        "visible": true,
+        "locked": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "g",
+            "kind": "group",
+            "name": "g",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "children": [
+              {
+                "id": "a",
+                "kind": "shape",
+                "name": "a",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "rotation": 0,
+                  "shear": 0
+                },
+                "attributes": {
+                  "fillRule": "evenodd",
+                  "fill": null,
+                  "stroke": null
+                },
+                "shapeKind": "rect",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 10,
+                  "height": 10
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "error": true
+  },
+  {
+    "name": "empty-group",
+    "before": [
+      {
+        "id": "back",
+        "kind": "shape",
+        "name": "back",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "shapeKind": "rect",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": []
+      },
+      {
+        "id": "front",
+        "kind": "shape",
+        "name": "front",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "shapeKind": "rect",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "order": [
+      "back",
+      "front"
+    ],
+    "selection": [],
+    "matrices": {},
+    "hidden": []
+  },
+  {
+    "name": "groups-in-distinct-parents",
+    "before": [
+      {
+        "id": "outer-a",
+        "kind": "group",
+        "name": "outer-a",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 100,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "g",
+            "kind": "group",
+            "name": "g",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "children": [
+              {
+                "id": "a",
+                "kind": "shape",
+                "name": "a",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 5,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "rotation": 0,
+                  "shear": 0
+                },
+                "attributes": {
+                  "fillRule": "evenodd",
+                  "fill": null,
+                  "stroke": null
+                },
+                "shapeKind": "rect",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 10,
+                  "height": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "outer-b",
+        "kind": "group",
+        "name": "outer-b",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": -100,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "h",
+            "kind": "group",
+            "name": "h",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 2,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "children": [
+              {
+                "id": "b",
+                "kind": "shape",
+                "name": "b",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 3,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "rotation": 0,
+                  "shear": 0
+                },
+                "attributes": {
+                  "fillRule": "evenodd",
+                  "fill": null,
+                  "stroke": null
+                },
+                "shapeKind": "rect",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 10,
+                  "height": 10
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "h",
+      "g"
+    ],
+    "order": [
+      "outer-a",
+      "outer-b"
+    ],
+    "selection": [
+      "a",
+      "b"
+    ],
+    "matrices": {
+      "a": [
+        1,
+        0,
+        0,
+        1,
+        15,
+        0
+      ],
+      "b": [
+        2,
+        0,
+        0,
+        1,
+        6,
+        0
+      ]
+    },
+    "hidden": []
+  },
+  {
+    "name": "missing-group-is-atomic",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g",
+      "missing"
+    ],
+    "error": true
+  },
+  {
+    "name": "overflow-is-atomic",
+    "before": [
+      {
+        "id": "g",
+        "kind": "group",
+        "name": "g",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 1e+308,
+          "y": 0,
+          "scaleX": 2,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": null,
+          "stroke": null
+        },
+        "children": [
+          {
+            "id": "a",
+            "kind": "shape",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 1e+308,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": null,
+              "stroke": null
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 10,
+              "height": 10
+            }
+          }
+        ]
+      }
+    ],
+    "ids": [
+      "g"
+    ],
+    "error": true
+  }
+]

@@ -4,21 +4,90 @@
   "title": "Stdio Snapshot Patch",
   "description": "🩹️ An atomic, bounded native artifact patch over decoded JSON Pointer segments.",
   "type": "object",
-  "required": ["edits"],
+  "required": [
+    "edits"
+  ],
   "properties": {
     "edits": {
       "type": "array",
       "maxItems": 2,
       "items": {
         "type": "object",
-        "required": ["path", "edit"],
+        "required": [
+          "path",
+          "edit"
+        ],
         "properties": {
-          "path": { "type": "array", "maxItems": 128, "items": { "type": "string" } },
+          "path": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "string"
+            }
+          },
           "edit": {
             "oneOf": [
-              { "type": "object", "required": ["operation", "value"], "properties": { "operation": { "const": "set" }, "value": {} }, "additionalProperties": false },
-              { "type": "object", "required": ["operation", "value"], "properties": { "operation": { "const": "insert" }, "value": {} }, "additionalProperties": false },
-              { "type": "object", "required": ["operation"], "properties": { "operation": { "const": "remove" } }, "additionalProperties": false }
+              {
+                "type": "object",
+                "required": [
+                  "operation",
+                  "value"
+                ],
+                "properties": {
+                  "operation": {
+                    "const": "set"
+                  },
+                  "value": {}
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "operation",
+                  "value"
+                ],
+                "properties": {
+                  "operation": {
+                    "const": "insert"
+                  },
+                  "value": {}
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "operation",
+                  "value",
+                  "index"
+                ],
+                "properties": {
+                  "operation": {
+                    "const": "insertAt"
+                  },
+                  "value": {},
+                  "index": {
+                    "type": "integer",
+                    "description": "Requested member position for insertion-ordered objects. Containers with intrinsic key ordering retain that ordering; keys and values are always preserved.",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "operation"
+                ],
+                "properties": {
+                  "operation": {
+                    "const": "remove"
+                  }
+                },
+                "additionalProperties": false
+              }
             ]
           }
         },

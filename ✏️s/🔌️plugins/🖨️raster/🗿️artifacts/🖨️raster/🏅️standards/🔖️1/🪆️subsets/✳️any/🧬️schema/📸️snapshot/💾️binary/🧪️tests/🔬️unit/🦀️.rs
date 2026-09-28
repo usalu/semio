@@ -11,7 +11,7 @@ async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
         let mask:RasterLayerMask=dsl::json::from_json_str(&case["mask"].to_string()).unwrap();
         let actual:serde_json::Value=serde_json::from_str(&dsl::json::to_json_string(&mask)).unwrap();
         assert_eq!(actual["imageKey"],case["mask"]["imageKey"]);
-        for field in ["x","y","scaleX","scaleY","rotation"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
+        for field in ["x","y","a","b","c","d"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
         let mut document=crate::standards::v1::subsets::any::schema::empty_raster_document();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut document.layers[0] {*target=Some(mask);}
         store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document,crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
@@ -61,7 +61,7 @@ async fn pack_round_trips_representative_document() {
             RasterLayerNode::Pixel {
                 id: "pixel-1".into(),
                 name: "Pixel One".into(),
-                visible: true,
+                visible: true, locked: false,
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
@@ -73,16 +73,16 @@ async fn pack_round_trips_representative_document() {
             RasterLayerNode::Group {
                 id: "group-1".into(),
                 name: "Group / Nested".into(),
-                visible: false,
+                visible: false, locked: false,
                 opacity: 0.5,
                 blend_mode: "screen".into(),
-                transform: RasterTransform { x: 1.0, y: -2.0, scale_x: 1.5, scale_y: 0.5, rotation: 12.0 },
+                transform: RasterTransform {x:1.0,y:-2.0,a:1.5,b:0.25,c:-0.5,d:0.75},
                 mask: None,
                 children: vec![
                     RasterLayerNode::Pixel {
                         id: "pixel-2".into(),
                         name: "Child Pixel".into(),
-                        visible: true,
+                        visible: true, locked: false,
                         opacity: 0.75,
                         blend_mode: "multiply".into(),
                         transform: RasterTransform::default(),
@@ -91,10 +91,10 @@ async fn pack_round_trips_representative_document() {
                         height: None,
                         image_key: None,
                     },
-                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
+                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
                 ],
             },
-            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
+            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     };
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
@@ -133,7 +133,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 layer: Box::new(RasterLayerNode::Pixel {
                     id: "command-envelope-pixel".into(),
                     name: "Command Envelope Pixel".into(),
-                    visible: true,
+                    visible: true, locked: false,
                     opacity: 1.0,
                     blend_mode: "normal".into(),
                     transform: RasterTransform::default(),

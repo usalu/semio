@@ -60,7 +60,7 @@ const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.xform.translate", "translate"),
     ("brep.xform.rotate", "rotate"),
     ("brep.xform.rotateAbout", "rotate_about"),
-    ("brep.xform.scale", "scale"),
+    ("brep.xform.scale", "scale_axes"),
     ("brep.xform.mirror", "mirror"),
     ("brep.xform.copy", "copy_shape"),
     ("brep.xform.linearPattern", "linear_pattern"),
@@ -123,6 +123,7 @@ const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
 /// lists unnoticed.
 #[cfg(test)]
 const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
+    ("scale", "Uniform scaling is represented by equal factors in the scale_axes widget"),
     ("kind", "internal handle-kind lookup behind geometry_dict, not a graph operation"),
     ("tessellate", "internal preview/export bridge (tessellate_geometry), not a graph node"),
     ("dispose", "internal GC primitive (dispose_geometry), not a graph node"),
@@ -394,8 +395,8 @@ geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
 /// ⏱️ The three set operations are the ONLY operators in this extension that answer
 /// [`Operator::step_plan`]: measured on `🍩️sphere-cut-with-torus` one `brep.bool.cut` costs 4.5 s
 /// natively and over 16 s in the served wasm — long enough for the host's shard watchdog to read
-/// the worker's silence as death and take every actor on that shard down with it. Everything else
-/// here is microseconds and is evaluated in one call
+/// the worker's silence as death and take every actor on that shard down with it. Other operators
+/// currently evaluate synchronously; curved affine transforms require a separate bounded-work audit
 /// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `📓️extension-evaluate-budget-2026-09-12.md`).
 macro_rules! boolean_operation {
     ($name:ident, $op:expr) => {
@@ -521,7 +522,7 @@ impl Operator for CompoundCut {
 geo_operation!(Translate, "geometryOut", |k, i| k.translate(&read_geometry(i, "geometry")?, read_xyz(i, "offset")?));
 geo_operation!(Rotate, "geometryOut", |k, i| k.rotate(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
 geo_operation!(RotateAbout, "geometryOut", |k, i| k.rotate_about(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
-geo_operation!(Scale, "geometryOut", |k, i| k.scale(&read_geometry(i, "geometry")?, read_channel_number(i, "factor")?, read_xyz(i, "center")?));
+geo_operation!(Scale, "geometryOut", |k, i| k.scale_axes(&read_geometry(i, "geometry")?, read_xyz(i, "factor")?, read_xyz(i, "center")?));
 geo_operation!(Mirror, "geometryOut", |k, i| k.mirror(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "normal")?));
 geo_operation!(CopyShape, "geometryOut", |k, i| k.copy_shape(&read_geometry(i, "geometry")?));
 geo_operation!(LinearPattern, "compound", |k, i| k.linear_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "direction")?, read_channel_number(i, "spacing")?, read_channel_number(i, "count")? as usize,));
@@ -934,6 +935,9 @@ impl Operator for ImportDwg {
     }
 }
 // #endregion 🔖️IO
+
+#[path = "🥽️mesh/🦀️.rs"]
+mod mesh;
 
 /// 📦️ Registers brep geometry schema and operators.
 pub async fn register(registry: &mut Registry) {
@@ -1379,8 +1383,8 @@ pub async fn register(registry: &mut Registry) {
         "Scale",
         "Scale",
         "emoji:🔁️",
-        &q("scale", "Scale geometry"),
-        vec![geometry_channel("geometry", "brep.xform.scale"), number_channel("factor", "brep.xform.scale", 2.0), ChannelSpec::requires("center", &["brep.xform.scale"])],
+        &q("scale_axes", "Scale geometry independently on each axis about a center"),
+        vec![geometry_channel("geometry", "brep.xform.scale"), vector_channel("factor", "brep.xform.scale", [1.0, 1.0, 1.0]), point_channel("center", "brep.xform.scale")],
         out_geometry_result("ScaledGeometry"),
         &["Transforms"],
         Box::new(Scale),
@@ -2015,6 +2019,7 @@ pub async fn register(registry: &mut Registry) {
         Box::new(ImportDwg),
     );
 
+    mesh::register_mesh(registry);
     registry.finalize();
 }
 

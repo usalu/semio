@@ -29,6 +29,10 @@ export class PathHitCursor {
   failed():boolean{return this.invalid;}
   contains(fill:boolean,stroke:boolean,evenOdd=false):boolean{return this.finished&&!this.invalid&&((fill&&(this.boundary||(evenOdd?this.winding%2!==0:this.winding!==0)))||(stroke&&this.stroke));}
   step(segments:readonly PathSegment[]):boolean {
+    return this.stepWith(index=>segments[index]);
+  }
+  stepWith(segmentAt:(index:number)=>PathSegment|undefined):boolean {
+    if(this.finished)return true;
     if(this.invalid){this.finished=true;return true;}
     const piece=this.work.pop();
     if(piece){
@@ -49,7 +53,7 @@ export class PathHitCursor {
       }
       this.maximumDepth=Math.max(this.maximumDepth,this.work.length);return false;
     }
-    const segment=segments[this.next++];
+    const segment=segmentAt(this.next++);
     if(!segment){if(this.open){this.line(this.map(this.current),this.map(this.start),false);this.open=false;}this.finished=true;return true;}
     switch(segment.kind){
       case "move":if(this.open)this.line(this.map(this.current),this.map(this.start),false);this.current=segment.to;this.start=segment.to;this.open=true;break;

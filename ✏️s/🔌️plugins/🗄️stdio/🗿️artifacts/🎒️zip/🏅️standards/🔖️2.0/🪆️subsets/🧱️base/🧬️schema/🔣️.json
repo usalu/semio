@@ -2,26 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/artifact.json",
   "title": "ZipArtifact",
+  "description": "The complete persisted ZIP artifact contract is the base snapshot contract and is referenced rather than restated.",
   "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
+  "allOf": [
+    { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json" }
+  ],
+  "x-semio-formats": ["🔣️jsonschema"]
 }

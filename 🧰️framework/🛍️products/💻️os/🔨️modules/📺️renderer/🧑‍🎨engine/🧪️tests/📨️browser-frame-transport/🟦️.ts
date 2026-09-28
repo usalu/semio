@@ -29,6 +29,7 @@ import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTa
 import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
+import { browserAssetFailureDisposition } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -65,7 +66,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
   }
 }
 
-function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: string[]; turns?: string[]; now?: () => number } = {}): BrowserFrameTransport {
+function transport(worker: FakeWorker, hooks: { diagnostics?: string[]; directives?: number[]; faults?: string[]; turns?: string[]; now?: () => number } = {}): BrowserFrameTransport {
   return new BrowserFrameTransport({
     worker,
     boot: {
@@ -85,6 +86,7 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
     clearTimer: () => {},
     now: hooks.now,
     onDirectives: (value) => hooks.directives?.push(value.generation),
+    onDiagnostic: (value) => hooks.diagnostics?.push(`${value.channel}:${value.generation}:${value.frameSequence}:${value.json}`),
     onUiTurn: (outcome) => hooks.turns?.push(`${outcome.verdict}:${outcome.site}`),
     onFault: (code) => hooks.faults?.push(code),
   });
@@ -793,6 +795,14 @@ describe("browser frame worker transport", () => {
     expect(turns).toEqual([]);
   });
 
+  it("forwards changed accepted World3d diagnostic receipts onto the page channel", () => {
+    const worker = new FakeWorker();
+    const diagnostics: string[] = [];
+    transport(worker, { diagnostics });
+    worker.reply({ kind: "diagnostic", lifecycle: 1, channel: "world3d-accepted-frame", generation: 7, frameSequence: 9, json: '{"surfaces":[]}' });
+    expect(diagnostics).toEqual(['world3d-accepted-frame:7:9:{"surfaces":[]}']);
+  });
+
   /** ♿️ LAW: the ARIA mirror is driven by the frame channel, and the pull never runs inside the hook. */
   it("refreshes the accessibility mirror from the frame channel, never from the overrun channel", () => {
     const root = dirname(fileURLToPath(import.meta.url));
@@ -811,7 +821,7 @@ describe("browser frame worker transport", () => {
     expect(mirrorSource).not.toContain("element.appendChild(description)");
   });
 
-  it("wakes the frame owner after a handled reference refusal so the next asset is polled", () => {
+  it("wakes the frame owner after a handled asset refusal so the next asset is polled", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
     const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
@@ -821,7 +831,35 @@ describe("browser frame worker transport", () => {
     expect(reject).toBeGreaterThan(-1);
     expect(wake).toBeGreaterThan(reject);
     expect(caught.match(/post\(\{ kind: "wake", lifecycle \}\)/g)).toHaveLength(1);
-    expect(caught).toContain("activeRequest?.referenceImage && !closing && !closed && !failed");
+    expect(caught).toContain('activeRequest && disposition === "missing" && !closing && !closed && !failed');
+  });
+
+  it("isolates unavailable browser assets while preserving capacity faults and cancellation", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/📄️native-asset-response/🔣️.json"), "utf8")) as {
+      readonly failureIsolation: {
+        readonly browser: readonly {
+          readonly detail: string;
+          readonly errorType: "error" | "typeError" | "abortError";
+          readonly referenceImage: boolean;
+          readonly disposition: "cancelled" | "missing" | "fault";
+        }[];
+      };
+    };
+    const schema = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/📄️native-asset-response/📐️schema.json"), "utf8"));
+    expect(new Ajv2020({ allErrors: true, strict: true }).compile(schema)(fixture)).toBe(true);
+    for (const row of fixture.failureIsolation.browser) {
+      const error = row.errorType === "typeError" ? new TypeError(row.detail) : row.errorType === "abortError" ? new DOMException(row.detail, "AbortError") : new Error(row.detail);
+      expect(browserAssetFailureDisposition(error, row.referenceImage)).toBe(row.disposition);
+    }
+    const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const caught = pump.slice(pump.lastIndexOf("  } catch (error) {"), pump.lastIndexOf("  } finally {"));
+    expect(caught).toContain('activeRequest && disposition === "missing"');
+    expect(caught).toContain('ownedStep("asset-reject"');
+    expect(caught).toContain('else ownedStep("asset-abort"');
+    expect(caught).toContain('disposition === "fault"');
+    expect(caught).not.toContain("!activeRequest?.referenceImage");
   });
 
   it("streams decoded references as cancellable row-aligned strips before the exact seal", () => {
@@ -868,6 +906,10 @@ describe("browser frame worker transport", () => {
     for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', 'message.probe === "chrome" ? bindings.dumpChrome', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
     expect(bootSource).toContain('dumpChrome: probe("chrome")');
     expect(workerSource).toContain("INTROSPECTION_STEP_BUDGET_MS");
+    expect(workerSource).toContain("publishWorld3dAcceptedFrameDiagnostic(input.generation)");
+    expect(workerSource).toContain("json === lastWorld3dAcceptedFrameDiagnostic");
+    expect(workerSource).toContain('channel: "world3d-accepted-frame"');
+    expect(bootSource).toContain("[DEBUG] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}");
   });
 
   it("carries the page realm's platform read across the boot seam", () => {

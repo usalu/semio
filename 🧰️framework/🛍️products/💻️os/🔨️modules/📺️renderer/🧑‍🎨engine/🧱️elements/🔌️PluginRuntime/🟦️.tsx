@@ -57,6 +57,7 @@ import {
   windowViewContext,
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
+import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework-os";
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
@@ -111,7 +112,7 @@ import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/�
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "./⏱️command-stall/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
@@ -190,6 +191,14 @@ export type PluginWasmHandle = {
    * agent (`📓️lb1-live-bridge-action-routing.md` §11.1, `📓️wr3-headless-routes-view-state-export.md`
    * §4.4). `null` when the reply carries no `AppFrame::Media` frame. */
   readonly exportAppMedia?: (instanceId: number, port: string) => Promise<{ readonly port: string; readonly descriptor: Uint8Array; readonly data: Uint8Array } | null>;
+  /** 🎬️ Starts one document-revision-owned media export without collecting its output. */
+  readonly submitMediaExport: (instanceId: number, port: string, parentDocumentId: string, revision: bigint) => Promise<MediaExportHandle>;
+  /** ⏱️ Advances one bounded media export turn and returns exact progress. */
+  readonly pollMediaExport: (instanceId: number, handle: MediaExportHandle) => Promise<MediaExportStatus>;
+  /** 🛑️ Cancels only the media operation identified by the complete handle. */
+  readonly cancelMediaExport: (instanceId: number, handle: MediaExportHandle) => Promise<void>;
+  /** 📥️ Takes one bounded media page and its explicit terminal marker. */
+  readonly takeMediaExportChunk: (instanceId: number, handle: MediaExportHandle) => Promise<{ readonly handle: MediaExportHandle; readonly data: Uint8Array; readonly terminal: boolean }>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
@@ -1031,6 +1040,8 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
     // always false and every binary export was saved as base64 TEXT under a binary file name.
     case "download-media-export":
       return wireDownloadMediaExport(effect);
+    case "icon-render-export":
+      return wireIconRenderExport(effect, decodePackWire);
     case "notify":
       return { notify: { message: str("message") } };
     case "navigate":
@@ -3836,6 +3847,20 @@ async function readHistoryWithBoundedRetryV1(
 }
 //#endregion 🔖️HistorySnapshotRetry
 
+/** 🎞️ Requires exactly one media response and preserves the guest's fault. */
+function mediaExportReply<T>(frames: readonly AppFrameValue[], select: (frame: AppFrameValue) => T | undefined): T {
+  const fault = frames.find((frame) => "Error" in frame);
+  if (fault && "Error" in fault) throw new Error(`media-export.failed: ${faultDisplayMessage(fault.Error.fault, decodePackValue)}`);
+  const replies = frames.map(select).filter((reply): reply is T => reply !== undefined);
+  if (replies.length !== 1) throw new Error(replies.length === 0 ? "media-export.missing-reply" : "media-export.ambiguous-reply");
+  return replies[0]!;
+}
+
+/** 🪪️ Keeps every media operation attached to its exact document and activation. */
+function assertMediaExportAuthority(handle: MediaExportHandle, expected: Partial<MediaExportHandle>): void {
+  for (const field of Object.keys(expected) as (keyof MediaExportHandle)[]) if (handle[field] !== expected[field]) throw new Error("media-export.authority-mismatch");
+}
+
 /** 📡️ Wraps the framework-core `PluginWasmHandle` (the `enqueue`/`outcomes` turn ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
@@ -3937,6 +3962,27 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (errorFrame) throw new Error(`exportAppMedia failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const mediaFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Media: unknown }> => "Media" in frame);
       return mediaFrame ? { port: mediaFrame.Media.port, descriptor: new Uint8Array(mediaFrame.Media.descriptor), data: new Uint8Array(mediaFrame.Media.data) } : null;
+    },
+    submitMediaExport: async (instanceId, port, parentDocumentId, revision) => {
+      const reply = mediaExportReply(await requireChannel(instanceId).submitMediaExport(port, parentDocumentId, revision), (frame) => "MediaExportSubmitted" in frame ? frame.MediaExportSubmitted : undefined);
+      assertMediaExportAuthority(reply.handle, { app_instance_id: instanceId, parent_document_id: parentDocumentId, base_revision: revision });
+      return reply.handle;
+    },
+    pollMediaExport: async (instanceId, authority) => {
+      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
+      const { in_reply_to, ...status } = mediaExportReply(await requireChannel(instanceId).pollMediaExport(authority), (frame) => "MediaExportStatus" in frame ? frame.MediaExportStatus : undefined);
+      assertMediaExportAuthority(status.handle, authority);
+      return status;
+    },
+    cancelMediaExport: async (instanceId, authority) => {
+      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
+      mediaExportReply(await requireChannel(instanceId).cancelMediaExport(authority), (frame) => "Done" in frame ? frame.Done : undefined);
+    },
+    takeMediaExportChunk: async (instanceId, authority) => {
+      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
+      const reply = mediaExportReply(await requireChannel(instanceId).takeMediaExportChunk(authority), (frame) => "MediaExportChunk" in frame ? frame.MediaExportChunk : undefined);
+      assertMediaExportAuthority(reply.handle, authority);
+      return { handle: reply.handle, data: new Uint8Array(reply.data), terminal: reply.terminal };
     },
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);

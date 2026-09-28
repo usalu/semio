@@ -53,10 +53,13 @@ trace-params-block = "params" "{" "threshold=" number SP "simplify-epsilon=" num
 layer-base = "base" "{" "id=" text SP "name=" text SP "visible=" bool SP "locked=" bool SP "opacity=" number SP "blend-mode=" text
      transform-block
      opt-attributes "}"
-transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "rad" "}"
-opt-attributes = ("attributes" "{" fill-block opt-stroke "}")?
+transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "shear=" number SP "rotation=" number "rad" "}"
+opt-attributes = ("attributes" "{" "fill-rule=" fill-rule fill-block opt-stroke "}")?
+fill-rule = "evenodd" / "nonzero"
 fill-block = "fill" "{" fill? "}"
-opt-stroke = ("stroke" "{" "color=" number4 SP "width=" number SP "cap=" text SP "join=" text opt-dash "}")?
+opt-stroke = ("stroke" "{" "color=" number4 SP "width=" number SP "cap=" stroke-cap SP "join=" stroke-join opt-dash "}")?
+stroke-cap = "butt" / "round" / "square"
+stroke-join = "miter" / "round" / "bevel"
 opt-dash = (SP "dash=" number-list)?
 
 # `fill: Option<FillStyle>` (`#[dsl(statements, block)]`) — own leading keyword per variant

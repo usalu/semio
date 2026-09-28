@@ -11,8 +11,11 @@
     "id": {
       "type": "string"
     },
-    "newDescription": {
-      "type": "string"
+    "new_description": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   }
 }

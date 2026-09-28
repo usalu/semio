@@ -10,6 +10,7 @@ three-state representation -- the structured text/binary codecs are authoritativ
 for the absent/null/set distinction. """
 type SvgDiff {
   prolog: [XmlNode!]
+  epilog: [XmlNode!]
   declaration: XmlDeclaration
   doctype: XmlDoctype
   root: SvgNodeDiff

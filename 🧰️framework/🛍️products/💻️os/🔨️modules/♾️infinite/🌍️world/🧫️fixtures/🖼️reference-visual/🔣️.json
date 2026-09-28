@@ -37,6 +37,7 @@
     "premultipliedAlpha": false
   },
   "geometry": {
+    "defaultWidthWorld": 10.0,
     "origin": [
       7.0,
       0.0,

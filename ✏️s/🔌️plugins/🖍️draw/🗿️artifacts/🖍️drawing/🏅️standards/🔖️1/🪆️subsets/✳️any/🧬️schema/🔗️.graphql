@@ -11,7 +11,20 @@ type DrawingArtifact {
 
 type DrawingLayerNode {
   kind: String!
+  attributes: DrawingAttributes
 }
+
+enum StrokeCap { butt round square }
+enum StrokeJoin { miter round bevel }
+type StrokeStyle {
+  color: [Float!]!
+  width: Float!
+  cap: StrokeCap!
+  join: StrokeJoin!
+  dash: [Float!]
+}
+enum FillRule { evenodd nonzero }
+type DrawingAttributes { fillRule: FillRule! stroke: StrokeStyle }
 
 type DrawingImageAssetEntry {
   key: String!

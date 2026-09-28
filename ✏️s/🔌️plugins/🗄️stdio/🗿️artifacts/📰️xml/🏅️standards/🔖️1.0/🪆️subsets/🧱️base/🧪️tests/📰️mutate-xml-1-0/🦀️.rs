@@ -263,7 +263,7 @@ mod subject {
             _ => None,
         };
         let declarations = params.array("entities").iter().map(|entry| XmlDtdDeclaration::Entity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") }).collect();
-        Some(XmlDoctype { name, external_id, declarations })
+        Some(XmlDoctype { prolog_position: usize_field(params, "prologPosition"), name, external_id, declarations })
     }
 
     /// 📄️ The scenario's `<id>`/`<params>` spec turned into the one direct typed mutation this subset declares for it.

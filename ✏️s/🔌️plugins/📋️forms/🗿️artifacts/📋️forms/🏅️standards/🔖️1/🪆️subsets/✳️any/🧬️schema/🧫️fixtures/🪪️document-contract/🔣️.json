@@ -25,7 +25,11 @@
           "subset": "table"
         }
       }
-    }
+    },
+    "definition": {
+      "steps": []
+    },
+    "responses": []
   },
   "invalidDocumentFields": {
     "steps": [],
@@ -83,7 +87,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -111,7 +119,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -139,7 +151,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -167,7 +183,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -196,7 +216,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -224,7 +248,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -252,7 +280,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -280,7 +312,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -308,7 +344,11 @@
             "subset": "foreign"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "forms.form",
@@ -337,7 +377,11 @@
           }
         },
         "locale": "de"
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     },
     {
       "schema": "foreign.document",
@@ -365,7 +409,11 @@
             "subset": "table"
           }
         }
-      }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
     }
   ],
   "patchCases": [
@@ -397,7 +445,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {},
       "after": {
@@ -426,7 +478,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     },
     {
@@ -457,7 +513,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {
         "title": "Revised Survey"
@@ -488,7 +548,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     },
     {
@@ -519,7 +583,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {
         "title": null
@@ -549,7 +617,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     },
     {
@@ -580,7 +652,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {
         "version": "2"
@@ -611,7 +687,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     },
     {
@@ -642,7 +722,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {
         "structure": {
@@ -683,7 +767,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     },
     {
@@ -714,7 +802,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       },
       "diff": {
         "results": {
@@ -755,7 +847,11 @@
               "subset": "table"
             }
           }
-        }
+        },
+        "definition": {
+          "steps": []
+        },
+        "responses": []
       }
     }
   ],

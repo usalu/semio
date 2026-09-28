@@ -1,5 +1,5 @@
 {
-  "law": "delayMs <= 0 is an unthrottled continuation that runs before any pending deadline and advances the clock by nothing; delayMs > 0 is a deadline honoured to the millisecond; every request is cancellable; requests sharing a key coalesce to one run at the earliest deadline with the newest callback; ties run in enqueue order.",
+  "law": "delayMs <= 0 is an unthrottled continuation that runs before a deadline that is not yet due and adds no artificial delay; chained continuations yield to due host deadlines; delayMs > 0 is a deadline honoured to the millisecond; every request is cancellable; requests sharing a key coalesce to one run at the earliest deadline with the newest callback; ties run in enqueue order.",
   "provenance": "ticket 2026/09/09/PROCEDURAL-3D-END-TO-END — 📓️audit-extension-hop-latency-2026-09-12.md measured two silent ~11-13 s gaps per extension hop in a headless page, caused by the guest's Effect::DispatchAction{delay_ms:0} re-arm riding a nested setTimeout chain that Chrome clamps to ~1 tick/s when the renderer is hidden or unfocused. Natively the same chain is 0.58 s.",
   "fairness": { "deadlineMs": 5, "maximumContinuations": 50000, "expectedDeadlineObserved": true },
   "cases": [

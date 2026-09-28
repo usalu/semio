@@ -51,6 +51,7 @@ pub(crate) fn test_case() -> CsvMutation {
 mod tests {
     use super::*;
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use semio_s_artifact_stdio_contract::pack;
 
     #[test]
     fn compact_snapshot_patch_matches_neutral_large_field_oracle() {

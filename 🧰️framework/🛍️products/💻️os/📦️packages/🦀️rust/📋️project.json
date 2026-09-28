@@ -9,6 +9,15 @@
     "family:os-kernel"
   ],
   "targets": {
+    "retained-clone-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun 📜️script.ts retained-clone-check",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": []
+    },
     "document-opening-attempt-native-check": {
       "executor": "nx:run-commands",
       "cache": true,

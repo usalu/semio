@@ -1,0 +1,250 @@
+{
+  "cases": [
+    {
+      "name": "create answer reference",
+      "before": null,
+      "path": "",
+      "field": "kind",
+      "value": "var",
+      "after": {
+        "kind": "var",
+        "name": ""
+      }
+    },
+    {
+      "name": "set referenced answer",
+      "before": {
+        "kind": "var",
+        "name": ""
+      },
+      "path": "",
+      "field": "name",
+      "value": "name",
+      "after": {
+        "kind": "var",
+        "name": "name"
+      }
+    },
+    {
+      "name": "create equality",
+      "before": null,
+      "path": "",
+      "field": "kind",
+      "value": "eq",
+      "after": {
+        "kind": "eq",
+        "left": {
+          "kind": "var",
+          "name": ""
+        },
+        "right": {
+          "kind": "const",
+          "value": ""
+        }
+      }
+    },
+    {
+      "name": "edit equality constant",
+      "before": {
+        "kind": "eq",
+        "left": {
+          "kind": "var",
+          "name": "name"
+        },
+        "right": {
+          "kind": "const",
+          "value": ""
+        }
+      },
+      "path": "1",
+      "field": "value",
+      "value": "Ada",
+      "after": {
+        "kind": "eq",
+        "left": {
+          "kind": "var",
+          "name": "name"
+        },
+        "right": {
+          "kind": "const",
+          "value": "Ada"
+        }
+      }
+    },
+    {
+      "name": "append grouped rule",
+      "before": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      },
+      "path": "",
+      "field": "add",
+      "value": null,
+      "after": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          },
+          {
+            "kind": "const",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "remove grouped rule",
+      "before": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      },
+      "path": "0",
+      "field": "remove",
+      "value": null,
+      "after": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      }
+    },
+    {
+      "name": "nested edit preserves siblings",
+      "before": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      },
+      "path": "1",
+      "field": "name",
+      "value": "third",
+      "after": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "third"
+          }
+        ]
+      }
+    },
+    {
+      "name": "clear root condition",
+      "before": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      },
+      "path": "",
+      "field": "kind",
+      "value": "none",
+      "after": null
+    },
+    {
+      "name": "typed boolean constant",
+      "before": {
+        "kind": "const",
+        "value": ""
+      },
+      "path": "",
+      "field": "valueType",
+      "value": "boolean",
+      "after": {
+        "kind": "const",
+        "value": false
+      }
+    },
+    {
+      "name": "typed numeric constant",
+      "before": {
+        "kind": "const",
+        "value": ""
+      },
+      "path": "",
+      "field": "valueType",
+      "value": "number",
+      "after": {
+        "kind": "const",
+        "value": 0
+      }
+    },
+    {
+      "name": "stale path rejected",
+      "before": {
+        "kind": "and",
+        "items": [
+          {
+            "kind": "var",
+            "name": "first"
+          },
+          {
+            "kind": "var",
+            "name": "second"
+          }
+        ]
+      },
+      "path": "9",
+      "field": "name",
+      "value": "x",
+      "error": "invalid-path"
+    },
+    {
+      "name": "invalid field rejected",
+      "before": {
+        "kind": "var",
+        "name": "first"
+      },
+      "path": "",
+      "field": "value",
+      "value": "x",
+      "error": "invalid-condition-edit"
+    }
+  ]
+}

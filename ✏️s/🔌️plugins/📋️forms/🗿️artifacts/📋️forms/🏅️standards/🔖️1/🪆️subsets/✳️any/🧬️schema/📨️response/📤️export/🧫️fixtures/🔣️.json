@@ -1,0 +1,128 @@
+{
+  "schema": "forms-response-export-v1",
+  "cases": [
+    {
+      "name": "no submissions",
+      "responses": [],
+      "rows": [
+        [
+          "responseId",
+          "submittedAt",
+          "definitionVersion",
+          "questionId",
+          "label",
+          "kind",
+          "valueJson"
+        ]
+      ],
+      "csv": "responseId,submittedAt,definitionVersion,questionId,label,kind,valueJson\r\n"
+    },
+    {
+      "name": "answers preserve punctuation and original labels",
+      "responses": [
+        {
+          "id": "response-a",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "revision-a",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name, full",
+              "kind": "text",
+              "value": "Ada \"A\"\nLovelace"
+            },
+            {
+              "questionId": "agree",
+              "label": "Zustimmung ✓",
+              "kind": "boolean",
+              "value": false
+            },
+            {
+              "questionId": "count",
+              "label": "Quantity",
+              "kind": "number",
+              "value": 0
+            },
+            {
+              "questionId": "optional",
+              "label": "Not answered",
+              "kind": "text",
+              "value": null
+            }
+          ]
+        },
+        {
+          "id": "response-b",
+          "submittedAt": 1790545740001,
+          "definitionVersion": "revision-b",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Renamed label",
+              "kind": "text",
+              "value": "Grace"
+            }
+          ]
+        }
+      ],
+      "rows": [
+        [
+          "responseId",
+          "submittedAt",
+          "definitionVersion",
+          "questionId",
+          "label",
+          "kind",
+          "valueJson"
+        ],
+        [
+          "response-a",
+          "1790545740000",
+          "revision-a",
+          "name",
+          "Name, full",
+          "text",
+          "\"Ada \\\"A\\\"\\nLovelace\""
+        ],
+        [
+          "response-a",
+          "1790545740000",
+          "revision-a",
+          "agree",
+          "Zustimmung ✓",
+          "boolean",
+          "false"
+        ],
+        [
+          "response-a",
+          "1790545740000",
+          "revision-a",
+          "count",
+          "Quantity",
+          "number",
+          "0"
+        ],
+        [
+          "response-a",
+          "1790545740000",
+          "revision-a",
+          "optional",
+          "Not answered",
+          "text",
+          "null"
+        ],
+        [
+          "response-b",
+          "1790545740001",
+          "revision-b",
+          "name",
+          "Renamed label",
+          "text",
+          "\"Grace\""
+        ]
+      ],
+      "csv": "responseId,submittedAt,definitionVersion,questionId,label,kind,valueJson\r\nresponse-a,1790545740000,revision-a,name,\"Name, full\",text,\"\"\"Ada \\\"\"A\\\"\"\\nLovelace\"\"\"\r\nresponse-a,1790545740000,revision-a,agree,Zustimmung ✓,boolean,false\r\nresponse-a,1790545740000,revision-a,count,Quantity,number,0\r\nresponse-a,1790545740000,revision-a,optional,Not answered,text,null\r\nresponse-b,1790545740001,revision-b,name,Renamed label,text,\"\"\"Grace\"\"\"\r\n"
+    }
+  ]
+}
+

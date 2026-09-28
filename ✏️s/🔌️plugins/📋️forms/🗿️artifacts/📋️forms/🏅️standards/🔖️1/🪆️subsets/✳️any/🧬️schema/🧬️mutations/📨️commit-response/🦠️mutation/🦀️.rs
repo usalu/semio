@@ -1,0 +1,18 @@
+//! 📨️ CommitResponse persists one semantic response event.
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct CommitResponse {
+    pub response: crate::schema::response::FormsResponse,
+    pub index: Option<usize>,
+}
+
+impl MutationKind<FormsSnapshot, FormMutation> for CommitResponse {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "commit", entity: "response", kind: "commit-response", record: "CommittedResponse" };
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> { super::diff::diff(self, base) }
+    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> { super::inverse::inverse(self, base) }
+    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Submit Response", "Antwort absenden") }
+    fn target(&self) -> Vec<String> { vec![self.response.id.clone()] }
+}

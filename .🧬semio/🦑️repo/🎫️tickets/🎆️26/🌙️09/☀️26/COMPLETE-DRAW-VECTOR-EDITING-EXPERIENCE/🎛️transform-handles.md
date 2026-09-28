@@ -46,3 +46,14 @@ The native scene interpreter also discarded movement modifiers. It now forwards 
 Native test process 30810 finished with exit 1 after 121 minutes: missing `semio_s_artifact_stdio_xml` and unresolved `export`. The XML dependency was already added after that process initialized its graph; the SVG wrapper's missing local module import was fixed here. A fresh registered native suite is running as **29811**, log `tests-native-handles-svg-fixed.txt`. It started before the modifier edits, so source capture and coverage need checking at completion. Component materialization **43904** remains live; no duplicate was started. The broader ticket and goal remain open.
 
 The registered native renderer subset was dispatched after all native modifier edits: `bun nx run @semio-tech/framework-renderer-wgpu:test-wgpu-unit --excludeTaskDependencies -- scenes::canvas2d_tests`, process **23844**, log `tests-native-pointer-modifiers.txt`. Keep polling this handle rather than starting another copy. A focused diff whitespace check passed after the edits.
+
+
+## Browser Resize Evidence
+
+Stable preview 6065 selected Orange Wedge and exposed its eight resize handles plus rotation stem. Dragging the bottom-right handle from (470,632) to (500,652) changed scale X to 1.3228410008071025 and scale Y to 1.0491761924332275, with translations (-0.4035512510088782,-2.1514584189537014) preserving the opposite geometry corner. The canvas inspector retained the selected layer. Error/warning console query remained empty. Undo and rotation are being checked next.
+
+
+Resize undo restored X=Y=0 and scale X=Y=1. Dragging the rotation handle from (423,197) to (500,197) then produced Rotation=18.4440702967987 degrees with scale unchanged. Screenshot `🗑️generated/rotation-handle-verified.png` captures this state. A single Command-Z was sent to restore the demo; completion is checked separately.
+
+
+Rotation undo completed: X=0, Y=0, Rotation=0; scale stayed 1. Final browser warning/error query was empty. Browser move/resize/rotation plus single-step undo are verified for this selected path. Modifier gestures, other transform topologies and cancellation still require browser checks.

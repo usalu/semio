@@ -1,7 +1,31 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_wav.mutations;
-message WavMutation {
+message WavMutationFmt { uint32 audio_format = 1; uint32 channels = 2; uint32 sample_rate = 3; uint32 byte_rate = 4; uint32 block_align = 5; uint32 bits_per_sample = 6; bytes ext = 7; }
+message WavMutationData { string kind = 1; repeated double value = 2; }
+message WavMutationRiffChunk { string fourcc = 1; bytes data = 2; uint32 pad_byte = 3; }
+message WavMutationChunkRef { string kind = 1; uint64 value = 2; }
+message WavMutationSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  WavMutationFmt fmt = 2;
+  WavMutationData data = 3;
+  uint32 fmt_pad_byte = 4;
+  uint32 data_pad_byte = 5;
+  repeated WavMutationRiffChunk other_chunks = 6;
+  repeated WavMutationChunkRef chunk_order = 7;
+}
+message WavMutationSetSnapshot { WavMutationSnapshot snapshot = 1; }
+message WavMutationPatchSnapshot { bytes patch_wire = 1; }
+message WavMutationSetFmt { WavMutationFmt fmt = 1; }
+message WavMutationSetData { WavMutationData data = 1; }
+message WavMutationPatchData { uint64 index = 1; uint64 remove_count = 2; WavMutationData data = 3; optional uint64 move_to = 4; }
+message WavMutationSetOtherChunks { repeated WavMutationRiffChunk chunks = 1; }
+message WavMutation {
+  oneof payload {
+    WavMutationSetSnapshot set_snapshot = 1;
+    WavMutationPatchSnapshot patch_snapshot = 2;
+    WavMutationSetFmt set_fmt = 3;
+    WavMutationSetData set_data = 4;
+    WavMutationPatchData patch_data = 5;
+    WavMutationSetOtherChunks set_other_chunks = 6;
+  }
 }

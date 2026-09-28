@@ -17,6 +17,19 @@
     "curvilinearStrength": 1,
     "curvilinearMapping": "fisheye"
   },
+  "framePolicies": [
+    {
+      "name": "interactive content owns one initial frame",
+      "value": "content",
+      "expectedFramesContent": true
+    },
+    {
+      "name": "authored camera pose remains authoritative",
+      "value": "preserveCamera",
+      "expectedFramesContent": false
+    }
+  ],
+  "framePolicyRejections": [null, "camera", "preserve-camera", "CONTENT"],
   "modes": [
     {
       "kind": "orthographic"
@@ -953,6 +966,104 @@
         ]
       }
     ],
+    "frameCases": [
+      {
+        "name": "top frames the reference extent in its cardinal plane",
+        "spec": {
+          "mode": {
+            "kind": "orthographic"
+          },
+          "orientation": {
+            "type": "cardinal",
+            "view": "top"
+          }
+        },
+        "bounds": {
+          "center": [
+            7,
+            0,
+            0.01
+          ],
+          "halfExtent": [
+            25,
+            25,
+            0.5
+          ]
+        },
+        "viewport": {
+          "width": 400,
+          "height": 800
+        },
+        "expected": {
+          "position": [
+            7,
+            0,
+            101.26
+          ],
+          "target": [
+            7,
+            0,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "zoom": 5.925925925925926,
+          "projection": "orthographic"
+        }
+      },
+      {
+        "name": "curvilinear frames the same extent with its free perspective look",
+        "spec": {
+          "mode": {
+            "kind": "curvilinear",
+            "fov": 120,
+            "strength": 1,
+            "mapping": "fisheye"
+          },
+          "orientation": {
+            "type": "free"
+          }
+        },
+        "bounds": {
+          "center": [
+            7,
+            0,
+            0.01
+          ],
+          "halfExtent": [
+            25,
+            25,
+            0.5
+          ]
+        },
+        "viewport": {
+          "width": 400,
+          "height": 800
+        },
+        "expected": {
+          "position": [
+            70.55770937652562,
+            -63.55770937652562,
+            46.61898687611879
+          ],
+          "target": [
+            7,
+            0,
+            0.01
+          ],
+          "up": [
+            0,
+            0,
+            1
+          ],
+          "zoom": 1,
+          "projection": "perspective"
+        }
+      }
+    ],
     "curvilinearCases": [
       {
         "name": "fisheye inverse pointer",
@@ -999,6 +1110,44 @@
           0.3268168928480098,
           0.20426055803000612
         ]
+      }
+    ],
+    "frameLifecycleCases": [
+      {
+        "name": "an explicit delivered seed frames its initial accepted bounds",
+        "viewportOwned": false,
+        "cameraNavigating": false,
+        "hasProjectionSeed": true,
+        "lockContentFrame": false,
+        "projectionFrame": "content",
+        "expectedMounted": true
+      },
+      {
+        "name": "the accepted frame owns the viewport across later bound growth",
+        "viewportOwned": true,
+        "cameraNavigating": false,
+        "hasProjectionSeed": true,
+        "lockContentFrame": true,
+        "projectionFrame": "content",
+        "expectedMounted": false
+      },
+      {
+        "name": "an external projection seed rearms the one-shot frame",
+        "viewportOwned": false,
+        "cameraNavigating": false,
+        "hasProjectionSeed": true,
+        "lockContentFrame": false,
+        "projectionFrame": "content",
+        "expectedMounted": true
+      },
+      {
+        "name": "an authored camera cancels automatic content framing",
+        "viewportOwned": false,
+        "cameraNavigating": false,
+        "hasProjectionSeed": true,
+        "lockContentFrame": false,
+        "projectionFrame": "preserveCamera",
+        "expectedMounted": false
       }
     ]
   }

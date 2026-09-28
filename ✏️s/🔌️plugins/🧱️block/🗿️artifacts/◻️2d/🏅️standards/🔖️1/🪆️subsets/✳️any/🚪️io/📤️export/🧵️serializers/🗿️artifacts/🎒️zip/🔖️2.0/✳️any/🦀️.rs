@@ -29,7 +29,13 @@ pub const ZIP_JSON_ENTRY: &str = "snapshot.json";
 
 /// 🎒️ Builds the container this leaf writes — shared with the sibling `📥️import` leaf's tests.
 pub fn archive_of(from: &Block2dSnapshot) -> ZipSnapshot {
-    ZipSnapshot { entries: vec![ZipEntry { name: ZIP_DSL_ENTRY.to_string(), data: dsl_text(from).into_bytes() }, ZipEntry { name: ZIP_JSON_ENTRY.to_string(), data: json_text(from).into_bytes() }], ..ZipSnapshot::default() }
+    ZipSnapshot {
+        entries: vec![
+            ZipEntry { name: ZIP_DSL_ENTRY.to_string(), data: dsl_text(from).into_bytes(), ..Default::default() },
+            ZipEntry { name: ZIP_JSON_ENTRY.to_string(), data: json_text(from).into_bytes(), ..Default::default() },
+        ],
+        ..ZipSnapshot::default()
+    }
 }
 
 /// 🧵️ `s.block.block2d@1/*` → `s.stdio.zip@2.0/*`.

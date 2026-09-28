@@ -11,6 +11,7 @@ export interface TxtMainViewModel {
 /** ✏️ `textEdit` payload shape — mirrors `TxtEditorCommand::ReplaceText`, a whole-document
  * replace (re-split into `lines` on the document's own line ending). */
 export interface TxtTextEdit {
+  revision: string;
   text: string;
 }
 

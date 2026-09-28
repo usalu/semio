@@ -21,6 +21,8 @@ type RenameLayer {
   newName: String!
 }
 
+type ChangeLayerLocked { layerId: String! expected: Boolean! locked: Boolean! }
+
 type ChangeLayerVisible {
   layerId: String!
   newVisible: Boolean!
@@ -89,6 +91,7 @@ union RasterMutation =
   | DeleteLayer
   | ReorderLayers
   | RenameLayer
+  | ChangeLayerLocked
   | ChangeLayerVisible
   | ChangeLayerOpacity
   | ChangeLayerBlendMode
@@ -99,3 +102,6 @@ union RasterMutation =
   | RemoveLayerAsset
   | ChangeLayerPixels
   | ChangeLayerMask
+  | ChangeLayerTransform
+
+type ChangeLayerTransform {layerId: String! expected: RasterTransform! transform: RasterTransform!}

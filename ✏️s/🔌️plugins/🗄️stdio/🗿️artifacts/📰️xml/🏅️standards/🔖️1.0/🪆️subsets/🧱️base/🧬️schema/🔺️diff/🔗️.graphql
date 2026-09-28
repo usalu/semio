@@ -4,6 +4,7 @@ native tri-state -- the wire encoding (JSON, via the sibling `.json`/`.ts` facet
 for the absent/null/set distinction. """
 type XmlDiff {
   prolog: [XmlNode!]
+  epilog: [XmlNode!]
   declaration: XmlDeclaration
   doctype: XmlDoctype
   root: XmlNodeDiff
@@ -31,7 +32,6 @@ type XmlAttrModified {
 }
 
 type XmlAttrAdded {
-  index: Int!
   name: String!
   value: String!
 }
@@ -41,6 +41,7 @@ type XmlAttributesDiff {
   removed: [String!]!
   modified: [XmlAttrModified!]!
   added: [XmlAttrAdded!]!
+  order: [String!]!
 }
 
 type XmlChildModified {

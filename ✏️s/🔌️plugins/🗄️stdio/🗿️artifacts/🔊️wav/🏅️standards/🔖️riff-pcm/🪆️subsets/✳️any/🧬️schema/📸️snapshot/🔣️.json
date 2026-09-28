@@ -2,19 +2,58 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json",
   "title": "WavSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Complete editable RIFF/WAVE state with typed primary chunks and exact top-level chunk order.",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "fmt", "data", "otherChunks", "chunkOrder"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
+    "schema": { "type": "string", "const": "stdio.wav", "x-semio-state": "artifact" },
+    "fmt": { "$ref": "#/$defs/WavFmt", "x-semio-state": "artifact" },
+    "data": { "$ref": "#/$defs/WavData", "x-semio-state": "artifact" },
+    "fmtPadByte": { "type": "integer", "minimum": 0, "maximum": 255, "default": 0, "description": "Word-alignment byte; must be zero when the serialized fmt payload length is even.", "x-semio-state": "artifact" },
+    "dataPadByte": { "type": "integer", "minimum": 0, "maximum": 255, "default": 0, "description": "Word-alignment byte; must be zero when the serialized data payload length is even.", "x-semio-state": "artifact" },
+    "otherChunks": { "type": "array", "items": { "$ref": "#/$defs/RiffChunk" }, "x-semio-state": "artifact" },
+    "chunkOrder": { "type": "array", "items": { "$ref": "#/$defs/WavChunkRef" }, "x-semio-state": "artifact" }
+  },
+  "$defs": {
+    "WavFmt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audioFormat", "channels", "sampleRate", "byteRate", "blockAlign", "bitsPerSample"],
+      "properties": {
+        "audioFormat": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "channels": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "sampleRate": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "byteRate": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "blockAlign": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "bitsPerSample": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "ext": { "type": "array", "maxItems": 65535, "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
       }
+    },
+    "WavData": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "pcm16" }, "value": { "type": "array", "items": { "type": "integer", "minimum": -32768, "maximum": 32767 } } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "pcm8" }, "value": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "float32" }, "value": { "type": "array", "items": { "type": "number" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "raw" }, "value": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } } }
+      ]
+    },
+    "RiffChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fourcc", "data"],
+      "properties": {
+        "fourcc": { "type": "string", "minLength": 4, "maxLength": 4, "pattern": "^[ -~]{4}$" },
+        "data": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+        "padByte": { "type": "integer", "minimum": 0, "maximum": 255, "default": 0, "description": "Word-alignment byte; must be zero when data has even length." }
+      }
+    },
+    "WavChunkRef": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "format" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "samples" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "other" }, "value": { "type": "integer", "minimum": 0 } } }
+      ]
     }
   }
 }

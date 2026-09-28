@@ -14,12 +14,10 @@ pub struct AddLayer {
     pub kind: String,
 }
 
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added layer used to also
-/// select itself here — the `"layers"` domain's selection is framework-owned `InteractionState` now,
-/// only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
-/// command's `Emit::config_mutations`.
+/// 🖱️ Creates a layer and selects it through the framework interaction lane after publication.
 pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let layer = create_layer_of_kind(&payload.kind);
-    Ok(Emit { artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })], ..Default::default() })
+    let selection=crate::editor::raster::layer_selection::select_layer_effect(crate::standards::v1::subsets::any::schema::layer_node_id(&layer))?;
+    Ok(Emit { artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })], effects:vec![selection], ..Default::default() })
 }

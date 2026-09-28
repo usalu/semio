@@ -5,7 +5,7 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
+use crate::mutations::{change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
 use crate::{RasterImageAsset, RasterLayerNode};
 use protocol::OpText;
@@ -43,6 +43,12 @@ enum RasterMutationDsl {
         #[dsl(key = "id")]
         layer_id: String,
         new_name: String,
+    },
+    ChangeLayerLocked {
+        #[dsl(key = "id")]
+        layer_id:String,
+        expected:bool,
+        locked:bool,
     },
     ChangeLayerVisible {
         #[dsl(key = "id")]
@@ -90,6 +96,14 @@ enum RasterMutationDsl {
         expected:Option<crate::RasterAdjustmentNumber>,
         #[dsl(key = "value")]
         value:Option<crate::RasterAdjustmentNumber>,
+    },
+    ChangeLayerTransform {
+        #[dsl(key="id")]
+        layer_id:String,
+        #[dsl(block)]
+        expected:crate::RasterTransform,
+        #[dsl(block)]
+        transform:crate::RasterTransform,
     },
     ChangeLayerMask {
         #[dsl(key = "id")]
@@ -152,6 +166,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::DeleteLayer(payload) => RasterMutationDsl::DeleteLayer { layer_id: payload.layer_id.clone() },
         RasterMutation::ReorderLayers(payload) => RasterMutationDsl::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id: payload.parent_id.clone(), index: payload.index },
         RasterMutation::RenameLayer(payload) => RasterMutationDsl::RenameLayer { layer_id: payload.layer_id.clone(), new_name: payload.new_name.clone() },
+        RasterMutation::ChangeLayerLocked(payload)=>RasterMutationDsl::ChangeLayerLocked {layer_id:payload.layer_id.clone(),expected:payload.expected,locked:payload.locked},
         RasterMutation::ChangeLayerVisible(payload) => RasterMutationDsl::ChangeLayerVisible { layer_id: payload.layer_id.clone(), new_visible: payload.new_visible },
         RasterMutation::ChangeLayerOpacity(payload) => RasterMutationDsl::ChangeLayerOpacity { layer_id: payload.layer_id.clone(), new_opacity: payload.new_opacity },
         RasterMutation::ChangeLayerBlendMode(payload) => RasterMutationDsl::ChangeLayerBlendMode { layer_id: payload.layer_id.clone(), new_blend_mode: payload.new_blend_mode.clone() },
@@ -160,6 +175,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::ChangeLayerAdjustmentKind(payload) => RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: payload.new_adjustment_kind.clone() },
         RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: payload.asset.clone() },
         RasterMutation::ChangeLayerAdjustmentParameter(payload) => RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id:payload.layer_id.clone(),parameter:payload.parameter.clone(),expected:payload.expected,value:payload.value},
+        RasterMutation::ChangeLayerTransform(payload)=>RasterMutationDsl::ChangeLayerTransform {layer_id:payload.layer_id.clone(),expected:payload.expected.clone(),transform:payload.transform.clone()},
         RasterMutation::ChangeLayerMask(payload) => RasterMutationDsl::ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: payload.expected.clone(), mask: payload.mask.clone() },
         RasterMutation::ChangeLayerPixels(payload) => RasterMutationDsl::ChangeLayerPixels { layer_id: payload.layer_id.clone(), expected_image_key: payload.expected_image_key.clone(), content: payload.content.clone(), transform: payload.transform.clone() },
         RasterMutation::RemoveLayerAsset(payload) => RasterMutationDsl::RemoveLayerAsset { asset_id: payload.asset_id.clone() },
@@ -172,6 +188,7 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
         RasterMutationDsl::DeleteLayer { layer_id } => RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id }),
         RasterMutationDsl::ReorderLayers { layer_id, parent_id, index } => RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id, parent_id, index }),
         RasterMutationDsl::RenameLayer { layer_id, new_name } => RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id, new_name }),
+        RasterMutationDsl::ChangeLayerLocked {layer_id,expected,locked}=>RasterMutation::ChangeLayerLocked(change_layer_locked::ChangeLayerLocked {layer_id,expected,locked}),
         RasterMutationDsl::ChangeLayerVisible { layer_id, new_visible } => RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id, new_visible }),
         RasterMutationDsl::ChangeLayerOpacity { layer_id, new_opacity } => RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id, new_opacity }),
         RasterMutationDsl::ChangeLayerBlendMode { layer_id, new_blend_mode } => RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id, new_blend_mode }),
@@ -180,6 +197,7 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
         RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind } => RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind }),
         RasterMutationDsl::AddLayerAsset { asset_id, asset } => RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
         RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value} => RasterMutation::ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value}),
+        RasterMutationDsl::ChangeLayerTransform {layer_id,expected,transform}=>RasterMutation::ChangeLayerTransform(change_layer_transform::ChangeLayerTransform {layer_id,expected,transform}),
         RasterMutationDsl::ChangeLayerMask { layer_id, expected, mask } => RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id, expected, mask }),
         RasterMutationDsl::ChangeLayerPixels { layer_id, expected_image_key, content, transform } => RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id, expected_image_key, content, transform }),
         RasterMutationDsl::RemoveLayerAsset { asset_id } => RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id }),

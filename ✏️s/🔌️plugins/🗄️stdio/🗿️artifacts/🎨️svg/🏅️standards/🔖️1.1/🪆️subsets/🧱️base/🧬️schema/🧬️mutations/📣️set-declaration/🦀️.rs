@@ -28,7 +28,7 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationM
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(SvgDiff { prolog: None, declaration: Some(payload.declaration.clone()), doctype: None, root: None }),
+            Self::Apply(payload) => protocol::MutationOutcome::new(SvgDiff { prolog: None, epilog: None, declaration: Some(payload.declaration.clone()), doctype: None, root: None }),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
         }
     }

@@ -8,9 +8,19 @@ import diffSchema from "../../🔺️diff/🔣️.json";
 import mutationSchema from "../../🧬️mutations/🎭️change-layer-mask/🧬️schema/🔣️.json";
 import mutations from "../../🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json";
 import {parseRasterLayerPatch} from "../../🔺️diff/🟦️.ts";
-import {parseRasterLayerMask} from "../../🟦️.ts";
+import {parseRasterLayerMask,parseRasterTransform} from "../../🟦️.ts";
+import transforms from "../../🧫️fixtures/📐️transform/🔣️.json";
 
 const validate=new Ajv({strict:false,validateFormats:false}).compile({$ref:"#/$defs/RasterLayerMask",$defs:schema.$defs});
+const validateTransform=new Ajv({strict:false,validateFormats:false}).compile(schema.$defs.RasterTransform);
+for(const row of transforms.cases)test(`Persisted affine transform: ${row.name}`,()=>{
+  expect(validateTransform(row.transform)).toBe(true);
+  expect(parseRasterTransform(row.transform)).toEqual(row.transform);
+  for(const field of transforms.fields){
+    const missing:Record<string,number>={...row.transform};delete missing[field];
+    expect(validateTransform(missing)).toBe(false);expect(()=>parseRasterTransform(missing)).toThrow();
+  }
+});
 const validatePatch=new Ajv({strict:false,validateFormats:false}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile({$ref:"#/$defs/RasterLayerPatch",$defs:diffSchema.$defs});
 const validateMutation=new Ajv({strict:false,validateFormats:false}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile(mutationSchema);
 test("mask mutation fixture conforms to the canonical nullable mask contract",()=>{
@@ -57,10 +67,10 @@ test("sparse mask patches preserve explicit removal and reject missing values",(
 
 test("sparse pixel patches retain nullable attachments and display transforms",()=>{
   const content={imageKey:null,width:32,height:null},transform=mutations.reveal.transform;
-  expect(validatePatch({pixelContent:content,pixelTransform:transform})).toBe(true);
-  const parsed=parseRasterLayerPatch({pixelContent:content,pixelTransform:transform});
+  expect(validatePatch({pixelContent:content,transform:transform})).toBe(true);
+  const parsed=parseRasterLayerPatch({pixelContent:content,transform:transform});
   expect(parsed.pixelContent).toEqual(content);
-  expect(parsed.pixelTransform).toEqual(transform);
+  expect(parsed.transform).toEqual(transform);
   expect(validatePatch({pixelContent:{...content,width:0}})).toBe(false);
   expect(()=>parseRasterLayerPatch({pixelContent:{...content,width:0}})).toThrow();
 });

@@ -10,6 +10,7 @@ fn layer(value: &serde_json::Value) -> DrawingLayerNode {
     base.locked = value["base"]["locked"].as_bool().unwrap_or(false);
     match &mut node {
         DrawingLayerNode::Group(group) => group.children = value["children"].as_array().unwrap().iter().map(layer).collect(),
+        DrawingLayerNode::Path(path) => path.segments = value.get("segments").map(|segments|serde_json::from_value(segments.clone()).unwrap()).unwrap_or_default(),
         DrawingLayerNode::Boolean(boolean) => boolean.children = value["children"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().into()).collect(),
         _ => {}
     }
@@ -28,5 +29,19 @@ fn document_topology_matches_language_neutral_fixture() {
             value
         }).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(actual), case["ordered"], "{}", case["name"]);
+    }
+}
+
+#[test]
+fn point_topology_obeys_ancestor_restrictions_and_actual_handles() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🎯️points/🧫️fixtures/🌳️topology/🔣️.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let snapshot=DrawingSnapshot {layers:row["layers"].as_array().unwrap().iter().map(layer).collect(),..Default::default()};
+        let actual=drawing_point_topology(&snapshot).ordered.into_iter().map(|node| {
+            let point=points::parse_point_id(&node.id).unwrap();
+            assert_eq!(node.granularity,"point");assert!(node.parent.is_none());
+            serde_json::json!([point.layer_id,point.index,points::point_name(point.point)])
+        }).collect::<Vec<_>>();
+        assert_eq!(serde_json::Value::Array(actual),row["points"]);
     }
 }

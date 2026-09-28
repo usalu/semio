@@ -1,4 +1,6 @@
 use super::*;
+use crate::schema::snapshot::{DocxBlock, DocxDocument};
+use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_document_window() {
@@ -9,9 +11,25 @@ async fn definition_declares_a_document_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_emits_one_page_per_top_level_block() {
-    let mut document = DocxSnapshot::default();
-    document.document.body.push(DocxBlock::paragraph("first"));
-    document.document.body.push(DocxBlock::paragraph("second"));
+    let document = build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: Vec::new() });
     let stack = render(&document).expect("render");
     assert_eq!(stack.children.len(), 2);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn nested_table_text_remains_editable_in_the_document_window() {
+    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
+    let mut snapshot = crate::engine::build_minimal_docx(crate::schema::snapshot::DocxDocument::default());
+    let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
+    snapshot.xml_part_mut(&part_path).unwrap().document = xml_document_from_text(fixture["xml"].as_str().unwrap()).unwrap();
+    let expected: Vec<Vec<String>> = serde_json::from_value(fixture["blocks"].clone()).unwrap();
+    let pages = editable_pages(&snapshot).unwrap();
+    assert_eq!(pages.iter().map(|page| page.text.as_str()).collect::<Vec<_>>(), expected.iter().flatten().map(String::as_str).collect::<Vec<_>>());
+    assert!(pages.iter().all(|page| matches!(&page.arguments, Some(UiValue::Map(_)))));
+    for locale in [Locale::En, Locale::De] {
+        let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale).unwrap();
+        assert_eq!(rendered.children.len(), 5);
+    }
+    println!("[DEBUG] DOCX nested table fixture renders five canonical text drafts in English and German");
 }

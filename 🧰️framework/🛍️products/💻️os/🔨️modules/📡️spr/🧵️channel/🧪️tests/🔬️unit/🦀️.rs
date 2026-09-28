@@ -1215,4 +1215,46 @@ fn every_command_ingress_refusal_answers_a_fault_and_keeps_its_page() {
     assert_eq!(fault.code.0, "plugin.command-page-count");
     assert_eq!(returned.as_slice(), b"third", "a refused page is handed back, never dropped");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn media_export_wire_matches_the_language_neutral_v19_fixture_above_number_safe_range() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🎬️media-export-wire-v19/🔣️.json")).expect("media export wire fixture parses");
+    let handle = MediaExportHandleWire {
+        app_instance_id: 42,
+        parent_document_id: "doc-α".into(),
+        operation_id: 9_007_199_254_740_995,
+        base_revision: 9_007_199_254_740_993,
+        generation: u64::MAX,
+    };
+    let commands = [
+        ("submit", AppCommand::SubmitMediaExport { seq: 9_007_199_254_740_993, port: "playback:out".into(), expected_parent_document_id: "doc-α".into(), expected_base_revision: 9_007_199_254_740_993 }),
+        ("poll", AppCommand::PollMediaExport { seq: 9_007_199_254_740_994, handle: handle.clone() }),
+        ("cancel", AppCommand::CancelMediaExport { seq: 9_007_199_254_740_995, handle: handle.clone() }),
+        ("takeChunk", AppCommand::TakeMediaExportChunk { seq: 9_007_199_254_740_996, handle: handle.clone() }),
+    ];
+    for (name, command) in commands {
+        let encoded = encode_app_command(&command).await.expect("media export command encodes");
+        let bytes = encoded.front_page().expect("fixture command has one page").as_slice();
+        assert_eq!(hex_encode(bytes).await, fixture["commands"][name]["hex"].as_str().expect("command hex"));
+        assert_eq!(decode_app_command(bytes).await.expect("media export command decodes"), command);
+        let mut paged = PagedAppCommandDecodeCursor::new(encoded);
+        let decoded = loop {
+            if let Some(decoded) = paged.step().expect("media export paged decode step") {
+                break decoded;
+            }
+        };
+        assert_eq!(decoded, command);
+    }
+    let frames = [
+        ("submitted", AppFrame::MediaExportSubmitted { in_reply_to: 9_007_199_254_740_993, handle: handle.clone() }),
+        ("status", AppFrame::MediaExportStatus { in_reply_to: 9_007_199_254_740_994, handle: handle.clone(), state: MediaExportStateWire::Complete, applied_progress: 4096, checkpoint_available: true, mime_type: "video/mp4".into(), total_bytes: 9_007_199_254_740_997, detail: String::new() }),
+        ("chunk", AppFrame::MediaExportChunk { in_reply_to: 9_007_199_254_740_996, handle: handle.clone(), data: vec![0, 255, 1, 128], terminal: false }),
+        ("terminalChunk", AppFrame::MediaExportChunk { in_reply_to: 9_007_199_254_740_997, handle, data: Vec::new(), terminal: true }),
+    ];
+    for (name, frame) in frames {
+        let bytes = encode_app_frame(&frame).await;
+        assert_eq!(hex_encode(&bytes).await, fixture["frames"][name]["hex"].as_str().expect("frame hex"));
+        assert_eq!(decode_app_frame(&bytes).await.expect("media export frame decodes"), frame);
+    }
+}
 //#endregion 📥️CommandIngressPages

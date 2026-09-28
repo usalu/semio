@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "checkboxPaint": { "availableWidth": 104, "availableHeight": 24, "controlSide": 9.6, "outlineWidth": 0, "checkedStates": [false, true] },
   "cases": [
     {
       "id": "button-toggle-publishes-pressed",

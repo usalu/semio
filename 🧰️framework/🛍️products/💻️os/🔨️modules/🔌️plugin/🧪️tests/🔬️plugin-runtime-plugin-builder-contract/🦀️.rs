@@ -24,9 +24,9 @@ mod plugin_builder_contract_tests {
         DslValue::from(&value)
     }
 
-    use super::ContextMenuWireRequest;
+    use super::{ContextMenuWireRequest, media_export_complete_status};
     use crate::app::{
-        ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu, NoDraft,
+        ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactOutputChunks, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu, NoDraft,
         NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp, ui_history_panel,
     };
     use crate::app::{ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId, deserializer_entry_of, resolve_ready, serializer_entry_of};
@@ -2810,6 +2810,19 @@ mod plugin_builder_contract_tests {
         assert_eq!(result.err().expect("poison must fail closed").code.0, "interactive-job.cancellation-busy");
     }
 
+    #[test]
+    fn completed_media_status_uses_explicit_mime_instead_of_schema() {
+        let chunks = ArtifactOutputChunks::new(4);
+        assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
+        assert_eq!(chunks.seal(), Ok(4));
+        let result = crate::app::ArtifactMediaExportResult::structured(MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence }, "stdio.mp4.isobmff", "video/mp4", chunks).expect("completed media");
+        let handle = protocol::MediaExportHandleWire { app_instance_id: 23, parent_document_id: "document-mp4-1".into(), operation_id: 9_007_199_254_740_993, base_revision: 9_007_199_254_740_994, generation: 9_007_199_254_740_995 };
+        let protocol::AppFrame::MediaExportStatus { mime_type, total_bytes, state, .. } = media_export_complete_status(9_007_199_254_740_996, handle, &result) else { panic!("completed status") };
+        assert_eq!(mime_type, "video/mp4");
+        assert_eq!(total_bytes, 4);
+        assert_eq!(state, protocol::MediaExportStateWire::Complete);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn segmented_download_remains_addressable_until_terminal_none_is_observed() {
         let mut app = contract_app_under_test().await;
@@ -2822,6 +2835,42 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.take_segmented_download_chunk(91).await.expect("terminal none"), None);
         assert!(!app.segmented_downloads.contains(91));
         assert_eq!(app.take_segmented_download_chunk(91).await.expect_err("terminal none removes authority").code.0, "interactive-job.unknown-segmented-download");
+        artifact_app_laws::close_registered_fixture_app(&mut *app);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn completed_media_cancel_moves_exact_output_to_bounded_cleanup() {
+        let mut app = contract_app_under_test().await;
+        let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, 0);
+        let handle = ArtifactMediaExportHandle {
+            app_instance_id: meta().instance_id,
+            parent_document_id: app.store.envelope().id.clone(),
+            operation_id,
+            base_revision: semio_framework_job::RevisionId(9_007_199_254_740_993),
+            generation: semio_framework_job::Generation(9_007_199_254_740_995),
+        };
+        let chunks = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES * 2);
+        assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
+        assert_eq!(chunks.push(vec![2; 17]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
+        assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
+        let output = ArtifactDownloadOutput::from_media_export(handle.clone(), "audio/mpeg", chunks.clone()).expect("exact media output");
+        app.segmented_downloads.insert_admitted(operation_id.0, output);
+
+        app.cancel_media_export(&handle).await.expect("completed output cancellation");
+        assert!(!app.segmented_downloads.contains(operation_id.0));
+        assert!(app.segmented_closures.contains(operation_id.0));
+        assert_eq!(chunks.chunks_remaining(), 2, "cancellation only transfers ownership");
+        assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
+
+        app.maintenance_stage = 2;
+        assert_eq!(app.maintenance_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("first bounded cleanup"), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES });
+        assert_eq!(chunks.bytes_remaining(), 17);
+        app.maintenance_stage = 2;
+        assert_eq!(app.maintenance_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("second bounded cleanup"), PluginCloseStep::Pending { released_items: 1, released_bytes: 17 });
+        assert_eq!(chunks.bytes_remaining(), 0);
+        app.maintenance_stage = 2;
+        assert_eq!(app.maintenance_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("terminal cleanup"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert!(!app.segmented_closures.contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 

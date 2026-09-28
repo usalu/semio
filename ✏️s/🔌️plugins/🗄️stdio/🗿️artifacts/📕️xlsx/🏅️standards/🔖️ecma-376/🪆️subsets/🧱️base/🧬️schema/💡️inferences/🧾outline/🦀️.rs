@@ -20,9 +20,10 @@ pub struct XlsxOutline {
 impl XlsxOutline {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &XlsxSnapshot) -> Self {
-        let sheet_names: Vec<String> = snapshot.workbook.sheets.iter().map(|s| s.name.clone()).collect();
+        let workbook = snapshot.project_workbook().unwrap_or_default();
+        let sheet_names: Vec<String> = workbook.sheets.iter().map(|s| s.name.clone()).collect();
         let sheet_count = sheet_names.len() as u32;
-        let cell_count = snapshot.workbook.sheets.iter().map(|s| s.cells.len() as u32).sum();
+        let cell_count = workbook.sheets.iter().map(|s| s.cells.len() as u32).sum();
         Self { sheet_names, sheet_count, cell_count }
     }
 }

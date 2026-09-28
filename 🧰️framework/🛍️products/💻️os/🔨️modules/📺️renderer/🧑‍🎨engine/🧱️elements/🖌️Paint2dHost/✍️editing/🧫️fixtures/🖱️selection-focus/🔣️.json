@@ -87,5 +87,73 @@
       "ctrlKey",
       "metaKey"
     ]
-  }
+  },
+  "combinationCancellation": {
+    "width": 1024,
+    "height": 64,
+    "actions": [
+      "Cancel",
+      "Deselect",
+      "Pan canvas",
+      "Switch utility"
+    ]
+  },
+  "affineMaskTargets": [
+    {
+      "name": "linked shear",
+      "linked": true,
+      "layer": {
+        "x": 0,
+        "y": 0,
+        "a": 2,
+        "b": 0,
+        "c": 0,
+        "d": 1
+      },
+      "mask": {
+        "x": 0,
+        "y": 0,
+        "a": 1,
+        "b": 1,
+        "c": -1,
+        "d": 1
+      },
+      "client": [
+        52,
+        51
+      ],
+      "point": [
+        3,
+        2
+      ]
+    },
+    {
+      "name": "unlinked shear",
+      "linked": false,
+      "layer": {
+        "x": 0,
+        "y": 0,
+        "a": 2,
+        "b": 0,
+        "c": 0,
+        "d": 1
+      },
+      "mask": {
+        "x": 0,
+        "y": 0,
+        "a": 2,
+        "b": 1,
+        "c": -2,
+        "d": 1
+      },
+      "client": [
+        52,
+        51
+      ],
+      "point": [
+        3,
+        2
+      ]
+    }
+  ]
 }

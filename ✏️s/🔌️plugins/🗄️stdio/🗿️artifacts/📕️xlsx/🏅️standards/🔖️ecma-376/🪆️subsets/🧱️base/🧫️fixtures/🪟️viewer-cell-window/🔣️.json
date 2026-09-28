@@ -1,0 +1,64 @@
+{
+  "sheets": [
+    {
+      "name": "First",
+      "values": [
+        "before",
+        "one",
+        "two"
+      ]
+    },
+    {
+      "name": "Empty",
+      "values": []
+    },
+    {
+      "name": "Überblick",
+      "values": [
+        "three",
+        "四",
+        "five"
+      ]
+    }
+  ],
+  "offset": 2,
+  "rows": 3,
+  "columnOffset": 1,
+  "columns": 3,
+  "expectedKeys": [
+    "workbook-cell-2",
+    "workbook-cell-3",
+    "workbook-cell-4"
+  ],
+  "expectedCells": [
+    [
+      "3",
+      "0",
+      "two"
+    ],
+    [
+      "1",
+      "0",
+      "three"
+    ],
+    [
+      "2",
+      "0",
+      "四"
+    ]
+  ],
+  "labels": {
+    "en": [
+      "Sheet",
+      "Row",
+      "Column",
+      "Value"
+    ],
+    "de": [
+      "Arbeitsblatt",
+      "Zeile",
+      "Spalte",
+      "Wert"
+    ]
+  }
+}

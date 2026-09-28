@@ -1864,6 +1864,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             engagement_preview_json: None,
             pick_targets_json: None,
             lod_json: None,
+            presentation_json: None,
             chunking_json: None,
             environment_json: None,
             frame_json: None,
@@ -2361,7 +2362,7 @@ fn append_component_vertex_spheres_render_base_vertices() {
     assert_eq!(instances.len(), 0);
 
     let mut lines = Vec::new();
-    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert_eq!(lines.len(), 28); // 4 from edges + 24 from 4 vertex crosses
 }
 
@@ -2381,7 +2382,7 @@ fn append_component_overlays_highlights_only_hovered_edge() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -2395,7 +2396,7 @@ fn append_component_overlays_highlights_selected_edge() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -2547,7 +2548,7 @@ fn marquee_face_preview_and_overlay_use_logical_face_ids() {
     update_marquee_preview(&mut state, bounds);
     assert!(state.marquee_preview_ids.iter().any(|id| id == "10" || id == "11"), "preview ids: {:?}", state.marquee_preview_ids);
     let mut lines = Vec::new();
-    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(!lines.is_empty(), "face marquee preview should draw triangle edge lines");
 }
 
@@ -2924,7 +2925,7 @@ fn append_component_face_overlay_lines_include_hovered_face() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 6, "hovered face should emit triangle edge lines, got {}", lines.len());
 }
 
@@ -3011,6 +3012,32 @@ fn resolve_physical_mesh_id_picks_closest_lod_url() {
 }
 
 //#region GlbAssetTests
+#[test]
+fn asset_request_cancellation_is_exact_and_cannot_cancel_a_reused_slot() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
+    for stage in fixture["stages"].as_array().unwrap() {
+        let mut lane = WorldAssetIoAuthority::default();
+        let first = lane.reserve_request(1, 0, WorldAssetRequestKind::Glb, fixture["requests"][0].as_str().unwrap()).unwrap();
+        let unrelated = lane.reserve_request(2, 0, WorldAssetRequestKind::Glb, fixture["requests"][1].as_str().unwrap()).unwrap();
+        let owner = (stage == "fetching").then(|| lane.take_next().unwrap());
+        assert!(lane.cancel_request(first));
+        assert_eq!(lane.cancel_request(first), fixture["expected"]["duplicateCancelAccepted"].as_bool().unwrap());
+        assert_eq!(lane.cancellation_requested(first), fixture["expected"]["cancelled"][0].as_bool().unwrap());
+        assert_eq!(lane.cancellation_requested(unrelated), fixture["expected"]["cancelled"][1].as_bool().unwrap());
+        if let Some(owner) = owner {
+            lane.return_owner(owner).unwrap();
+        }
+        while lane.retire_cancelled_step() {}
+        let replacement = lane.reserve_request(3, 0, WorldAssetRequestKind::Glb, fixture["requests"][2].as_str().unwrap()).unwrap();
+        assert_eq!(first.slot, replacement.slot);
+        assert_eq!(lane.cancel_request(first), fixture["expected"]["staleCancelAccepted"].as_bool().unwrap());
+        assert_eq!(lane.cancellation_requested(replacement), fixture["expected"]["replacementCancelled"].as_bool().unwrap());
+        lane.begin_close();
+        while !lane.close_step() {}
+        assert!(lane.terminal_is_empty());
+    }
+}
+
 #[test]
 fn asset_authority_rejects_request_and_byte_capacity_plus_one_before_string_ownership() {
     let mut lane = WorldAssetIoAuthority::default();
@@ -3633,6 +3660,7 @@ fn environment_shadow_requires_the_configured_sun_and_ignores_react_dead_control
     assert_eq!(enabled.map_size, WORLD_SHADOW_MAP_SIZE);
     let icon = environment_scene_shadow(&environment, environment_light_dir(&environment), World3dShadowProfile::IconPng);
     assert_eq!(icon.map_size, ICON_SHADOW_MAP_SIZE);
+    assert!(!environment_scene_shadow(&environment, environment_light_dir(&environment), World3dShadowProfile::IconSvg).enabled);
     assert!(!environment_scene_shadow(&environment, environment_light_dir(&environment), World3dShadowProfile::Unshadowed).enabled);
 }
 
@@ -3655,6 +3683,33 @@ fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
     }
     assert!(!fixture["profiles"]["world"]["consumesOpacity"].as_bool().unwrap());
     assert!(!fixture["profiles"]["world"]["consumesSoftness"].as_bool().unwrap());
+}
+
+#[test]
+fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
+    assert_eq!(World3dShadowProfile::IconSvg.render_profile(), ui_wgpu::wgpu::SceneRenderProfile3d::SvgFlatLit);
+    for profile in [World3dShadowProfile::World, World3dShadowProfile::IconPng, World3dShadowProfile::Unshadowed] {
+        assert_eq!(profile.render_profile(), ui_wgpu::wgpu::SceneRenderProfile3d::RasterPbr);
+    }
+}
+
+#[test]
+fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
+    let to_srgb = |value: f32| if value < 0.0031308 { value * 12.92 } else { 1.055 * value.powf(0.41666) - 0.055 };
+    for row in fixture["cases"].as_array().unwrap() {
+        let vector = |field: &str| Vec3::new(row[field][0].as_f64().unwrap() as f32, row[field][1].as_f64().unwrap() as f32, row[field][2].as_f64().unwrap() as f32).normalize();
+        let normal = vector("normal");
+        let light = vector("lightDirection");
+        let ambient = parse_color(row["ambient"]["color"].as_str().unwrap());
+        let sun = parse_color(row["sun"]["color"].as_str().unwrap());
+        let base = parse_color(row["material"]["color"].as_str().unwrap());
+        let emissive = parse_color(row["material"]["emissive"].as_str().unwrap());
+        let amount = normal.dot(light).max(0.0) * row["sun"]["intensity"].as_f64().unwrap() as f32;
+        let rgb: [u8; 3] = std::array::from_fn(|channel| (to_srgb(((ambient[channel] + sun[channel] * amount) * base[channel] + emissive[channel]).clamp(0.0, 1.0)) * 255.0).round() as u8);
+        assert_eq!(format!("rgb({},{},{})", rgb[0], rgb[1], rgb[2]), row["expectedFill"], "{}", row["id"]);
+    }
+    assert_eq!(fixture["cases"][0]["expectedFill"], fixture["cases"][1]["expectedFill"], "ambient intensity, metalness, roughness, and emissive intensity are intentionally ignored by SVGRenderer");
 }
 
 #[test]
@@ -4776,6 +4831,8 @@ fn transparent_standard_draws_match_the_recorded_three_projected_order() {
             draws.push(SceneMaterialDraw3d {
                 mesh_key: id.into(),
                 mesh_version: 0,
+                first_index: 0,
+                index_count: u32::MAX,
                 instances: vec![Instance3d {
                     id: id.into(),
                     model: Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0; 3]),
@@ -4961,15 +5018,10 @@ fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
     assert!((target[0] - 3.5).abs() < 1e-6 && target[1].abs() < 1e-6 && (target[2] - 0.005).abs() < 1e-6, "🎥️ the row follows the orbit, not the wire: {target:?}");
 }
 
-/// 📐️ LAW: selecting a projection template re-arms the pane's framing. React's
-/// `handleProjectionKindChange` hands the pending spec to `seedPendingWorldProjectionCamera`, which
-/// re-runs `frameWorldProjectionPose` (`🌐️World3dHost/🟦️.tsx`).
-///
-/// 🩸️ `apply_world3d_projection` arms `camera_user_moved`, which is the very gate
-/// `sync_world3d_projection_content_frame` refuses on — so a pane switched to `Orthographic` took
-/// the parallel frustum and kept the perspective pane's zoom forever.
+/// 📐️ LAW: local projection selections acquire the spec without rearming content framing. React's
+/// viewport owner remains mounted and `WorldProjectionSnapDriver` retains the accepted pose.
 #[test]
-fn a_projection_selection_rearms_the_panes_framing() {
+fn a_local_projection_selection_retains_viewport_ownership() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
     state.camera_user_moved = true;
@@ -4978,10 +5030,10 @@ fn a_projection_selection_rearms_the_panes_framing() {
 
     let top = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
     assert!(apply_world3d_projection_spec(&mut state, top), "📐️ the press moves the pane");
-    assert!(state.projection_frame_owed, "📐️ and owes one framing, immune to the ownership latch the settle it queues arms");
+    assert!(!state.projection_frame_owed, "📐️ local selection retains the viewport owner instead of invoking the content framer");
     assert!(state.projection_selected, "📐️ and holds its own spec from here on, React's `externalPendingProjectionSpec`");
-    assert_eq!(state.projection_frame_key, None, "📐️ and forgets the extent it last framed");
-    assert_eq!(state.projection_frame_zoom, None);
+    assert_eq!(state.projection_frame_key, Some(7));
+    assert_eq!(state.projection_frame_zoom, Some(3.0));
     assert_eq!(state.projection_spec, top);
 
     assert!(!apply_world3d_projection_spec(&mut state, top), "📐️ pressing the SAME row again changes nothing");
@@ -5000,6 +5052,125 @@ fn a_projection_selection_rearms_the_panes_framing() {
     let held = OrbitController { projection: wired.orbit.projection, ..echo.clone() };
     assert_eq!(held.projection, CameraProjection3d::Orthographic, "📐️ the echoed pose lands, the echoed FAMILY does not");
     assert_eq!(held.target, echo.target, "📐️ everything else the wire says still wins");
+}
+
+/// 🐟️ LAW: Top → Curvilinear keeps the accepted Top eye/target/distance/zoom while replacing the
+/// projection family and FOV. This is the exact mounted React transition after initial framing.
+#[test]
+fn curvilinear_selection_retains_the_accepted_top_pose_and_zoom() {
+    let mut state = World3dState::new("surface-curvilinear-frame".into(), "controller".into());
+    state.bounds = Rect::new(0.0, 0.0, 400.0, 800.0);
+    state.orbit.projection = CameraProjection3d::Orthographic;
+    state.orbit.target = Vec3::new(5.4054055, 2.3406067, 1.5015);
+    state.orbit.distance = 19.855713;
+    state.orbit.zoom = 6.1791667;
+    state.projection_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top },
+    };
+    state.projection_selected = true;
+    let accepted = state.orbit.clone();
+    let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Curvilinear { fov: 120.0, strength: 1.0, mapping: semio_framework_ui_viewport::Viewport3dCurvilinearMapping::Fisheye },
+        orientation: state.projection_spec.orientation,
+    };
+
+    assert!(apply_world3d_projection_spec(&mut state, spec));
+    sync_world3d_projection_content_frame(&mut state);
+    let camera = state.orbit.to_camera();
+    assert_eq!(camera.target.to_array(), accepted.target.to_array());
+    assert_eq!(camera.position.to_array(), accepted.to_camera().position.to_array());
+    assert_eq!(state.orbit.distance, accepted.distance);
+    assert_eq!(state.orbit.zoom, accepted.zoom);
+    assert!((camera.fov_y.to_degrees() - 120.0).abs() <= 2e-5);
+    assert_eq!(camera.projection, CameraProjection3d::Perspective);
+    assert!(!state.projection_frame_owed);
+}
+
+/// 📥️ LAW: a delivered full projection spec owns one frame after its camera snapshot is accepted.
+/// The bridge exposes instance bounds before the staged camera page lands, so consuming the frame any
+/// earlier lets snapshot apply overwrite it. A later document-bound change stays put until another
+/// external seed or explicit projection selection rearms the debt.
+#[test]
+fn delivered_projection_spec_frames_once_after_accepted_camera() {
+    let fixture = camera_framing_fixture();
+    let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
+    let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top },
+    };
+    let mut scene = camera_framing_scene(&fixture, "perspective", true, None);
+    scene.world_3d.as_mut().expect("world scene").camera_json = serde_json::json!({
+        "position": [40, -30, 20],
+        "target": [0, 0, 0],
+        "up": [0, 0, 1],
+        "fov": 50,
+        "zoom": 1,
+        "projection": spec,
+    })
+    .to_string();
+    let mut state = World3dState::new("surface-delivered-projection".into(), "controller".into());
+    state.camera_user_moved = true;
+
+    drive_scene_bridge(&mut state, &scene, viewport);
+    assert_eq!(state.projection_spec, spec, "the typed delivered spec survives the scene bridge");
+    assert!(state.projection_frame_owed, "an accepted external projection seed owns one content frame");
+    assert!(!state.camera_user_moved, "external camera reattach releases the previous viewport owner");
+
+    sync_world3d_projection_content_frame(&mut state);
+    assert!(!state.projection_frame_owed, "the accepted camera consumes the debt exactly once");
+    let accepted = state.orbit.clone();
+    state.instance_positions.insert("late-growth".into(), [1_000.0, 1_000.0, 1_000.0]);
+    sync_world3d_projection_content_frame(&mut state);
+    assert_eq!(state.orbit.target.to_array(), accepted.target.to_array());
+    assert_eq!(state.orbit.to_camera().position.to_array(), accepted.to_camera().position.to_array());
+}
+
+/// 📷️ An authored preview camera keeps its exact pose while its full projection spec still drives
+/// matrix family/FOV. A later local projection command acquires the spec without framing content.
+#[test]
+fn delivered_preserve_camera_policy_cancels_frame_debt_until_local_projection_selection() {
+    let fixture = camera_framing_fixture();
+    let projection_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    assert!(projection_fixture["framePolicies"].as_array().unwrap().iter().any(|row| row["value"] == "preserveCamera" && row["expectedFramesContent"] == false));
+    let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
+    let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Free {},
+    };
+    let mut scene = camera_framing_scene(&fixture, "perspective", true, None);
+    scene.world_3d.as_mut().expect("world scene").camera_json = serde_json::json!({
+        "position": [40, -30, 20],
+        "target": [123, 456, 789],
+        "up": [0, 0, 1],
+        "fov": 50,
+        "zoom": 7,
+        "projection": spec,
+        "projectionFrame": "preserveCamera",
+    })
+    .to_string();
+    let mut state = World3dState::new("surface-preserved-camera".into(), "controller".into());
+
+    drive_scene_bridge(&mut state, &scene, viewport);
+    assert_eq!(state.projection_frame_policy, semio_framework_ui_viewport::Viewport3dProjectionFramePolicy::PreserveCamera);
+    assert!(!state.projection_frame_owed);
+    let accepted = state.orbit.clone();
+    sync_world3d_projection_content_frame(&mut state);
+    assert_eq!(state.orbit.target.to_array(), accepted.target.to_array());
+    assert_eq!(state.orbit.to_camera().position.to_array(), accepted.to_camera().position.to_array());
+    assert_eq!(state.orbit.zoom, accepted.zoom);
+
+    let local = semio_framework_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::ThreePoint { fov: 50.0 },
+        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Free {},
+    };
+    assert!(apply_world3d_projection_spec(&mut state, local));
+    assert_eq!(state.projection_frame_policy, semio_framework_ui_viewport::Viewport3dProjectionFramePolicy::Content);
+    assert!(!state.projection_frame_owed, "a local projection selection retains the accepted authored pose");
+    sync_world3d_projection_content_frame(&mut state);
+    assert!(!state.projection_frame_owed);
+    assert_eq!(state.orbit.target.to_array(), accepted.target.to_array());
+    assert_eq!(state.orbit.to_camera().position.to_array(), accepted.to_camera().position.to_array());
 }
 
 /// 🌐️ LAW: the grid never ends on a HARD edge, at any camera. React's drei `Grid` is `infiniteGrid`
@@ -5044,6 +5215,8 @@ fn reference_visual_identity_geometry_and_interaction_match_three() {
     assert_eq!(identity[1]["url"].as_str(), Some(shared_url));
 
     let geometry = &fixture["geometry"];
+    let default_width = geometry["defaultWidthWorld"].as_f64().unwrap() as f32;
+    assert_eq!(world_reference_width(&WorldReferenceRecord::default()), default_width, "the neutral fixture and WGPU use React's missing-width authority");
     let source = geometry["sourceNaturalSize"].as_array().expect("source natural size");
     let mut state = World3dState::new("surface".into(), "controller".into());
     let _ = state.reference_pixels.insert(shared_url.into(), test_world_scene_raster(source[0].as_u64().unwrap() as u32, source[1].as_u64().unwrap() as u32, 0));
@@ -5196,6 +5369,52 @@ fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_l
     assert_eq!(grid.cell_color, [theme.text_element.r, theme.text_element.g, theme.text_element.b], "the retained grid owns the linear element token");
     let retained_line_vertices = pass.line_draws.iter().map(|draw| draw.vertices.len()).sum::<usize>();
     assert_eq!(retained_line_vertices, 0, "the grid is one procedural scalar, never a camera-target-anchored LineList");
+    retire_bridged_surface(&mut state);
+}
+
+#[test]
+fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_work() {
+    let mut scene = scene_with_selection("{}");
+    scene.world_3d.as_mut().expect("world fixture").presentation_json = Some(
+        serde_json::to_string(&World3dPresentation {
+            show_grid: false,
+            show_gizmo: false,
+            interactive: false,
+            viewport_mask: SceneViewportMask3d::Ellipse,
+            clear: World3dPresentationClear::Transparent,
+            source_aspect: Some(2.0),
+        })
+        .expect("typed isolated presentation"),
+    );
+    let bounds = Rect::new(0.0, 0.0, 396.0, 196.0);
+    let mut state = World3dState::new("surface-icon".into(), "controller-icon".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+    state.retired_draws = Some(WorldDrawRegistry::default());
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+        draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
+        scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
+        interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
+    };
+    render_world_3d(&scene, bounds, &mut ctx, &mut state, &mut gpu, World3dShadowProfile::IconPng);
+    let pass = draw.scene_passes.last().expect("isolated world scene pass");
+    assert_eq!(pass.viewport_mask, SceneViewportMask3d::Ellipse);
+    assert_eq!(pass.clear_color, None, "transparent presentation leaves the accepted card in place");
+    assert!(pass.procedural_grid.is_none());
+    let camera = state.orbit.to_camera();
+    let expected = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, bounds.w, bounds.w / 2.0).to_cols_array();
+    assert_eq!(pass.view_proj, expected, "authored 2:1 source aspect survives the 396×196 physical stretch");
+    assert!(input.staged_hits().is_empty(), "noninteractive worlds publish no pointer owner");
+    assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>(), 0, "noninteractive isolated worlds paint no gizmo or fallback clear quad");
+    assert!(gpu.take_cursor_wake().expect("wake authority remains open").is_some(), "retained scene work still wakes an isolated world");
+    state.retired_draws = None;
     retire_bridged_surface(&mut state);
 }
 

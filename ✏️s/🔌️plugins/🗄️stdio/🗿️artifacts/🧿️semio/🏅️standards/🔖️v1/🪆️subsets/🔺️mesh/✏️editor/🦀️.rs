@@ -9,10 +9,15 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionDefinition, ActionKind, ArgSchema, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep},
+    ActionArgDef, ActionDefinition, ActionKind, ArgSchema, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
+    NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use store::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
+use store::EngineHandles;
+
+#[path = "📬️preparation/🦀️.rs"]
+mod preparation;
 
 //#region 🔖️Dialect
 pub const SEMIO_MESH_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -27,7 +32,7 @@ pub const SEMIO_MESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 /// meshes"); every other subset in this packet's lease uses the minimal-command pattern instead,
 /// reported per-subset in the packet report, because their own schemas expose no by-index "replace"
 /// mutation today (only insert/remove/whole-document `SetSnapshot`).
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SemioMeshSetVertexArgs {
     pub mesh_id: String,
     pub primitive_id: String,
@@ -77,6 +82,128 @@ pub fn set_vertex_action() -> ActionDefinition {
         ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required(),
     ])
 }
+
+#[derive(Default)]
+struct SemioMeshSetVertexWork {
+    mesh_cursor: usize,
+    primitive_cursor: usize,
+    mesh_index: Option<usize>,
+    primitive_index: Option<usize>,
+    meshes_scanned: bool,
+    primitives_scanned: bool,
+    complete: bool,
+}
+
+fn resolve_unique_mesh_target(snapshot: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Result<(usize, usize), Fault> {
+    let mut mesh_index = None;
+    for (index, mesh) in snapshot.meshes.iter().enumerate().filter(|(_, mesh)| mesh.id == mesh_id) {
+        if mesh_index.replace(index).is_some() {
+            return Err(Fault::from(format!("mesh id '{mesh_id}' is ambiguous")));
+        }
+    }
+    let mesh_index = mesh_index.ok_or_else(|| Fault::from(format!("mesh '{mesh_id}' does not exist")))?;
+    let mut primitive_index = None;
+    for (index, primitive) in snapshot.meshes[mesh_index].primitives.iter().enumerate().filter(|(_, primitive)| primitive.id == primitive_id) {
+        if primitive_index.replace(index).is_some() {
+            return Err(Fault::from(format!("primitive id '{primitive_id}' is ambiguous in mesh '{mesh_id}'")));
+        }
+    }
+    let primitive_index = primitive_index.ok_or_else(|| Fault::from(format!("primitive '{primitive_id}' does not exist in mesh '{mesh_id}'")))?;
+    Ok((mesh_index, primitive_index))
+}
+
+fn move_vertex_mutation(snapshot: &SemioMeshSnapshot, args: &SemioMeshSetVertexArgs) -> Result<Option<SemioMeshMutation>, Fault> {
+    let (mesh_index, primitive_index) = resolve_unique_mesh_target(snapshot, &args.mesh_id, &args.primitive_id)?;
+    let primitive = &snapshot.meshes[mesh_index].primitives[primitive_index];
+    let current = primitive.positions.get(args.vertex_index).ok_or_else(|| Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)))?;
+    let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
+    if *current == new_point {
+        return Ok(None);
+    }
+    Ok(Some(SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex { mesh_id: args.mesh_id.clone(), primitive_id: args.primitive_id.clone(), vertex_index: args.vertex_index, new_point })))
+}
+
+impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork {
+    fn tool_id(&self) -> &'static str {
+        "set-vertex"
+    }
+
+    fn extent(
+        &self,
+        command: &editing::SnapshotEditingCommand<SemioMeshEditCommand>,
+        _snapshot: &SemioMeshSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SemioMeshEditor>>>,
+    ) -> Option<usize> {
+        let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else { return None };
+        (!args.mesh_id.is_empty() && !args.primitive_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {
+        if self.complete {
+            return Err(Fault::from("stdio.semio.mesh.set-vertex.work-closed"));
+        }
+        let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = input.command else {
+            return Err(Fault::from("stdio.semio.mesh.set-vertex.command-mismatch"));
+        };
+        if !self.meshes_scanned {
+            let Some(mesh) = input.snapshot.meshes.get(self.mesh_cursor) else {
+                self.meshes_scanned = true;
+                if self.mesh_index.is_none() {
+                    return Err(Fault::from(format!("mesh '{}' does not exist", args.mesh_id)));
+                }
+                return Ok(ArtifactCommandWorkStep::Replay { stage: "semio-mesh-resolve-mesh", preview: br#"{"en":"Checking meshes","de":"Netze werden gepr\u00fcft"}"# });
+            };
+            let index = self.mesh_cursor;
+            self.mesh_cursor += 1;
+            if mesh.id == args.mesh_id {
+                if self.mesh_index.replace(index).is_some() {
+                    return Err(Fault::from(format!("mesh id '{}' is ambiguous", args.mesh_id)));
+                }
+            }
+            return Ok(ArtifactCommandWorkStep::Replay { stage: "semio-mesh-resolve-mesh", preview: br#"{"en":"Checking meshes","de":"Netze werden gepr\u00fcft"}"# });
+        }
+        let mesh = &input.snapshot.meshes[self.mesh_index.expect("resolved mesh index")];
+        if !self.primitives_scanned {
+            let Some(primitive) = mesh.primitives.get(self.primitive_cursor) else {
+                self.primitives_scanned = true;
+                if self.primitive_index.is_none() {
+                    return Err(Fault::from(format!("primitive '{}' does not exist in mesh '{}'", args.primitive_id, args.mesh_id)));
+                }
+                return Ok(ArtifactCommandWorkStep::Replay { stage: "semio-mesh-resolve-primitive", preview: br#"{"en":"Checking mesh primitives","de":"Netzprimitive werden gepr\u00fcft"}"# });
+            };
+            let index = self.primitive_cursor;
+            self.primitive_cursor += 1;
+            if primitive.id == args.primitive_id && self.primitive_index.replace(index).is_some() {
+                return Err(Fault::from(format!("primitive id '{}' is ambiguous in mesh '{}'", args.primitive_id, args.mesh_id)));
+            }
+            return Ok(ArtifactCommandWorkStep::Replay { stage: "semio-mesh-resolve-primitive", preview: br#"{"en":"Checking mesh primitives","de":"Netzprimitive werden gepr\u00fcft"}"# });
+        }
+        let primitive = &mesh.primitives[self.primitive_index.expect("resolved primitive index")];
+        let Some(current) = primitive.positions.get(args.vertex_index) else {
+            return Err(Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)));
+        };
+        self.complete = true;
+        let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
+        if *current == new_point {
+            return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
+        }
+        Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex {
+            mesh_id: args.mesh_id.clone(),
+            primitive_id: args.primitive_id.clone(),
+            vertex_index: args.vertex_index,
+            new_point,
+        })])))
+    }
+
+    fn begin_close(&mut self) {
+        self.complete = true;
+    }
+}
+
+fn semio_mesh_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<SemioMeshEditor>>> {
+    Box::new(SemioMeshSetVertexWork::default())
+}
 //#endregion 🔖️Command
 
 //#region 🔖️Editor
@@ -103,7 +230,8 @@ impl ArtifactEditor for SemioMeshEditor {
         owner_file: "semio/v1/mesh/editor",
         controller: "s.stdio.semio@v1/mesh#editor",
         artifact_schema: "stdio.semio.mesh",
-        preparation: "stdio-semio-mesh-snapshot-edit"
+        preparation: "stdio-semio-mesh-snapshot-edit",
+        bounded_native: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -127,20 +255,17 @@ impl ArtifactEditor for SemioMeshEditor {
             let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let Some(mesh) = doc.snapshot.meshes.iter().find(|mesh| mesh.id == args.mesh_id) else { return Err(Fault::from(format!("mesh '{}' does not exist", args.mesh_id))); };
-        let Some(primitive) = mesh.primitives.iter().find(|primitive| primitive.id == args.primitive_id) else { return Err(Fault::from(format!("primitive '{}' does not exist in mesh '{}'", args.primitive_id, args.mesh_id))); };
-        if primitive.positions.get(args.vertex_index).is_none() {
-            return Err(Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)));
-        }
-        let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
-        let mutation = SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex { mesh_id: mesh.id.clone(), primitive_id: primitive.id.clone(), vertex_index: args.vertex_index, new_point });
-        Ok(Emit::mutations(vec![mutation]))
+        Ok(match move_vertex_mutation(doc.snapshot, args)? {
+            Some(mutation) => Emit::mutations(vec![mutation]),
+            None => Emit::default(),
+        })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+                .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -153,7 +278,8 @@ impl ArtifactEditor for SemioMeshEditor {
             let field = |key: &str| args.and_then(|value| value.get(key)).ok_or_else(|| Fault::from(format!("set-vertex requires '{key}'")));
             let mesh_id = field("meshId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex meshId must be non-empty text"))?.to_owned();
             let primitive_id = field("primitiveId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex primitiveId must be non-empty text"))?.to_owned();
-            let vertex_number = field("vertexIndex")?.as_f64().filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64).ok_or_else(|| Fault::from("set-vertex vertexIndex must be a non-negative integer"))?;
+            let vertex_number =
+                field("vertexIndex")?.as_f64().filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64).ok_or_else(|| Fault::from("set-vertex vertexIndex must be a non-negative integer"))?;
             let point_value = field("point")?.as_array().filter(|value| value.len() == 3).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"))?;
             let component = |index: usize| point_value[index].as_f64().filter(|value| value.is_finite()).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"));
             Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_id, primitive_id, vertex_index: vertex_number as usize, point: [component(0)?, component(1)?, component(2)?] }))
@@ -163,20 +289,47 @@ impl ArtifactEditor for SemioMeshEditor {
 
 impl editing::SnapshotEditingEditor for SemioMeshEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
-        match command { editing::SnapshotEditingCommand::Edit(event) => Some(event), _ => None }
+        match command {
+            editing::SnapshotEditingCommand::Edit(event) => Some(event),
+            _ => None,
+        }
     }
-
 
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioMeshMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
+}
+
+semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
+    editor: SemioMeshEditor,
+    tools: ["set-vertex"],
+    payload_schema: "semio.stdio.semio-mesh-set-vertex-command.v1",
+    reduce: |command, snapshot| {
+        let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else {
+            return Err(Fault::from("stdio.semio.mesh.set-vertex.command-mismatch"));
+        };
+        Ok(match move_vertex_mutation(snapshot, args)? {
+            Some(mutation) => Emit::mutations(vec![mutation]),
+            None => Emit::default(),
+        })
+    },
+    work: semio_mesh_set_vertex_work,
+    preparation_route: preparation::route,
 }
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(SEMIO_MESH_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(set_vertex_action());
+    let builder = Editor::builder(SEMIO_MESH_DIALECT)
+        .document(["stdio", "semio"])
+        .icon_id("box")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .window_kind_def(editing::snapshot_details_window_definition())
+        .default_layout(edit::layout())
+        .action_with(set_vertex_action());
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

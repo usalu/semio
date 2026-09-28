@@ -27,8 +27,8 @@ comment none
 artifact-mark = "stdio.svg"
 document = artifact-mark snapshot-body
 
-# `encode_snapshot`: `[hex(schema),opt-node(root),opt-doctype,opt-declaration,[prolog-nodes]]`.
-snapshot-body = "[" hex "," opt-xml-node "," opt-doctype "," opt-declaration "," "[" node-item* "]" "]"
+# `encode_snapshot`: `[hex(schema),opt-node(root),opt-doctype,opt-declaration,[prolog-nodes],[epilog-nodes]]`.
+snapshot-body = "[" hex "," opt-xml-node "," opt-doctype "," opt-declaration "," "[" node-item* "]" "," "[" node-item* "]" "]"
 
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]` (None) /
 # `[1,<value>]` (Some).
@@ -44,9 +44,9 @@ opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
 declaration-lit = "[" hex "," opt-hex "," opt-bool "," bool-lit "]"
 
-# `enc_doctype`/`dec_doctype`: `[hex(name),opt-external-id,[dtd-declarations]]`.
+# `enc_doctype`/`dec_doctype`: `[prolog-position,hex(name),opt-external-id,[dtd-declarations]]`.
 opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
-doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
+doctype-lit = "[" INT "," hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
 opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
 external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
 dtd-declaration-list = dtd-declaration dtd-declaration-tail*

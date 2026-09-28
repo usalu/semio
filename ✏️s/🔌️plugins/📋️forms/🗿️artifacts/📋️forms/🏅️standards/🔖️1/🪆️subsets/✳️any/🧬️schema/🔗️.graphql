@@ -1,5 +1,7 @@
 # 🪪️ FormsArtifact imports the canonical OS Store child identity.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import FormsDefinition from "./📝️definition/🔗️.graphql"
+# import FormsResponse from "./📨️response/🔗️.graphql"
 type FormsArtifact {
   schema: String! @state(class: ARTIFACT)
   id: String! @state(class: ARTIFACT)
@@ -7,4 +9,6 @@ type FormsArtifact {
   title: String @state(class: ARTIFACT)
   structure: ArtifactChild! @state(class: ARTIFACT)
   results: ArtifactChild! @state(class: ARTIFACT)
+  definition: FormsDefinition! @state(class: ARTIFACT)
+  responses: [FormsResponse!]! @state(class: ARTIFACT)
 }

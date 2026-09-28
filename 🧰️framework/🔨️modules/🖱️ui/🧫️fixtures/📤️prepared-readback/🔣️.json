@@ -1,0 +1,21 @@
+{
+  "alignment": 256,
+  "maxSide": 16384,
+  "maxPixels": 16777216,
+  "srgbClear": { "linear": [0.25, 0.5, 0.75, 1], "rgba": [137, 188, 225, 255] },
+  "cases": [
+    { "id": "rgba-padding-and-alpha", "width": 3, "height": 2, "format": "rgba8unorm", "paddedBytesPerRow": 256, "rgba": [255, 0, 0, 255, 17, 63, 129, 127, 0, 0, 0, 0, 4, 128, 240, 255, 211, 43, 7, 64, 255, 255, 255, 255] },
+    { "id": "bgra-padding-and-alpha", "width": 3, "height": 2, "format": "bgra8unorm", "paddedBytesPerRow": 256, "rgba": [255, 0, 0, 255, 17, 63, 129, 127, 0, 0, 0, 0, 4, 128, 240, 255, 211, 43, 7, 64, 255, 255, 255, 255] }
+  ],
+  "admission": [
+    { "width": 0, "height": 1, "accepted": false },
+    { "width": 1, "height": 0, "accepted": false },
+    { "width": 1, "height": 1, "accepted": true, "paddedBytesPerRow": 256 },
+    { "width": 64, "height": 2, "accepted": true, "paddedBytesPerRow": 256 },
+    { "width": 65, "height": 2, "accepted": true, "paddedBytesPerRow": 512 },
+    { "width": 16384, "height": 1, "accepted": true, "paddedBytesPerRow": 65536 },
+    { "width": 16385, "height": 1, "accepted": false },
+    { "width": 4096, "height": 4096, "accepted": true, "paddedBytesPerRow": 16384 },
+    { "width": 4097, "height": 4096, "accepted": false }
+  ]
+}

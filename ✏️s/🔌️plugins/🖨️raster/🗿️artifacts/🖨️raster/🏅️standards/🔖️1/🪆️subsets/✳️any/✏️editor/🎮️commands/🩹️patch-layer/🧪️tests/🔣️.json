@@ -11,11 +11,12 @@
         "height": null,
         "imageKey": null,
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     },
@@ -25,10 +26,11 @@
       "change": {
         "transform": {
           "x": 12.5,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     },
@@ -38,10 +40,11 @@
       "change": {
         "transform": {
           "x": 12.5,
-          "y": -7,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "y": -7.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     },
@@ -51,10 +54,11 @@
       "change": {
         "transform": {
           "x": 12.5,
-          "y": -7,
-          "scaleX": -2,
-          "scaleY": 1,
-          "rotation": 0
+          "y": -7.0,
+          "a": -2.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     },
@@ -64,10 +68,11 @@
       "change": {
         "transform": {
           "x": 12.5,
-          "y": -7,
-          "scaleX": -2,
-          "scaleY": 0.5,
-          "rotation": 0
+          "y": -7.0,
+          "a": -2.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": -0.5
         }
       }
     },
@@ -77,11 +82,40 @@
       "change": {
         "transform": {
           "x": 12.5,
-          "y": -7,
-          "scaleX": -2,
-          "scaleY": 0.5,
-          "rotation": 45
+          "y": -7.0,
+          "a": 1.4142135623730951,
+          "b": 1.4142135623730951,
+          "c": -0.3535533905932738,
+          "d": 0.3535533905932738
         }
+      }
+    },
+    {
+      "field": "maskShearX",
+      "value": 1.0,
+      "change": {
+        "transform": {
+          "x": 12.5,
+          "y": -7.0,
+          "a": 1.4142135623730951,
+          "b": 1.4142135623730951,
+          "c": 0.0,
+          "d": 0.7071067811865476
+        }
+      }
+    },
+    {
+      "field": "maskLinked",
+      "value": false,
+      "change": {
+        "linked": false
+      }
+    },
+    {
+      "field": "maskLinked",
+      "value": true,
+      "change": {
+        "linked": true
       }
     },
     {
@@ -150,6 +184,14 @@
     {
       "field": "maskScaleX",
       "value": 1e-20
+    },
+    {
+      "field": "maskLinked",
+      "value": "false"
+    },
+    {
+      "field": "maskShearX",
+      "value": "1"
     }
   ]
 }

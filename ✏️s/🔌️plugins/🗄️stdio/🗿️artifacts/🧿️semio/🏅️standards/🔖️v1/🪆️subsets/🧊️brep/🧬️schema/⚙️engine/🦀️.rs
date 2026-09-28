@@ -241,6 +241,8 @@ pub trait BrepKernel {
     fn rotate_about(&mut self, shape: &GeometryHandle, origin: Vec3, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError>;
+    /// 📏️ Scales geometry independently along the world axes around an explicit center.
+    fn scale_axes(&mut self, shape: &GeometryHandle, factors: Vec3, center: Vec3) -> Result<GeometryHandle, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1125,6 +1127,11 @@ impl Brep {
     pub fn scale_sync(&mut self, shape: &GeometryHandle, factor: f64, center: EVec3) -> Result<GeometryHandle, BrepError> {
         self.transform_shape_sync(shape, &Affine3::scaling(pnt(center), NativeVec3::new(factor, factor, factor)))
     }
+    /// 📐️ Applies a finite, invertible axis scale through the kernel affine dispatcher.
+    pub fn scale_axes_sync(&mut self, shape: &GeometryHandle, factors: EVec3, center: EVec3) -> Result<GeometryHandle, BrepError> {
+        if factors.iter().any(|value| !value.is_finite() || *value == 0.0) || center.iter().any(|value| !value.is_finite()) { return Err(BrepError::InvalidInput("Scale factors must be finite and nonzero; the center must be finite".into())); }
+        self.transform_shape_sync(shape, &Affine3::scaling(pnt(center), vec3(factors)))
+    }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mirror_sync(&mut self, shape: &GeometryHandle, origin: EVec3, normal: EVec3) -> Result<GeometryHandle, BrepError> {
         self.transform_shape_sync(shape, &Affine3::mirror(pnt(origin), vec3(normal)))
@@ -1920,6 +1927,9 @@ impl BrepKernel for Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: EVec3) -> Result<GeometryHandle, BrepError> {
         self.scale_sync(shape, factor, center)
+    }
+    fn scale_axes(&mut self, shape: &GeometryHandle, factors: EVec3, center: EVec3) -> Result<GeometryHandle, BrepError> {
+        self.scale_axes_sync(shape, factors, center)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mirror(&mut self, shape: &GeometryHandle, origin: EVec3, normal: EVec3) -> Result<GeometryHandle, BrepError> {

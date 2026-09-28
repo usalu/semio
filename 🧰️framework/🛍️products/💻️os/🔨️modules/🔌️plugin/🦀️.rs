@@ -5950,7 +5950,7 @@ pub mod app {
                 command_grammar: self.command_grammar,
                 io: self.io,
             };
-            for action in semio_framework::interaction_action_definitions(&definition).into_iter().chain(semio_framework::tool_run_action_definitions(&definition)) {
+            for action in semio_framework::interaction_action_definitions(&definition).into_iter().chain(semio_framework::tool_run_action_definitions(&definition)).chain([crate::app::operation_progress::cancellation_action_definition()]) {
                 if declared_action_ids.insert(action.id.clone()) {
                     if let Some(keys) = &action.keys {
                         if bound_keys.insert(keys.clone()) {
@@ -6517,6 +6517,10 @@ pub mod app {
         }
 
         fn sliced(&self, path: &str, default_open: bool, total: usize) -> TreeSlice {
+            self.sliced_capped(path, default_open, total, usize::MAX)
+        }
+
+        fn sliced_capped(&self, path: &str, default_open: bool, total: usize, maximum: usize) -> TreeSlice {
             let seat = self.seat(path);
             if let Some((_, reservation)) = seat {
                 self.reserved.set(self.reserved.get().saturating_sub(reservation.replace(0)));
@@ -6526,14 +6530,28 @@ pub mod app {
                 return TreeSlice { open: false, offset: 0, len: 0, total };
             }
             let Some(request) = request else {
-                let len = self.grant_unreserved(total.min(UI_BUILT_CHILDREN_MAX).min(self.budget.get() as usize));
+                let len = self.grant_unreserved(total.min(maximum).min(UI_BUILT_CHILDREN_MAX).min(self.budget.get() as usize));
                 self.budget.set(self.budget.get() - len as u32);
                 return TreeSlice { open: true, offset: 0, len, total };
             };
-            let rows = (request.rows as usize).min(UI_BUILT_CHILDREN_MAX);
+            let rows = (request.rows as usize).min(maximum).min(UI_BUILT_CHILDREN_MAX);
             let offset = (request.offset as usize).min(total.saturating_sub(rows.max(1)));
             let len = self.grant(rows.min(total - offset));
             TreeSlice { open: true, offset, len, total }
+        }
+
+        fn projection_slice(&self, path: &str, default_open: bool, total: usize, first_paint: usize, maximum: usize) -> TreeSlice {
+            let seat = self.seat(path);
+            if let Some((_, reservation)) = seat {
+                self.reserved.set(self.reserved.get().saturating_sub(reservation.replace(0)));
+            }
+            let request = seat.map(|(request, _)| *request);
+            if !request.and_then(|request| request.open).unwrap_or(default_open) {
+                return TreeSlice { open: false, offset: 0, len: 0, total };
+            }
+            let rows = request.map_or(first_paint, |request| request.rows as usize).min(maximum).min(UI_BUILT_CHILDREN_MAX).min(total);
+            let offset = request.map_or(0, |request| request.offset as usize).min(total.saturating_sub(rows.max(1)));
+            TreeSlice { open: true, offset, len: rows.min(total - offset), total }
         }
 
         /// 🪟️ The contract stamp a slice publishes to the host.
@@ -7212,6 +7230,10 @@ pub mod app {
     #[cfg(test)]
     #[path = "🧪️tests/♻️publication-retirement-authority/🦀️.rs"]
     mod publication_retirement_authority;
+
+    #[path = "⏳️operation-progress/🦀️.rs"]
+    pub mod operation_progress;
+    pub use operation_progress::{ArtifactOperationProgress,CANCEL_TYPED_OPERATION_ACTION_ID};
 
     #[path = "⏯️tool-run/🦀️.rs"]
     pub mod tool_run;
@@ -7896,7 +7918,7 @@ pub mod app {
                 "setInteractionGranularity",
             ];
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
-                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) {
+                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
                     continue;
                 }
                 // 🧱️ Window-KIT catalog rows are framework-owned surface verbs, not app actions: the shared
@@ -9298,8 +9320,10 @@ pub mod app {
         pub children: ChildContentView,
         operation: Option<AppOperationContext>,
         render_operation: Option<AppRenderOperationContext>,
+        parent_document_id: Option<String>,
         snapshot_read: std::sync::Mutex<Option<store::SnapshotRead<P>>>,
         tool_run: Option<ToolRunView>,
+        operations: &'a [ArtifactOperationProgress],
     }
 
     /// 🪪️ Durable authority captured once at public command admission and copied into every
@@ -9342,19 +9366,19 @@ pub mod app {
         /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
         /// over time, and a constructor absorbs that growth without touching every call site.
         pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
         }
 
         /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
         pub fn with_operation(snapshot: &'a P, history: &'a HistoryView, operation: AppOperationContext) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
         }
 
         /// 🧩️ App-side composing view for retained command work, which observes its children through
         /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
         /// carries no render identity. Synchronous on purpose: it only moves owned fields.
         pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
+            Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
         }
 
         /// 🏗️ A view over a composing document, wired to its live child stores AND to the identity the
@@ -9363,8 +9387,8 @@ pub mod app {
         /// `context_menu`, `interaction_topology`, `export_media`, `media_fingerprint` — goes through
         /// here, so [`ArtifactView::render_operation`] is total on the host and an app that leases a
         /// per-instance session off it (puzzle 3d's `puzzle3d_view_session_key`) never runs cold.
-        async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), snapshot_read: std::sync::Mutex::new(snapshot_read), tool_run: None }
+        async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: String, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
+            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), parent_document_id: Some(parent_document_id), snapshot_read: std::sync::Mutex::new(snapshot_read), tool_run: None,operations:&[] }
         }
 
         /// ⏯️ Binds the tool run this document instance shows; `snapshot` is then committed ⊕ provisional.
@@ -9379,6 +9403,11 @@ pub mod app {
             self.tool_run.as_ref()
         }
 
+        /// ⏳️ Current local command work; observation never enters artifact history.
+        pub fn operations(&self)->&[ArtifactOperationProgress] {self.operations}
+
+        fn with_operations(mut self,operations:&'a [ArtifactOperationProgress])->Self {self.operations=operations;self}
+
         /// 🪪️ Returns the actual public job authority for command handlers.
         pub fn operation(&self) -> Result<&AppOperationContext, Fault> {
             self.operation.as_ref().ok_or_else(|| plugin_sdk_fault("the artifact view is not bound to a public command operation"))
@@ -9392,6 +9421,11 @@ pub mod app {
         /// 🎨️ Returns the immutable identity observed by a live render/refresh pass.
         pub fn render_operation(&self) -> Option<AppRenderOperationContext> {
             self.render_operation
+        }
+
+        /// 🧾️ Returns the exact live store envelope id bound to this host render pass.
+        pub fn parent_document_id(&self) -> Option<&str> {
+            self.parent_document_id.as_deref()
         }
 
         /// 🧵️ Transfers the one registered immutable snapshot-read lease to a retained worker
@@ -13895,12 +13929,21 @@ pub mod app {
         async fn submit_media_export(&mut self, _port: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
             Err(MediaError::NotImplemented)
         }
+        async fn submit_media_export_checked(&mut self, _port: &str, _expected_parent_document_id: &str, _expected_base_revision: u64) -> Result<ArtifactMediaExportHandle, MediaError> {
+            Err(MediaError::NotImplemented)
+        }
         /// 📡️ Advances exactly one bounded worker slice and returns current progress/checkpoint/result.
         async fn poll_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<ArtifactMediaExportPoll, MediaError> {
             Err(MediaError::NotImplemented)
         }
         /// 🛑️ Cancels an externally held live export handle.
         async fn cancel_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
+            Err(MediaError::NotImplemented)
+        }
+        async fn retain_media_export_result(&mut self, _handle: &ArtifactMediaExportHandle, _result: ArtifactMediaExportResult) -> Result<(), MediaError> {
+            Err(MediaError::NotImplemented)
+        }
+        async fn take_media_export_chunk(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
             Err(MediaError::NotImplemented)
         }
         /// 🧵️ Takes one bounded action-download chunk by its operation handle.
@@ -15045,6 +15088,7 @@ pub mod app {
     struct ArtifactOutputChunksInner {
         state: std::sync::Mutex<ArtifactOutputChunksState>,
         bytes: std::sync::atomic::AtomicUsize,
+        bytes_remaining: std::sync::atomic::AtomicUsize,
         remaining: std::sync::atomic::AtomicUsize,
         slots: usize,
         maximum: usize,
@@ -15087,6 +15131,7 @@ pub mod app {
                 inner: std::sync::Arc::new(ArtifactOutputChunksInner {
                     state: std::sync::Mutex::new(ArtifactOutputChunksState { chunks: ArtifactFixedQueue::new(slots) }),
                     bytes: std::sync::atomic::AtomicUsize::new(0),
+                    bytes_remaining: std::sync::atomic::AtomicUsize::new(0),
                     remaining: std::sync::atomic::AtomicUsize::new(0),
                     slots,
                     maximum,
@@ -15109,6 +15154,7 @@ pub mod app {
             self.inner.remaining.store(state.chunks.len(), std::sync::atomic::Ordering::Release);
             let next = next.expect("validated segmented byte total");
             self.inner.bytes.store(next, std::sync::atomic::Ordering::Release);
+            self.inner.bytes_remaining.store(next, std::sync::atomic::Ordering::Release);
             Ok(next)
         }
 
@@ -15128,6 +15174,10 @@ pub mod app {
             self.inner.remaining.load(std::sync::atomic::Ordering::Acquire)
         }
 
+        pub fn bytes_remaining(&self) -> usize {
+            self.inner.bytes_remaining.load(std::sync::atomic::Ordering::Acquire)
+        }
+
         pub fn slot_capacity(&self) -> usize {
             self.inner.slots
         }
@@ -15139,6 +15189,10 @@ pub mod app {
             let mut state = self.inner.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-busy"), "segmented output slot authority is busy or poisoned"))?;
             let chunk = state.chunks.pop();
             self.inner.remaining.store(state.chunks.len(), std::sync::atomic::Ordering::Release);
+            if let Some(chunk) = chunk.as_ref() {
+                let remaining = self.inner.bytes_remaining.load(std::sync::atomic::Ordering::Acquire);
+                self.inner.bytes_remaining.store(remaining.checked_sub(chunk.len()).expect("queued output byte census"), std::sync::atomic::Ordering::Release);
+            }
             Ok(chunk)
         }
 
@@ -15146,6 +15200,10 @@ pub mod app {
             let mut state = self.inner.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-busy"), "segmented output disposal authority is busy or poisoned"))?;
             let chunk = state.chunks.pop();
             self.inner.remaining.store(state.chunks.len(), std::sync::atomic::Ordering::Release);
+            if let Some(chunk) = chunk.as_ref() {
+                let remaining = self.inner.bytes_remaining.load(std::sync::atomic::Ordering::Acquire);
+                self.inner.bytes_remaining.store(remaining.checked_sub(chunk.len()).expect("queued output byte census"), std::sync::atomic::Ordering::Release);
+            }
             Ok(chunk)
         }
 
@@ -15163,16 +15221,18 @@ pub mod app {
     pub struct ArtifactMediaExportResult {
         pub media_type: MediaType,
         pub schema: String,
+        pub mime_type: String,
         pub chunks: ArtifactOutputChunks,
     }
 
     impl ArtifactMediaExportResult {
-        pub fn structured(media_type: MediaType, schema: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
+        pub fn structured(media_type: MediaType, schema: impl Into<String>, mime_type: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
             let schema = schema.into();
-            if schema.len() > ARTIFACT_OUTPUT_METADATA_BYTES || !chunks.is_sealed() {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-media-metadata"), "segmented media schema is oversized or its chunks are unsealed"));
+            let mime_type = mime_type.into();
+            if schema.len() > ARTIFACT_OUTPUT_METADATA_BYTES || mime_type.is_empty() || mime_type.len() > 128 || !chunks.is_sealed() {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-media-metadata"), "segmented media schema or MIME type is invalid, or its chunks are unsealed"));
             }
-            Ok(Self { media_type, schema, chunks })
+            Ok(Self { media_type, schema, mime_type, chunks })
         }
 
         fn into_batch_media(self) -> Result<Media, MediaError> {
@@ -15191,6 +15251,7 @@ pub mod app {
         pub mime_type: String,
         pub encoding: Option<String>,
         pub chunks: ArtifactOutputChunks,
+        media_export_handle: Option<ArtifactMediaExportHandle>,
     }
 
     impl ArtifactDownloadOutput {
@@ -15202,7 +15263,17 @@ pub mod app {
             if filename.len() > ARTIFACT_OUTPUT_METADATA_BYTES || mime_type.len() > ARTIFACT_OUTPUT_METADATA_BYTES || marker_bytes.is_none_or(|bytes| bytes > ARTIFACT_OUTPUT_METADATA_BYTES) || !chunks.is_sealed() {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-metadata"), "segmented download metadata is oversized or its chunks are unsealed"));
             }
-            Ok(Self { filename, mime_type, encoding, chunks })
+            Ok(Self { filename, mime_type, encoding, chunks, media_export_handle: None })
+        }
+
+        fn from_media_export(handle: ArtifactMediaExportHandle, mime_type: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
+            let mut output = Self::new(String::new(), mime_type, None, chunks)?;
+            output.media_export_handle = Some(handle);
+            Ok(output)
+        }
+
+        fn owns_media_export(&self, handle: &ArtifactMediaExportHandle) -> bool {
+            self.media_export_handle.as_ref() == Some(handle)
         }
 
         #[cfg(test)]
@@ -15211,7 +15282,7 @@ pub mod app {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.chunks.chunks_remaining() == 0
+            self.chunks.chunks_remaining() == 0 && self.chunks.bytes_remaining() == 0
         }
     }
 
@@ -15696,6 +15767,18 @@ pub mod app {
     }
 
     impl<A: ArtifactApp> ArtifactToolCompletion<A> {
+        /// 🧪️ Creates a completion cell for an external artifact's registered factory laws.
+        #[cfg(feature = "artifact-app-testing")]
+        pub fn test_new() -> Self {
+            Self::new()
+        }
+
+        /// 🧪️ Observes a factory result without granting production code completion consumption.
+        #[cfg(feature = "artifact-app-testing")]
+        pub fn test_take_emit(&self) -> Result<Option<ArtifactToolEmission<A>>, Fault> {
+            self.take_emit()
+        }
+
         pub(crate) fn new() -> Self {
             Self { inner: std::sync::Arc::new(std::sync::Mutex::new(None)) }
         }
@@ -18597,6 +18680,7 @@ pub mod app {
                 && self.retained_outcome.as_ref().is_none_or(semio_framework_job::StepOutcome::terminal_is_empty)
                 && self.closing_job.as_ref().is_none_or(ArtifactReservedToolJob::terminal_is_empty)
                 && self.output_chunks.chunks_remaining() == 0
+                && self.output_chunks.bytes_remaining() == 0
                 && self.completion.terminal_is_empty()?
                 && !self.checkpoint_available)
         }
@@ -19504,6 +19588,9 @@ pub mod app {
         publication_checkpoint: Option<store::ArtifactStoreOneItemCheckpoint>,
         publication_attempt: u8,
         ui_pending: bool,
+        progress: Option<u64>,
+        progress_pending: bool,
+        user_cancel_requested: bool,
         published_artifact: bool,
         published_config: bool,
         /// 🪟 The per-window config lane published. A `View` whose only durable emission is this lane
@@ -19600,6 +19687,11 @@ pub mod app {
                             lease.cancel();
                         }
                     }
+                    if let semio_framework_job::StepOutcome::CheckpointReady(checkpoint)=&outcome {
+                        let next=self.progress.unwrap_or(0).max(checkpoint.applied_progress);
+                        self.progress_pending|=self.progress!=Some(next);self.progress=Some(next);
+                    }
+                    if terminal&&self.progress.is_some(){self.progress_pending=true;}
                     self.terminal_seen = terminal;
                     self.terminal_outcome = Some(outcome);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19653,7 +19745,11 @@ pub mod app {
                     let len = fault.framed_page_bytes(&mut framed);
                     TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, &framed[..len])?
                 }
-                None => TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, b"typed-operation cancelled before its next publication unit")?,
+                None => {
+                    let lane=operation_progress::cancellation_result_lane(self.user_cancel_requested,false);
+                    let detail:&[u8]=if lane==TypedOperationResultLane::Terminal {b""}else{b"typed-operation cancelled before its next publication unit"};
+                    TypedOperationResultPage::try_new(self.next_token(),lane,detail)?
+                }
             };
             self.queue_page(page)?;
             Ok(true)
@@ -22551,6 +22647,7 @@ pub mod app {
         typed_effect_outbox: ArtifactFixedQueue<Effect>,
         typed_event_outbox: ArtifactFixedQueue<AppEvent>,
         typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
+        operation_progress_retired: bool,
         /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — per mounted typed operation (keyed by
         /// its operation id), the guest-emitted interaction verbs (`Effect::ReplayShellCommand`/
         /// `DispatchAction` with an `INTERACTION_ACTION_IDS` action, see [`is_inline_interaction_verb`])
@@ -22895,6 +22992,7 @@ pub mod app {
             || CLIPBOARD_ACTION_IDS.contains(&action)
             || INTERACTION_ACTION_IDS.contains(&action)
             || is_tool_run_action_id(action)
+            || action == CANCEL_TYPED_OPERATION_ACTION_ID
             || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
     }
 
@@ -22908,7 +23006,7 @@ pub mod app {
         if INTERACTION_ACTION_IDS.contains(&action) {
             return Some(ActionKind::Interaction);
         }
-        if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
+        if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID || action == CANCEL_TYPED_OPERATION_ACTION_ID {
             return Some(ActionKind::View);
         }
         if action == NOTE_SHELL_COMMAND_ACTION_ID {
@@ -23664,6 +23762,7 @@ pub mod app {
                 typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 typed_ui_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
+                operation_progress_retired: false,
                 typed_inline_interaction_verbs: Vec::new(),
                 typed_inline_interaction_leftover: None,
                 typed_completion_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
@@ -25285,6 +25384,7 @@ pub mod app {
             }
             let operation =
                 self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "terminal typed operation changed before exact removal"))?;
+            self.operation_progress_retired |= operation.progress.is_some();
             drop(operation);
             self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
             Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -27052,8 +27152,9 @@ pub mod app {
             let key = (self.store.generation(), self.config_store.generation());
             if self.interaction_topology_memo.as_ref().map(|(cached, _)| *cached) != Some(key) {
                 let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
                 let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root), render_operation, None).await;
+                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root), render_operation, parent_document_id, None).await;
                 let cfg = ConfigView { snapshot: config.as_ref(), window: None };
                 let topology = A::interaction_topology(&doc, &cfg).await;
                 self.interaction_topology_memo = Some((key, topology));
@@ -27863,19 +27964,31 @@ pub mod app {
         }
 
         async fn cancel_owned_media_export(&mut self, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
-            if !self.media_closures.can_insert(handle.operation_id.0) {
+            let operation_id = handle.operation_id.0;
+            if let Some(output) = self.segmented_downloads.get(operation_id) {
+                if !output.owns_media_export(handle) {
+                    return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download handle authority mismatch".into()));
+                }
+                if !self.segmented_closures.can_insert(operation_id) {
+                    return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download cleanup authority is saturated".into()));
+                }
+                let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "media export download changed before cancellation".into()))?;
+                self.segmented_closures.insert_admitted(operation_id, output);
+                return Ok(());
+            }
+            if !self.media_closures.can_insert(operation_id) {
                 return Err(MediaError::Payload(handle.parent_document_id.clone(), "media close authority is saturated or already owns this operation".into()));
             }
-            let Some(active) = self.media_exports.get(handle.operation_id.0) else {
+            let Some(active) = self.media_exports.get(operation_id) else {
                 return Err(MediaError::Payload(handle.parent_document_id.clone(), "unknown or completed media export handle".into()));
             };
             if active.handle != *handle {
                 return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export handle authority mismatch".into()));
             }
-            self.quarantine_media_snapshot(handle.operation_id.0, active)?;
-            let active = self.media_exports.remove(handle.operation_id.0).expect("checked exact media export owner");
-            self.media_closures.insert_admitted(handle.operation_id.0, active);
-            if self.current_media_export == Some(handle.operation_id.0) {
+            self.quarantine_media_snapshot(operation_id, active)?;
+            let active = self.media_exports.remove(operation_id).expect("checked exact media export owner");
+            self.media_closures.insert_admitted(operation_id, active);
+            if self.current_media_export == Some(operation_id) {
                 self.current_media_export = None;
             }
             Ok(())
@@ -28412,6 +28525,7 @@ pub mod app {
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
+            if action==CANCEL_TYPED_OPERATION_ACTION_ID {return self.dispatch_operation_cancellation(args,meta).await;}
             if is_tool_run_action_id(action) {
                 return self.dispatch_tool_run_action(action, args, meta).await;
             }
@@ -29253,6 +29367,9 @@ pub mod app {
                     publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
+                    progress: None,
+                    progress_pending: false,
+                    user_cancel_requested: false,
                     published_artifact: false,
                     published_config: false,
                     published_window_config: false,
@@ -30314,6 +30431,9 @@ pub mod app {
                     publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
+                    progress: None,
+                    progress_pending: false,
+                    user_cancel_requested: false,
                     published_artifact: false,
                     published_config: false,
                     published_window_config: false,
@@ -30751,6 +30871,9 @@ pub mod app {
                 drop(scope);
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
+            if std::mem::take(&mut self.operation_progress_retired) {
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
             if let Some(completion) = self.typed_completion_outbox.pop() {
                 drop(completion);
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
@@ -30807,6 +30930,7 @@ pub mod app {
                 && self.typed_effect_outbox.len() == 0
                 && self.typed_event_outbox.len() == 0
                 && self.typed_ui_outbox.len() == 0
+                && !self.operation_progress_retired
                 && self.typed_completion_outbox.len() == 0
                 && self.typed_composed_outbox.len() == 0
                 && self.registry.terminal_is_empty()
@@ -31132,6 +31256,7 @@ pub mod app {
                         }
                         let operation =
                             self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
+                        self.operation_progress_retired |= operation.progress.is_some();
                         drop(operation);
                         self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
                         return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -32160,7 +32285,8 @@ pub mod app {
         }
 
         fn has_pending_typed_operations(&self) -> bool {
-            self.tool_run_has_pending_work()
+            self.operation_progress_retired
+                || self.tool_run_has_pending_work()
                 || !self.reserved_commits.is_empty()
                 || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
@@ -32177,7 +32303,8 @@ pub mod app {
         }
 
         fn has_runnable_typed_operations(&self) -> bool {
-            self.tool_run_has_pending_work()
+            self.operation_progress_retired
+                || self.tool_run_has_pending_work()
                 || !self.reserved_commits.is_empty()
                 || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
@@ -32309,10 +32436,10 @@ pub mod app {
         }
 
         fn take_typed_operation_ui_scope(&mut self) -> Option<UiDirtyScope> {
-            self.typed_ui_outbox.pop()
+            self.typed_ui_outbox.pop().or_else(||self.take_operation_progress_scope())
         }
         fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
-            let ui_scope = self.typed_ui_outbox.pop()?;
+            let ui_scope = self.typed_ui_outbox.pop().or_else(||self.take_operation_progress_scope())?;
             Some(TypedOperationUiProgress { ui_scope, leftover: self.typed_inline_interaction_leftover.take() })
         }
 
@@ -33021,15 +33148,18 @@ pub mod app {
                 self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(node);
             }
+            let operation_progress = self.operation_progress_snapshot();
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let mut node = {
                 let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None)
+                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                     .await
-                    .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
+                    .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
+                    .with_operations(&operation_progress);
                 let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
@@ -33052,9 +33182,10 @@ pub mod app {
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None)
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut engagements = HashMap::new();
@@ -33088,9 +33219,10 @@ pub mod app {
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None)
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut measures = HashMap::new();
@@ -33118,9 +33250,10 @@ pub mod app {
                 Err(_) => return HashMap::new(),
             };
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None)
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
@@ -33136,6 +33269,7 @@ pub mod app {
                 return Vec::new();
             }
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let snapshot_is_admitted = {
                 let (_, snapshot, _, _) = self.cache.as_ref().expect("cache refreshed above");
                 A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())
@@ -33167,7 +33301,7 @@ pub mod app {
                 // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
                 // stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
                 // run's own provisional overlay.
-                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read)
+                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, snapshot_read)
                     .await
                     .with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())));
                 let cfg = ConfigView { snapshot: config.as_ref(), window: None };
@@ -33192,9 +33326,10 @@ pub mod app {
                 Err(_) => return Vec::new(),
             };
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { app: _, cache, registry, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await;
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
             let items = A::context_menu_with_request_context(request, &doc, &cfg, view_state, &interaction, registry).await;
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
@@ -33256,9 +33391,10 @@ pub mod app {
             }
             self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { app: _, cache, child_content_root, transient_store, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await;
             let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
             let transient = transient_store.current_root();
             A::export_media_with_request_context(port, &doc, &TransientView { snapshot: transient.as_ref(), window: None }).await
@@ -33269,12 +33405,56 @@ pub mod app {
             self.submit_owned_media_export(port, app_instance_id).await
         }
 
+        async fn submit_media_export_checked(&mut self, port: &str, expected_parent_document_id: &str, expected_base_revision: u64) -> Result<ArtifactMediaExportHandle, MediaError> {
+            let parent_document_id = self.store.envelope().id.as_str();
+            let content_revision = self.store.content_revision();
+            let base_revision = u64::from_be_bytes(content_revision[..8].try_into().expect("revision lane width"));
+            if parent_document_id != expected_parent_document_id || base_revision != expected_base_revision {
+                return Err(MediaError::Payload(port.to_string(), "media export resource authority is stale".into()));
+            }
+            let app_instance_id = self.live_runtime_instance_id.ok_or_else(|| MediaError::Payload(port.to_string(), "resumable media export requires a bound live app instance".into()))?;
+            self.submit_owned_media_export(port, app_instance_id).await
+        }
+
         async fn poll_media_export(&mut self, handle: &ArtifactMediaExportHandle) -> Result<ArtifactMediaExportPoll, MediaError> {
             self.poll_owned_media_export(handle).await
         }
 
         async fn cancel_media_export(&mut self, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
             self.cancel_owned_media_export(handle).await
+        }
+
+        async fn retain_media_export_result(&mut self, handle: &ArtifactMediaExportHandle, result: ArtifactMediaExportResult) -> Result<(), MediaError> {
+            let operation_id = handle.operation_id.0;
+            if !self.segmented_downloads.can_insert(operation_id) {
+                return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download authority is saturated or already occupied".into()));
+            }
+            let active = self.media_closures.get_mut(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "completed media export lost its close authority".into()))?;
+            if active.handle != *handle || !result.chunks.same_operation(&active.output_chunks) {
+                return Err(MediaError::Payload(handle.parent_document_id.clone(), "completed media export authority mismatch".into()));
+            }
+            let output = ArtifactDownloadOutput::from_media_export(handle.clone(), result.mime_type, result.chunks).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
+            active.output_chunks = ArtifactOutputChunks::new(active.contract.max_output_bytes);
+            self.segmented_downloads.insert_admitted(operation_id, output);
+            Ok(())
+        }
+
+        async fn take_media_export_chunk(&mut self, handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
+            let operation_id = handle.operation_id.0;
+            let output = self.segmented_downloads.get(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "unknown media export download handle".into()))?;
+            if !output.owns_media_export(handle) {
+                return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download handle authority mismatch".into()));
+            }
+            let chunk = output.chunks.take_chunk().map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
+            if chunk.is_none() {
+                let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "terminal media export download changed before exact removal".into()))?;
+                if !output.terminal_is_empty() {
+                    self.segmented_downloads.insert_admitted(operation_id, output);
+                    return Err(MediaError::Payload(handle.parent_document_id.clone(), "terminal media export download retained unread chunks".into()));
+                }
+                drop(output);
+            }
+            Ok(chunk)
         }
 
         async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
@@ -33301,9 +33481,10 @@ pub mod app {
         async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
             self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
             let render_operation = self.live_render_operation();
+            let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await;
             let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::media_fingerprint(port, &doc).await
         }
@@ -33662,7 +33843,7 @@ pub mod app {
                 SurfaceKind::TextEditor,
                 "type",
                 vec![ActionDefinition::bounded_catalog("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), ActionKind::Mutation)
-                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required()])
+                    .with_args(vec![ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required()])
                     .describe(LocalizedLabel::native(
                         "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                         "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird.",
@@ -33768,7 +33949,35 @@ pub mod app {
         }
     }
 
+    /// ✏️ One declarative table cell whose local draft commits through an artifact-owned action.
+    #[derive(Debug, PartialEq)]
+    pub struct WindowedEditableTableCell {
+        pub value: String,
+        pub label: String,
+        pub action: Option<(String, UiValue)>,
+    }
+
+    impl WindowedEditableTableCell {
+        pub fn new(value: impl Into<String>, label: impl Into<String>, action_id: impl Into<String>, arguments: UiValue) -> Self {
+            Self { value: value.into(), label: label.into(), action: Some((action_id.into(), arguments)) }
+        }
+
+        pub fn read_only(value: impl Into<String>, label: impl Into<String>) -> Self {
+            Self { value: value.into(), label: label.into(), action: None }
+        }
+    }
+
     pub struct TableWindowKit;
+
+    /// ↔️ Columns shown before the host has measured the horizontal viewport.
+    pub const TABLE_COLUMN_WINDOW_DEFAULT: usize = 8;
+    /// ↔️ Maximum columns in one materialised slice; every logical column remains reachable by offset.
+    pub const TABLE_COLUMN_WINDOW_MAX: usize = 16;
+
+    /// 🔑️ Stable sibling window key for one table's independent column projection.
+    pub fn table_column_window_key(table_id: &str) -> String {
+        format!("{table_id}.columns")
+    }
 
     impl WindowKit for TableWindowKit {
         type ViewModel = TableView;
@@ -33909,6 +34118,25 @@ pub mod app {
         })
     }
 
+    fn table_row_action_buttons(actions: &[RowAction]) -> UiAssemblyResult<Vec<BuiltNode>> {
+        let mut buttons = Vec::with_capacity(actions.len());
+        for (index, action) in actions.iter().enumerate() {
+            let duplicate = action.credited_clone().ok_or_else(|| ui_assembly_error("table-window.row-action-clone"))?;
+            let label = duplicate.label.ok_or_else(|| ui_assembly_error("table-window.row-action-label"))?;
+            let binding = duplicate.action;
+            if binding.capability.is_some() {
+                return Err(ui_assembly_error("table-window.row-action-capability"));
+            }
+            let builder = ui::button(label).icon(duplicate.icon).try_id(&format!("row-action-{index}")).map_err(|_| ui_assembly_error("table-window.row-action-id"))?;
+            let builder = match binding.args {
+                Some(arguments) => builder.try_on_with(binding.trigger, binding.action, arguments).map_err(|_| ui_assembly_error("table-window.row-action-binding"))?,
+                None => builder.try_on(binding.trigger, binding.action).map_err(|_| ui_assembly_error("table-window.row-action-binding"))?,
+            };
+            buttons.push(builder.try_build().map_err(|_| ui_assembly_error("table-window.row-action-button"))?);
+        }
+        Ok(buttons)
+    }
+
     /// 📊️ One windowed table row: record key `key` (the row's stable identity, e.g. `"space:<id>"`),
     /// `cells` positional to the table's columns, `actions` in its actions column and `activate` its primary
     /// activation (Enter on the focused row). One node record however many cells and actions it carries.
@@ -33917,7 +34145,12 @@ pub mod app {
         for cell in cells {
             row_cells.try_push(UiText::try_from_str(cell).ok_or_else(|| ui_assembly_error("table-window.cell"))?).map_err(|_| ui_assembly_error("table-window.cells"))?;
         }
+        let actions = actions.into_iter().collect::<Vec<_>>();
+        let action_buttons = table_row_action_buttons(&actions)?;
         let mut builder = table_row(row_cells).try_id(key).map_err(|_| ui_assembly_error("table-window.row-id"))?;
+        if !action_buttons.is_empty() {
+            builder = builder.try_children(action_buttons).map_err(|_| ui_assembly_error("table-window.row-action-children"))?;
+        }
         for action in actions {
             builder = builder.try_row_action(action).map_err(|_| ui_assembly_error("table-window.row-actions"))?;
         }
@@ -33927,6 +34160,76 @@ pub mod app {
             None => builder,
         };
         builder.try_build().map_err(|_| ui_assembly_error("table-window.row-build"))
+    }
+
+    /// ✏️ One windowed table row whose cells are native declarative inputs. Short values use inline
+    /// commit-on-blur controls; long values use the paged text-draft scene with explicit Apply/Discard.
+    pub fn editable_table_window_row(key: &str, controller_id: &str, locale: Locale, cells: impl IntoIterator<Item = WindowedEditableTableCell>, actions: impl IntoIterator<Item = RowAction>) -> UiAssemblyResult<BuiltNode> {
+        editable_table_window_row_at(key, controller_id, locale, 0, cells, actions)
+    }
+
+    /// ↔️ Column-windowed counterpart whose child keys and draft surfaces retain logical ordinals.
+    pub fn editable_table_window_row_at(key: &str, controller_id: &str, locale: Locale, column_offset: usize, cells: impl IntoIterator<Item = WindowedEditableTableCell>, actions: impl IntoIterator<Item = RowAction>) -> UiAssemblyResult<BuiltNode> {
+        let mut row_cells = UiFixedList::default();
+        let mut children = Vec::new();
+        for (index, cell) in cells.into_iter().enumerate() {
+            let logical_column = column_offset + index;
+            let preview = UiText::try_from_str(&cell.value).unwrap_or_else(|| UiText::try_from_str("…").expect("static table overflow marker fits"));
+            row_cells.try_push(preview).map_err(|_| ui_assembly_error("table-window.editable-row-cells"))?;
+            let child_id = format!("cell-{logical_column}");
+            let child = if let Some((action_id, arguments)) = cell.action {
+                if let Some(value) = UiText::try_from_str(&cell.value) {
+                    let action = ActionId::try_v1(controller_id, &action_id).ok_or_else(|| ui_assembly_error("table-window.editable-row-action"))?;
+                    ui::input(InputKind::Text)
+                        .value(value)
+                        .commit(UiText::try_from_str("blur").ok_or_else(|| ui_assembly_error("table-window.editable-row-commit"))?)
+                        .try_label(&cell.label)
+                        .map_err(|_| ui_assembly_error("table-window.editable-row-label"))?
+                        .try_id(&child_id)
+                        .map_err(|_| ui_assembly_error("table-window.editable-row-id"))?
+                        .try_on_with(Trigger::Commit, action, arguments)
+                        .map_err(|_| ui_assembly_error("table-window.editable-row-binding"))?
+                        .try_build()
+                        .map_err(|_| ui_assembly_error("table-window.editable-row-input"))?
+                } else {
+                    let (apply_label, discard_label, conflict_label, applying_label, cancel_label, failed_label) = match locale {
+                        Locale::De => ("Anwenden", "Verwerfen", "Der gespeicherte Zellwert hat sich geändert. Bitte neu abgleichen.", "Wird angewendet …", "Abbrechen", "Änderung fehlgeschlagen. Der Entwurf bleibt erhalten."),
+                        Locale::En => ("Apply", "Discard", "The saved cell value changed. Reconcile before applying.", "Applying…", "Cancel", "The edit failed. Your draft is preserved."),
+                    };
+                    TextWindowKit::render_draft(&TextDraftView {
+                        surface_id: format!("table-draft-{key}-{logical_column}"),
+                        text: cell.value,
+                        language: None,
+                        action_id,
+                        argument: "value".into(),
+                        arguments: Some(arguments),
+                        apply_label: apply_label.into(),
+                        discard_label: discard_label.into(),
+                        conflict_label: conflict_label.into(),
+                        applying_label: applying_label.into(),
+                        cancel_label: cancel_label.into(),
+                        failed_label: failed_label.into(),
+                    })?
+                }
+            } else if let Some(value) = UiText::try_from_str(&cell.value) {
+                ui::text(Label::try_from(value.as_str()).map_err(|_| ui_assembly_error("table-window.read-only-cell-label"))?)
+                    .try_id(&child_id)
+                    .map_err(|_| ui_assembly_error("table-window.read-only-cell-id"))?
+                    .try_build()
+                    .map_err(|_| ui_assembly_error("table-window.read-only-cell"))?
+            } else {
+                TextWindowKit::render_read_only(&format!("table-value-{key}-{logical_column}"), &TextView { text: cell.value, language: None, read_only: true })?
+            };
+            children.push(child);
+        }
+        let actions = actions.into_iter().collect::<Vec<_>>();
+        children.extend(table_row_action_buttons(&actions)?);
+        let mut builder = table_row(row_cells).try_id(key).map_err(|_| ui_assembly_error("table-window.editable-row-key"))?;
+        builder = builder.try_children(children).map_err(|_| ui_assembly_error("table-window.editable-row-children"))?;
+        for action in actions {
+            builder = builder.try_row_action(action).map_err(|_| ui_assembly_error("table-window.editable-row-actions"))?;
+        }
+        builder.try_build().map_err(|_| ui_assembly_error("table-window.editable-row-build"))
     }
 
     impl TableWindowKit {
@@ -33959,6 +34262,88 @@ pub mod app {
             };
             builder.try_build().map_err(|_| ui_assembly_error("table-window.build"))
         }
+
+        /// 📊️ Windowed table projection addressed by logical row ordinal, without allocating a
+        /// temporary row collection proportional to the document.
+        pub fn render_indexed_rows(windows: &TreeWindows<'_>, label: &str, columns: &[&str], actions_label: Option<&str>, total: usize, row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+            Self::render_indexed_rows_with_id(windows, Self::KIND_ID, label, columns, actions_label, total, row)
+        }
+
+        /// 📊️ Named counterpart used when one body owns more than one independently windowed table.
+        pub fn render_indexed_rows_with_id(windows: &TreeWindows<'_>, id: &str, label: &str, columns: &[&str], actions_label: Option<&str>, total: usize, row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+            TreeWindows::admit_key(id)?;
+            let path = windows.path_of(id);
+            windows.claim_window(&path, total)?;
+            windows.debit_container();
+            let slice = windows.sliced(&path, true, total);
+            let mut headers = UiFixedList::default();
+            for column in columns {
+                headers.try_push(Label::try_from(*column).map_err(|_| ui_assembly_error("table-window.column"))?).map_err(|_| ui_assembly_error("table-window.columns"))?;
+            }
+            let builder = table(Label::try_from(label).map_err(|_| ui_assembly_error("table-window.label"))?, headers).grow(true).try_id(id).map_err(|_| ui_assembly_error("table-window.id"))?;
+            let builder = match actions_label {
+                Some(actions_label) => builder.actions_label(Label::try_from(actions_label).map_err(|_| ui_assembly_error("table-window.actions-label"))?),
+                None => builder,
+            };
+            let builder = tree_window_indexed_rows(builder, windows, id, &slice, row)?;
+            let builder = match windows.stamp(&path, &slice) {
+                Some(window) => builder.window(window),
+                None => builder,
+            };
+            builder.try_build().map_err(|_| ui_assembly_error("table-window.build"))
+        }
+
+        /// ↔️ Projects one logical matrix through independent row and column windows. Header and cell
+        /// closures receive logical indices, so a nonzero column offset never rewrites action addresses.
+        pub fn render_indexed_matrix_with_id(
+            windows: &TreeWindows<'_>,
+            id: &str,
+            label: &str,
+            row_label: &str,
+            column_label: &str,
+            column_total: usize,
+            mut column: impl FnMut(usize) -> UiAssemblyResult<Label>,
+            actions_label: Option<&str>,
+            row_total: usize,
+            mut row: impl FnMut(usize, std::ops::Range<usize>) -> UiAssemblyResult<BuiltNode>,
+        ) -> UiAssemblyResult<BuiltNode> {
+            TreeWindows::admit_key(id)?;
+            let column_id = table_column_window_key(id);
+            TreeWindows::admit_key(&column_id)?;
+            let row_path = windows.path_of(id);
+            let column_path = windows.path_of(&column_id);
+            windows.claim_window(&row_path, row_total)?;
+            windows.claim_window(&column_path, column_total)?;
+            windows.debit_container();
+            let column_slice = windows.projection_slice(&column_path, true, column_total, TABLE_COLUMN_WINDOW_DEFAULT, TABLE_COLUMN_WINDOW_MAX);
+            let per_row_records = column_slice.len.saturating_add(2).max(1);
+            let row_cap = (windows.nodes_remaining() / per_row_records).max(1);
+            let row_slice = windows.sliced_capped(&row_path, true, row_total, row_cap);
+            let mut headers = UiFixedList::default();
+            for index in column_slice.offset..column_slice.offset + column_slice.len {
+                headers.try_push(column(index)?).map_err(|_| ui_assembly_error("table-window.columns"))?;
+            }
+            let builder = table(Label::try_from(label).map_err(|_| ui_assembly_error("table-window.label"))?, headers)
+                .axis_labels(Label::try_from(row_label).map_err(|_| ui_assembly_error("table-window.row-label"))?, Label::try_from(column_label).map_err(|_| ui_assembly_error("table-window.column-label"))?)
+                .grow(true)
+                .try_id(id)
+                .map_err(|_| ui_assembly_error("table-window.id"))?;
+            let builder = match actions_label {
+                Some(actions_label) => builder.actions_label(Label::try_from(actions_label).map_err(|_| ui_assembly_error("table-window.actions-label"))?),
+                None => builder,
+            };
+            let columns = column_slice.offset..column_slice.offset + column_slice.len;
+            let builder = tree_window_indexed_rows(builder, windows, id, &row_slice, |index| row(index, columns.clone()))?;
+            let builder = match windows.stamp(&row_path, &row_slice) {
+                Some(window) => builder.window(window),
+                None => builder,
+            };
+            let builder = match windows.stamp(&column_path, &column_slice) {
+                Some(window) => builder.column_window(window),
+                None => builder,
+            };
+            builder.try_build().map_err(|_| ui_assembly_error("table-window.build"))
+        }
     }
     //#endregion 🔖️TableWindowKit
 
@@ -33974,6 +34359,20 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq)]
     pub struct TreeView {
         pub roots: Vec<TreeNodeView>,
+    }
+
+    /// ✏️ One materialized tree row's inline text draft and complete static artifact address.
+    #[derive(Debug, PartialEq)]
+    pub struct EditableTreeNode {
+        pub value: String,
+        pub action_id: String,
+        pub arguments: UiValue,
+    }
+
+    impl EditableTreeNode {
+        pub fn new(value: impl Into<String>, action_id: impl Into<String>, arguments: UiValue) -> Self {
+            Self { value: value.into(), action_id: action_id.into(), arguments }
+        }
     }
 
     pub struct TreeWindowKit;
@@ -33994,7 +34393,11 @@ pub mod app {
                 SurfaceKind::BlockList,
                 "list-tree",
                 vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)
-                    .with_args(vec![ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(), ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required()])
+                    .with_args(vec![
+                        ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                        ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")).required(),
+                        ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
+                    ])
                     .describe(LocalizedLabel::native(
                         "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
                         "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert.",
@@ -34025,6 +34428,47 @@ pub mod app {
         pub fn render_windowed(view: &TreeView, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
             let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
             let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| Self::windowed_node(windows, node, semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH))?;
+            let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
+            tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))
+        }
+
+        fn editable_windowed_node<F>(windows: &TreeWindows<'_>, node: &TreeNodeView, path: &str, depth: usize, controller_id: &str, editable: &mut F) -> UiAssemblyResult<BuiltNode>
+        where
+            F: FnMut(&str, &TreeNodeView) -> Option<EditableTreeNode>,
+        {
+            let depth = depth.checked_sub(1).ok_or_else(|| ui_assembly_error("tree-window.depth"))?;
+            let mut builder = ui::tree_item(ui_label(node.label.clone(), "tree-window.item-label")?).try_id(&node.id).map_err(|_| ui_assembly_error("tree-window.item-id"))?;
+            if let Some(edit) = editable(path, node) {
+                let action = ActionId::try_v1(controller_id, &edit.action_id).ok_or_else(|| ui_assembly_error("tree-window.edit-action-id"))?;
+                let input = ui::input(InputKind::Text)
+                    .value(UiText::try_from_str(&edit.value).ok_or_else(|| ui_assembly_error("tree-window.edit-value"))?)
+                    .commit(UiText::try_from_str("blur").ok_or_else(|| ui_assembly_error("tree-window.edit-commit"))?)
+                    .try_label(&node.label)
+                    .map_err(|_| ui_assembly_error("tree-window.edit-label"))?
+                    .try_id("edit")
+                    .map_err(|_| ui_assembly_error("tree-window.edit-id"))?
+                    .try_on_with(Trigger::Commit, action, edit.arguments)
+                    .map_err(|_| ui_assembly_error("tree-window.edit-binding"))?
+                    .try_build()
+                    .map_err(|_| ui_assembly_error("tree-window.edit-input"))?;
+                builder = builder.try_child(input).map_err(|_| ui_assembly_error("tree-window.edit-child"))?;
+            }
+            tree_window_item(windows, builder, &node.id, !node.children.is_empty(), &node.children, |child| {
+                let child_path = format!("{path}{}{id}", TREE_WINDOW_PATH_SEPARATOR, id = child.id);
+                Self::editable_windowed_node(windows, child, &child_path, depth, controller_id, editable)
+            })
+        }
+
+        /// ✏️ Renders only materialized rows with inline text drafts carrying caller-authored stable
+        /// addresses and revisions; the committed text is merged as the canonical `value` argument.
+        pub fn render_editable_nodes_windowed<F>(view: &TreeView, windows: &TreeWindows<'_>, controller_id: &str, mut editable: F) -> UiAssemblyResult<BuiltNode>
+        where
+            F: FnMut(&str, &TreeNodeView) -> Option<EditableTreeNode>,
+        {
+            let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
+            let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| {
+                Self::editable_windowed_node(windows, node, &node.id, semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH, controller_id, &mut editable)
+            })?;
             let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
             tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))
         }
@@ -34140,17 +34584,30 @@ pub mod app {
     }
 
     /// ✏️ One explicitly addressed document text target with a locally buffered replacement.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct EditableDocumentPage {
         pub page_index: u32,
         pub item_index: u32,
         pub text: String,
+        pub arguments: Option<UiValue>,
     }
 
     /// ✏️ Addressed text targets rendered as prefilled apply/discard drafts.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct EditableDocumentView {
         pub pages: Vec<EditableDocumentPage>,
+    }
+
+    impl EditableDocumentPage {
+        /// 📄️ Creates an ordinal document draft with a renderer-authored revision guard.
+        pub fn new(page_index: u32, item_index: u32, text: impl Into<String>) -> Self {
+            Self { page_index, item_index, text: text.into(), arguments: None }
+        }
+
+        /// 🧭️ Creates a document draft carrying the artifact's complete stable address.
+        pub fn with_arguments(page_index: u32, item_index: u32, text: impl Into<String>, arguments: UiValue) -> Self {
+            Self { page_index, item_index, text: text.into(), arguments: Some(arguments) }
+        }
     }
 
     pub struct DocumentWindowKit;
@@ -34164,25 +34621,11 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Artifact",
-                "Artefakt",
-                SurfaceKind::TextEditor,
-                "file-text",
-                vec![ActionDefinition::bounded_catalog("set-page", LocalizedLabel::native("Set Page Text", "Seitentext setzen"), ActionKind::Mutation)
-                    .with_args(vec![
-                        ActionArgDef::index("page", LocalizedLabel::native("Page", "Seite")).required(),
-                        ActionArgDef::index("item", LocalizedLabel::native("Text Item", "Textelement")).required(),
-                        ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")).required(),
-                        ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required(),
-                    ])
-                    .describe(LocalizedLabel::native(
-                        "Replaces the addressed page text when its revision still matches; the previous text remains available through undo.",
-                        "Ersetzt den adressierten Seitentext, wenn seine Revision noch übereinstimmt; der bisherige Text bleibt über Rückgängig verfügbar.",
-                    ))
-                    .in_palette(false)],
-            )
+            Self::editable_window_kind_with_args(vec![
+                ActionArgDef::index("page", LocalizedLabel::native("Page", "Seite")).required(),
+                ActionArgDef::index("item", LocalizedLabel::native("Text Item", "Textelement")).required(),
+                ActionArgDef::text("revision", LocalizedLabel::native("Revision", "Revision")).required(),
+            ])
         }
 
         fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
@@ -34191,6 +34634,25 @@ pub mod app {
     }
 
     impl DocumentWindowKit {
+        /// 🧭️ Declares the document edit action with an artifact-owned stable address contract.
+        pub fn editable_window_kind_with_args(mut arguments: Vec<ActionArgDef>) -> WindowKindDefinition {
+            arguments.push(ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required());
+            window_kind_definition(
+                Self::KIND_ID,
+                "Artifact",
+                "Artefakt",
+                SurfaceKind::TextEditor,
+                "file-text",
+                vec![ActionDefinition::bounded_catalog("set-page", LocalizedLabel::native("Set Page Text", "Seitentext setzen"), ActionKind::Mutation)
+                    .with_args(arguments)
+                    .describe(LocalizedLabel::native(
+                        "Replaces the addressed page text when its revision still matches; the previous text remains available through undo.",
+                        "Ersetzt den adressierten Seitentext, wenn seine Revision noch übereinstimmt; der bisherige Text bleibt über Rückgängig verfügbar.",
+                    ))
+                    .in_palette(false)],
+            )
+        }
+
         /// 🔐️ Computes the compact optimistic-concurrency token carried by a document draft.
         pub fn text_revision(text: &str) -> String {
             let hash = text.as_bytes().iter().fold(0xcbf29ce484222325_u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3));
@@ -34208,12 +34670,19 @@ pub mod app {
                 };
                 let item = ui::tree_item(ui_label(title, "document-window.editable-page-label")?).try_id(&id).map_err(|_| ui_assembly_error("document-window.editable-page-id"))?;
                 tree_window_item(windows, item, &id, *ordinal == 0, &[*page], |page| {
-                    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("document-window.editable-arguments"))?;
-                    arguments.try_insert("page".into(), UiValue::Number(f64::from(page.page_index))).map_err(|_| ui_assembly_error("document-window.editable-page-argument"))?;
-                    arguments.try_insert("item".into(), UiValue::Number(f64::from(page.item_index))).map_err(|_| ui_assembly_error("document-window.editable-item-argument"))?;
-                    arguments
-                        .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(&Self::text_revision(&page.text)).ok_or_else(|| ui_assembly_error("document-window.editable-revision"))?))
-                        .map_err(|_| ui_assembly_error("document-window.editable-revision-argument"))?;
+                    let arguments = match &page.arguments {
+                        Some(arguments @ UiValue::Map(_)) => arguments.credited_clone().ok_or_else(|| ui_assembly_error("document-window.editable-argument-credits"))?,
+                        Some(_) => return Err(ui_assembly_error("document-window.editable-arguments-map")),
+                        None => {
+                            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("document-window.editable-arguments"))?;
+                            arguments.try_insert("page".into(), UiValue::Number(f64::from(page.page_index))).map_err(|_| ui_assembly_error("document-window.editable-page-argument"))?;
+                            arguments.try_insert("item".into(), UiValue::Number(f64::from(page.item_index))).map_err(|_| ui_assembly_error("document-window.editable-item-argument"))?;
+                            arguments
+                                .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(&Self::text_revision(&page.text)).ok_or_else(|| ui_assembly_error("document-window.editable-revision"))?))
+                                .map_err(|_| ui_assembly_error("document-window.editable-revision-argument"))?;
+                            UiValue::Map(arguments.finish())
+                        }
+                    };
                     let (apply_label, discard_label, conflict_label, applying_label, cancel_label, failed_label) = match locale {
                         Locale::De => ("Anwenden", "Verwerfen", "Der gespeicherte Text hat sich geändert. Bitte neu abgleichen.", "Wird angewendet …", "Abbrechen", "Änderung fehlgeschlagen. Der Entwurf bleibt erhalten."),
                         Locale::En => ("Apply", "Discard", "The saved text changed. Reconcile before applying.", "Applying…", "Cancel", "The edit failed. Your draft is preserved."),
@@ -34224,7 +34693,7 @@ pub mod app {
                         language: None,
                         action_id: "set-page".into(),
                         argument: "text".into(),
-                        arguments: Some(UiValue::Map(arguments.finish())),
+                        arguments: Some(arguments),
                         apply_label: apply_label.into(),
                         discard_label: discard_label.into(),
                         conflict_label: conflict_label.into(),
@@ -34253,21 +34722,91 @@ pub mod app {
     //#endregion 🔖️DocumentWindowKit
 
     //#region 🔖️MediaWindowKit
-    /// 🎬️ Audio/video transport state — duration/position in milliseconds, no playback engine.
+    pub const MEDIA_TRANSPORT_EXTENSION_ID: &str = "framework.media.transport@1";
+    pub const MEDIA_PLAYBACK_OUTPUT_PORT: &str = "playback:out";
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum MediaKind {
         Audio,
         Video,
     }
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum MediaCapabilityStatus {
+        Ready,
+        Loading,
+        Unsupported,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct MediaResource {
+        pub controller_id: String,
+        pub app_instance_id: u32,
+        pub parent_document_id: String,
+        pub output_port: String,
+        pub revision: String,
+        pub generation: String,
+    }
+
     #[derive(Clone, Debug, PartialEq)]
     pub struct MediaView {
-        pub duration_ms: u64,
+        pub duration_ms: Option<u64>,
         pub position_ms: u64,
+        pub selection_start_ms: Option<u64>,
+        pub selection_end_ms: Option<u64>,
         pub kind: MediaKind,
+        pub media_type: String,
+        pub revision: String,
+        pub locale: Locale,
+        pub resource: Option<MediaResource>,
+        pub capability: MediaCapabilityStatus,
+        pub capability_reason: Option<String>,
+        pub host_content_height: f64,
     }
 
     pub struct MediaWindowKit;
+
+    impl MediaWindowKit {
+        fn value_text(value: &str, field: &'static str) -> UiAssemblyResult<UiValue> {
+            Ok(UiValue::Text(UiText::try_from_str(value).ok_or_else(|| ui_assembly_error(field))?))
+        }
+
+        fn put(map: &mut UiMapBuilder, key: &str, value: UiValue) -> UiAssemblyResult<()> {
+            map.try_insert(key.into(), value).map_err(|_| ui_assembly_error("media-window.props"))
+        }
+
+        fn labels(locale: Locale) -> UiAssemblyResult<UiValue> {
+            let labels = match locale {
+                Locale::De => [
+                    ("play", "Wiedergabe"), ("pause", "Pause"), ("seek", "Position"), ("position", "Position"), ("duration", "Dauer"),
+                    ("selectionStart", "Auswahlbeginn"), ("selectionEnd", "Auswahlende"), ("loading", "Medium wird geladen…"), ("progress", "Ladefortschritt"),
+                    ("cancel", "Abbrechen"), ("unsupported", "Dieses Medium kann auf diesem Gerät nicht wiedergegeben werden."), ("unknownDuration", "Dauer unbekannt"), ("audio", "Audio"), ("video", "Video"),
+                ],
+                Locale::En => [
+                    ("play", "Play"), ("pause", "Pause"), ("seek", "Seek"), ("position", "Position"), ("duration", "Duration"),
+                    ("selectionStart", "Selection start"), ("selectionEnd", "Selection end"), ("loading", "Loading media…"), ("progress", "Loading progress"),
+                    ("cancel", "Cancel"), ("unsupported", "This media cannot be played on this device."), ("unknownDuration", "Unknown duration"), ("audio", "Audio"), ("video", "Video"),
+                ],
+            };
+            let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.labels"))?;
+            for (key, value) in labels {
+                Self::put(&mut map, key, Self::value_text(value, "media-window.label")?)?;
+            }
+            Ok(UiValue::Map(map.finish()))
+        }
+
+        fn resource(resource: &MediaResource) -> UiAssemblyResult<UiValue> {
+            let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.resource"))?;
+            Self::put(&mut map, "kind", Self::value_text("artifact-media-export", "media-window.resource-kind")?)?;
+            Self::put(&mut map, "controllerId", Self::value_text(&resource.controller_id, "media-window.resource-controller")?)?;
+            Self::put(&mut map, "appInstanceId", UiValue::Number(f64::from(resource.app_instance_id)))?;
+            Self::put(&mut map, "parentDocumentId", Self::value_text(&resource.parent_document_id, "media-window.resource-parent-document")?)?;
+            Self::put(&mut map, "outputPort", Self::value_text(&resource.output_port, "media-window.resource-port")?)?;
+            Self::put(&mut map, "revision", Self::value_text(&resource.revision, "media-window.resource-revision")?)?;
+            Self::put(&mut map, "generation", Self::value_text(&resource.generation, "media-window.resource-generation")?)?;
+            Ok(UiValue::Map(map.finish()))
+        }
+    }
 
     impl WindowKit for MediaWindowKit {
         type ViewModel = MediaView;
@@ -34278,23 +34817,67 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::bounded_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)])
+            Self::window_kind()
         }
 
         fn render(view: &MediaView) -> UiAssemblyResult<BuiltNode> {
-            let kind_label = match view.kind {
-                MediaKind::Audio => "audio",
-                MediaKind::Video => "video",
-            };
-            let mut entries = UiFixedList::default();
-            for entry in [
-                KeyValueEntry { label: ui_label("Duration", "media-window.duration-label")?, value: ui_text(view.duration_ms.to_string(), "media-window.duration")? },
-                KeyValueEntry { label: ui_label("Position", "media-window.position-label")?, value: ui_text(view.position_ms.to_string(), "media-window.position")? },
-                KeyValueEntry { label: ui_label("Kind", "media-window.kind-label")?, value: ui_text(kind_label, "media-window.kind")? },
-            ] {
-                entries.try_push(entry).map_err(|_| ui_assembly_error("media-window.entries"))?;
+            const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+            let parsed_revision = view.revision.parse::<u64>().ok().filter(|revision| revision.to_string() == view.revision).ok_or_else(|| ui_assembly_error("media-window.revision"))?;
+            let _ = parsed_revision;
+            if view.media_type.is_empty() || view.media_type.len() > 128 || !view.host_content_height.is_finite() || !(0.0..=4096.0).contains(&view.host_content_height) {
+                return Err(ui_assembly_error("media-window.identity"));
             }
-            BuiltNode::try_new(Self::KIND_ID, Component::KeyValueList(KeyValueListProps { entries })).map_err(|_| ui_assembly_error("media-window.build"))
+            if view.resource.as_ref().is_some_and(|resource| {
+                resource.controller_id.is_empty()
+                    || resource.parent_document_id.is_empty()
+                    || resource.parent_document_id.len() > 512
+                    || resource.revision != view.revision
+                    || resource.output_port != MEDIA_PLAYBACK_OUTPUT_PORT
+                    || resource.generation.parse::<u64>().ok().is_none_or(|generation| generation.to_string() != resource.generation)
+            }) || matches!(view.capability, MediaCapabilityStatus::Ready) && view.resource.is_none() {
+                return Err(ui_assembly_error("media-window.resource-authority"));
+            }
+            let duration_ms = view.duration_ms.filter(|duration| *duration > 0 && *duration <= MAX_SAFE_INTEGER);
+            let position_ms = duration_ms.map_or(0, |duration| view.position_ms.min(duration));
+            let (selection_start_ms, selection_end_ms) = match (duration_ms, view.selection_start_ms, view.selection_end_ms) {
+                (Some(duration), Some(start), Some(end)) if start < end => {
+                    let start = start.min(duration.saturating_sub(1));
+                    (Some(start), Some(end.max(start + 1).min(duration)))
+                }
+                _ => (None, None),
+            };
+            let kind = match view.kind { MediaKind::Audio => "audio", MediaKind::Video => "video" };
+            let locale = match view.locale { Locale::En => "en", Locale::De => "de" };
+            let status = match view.capability { MediaCapabilityStatus::Ready => "ready", MediaCapabilityStatus::Loading => "loading", MediaCapabilityStatus::Unsupported => "unsupported" };
+            let mut capability = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.capability"))?;
+            Self::put(&mut capability, "status", Self::value_text(status, "media-window.capability-status")?)?;
+            Self::put(&mut capability, "reason", match &view.capability_reason { Some(reason) => Self::value_text(reason, "media-window.capability-reason")?, None => UiValue::Null })?;
+            let mut props = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.props"))?;
+            for (key, value) in [
+                ("schemaVersion", UiValue::Number(1.0)),
+                ("kind", Self::value_text(kind, "media-window.kind")?),
+                ("mediaType", Self::value_text(&view.media_type, "media-window.media-type")?),
+                ("revision", Self::value_text(&view.revision, "media-window.revision")?),
+                ("durationMs", duration_ms.map_or(UiValue::Null, |value| UiValue::Number(value as f64))),
+                ("positionMs", UiValue::Number(position_ms as f64)),
+                ("selectionStartMs", selection_start_ms.map_or(UiValue::Null, |value| UiValue::Number(value as f64))),
+                ("selectionEndMs", selection_end_ms.map_or(UiValue::Null, |value| UiValue::Number(value as f64))),
+                ("locale", Self::value_text(locale, "media-window.locale")?),
+                ("labels", Self::labels(view.locale)?),
+                ("resource", match &view.resource { Some(resource) => Self::resource(resource)?, None => UiValue::Null }),
+                ("capability", UiValue::Map(capability.finish())),
+                ("hostContentHeight", UiValue::Number(view.host_content_height)),
+            ] {
+                Self::put(&mut props, key, value)?;
+            }
+            BuiltNode::try_new(
+                Self::KIND_ID,
+                Component::Extension(semio_framework_ui_contract::ExtensionProps {
+                    extension: UiText::try_from_str(MEDIA_TRANSPORT_EXTENSION_ID).ok_or_else(|| ui_assembly_error("media-window.extension"))?,
+                    props: UiValue::Map(props.finish()),
+                }),
+            )
+            .map_err(|_| ui_assembly_error("media-window.build"))
         }
     }
     //#endregion 🔖️MediaWindowKit
@@ -36599,7 +37182,7 @@ pub mod plugin_runtime {
     //! 📤️ WASM component export glue for plugin bundles.
 
     use crate::app::{
-        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EmitWire, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError,
+        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, EmitWire, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError,
         PluginProgram, PresenceRosterAdmission, TransactionProposalDraft, TypedOperationLeftover, TypedOperationResultPage, TypedOperationResultToken,
     };
     use crate::{ArtifactApp, WindowConfigPack};
@@ -39358,10 +39941,10 @@ pub mod plugin_runtime {
     }
 
     /// 🎬️ Interactive workflow entry: submits without waiting for the exporter to finish.
-    pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
+    pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64) -> Result<ArtifactMediaExportHandle, MediaError> {
         let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(port_id.to_string(), error.message))?;
         let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(port_id.to_string(), format!("instance busy or poisoned: {instance_id}")))?;
-        instance.app.submit_media_export(port_id).await
+        instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision).await
     }
 
     /// 📡️ Interactive workflow entry: advances one bounded slice and exposes progress/checkpoint/result.
@@ -39376,6 +39959,18 @@ pub mod plugin_runtime {
         let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
         let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
         instance.app.cancel_media_export(handle).await
+    }
+
+    pub async fn plugin_retain_media_export_result<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle, result: ArtifactMediaExportResult) -> Result<(), MediaError> {
+        let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
+        let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
+        instance.app.retain_media_export_result(handle, result).await
+    }
+
+    pub async fn plugin_take_media_export_chunk<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
+        let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
+        let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
+        instance.app.take_media_export_chunk(handle).await
     }
 
     /// 🧵️ Takes one already-produced bounded action-download chunk without blocking another instance.
@@ -40668,6 +41263,39 @@ pub mod plugin_runtime {
         panic!("drive_self_waking_ready: exceeded the self-wake bound");
     }
 
+    fn media_export_handle_from_wire(handle: protocol::MediaExportHandleWire) -> ArtifactMediaExportHandle {
+        ArtifactMediaExportHandle {
+            app_instance_id: handle.app_instance_id,
+            parent_document_id: handle.parent_document_id,
+            operation_id: semio_framework_job::OperationId(handle.operation_id),
+            base_revision: semio_framework_job::RevisionId(handle.base_revision),
+            generation: semio_framework_job::Generation(handle.generation),
+        }
+    }
+
+    fn media_export_handle_to_wire(handle: &ArtifactMediaExportHandle) -> protocol::MediaExportHandleWire {
+        protocol::MediaExportHandleWire {
+            app_instance_id: handle.app_instance_id,
+            parent_document_id: handle.parent_document_id.clone(),
+            operation_id: handle.operation_id.0,
+            base_revision: handle.base_revision.0,
+            generation: handle.generation.0,
+        }
+    }
+
+    fn media_export_complete_status(in_reply_to: u64, handle: protocol::MediaExportHandleWire, result: &ArtifactMediaExportResult) -> protocol::AppFrame {
+        protocol::AppFrame::MediaExportStatus {
+            in_reply_to,
+            handle,
+            state: protocol::MediaExportStateWire::Complete,
+            applied_progress: result.chunks.bytes() as u64,
+            checkpoint_available: false,
+            mime_type: result.mime_type.clone(),
+            total_bytes: result.chunks.bytes() as u64,
+            detail: String::new(),
+        }
+    }
+
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
         debug_runtime_line(format_args!("[DEBUG] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
@@ -41192,6 +41820,72 @@ pub mod plugin_runtime {
                     }
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                 },
+                protocol::AppCommand::SubmitMediaExport { seq, port, expected_parent_document_id, expected_base_revision } => {
+                    match plugin_submit_media_export(runtime, instance_id, &port, &expected_parent_document_id, expected_base_revision).await {
+                        Ok(handle) => frames.push(protocol::AppFrame::MediaExportSubmitted { in_reply_to: seq, handle: media_export_handle_to_wire(&handle) }),
+                        Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+                    }
+                }
+                protocol::AppCommand::PollMediaExport { seq, handle } => {
+                    let handle = media_export_handle_from_wire(handle);
+                    let wire = media_export_handle_to_wire(&handle);
+                    match plugin_poll_media_export(runtime, instance_id, &handle).await {
+                        Ok(ArtifactMediaExportPoll::Running { applied_progress, checkpoint_available }) => frames.push(protocol::AppFrame::MediaExportStatus {
+                            in_reply_to: seq,
+                            handle: wire,
+                            state: protocol::MediaExportStateWire::Running,
+                            applied_progress,
+                            checkpoint_available,
+                            mime_type: String::new(),
+                            total_bytes: 0,
+                            detail: String::new(),
+                        }),
+                        Ok(ArtifactMediaExportPoll::Complete(result)) => {
+                            let status = media_export_complete_status(seq, wire, &result);
+                            match plugin_retain_media_export_result(runtime, instance_id, &handle, result).await {
+                                Ok(()) => frames.push(status),
+                                Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+                            }
+                        }
+                        Ok(ArtifactMediaExportPoll::Cancelled) => frames.push(protocol::AppFrame::MediaExportStatus {
+                            in_reply_to: seq,
+                            handle: wire,
+                            state: protocol::MediaExportStateWire::Cancelled,
+                            applied_progress: 0,
+                            checkpoint_available: false,
+                            mime_type: String::new(),
+                            total_bytes: 0,
+                            detail: String::new(),
+                        }),
+                        Ok(ArtifactMediaExportPoll::Failed(detail)) => frames.push(protocol::AppFrame::MediaExportStatus {
+                            in_reply_to: seq,
+                            handle: wire,
+                            state: protocol::MediaExportStateWire::Failed,
+                            applied_progress: 0,
+                            checkpoint_available: false,
+                            mime_type: String::new(),
+                            total_bytes: 0,
+                            detail,
+                        }),
+                        Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+                    }
+                }
+                protocol::AppCommand::CancelMediaExport { seq, handle } => {
+                    let handle = media_export_handle_from_wire(handle);
+                    match plugin_cancel_media_export(runtime, instance_id, &handle).await {
+                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                        Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+                    }
+                }
+                protocol::AppCommand::TakeMediaExportChunk { seq, handle } => {
+                    let handle = media_export_handle_from_wire(handle);
+                    let wire = media_export_handle_to_wire(&handle);
+                    match plugin_take_media_export_chunk(runtime, instance_id, &handle).await {
+                        Ok(Some(data)) => frames.push(protocol::AppFrame::MediaExportChunk { in_reply_to: seq, handle: wire, data, terminal: false }),
+                        Ok(None) => frames.push(protocol::AppFrame::MediaExportChunk { in_reply_to: seq, handle: wire, data: Vec::new(), terminal: true }),
+                        Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+                    }
+                }
                 protocol::AppCommand::MediaFingerprint { seq, port } => {
                     let fingerprint = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
@@ -43251,11 +43945,11 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use plugin_runtime::{
     extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_artifact_apply_ops, plugin_artifact_genesis, plugin_artifact_pack_schema_hash,
     plugin_artifact_print_mirror, plugin_artifact_replay_envelopes, plugin_attach_backbone, plugin_cancel_media_export, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, plugin_poll_media_export,
-    plugin_submit_media_export, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
+    plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
-pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Component, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger, UiFixedList, UiFixedMap, UiListBuilder, UiMapBuilder, UiText, UiValue};
+pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Component, HasBase, HasChildren, Label as UiLabel, RowAction, RowActionPlacement, Trigger, UiFixedList, UiFixedMap, UiListBuilder, UiMapBuilder, UiText, UiValue};
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, scene_lane_hash, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json,
     world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose,

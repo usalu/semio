@@ -295,9 +295,7 @@ fn step_from_semio_value(value: &SemioValue) -> FormStep {
     }
 }
 
-/// 🌉 REAL bidirectional converter: the whole `steps` tree <-> one structured `value` Map — the
-/// SOLE source of truth for reconstruction (see this region's own doc comment for why `results`
-/// is a derived, non-reconstructive projection instead).
+/// 🌉 Projects the authoritative definition into its structured value child.
 pub fn forms_structure_from_steps(steps: &[FormStep]) -> SemioValueSnapshot {
     SemioValueSnapshot {
         schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
@@ -312,50 +310,25 @@ pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormSte
     }
 }
 
-/// 🌉 DERIVED, non-reconstructive projection: one row per block, flattened in step order —
-/// "tabular/repeating-row data" for scan/display, always regenerated alongside `structure` from
-/// the SAME steps (see this region's own doc comment).
-pub fn forms_results_from_steps(steps: &[FormStep]) -> SemioTableSnapshot {
-    let mut rows = Vec::new();
-    for step in steps {
-        for block in &step.blocks {
-            rows.push(SemioTableRow {
-                cells: vec![
-                    SemioValue::Str { value: block.id.clone() },
-                    SemioValue::Str { value: step.id.clone() },
-                    SemioValue::Str { value: block.label.clone() },
-                    SemioValue::Str { value: block.kind.clone() },
-                    match block.required {
-                        Some(v) => SemioValue::Bool { value: v },
-                        None => SemioValue::Null,
-                    },
-                ],
-            });
-        }
-    }
-    SemioTableSnapshot {
-        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "stepId".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "kind".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "required".into(), kind: SemioTableCellKind::Bool },
-        ],
-        rows,
-    }
+/// 📊️ A normalized response table preserves each answer's original field label and typed JSON value.
+pub fn forms_results_from_responses(responses: &[schema::response::FormsResponse]) -> SemioTableSnapshot {
+    let rows = responses.iter().flat_map(|response| response.answers.iter().map(move |answer| SemioTableRow {
+        cells: schema::response::export::response_row(response, answer).into_iter().map(|value| SemioValue::Str { value }).collect(),
+    })).collect();
+    SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: schema::response::export::RESPONSE_COLUMNS.into_iter().map(|name| SemioTableColumn { name: name.into(), kind: SemioTableCellKind::Str }).collect(), rows }
+}
+
+/// 🪆️ Response content has its own projection identity independent of definition edits.
+pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> FormsResultsChild {
+    use std::hash::{Hash, Hasher};
+    let mut digest = std::collections::hash_map::DefaultHasher::new();
+    dsl::os_pack::json::to_json_string(&responses.to_vec()).hash(&mut digest);
+    let id = format!("forms-table-{:016x}", digest.finish());
+    store::ArtifactChild::new(id.clone(), store::os_io::ArtifactRef { artifact_id: id, dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
 }
 //#endregion 🔖️Converters
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral representation of one composed child's live step tree. The value belongs to
-/// the exact `ArtifactChild`; it is never persisted, never process-global, and retires with that
-/// owner. Equal wire identities cannot observe one another's materialization.
-#[derive(Clone, Debug, Default)]
-pub struct FormsWorkingScene {
-    pub steps: Vec<FormStep>,
-}
-
+//#region 🔖️DurableDefinition
 fn forms_scene_id(steps: &[FormStep]) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = dsl::os_pack::json::to_json_string(&steps.to_vec());
@@ -364,49 +337,42 @@ fn forms_scene_id(steps: &[FormStep]) -> String {
     format!("forms-scene-{:016x}", hasher.finish())
 }
 
-/// 📝 Transfers decoded or test-provided steps into one exact structure-child owner.
-pub fn materialize_forms_steps(handle: &mut FormsStructureChild, steps: Vec<FormStep>) {
-    handle.set_local_owner(std::sync::Arc::new(FormsWorkingScene { steps }));
+/// 📝️ Replaces the durable definition while retaining its owned projection handles.
+pub fn replace_forms_steps(snapshot: &mut FormsSnapshot, steps: Vec<FormStep>) {
+    snapshot.definition.steps = steps;
 }
 
-/// 🏗️ Mints both composed-child handles and transfers the same immutable materialization
-/// into each exact owner. The shared `Arc` is scoped to this returned pair, never to wire identity.
+/// 🪆️ Derives projection handles without using process-local document caches.
 pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
-    let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("forms-{subset}-{}", scene_id.strip_prefix("forms-scene-").unwrap_or(&scene_id)), dialect: dialect_for(subset) };
-    let scene = std::sync::Arc::new(FormsWorkingScene { steps: steps.to_vec() });
+    let target_for = |subset: &str| store::os_io::ArtifactRef {
+        artifact_id: format!("forms-{subset}-{}", scene_id.strip_prefix("forms-scene-").unwrap_or(&scene_id)),
+        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() },
+    };
     let structure = target_for("value");
-    let results = target_for("table");
-    (store::ArtifactChild::new(structure.artifact_id.clone(), structure).with_local_owner(scene.clone()), store::ArtifactChild::new(results.artifact_id.clone(), results).with_local_owner(scene))
+    (store::ArtifactChild::new(structure.artifact_id.clone(), structure), forms_results_child(&[]))
 }
 
-/// 🔎 Reads the materialization owned by this snapshot's exact structure child. A wire-only
-/// handle fails soft until the host materializes its child document.
-pub fn forms_scene(snapshot: &FormsSnapshot) -> FormsWorkingScene {
-    snapshot.structure.local_owner::<FormsWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
-}
+/// 🔎️ Reads the authoritative durable definition.
+pub fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> { snapshot.definition.steps.clone() }
 
-/// 🔎 The live `steps` tree behind a snapshot's composed children — the single read call site
-/// every render/inference/export/command path in this plugin now uses instead of the old `.steps`
-/// field.
-pub fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> {
-    forms_scene(snapshot).steps
-}
+/// 🔎️ Reads the authoritative definition on a full artifact.
+pub fn forms_artifact_steps(artifact: &schema::FormsArtifact) -> Vec<FormStep> { artifact.definition.steps.clone() }
 
-/// 🔎 Twin of [`forms_steps`] for the UI-inclusive [`crate::schema::FormsArtifact`]
-/// (its own `structure`/`results` fields mirror the snapshot's — see that struct's own doc).
-pub fn forms_artifact_steps(artifact: &schema::FormsArtifact) -> Vec<FormStep> {
-    artifact.structure.local_owner::<FormsWorkingScene>().map(|scene| scene.steps.clone()).unwrap_or_default()
-}
-
-/// 🏗️ Builds a full `FormsSnapshot` from a literal `steps` tree — the standard fixture/import
-/// constructor replacing the old struct literal with an inline `steps: Vec<FormStep>` field.
+/// 🏗️ Creates a form with a durable definition and no responses.
 pub fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: &[FormStep]) -> FormsSnapshot {
     let (structure, results) = forms_children_from_steps(steps);
-    FormsSnapshot { schema, id, version, title, structure, results }
+    FormsSnapshot { schema, id, version, title, definition: schema::definition::FormsDefinition { steps: steps.to_vec() }, responses: Vec::new(), structure, results }
 }
-//#endregion 🔖️WorkingScene
+
+/// 🌱️ Materializes the exact derived child requested by the framework's archive loader.
+pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    if slot == "structure" && child_id == snapshot.structure.child_id { return Some(forms_structure_from_steps(&snapshot.definition.steps).encode_pack()); }
+    if slot == "results" && child_id == snapshot.results.child_id { return Some(forms_results_from_responses(&snapshot.responses).encode_pack()); }
+    None
+}
+//#endregion 🔖️DurableDefinition
 //#endregion 🔖️Composition
 
 //#region 🔖️ArtifactKind
@@ -489,15 +455,15 @@ pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarati
 /// 📋️ Application variants required to assemble the Forms artifact.
 pub trait FormsApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> FormsApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 //#endregion 🔖️Declaration
@@ -895,6 +861,10 @@ pub mod editor {
             pub mod drop_question_kind;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-fixture/🦀️.rs"]
             pub mod export_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-responses/🦀️.rs"]
+            pub mod export_responses;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️discard-response/🦀️.rs"]
+            pub mod discard_response;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-question/🦀️.rs"]
             pub mod move_question;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️move-step/🦀️.rs"]
@@ -941,6 +911,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod modes {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📨️responses/🦀️.rs"]
+            pub mod responses;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✍️fill/🦀️.rs"]
+            pub mod fill;
             #[path = "."]
             pub mod blueprint {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🦀️.rs"]

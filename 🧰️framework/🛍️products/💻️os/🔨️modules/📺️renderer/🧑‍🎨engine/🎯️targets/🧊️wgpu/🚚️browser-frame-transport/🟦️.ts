@@ -359,6 +359,7 @@ export type BrowserFrameWorkerMessage =
       readonly faultDetail?: string;
     }
   | { readonly kind: "introspection"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly json: string | null; readonly detail?: string }
+  | { readonly kind: "diagnostic"; readonly lifecycle: number; readonly channel: "world3d-accepted-frame"; readonly generation: number; readonly frameSequence: number; readonly json: string }
   | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string }
   | { readonly kind: "closed"; readonly lifecycle: number }
   | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
@@ -387,6 +388,13 @@ export type BrowserFrameDirectives = {
   readonly workerDurationMs: number;
 };
 
+export type BrowserFrameDiagnostic = {
+  readonly channel: "world3d-accepted-frame";
+  readonly generation: number;
+  readonly frameSequence: number;
+  readonly json: string;
+};
+
 export type BrowserFrameTransportOptions = {
   readonly worker: BrowserFrameWorkerPort;
   readonly boot: Omit<BrowserFrameWorkerBoot, "kind" | "lifecycle">;
@@ -396,6 +404,7 @@ export type BrowserFrameTransportOptions = {
   readonly onReady?: () => void;
   readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
   readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
+  readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
   readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
   /** @emoji 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
   readonly onUiTurn?: (outcome: TurnOutcome) => void;
@@ -437,6 +446,7 @@ export class BrowserFrameTransport {
   /** @emoji 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
   private workerStepOverruns = 0;
   private readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
+  private readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
   private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
   private readonly onUiTurn?: (outcome: TurnOutcome) => void;
   private readonly requestRaf?: (callback: FrameRequestCallback) => number;
@@ -487,6 +497,7 @@ export class BrowserFrameTransport {
     this.onReady = options.onReady;
     this.onProgress = options.onProgress;
     this.onDirectives = options.onDirectives;
+    this.onDiagnostic = options.onDiagnostic;
     this.onFault = options.onFault;
     this.onUiTurn = options.onUiTurn;
     this.uiTurnClock = new TurnClock(this.now);
@@ -914,6 +925,10 @@ export class BrowserFrameTransport {
       this.introspections.delete(message.requestId);
       this.clearTimer(pending.timer);
       pending.resolve(message.json);
+      return;
+    }
+    if (message.kind === "diagnostic") {
+      this.runUiHook("diagnostic-hook", () => this.onDiagnostic?.({ channel: message.channel, generation: message.generation, frameSequence: message.frameSequence, json: message.json }));
       return;
     }
     if (message.kind === "closed") {

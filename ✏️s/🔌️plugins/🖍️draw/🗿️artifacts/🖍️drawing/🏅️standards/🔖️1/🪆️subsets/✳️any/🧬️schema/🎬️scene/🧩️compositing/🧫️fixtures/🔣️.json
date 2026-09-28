@@ -1,0 +1,5939 @@
+[
+  {
+    "name": "group-overlap",
+    "nodes": [
+      {
+        "id": "red",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "group",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      },
+      {
+        "id": "blue",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              6,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "group",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      }
+    ],
+    "svg": "<g opacity=\"0.5\"><rect width=\"12\" height=\"12\" fill=\"red\"/><rect x=\"6\" width=\"12\" height=\"12\" fill=\"blue\"/></g>",
+    "samples": [
+      {
+        "point": [
+          8,
+          5
+        ],
+        "rgba": [
+          0,
+          0,
+          255,
+          128
+        ]
+      }
+    ]
+  },
+  {
+    "name": "nested-opacity",
+    "nodes": [
+      {
+        "id": "red",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "group",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      },
+      {
+        "id": "blue",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              6,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "group",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          },
+          {
+            "id": "nested",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      }
+    ],
+    "svg": "<g opacity=\"0.5\"><rect width=\"12\" height=\"12\" fill=\"red\"/><g opacity=\"0.5\"><rect x=\"6\" width=\"12\" height=\"12\" fill=\"blue\"/></g></g>",
+    "samples": []
+  },
+  {
+    "name": "sibling-composites",
+    "nodes": [
+      {
+        "id": "red",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "group",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      },
+      {
+        "id": "blue",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              6,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "sibling",
+            "opacity": 0.5,
+            "blendMode": "normal"
+          }
+        ]
+      }
+    ],
+    "svg": "<g opacity=\"0.5\"><rect width=\"12\" height=\"12\" fill=\"red\"/></g><g opacity=\"0.5\"><rect x=\"6\" width=\"12\" height=\"12\" fill=\"blue\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "group-multiply",
+    "nodes": [
+      {
+        "id": "backdrop",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "red",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "blend",
+            "opacity": 1,
+            "blendMode": "multiply"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"12\" height=\"12\" fill=\"lime\"/><g style=\"mix-blend-mode:multiply;isolation:isolate\"><rect width=\"12\" height=\"12\" fill=\"red\"/></g>",
+    "samples": [
+      {
+        "point": [
+          5,
+          5
+        ],
+        "rgba": [
+          0,
+          0,
+          0,
+          255
+        ]
+      }
+    ]
+  },
+  {
+    "name": "leaf-fill-and-stroke-opacity",
+    "nodes": [
+      {
+        "id": "fill-stroke",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              14,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              14,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "opacity": 0.5,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" fill=\"red\" stroke=\"blue\" stroke-width=\"4\" opacity=\"0.5\"/>",
+    "samples": [
+      {
+        "point": [
+          3,
+          6
+        ],
+        "rgba": [
+          0,
+          0,
+          255,
+          128
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blend-group-normal",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "normal"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "normal"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:normal\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-normal",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:normal\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-multiply",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "multiply"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "multiply"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:multiply\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-multiply",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "multiply",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:multiply\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-screen",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "screen"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "screen"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:screen\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-screen",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "screen",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:screen\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-overlay",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "overlay"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "overlay"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:overlay\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-overlay",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "overlay",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:overlay\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-darken",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "darken"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "darken"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:darken\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-darken",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "darken",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:darken\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-lighten",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "lighten"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "lighten"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:lighten\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-lighten",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "lighten",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:lighten\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-colorDodge",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "colorDodge"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "colorDodge"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color-dodge\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-colorDodge",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "colorDodge",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color-dodge\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-colorBurn",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "colorBurn"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "colorBurn"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color-burn\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-colorBurn",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "colorBurn",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color-burn\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-hardLight",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "hardLight"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "hardLight"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:hard-light\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-hardLight",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "hardLight",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:hard-light\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-softLight",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "softLight"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "softLight"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:soft-light\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-softLight",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "softLight",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:soft-light\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-difference",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "difference"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "difference"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:difference\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-difference",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "difference",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:difference\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-exclusion",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "exclusion"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "exclusion"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:exclusion\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-exclusion",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "exclusion",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:exclusion\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-hue",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "hue"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "hue"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:hue\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-hue",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "hue",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:hue\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-saturation",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "saturation"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "saturation"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:saturation\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-saturation",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "saturation",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:saturation\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-color",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "color"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "color"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-color",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "color",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:color\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-group-luminosity",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "luminosity"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              8,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              4
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              22,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              8,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": [
+          {
+            "id": "effect",
+            "opacity": 0.65,
+            "blendMode": "luminosity"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:luminosity\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\"/><rect x=\"8\" y=\"4\" width=\"14\" height=\"10\" fill=\"#1acc66\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "blend-leaf-luminosity",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              24,
+              16
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              16
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.2,
+            0.4,
+            0.7019607843137254,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              18,
+              14
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              14
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0.9019607843137255,
+            0.30196078431372547,
+            0.5019607843137255,
+            1
+          ]
+        },
+        "opacity": 0.65,
+        "blendMode": "luminosity",
+        "visible": true,
+        "groups": [],
+        "stroke": {
+          "color": [
+            0.10196078431372549,
+            0.8,
+            0.4,
+            1
+          ],
+          "width": 4,
+          "cap": "butt",
+          "join": "miter"
+        }
+      }
+    ],
+    "svg": "<rect width=\"24\" height=\"16\" fill=\"#3366b3\"/><g opacity=\"0.65\" style=\"isolation:isolate;mix-blend-mode:luminosity\"><rect x=\"2\" y=\"2\" width=\"16\" height=\"12\" fill=\"#e64d80\" stroke=\"#1acc66\" stroke-width=\"4\"/></g>",
+    "samples": []
+  },
+  {
+    "name": "explicit-unit-opacity-isolation",
+    "nodes": [
+      {
+        "id": "back",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "normal",
+        "visible": true,
+        "groups": []
+      },
+      {
+        "id": "front",
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              12
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "opacity": 1,
+        "blendMode": "multiply",
+        "visible": true,
+        "groups": [
+          {
+            "id": "isolated",
+            "opacity": 1,
+            "blendMode": "normal"
+          }
+        ]
+      }
+    ],
+    "svg": "<rect width=\"12\" height=\"12\" fill=\"yellow\"/><g style=\"isolation:isolate\"><rect width=\"12\" height=\"12\" fill=\"blue\" style=\"mix-blend-mode:multiply\"/></g>",
+    "samples": [
+      {
+        "point": [
+          5,
+          5
+        ],
+        "rgba": [
+          0,
+          0,
+          255,
+          255
+        ]
+      }
+    ]
+  }
+]

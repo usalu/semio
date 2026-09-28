@@ -20,6 +20,8 @@ extern crate semio_framework_schema as framework_schema;
 // hard error under `-D warnings` without this crate-wide allow.
 
 pub use store::ArtifactDsl;
+pub use schema::stroke::{StrokeCap, StrokeJoin};
+pub use schema::fill_rule::FillRule;
 
 pub const DRAWING_DOCUMENT_SCHEMA: &str = "drawing.document";
 pub const DRAWING_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
@@ -92,8 +94,8 @@ pub enum FillStyle {
 pub struct StrokeStyle {
     pub color: [f64; 4],
     pub width: f64,
-    pub cap: String,
-    pub join: String,
+    pub cap: StrokeCap,
+    pub join: StrokeJoin,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub dash: Option<Vec<f64>>,
@@ -104,6 +106,9 @@ pub struct StrokeStyle {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawingAttributes {
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub fill_rule: FillRule,
     // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
     // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
     // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
@@ -305,9 +310,14 @@ pub struct DrawingGroupBody {
     #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
+    #[value(default,skip_serializing_if="group_isolation_disabled")]
+    #[cfg_attr(test,serde(default,skip_serializing_if="group_isolation_disabled"))]
+    pub isolation:bool,
     #[dsl(statements, block)]
     pub children: Vec<DrawingLayerNode>,
 }
+
+fn group_isolation_disabled(value:&bool)->bool {!*value}
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -646,6 +656,14 @@ pub mod standards {
                             #[path = "."]
                             pub mod artifacts {
                                 #[path = "."]
+                                pub mod svg {
+                                    #[path = "."]
+                                    pub mod v1_1 {
+                                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                                        pub mod any;
+                                    }
+                                }
+                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {
@@ -853,6 +871,30 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal-to-multiply/🦀️.rs"]
                             mod tests_normal_to_multiply;
+                        }
+                        #[path = "."]
+                        pub mod set_layer_fill_rule {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests;
+                        }
+                        #[path = "."]
+                        pub mod set_group_isolation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests;
                         }
                         #[path = "."]
                         pub mod set_layer_opacity {
@@ -1087,6 +1129,10 @@ pub mod editor {
             pub mod edit_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🦀️.rs"]
             pub mod edit_path;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🦀️.rs"]
+            pub mod nudge_selection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌫️delete-selection/🦀️.rs"]
+            pub mod delete_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-fill/🦀️.rs"]
             pub mod edit_fill;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🦀️.rs"]

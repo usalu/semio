@@ -15,6 +15,14 @@ export interface RasterConfigViewportSize {
   height: number;
 }
 
+export interface RasterPixelSelection {
+  layerId:string;
+  target:"pixels"|"mask";
+  width:number;
+  height:number;
+  spans:string;
+}
+
 export interface RasterConfig {
   /** @state config */
   brushSize: number;
@@ -24,6 +32,9 @@ export interface RasterConfig {
   brushColor: string;
   /** 🖌️ Solid fraction of the brush radius. */
   brushHardness: number;
+  paintTarget:"pixels"|"mask";
+  maskValue:number;
+  pixelSelection?:RasterPixelSelection;
   /** @state config */
   compositeViewport?: RasterConfigViewportSize;
   /** @state config */
@@ -80,11 +91,16 @@ export const rasterRasterConfigGuardConstant = <T extends string | number | bool
 
 export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
   const row = rasterRasterConfigGuardObject(value, at);
+  const pixelSelection=row.pixelSelection===undefined?undefined:parseRasterPixelSelection(row.pixelSelection,`${at}.pixelSelection`);
+  if(pixelSelection&&pixelSelection.target!==row.paintTarget)rasterRasterConfigGuardReject(`${at}.pixelSelection.target`,"selection target differs from paint target");
   return {
+    ...(pixelSelection===undefined?{}:{pixelSelection}),
     brushSize: rasterRasterConfigGuardNumber(row["brushSize"], `${at}.brushSize`),
     brushOpacity: rasterRasterConfigGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
     brushColor: rasterRasterConfigGuardString(row["brushColor"], `${at}.brushColor`, {pattern:"^#[0-9a-fA-F]{6}$"}),
     brushHardness: rasterRasterConfigGuardNumber(row["brushHardness"], `${at}.brushHardness`, {minimum:0,maximum:1}),
+    paintTarget:rasterRasterConfigGuardMember(row["paintTarget"],`${at}.paintTarget`,["pixels","mask"]),
+    maskValue:rasterRasterConfigGuardInteger(row["maskValue"],`${at}.maskValue`,{minimum:0,maximum:255}),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterConfigViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
     camera: parseRasterCamera(row["camera"], `${at}.camera`),
   };
@@ -105,4 +121,28 @@ export function parseRasterConfigViewportSize(value: unknown, at = "$"): RasterC
     width: rasterRasterConfigGuardNumber(row["width"], `${at}.width`),
     height: rasterRasterConfigGuardNumber(row["height"], `${at}.height`),
   };
+}
+
+/** 🎯️ Admits bounded completed coverage without allocating an image-sized mask. */
+export function parseRasterPixelSelection(value:unknown,at="$"):RasterPixelSelection{
+  const row=rasterRasterConfigGuardObject(value,at);
+  const layerId=rasterRasterConfigGuardString(row.layerId,`${at}.layerId`,{minLength:1,maxLength:256});
+  const target=rasterRasterConfigGuardMember(row.target,`${at}.target`,["pixels","mask"]);
+  const width=rasterRasterConfigGuardInteger(row.width,`${at}.width`,{minimum:1,maximum:16384});
+  const height=rasterRasterConfigGuardInteger(row.height,`${at}.height`,{minimum:1,maximum:16384});
+  const count=width*height;
+  if(count>16777216)rasterRasterConfigGuardReject(at,"selection exceeds pixel budget");
+  const spans=rasterRasterConfigGuardString(row.spans,`${at}.spans`,{maxLength:40000});
+  if(new TextEncoder().encode(spans).length>40000)rasterRasterConfigGuardReject(`${at}.spans`,"selection exceeds transport budget");
+  let decoded:unknown;
+  try{decoded=JSON.parse(spans);}catch{rasterRasterConfigGuardReject(`${at}.spans`,"invalid selection JSON");}
+  let previous=0;
+  for(const span of rasterRasterConfigGuardArray(decoded,`${at}.spans`)){
+    const values=rasterRasterConfigGuardArray(span,`${at}.spans`,{minItems:3,maxItems:3});
+    const start=rasterRasterConfigGuardInteger(values[0],`${at}.spans.start`,{minimum:previous,maximum:count});
+    const length=rasterRasterConfigGuardInteger(values[1],`${at}.spans.length`,{minimum:1,maximum:count-start});
+    rasterRasterConfigGuardInteger(values[2],`${at}.spans.coverage`,{minimum:0,maximum:255});
+    previous=start+length;
+  }
+  return {layerId,target,width,height,spans};
 }

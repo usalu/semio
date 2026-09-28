@@ -25,4 +25,8 @@ async fn render_lists_one_row_per_record_with_35_columns() {
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["id"], serde_json::json!("0"));
     assert_eq!(rows[0].len(), 36);
+    assert_eq!(rows[0]["0"]["kind"], "editableText");
+    assert_eq!(rows[0]["0"]["action"]["args"]["row"], 0);
+    assert_eq!(rows[0]["0"]["action"]["args"]["column"], 0);
+    assert_eq!(rows[0]["0"]["action"]["args"]["revision"], epw_row_revision(&document.records[0]));
 }

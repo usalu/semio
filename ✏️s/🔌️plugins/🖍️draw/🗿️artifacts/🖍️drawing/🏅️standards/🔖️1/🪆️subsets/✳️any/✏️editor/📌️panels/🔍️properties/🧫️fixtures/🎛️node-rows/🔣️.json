@@ -1,0 +1,16 @@
+{
+  "segments": [
+    {"kind":"move","to":[0,0]},
+    {"kind":"quad","ctrl":[10,20],"to":[30,0]},
+    {"kind":"cubic","ctrl1":[40,20],"ctrl2":[50,-20],"to":[60,0]},
+    {"kind":"close"}
+  ],
+  "rows": [
+    {"id":"node.0","inputs":["node.0.anchor.x","node.0.anchor.y"]},
+    {"id":"node.1","inputs":["node.1.anchor.x","node.1.anchor.y"]},
+    {"id":"node.1.control1","inputs":["node.1.control1.x","node.1.control1.y"]},
+    {"id":"node.2","inputs":["node.2.anchor.x","node.2.anchor.y"]},
+    {"id":"node.2.control1","inputs":["node.2.control1.x","node.2.control1.y"]},
+    {"id":"node.2.control2","inputs":["node.2.control2.x","node.2.control2.y"]}
+  ]
+}

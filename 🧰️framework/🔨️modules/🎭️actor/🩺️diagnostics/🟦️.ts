@@ -26,10 +26,19 @@ export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 /** 🩺️ Whether this realm has armed runtime diagnostics: the stored
  * {@link SHARD_RUNTIME_DIAGNOSTICS_KEY} preference, read defensively because a Worker (and a
  * storage-blocked browser) throws on the accessor itself rather than returning null. */
+export function runtimeDiagnosticsArmed(value: unknown): boolean {
+  return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
+}
+
+/** 🩺️ Resolves the page-owned persisted switch before its server launch default. A stored false value
+ * is an explicit preference and therefore outranks an armed server. */
+export function resolveRuntimeDiagnosticsPreference(stored: string | null | undefined, serverDefault: string | null | undefined): boolean {
+  return runtimeDiagnosticsArmed(stored ?? serverDefault);
+}
+
 export function shardRuntimeDiagnosticsArmed(): boolean {
   try {
-    const stored = globalThis.localStorage?.getItem(SHARD_RUNTIME_DIAGNOSTICS_KEY)?.trim().toLowerCase();
-    return stored === "1" || stored === "true" || stored === "on" || stored === "yes";
+    return runtimeDiagnosticsArmed(globalThis.localStorage?.getItem(SHARD_RUNTIME_DIAGNOSTICS_KEY));
   } catch {
     return false;
   }
@@ -40,8 +49,8 @@ export function shardRuntimeDiagnosticsArmed(): boolean {
  * shards from the UI isolate on a url its FRAME WORKER named, and a frame worker owns no storage, so
  * a url stamped at the naming site was never stamped at all and every guest `[DEBUG]` trace site was
  * unreachable on that target. Idempotent, so an already-stamped url crosses unchanged. */
-export function stampShardWorkerDiagnostics(url: string): string {
-  if (!shardRuntimeDiagnosticsArmed() || url.includes(`${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`)) return url;
+export function stampShardWorkerDiagnostics(url: string, armed = shardRuntimeDiagnosticsArmed()): string {
+  if (!armed || url.includes(`${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`)) return url;
   return `${url}${url.includes("?") ? "&" : "?"}${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`;
 }
 //#endregion 🔖️Switch

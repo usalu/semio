@@ -29,7 +29,7 @@ fn retained_composite_matches_shared_mask_oracles(){
 #[test]
 fn retained_composite_applies_adjustments_and_updates_implicit_image_extents(){
     let mut host=RasterHost::new();
-    host.sync_document_json(r#"{"schema":"raster.document","layers":[{"kind":"pixel","id":"p","imageKey":"image","transform":{}},{"kind":"adjustment","id":"a","transform":{},"adjustmentKind":"brightnessContrast","params":{"brightness":0.25}}]}"#).unwrap();
+    host.sync_document_json(r#"{"schema":"raster.document","layers":[{"kind":"pixel","id":"p","imageKey":"image","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}},{"kind":"adjustment","id":"a","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"adjustmentKind":"brightnessContrast","params":{"brightness":0.25}}]}"#).unwrap();
     let source=semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![10,20,30,128]};
     host.upload_raster_image_key("image",&semio_framework_pixels::encode_png(&source).unwrap()).unwrap();
     while !host.advance_composite(1).unwrap().done{}
@@ -41,7 +41,7 @@ fn retained_composite_applies_adjustments_and_updates_implicit_image_extents(){
 #[test]
 fn retained_composite_cancellation_keeps_the_last_complete_image(){
     let mut host=RasterHost::new();
-    let document=serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","transform":{},"width":2,"height":1}]});
+    let document=serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":2,"height":1}]});
     host.sync_document_json(&document.to_string()).unwrap();while !host.advance_composite(32).unwrap().done{}
     let before=host.composite_pixels().unwrap().pixels.clone();
     let mut next=document;next["layers"][0]["width"]=100.into();host.sync_document_json(&next.to_string()).unwrap();
@@ -87,7 +87,7 @@ fn parse_play_fixtures() {
     // handcrafted DSL (`store::ArtifactDsl`), which this JSON-only surface parser doesn't read.
     // Inlined an equivalent layered document so this test still exercises multi-layer parsing.
     let json = r#"{"schema":"raster.document","id":"semio","camera":{"x":0,"y":0,"zoom":1},"layers":[
-            {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"adjustmentKind":"brightnessContrast"}
+            {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"adjustmentKind":"brightnessContrast"}
         ]}"#;
     let doc = parse_document(json).expect("parse semio fixture");
     assert!(!doc.layers.is_empty(), "semio should have layers");
@@ -96,7 +96,7 @@ fn parse_play_fixtures() {
 #[test]
 fn parse_adjustment_without_params() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"adjustmentKind":"brightnessContrast"}
+            {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"adjustmentKind":"brightnessContrast"}
         ]}"#;
     let doc = parse_document(json).expect("adjustment params must default");
     assert_eq!(doc.layers.len(), 1);
@@ -105,8 +105,8 @@ fn parse_adjustment_without_params() {
 #[test]
 fn group_child_world_transform_uses_parent_once() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"group","id":"g","name":"G","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":100,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"children":[
-                {"kind":"pixel","id":"p","name":"P","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":50,"height":50}
+            {"kind":"group","id":"g","name":"G","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":100.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"children":[
+                {"kind":"pixel","id":"p","name":"P","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"width":50,"height":50}
             ]}
         ]}"#;
     let mut host = RasterHost::new();
@@ -119,8 +119,8 @@ fn group_child_world_transform_uses_parent_once() {
 
 fn two_pixel_layer_host() -> RasterHost {
     let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[
-            {"kind":"pixel","id":"back","name":"Back","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100},
-            {"kind":"pixel","id":"front","name":"Front","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":10,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100}
+            {"kind":"pixel","id":"back","name":"Back","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"width":100,"height":100},
+            {"kind":"pixel","id":"front","name":"Front","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":10.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"width":100,"height":100}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -200,7 +200,7 @@ fn parse_document_rejects_unsupported_schema() {
 #[test]
 fn parse_document_pixel_defaults_when_fields_absent() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{}}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}
         ]}"#;
     let doc = parse_document(json).expect("parse");
     match &doc.layers[0] {
@@ -220,7 +220,7 @@ fn parse_document_pixel_defaults_when_fields_absent() {
 #[test]
 fn parse_document_group_with_mask_and_clip_to_below() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"group","id":"g","name":"G","opacity":0.5,"blendMode":"multiply","transform":{},"clipToBelow":true,
+            {"kind":"group","id":"g","name":"G","opacity":0.5,"blendMode":"multiply","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"clipToBelow":true,
              "mask":{"enabled":true,"linked":false,"invert":true,"width":64,"height":32},
              "children":[]}
         ]}"#;
@@ -230,8 +230,8 @@ fn parse_document_group_with_mask_and_clip_to_below() {
             assert_eq!(*opacity, 0.5);
             assert!(matches!(blend, BlendMode::Multiply));
             let mask = mask.as_ref().expect("mask present");
-            assert!(mask.enabled);
-            assert!(mask.invert);
+            assert!(mask.descriptor.enabled);
+            assert!(mask.descriptor.invert);
             assert_eq!(mask.width, 64);
             assert_eq!(mask.height, 32);
             assert!(children.is_empty());
@@ -243,7 +243,7 @@ fn parse_document_group_with_mask_and_clip_to_below() {
 #[test]
 fn parse_document_opacity_out_of_range_is_clamped() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","opacity":5.0,"transform":{}}
+            {"kind":"pixel","id":"p","name":"P","opacity":5.0,"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}
         ]}"#;
     let doc = parse_document(json).expect("parse");
     match &doc.layers[0] {
@@ -449,13 +449,39 @@ fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels(
         let (x, y) = host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(), case["worldPoint"][1].as_f64().unwrap());
         host.pointer_down_screen(x, y, 0);
         assert!(host.paint_gesture.is_some());
-        assert!(host.pixel_edit().is_none());
+        assert!(host.paint_edit().is_none());
         host.pointer_up_screen(x, y);
-        let command = host.take_pixel_edit().unwrap();
+        let command = host.take_paint_edit().unwrap();
         let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
         for index in 0..2 { assert_eq!(operation["points"][0][index].as_f64(), case["pixelPoint"][index].as_f64()); }
         assert_eq!(command.layer_id, "p");
         assert_eq!(host.buffers.paint, before);
+    }
+}
+
+#[test]
+fn paint_stroke_refuses_locked_layers_and_locked_ancestors(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap().iter().filter(|case|matches!(case["id"].as_str().unwrap(),"locked-pixel"|"editable-pixel"|"inherited-pixel"|"outside")){
+        let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":fixture["layers"]}).to_string()).unwrap();
+        host.sync_interaction(&[case["id"].as_str().unwrap().into()],None);host.set_active_utility("paintBrush");let (x,y)=host.world_to_screen_point(0.0,0.0);
+        host.pointer_down_screen(x,y,0);assert_eq!(host.paint_gesture.is_some(),case["expected"]["editable"].as_bool().unwrap(),"{}",case["id"]);
+        host.pointer_up_screen(x,y);assert_eq!(host.take_paint_edit().is_some(),case["expected"]["editable"].as_bool().unwrap());
+    }
+}
+
+#[test]
+fn paint_stroke_revision_changes_cancel_only_invalidated_gestures(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖌️stroke-revision/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap(){
+        let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&fixture["document"].to_string()).unwrap();host.sync_interaction(&["paint".into()],None);host.set_active_utility("paintBrush");
+        let (x,y)=host.world_to_screen_point(0.0,0.0);host.pointer_down_screen(x,y,0);assert!(host.paint_gesture.is_some());
+        let mut document=fixture["document"].clone();
+        for patch in case["patch"].as_array().unwrap(){
+            if patch["op"]=="remove" {document["layers"].as_array_mut().unwrap().remove(0);}else{*document.pointer_mut(patch["path"].as_str().unwrap()).unwrap()=patch["value"].clone();}
+        }
+        host.sync_document_json(&document.to_string()).unwrap();let selected:Vec<String>=serde_json::from_value(case["selected"].clone()).unwrap();host.sync_interaction(&selected,None);host.set_active_utility(case["utility"].as_str().unwrap());let expected=!case["cancel"].as_bool().unwrap();assert_eq!(host.paint_gesture.is_some(),expected,"{}",case["name"]);
+        host.pointer_up_screen(x,y);assert_eq!(host.take_paint_edit().is_some(),expected,"{}",case["name"]);
     }
 }
 
@@ -468,10 +494,10 @@ fn paint_cancel_discards_unpublished_intent_and_accepts_another_stroke() {
     host.pointer_move_screen(110.0, 120.0);
     host.pointer_cancel_screen();
     assert!(host.paint_gesture.is_none());
-    assert!(host.pixel_edit().is_none());
+    assert!(host.paint_edit().is_none());
     host.pointer_down_screen(100.0, 100.0, 0);
     host.pointer_up_screen(110.0, 120.0);
-    assert!(host.take_pixel_edit().is_some());
+    assert!(host.take_paint_edit().is_some());
 }
 
 #[test]
@@ -484,7 +510,7 @@ fn native_eraser_preserves_brush_settings_in_the_command() {
     host.set_brush_hardness(0.5);
     host.pointer_down_screen(100.0, 100.0, 0);
     host.pointer_up_screen(100.0, 100.0);
-    let command = host.take_pixel_edit().unwrap();
+    let command = host.take_paint_edit().unwrap();
     let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
     assert_eq!(operation["erase"], true);
     assert_eq!(operation["hardness"], 0.5);
@@ -498,7 +524,7 @@ fn missing_pixel_target_does_not_create_an_arbitrary_background_layer() {
     host.set_active_utility("paintBrush");
     host.pointer_down_screen(20.0, 20.0, 0);
     host.pointer_up_screen(40.0, 40.0);
-    assert!(host.pixel_edit().is_none());
+    assert!(host.paint_edit().is_none());
     assert!(host.buffers.paint.is_empty());
 }
 // #endregion ✋️ Pointer / paint interaction
@@ -584,7 +610,7 @@ fn build_vector_scene_empty_document_is_empty() {
 #[test]
 fn build_vector_scene_skips_invisible_layers() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","visible":false,"transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","visible":false,"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -595,7 +621,7 @@ fn build_vector_scene_skips_invisible_layers() {
 #[test]
 fn build_vector_scene_draws_visible_pixel_layer() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -606,7 +632,7 @@ fn build_vector_scene_draws_visible_pixel_layer() {
 #[test]
 fn build_vector_scene_adds_stroke_for_selected_layer_when_chrome_enabled() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -625,8 +651,8 @@ fn build_vector_scene_adds_stroke_for_selected_layer_when_chrome_enabled() {
 #[test]
 fn build_layer_scene_isolates_single_pixel_layer() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"back","name":"Back","transform":{},"width":50,"height":50},
-            {"kind":"pixel","id":"front","name":"Front","transform":{},"width":20,"height":10}
+            {"kind":"pixel","id":"back","name":"Back","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50},
+            {"kind":"pixel","id":"front","name":"Front","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":20,"height":10}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -640,8 +666,8 @@ fn build_layer_scene_isolates_single_pixel_layer() {
 #[test]
 fn build_layer_scene_group_isolation_recurses_into_children() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"group","id":"g","name":"G","transform":{},"children":[
-                {"kind":"pixel","id":"child","name":"C","transform":{},"width":50,"height":50}
+            {"kind":"group","id":"g","name":"G","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"children":[
+                {"kind":"pixel","id":"child","name":"C","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
             ]}
         ]}"#;
     let mut host = RasterHost::new();
@@ -661,7 +687,7 @@ fn build_mask_scene_does_not_invent_a_mask_for_a_missing_layer() {
 #[test]
 fn build_render_scene_matches_vector_scene_at_unit_dpr() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);
@@ -672,7 +698,7 @@ fn build_render_scene_matches_vector_scene_at_unit_dpr() {
 #[test]
 fn build_render_scene_scales_for_device_pixel_ratio() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host = RasterHost::new();
     host.set_size(400, 400, 2.0);
@@ -683,7 +709,7 @@ fn build_render_scene_scales_for_device_pixel_ratio() {
 #[test]
 fn constant_inverted_mask_hides_pixels_instead_of_drawing_a_white_overlay() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50,
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50,
              "mask":{"enabled":true,"invert":true,"width":50,"height":50}}
         ]}"#;
     let mut host = RasterHost::new();
@@ -693,7 +719,7 @@ fn constant_inverted_mask_hides_pixels_instead_of_drawing_a_white_overlay() {
     assert!(host.composite_pixels().unwrap().pixels.chunks_exact(4).all(|p|p[3]==0));
 
     let unmasked_json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
+            {"kind":"pixel","id":"p","name":"P","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":50,"height":50}
         ]}"#;
     let mut host2 = RasterHost::new();
     host2.set_size(400, 400, 1.0);
@@ -705,7 +731,7 @@ fn constant_inverted_mask_hides_pixels_instead_of_drawing_a_white_overlay() {
 #[test]
 fn append_layer_node_adjustment_layer_is_transparent_to_scene() {
     let json = r#"{"schema":"raster.document","id":"t","layers":[
-            {"kind":"adjustment","id":"a","name":"A","transform":{},"adjustmentKind":"brightnessContrast",
+            {"kind":"adjustment","id":"a","name":"A","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"adjustmentKind":"brightnessContrast",
              "params":{"brightness":0.3,"contrast":0.1}}
         ]}"#;
     let mut host = RasterHost::new();
@@ -787,9 +813,33 @@ fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asse
     let mut host = RasterHost::new();
     let width = fixture["layerWidth"].as_u64().unwrap() as u32;
     let height = fixture["layerHeight"].as_u64().unwrap() as u32;
-    host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"blank","transform":{},"width":width,"height":height}]}).to_string()).unwrap();
+    host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"blank","transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1},"width":width,"height":height}]}).to_string()).unwrap();
     while !host.advance_composite(65536).unwrap().done{}
     let oracle=image::RgbaImage::new(width,height);
     assert_eq!(host.composite_pixels().unwrap().pixels,oracle.into_raw());
     assert!(host.buffers.paint.is_empty());
+}
+
+#[test]
+fn paint_mask_stroke_captures_intrinsic_coordinates_and_exact_revision(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap(){for erase in [false,true]{
+        let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&case["document"].to_string()).unwrap();
+        for (key,asset) in case["assets"].as_object().unwrap(){host.upload_raster_image_key(key,&png_bytes(asset["width"].as_u64().unwrap() as u32,asset["height"].as_u64().unwrap() as u32)).unwrap();}
+        host.sync_interaction(&["p".into()],None);host.set_active_utility(if erase {"paintEraser"}else{"paintBrush"});host.set_paint_target(PaintTarget::Mask);host.set_mask_value(96);host.set_brush_size(3.0);host.set_brush_opacity(0.25);host.set_brush_hardness(0.5);
+        let before=host.buffers.paint.clone();let (x,y)=host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap());host.pointer_down_screen(x,y,0);host.pointer_up_screen(x,y);
+        let command=host.take_paint_edit().expect(case["name"].as_str().unwrap());assert_eq!(command.action(),"editMask");assert_eq!(command.revision_field(),"expectedMask");assert_eq!(command.layer_id,"p");
+        let revision:MaskJson=serde_json::from_str(command.revision_value().unwrap()).unwrap();let expected:MaskJson=serde_json::from_value(case["document"]["layers"][0]["children"][0]["mask"].clone()).unwrap();assert_eq!(revision,expected);
+        let operation:serde_json::Value=serde_json::from_str(&command.operation).unwrap();assert_eq!(operation,serde_json::json!({"kind":"alphaStroke","points":[[case["pixelPoint"][0].as_f64().unwrap(),case["pixelPoint"][1].as_f64().unwrap()]],"size":3.0,"opacity":0.25,"hardness":0.5,"alpha":if erase{0}else{96}}));assert_eq!(host.buffers.paint,before);
+    }}
+}
+
+#[test]
+fn paint_mask_stroke_cancels_on_mask_revision_or_target_change(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();let base=&fixture["cases"][0];
+    for case in fixture["revisions"].as_array().unwrap(){
+        let mut host=RasterHost::new();host.sync_document_json(&base["document"].to_string()).unwrap();host.upload_raster_image_key("m",&png_bytes(3,1)).unwrap();host.sync_interaction(&["p".into()],None);host.set_active_utility("paintBrush");host.set_paint_target(PaintTarget::Mask);host.pointer_down_screen(50.0,50.0,0);assert!(host.paint_gesture.is_some());
+        let mut document=base["document"].clone();for patch in case["patch"].as_array().unwrap(){*document.pointer_mut(patch["path"].as_str().unwrap()).unwrap()=patch["value"].clone();}host.sync_document_json(&document.to_string()).unwrap();host.pointer_up_screen(50.0,50.0);assert_eq!(host.take_paint_edit().is_none(),case["cancel"].as_bool().unwrap(),"{}",case["name"]);host.pointer_down_screen(50.0,50.0,0);assert_eq!(host.paint_gesture.is_some(),case["admit"].as_bool().unwrap(),"{}",case["name"]);
+    }
+    let mut host=RasterHost::new();host.sync_document_json(&base["document"].to_string()).unwrap();host.sync_interaction(&["p".into()],None);host.set_active_utility("paintBrush");host.set_paint_target(PaintTarget::Mask);host.pointer_down_screen(50.0,50.0,0);assert!(host.paint_gesture.is_some());host.set_paint_target(PaintTarget::Mask);assert!(host.paint_gesture.is_some());host.set_paint_target(PaintTarget::Pixels);assert!(host.paint_gesture.is_none());host.pointer_up_screen(50.0,50.0);assert!(host.take_paint_edit().is_none());
 }

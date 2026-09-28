@@ -1,0 +1,164 @@
+{
+  "cases": [
+    {
+      "name": "A Flow Question Does Not Invent a Geometry Fixture",
+      "question": {
+        "id": "cost",
+        "label": "Cost",
+        "kind": "flow",
+        "params": {
+          "quantity": 2
+        }
+      },
+      "values": {},
+      "interactive": true,
+      "expected": {
+        "params": {
+          "quantity": 2
+        },
+        "questionId": "cost",
+        "controllerId": "forms-play",
+        "surface": "blueprint",
+        "interactive": true
+      },
+      "target": {
+        "surface": "blueprint"
+      }
+    },
+    {
+      "name": "The Answer Overrides the Authored Procedural Parameters",
+      "question": {
+        "id": "column",
+        "label": "Column",
+        "kind": "buildingComponent",
+        "fixtureSlug": "custom-column",
+        "params": {
+          "height": 3
+        }
+      },
+      "values": {
+        "column": {
+          "height": 5
+        }
+      },
+      "interactive": true,
+      "expected": {
+        "fixtureSlug": "custom-column",
+        "params": {
+          "height": 5
+        },
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "fill-1",
+        "windowKindId": "forms-try"
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "fill-1",
+        "windowKindId": "forms-try"
+      }
+    },
+    {
+      "name": "An Explicit Null Answer Is Preserved",
+      "question": {
+        "id": "procedure",
+        "label": "Procedure",
+        "kind": "playbook",
+        "params": {
+          "enabled": true
+        }
+      },
+      "values": {
+        "procedure": null
+      },
+      "interactive": false,
+      "expected": {
+        "params": null,
+        "questionId": "procedure",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": false,
+        "windowId": "fill-2",
+        "windowKindId": "forms-try"
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "fill-2",
+        "windowKindId": "forms-try"
+      }
+    },
+    {
+      "name": "A Second Fill Window Retains Its Own Answer Route",
+      "question": {
+        "id": "column",
+        "label": "Column",
+        "kind": "buildingComponent",
+        "fixtureSlug": "custom-column",
+        "params": {
+          "height": 3
+        }
+      },
+      "values": {
+        "column": {
+          "height": 5
+        }
+      },
+      "interactive": true,
+      "expected": {
+        "fixtureSlug": "custom-column",
+        "params": {
+          "height": 5
+        },
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "second-fill",
+        "windowKindId": "forms-try"
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "second-fill",
+        "windowKindId": "forms-try"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "A Fill Extension Cannot Omit Its Window",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true
+      }
+    },
+    {
+      "name": "A Fill Extension Cannot Address the Designer",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "designer",
+        "windowKindId": "forms-blueprint"
+      }
+    },
+    {
+      "name": "An Authoring Extension Cannot Mutate a Fill Window",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "blueprint",
+        "interactive": true,
+        "windowId": "fill-1",
+        "windowKindId": "forms-try"
+      }
+    }
+  ]
+}

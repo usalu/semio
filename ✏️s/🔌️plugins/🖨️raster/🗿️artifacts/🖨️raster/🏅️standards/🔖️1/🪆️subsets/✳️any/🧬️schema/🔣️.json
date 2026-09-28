@@ -64,53 +64,178 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform"],
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "visible",
+            "locked",
+            "opacity",
+            "blendMode",
+            "transform"
+          ],
           "properties": {
-            "kind": { "const": "pixel" },
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "visible": { "type": "boolean" },
-            "opacity": { "type": "number" },
-            "blendMode": { "type": "string" },
-            "transform": { "$ref": "#/$defs/RasterTransform" },
-            "mask": { "$ref": "#/$defs/RasterLayerMask" },
-            "width": { "type": "integer", "minimum": 0 },
-            "height": { "type": "integer", "minimum": 0 },
-            "imageKey": { "type": "string" }
+            "kind": {
+              "const": "pixel"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "blendMode": {
+              "type": "string"
+            },
+            "transform": {
+              "$ref": "#/$defs/RasterTransform"
+            },
+            "mask": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RasterLayerMask"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "width": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "height": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "imageKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform", "children"],
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "visible",
+            "locked",
+            "opacity",
+            "blendMode",
+            "transform",
+            "children"
+          ],
           "properties": {
-            "kind": { "const": "group" },
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "visible": { "type": "boolean" },
-            "opacity": { "type": "number" },
-            "blendMode": { "type": "string" },
-            "transform": { "$ref": "#/$defs/RasterTransform" },
-            "mask": { "$ref": "#/$defs/RasterLayerMask" },
-            "children": { "type": "array", "items": { "$ref": "#/$defs/RasterLayerNode" } }
+            "kind": {
+              "const": "group"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "blendMode": {
+              "type": "string"
+            },
+            "transform": {
+              "$ref": "#/$defs/RasterTransform"
+            },
+            "mask": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RasterLayerMask"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RasterLayerNode"
+              }
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "name", "visible", "opacity", "blendMode", "transform", "adjustmentKind", "params"],
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "visible",
+            "locked",
+            "opacity",
+            "blendMode",
+            "transform",
+            "adjustmentKind",
+            "params"
+          ],
           "properties": {
-            "kind": { "const": "adjustment" },
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "visible": { "type": "boolean" },
-            "opacity": { "type": "number" },
-            "blendMode": { "type": "string" },
-            "transform": { "$ref": "#/$defs/RasterTransform" },
-            "adjustmentKind": { "type": "string" },
+            "kind": {
+              "const": "adjustment"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "blendMode": {
+              "type": "string"
+            },
+            "transform": {
+              "$ref": "#/$defs/RasterTransform"
+            },
+            "adjustmentKind": {
+              "type": "string"
+            },
             "params": {
               "type": "object",
-              "additionalProperties": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue" }
+              "additionalProperties": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+              }
             }
           }
         }
@@ -118,29 +243,83 @@
     },
     "RasterTransform": {
       "type": "object",
+      "description": "Full affine placement: [a,b,c,d,x,y], retaining shear and reflection without a TRS approximation.",
       "additionalProperties": false,
-      "required": ["x", "y", "scaleX", "scaleY", "rotation"],
+      "required": [
+        "x",
+        "y",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "scaleX": { "type": "number" },
-        "scaleY": { "type": "number" },
-        "rotation": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "c": {
+          "type": "number"
+        },
+        "d": {
+          "type": "number"
+        }
       }
     },
     "RasterLayerMask": {
       "type": "object",
       "additionalProperties": false,
       "description": "An absent imageKey is a constant reveal mask. Image coverage is sRGB luminance multiplied by alpha. A linked transform is relative to the layer center; an unlinked transform is relative to its parent.",
-      "required": ["enabled", "linked", "invert", "transform"],
+      "required": [
+        "enabled",
+        "linked",
+        "invert",
+        "transform"
+      ],
       "properties": {
-        "enabled": { "type": "boolean" },
-        "linked": { "type": "boolean" },
-        "invert": { "type": "boolean" },
-        "width": { "type": ["integer", "null"], "minimum": 1, "maximum": 16384 },
-        "height": { "type": ["integer", "null"], "minimum": 1, "maximum": 16384 },
-        "imageKey": { "type": ["string", "null"], "minLength": 1 },
-        "transform": { "$ref": "#/$defs/RasterTransform" }
+        "enabled": {
+          "type": "boolean"
+        },
+        "linked": {
+          "type": "boolean"
+        },
+        "invert": {
+          "type": "boolean"
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "imageKey": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "transform": {
+          "$ref": "#/$defs/RasterTransform"
+        }
       }
     },
     "RasterViewportSize": {

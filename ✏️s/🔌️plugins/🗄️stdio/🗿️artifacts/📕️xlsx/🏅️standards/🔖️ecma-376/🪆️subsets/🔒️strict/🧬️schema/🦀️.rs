@@ -39,17 +39,12 @@ pub mod derived_construction {
     /// `check_strict_conformance` actually inspects change.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn stamp_strict_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
-        if let Some(bytes) = snapshot.opc.part_bytes(WORKBOOK_PART) {
-            if let Ok(text) = std::str::from_utf8(bytes) {
-                if let Ok(mut doc) = xml_document_from_text(text) {
-                    if let Some(XmlNode::Element { attrs, .. }) = &mut doc.root {
-                        set_attr(attrs, "xmlns", STRICT_SML_NS);
-                        set_attr(attrs, "xmlns:r", STRICT_R_NS);
-                        set_attr(attrs, "conformance", "strict");
-                    }
-                    let bytes = xml_document_to_text(&doc).into_bytes();
-                    snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, bytes);
-                }
+        let main_path = snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT));
+        if let Some(part) = main_path.as_deref().and_then(|path| snapshot.xml_part_mut(path)) {
+            if let Some(XmlNode::Element { attrs, .. }) = &mut part.document.root {
+                set_attr(attrs, "xmlns", STRICT_SML_NS);
+                set_attr(attrs, "xmlns:r", STRICT_R_NS);
+                set_attr(attrs, "conformance", "strict");
             }
         }
         snapshot
@@ -170,11 +165,9 @@ pub mod derived_analysis {
     /// (should never happen for anything that survived `🧱️base` decode, but never assumed).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
-        let bytes = snapshot.opc.part_bytes(WORKBOOK_PART)?;
-        let text = std::str::from_utf8(bytes).ok()?;
-        let doc = xml_document_from_text(text).ok()?;
-        let XmlNode::Element { name, attrs, .. } = doc.root? else { return None };
-        if name != "workbook" {
+        let path = snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT))?;
+        let XmlNode::Element { name, attrs, .. } = snapshot.xml_part(&path)?.document.root.as_ref()? else { return None };
+        if name.rsplit_once(':').map_or(name.as_str(), |(_, local)| local) != "workbook" {
             return None;
         }
         let get = |n: &str| attrs.iter().find(|a| a.name == n).map(|a| a.value.clone());
@@ -197,10 +190,9 @@ pub mod derived_analysis {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
         snapshot
-            .opc
-            .parts
+            .xml_parts
             .iter()
-            .filter(|p| p.path.starts_with("xl/worksheets/") && p.path.ends_with(".xml") && p.content_type != WORKSHEET_CONTENT_TYPE)
+            .filter(|p| p.content_type.contains("worksheet") && p.content_type != WORKSHEET_CONTENT_TYPE)
             .map(|p| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type)))
             .collect()
     }

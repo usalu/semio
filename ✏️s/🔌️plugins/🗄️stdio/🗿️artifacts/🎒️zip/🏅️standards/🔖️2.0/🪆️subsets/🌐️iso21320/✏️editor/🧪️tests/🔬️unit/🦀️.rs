@@ -17,3 +17,10 @@ async fn editor_declares_the_main_window() {
     let def = create_zip_iso21320_editor();
     assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn editor_mounts_the_bounded_zip_preparation_route() {
+    use semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor;
+
+    assert!(ZipIso21320Editor::native_edit_preparation_route("stdio-zip-iso21320-snapshot-edit").is_some());
+}

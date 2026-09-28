@@ -1,0 +1,31 @@
+{
+  "text": "Edited 📝 document",
+  "cases": [
+    {
+      "main": "word/document.xml",
+      "styles": "word/styles.xml",
+      "stylesTarget": "styles.xml"
+    },
+    {
+      "main": "custom/main.xml",
+      "styles": "resources/definitions.xml",
+      "stylesTarget": "../resources/definitions.xml"
+    },
+    {
+      "main": "nested/report.xml",
+      "styles": "styles/custom.xml",
+      "stylesTarget": "/styles/custom.xml"
+    },
+    {
+      "main": "word/document.xml",
+      "styles": "word/styles.xml",
+      "stylesTarget": "styles.xml",
+      "removeRequiredRelationships": true,
+      "occupiedIds": [
+        "rId1",
+        "rId2",
+        "rId4"
+      ]
+    }
+  ]
+}

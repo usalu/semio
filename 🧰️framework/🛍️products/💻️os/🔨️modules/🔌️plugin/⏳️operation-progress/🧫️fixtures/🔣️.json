@@ -1,0 +1,119 @@
+{
+  "action": "cancelTypedOperation",
+  "cases": [
+    {
+      "name": "first",
+      "args": {
+        "operationId": "0000000000000001",
+        "generation": "0000000000000002"
+      },
+      "valid": true
+    },
+    {
+      "name": "maximum",
+      "args": {
+        "operationId": "ffffffffffffffff",
+        "generation": "ffffffffffffffff"
+      },
+      "valid": true
+    },
+    {
+      "name": "zero syntax",
+      "args": {
+        "operationId": "0000000000000000",
+        "generation": "0000000000000000"
+      },
+      "valid": true
+    },
+    {
+      "name": "truncated",
+      "args": {
+        "operationId": "1",
+        "generation": "0000000000000002"
+      },
+      "valid": false
+    },
+    {
+      "name": "uppercase",
+      "args": {
+        "operationId": "FFFFFFFFFFFFFFFF",
+        "generation": "0000000000000002"
+      },
+      "valid": false
+    },
+    {
+      "name": "overflow",
+      "args": {
+        "operationId": "10000000000000000",
+        "generation": "0000000000000002"
+      },
+      "valid": false
+    },
+    {
+      "name": "missing generation",
+      "args": {
+        "operationId": "0000000000000001"
+      },
+      "valid": false
+    },
+    {
+      "name": "numeric identity",
+      "args": {
+        "operationId": 1,
+        "generation": 2
+      },
+      "valid": false
+    },
+    {
+      "name": "foreign authority field",
+      "args": {
+        "operationId": "0000000000000001",
+        "generation": "0000000000000002",
+        "instanceId": 2
+      },
+      "valid": false
+    }
+  ],
+  "labels": {
+    "en": {
+      "cancel": "Cancel",
+      "working": "Working",
+      "cancelling": "Cancelling",
+      "units": "Completed units"
+    },
+    "de": {
+      "cancel": "Abbrechen",
+      "working": "Wird ausgeführt",
+      "cancelling": "Wird abgebrochen",
+      "units": "Abgeschlossene Schritte"
+    }
+  },
+  "counts": [
+    "0",
+    "64",
+    "9007199254740993",
+    "18446744073709551615"
+  ],
+  "cancellationOutcomes": [
+    {
+      "userRequested": false,
+      "workerFault": false,
+      "lane": "fault"
+    },
+    {
+      "userRequested": false,
+      "workerFault": true,
+      "lane": "fault"
+    },
+    {
+      "userRequested": true,
+      "workerFault": false,
+      "lane": "terminal"
+    },
+    {
+      "userRequested": true,
+      "workerFault": true,
+      "lane": "fault"
+    }
+  ]
+}

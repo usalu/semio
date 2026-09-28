@@ -1,0 +1,679 @@
+{
+  "meshes": [
+    {
+      "name": "unit-tetrahedron",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            3
+          ],
+          [
+            0,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "expected": {
+        "vertices": 4,
+        "faces": 4,
+        "edges": 6,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "area": 2.3660254037844384,
+        "volume": 0.16666666666666666
+      }
+    },
+    {
+      "name": "open-concave-face",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        ]
+      },
+      "expected": {
+        "vertices": 6,
+        "faces": 1,
+        "edges": 6,
+        "boundaryEdges": 6,
+        "nonManifoldEdges": 0,
+        "area": 3,
+        "volume": null
+      }
+    },
+    {
+      "name": "large-tetrahedron",
+      "mesh": {
+        "vertices": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            1125899906842624.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1125899906842624.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1125899906842624.0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            3
+          ],
+          [
+            0,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "expected": {
+        "vertices": 4,
+        "faces": 4,
+        "edges": 6,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "area": 2.999293523262582e+30,
+        "volume": 2.378746154509933e+44,
+        "degenerateTriangles": 0
+      }
+    },
+    {
+      "name": "small-tetrahedron",
+      "mesh": {
+        "vertices": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.881784197001252e-16,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            8.881784197001252e-16,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            8.881784197001252e-16
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            3
+          ],
+          [
+            0,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "expected": {
+        "vertices": 4,
+        "faces": 4,
+        "edges": 6,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "area": 1.866464941805302e-30,
+        "volume": 1.1677487202706808e-46,
+        "degenerateTriangles": 0
+      }
+    },
+    {
+      "name": "collapsed-closed-triangles",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            2,
+            1,
+            0
+          ]
+        ]
+      },
+      "expected": {
+        "vertices": 3,
+        "faces": 2,
+        "edges": 3,
+        "triangles": 2,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 0,
+        "degenerateTriangles": 2,
+        "area": 0,
+        "volume": null
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "out-of-range-index",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            8
+          ]
+        ]
+      }
+    },
+    {
+      "name": "repeated-vertex",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "fractional-index",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            1.5
+          ]
+        ]
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "operation": "box",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "plane",
+      "expected": {
+        "vertices": 4,
+        "faces": 1,
+        "area": 1
+      }
+    },
+    {
+      "operation": "sphere",
+      "expected": {
+        "vertices": 162,
+        "faces": 320
+      }
+    },
+    {
+      "operation": "cylinder",
+      "expected": {
+        "vertices": 64,
+        "faces": 34
+      }
+    },
+    {
+      "operation": "cone",
+      "expected": {
+        "vertices": 33,
+        "faces": 33
+      }
+    },
+    {
+      "operation": "translate",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "rotate",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "scale",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "moveVertices",
+      "expected": {
+        "vertices": 8,
+        "faces": 6
+      }
+    },
+    {
+      "operation": "extrude",
+      "expected": {
+        "vertices": 12,
+        "faces": 10,
+        "area": 10,
+        "volume": 2
+      }
+    },
+    {
+      "operation": "inset",
+      "expected": {
+        "vertices": 12,
+        "faces": 10,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "subdivide",
+      "expected": {
+        "vertices": 9,
+        "faces": 9,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "flip",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6
+      }
+    },
+    {
+      "operation": "deleteFaces",
+      "expected": {
+        "vertices": 8,
+        "faces": 5,
+        "area": 5,
+        "boundaryEdges": 4
+      }
+    },
+    {
+      "operation": "triangulate",
+      "expected": {
+        "vertices": 8,
+        "faces": 12,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "weld",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "orient",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "fillHoles",
+      "expected": {
+        "vertices": 8,
+        "faces": 6,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "loopCut",
+      "expected": {
+        "vertices": 12,
+        "faces": 10,
+        "edges": 20,
+        "boundaryEdges": 0,
+        "area": 6,
+        "volume": 1
+      }
+    },
+    {
+      "operation": "knifeCut",
+      "expected": {
+        "vertices": 10,
+        "faces": 7,
+        "edges": 15,
+        "boundaryEdges": 0,
+        "area": 6,
+        "volume": 1
+      }
+    }
+  ],
+  "gumball": [
+    {
+      "operation": "translate",
+      "operator": "brep.mesh.translate",
+      "input": "mesh",
+      "output": "meshOut"
+    },
+    {
+      "operation": "rotate",
+      "operator": "brep.mesh.rotate",
+      "input": "mesh",
+      "output": "meshOut"
+    },
+    {
+      "operation": "scale",
+      "operator": "brep.mesh.scale",
+      "input": "mesh",
+      "output": "meshOut"
+    }
+  ],
+  "reflections": [
+    {
+      "name": "one reflection",
+      "factors": [
+        -2,
+        3,
+        4
+      ],
+      "volume": 24
+    },
+    {
+      "name": "two reflections",
+      "factors": [
+        -2,
+        -3,
+        4
+      ],
+      "volume": 24
+    },
+    {
+      "name": "tiny reflection",
+      "factors": [
+        -8.673617379884035e-19,
+        8.673617379884035e-19,
+        8.673617379884035e-19
+      ],
+      "volume": 6.525304467998525e-55
+    },
+    {
+      "name": "tiny double reflection",
+      "factors": [
+        -8.673617379884035e-19,
+        -8.673617379884035e-19,
+        8.673617379884035e-19
+      ],
+      "volume": 6.525304467998525e-55
+    }
+  ],
+  "brepScales": [
+    {
+      "name": "independent axes",
+      "factors": [
+        2,
+        3,
+        4
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "minimum": [
+        0,
+        0,
+        0
+      ],
+      "maximum": [
+        2,
+        3,
+        4
+      ],
+      "volume": 24
+    },
+    {
+      "name": "explicit center",
+      "factors": [
+        2,
+        3,
+        4
+      ],
+      "center": [
+        1,
+        2,
+        3
+      ],
+      "minimum": [
+        -1,
+        -4,
+        -9
+      ],
+      "maximum": [
+        1,
+        -1,
+        -5
+      ],
+      "volume": 24
+    },
+    {
+      "name": "reflection",
+      "factors": [
+        -2,
+        3,
+        4
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "minimum": [
+        -2,
+        0,
+        0
+      ],
+      "maximum": [
+        0,
+        3,
+        4
+      ],
+      "volume": 24
+    }
+  ]
+}

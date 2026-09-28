@@ -918,9 +918,9 @@ async fn add_layer_undo_round_trip_through_wrapper() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn path_join_conversion_and_position_each_undo_as_one_edit() {
-    use crate::schema::geometry::editing::{edit_path,PathEdit,PathPoint,SegmentType};
-    for edit in [PathEdit::Join { index:1,other:2 },PathEdit::Convert { index:1,target:SegmentType::Cubic },PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]}] {
+async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
+    use crate::schema::geometry::editing::{edit_path,PathEdit,PathPoint,PathPointRef,SegmentType};
+    for edit in [PathEdit::Join { index:1,other:2 },PathEdit::Convert { index:1,target:SegmentType::Cubic },PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]},PathEdit::Translate {points:vec![PathPointRef {index:0,point:PathPoint::Anchor},PathPointRef {index:1,point:PathPoint::Anchor}],delta:[3.0,-2.0]}] {
         let mut app=drawing_app().await;
         let before=vec![crate::PathSegment::Move { to:[0.0,0.0] },crate::PathSegment::Line { to:[10.0,0.0] },crate::PathSegment::Move { to:[20.0,0.0] },crate::PathSegment::Line { to:[30.0,0.0] }];
         let after=edit_path(&before,&edit).unwrap();
@@ -935,7 +935,7 @@ async fn path_join_conversion_and_position_each_undo_as_one_edit() {
             path.segments.clone()
         },before,after).await;
     }
-    eprintln!("[DEBUG] path joins, conversions and positions restore exact geometry through one undo and redo");
+    eprintln!("[DEBUG] path joins, conversions, positions and translations restore exact geometry through one undo and redo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -955,9 +955,9 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
 async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
     let definition = create_drawing_app();
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-    assert_eq!(utility_ids, ["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],);
+    assert_eq!(utility_ids, ["selectMarquee", "selectLasso", "selectDirect", "editNodes", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],);
     let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
-    assert_eq!(selects, ["selectMarquee", "selectLasso", "selectDirect"]);
+    assert_eq!(selects, ["selectMarquee", "selectLasso", "selectDirect", "editNodes"]);
     let scene = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).expect("canvas window");
     assert_eq!(scene.utilities.len(), definition.utilities.len(), "every utility is scoped to the canvas window kind");
     let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility app action");
@@ -1226,6 +1226,15 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::EditSelection(edit_selection::EditSelection { operation: "group".into(), ids: vec!["a".into(), "b".into()] }),
         DrawingCommand::EditPath(edit_path::EditPath { layer_id: "path".into(), edit: Box::new(crate::schema::geometry::editing::PathEdit::Reverse) }),
         DrawingCommand::EditFill(edit_fill::EditFill { layer_id: "a".into(), edit: Box::new(crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }) }),
+        DrawingCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+        DrawingCommand::NudgeSelectionLeft(nudge_selection_left::NudgeSelectionLeft {}),
+        DrawingCommand::NudgeSelectionLeftFast(nudge_selection_left_fast::NudgeSelectionLeftFast {}),
+        DrawingCommand::NudgeSelectionRight(nudge_selection_right::NudgeSelectionRight {}),
+        DrawingCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}),
+        DrawingCommand::NudgeSelectionUp(nudge_selection_up::NudgeSelectionUp {}),
+        DrawingCommand::NudgeSelectionUpFast(nudge_selection_up_fast::NudgeSelectionUpFast {}),
+        DrawingCommand::NudgeSelectionDown(nudge_selection_down::NudgeSelectionDown {}),
+        DrawingCommand::NudgeSelectionDownFast(nudge_selection_down_fast::NudgeSelectionDownFast {}),
     ]
 }
 
@@ -1313,7 +1322,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 22);
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 30);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
@@ -1385,12 +1394,14 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
         let mut child=crate::schema::create_drawing_shape_layer_rect("Child");
         crate::schema::layer_base_mut(&mut child).id="child".into();
+        crate::schema::layer_base_mut(&mut child).attributes.fill=Some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
         let mut group=crate::schema::create_drawing_group_layer("Group");
         crate::schema::layer_base_mut(&mut group).id="group".into();
         crate::schema::layer_base_mut(&mut group).transform.scale_x=2.0;
         if let DrawingLayerNode::Group(body)=&mut group { body.children.push(child); }
         let mut other=crate::schema::create_drawing_shape_layer_rect("Other");
         crate::schema::layer_base_mut(&mut other).id="other".into();
+        crate::schema::layer_base_mut(&mut other).attributes.fill=Some(crate::FillStyle::Solid {color:[0.0,0.0,1.0,1.0]});
         crate::schema::layer_base_mut(&mut other).transform.x=400.0;
         let before=DrawingSnapshot { id:"selection-drag".into(),layers:vec![group,other],..Default::default() };
         load_drawing_fixture(&mut app,&before);
@@ -1401,24 +1412,25 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         let selected=selected_strokes(&app).await;
         assert_eq!(selected.len(),3);
-        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x:400.0,y:300.0,width:800.0,height:600.0,..Default::default() }),&meta).await;
+        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x:420.0,y:320.0,width:800.0,height:600.0,..Default::default() }),&meta).await;
         assert_eq!(selected_strokes(&app).await,selected);
-        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x:430.0,y:320.0,width:800.0,height:600.0,samples:vec![] }),&meta).await;
+        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x:450.0,y:340.0,width:800.0,height:600.0,samples:vec![] }),&meta).await;
         assert_eq!(app.snapshot().unwrap(),before);
         let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
         let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
-        for (id,x) in [("child",30.0),("other",430.0)] {
+        for (id,x,scale) in [("child",30.0,2.0),("other",430.0,1.0)] {
             let node=records.iter().find(|node|node["id"]==id).unwrap();
-            assert_eq!(node["transform"][4].as_f64(),Some(x));
-            assert_eq!(node["transform"][5].as_f64(),Some(20.0));
+            assert_eq!(node["transform"][0].as_f64(),Some(scale),"interior drag preserves scale");
+            assert!((node["transform"][4].as_f64().unwrap()-x).abs()<1e-10);
+            assert!((node["transform"][5].as_f64().unwrap()-20.0).abs()<1e-10);
         }
-        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x:430.0,y:320.0,width:800.0,height:600.0,shift:false,ctrl:false,meta:false,cancelled }),&meta).await;
+        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x:450.0,y:340.0,width:800.0,height:600.0,shift:false,ctrl:false,meta:false,cancelled }),&meta).await;
         if cancelled { assert_eq!(app.snapshot().unwrap(),before); }
         else {
             assert_one_artifact_publication(&receipt);
             let after=app.snapshot().unwrap();
-            assert_eq!(crate::schema::layer_base(&after.layers[0]).transform.x,30.0);
-            assert_eq!(crate::schema::layer_base(&after.layers[1]).transform.x,430.0);
+            assert!((crate::schema::layer_base(&after.layers[0]).transform.x-30.0).abs()<1e-10);
+            assert!((crate::schema::layer_base(&after.layers[1]).transform.x-430.0).abs()<1e-10);
             assert_eq!(crate::schema::layer_base(crate::schema::find_drawing_layer(&after,"child").unwrap()).transform.x,0.0);
             artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
             assert_eq!(app.snapshot().unwrap(),before);
@@ -1452,14 +1464,14 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let mut document = crate::DrawingSnapshot { layers: vec![layer],artboard: None,..Default::default() };
     let mut config = canvas_window::config::DrawingCanvasWindowConfig::default();
     let preview = DrawingGesturePreview::default();
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(crate::schema::DrawingArtboard { width: 1024.0,height: 1024.0 });
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,1024.0,1024.0]);
     config.framed = true;
     config.viewport = store::Viewport2d { x: 777.0,y: -333.0,zoom: 2.0 };
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
     eprintln!("[DEBUG] initial Drawing framing follows off-origin geometry and yields to restored navigation");
@@ -1496,16 +1508,16 @@ async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
     let ids = vec![layer_id(&first).to_string(), layer_id(&second).to_string()];
     let snapshot = DrawingSnapshot { id: "select-all-topology".into(), layers: vec![first, second], ..Default::default() };
     load_drawing_fixture(&mut app, &snapshot);
-    app.handle_action("selectAll", None, &meta).await.expect("Select All admission");
-    artifact_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.expect("Select All publication");
+    let admission=app.handle_action("selectAll", None, &meta).await.expect("Select All admission");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.expect("Select All publication");
     assert_eq!(selected_strokes(&app).await, ids);
     assert_eq!(app.snapshot().unwrap(), snapshot, "selection must not edit the drawing");
     settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[0].clone() }), &meta).await;
     assert_eq!(selected_strokes(&app).await, vec![ids[1].clone()]);
     settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[1].clone() }), &meta).await;
     assert!(selected_strokes(&app).await.is_empty());
-    app.handle_action("selectAll", None, &meta).await.expect("empty Select All admission");
-    artifact_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.expect("empty Select All publication");
+    let admission=app.handle_action("selectAll", None, &meta).await.expect("empty Select All admission");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.expect("empty Select All publication");
     assert!(selected_strokes(&app).await.is_empty());
     eprintln!("[DEBUG] Select All discovers untouched layers and document deletion retires selection");
 }
@@ -1557,5 +1569,345 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             }
             eprintln!("[DEBUG] registered handle {handle} preview/release/history; cancelled={cancelled}");
         }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
+    for cancelled in [true,false] {
+        let (mut app,mut meta)=inline_selection_app().await;
+        meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+        let source=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Cubic {ctrl1:[10.0,20.0],ctrl2:[30.0,20.0],to:[40.0,0.0]}];
+        let mut path=crate::schema::create_drawing_path_layer("Curve",source.clone());
+        crate::schema::layer_base_mut(&mut path).id="curve".into();
+        crate::schema::layer_base_mut(&mut path).transform.scale_x=2.0;
+        let before=DrawingSnapshot {id:"node-drag".into(),layers:vec![path],..Default::default()};
+        load_drawing_fixture(&mut app,&before);
+        settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
+        let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"curve"})]).unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:421.0,y:321.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
+        let selected=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+        assert_eq!(selected.len(),1);
+        let selected_point=interaction::points::parse_point_id(&selected[0]).unwrap();
+        assert_eq!((selected_point.layer_id,selected_point.index,selected_point.point),("curve",1,crate::schema::geometry::editing::PathPoint::Control1));
+        assert_eq!(selected_point.geometry,interaction::points::geometry_id(&source).unwrap());
+        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {x:441.0,y:331.0,width:800.0,height:600.0,shift:false,alt:false,samples:vec![]}),&meta).await;
+        assert_eq!(app.snapshot().unwrap(),before);
+        let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+        let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
+        let node=records.iter().find(|node|node["id"]=="curve").unwrap();
+        assert_eq!(node["segments"][1]["ctrl1"],serde_json::json!([20.0,30.0]));
+        assert!(records.iter().any(|node|node["id"].as_str().is_some_and(|id|id.starts_with("overlay:node:"))));
+        assert!(records.iter().any(|node|node["id"]=="overlay:node:curve:selected-controls" && node["segments"].as_array().is_some_and(|segments|!segments.is_empty())));
+        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:441.0,y:331.0,width:800.0,height:600.0,shift:false,alt:false,ctrl:false,meta:false,cancelled}),&meta).await;
+        if cancelled {assert_eq!(app.snapshot().unwrap(),before);assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,selected);} else {
+            assert_one_artifact_publication(&receipt);
+            let after=app.snapshot().unwrap();
+            let DrawingLayerNode::Path(path)=&after.layers[0] else {panic!("Expected path")};
+            let rebound=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+            assert_eq!(rebound.len(),1);
+            assert_ne!(rebound,selected);
+            assert_eq!(interaction::points::parse_point_id(&rebound[0]).unwrap().geometry,interaction::points::geometry_id(&path.segments).unwrap());
+            assert_eq!(path.segments[1],crate::PathSegment::Cubic {ctrl1:[20.0,30.0],ctrl2:[30.0,20.0],to:[40.0,0.0]});
+            artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
+            artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
+        }
+        assert_eq!(selected_strokes(&app).await,vec!["curve".to_string()]);
+        eprintln!("[DEBUG] path control drag preserves press offset and affine scale, previews, cancels and commits once; cancelled={cancelled}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prunes() {
+    use crate::schema::geometry::editing::{PathEdit,PathPoint,PathAxis};
+    let (mut app,mut meta)=inline_selection_app().await;
+    meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+    let mut layer=crate::schema::create_drawing_path_layer("Line",vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}]);
+    crate::schema::layer_base_mut(&mut layer).id="path".into();
+    let before=DrawingSnapshot {id:"point-selection".into(),layers:vec![layer],..Default::default()};
+    load_drawing_fixture(&mut app,&before);
+    settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
+    let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"path"})]).unwrap();
+    let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+    artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+    settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:410.0,y:300.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
+    settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:410.0,y:300.0,width:800.0,height:600.0,shift:false,alt:false,ctrl:false,meta:false,cancelled:false}),&meta).await;
+    assert_eq!(app.snapshot().unwrap(),before);
+    let selected=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+    assert_eq!(selected.len(),1);
+    let point=interaction::points::parse_point_id(&selected[0]).unwrap();
+    assert_eq!((point.layer_id,point.index,point.point),("path",1,PathPoint::Anchor));
+    settled(&mut app,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Coordinate {index:1,point:PathPoint::Anchor,axis:PathAxis::X,value:15.0})}),&meta).await;
+    let rebound=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+    assert_eq!(rebound.len(),1);assert_ne!(selected,rebound);
+    let point=interaction::points::parse_point_id(&rebound[0]).unwrap();
+    assert_eq!((point.layer_id,point.index,point.point),("path",1,PathPoint::Anchor));
+    settled(&mut app,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Reverse)}),&meta).await;
+    assert!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.is_empty());
+    assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);
+    eprintln!("[DEBUG] node click persists, numeric editing rebinds selection and topology changes prune old point addresses");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture.as_array().unwrap() {
+        let (mut app,meta)=inline_selection_app().await;
+        let mut layer=crate::schema::create_layer_by_kind("shape:rect");
+        crate::schema::layer_base_mut(&mut layer).id="shape".into();
+        let before=DrawingSnapshot {id:"nudge".into(),layers:vec![layer],..Default::default()};
+        load_drawing_fixture(&mut app,&before);
+        let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"shape"})]).unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+        let command=args_bridge::command_from_action(row["action"].as_str().unwrap(),None).unwrap();
+        store::os_store::test_support::assert_op_line_round_trip(&command);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let (_,receipt)=settled(&mut app,command,&meta).await;
+        assert_one_artifact_publication(&receipt);
+        let after=app.snapshot().unwrap();
+        let transform=&crate::schema::layer_base(&after.layers[0]).transform;
+        assert_eq!([transform.x,transform.y],serde_json::from_value::<[f64;2]>(row["delta"].clone()).unwrap());
+        artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
+        assert_eq!(app.snapshot().unwrap(),before);
+        artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;
+        assert_eq!(app.snapshot().unwrap(),after);
+    }
+    eprintln!("[DEBUG] all eight keyboard nudge actions commit and undo exactly once");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn node_keyboard_nudges_rebind_selection_and_use_parent_axes() {
+    let (mut app,mut meta)=inline_selection_app().await;
+    meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+    let source=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Cubic {ctrl1:[2.0,0.0],ctrl2:[8.0,0.0],to:[10.0,0.0]}];
+    let mut path=crate::schema::create_drawing_path_layer("Curve",source.clone());
+    crate::schema::layer_base_mut(&mut path).id="path".into();
+    let mut group=crate::schema::create_layer_by_kind("group");
+    if let DrawingLayerNode::Group(group)=&mut group {
+        group.base.id="group".into();group.base.transform.rotation=std::f64::consts::FRAC_PI_2;group.base.transform.scale_x=2.0;group.base.transform.scale_y=4.0;group.base.transform.x=100.0;group.base.transform.y=200.0;group.children=vec![path];
+    }
+    let before=DrawingSnapshot {id:"point-nudge".into(),layers:vec![group],..Default::default()};
+    load_drawing_fixture(&mut app,&before);
+    let point=interaction::points::point_id("path",&interaction::points::geometry_id(&source).unwrap(),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
+    for (domain,granularity,id) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,"path".to_owned()),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,point)] {
+        let targets=serde_json::to_string(&[serde_json::json!({"granularity":granularity,"id":id})]).unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+    }
+    for step in 1..=2 {
+        let (_,receipt)=settled(&mut app,DrawingCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}),&meta).await;
+        assert_one_artifact_publication(&receipt);
+        let after=app.snapshot().unwrap();
+        let Some(DrawingLayerNode::Path(path))=crate::schema::find_drawing_layer(&after,"path") else {panic!("Path missing")};
+        let crate::PathSegment::Cubic {ctrl1,ctrl2,to}=path.segments[1] else {panic!("Cubic missing")};
+        assert_eq!(ctrl1,[2.0,0.0]);
+        assert!((to[0]-10.0).abs()<1e-10 && (to[1]+2.5*f64::from(step)).abs()<1e-10);
+        assert!((ctrl2[0]-8.0).abs()<1e-10 && (ctrl2[1]-to[1]).abs()<1e-10);
+        let selection=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+        assert_eq!(selection.len(),1);
+        assert_eq!(interaction::points::parse_point_id(&selection[0]).unwrap().geometry,interaction::points::geometry_id(&path.segments).unwrap());
+    }
+    artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
+    artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
+    assert_eq!(app.snapshot().unwrap(),before);
+    eprintln!("[DEBUG] point nudge honors ancestor affine basis, preserves handles and rebinds repeated selection");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_edit() {
+    for cancelled in [true,false] {
+        let (mut app,mut meta)=inline_selection_app().await;
+        meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+        let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
+        let mut first=crate::schema::create_drawing_path_layer("First",segments.clone());
+        crate::schema::layer_base_mut(&mut first).id="first".into();
+        let mut second=crate::schema::create_drawing_path_layer("Second",segments);
+        let base=crate::schema::layer_base_mut(&mut second);base.id="second".into();base.transform.x=40.0;base.transform.scale_x=2.0;base.transform.scale_y=2.0;
+        let before=DrawingSnapshot {id:"multi-node-drag".into(),layers:vec![first,second],..Default::default()};
+        load_drawing_fixture(&mut app,&before);
+        settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
+        let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"first"}),serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"second"})]).unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+        for (x,y,shift,count) in [(410.0,300.0,false,1),(460.0,300.0,true,2),(700.0,500.0,true,2),(460.0,300.0,true,1),(460.0,300.0,true,2)] {
+            settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x,y,shift,width:800.0,height:600.0,..Default::default()}),&meta).await;
+            settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x,y,shift,width:800.0,height:600.0,alt:false,ctrl:false,meta:false,cancelled:false}),&meta).await;
+            assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.len(),count);
+            assert_eq!(selected_strokes(&app).await,vec!["first".to_owned(),"second".to_owned()]);
+            assert_eq!(app.snapshot().unwrap(),before);
+        }
+        let selected=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
+        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:410.0,y:300.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
+        assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,selected);
+        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {x:420.0,y:310.0,width:800.0,height:600.0,shift:false,alt:false,samples:vec![]}),&meta).await;
+        assert_eq!(app.snapshot().unwrap(),before);
+        let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+        let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
+        assert_eq!(records.iter().find(|row|row["id"]=="first").unwrap()["segments"][1]["to"],serde_json::json!([20.0,10.0]));
+        assert_eq!(records.iter().find(|row|row["id"]=="second").unwrap()["segments"][1]["to"],serde_json::json!([15.0,5.0]));
+        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:420.0,y:310.0,width:800.0,height:600.0,shift:false,alt:false,ctrl:false,meta:false,cancelled}),&meta).await;
+        if cancelled {assert_eq!(app.snapshot().unwrap(),before);assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,selected);} else {
+            assert_one_artifact_publication(&receipt);
+            let after=app.snapshot().unwrap();assert_ne!(after,before);
+            assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.len(),2);
+            artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
+            artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
+        }
+        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:700.0,y:500.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
+        settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:700.0,y:500.0,width:800.0,height:600.0,shift:false,alt:false,ctrl:false,meta:false,cancelled:false}),&meta).await;
+        assert!(app.interaction_state().await.selection.get(DRAWING_POINT_DOMAIN).is_none_or(|selection|selection.ids.is_empty()));
+        assert_eq!(selected_strokes(&app).await,vec!["first".to_owned(),"second".to_owned()]);
+        eprintln!("[DEBUG] modified node picks preserve layers and combined affine preview/release/history; cancelled={cancelled}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
+    let mut app=drawing_app().await;
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let mut before=before;
+    let mut second=before.layers[0].clone();
+    crate::schema::layer_base_mut(&mut second).id="shape-b".into();
+    before.layers.push(second);
+    let mut after=before.clone();
+    for layer in &mut after.layers {crate::schema::layer_base_mut(layer).attributes.fill_rule=crate::FillRule::Nonzero;}
+    let ids=before.layers.iter().map(|layer|crate::schema::layer_id(layer).to_string()).collect();
+    load_drawing_fixture(&mut app,&before);
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:ids,field:"fillRule".into(),value:"nonzero".into()}),|app|app.snapshot().unwrap(),before,after).await;
+    eprintln!("[DEBUG] multi-selection fill-rule edit publishes and undoes/redoes as one history entry");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn alignment_across_groups_undoes_as_one_history_entry() {
+    let mut app=drawing_app().await;
+    let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+    crate::schema::layer_base_mut(&mut first).id="first".into();
+    let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+    let base=crate::schema::layer_base_mut(&mut second);base.id="second".into();base.transform.x=20.0;base.transform.y=20.0;
+    let mut group=crate::schema::create_drawing_group_layer("Group");
+    let DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
+    body.base.id="group".into();body.base.transform.scale_x=2.0;body.base.transform.scale_y=3.0;body.children=vec![first,second];
+    let mut third=crate::schema::create_drawing_shape_layer_rect("Third");
+    let base=crate::schema::layer_base_mut(&mut third);base.id="third".into();base.transform.x=-20.0;
+    let before=DrawingSnapshot {id:"alignment-history".into(),layers:vec![group,third],..Default::default()};
+    let mut after=before.clone();
+    let DrawingLayerNode::Group(body)=&mut after.layers[0] else {unreachable!()};
+    for layer in &mut body.children {crate::schema::layer_base_mut(layer).transform.x=-10.0;}
+    load_drawing_fixture(&mut app,&before);
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["first".into(),"second".into(),"third".into()],operation:"alignLeft".into()}),|app|app.snapshot().unwrap(),before,after).await;
+    eprintln!("[DEBUG] cross-group alignment publishes and undoes/redoes as one history entry");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn layer_stack_steps_undo_as_one_history_entry() {
+    for (operation,order) in [("bringForward",["a","d","b","c"]),("sendBackward",["b","c","a","d"])] {
+        let mut app=drawing_app().await;
+        let layers=["a","b","c","d"].into_iter().map(|id| {
+            let mut layer=crate::schema::create_drawing_shape_layer_rect(id);
+            crate::schema::layer_base_mut(&mut layer).id=id.into();layer
+        }).collect::<Vec<_>>();
+        let before=DrawingSnapshot {id:"stack-history".into(),layers,..Default::default()};
+        let after=DrawingSnapshot {layers:order.into_iter().map(|id|before.layers.iter().find(|layer|crate::schema::layer_id(layer)==id).unwrap().clone()).collect(),..before.clone()};
+        load_drawing_fixture(&mut app,&before);
+        artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["c".into(),"b".into()],operation:operation.into()}),|app|app.snapshot().unwrap(),before,after).await;
+        eprintln!("[DEBUG] {operation} publishes and undoes/redoes as one history entry");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
+    let (mut app,meta)=inline_selection_app().await;
+    let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+    let base=crate::schema::layer_base_mut(&mut first);base.id="first".into();base.transform.x=2.0;
+    let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+    crate::schema::layer_base_mut(&mut second).id="second".into();
+    let mut group=crate::schema::create_drawing_group_layer("Group");
+    let DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
+    body.base.id="group".into();body.base.transform.x=5.0;body.children=vec![first.clone(),second.clone()];
+    let before=DrawingSnapshot {id:"ungroup-history".into(),layers:vec![group],..Default::default()};
+    crate::schema::layer_base_mut(&mut first).transform.x=7.0;
+    crate::schema::layer_base_mut(&mut second).transform.x=5.0;
+    let after=DrawingSnapshot {layers:vec![first,second],..before.clone()};
+    load_drawing_fixture(&mut app,&before);
+    let (_,receipt)=settled(&mut app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["group".into()],operation:"ungroup".into()}),&meta).await;
+    assert_one_artifact_publication(&receipt);
+    assert_eq!(app.snapshot().unwrap(),after);
+    assert_eq!(selected_strokes(&app).await,vec!["first".to_owned(),"second".to_owned()]);
+    artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
+    artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
+    eprintln!("[DEBUG] ungroup selects promoted children and undoes/redoes as one history entry");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
+    let mut app=drawing_app().await;
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    load_drawing_fixture(&mut app,&before);
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after).await;
+    eprintln!("[DEBUG] group isolation publishes and undoes/redoes as one history entry");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn deleting_selected_nodes_commits_once_clears_points_and_undoes_exactly() {
+    let (mut app,mut meta)=inline_selection_app().await;
+    meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+    let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}];
+    let mut path=crate::schema::create_drawing_path_layer("Path",segments.clone());
+    crate::schema::layer_base_mut(&mut path).id="path".into();
+    let before=DrawingSnapshot {id:"node-delete-history".into(),layers:vec![path],..Default::default()};
+    load_drawing_fixture(&mut app,&before);
+    let geometry=interaction::points::geometry_id(&segments).unwrap();
+    let points=[0,1].iter().map(|index|interaction::points::point_id("path",&geometry,*index,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()).collect::<Vec<_>>();
+    for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,points)] {
+        let targets=serde_json::to_string(&ids.into_iter().map(|id|serde_json::json!({"granularity":granularity,"id":id})).collect::<Vec<_>>()).unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+    }
+    let (_,receipt)=settled(&mut app,DrawingCommand::DeleteSelection(delete_selection::DeleteSelection {}),&meta).await;
+    assert_one_artifact_publication(&receipt);
+    let after=app.snapshot().unwrap();
+    let Some(DrawingLayerNode::Path(path))=crate::schema::find_drawing_layer(&after,"path") else {panic!("Path missing")};
+    assert_eq!(path.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}]);
+    assert!(app.interaction_state().await.selection.get(DRAWING_POINT_DOMAIN).is_none_or(|selection|selection.ids.is_empty()));
+    assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);
+    artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
+    artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
+    eprintln!("[DEBUG] Delete selection commits one node edit, clears stale point references and supports exact undo/redo");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
+    for (shift,ctrl,cancelled,initial,expected) in [(false,false,false,vec![0],vec![1,2]),(true,false,false,vec![1],vec![2]),(false,true,false,vec![0],vec![0,1,2]),(false,false,true,vec![0],vec![0])] {
+        let (mut app,mut meta)=inline_selection_app().await;
+        meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
+        let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}];
+        let geometry=interaction::points::geometry_id(&segments).unwrap();
+        let point=|index|interaction::points::point_id("path",&geometry,index,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
+        let mut path=crate::schema::create_drawing_path_layer("Path",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
+        let before=DrawingSnapshot {id:"node-marquee".into(),layers:vec![path],..Default::default()};load_drawing_fixture(&mut app,&before);
+        settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
+        for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,initial.iter().copied().map(point).collect())] {
+            let targets=serde_json::to_string(&ids.into_iter().map(|id|serde_json::json!({"granularity":granularity,"id":id})).collect::<Vec<_>>()).unwrap();
+            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+            semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
+        }
+        settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:404.0,y:292.0,width:800.0,height:600.0,shift,ctrl,..Default::default()}),&meta).await;
+        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {x:412.0,y:312.0,width:800.0,height:600.0,shift,alt:false,samples:vec![]}),&meta).await;
+        assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,initial.iter().copied().map(point).collect::<Vec<_>>());
+        assert_eq!(app.snapshot().unwrap(),before);
+        settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:412.0,y:312.0,width:800.0,height:600.0,shift,ctrl,meta:false,alt:false,cancelled}),&meta).await;
+        assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,expected.iter().copied().map(point).collect::<Vec<_>>());
+        assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);assert_eq!(app.snapshot().unwrap(),before);
+        eprintln!("[DEBUG] node marquee selection preserves the document and layers; shift={shift}, ctrl={ctrl}, cancelled={cancelled}");
     }
 }

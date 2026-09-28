@@ -20,6 +20,11 @@
 use crate::{FormsDiff, FormsSnapshot};
 use protocol::Mutation;
 
+#[path = "📨️commit-response/🦀️.rs"]
+pub mod commit_response;
+#[path = "↩️discard-response/🦀️.rs"]
+pub mod discard_response;
+
 //#region 🔖️FormMutation
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<FormsSnapshot, FormMutation>` payload
 /// struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
@@ -37,6 +42,8 @@ pub enum FormMutation {
     MoveBlockToStep(super::move_block_to_step::mutation::MoveBlockToStep),
     ReplaceBlock(super::replace_block::mutation::ReplaceBlock),
     ChangeFormTitle(super::change_form_title::mutation::ChangeFormTitle),
+    CommitResponse(commit_response::mutation::CommitResponse),
+    DiscardResponse(discard_response::mutation::DiscardResponse),
 }
 //#endregion 🔖️FormMutation
 
@@ -68,7 +75,7 @@ pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> semio_framework_artifact_pl
 /// exhaustive `mutate-*` case measures itself against (5 step kinds, 4 block kinds and the document title). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.
-pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-form-title"];
+pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-form-title", "commit-response", "discard-response"];
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
 /// diagnostics included — the shape an external conformance host needs, since a committed
@@ -121,7 +128,7 @@ pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::FormStep>, String> {
     let steps: Vec<crate::FormStep> = dsl::os_pack::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
-    crate::materialize_forms_steps(&mut snapshot.structure, steps.clone());
+    crate::replace_forms_steps(snapshot, steps.clone());
     Ok(steps)
 }
 //#endregion 🔖️Kinds

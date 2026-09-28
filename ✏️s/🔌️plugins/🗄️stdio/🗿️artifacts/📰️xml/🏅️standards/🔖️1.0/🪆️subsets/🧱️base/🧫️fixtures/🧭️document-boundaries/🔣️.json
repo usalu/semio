@@ -1,0 +1,64 @@
+{
+  "valid": [
+    {
+      "id": "doctype-before-prolog",
+      "source": "<!DOCTYPE root SYSTEM \"urn:system]>greater>\">\n<!--before--><?prepare first?><root/><!--after--><?finish last?>",
+      "doctypePosition": 0,
+      "prologKinds": ["comment", "processingInstruction"],
+      "epilogKinds": ["comment", "processingInstruction"]
+    },
+    {
+      "id": "doctype-between-prolog",
+      "source": "<!--first--><!DOCTYPE root PUBLIC \"public-id\" \"urn:system]>id\"><?prepare second?><root/><?finish after?>",
+      "doctypePosition": 1,
+      "prologKinds": ["comment", "processingInstruction"],
+      "epilogKinds": ["processingInstruction"]
+    },
+    {
+      "id": "doctype-after-prolog",
+      "source": "<!--first--><?prepare second?><!DOCTYPE root [<!ENTITY quoted \"value ] > still quoted\">]><root/><!--after-->",
+      "doctypePosition": 2,
+      "prologKinds": ["comment", "processingInstruction"],
+      "epilogKinds": ["comment"]
+    }
+  ],
+  "invalid": [
+    {
+      "id": "duplicate-doctype",
+      "source": "<!DOCTYPE root><!--between--><!DOCTYPE root><root/>",
+      "error": "duplicate DOCTYPE declaration"
+    },
+    {
+      "id": "trailing-doctype",
+      "source": "<root/><!--after--><!DOCTYPE root>",
+      "error": "DOCTYPE declaration cannot appear after root element"
+    }
+  ],
+  "invalidAuthored": [
+    {
+      "id": "doctype-position-past-prolog",
+      "prologLength": 1,
+      "doctypePosition": 2,
+      "error": "DOCTYPE prolog position 2 exceeds prolog length 1"
+    },
+    {
+      "id": "non-misc-epilog-node",
+      "epilogKind": "text",
+      "error": "XML epilog may contain only comments and processing instructions"
+    },
+    {
+      "id": "declaration-encoding-quote-injection",
+      "encoding": "UTF-8\" standalone=\"no",
+      "quote": "double",
+      "rootText": "Grüße",
+      "error": "XML declaration encoding contains its double quote delimiter"
+    },
+    {
+      "id": "declaration-conflicts-with-utf8-transport",
+      "encoding": "ISO-8859-1",
+      "quote": "single",
+      "rootText": "Grüße",
+      "error": "XML UTF-8 transport cannot declare encoding ISO-8859-1"
+    }
+  ]
+}

@@ -170,12 +170,25 @@ pub struct TurnMoreWorkSources {
     pub command_ingress: bool,
     /// 🚪️ The guest lifecycle registry owes a receipt or a transition.
     pub lifecycle: bool,
+    /// ♻️ UI owners released during this turn still owe bounded retirement work.
+    pub ui_retirement: bool,
 }
 
 impl TurnMoreWorkSources {
     /// 😴️ The reading of a turn that answered `Idle`.
-    pub const SETTLED: Self =
-        Self { executor_deadline: false, process_pool: false, close_cleanup: false, typed_operation: false, typed_operation_contended: false, reconcile: false, resumes: false, executor_pending: false, command_ingress: false, lifecycle: false };
+    pub const SETTLED: Self = Self {
+        executor_deadline: false,
+        process_pool: false,
+        close_cleanup: false,
+        typed_operation: false,
+        typed_operation_contended: false,
+        reconcile: false,
+        resumes: false,
+        executor_pending: false,
+        command_ingress: false,
+        lifecycle: false,
+        ui_retirement: false,
+    };
 
     /// 🔦️ Whether any source is armed — equal to the turn's `MoreWork` verdict.
     pub fn any(self) -> bool {
@@ -194,11 +207,20 @@ impl TurnMoreWorkSources {
             (self.executor_pending, "executor_pending"),
             (self.command_ingress, "command_ingress"),
             (self.lifecycle, "lifecycle"),
+            (self.ui_retirement, "ui_retirement"),
         ]
         .into_iter()
         .filter_map(|(armed, name)| armed.then_some(name))
         .collect()
     }
+}
+
+/// 🧹️ Retires late-built children and documents before their released arguments and keeps queued ownership runnable.
+pub(crate) fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault> {
+    let built_complete = ui_contract::close_built_node_page_one();
+    let documents = ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
+    let values = ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
+    Ok(!built_complete || !documents.complete || !values.complete)
 }
 
 /// 🩺️ Records what this turn was handed so the per-turn memory line can put growth beside input
@@ -1362,6 +1384,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
+    let ui_retirement_work = close_late_ui_retirement()?;
     // 🔒️ `typed_operation_scan.contended` is deliberately NOT folded in. A busy instance lock is not
     // an answer of "there is runnable work", it is "another owner is mid-step and I could not look" —
     // and the guest is single-threaded, so on wasm it can only ever be a reader inside this very turn.
@@ -1370,7 +1393,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     // hold that lock is itself either a reactor executor task (`executor_pending`), a task resume
     // (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
     // which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
-    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work;
+    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,
         process_pool: process_pool_work,
@@ -1382,6 +1405,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         executor_pending,
         command_ingress: command_ingress_pending,
         lifecycle: lifecycle_work,
+        ui_retirement: ui_retirement_work,
     });
     trace_turn_phase_retention("render");
     trace_guest_memory_pressure();

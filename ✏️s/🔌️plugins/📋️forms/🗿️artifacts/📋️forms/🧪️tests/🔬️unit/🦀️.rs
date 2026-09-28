@@ -39,16 +39,17 @@ async fn question_fields_roundtrip() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn forms_working_scene_is_owned_by_the_exact_snapshot_child() {
-    let (owned, _) = forms_children_from_steps(&[FormStep { id: "step-one".into(), title: "One".into(), description: None, blocks: Vec::new() }]);
-    let wire = dsl::os_pack::json::to_json_string(&owned).into_bytes();
-    let reconstructed: FormsStructureChild = dsl::os_pack::json::from_json_str(std::str::from_utf8(&wire).expect("child JSON UTF-8")).expect("Forms child wire roundtrip");
+async fn forms_definition_is_durable_and_owned_by_each_snapshot() {
+    let original = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "test".into(), "1".into(), None, &[FormStep { id: "step-one".into(), title: "One".into(), description: None, blocks: Vec::new() }]);
+    let mut cloned = original.clone();
+    cloned.definition.steps[0].title = "Changed".into();
+    let wire = dsl::os_pack::json::to_json_string(&original);
+    let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(&wire).unwrap();
     let observed = serde_json::json!({
-        "ownedHasScene": owned.local_owner::<FormsWorkingScene>().is_some(),
-        "wireIdentityMatches": owned == reconstructed,
-        "wireHasScene": reconstructed.local_owner::<FormsWorkingScene>().is_some(),
+        "ownerIsolation": original.definition.steps[0].title == "One",
+        "wireKeepsDefinition": decoded.definition == original.definition,
+        "childReferencesMatch": decoded.structure == original.structure && decoded.results == original.results,
     });
-
     assert_eq!(observed, SerdeJsonFormsChildOwnerOracle::expected());
 }
 

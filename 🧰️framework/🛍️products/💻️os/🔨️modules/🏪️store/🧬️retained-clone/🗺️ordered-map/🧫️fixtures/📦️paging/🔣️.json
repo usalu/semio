@@ -1,0 +1,52 @@
+{
+  "pageCapacity": 16,
+  "entryCount": 70,
+  "keyPrefix": "key-",
+  "valuePrefix": "value-β-",
+  "longKeyByteLength": 65536,
+  "comparisonGrant": {
+    "maximumItems": 1,
+    "maximumBytes": 7
+  },
+  "progressChannels": {
+    "comparisonOnly": true,
+    "capacityOnly": true,
+    "minimumMovedItems": 1
+  },
+  "repeatedGrowth": {
+    "entryCount": 32,
+    "insertions": 17,
+    "keyPrefix": "growth-",
+    "valuePrefix": "page-β-",
+    "expectedEntryCount": 49
+  },
+  "immutableLookup": {
+    "capturedTarget": "key-0033a",
+    "externalAfterCapture": "key-0068a",
+    "expectedOrdinal": 34
+  },
+  "operations": [
+    {
+      "kind": "lookup",
+      "key": "key-0033",
+      "expected": { "found": true, "ordinal": 33, "entryCount": 70 }
+    },
+    {
+      "kind": "lookup",
+      "key": "key-0033a",
+      "expected": { "found": false, "ordinal": 34, "entryCount": 70 }
+    },
+    {
+      "kind": "insert",
+      "key": "key-0033a",
+      "value": "inserted-日本語",
+      "expected": { "found": true, "ordinal": 34, "entryCount": 71 }
+    },
+    {
+      "kind": "duplicate",
+      "key": "key-0033",
+      "value": "must-not-replace",
+      "expected": { "found": true, "ordinal": 33, "entryCount": 71 }
+    }
+  ]
+}

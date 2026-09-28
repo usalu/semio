@@ -10,11 +10,16 @@ use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnap
 use dsl::os_pack::json::{Object, Value};
 use framework_schema::ArtifactSchema;
 
+#[path = "📝️definition/🦀️.rs"]
+pub mod definition;
+#[path = "📨️response/🦀️.rs"]
+pub mod response;
+#[path = "✅️validation/🦀️.rs"]
+pub mod validation;
+pub use validation::{can_advance, step_errors};
+
 //#region 🔖️Artifact
-/// 🧬️ forms document artifact state. Ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
-/// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
-/// through `crate::forms_artifact_steps`, never a bare field.
+/// 🧬️ Form domain state and its derived composition slots.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
@@ -28,6 +33,10 @@ pub struct FormsArtifact {
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[state(artifact)]
+    pub definition: definition::FormsDefinition,
+    #[state(artifact)]
+    pub responses: Vec<response::FormsResponse>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub structure: FormsStructureChild,
@@ -48,19 +57,19 @@ impl dsl::FromValue for FormsArtifact {
 impl Default for FormsArtifact {
     fn default() -> Self {
         let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[]);
-        Self { schema: empty.schema, id: empty.id, version: empty.version, title: empty.title, structure: empty.structure, results: empty.results }
+        Self { schema: empty.schema, id: empty.id, version: empty.version, title: empty.title, definition: empty.definition, responses: empty.responses, structure: empty.structure, results: empty.results }
     }
 }
 
 impl FormsArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> FormsSnapshot {
-        FormsSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), structure: self.structure.clone(), results: self.results.clone() }
+        FormsSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), definition: self.definition.clone(), responses: self.responses.clone(), structure: self.structure.clone(), results: self.results.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: FormsSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, structure: snapshot.structure, results: snapshot.results }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, definition: snapshot.definition, responses: snapshot.responses, structure: snapshot.structure, results: snapshot.results }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -69,6 +78,8 @@ impl FormsArtifact {
         self.id = snapshot.id;
         self.version = snapshot.version;
         self.title = snapshot.title;
+        self.definition = snapshot.definition;
+        self.responses = snapshot.responses;
         self.structure = snapshot.structure;
         self.results = snapshot.results;
     }
@@ -80,8 +91,8 @@ impl FormsArtifact {
 /// forms' historical names (relocated from the deleted `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub use crate::playbook::{
-    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, is_block_visible as is_question_visible,
-    is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
+    default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, is_block_visible as is_question_visible,
+    is_extension_block_kind as is_extension_question_kind, visible_blocks as visible_questions,
 };
 
 pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
@@ -100,15 +111,12 @@ pub fn empty_forms_snapshot() -> FormsSnapshot {
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
 pub fn building_component_spec() -> FormsSnapshot {
-    forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
 }
 
-/// 📄️ The `default` (Contact) example, parsed once from `forms_dsl::DEFAULT_EXAMPLE_TEXT` — the source of truth
-/// for every "default" example call site (`setActiveExample`, `App::example`). Loaded through
-/// `parse_playbook_example_dsl` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM), not `parse_dsl`
-/// — see that function's own doc comment for why.
+/// 📇️ Loads the canonical Contact template.
 pub fn default_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_playbook_example_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
 }
 
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
@@ -119,7 +127,7 @@ pub fn default_example_json() -> String {
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
 pub fn onboarding_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_playbook_example_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
 }
 
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
@@ -170,12 +178,10 @@ pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: i
 //#endregion 🔖️QuestionLocation
 
 //#region 🔖️Ids
-/// 🆔️ A process-unique id for a newly created step/question/option — shared by every command that
+/// 🆔️ A platform-entropy identity for a newly created step/question/option — shared by every command that
 /// creates one (`addStep`, `addQuestion`, `dropQuestionKind`, `addQuestionOption`).
 pub fn create_form_id(prefix: &str) -> String {
-    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    format!("{prefix}-{next}")
+    format!("{prefix}-{}", dsl::os_identity::time_ordered_id())
 }
 
 /// 🌳️ The document-tree node id for a step — shared by the document panel (tree item ids) and the

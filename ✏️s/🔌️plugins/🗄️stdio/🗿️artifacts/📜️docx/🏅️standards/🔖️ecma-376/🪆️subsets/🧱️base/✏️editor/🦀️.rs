@@ -1,18 +1,19 @@
 //! ✏️ Docx editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.docx@ecma-376/*`
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`DocumentWindowKit`), rendering one page per top-level `DocxDocument.body` block and editing
-//! it through the artifact's own `DocxMutation::SetBlockContent`.
+//! (`DocumentWindowKit`), rendering one draft per paragraph run and editing it through the
+//! artifact's own `DocxMutation::SetRunText`.
 
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
-use crate::schema::diff::DocxBlockPath;
-use crate::schema::mutations::{set_run_text, set_snapshot};
-use crate::schema::snapshot::DocxBlock;
+use crate::schema::mutations::{set_run_text, set_snapshot, DocxXmlAddress};
 use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep},
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
+
+#[path = "📬️preparation/🦀️.rs"]
+pub(crate) mod preparation;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.docx@ecma-376/*` (the unrestricted `any` subset). Duplicated
@@ -23,11 +24,11 @@ pub const DOCX_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx"
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
-/// action (`set-page`, contract §2.6) can trigger. `index` addresses `DocxDocument.body` directly
-/// (one page per top-level block, see the window's own `render` doc comment).
+/// action (`set-page`, contract §2.6) can trigger. `page` addresses `DocxDocument.body` and `item`
+/// addresses the paragraph's original run ordinal.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum DocxEditorCommand {
-    SetPage { page: u32, item: u32, revision: String, text: String },
+    SetPage { address: DocxXmlAddress, text: String },
 }
 
 semio_s_artifact_stdio_contract::impl_serde_op_codec!(DocxEditorCommand, "docx editor command");
@@ -37,42 +38,60 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DocxEditorComm
 //#region 🔖️Helpers
 /// 🧮️ Maps one strictly addressed, revision-checked paragraph draft to a reversible mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_set_page_mutation(snapshot: &DocxSnapshot, page: usize, item: u32, revision: &str, text: &str) -> Result<Option<DocxMutation>, Fault> {
-    let (run_index, current) = addressed_run_text(snapshot, page, item)?;
-    semio_s_artifact_stdio_contract::require_window_kit_document_revision(current, revision, "stdio.docx.set-page.conflict")?;
-    if current == text {
-        return Ok(None);
-    }
-    let path = DocxBlockPath { segments: Vec::new(), index: page };
-    Ok(Some(DocxMutation::SetRunText(set_run_text::SetRunText { path, run_index, text: text.to_string() })))
+fn build_set_page_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, Fault> {
+    preparation::prepare_set_run_text(snapshot, address, text).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
 }
 
-fn addressed_run_text(snapshot: &DocxSnapshot, page: usize, item: u32) -> Result<(usize, &str), Fault> {
-    let block = snapshot.document.body.get(page).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.stale-target"), format!("DOCX body block {page} no longer exists")))?;
-    let DocxBlock::Paragraph(paragraph) = block else {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.unsupported-target"), format!("DOCX body block {page} is not a paragraph")));
+fn docx_action_fault(code: &'static str, message: impl Into<String>) -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+}
+
+fn required_docx_xml_address(args: Option<&dsl::DslValue>) -> Result<DocxXmlAddress, Fault> {
+    let dsl::DslValue::Object(arguments) = args.ok_or_else(|| docx_action_fault("stdio.docx.set-page.arguments", "set-page requires an argument object"))? else {
+        return Err(docx_action_fault("stdio.docx.set-page.arguments", "set-page requires an argument object"));
     };
-    let run_index = item as usize;
-    let run =
-        paragraph.runs.get(run_index).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.stale-item"), format!("DOCX text run {page}/{run_index} no longer exists")))?;
-    Ok((run_index, &run.text))
+    let mut addresses = arguments.iter().filter(|(name, _)| name == "address").map(|(_, value)| value);
+    let Some(dsl::DslValue::Object(fields)) = addresses.next() else { return Err(docx_action_fault("stdio.docx.set-page.address-required", "set-page requires one canonical address object")) };
+    if addresses.next().is_some() {
+        return Err(docx_action_fault("stdio.docx.set-page.address-duplicate", "set-page address must occur exactly once"));
+    }
+    let field = |name: &str| -> Result<&dsl::DslValue, Fault> {
+        let mut matches = fields.iter().filter(|(key, _)| key == name).map(|(_, value)| value);
+        let value = matches.next().ok_or_else(|| docx_action_fault("stdio.docx.set-page.address-field", format!("DOCX address requires '{name}'")))?;
+        if matches.next().is_some() {
+            return Err(docx_action_fault("stdio.docx.set-page.address-field-duplicate", format!("DOCX address field '{name}' must occur exactly once")));
+        }
+        Ok(value)
+    };
+    if fields.len() != 4 {
+        return Err(docx_action_fault("stdio.docx.set-page.address-fields", "DOCX address requires exactly partPath, nodePath, expectedName, and revision"));
+    }
+    let text = |name: &str| match field(name)? {
+        dsl::DslValue::String(value) => Ok(value.clone()),
+        _ => Err(docx_action_fault("stdio.docx.set-page.address-field-type", format!("DOCX address field '{name}' must be text"))),
+    };
+    let dsl::DslValue::Array(indices) = field("nodePath")? else { return Err(docx_action_fault("stdio.docx.set-page.node-path", "DOCX address nodePath must be an index array")) };
+    let mut node_path = Vec::with_capacity(indices.len());
+    for value in indices {
+        let dsl::DslValue::Number(number) = value else { return Err(docx_action_fault("stdio.docx.set-page.node-path-index", "DOCX address nodePath entries must be unsigned integers")) };
+        let index = number.as_u64().and_then(|value| usize::try_from(value).ok()).ok_or_else(|| docx_action_fault("stdio.docx.set-page.node-path-index", "DOCX address nodePath entries must fit the native index range"))?;
+        node_path.push(index);
+    }
+    Ok(DocxXmlAddress { part_path: text("partPath")?, node_path, expected_name: text("expectedName")?, revision: text("revision")? })
 }
 
-const DOCX_TEXT_WORK_PAGE_BYTES: usize = 4_096;
+pub(crate) const DOCX_TEXT_WORK_PAGE_BYTES: usize = 4_096;
 
 struct DocxSetPageWork {
-    scan_cursor: usize,
-    revision_hash: u64,
-    equal: bool,
-    copying: bool,
     copied_text: semio_s_artifact_stdio_contract::editing::RetainedTextCopy,
+    validated: bool,
     complete: bool,
     closing: bool,
 }
 
 impl Default for DocxSetPageWork {
     fn default() -> Self {
-        Self { scan_cursor: 0, revision_hash: 0xcbf29ce484222325, equal: true, copying: false, copied_text: Default::default(), complete: false, closing: false }
+        Self { copied_text: Default::default(), validated: false, complete: false, closing: false }
     }
 }
 
@@ -84,46 +103,31 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
     fn extent(
         &self,
         command: &<DocxEditor as ArtifactEditor>::Command,
-        snapshot: &DocxSnapshot,
+        _snapshot: &DocxSnapshot,
         _interaction: &protocol::InteractionState,
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DocxEditor>>>,
     ) -> Option<usize> {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { page, item, text, .. }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) = command else {
             return None;
         };
-        addressed_run_text(snapshot, *page as usize, *item).ok()?;
-        (text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES).then_some(2)
+        let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
+        (address_bytes <= DOCX_TEXT_WORK_PAGE_BYTES && text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES).then_some(text.len().div_ceil(DOCX_TEXT_WORK_PAGE_BYTES).saturating_add(1))
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<DocxEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<DocxEditor>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("stdio.docx.set-page.work-closed"));
         }
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { page, item, revision, text }) = input.command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) = input.command else {
             return Err(Fault::from("stdio.docx.set-page.command-mismatch"));
         };
-        let page = *page as usize;
-        let (run_index, current) = addressed_run_text(input.snapshot, page, *item)?;
-        if !self.copying {
-            if self.scan_cursor < current.len() {
-                let end = self.scan_cursor.saturating_add(DOCX_TEXT_WORK_PAGE_BYTES).min(current.len());
-                let source = &current.as_bytes()[self.scan_cursor..end];
-                for byte in source {
-                    self.revision_hash = (self.revision_hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3);
-                }
-                self.equal &= text.as_bytes().get(self.scan_cursor..end) == Some(source);
-                self.scan_cursor = end;
-                return Ok(ArtifactCommandWorkStep::Replay { stage: "docx-check-run-text", preview: br#"{"en":"Checking paragraph revision","de":"Absatzversion wird gepr\u00fcft"}"# });
-            }
-            self.equal &= current.len() == text.len();
-            if format!("{:016x}", self.revision_hash) != *revision {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.conflict"), "The paragraph changed while this draft was open"));
-            }
-            if self.equal {
+        if !self.validated {
+            preparation::snapshot_is_admitted(input.snapshot).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))?;
+            let Some(_) = build_set_page_mutation(input.snapshot, address, text)? else {
                 self.complete = true;
                 return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
-            }
-            self.copying = true;
+            };
+            self.validated = true;
         }
         self.copied_text.advance(text, DOCX_TEXT_WORK_PAGE_BYTES).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
         if !self.copied_text.is_complete() {
@@ -132,8 +136,8 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         let copied = self.copied_text.take().ok_or_else(|| Fault::from("stdio.docx.set-page.copy-incomplete"))?;
         self.complete = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit {
-            artifact_mutations: vec![DocxMutation::SetRunText(set_run_text::SetRunText { path: DocxBlockPath { segments: Vec::new(), index: page }, run_index, text: copied })],
-            description: Some(format!("Set page {page}")),
+            artifact_mutations: vec![DocxMutation::SetRunText(set_run_text::SetRunText { address: address.clone(), text: copied })],
+            description: Some(format!("Set DOCX run in {}", address.part_path)),
             ..Default::default()
         }))
     }
@@ -154,6 +158,94 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
 fn docx_set_page_work(_tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<DocxEditor>>> {
     Box::new(DocxSetPageWork::default())
 }
+
+macro_rules! canonical_docx_set_page_work {
+    ($work:ident, $factory:ident, $editor:ty, $command:path) => {
+        struct $work {
+            copied_text: semio_s_artifact_stdio_contract::editing::RetainedTextCopy,
+            validated: bool,
+            complete: bool,
+            closing: bool,
+        }
+
+        impl Default for $work {
+            fn default() -> Self {
+                Self { copied_text: Default::default(), validated: false, complete: false, closing: false }
+            }
+        }
+
+        impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<$editor>> for $work {
+            fn tool_id(&self) -> &'static str {
+                "set-page"
+            }
+
+            fn extent(
+                &self,
+                command: &<$editor as semio_framework_plugin::ArtifactEditor>::Command,
+                _snapshot: &DocxSnapshot,
+                _interaction: &protocol::InteractionState,
+                _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<$editor>>>,
+            ) -> Option<usize> {
+                let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($command { address, text }) = command else {
+                    return None;
+                };
+                let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
+                (address_bytes <= crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES && text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES)
+                    .then_some(text.len().div_ceil(crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES).saturating_add(1))
+            }
+
+            fn step(
+                &mut self,
+                input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>,
+            ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<$editor>>, semio_framework_plugin::Fault> {
+                if self.closing || self.complete {
+                    return Err(semio_framework_plugin::Fault::from("stdio.docx.set-page.work-closed"));
+                }
+                let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($command { address, text }) = input.command else {
+                    return Err(semio_framework_plugin::Fault::from("stdio.docx.set-page.command-mismatch"));
+                };
+                if !self.validated {
+                    let Some(_) = build_set_page_mutation(input.snapshot, address, text)? else {
+                        self.complete = true;
+                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit::default()));
+                    };
+                    self.validated = true;
+                }
+                self.copied_text
+                    .advance(text, crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES)
+                    .map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
+                if !self.copied_text.is_complete() {
+                    return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Replay { stage: "docx-copy-run-text", preview: br#"{"en":"Preparing paragraph text","de":"Absatztext wird vorbereitet"}"# });
+                }
+                let copied = self.copied_text.take().ok_or_else(|| semio_framework_plugin::Fault::from("stdio.docx.set-page.copy-incomplete"))?;
+                self.complete = true;
+                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit {
+                    artifact_mutations: vec![DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: copied })],
+                    description: Some(format!("Set DOCX run in {}", address.part_path)),
+                    ..Default::default()
+                }))
+            }
+
+            fn begin_close(&mut self) {
+                self.closing = true;
+            }
+
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+                self.copied_text.close_step(maximum_items, maximum_bytes)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.closing && self.copied_text.terminal_is_empty()
+            }
+        }
+
+        fn $factory(_tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<$editor>>> {
+            Box::new($work::default())
+        }
+    };
+}
+
+pub(crate) use canonical_docx_set_page_work;
 //#endregion 🔖️Helpers
 
 //#region 🔖️Editor
@@ -191,8 +283,9 @@ impl ArtifactEditor for DocxEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-page" => {
-                let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
-                Ok(DocxEditorCommand::SetPage { page: edit.page, item: edit.item, revision: edit.revision, text: edit.text })
+                let address = required_docx_xml_address(args)?;
+                let text = semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")?;
+                Ok(DocxEditorCommand::SetPage { address, text })
             }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
         })
@@ -213,13 +306,12 @@ impl ArtifactEditor for DocxEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { page, item, revision, text }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let page = *page as usize;
-        let Some(mutation) = build_set_page_mutation(doc.snapshot, page, *item, revision, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+        let Some(mutation) = build_set_page_mutation(doc.snapshot, address, text)? else { return Ok(Emit::default()) };
+        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set DOCX run in {}", address.part_path)), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -255,14 +347,14 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     tools: ["set-page"],
     payload_schema: "semio.stdio.document-text-edit-command.v1",
     reduce: |command, snapshot| {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { page, item, revision, text }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) = command else {
             return Err(Fault::from("stdio-docx-native-edit-command-mismatch"));
         };
-        let page = *page as usize;
-        let Some(mutation) = build_set_page_mutation(snapshot, page, *item, revision, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+        let Some(mutation) = build_set_page_mutation(snapshot, address, text)? else { return Ok(Emit::default()) };
+        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set DOCX run in {}", address.part_path)), ..Default::default() })
     },
     work: docx_set_page_work,
+    preparation_route: preparation::route,
 }
 
 //#endregion 🔖️Editor

@@ -59,7 +59,7 @@ fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement
         common.presentation.stroke = Some(rgb(&stroke.color));
         common.presentation.stroke_opacity = Some(stroke.color[3].to_string());
         common.presentation.stroke_width = Some(stroke.width.to_string());
-        common.extra_attrs.extend([attr("stroke-linecap", &stroke.cap), attr("stroke-linejoin", &stroke.join)]);
+        common.extra_attrs.extend([attr("stroke-linecap", stroke.cap.as_str()), attr("stroke-linejoin", stroke.join.as_str())]);
         if let Some(dash) = &stroke.dash { common.extra_attrs.push(attr("stroke-dasharray", dash.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "))); }
     }
     common.extra_attrs.push(attr("fill-rule", node.fill_rule.as_deref().unwrap_or("evenodd")));
@@ -100,16 +100,35 @@ fn finite_numbers(node: &DrawingSceneNode) -> bool {
         && node.image.as_ref().is_none_or(|image| finite(&[image.width,image.height]))
 }
 
+fn close_group(stack:&mut Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>)>,root:&mut Vec<SvgElement>) {
+    let (group,children)=stack.pop().expect("open compositing group");
+    let mut common=CommonAttrs::default().with_opacity(group.opacity.to_string());
+    common.extra_attrs.push(attr("data-group-id",&group.id));
+    common.presentation.extra_style.push(("isolation".into(),"isolate".into()));
+    common.presentation.extra_style.push(("mix-blend-mode".into(),blend(&group.blend_mode).into()));
+    let node=SvgElement::Group {common,children};
+    if let Some((_,children))=stack.last_mut() {children.push(node);}else {root.push(node);}
+}
+
 /// 🖼️ Serializes scene-space nodes using the first-party SVG/XML vocabulary and writer.
 pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Result<String,String> {
     let [x,y,width,height] = view_box;
     if !view_box.iter().all(|value| value.is_finite()) || width <= 0.0 || height <= 0.0 { return Err("SVG view box must have finite coordinates and positive dimensions".into()); }
     let mut defs = Vec::new();
     let mut children = Vec::new();
+    let mut stack:Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>)>=Vec::new();
+    let mut opened=std::collections::BTreeSet::new();
     for (index,node) in nodes.iter().enumerate().filter(|(_,node)| node.visible) {
         if !finite_numbers(node) { return Err(format!("SVG layer {} geometry and paint must be finite", node.id)); }
         if node.opacity <= 0.0 { continue; }
         if !node.transform.iter().all(|value| value.is_finite()) { return Err("SVG layer transform must be finite".into()); }
+        let mut common_depth=0;
+        while common_depth<stack.len() && common_depth<node.groups.len() && stack[common_depth].0==&node.groups[common_depth] {common_depth+=1;}
+        while stack.len()>common_depth {close_group(&mut stack,&mut children);}
+        for group in &node.groups[common_depth..] {
+            if group.id.is_empty() || !opened.insert(group.id.clone()) || !group.opacity.is_finite() || !(0.0..=1.0).contains(&group.opacity) || group.blend_mode!="normal" && blend(&group.blend_mode)=="normal" {return Err("Invalid scene compositing hierarchy".into());}
+            stack.push((group,Vec::new()));
+        }
         let mut common = presentation(node,index,&mut defs);
         let leaf = if let Some(text) = &node.text {
             common.presentation.font_size = Some(text.size.to_string());
@@ -126,12 +145,14 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Re
         let mut wrapper = CommonAttrs::default().with_transform(vec![TransformOp::Matrix { a,b,c,d,e,f }]).with_opacity(node.opacity.to_string());
         wrapper.extra_attrs.push(attr("data-layer-id", &node.id));
         if node.blend_mode != "normal" { wrapper.presentation.extra_style.push(("mix-blend-mode".into(),blend(&node.blend_mode).into())); }
-        children.push(SvgElement::Group { common:wrapper,children:vec![leaf] });
+        let node=SvgElement::Group { common:wrapper,children:vec![leaf] };
+        if let Some((_,children))=stack.last_mut() {children.push(node);}else {children.push(node);}
     }
+    while !stack.is_empty() {close_group(&mut stack,&mut children);}
     if !defs.is_empty() { children.insert(0,SvgElement::Defs { common:CommonAttrs::default(),children:defs }); }
     let common = CommonAttrs { extra_attrs: vec![attr("version","1.1"),attr("xmlns:xlink","http://www.w3.org/1999/xlink")], ..Default::default() };
     let root = SvgElement::Svg { common,view_box:Some(ViewBox { min_x:x,min_y:y,width,height }),width:Some(width.to_string()),height:Some(height.to_string()),xmlns:Some("http://www.w3.org/2000/svg".into()),children };
-    Ok(write_svg_xml(&typed_to_svg_document(&root,None)))
+    write_svg_xml(&typed_to_svg_document(&root,None))
 }
 
 pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String,u32,u32),String> {

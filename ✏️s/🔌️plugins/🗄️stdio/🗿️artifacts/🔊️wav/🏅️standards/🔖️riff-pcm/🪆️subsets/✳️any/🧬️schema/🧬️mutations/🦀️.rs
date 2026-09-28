@@ -2,7 +2,7 @@
 //! top-level fields (`fmt`/`data`/`other_chunks`), plus `SetSnapshot` for full replace.
 
 use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
-use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -97,14 +97,19 @@ impl OpBinary for WavMutation {
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &WavMutation, base: &WavSnapshot) -> protocol::MutationOutcome<WavDiff> {
-    match this {
+    let outcome = match this {
         WavMutation::PatchSnapshot(payload) => protocol::MutationKind::diff(payload, base),
         WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
         WavMutation::SetFmt(set_fmt::SetFmt { fmt }) => protocol::MutationOutcome::new(diff_set_fmt(fmt.clone())),
         WavMutation::SetData(set_data::SetData { data }) => protocol::MutationOutcome::new(diff_set_data(data.clone())),
         WavMutation::PatchData(payload) => patch_data::diff(payload, base),
-        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks }) => protocol::MutationOutcome::new(diff_set_other_chunks(chunks.clone())),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks }) => protocol::MutationOutcome::new(diff_set_other_chunks(base, chunks.clone())),
+    };
+    let Ok(candidate) = protocol::MutationDiff::apply(outcome.diff(), base) else { return outcome };
+    if let Err(issue) = validate_wav_serialization(&candidate) {
+        return protocol::MutationOutcome::error(issue.code, issue.message, issue.target).absorb_messages(outcome.messages().to_vec());
     }
+    outcome
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
@@ -115,7 +120,7 @@ pub(crate) fn agg_inverse(this: &WavMutation, base: &WavSnapshot) -> Vec<WavMuta
         WavMutation::SetFmt(_) => WavMutation::SetFmt(set_fmt::SetFmt { fmt: base.fmt.clone() }),
         WavMutation::SetData(_) => WavMutation::SetData(set_data::SetData { data: base.data.clone() }),
         WavMutation::PatchData(payload) => return patch_data::inverse(payload, base),
-        WavMutation::SetOtherChunks(_) => WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: base.other_chunks.clone() }),
+        WavMutation::SetOtherChunks(_) => WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
     }]
 }
 //#endregion 🔖️MutationTrait

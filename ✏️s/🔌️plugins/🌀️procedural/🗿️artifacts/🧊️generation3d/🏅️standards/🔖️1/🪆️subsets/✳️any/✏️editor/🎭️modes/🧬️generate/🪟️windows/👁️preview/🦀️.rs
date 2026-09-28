@@ -78,6 +78,7 @@ pub fn render(
     run: Option<&semio_framework_plugin::ToolRunView>,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_eval_text.unwrap_or_default();
+    let marks = PreviewInteractionMarks { components: Default::default(), ..marks.clone() };
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
         // 🧹️ `generation_host_snapshot_for` CLONES the document host_snapshot, so the patched copy owns its own
         // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the
@@ -86,7 +87,7 @@ pub fn render(
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
             let gen_fixture = generation_host_snapshot_for(host_snapshot, generation, selected_id);
-            let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), marks);
+            let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), &marks);
             let preview_status = preview_status_json(eval_json, &gen_fixture);
             gen_fixture.retire_cold();
             (payload, preview_status)

@@ -1,6 +1,6 @@
 {
   "$schema": "./📐️schema.json",
-  "schema": "semio.native-asset-response.v8",
+  "schema": "semio.native-asset-response.v9",
   "pageBytes": 16384,
   "patternPeriod": 251,
   "cases": [
@@ -62,6 +62,22 @@
     "pageRetirementTurns": 1,
     "terminalNativeOwners": 0,
     "frameFaults": 0
+  },
+  "failureIsolation": {
+    "browser": [
+      { "id": "http-status", "detail": "asset-fetch-status: 404", "errorType": "error", "referenceImage": false, "disposition": "missing" },
+      { "id": "network", "detail": "Failed to fetch", "errorType": "typeError", "referenceImage": false, "disposition": "missing" },
+      { "id": "reference-decode", "detail": "reference-image-format", "errorType": "error", "referenceImage": true, "disposition": "missing" },
+      { "id": "capacity", "detail": "asset-response-length: Content-Length exceeded fixed aggregate credits", "errorType": "error", "referenceImage": false, "disposition": "fault" },
+      { "id": "stale", "detail": "asset generation retired", "errorType": "abortError", "referenceImage": false, "disposition": "cancelled" }
+    ],
+    "native": {
+      "unavailableMarksOneMiss": true,
+      "unavailableFrameFaults": 0,
+      "cancelledMarksMiss": false,
+      "capacityFrameFaults": 1,
+      "terminalOwners": 0
+    }
   },
   "rendererIoContention": {
     "registrationState": "checkedOut",

@@ -3,8 +3,8 @@
 //! Render is identical to the viewer's read; mutation is the surface root's `handle()` responsibility.
 
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::app::{editable_table_window_row, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_framework_plugin::{BuiltNode, Locale, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -20,23 +20,35 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
-    let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
-    let rows = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
-    (columns, rows)
+fn columns(locale: Locale) -> [&'static str; 5] {
+    match locale {
+        Locale::De => ["GUID", "Titel", "Status", "Priorität", "Autor"],
+        Locale::En => ["GUID", "Title", "Status", "Priority", "Author"],
+    }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BcfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BcfSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
-    render_revisioned(document, &revision)
+    render_revisioned(document, &revision, locale, &TreeWindows::unhosted())
 }
 
-/// 🔐️ Renders against the store revision captured by the host without re-encoding the snapshot.
-pub fn render_revisioned(document: &BcfSnapshot, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (columns, rows) = columns_and_rows(document);
-    let editable = semio_s_artifact_stdio_contract::window_kit_revisioned_editable_cells(&rows, "set-cell", revision)?;
-    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.bcf@2.1/*#editor", &editable)
+/// 🔐️ Renders only the host-requested topic rows against the captured store revision.
+pub fn render_revisioned(document: &BcfSnapshot, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let columns = columns(locale);
+    TableWindowKit::render_indexed_rows(windows, match locale { Locale::De => "BCF-Themen", Locale::En => "BCF topics" }, &columns, None, document.topics.len(), |row| {
+        let topic = &document.topics[row];
+        let values = [&topic.guid, &topic.title, &topic.status, &topic.priority, &topic.creation_author];
+        let mut cells = Vec::with_capacity(values.len());
+        for (column, value) in values.into_iter().enumerate() {
+            if column == 0 {
+                cells.push(WindowedEditableTableCell::read_only(value.clone(), columns[column]));
+            } else {
+                let arguments = semio_s_artifact_stdio_contract::window_kit_revisioned_cell_arguments(row, column, revision)?;
+                cells.push(WindowedEditableTableCell::new(value.clone(), columns[column], "set-cell", arguments));
+            }
+        }
+        editable_table_window_row(&format!("topic-{row}"), "s.stdio.bcf@2.1/*#editor", locale, cells, std::iter::empty())
+    })
 }
 //#endregion 🔖️Render
 

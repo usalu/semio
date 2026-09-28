@@ -35,7 +35,7 @@ async fn applies_to_committed_after() {
     assert_eq!(produced, expected_after(), "move-layer/slides-the-stamp-layer-off-the-origin: applied state differs from committed after-snapshot");
     let transform = layer_transform(find_layer(&produced.layers, "stamp").expect("stamp is present"));
     assert_eq!((transform.x, transform.y), (16.0, -8.0), "move-layer/slides-the-stamp-layer-off-the-origin: the layer must sit at the payload's absolute position");
-    assert_eq!((transform.scale_x, transform.scale_y, transform.rotation), (1.0, 1.0, 0.0), "move-layer/slides-the-stamp-layer-off-the-origin: a move must not disturb scale or rotation");
+    assert_eq!((transform.a, transform.b, transform.c, transform.d), (1.0, 0.0, 0.0, 1.0), "move-layer/slides-the-stamp-layer-off-the-origin: a move must not disturb scale or rotation");
     assert_eq!(locate_layer(&produced.layers, "stamp"), Some((None, 0)), "move-layer/slides-the-stamp-layer-off-the-origin: a SPATIAL move must leave the layer's LIST position alone");
 }
 

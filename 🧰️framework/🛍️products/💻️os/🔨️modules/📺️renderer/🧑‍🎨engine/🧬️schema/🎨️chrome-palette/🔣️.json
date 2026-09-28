@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tokens",
+    "custom"
+  ],
+  "properties": {
+    "tokens": {
+      "type": "object",
+      "minProperties": 14,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^--[a-z-]+$"
+      }
+    },
+    "custom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "light",
+        "dark"
+      ],
+      "properties": {
+        "light": {
+          "$ref": "#/$defs/paints"
+        },
+        "dark": {
+          "$ref": "#/$defs/paints"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "paints": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hex"
+        ],
+        "properties": {
+          "hex": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$"
+          }
+        }
+      }
+    }
+  }
+}

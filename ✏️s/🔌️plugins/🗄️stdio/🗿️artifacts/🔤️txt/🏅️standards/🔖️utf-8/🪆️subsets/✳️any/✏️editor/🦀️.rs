@@ -10,13 +10,13 @@ use crate::editor::txt::modes::edit::windows::main;
 use crate::schema::mutation_support::txt_usize_to_u32;
 use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetTrailingNewlineMutation};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId,
-    SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
+    Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — verified against the artifact's own `🚪️io`/`🧬️schema` `DIALECT`
@@ -29,10 +29,17 @@ pub const TXT_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", 
 /// action (`replace-text`, contract §2.6) can trigger.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TxtEditorCommand {
-    ReplaceText { text: String },
-    EditSnapshot { event: SnapshotEditEvent },
+    ReplaceText {
+        revision: String,
+        text: String,
+    },
+    EditSnapshot {
+        event: SnapshotEditEvent,
+    },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
-    SetActiveExample { example_id: String },
+    SetActiveExample {
+        example_id: String,
+    },
 }
 
 /// 🔤️ Hand-rolled hex codec — `OpText::print_op` must be one line, and `ReplaceText` carries
@@ -44,16 +51,25 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) {
+    let bytes = text.as_bytes();
+    if !bytes.len().is_multiple_of(2) {
         return Err("odd-length hex string".into());
     }
-    (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+    fn nibble(byte: u8) -> Result<u8, String> {
+        match byte {
+            b'0'..=b'9' => Ok(byte - b'0'),
+            b'a'..=b'f' => Ok(byte - b'a' + 10),
+            b'A'..=b'F' => Ok(byte - b'A' + 10),
+            _ => Err(format!("non-hex byte 0x{byte:02x}")),
+        }
+    }
+    bytes.chunks_exact(2).map(|pair| Ok((nibble(pair[0])? << 4) | nibble(pair[1])?)).collect()
 }
 
 impl protocol::OpText for TxtEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            TxtEditorCommand::ReplaceText { text } => format!("replace-text text={}", hex_encode(text.as_bytes())),
+            TxtEditorCommand::ReplaceText { revision, text } => format!("replace-text revision={} text={}", hex_encode(revision.as_bytes()), hex_encode(text.as_bytes())),
             TxtEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
             TxtEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
@@ -69,10 +85,13 @@ impl protocol::OpText for TxtEditorCommand {
             let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad snapshot edit {error}"), dsl::TextSpan::at(1, 1)))?;
             return Ok(TxtEditorCommand::EditSnapshot { event });
         }
-        let hex = line.strip_prefix("replace-text text=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
-        let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
-        let text = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(TxtEditorCommand::ReplaceText { text })
+        let rest = line.strip_prefix("replace-text revision=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
+        let (revision, text) = rest.split_once(" text=").ok_or_else(|| store::TextError::new("txt editor command: missing text", dsl::TextSpan::at(1, 1)))?;
+        let revision = String::from_utf8(hex_decode(revision).map_err(|error| store::TextError::new(format!("txt editor command: bad revision hex {error}"), dsl::TextSpan::at(1, 1)))?)
+            .map_err(|error| store::TextError::new(format!("txt editor command: bad revision utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+        let text = String::from_utf8(hex_decode(text).map_err(|error| store::TextError::new(format!("txt editor command: bad text hex {error}"), dsl::TextSpan::at(1, 1)))?)
+            .map_err(|error| store::TextError::new(format!("txt editor command: bad text utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+        Ok(TxtEditorCommand::ReplaceText { revision, text })
     }
 }
 
@@ -92,22 +111,6 @@ impl protocol::OpBinary for TxtEditorCommand {
     }
 }
 //#endregion 🔖️Command
-
-//#region 🔖️TextSplit
-/// 🧮️ Splits a plain `\n`-joined buffer into `(lines, trailing_newline)`. The document's existing
-/// `line_ending` convention is preserved rather than re-detected — a plain-text window edit never
-/// carries `\r\n` metadata worth trusting.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn split_text(text: &str) -> (Vec<String>, bool) {
-    if text.is_empty() {
-        return (Vec::new(), false);
-    }
-    let trailing = text.ends_with('\n');
-    let body = if trailing { &text[..text.len() - 1] } else { text };
-    let lines = body.split('\n').map(|line| line.trim_end_matches('\r').to_string()).collect();
-    (lines, trailing)
-}
-//#endregion 🔖️TextSplit
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
@@ -168,12 +171,10 @@ fn txt_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TxtEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        TXT_KIT_ACTION_ID => Ok(TxtEditorCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
-        other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.txt.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"),
-        )),
+        TXT_KIT_ACTION_ID => {
+            Ok(TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? })
+        }
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"))),
     }
 }
 
@@ -195,33 +196,37 @@ fn txt_retained_extent(_command: &TxtEditorCommand, _snapshot: &TxtSnapshot, _in
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `replace-text` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let text = match command {
+fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (revision, text) = match command {
         TxtEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
-                ..Default::default()
-            })
+            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
         }
-        TxtEditorCommand::ReplaceText { text } => text,
+        TxtEditorCommand::ReplaceText { revision, text } => (revision, text),
         TxtEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-txt-snapshot-edit-routed-to-native-reducer")),
     };
-    let (lines, trailing_newline) = split_text(text);
-    let mut mutations = Vec::new();
-    if snapshot.trailing_newline {
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
+    let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
+    if revision != &current_revision {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.stale-text-edit"), "the text document changed while this draft was open"));
     }
+    let mut next = TxtSnapshot::from_body(text);
+    next.schema.clone_from(&snapshot.schema);
+    if &next == snapshot {
+        return Ok(Emit::default());
+    }
+    let mut mutations = Vec::new();
     for index in (0..snapshot.lines.len()).rev() {
         let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
         mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index }));
     }
-    for (index, text) in lines.into_iter().enumerate() {
+    for (index, text) in next.lines.iter().cloned().enumerate() {
         let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
         mutations.push(TxtMutation::InsertLine(InsertLineMutation { index, text }));
     }
-    if trailing_newline {
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true }));
+    if next.trailing_newline != snapshot.trailing_newline {
+        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: next.trailing_newline }));
+    }
+    if next.line_ending != snapshot.line_ending {
+        mutations.push(TxtMutation::SetLineEnding(SetLineEndingMutation { value: next.line_ending }));
     }
     Ok(Emit { artifact_mutations: mutations, description: Some("Replace text".into()), ..Default::default() })
 }
@@ -236,9 +241,9 @@ fn txt_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TxtEditor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    txt_emit(command, snapshot)
+    txt_emit(command, snapshot, Some(operation.canonical_base_revision))
 }
 
 struct TxtRetainedCommandJobFactory {
@@ -462,13 +467,17 @@ impl ArtifactEditor for TxtEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             TxtEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => txt_emit(command, doc.snapshot),
+            _ => txt_emit(command, doc.snapshot, doc.operation_optional().map(|operation| operation.canonical_base_revision)),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let revision =
+                    doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
+                main::render(doc.snapshot, view_state.locale, &revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -489,17 +498,12 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TxtEdit
         }
     }
 
-
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event)
-            .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(error.code), error.to_string()))?;
+        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(error.code), error.to_string()))?;
         if next.schema != snapshot.schema {
             return Err(Fault::from("stdio-txt-schema-is-immutable"));
         }
-        let mut emit = txt_emit(&TxtEditorCommand::ReplaceText { text: next.lines.join("\n") + if next.trailing_newline { "\n" } else { "" } }, snapshot)?;
-        if next.line_ending != snapshot.line_ending {
-            emit.artifact_mutations.push(TxtMutation::SetLineEnding(SetLineEndingMutation { value: next.line_ending }));
-        }
+        let mut emit = txt_emit(&TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), text: next.to_body() }, snapshot, None)?;
         emit.description = Some("Edit text details".into());
         Ok(emit)
     }

@@ -40,7 +40,7 @@ type XmlDeclaration {
 enum XmlExternalIdKind { SYSTEM PUBLIC }
 type XmlExternalId { kind: XmlExternalIdKind! publicId: String systemId: String! }
 type XmlDtdEntity { parameter: Boolean! name: String! value: String! }
-type XmlDoctype { name: String! externalId: XmlExternalId declarations: [XmlDtdEntity!]! }
+type XmlDoctype { prologPosition: Int! name: String! externalId: XmlExternalId declarations: [XmlDtdEntity!]! }
 
 """ 📰 Well-formed XML document root. """
 type XmlDocument {
@@ -48,6 +48,7 @@ type XmlDocument {
   doctype: XmlDoctype
   declaration: XmlDeclaration
   prolog: [XmlNode!]!
+  epilog: [XmlNode!]!
 }
 
 """ 📸️ Persisted `stdio.xml` snapshot. """

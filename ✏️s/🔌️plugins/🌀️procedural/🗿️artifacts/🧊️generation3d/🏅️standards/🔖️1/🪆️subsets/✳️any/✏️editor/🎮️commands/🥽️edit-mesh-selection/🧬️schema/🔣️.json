@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Edit Selected Mesh Components",
+  "type": "object",
+  "required": ["operation", "amount", "cuts", "dx", "dy", "dz"],
+  "additionalProperties": false,
+  "properties": {
+    "operation": {"enum": ["extrude", "inset", "subdivide", "flip", "deleteFaces", "moveVertices", "loopCut"]},
+    "amount": {"type": "number"},
+    "cuts": {"type": "integer", "minimum": 1, "maximum": 256},
+    "dx": {"type": "number"},
+    "dy": {"type": "number"},
+    "dz": {"type": "number"}
+  }
+}

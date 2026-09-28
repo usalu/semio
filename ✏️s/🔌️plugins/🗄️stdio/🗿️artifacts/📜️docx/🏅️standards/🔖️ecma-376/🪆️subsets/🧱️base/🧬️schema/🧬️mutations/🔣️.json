@@ -169,6 +169,24 @@
     {
       "allOf": [
         {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/replace-xml-node/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "replaceXmlNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/set-snapshot/schema.json"
         },
         {
@@ -215,6 +233,96 @@
           "properties": {
             "mutation": {
               "const": "setStyleName"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/set-paragraph-style/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setParagraphStyle"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/insert-table-row/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertTableRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/remove-table-row/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeTableRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/insert-xml-node/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertXmlNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/remove-xml-node/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeXmlNode"
             }
           }
         }

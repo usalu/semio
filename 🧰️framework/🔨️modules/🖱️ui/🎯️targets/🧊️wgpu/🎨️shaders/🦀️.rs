@@ -22,6 +22,7 @@ struct InstanceInput {
 @location(2) color: vec4<f32>,
 @location(3) params: vec4<f32>,
 @location(4) uv_rect: vec4<f32>,
+@location(5) clip_ellipse: vec4<f32>,
 }
 
 struct VertexOutput {
@@ -31,6 +32,8 @@ struct VertexOutput {
 @location(2) color: vec4<f32>,
 @location(3) params: vec4<f32>,
 @location(4) uv: vec2<f32>,
+@location(5) clip_ellipse: vec4<f32>,
+@location(6) logical_position: vec2<f32>,
 }
 
 @vertex
@@ -40,6 +43,8 @@ let pos = instance.rect.xy + vertex.corner * instance.rect.zw;
 let ndc = (pos / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
 out.clip_position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 out.local = vertex.corner * instance.rect.zw;
+out.clip_ellipse = instance.clip_ellipse;
+out.logical_position = pos;
 out.size = instance.rect.zw;
 out.color = instance.color;
 out.params = instance.params;
@@ -54,8 +59,7 @@ let q = abs(p) - half_size + vec2<f32>(radius);
 return length(max(q, vec2<f32>(0.0))) + min(max(q.x, q.y), 0.0) - radius;
 }
 
-@fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn paint_fragment(in: VertexOutput) -> vec4<f32> {
 let kind = i32(in.params.z + 0.5);
 let glyph = textureSample(glyph_atlas, glyph_sampler, in.uv);
 let icon = textureSample(icon_atlas, icon_sampler, in.uv);
@@ -155,6 +159,17 @@ if (kind == 3) {
 }
 return in.color;
 }
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+let color = paint_fragment(in);
+let radius = max(in.clip_ellipse.zw * 0.5, vec2<f32>(0.0001));
+let normalized = (in.logical_position - in.clip_ellipse.xy - radius) / radius;
+let distance = length(normalized) - 1.0;
+let antialias = max(fwidth(distance), 0.0001);
+let coverage = 1.0 - smoothstep(-antialias * 0.5, antialias * 0.5, distance);
+let enabled = in.clip_ellipse.z > 0.0 && in.clip_ellipse.w > 0.0;
+return vec4<f32>(color.rgb, color.a * select(1.0, coverage, enabled));
+}
 "#;
 
 pub const VECTOR_SHADER: &str = r#"
@@ -220,6 +235,7 @@ struct InstanceInput {
 @location(6) model3: vec4<f32>,
 @location(7) color: vec4<f32>,
 @location(8) flags: vec4<f32>,
+@location(10) emissive_cutoff: vec4<f32>,
 }
 
 struct VertexOutput {
@@ -228,6 +244,7 @@ struct VertexOutput {
 @location(1) normal: vec3<f32>,
 @location(2) flags: vec4<f32>,
 @location(3) world_position: vec3<f32>,
+@location(4) emissive_cutoff: vec4<f32>,
 }
 
 @vertex
@@ -252,6 +269,7 @@ let vertex_weight = f32(u32(instance.flags.x) & 1u);
 out.color = vec4<f32>(instance.color.rgb * mix(vec3<f32>(1.0), vertex.color.rgb, vertex_weight), instance.color.a * mix(1.0, vertex.color.a, vertex_weight));
 out.flags = instance.flags;
 out.world_position = world_pos.xyz;
+out.emissive_cutoff = instance.emissive_cutoff;
 return out;
 }
 
@@ -419,6 +437,10 @@ fn world3d_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
     return mix(display_linear, world3d_linear_to_srgb(display_linear), clamp(globals.shadow.w, 0.0, 1.0));
 }
 
+fn world3d_svg_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+    return world3d_linear_to_srgb(clamp(linear_rgb, vec3<f32>(0.0), vec3<f32>(1.0)));
+}
+
 fn world3d_interleaved_gradient_noise(position: vec2<f32>) -> f32 {
 return fract(52.9829189 * fract(dot(position, vec2<f32>(0.06711056, 0.00583715))));
 }
@@ -464,14 +486,32 @@ return indirect * base_color * (1.0 - metalness) * WORLD3D_RECIPROCAL_PI + direc
 }
 
 @fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {
+if (in.emissive_cutoff.w >= 0.0 && in.color.a < in.emissive_cutoff.w) {
+    discard;
+}
 let n = normalize(in.normal);
 let v = normalize(globals.camera_position.xyz - in.world_position);
+if (globals.shadow.y > 0.5) {
+    if (!front_facing) {
+        discard;
+    }
+    var face_normal = normalize(cross(dpdx(in.world_position), dpdy(in.world_position)));
+    if (dot(face_normal, n) < 0.0) {
+        face_normal = -face_normal;
+    }
+    var svg_light = globals.ambient.rgb;
+    if (globals.material.w > 0.5) {
+        svg_light = svg_light + globals.sun.rgb * globals.sun.a * max(dot(face_normal, normalize(globals.light_dir.xyz)), 0.0);
+    }
+    let svg_color = svg_light * in.color.rgb + globals.material_emissive.rgb;
+    return vec4<f32>(world3d_svg_attachment_output(svg_color), in.color.a);
+}
 let metalness = clamp(in.flags.z, 0.0, 1.0);
 let normal_derivative = max(abs(dpdx(in.normal)), abs(dpdy(in.normal)));
 let geometry_roughness = max(max(normal_derivative.x, normal_derivative.y), normal_derivative.z);
 let roughness = min(max(in.flags.w, 0.0525) + geometry_roughness, 1.0);
-let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0);
+let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;
 var shadow_visibility = 1.0;
 if ((u32(in.flags.x) & 2u) != 0u) {
     shadow_visibility = world3d_shadow_visibility(in.world_position, in.clip_position.xy);
@@ -492,11 +532,11 @@ pub fn world3d_painted_shader() -> String {
             1,
         )
         .replacen("@location(2) color: vec4<f32>,\n}", "@location(2) color: vec4<f32>,\n@location(9) uv: vec2<f32>,\n}", 1)
-        .replacen("@location(3) world_position: vec3<f32>,\n}", "@location(3) world_position: vec3<f32>,\n@location(4) uv: vec2<f32>,\n}", 1)
-        .replacen("out.world_position = world_pos.xyz;\nreturn out;", "out.world_position = world_pos.xyz;\nout.uv = vertex.uv;\nreturn out;", 1)
+        .replacen("@location(4) emissive_cutoff: vec4<f32>,\n}", "@location(4) emissive_cutoff: vec4<f32>,\n@location(5) uv: vec2<f32>,\n}", 1)
+        .replacen("out.emissive_cutoff = instance.emissive_cutoff;\nreturn out;", "out.emissive_cutoff = instance.emissive_cutoff;\nout.uv = vertex.uv;\nreturn out;", 1)
         .replacen(
             "let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0);",
-            "let sampled = textureSample(paint_map, paint_sampler, in.uv);\nlet paint_color = world3d_linear_to_srgb(sampled.rgb);\nlet lit_color = in.color.rgb * paint_color;\nlet emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0);",
+            "let sampled = textureSample(paint_map, paint_sampler, in.uv);\nlet authored_texture = (u32(in.flags.x) & 4u) != 0u;\nlet paint_color = select(world3d_linear_to_srgb(sampled.rgb), sampled.rgb, authored_texture);\nlet lit_color = in.color.rgb * paint_color;\nif (in.emissive_cutoff.w >= 0.0 && sampled.a * in.color.a < in.emissive_cutoff.w) { discard; }\nlet emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;",
             1,
         )
         .replacen(
@@ -630,9 +670,14 @@ let display_linear = world3d_output_transform(linear_rgb);
 return mix(display_linear, world3d_linear_to_srgb(display_linear), clamp(globals.shadow.w, 0.0, 1.0));
 }
 
+fn world3d_svg_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+return world3d_linear_to_srgb(clamp(linear_rgb, vec3<f32>(0.0), vec3<f32>(1.0)));
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-return vec4<f32>(world3d_attachment_output(in.color.rgb), in.color.a);
+let color = select(world3d_attachment_output(in.color.rgb), world3d_svg_attachment_output(in.color.rgb), globals.shadow.y > 0.5);
+return vec4<f32>(color, in.color.a);
 }
 "#;
 
@@ -871,16 +916,19 @@ return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
 }
 "#;
 
-pub const WORLD_CURVILINEAR_SHADER: &str = r#"
-struct CurvilinearGlobals {
+pub const WORLD3D_POSTPROCESS_SHADER: &str = r#"
+struct WorldPostprocessGlobals {
 viewport: vec4<f32>,
 surface_size: vec2<f32>,
 fov_strength: vec2<f32>,
+modes: vec4<u32>,
+clear_color: vec4<f32>,
 }
 
-@group(0) @binding(0) var<uniform> globals: CurvilinearGlobals;
+@group(0) @binding(0) var<uniform> globals: WorldPostprocessGlobals;
 @group(0) @binding(1) var capture_tex: texture_2d<f32>;
 @group(0) @binding(2) var capture_samp: sampler;
+@group(0) @binding(3) var background_tex: texture_2d<f32>;
 
 struct VertexOutput {
 @builtin(position) clip_position: vec4<f32>,
@@ -905,12 +953,19 @@ return out;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+if (globals.modes.z == 1u) {
+    return globals.clear_color;
+}
 let ndc = in.uv * 2.0 - 1.0;
 let aspect = globals.viewport.z / max(1.0, globals.viewport.w);
 let scaled = vec2<f32>(ndc.x * aspect, ndc.y);
 let radius = length(scaled);
+let destination_pixel = globals.viewport.xy + in.uv * globals.viewport.zw;
+if (globals.modes.y == 1u && length(ndc) > 1.0) {
+    return textureSampleLevel(background_tex, capture_samp, destination_pixel / globals.surface_size, 0.0);
+}
 var source_ndc = ndc;
-if (radius > 0.00001) {
+if (globals.modes.x == 1u && radius > 0.00001) {
     let rectilinear_radius = tan(radius * globals.fov_strength.x * 0.5) / tan(globals.fov_strength.x * 0.5);
     let source_radius = mix(radius, rectilinear_radius, globals.fov_strength.y);
     let scale = source_radius / radius;

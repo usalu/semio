@@ -17,9 +17,11 @@
         "scaleX": 1.0,
         "scaleY": 1.0,
         "rotation": 0.0,
-        "shear": 0
+        "shear": 0.0
       },
-      "attributes": {},
+      "attributes": {
+        "fillRule": "evenodd"
+      },
       "shapeKind": "rect",
       "rect": {
         "x": 0.0,
@@ -42,9 +44,11 @@
         "scaleX": 1.0,
         "scaleY": 1.0,
         "rotation": 0.0,
-        "shear": 0
+        "shear": 0.0
       },
-      "attributes": {},
+      "attributes": {
+        "fillRule": "evenodd"
+      },
       "children": [
         {
           "kind": "text",
@@ -60,9 +64,11 @@
             "scaleX": 1.0,
             "scaleY": 1.0,
             "rotation": 0.0,
-            "shear": 0
+            "shear": 0.0
           },
-          "attributes": {},
+          "attributes": {
+            "fillRule": "evenodd"
+          },
           "x": 8.0,
           "y": 16.0,
           "content": "Alpha",

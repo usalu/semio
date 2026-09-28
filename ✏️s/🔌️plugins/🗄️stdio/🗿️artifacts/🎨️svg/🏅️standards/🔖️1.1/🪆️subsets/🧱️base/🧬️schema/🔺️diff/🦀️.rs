@@ -32,6 +32,10 @@ pub struct SvgDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub prolog: Option<Vec<XmlNode>>,
+    /// 🧹 Tri-state logical document-epilog nodes.
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub epilog: Option<Vec<XmlNode>>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -148,7 +152,7 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
     for &index in path.iter().rev() {
         node_diff = SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: vec![SvgChildModified { index, diff: node_diff }], added: Vec::new() }) });
     }
-    SvgDiff { prolog: None, declaration: None, doctype: None, root: Some(node_diff) }
+    SvgDiff { prolog: None, epilog: None, declaration: None, doctype: None, root: Some(node_diff) }
 }
 //#endregion 🔖️DiffAtPath
 
@@ -162,6 +166,9 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         if let Some(prolog) = &self.prolog {
             next.doc.prolog = prolog.clone();
         }
+        if let Some(epilog) = &self.epilog {
+            next.doc.epilog = epilog.clone();
+        }
         if let Some(declaration) = &self.declaration {
             next.doc.declaration = declaration.clone();
         }
@@ -171,12 +178,17 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         if let Some(node_diff) = &self.root {
             next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
+        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&next.doc)
+            .map_err(|detail| MutationApplyError::new("mutation.apply.invalid-document-boundary", detail))?;
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
         if other.prolog.is_some() {
             self.prolog = other.prolog;
+        }
+        if other.epilog.is_some() {
+            self.epilog = other.epilog;
         }
         if other.declaration.is_some() {
             self.declaration = other.declaration;
@@ -368,6 +380,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
     fn inverse(&self, base: &SvgSnapshot) -> Self {
         SvgDiff {
             prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
+            epilog: self.epilog.as_ref().map(|_| base.doc.epilog.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
@@ -377,6 +390,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
     fn between(base: &SvgSnapshot, other: &SvgSnapshot) -> Self {
         SvgDiff {
             prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
+            epilog: if base.doc.epilog != other.doc.epilog { Some(other.doc.epilog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
             root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
@@ -384,7 +398,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.prolog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 
@@ -923,13 +937,13 @@ pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
         })
         .collect::<Vec<_>>()
         .join(",");
-    format!("[{},{},[{}]]", enc_str(&doctype.name), external, declarations)
+    format!("[{},{},{},[{}]]", doctype.prolog_position, enc_str(&doctype.name), external, declarations)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name, external, declarations] = parts.as_slice() else {
-        return Err(format!("doctype: expected 3 fields, got {}", parts.len()));
+    let [prolog_position, name, external, declarations] = parts.as_slice() else {
+        return Err(format!("doctype: expected 4 fields, got {}", parts.len()));
     };
     let external_id = decode_option(external, |value| {
         let (tag, rest) = value.split_at(1);
@@ -952,10 +966,11 @@ pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
             }
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlDoctype { name: dec_str(name)?, external_id, declarations })
+    Ok(XmlDoctype { prolog_position: parse_usize(prolog_position)?, name: dec_str(name)?, external_id, declarations })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, doctype.prolog_position as u64);
     write_str_lp(out, &doctype.name);
     match &doctype.external_id {
         None => out.push(0),
@@ -983,6 +998,7 @@ pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
+    let prolog_position = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
     let name = read_str_lp(reader)?;
     let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
         0 => None,
@@ -998,7 +1014,7 @@ pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlD
             tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
         }
     }
-    Ok(XmlDoctype { name, external_id, declarations })
+    Ok(XmlDoctype { prolog_position, name, external_id, declarations })
 }
 /// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]` (comment)
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
@@ -1415,6 +1431,9 @@ fn print_svg_diff(d: &SvgDiff) -> String {
     if let Some(v) = &d.prolog {
         tokens.push(format!("prolog={}", enc_prolog(v)));
     }
+    if let Some(v) = &d.epilog {
+        tokens.push(format!("epilog={}", enc_prolog(v)));
+    }
     if let Some(v) = &d.declaration {
         tokens.push(format!("declaration={}", encode_option(v, enc_declaration)));
     }
@@ -1435,6 +1454,8 @@ fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("prolog=") {
             d.prolog = Some(dec_prolog(rest)?);
+        } else if let Some(rest) = token.strip_prefix("epilog=") {
+            d.epilog = Some(dec_prolog(rest)?);
         } else if let Some(rest) = token.strip_prefix("declaration=") {
             d.declaration = Some(decode_option(rest, dec_declaration)?);
         } else if let Some(rest) = token.strip_prefix("doctype=") {
@@ -1475,9 +1496,15 @@ impl protocol::DiffCodec for SvgDiff {
         if self.prolog.is_some() {
             flags |= 0b1000;
         }
+        if self.epilog.is_some() {
+            flags |= 0b1_0000;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(prolog) = &self.prolog {
             enc_prolog_bin(prolog, &mut out);
+        }
+        if let Some(epilog) = &self.epilog {
+            enc_prolog_bin(epilog, &mut out);
         }
         if let Some(declaration) = &self.declaration {
             out.push(if declaration.is_some() { 1 } else { 0 });
@@ -1502,6 +1529,7 @@ impl protocol::DiffCodec for SvgDiff {
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?) } else { None };
+        let epilog = if flags & 0b1_0000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff epilog", reader.position(), e))?) } else { None };
         let declaration = if flags & 0b001 != 0 {
             let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
             Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
@@ -1515,7 +1543,7 @@ impl protocol::DiffCodec for SvgDiff {
             None
         };
         let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
-        Ok(SvgDiff { prolog, declaration, doctype, root })
+        Ok(SvgDiff { prolog, epilog, declaration, doctype, root })
     }
 }
 //#endregion 🔖️TopLevel
@@ -1546,9 +1574,10 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
         doctype: Some("<!DOCTYPE svg>".into()),
         declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
         prolog: Vec::new(),
+        epilog: Vec::new(),
     });
-    let b = snapshot(XmlDocument { root: Some(elem("svg", vec![("width", "20"), ("height", "30")], vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new() });
-    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() });
+    let b = snapshot(XmlDocument { root: Some(elem("svg", vec![("width", "20"), ("height", "30")], vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
+    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
 
     vec![SvgDiff::default(), SvgDiff::between(&a, &b), SvgDiff::between(&b, &a), SvgDiff::between(&a, &c), SvgDiff::between(&c, &a)]
 }

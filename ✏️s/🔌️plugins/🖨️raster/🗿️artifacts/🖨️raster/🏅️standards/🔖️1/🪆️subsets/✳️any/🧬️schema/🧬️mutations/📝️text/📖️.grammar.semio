@@ -20,9 +20,9 @@ start mutation
 # (positional-first, then keyed fields sorted by internal shape rank) was not independently
 # re-derived rule-by-rule; this grammar states the real verb/field/key SET precisely, not a
 # byte-exact token order.
-mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible
+mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible / change-layer-locked
      / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
-     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter
+     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter / change-layer-transform
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -47,7 +47,7 @@ adjustment-layer = "adjustment" SP id SP text SP bool SP number SP transform-blo
 # `RasterTransform.rotation` carries `#[dsl(angle = "deg")]` (🦀️.rs:420) — same bare
 # unit-suffix convention `draw.document`'s fixture confirms for its own `#[dsl(angle="rad")]`
 # (`rotation=0rad`); raster's own unit is degrees, so `<number>deg`.
-transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "deg" "}"
+transform-block = "transform" "{" "x=" number SP "y=" number SP "a=" number SP "b=" number SP "c=" number SP "d=" number "}"
 mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"
 param = IDENT "=" TEXT
 
@@ -66,3 +66,8 @@ change-layer-mask = "change-layer-mask" SP "id=" id SP expected-mask-block? SP m
 expected-mask-block = "expected" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"
 
 change-layer-adjustment-parameter = "change-layer-adjustment-parameter" SP "id=" id SP text SP ("expected=" number)? SP ("value=" number)?
+
+change-layer-locked = "change-layer-locked" "id" "=" value "expected" "=" BOOL "locked" "=" BOOL
+
+change-layer-transform = "change-layer-transform" SP "id=" id SP expected-transform-block SP transform-block
+expected-transform-block = "expected" "{" "x=" number SP "y=" number SP "a=" number SP "b=" number SP "c=" number SP "d=" number "}"

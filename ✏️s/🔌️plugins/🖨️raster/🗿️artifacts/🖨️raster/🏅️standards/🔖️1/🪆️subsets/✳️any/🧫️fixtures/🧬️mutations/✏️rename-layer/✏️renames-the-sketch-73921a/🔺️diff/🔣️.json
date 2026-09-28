@@ -18,7 +18,8 @@
           "transformY": null,
           "width": null,
           "height": null,
-          "adjustmentKind": null
+          "adjustmentKind": null,
+          "locked": null
         }
       }
     ],

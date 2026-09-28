@@ -21,8 +21,7 @@ pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), 
         }
         if [mask.width, mask.height].iter().flatten().any(|&n| n == 0 || n > 16384) || mask.width.zip(mask.height).is_some_and(|(w, h)| u64::from(w) * u64::from(h) > 16_777_216) { return Err("mutation.invariant"); }
         let t = &mask.transform;
-        let determinant = t.scale_x * t.scale_y;
-        if [t.x, t.y, t.scale_x, t.scale_y, t.rotation, determinant].iter().any(|n| !n.is_finite()) || determinant.abs() < 1e-12 { return Err("mutation.invariant"); }
+        semio_framework_pixels::compositing::inverse(t.as_affine()).map_err(|_| "mutation.invariant")?;
     }
     Ok(())
 }

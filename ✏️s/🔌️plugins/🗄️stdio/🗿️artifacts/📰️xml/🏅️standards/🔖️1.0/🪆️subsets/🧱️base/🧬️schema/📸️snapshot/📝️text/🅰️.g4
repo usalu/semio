@@ -1,8 +1,9 @@
 grammar StdioXmlSnapshot;
 
-document   : declaration? doctype? element misc* EOF ;
+document   : declaration? preRoot* element misc* EOF ;
 declaration: XMLDECL_OPEN VERSION_ATTR ENCODING_ATTR? STANDALONE_ATTR? PI_CLOSE ;
-doctype    : DOCTYPE_START .*? '>' ;
+preRoot    : misc | doctype ;
+doctype    : DOCTYPE ;
 misc       : COMMENT | PI | WS ;
 
 element    : '<' Name attribute* '/>'
@@ -19,7 +20,7 @@ PI         : '<?' Name (WS .*?)? '?>' ;
 Reference  : '&' Name ';' | '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';' ;
 XMLDECL_OPEN: '<?xml' ;
 PI_CLOSE   : '?>' ;
-DOCTYPE_START: '<!DOCTYPE' ;
+DOCTYPE    : '<!DOCTYPE' ( '"' ~["]* '"' | '\'' ~[']* '\'' | '[' ( '"' ~["]* '"' | '\'' ~[']* '\'' | ~[\]'"] )* ']' | ~[>\["'] )* '>' ;
 VERSION_ATTR: WS 'version' '=' AttValue ;
 ENCODING_ATTR: WS 'encoding' '=' AttValue ;
 STANDALONE_ATTR: WS 'standalone' '=' AttValue ;

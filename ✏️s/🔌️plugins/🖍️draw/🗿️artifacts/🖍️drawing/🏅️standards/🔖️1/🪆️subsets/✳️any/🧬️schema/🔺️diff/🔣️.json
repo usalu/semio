@@ -6,42 +6,67 @@
   "additionalProperties": false,
   "properties": {
     "schema": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "artifact": {
       "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json" },
-        { "type": "null" }
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-state": "artifact"
     },
     "id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "title": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-semio-state": "artifact"
     },
     "layers": {
       "anyOf": [
-        { "$ref": "#/$defs/DrawingLayersDelta" },
-        { "type": "null" }
+        {
+          "$ref": "#/$defs/DrawingLayersDelta"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-state": "artifact"
     },
     "assets": {
       "anyOf": [
-        { "$ref": "#/$defs/DrawingAssetsDelta" },
-        { "type": "null" }
+        {
+          "$ref": "#/$defs/DrawingAssetsDelta"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-state": "artifact"
     },
     "artboard": {
       "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard" },
-        { "type": "null" }
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-state": "artifact"
     }
@@ -50,14 +75,20 @@
     "DrawingAssetsDelta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entries"],
+      "required": [
+        "entries"
+      ],
       "properties": {
         "entries": {
           "type": "object",
           "additionalProperties": {
             "anyOf": [
-              { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
-              { "type": "null" }
+              {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         }
@@ -66,51 +97,197 @@
     "DrawingLayersDelta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["added", "removed", "patched"],
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
       "properties": {
-        "added": { "type": "array", "items": { "$ref": "#/$defs/DrawingLayerAddition" } },
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "patched": { "type": "array", "items": { "$ref": "#/$defs/DrawingLayerPatchEntry" } },
-        "reordered": { "type": ["array", "null"], "items": { "type": "string" } }
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawingLayerAddition"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawingLayerPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "DrawingLayerAddition": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "layer"],
+      "required": [
+        "index",
+        "layer"
+      ],
       "properties": {
-        "parentId": { "type": "string" },
-        "index": { "type": "integer", "minimum": 0 },
-        "layer": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" }
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "layer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode"
+        }
       }
     },
     "DrawingLayerPatchEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "patch"],
+      "required": [
+        "id",
+        "patch"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "patch": { "$ref": "#/$defs/DrawingLayerPatch" }
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DrawingLayerPatch"
+        }
       }
     },
     "DrawingLayerPatch": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "visible": { "type": ["boolean", "null"] },
-        "locked": { "type": ["boolean", "null"] },
-        "name": { "type": ["string", "null"] },
-        "opacity": { "type": ["number", "null"] },
-        "blendMode": { "type": ["string", "null"] },
-        "transformJson": { "type": ["string", "null"] },
-        "fillJson": { "type": ["string", "null"] },
-        "strokeJson": { "type": ["string", "null"] },
-        "booleanOperation": { "type": ["string", "null"] },
-        "traceParamsJson": { "type": ["string", "null"] },
-        "layerJson": { "type": ["string", "null"] },
-        "textContent": { "type": ["string", "null"] },
-        "textSize": { "type": ["number", "null"], "exclusiveMinimum": 0 },
-        "pathSegments": { "type": ["array", "null"], "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/PathSegment" } }
+        "visible": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opacity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity",
+            null
+          ]
+        },
+        "transformJson": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fillJson": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strokeJson": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "booleanOperation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "traceParamsJson": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layerJson": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "textContent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "textSize": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "pathSegments": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/PathSegment"
+          }
+        },
+        "fillRule": {
+          "enum": [
+            "evenodd",
+            "nonzero",
+            null
+          ]
+        },
+        "isolation": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
       }
     }
   }

@@ -4,29 +4,10 @@
   "title": "SetCell",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "sheet_name",
-    "row",
-    "col",
-    "value"
-  ],
+  "required": ["address", "value"],
   "properties": {
-    "sheet_name": {
-      "type": "string"
-    },
-    "row": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 4294967295
-    },
-    "col": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 4294967295
-    },
-    "value": {
-      "$ref": "#/$defs/XlsxCellValue"
-    },
+    "address": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json" },
+    "value": { "$ref": "#/$defs/XlsxCellValue" },
     "mutation": {
       "const": "setCell",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
@@ -38,105 +19,48 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "kind",
-            "value"
-          ],
+          "required": ["kind", "value"],
+          "properties": { "kind": { "const": "number" }, "value": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": { "kind": { "const": "sharedString" }, "value": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": { "kind": { "const": "inlineString" }, "value": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": { "kind": { "const": "boolean" }, "value": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": { "kind": { "const": "error" }, "value": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "expr"],
           "properties": {
-            "kind": {
-              "const": "number"
-            },
-            "value": {
-              "type": "number"
-            }
+            "kind": { "const": "formula" },
+            "expr": { "type": "string" },
+            "cached": { "anyOf": [{ "$ref": "#/$defs/XlsxCellValue" }, { "type": "null" }] }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "kind",
-            "value"
-          ],
-          "properties": {
-            "kind": {
-              "const": "sharedString"
-            },
-            "value": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "value"
-          ],
-          "properties": {
-            "kind": {
-              "const": "inlineString"
-            },
-            "value": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "value"
-          ],
-          "properties": {
-            "kind": {
-              "const": "boolean"
-            },
-            "value": {
-              "type": "boolean"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "expr"
-          ],
-          "properties": {
-            "kind": {
-              "const": "formula"
-            },
-            "expr": {
-              "type": "string"
-            },
-            "cached": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/XlsxCellValue"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "const": "empty"
-            }
-          }
+          "required": ["kind"],
+          "properties": { "kind": { "const": "empty" } }
         }
       ]
     }

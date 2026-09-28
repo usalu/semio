@@ -520,6 +520,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
             app_id: "shell".into(),
             body_key: "framework.chat.transcript".into(),
             params_json: format!("{{\"hostContentHeight\": {declared}}}"),
+            host_status: None,
             presence: UiPresence::default(),
             menu: None,
         }),

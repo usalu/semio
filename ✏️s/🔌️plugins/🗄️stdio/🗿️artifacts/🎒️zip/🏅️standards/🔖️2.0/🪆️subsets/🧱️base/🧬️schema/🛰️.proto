@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s_stdio_zip.artifact;
-message ZipArtifact {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+message ZipExtraField { uint32 id = 1; bytes data = 2; }
+message ZipLocalHeaderMetadata { uint32 version_needed = 1; uint32 flags = 2; uint32 modified_time = 3; uint32 modified_date = 4; repeated ZipExtraField extra_fields = 5; optional bytes unicode_path_legacy_name = 6; }
+message ZipCentralHeaderMetadata { uint32 version_made_by = 1; uint32 version_needed = 2; uint32 flags = 3; uint32 modified_time = 4; uint32 modified_date = 5; repeated ZipExtraField extra_fields = 6; optional bytes unicode_path_legacy_name = 7; string comment = 8; optional bytes unicode_comment_legacy = 9; uint32 internal_attributes = 10; uint32 external_attributes = 11; }
+message ZipEntryMetadata { uint32 compression_method = 1; ZipLocalHeaderMetadata local = 2; ZipCentralHeaderMetadata central = 3; bool data_descriptor_signature = 4; }
+message ZipEntry { string name = 1; bytes data = 2; ZipEntryMetadata metadata = 3; }
+message ZipArtifact { string schema = 1; repeated ZipEntry entries = 2; string comment = 3; bool comment_utf8 = 4; }

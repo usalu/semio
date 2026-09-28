@@ -2568,11 +2568,27 @@ impl MapHost {
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+        self.set_camera_internal(x, y, zoom, true);
+    }
+
+    /// 📷️ Returns the live map camera as `[x, y, zoom]`.
+    pub fn camera(&self) -> [f64; 3] {
+        [self.camera.x, self.camera.y, self.camera.zoom]
+    }
+
+    /// 🔇️ Updates the live camera without appending a camera event during a gesture.
+    pub fn set_camera_silent(&mut self, x: f64, y: f64, zoom: f64) {
+        self.set_camera_internal(x, y, zoom, false);
+    }
+
+    fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
         self.camera.x = x;
         self.camera.y = y;
         self.camera.zoom = zoom;
         self.clamp_camera_to_world();
-        self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        if emit_event {
+            self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        }
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 

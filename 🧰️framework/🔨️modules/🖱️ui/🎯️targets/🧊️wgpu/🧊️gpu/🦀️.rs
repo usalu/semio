@@ -100,7 +100,7 @@ static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 
 fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
-    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. } | DrawMeasureCursor::PassCurvilinear { .. })
+    matches!(cursor, DrawMeasureCursor::PassSceneClear { .. } | DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. } | DrawMeasureCursor::PassPostprocess { .. })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,7 +115,7 @@ fn prepared_command_color_layer(draw: &crate::wgpu::draw_types::DrawList, cursor
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
         DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
-        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } | DrawMeasureCursor::PassGrid { pass } | DrawMeasureCursor::PassCurvilinear { pass } => {
+        DrawMeasureCursor::PassSceneClear { pass } | DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } | DrawMeasureCursor::PassGrid { pass } | DrawMeasureCursor::PassPostprocess { pass } => {
             let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
             Some((pass.layer_index, Some(pass.viewport)))
         }
@@ -280,10 +280,15 @@ impl Drop for PreparedGpuPresentCursor {
     }
 }
 
+#[path = "📤️readback/🦀️.rs"]
+mod readback;
+pub use readback::PreparedGpuReadback;
+use readback::PreparedReadbackLayout;
+
 pub struct GpuContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
-    surface: Surface<'static>,
+    surface: Option<Surface<'static>>,
     config: wgpu::SurfaceConfiguration,
     color_target_format: wgpu::TextureFormat,
     pipelines: UiPipelines,
@@ -294,6 +299,7 @@ pub struct GpuContext {
     raster_store: RasterTextureTable,
     scene_color: Option<SceneColorTarget>,
     composite_color: Option<PreparedCompositeTarget>,
+    accepted_offscreen: Option<(u64, u64)>,
     atlas_upload: Option<PreparedAtlasUploadCursor>,
     /// 🧷️ The last prepared world draw whose mesh was not resident at submit, kept for ONE readable
     /// host report instead of the fatal `present_step` fault that used to quarantine the surface.
@@ -365,6 +371,12 @@ impl GpuContext {
             desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &config);
+        Ok(Self::from_device(device, queue, Some(surface), config, css_width, css_height, dpr))
+    }
+
+    fn from_device(device: wgpu::Device, queue: wgpu::Queue, surface: Option<Surface<'static>>, config: wgpu::SurfaceConfiguration, css_width: f32, css_height: f32, dpr: f32) -> Self {
+        let color_target_format = config.format.add_srgb_suffix();
+        let (width, height) = (config.width, config.height);
         let mut pipelines = UiPipelines::new(&device, &queue, color_target_format);
         pipelines.set_surface_scale(dpr);
         let raster_store = RasterTextureTable::new(&device, pipelines.bind_group_layout());
@@ -388,6 +400,7 @@ impl GpuContext {
             raster_store,
             scene_color: None,
             composite_color: None,
+            accepted_offscreen: None,
             atlas_upload: None,
             missing_world_mesh: None,
             prepared_command_buffer,
@@ -398,7 +411,75 @@ impl GpuContext {
             dpr,
         };
         gpu.ensure_depth();
-        Ok(gpu)
+        gpu
+    }
+
+    /// 🏞️ Creates an export device without acquiring a window or browser canvas.
+    pub async fn headless(width: u32, height: u32) -> Result<Self, String> {
+        let layout = PreparedReadbackLayout::new(width, height, false)?;
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY },
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
+        });
+        let adapter = instance.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            compatible_surface: None,
+            force_fallback_adapter: false,
+        }).await.map_err(|error| format!("offscreen adapter: {error}"))?;
+        let limits = wgpu::Limits::default().using_resolution(adapter.limits());
+        if width > limits.max_texture_dimension_2d || height > limits.max_texture_dimension_2d || layout.byte_length > limits.max_buffer_size {
+            return Err("prepared offscreen dimensions exceed the device budget".into());
+        }
+        let (device, queue) = adapter.request_device(&wgpu::DeviceDescriptor {
+            label: Some("ui_wgpu_export"),
+            required_features: wgpu::Features::empty(),
+            required_limits: limits,
+            memory_hints: Default::default(),
+            trace: wgpu::Trace::Off,
+            experimental_features: Default::default(),
+        }).await.map_err(|error| format!("offscreen device: {error}"))?;
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            width,
+            height,
+            present_mode: wgpu::PresentMode::AutoVsync,
+            alpha_mode: wgpu::CompositeAlphaMode::PreMultiplied,
+            view_formats: vec![wgpu::TextureFormat::Rgba8UnormSrgb],
+            desired_maximum_frame_latency: 2,
+        };
+        Ok(Self::from_device(device, queue, None, config, width as f32, height as f32, 1.0))
+    }
+
+    /// 🖼️ Creates an independent request-sized target on the existing device and queue.
+    pub fn offscreen(&self, width: u32, height: u32) -> Result<Self, String> {
+        let layout = PreparedReadbackLayout::new(width, height, false)?;
+        let limits = self.device.limits();
+        if width > limits.max_texture_dimension_2d || height > limits.max_texture_dimension_2d || layout.byte_length > limits.max_buffer_size {
+            return Err("prepared offscreen dimensions exceed the device budget".into());
+        }
+        let mut config = self.config.clone();
+        config.width = width;
+        config.height = height;
+        config.format = wgpu::TextureFormat::Rgba8Unorm;
+        config.view_formats = vec![wgpu::TextureFormat::Rgba8UnormSrgb];
+        Ok(Self::from_device(self.device.clone(), self.queue.clone(), None, config, width as f32, height as f32, 1.0))
+    }
+
+    /// 📥️ Reads only a completed offscreen packet; live surface ownership is untouched.
+    pub fn begin_prepared_readback(&mut self, cursor: &PreparedGpuPresentCursor) -> Result<PreparedGpuReadback, String> {
+        if self.surface.is_some() || cursor.phase != PreparedGpuPresentPhase::Complete || self.accepted_offscreen != Some((cursor.scene_revision, cursor.preview_generation)) {
+            return Err("prepared readback requires a completed offscreen packet".into());
+        }
+        let composite = self.composite_color.as_ref().ok_or_else(|| "prepared readback target was missing".to_string())?;
+        let layout = PreparedReadbackLayout::new(self.width, self.height, false)?;
+        let readback = PreparedGpuReadback::begin(&self.device, &self.queue, composite, layout)?;
+        self.accepted_offscreen = None;
+        Ok(readback)
+    }
+
+    pub fn prepared_readback_step(&self, readback: &mut PreparedGpuReadback) -> Result<bool, String> {
+        readback.advance(&self.device)
     }
 
     fn ensure_depth(&mut self) {
@@ -436,9 +517,12 @@ impl GpuContext {
         self.height = height;
         self.config.width = width;
         self.config.height = height;
-        self.surface.configure(&self.device, &self.config);
+        if let Some(surface) = self.surface.as_ref() {
+            surface.configure(&self.device, &self.config);
+        }
         self.scene_color = None;
         self.composite_color = None;
+        self.accepted_offscreen = None;
         self.ensure_depth();
     }
 
@@ -599,6 +683,7 @@ impl GpuContext {
     pub fn begin_prepared_present(&mut self, packet: &PreparedRenderPacket, witness: RasterTextureWitness) -> Result<PreparedGpuPresentCursor, String> {
         let cursor = PreparedGpuPresentCursor::begin(packet.scene_revision(), packet.preview_generation()).ok_or_else(|| "prepared GPU cursor generation or abandonment admission was exhausted".to_string())?;
         self.raster_store.begin_presenting(witness).map_err(str::to_owned)?;
+        self.accepted_offscreen = None;
         Ok(cursor)
     }
 
@@ -643,7 +728,8 @@ impl GpuContext {
             PreparedGpuPresentPhase::ClearScene => {
                 let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_scene_packet") });
-                self.pipelines.clear_prepared_scene(&mut encoder, scene, self.depth_view.as_ref());
+                let clear = if self.surface.is_none() { wgpu::Color::TRANSPARENT } else { wgpu::Color { r: 0.05, g: 0.05, b: 0.06, a: 1.0 } };
+                self.pipelines.clear_prepared_scene(&mut encoder, scene, self.depth_view.as_ref(), clear);
                 self.queue.submit(Some(encoder.finish()));
                 cursor.phase = PreparedGpuPresentPhase::InitializeComposite;
             }
@@ -740,7 +826,12 @@ impl GpuContext {
             }
             PreparedGpuPresentPhase::Present => {
                 let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
-                cursor.frame = Some(match self.surface.get_current_texture() {
+                let Some(surface) = self.surface.as_ref() else {
+                    cursor.phase = PreparedGpuPresentPhase::Complete;
+                    self.accepted_offscreen = Some((cursor.scene_revision, cursor.preview_generation));
+                    return Ok(true);
+                };
+                cursor.frame = Some(match surface.get_current_texture() {
                     wgpu::CurrentSurfaceTexture::Success(frame) | wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
                     outcome => return Err(format!("prepared surface acquisition: {outcome:?}")),
                 });
@@ -763,6 +854,17 @@ impl GpuContext {
 
     fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<crate::wgpu::draw_types::ScissorRect>) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay.as_ref().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { &packet.draw };
+        if let DrawMeasureCursor::PassBackdropSnapshot { pass } = cursor {
+            let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared backdrop snapshot pass cursor was stale".to_string())?;
+            if pass_owner.viewport_mask != crate::wgpu::kernel_3d_scene::SceneViewportMask3d::Ellipse {
+                return Err("prepared backdrop snapshot did not own an ellipse mask".to_string());
+            }
+            let composite = self.composite_color.as_mut().ok_or_else(|| "prepared backdrop snapshot composite target was missing".to_string())?;
+            let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_backdrop_snapshot") });
+            composite.copy_to_postprocess_background_scratch(&self.device, &mut encoder);
+            self.queue.submit(Some(encoder.finish()));
+            return Ok(());
+        }
         let world_encoded = prepared_draw_scalar_uses_world_encoded_attachment(cursor);
         let color_view = self.composite_color.as_ref().map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() }).ok_or_else(|| "prepared composite target was missing".to_string())?;
         let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
@@ -800,6 +902,14 @@ impl GpuContext {
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared shadow pass cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_shadow_clear") });
                 self.pipelines.encode_prepared_world_shadow_begin(&self.device, &mut encoder, pass_owner);
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassSceneClear { pass } => {
+                let scissor = scissor.ok_or_else(|| "prepared world scene clear clip piece was missing".to_string())?;
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world scene clear pass cursor was stale".to_string())?;
+                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared world scene clear composite target was missing".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_scene_clear") });
+                self.pipelines.encode_prepared_world_scene_clear(&self.device, &self.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassShadowInstance { pass, draw: draw_index, instance } => {
@@ -894,12 +1004,12 @@ impl GpuContext {
                 self.pipelines.encode_prepared_world_line(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, segment, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
-            DrawMeasureCursor::PassCurvilinear { pass } => {
-                let scissor = scissor.ok_or_else(|| "prepared curvilinear clip piece was missing".to_string())?;
-                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared curvilinear pass cursor was stale".to_string())?;
-                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared curvilinear composite target was missing".to_string())?;
-                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_curvilinear") });
-                self.pipelines.encode_prepared_world_curvilinear(&self.device, &self.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
+            DrawMeasureCursor::PassPostprocess { pass } => {
+                let scissor = scissor.ok_or_else(|| "prepared world postprocess clip piece was missing".to_string())?;
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world postprocess pass cursor was stale".to_string())?;
+                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared world postprocess composite target was missing".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_postprocess") });
+                self.pipelines.encode_prepared_world_postprocess(&self.device, &self.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             _ => {}

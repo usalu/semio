@@ -1,3 +1,4 @@
+import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts";
 /** 🔺️ Mirrors Rust `DrawingDiff` (sparse field delta over the drawing artifact; sibling `🦀️.rs`,
  * `#[serde(rename_all = "camelCase", default)]`). Every top-level field is an optional patch slot;
  * a Rust `Option<Option<T>>` field (touched-but-cleared vs untouched) collapses to `T | null`
@@ -9,6 +10,8 @@
  * `DrawingArtboard`/`DrawingArtifact`. */
 import {
   parsePathSegment,
+  parseBlendMode,
+  type BlendMode,
   type PathSegment,
   parseDrawingArtifact,
   parseDrawingArtboard,
@@ -79,7 +82,9 @@ export interface DrawingLayerPatch {
   locked?: boolean;
   name?: string;
   opacity?: number;
-  blendMode?: string;
+  blendMode?: BlendMode;
+  fillRule?:FillRule;
+  isolation?:boolean;
   transformJson?: string;
   fillJson?: string;
   strokeJson?: string;
@@ -196,7 +201,9 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     locked: row["locked"] == null ? undefined : drawingDrawingDiffGuardBoolean(row["locked"], `${at}.locked`),
     name: text("name"),
     opacity: row["opacity"] == null ? undefined : drawingDrawingDiffGuardNumber(row["opacity"], `${at}.opacity`),
-    blendMode: text("blendMode"),
+    blendMode: row.blendMode == null ? undefined : parseBlendMode(row.blendMode,`${at}.blendMode`),
+    fillRule:row.fillRule==null?undefined:parseFillRule(row.fillRule),
+    isolation:row.isolation==null?undefined:drawingDrawingDiffGuardBoolean(row.isolation,`${at}.isolation`),
     transformJson: text("transformJson"),
     fillJson: text("fillJson"),
     strokeJson: text("strokeJson"),

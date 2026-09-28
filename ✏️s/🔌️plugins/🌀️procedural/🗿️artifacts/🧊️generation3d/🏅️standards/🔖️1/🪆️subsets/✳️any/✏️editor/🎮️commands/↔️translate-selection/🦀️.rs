@@ -4,55 +4,12 @@ use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfig
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_framework_os_flow::FlowEvalSession;
+use crate::editor::generation3d::transform_commands::{apply as gumball_transform, selection_ids as mesh_selection_ids_typed};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, with_host};
+use crate::standards::v1::subsets::any::schema::{gumball_translate_params_json, gumball_widget_offset, with_host};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️Shared
-/// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
-/// to the current config selection when the command carries no explicit ids.
-fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
-    if ids.is_empty() {
-        fallback.to_vec()
-    } else {
-        ids.to_vec()
-    }
-}
-
-/// 🧭️ Runs a gumball transform (translate/rotate/scale) as a fixture operation, splicing transform
-/// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets. `None` when no
-/// transform actually changed anything (nothing to commit).
-fn gumball_transform(host_snapshot: &FlowHostSnapshot, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Generation3dMutation>, Vec<String>)> {
-    with_host(host_snapshot, |host| {
-        let mut new_selection = Vec::new();
-        let mut changed = false;
-        for id in ids {
-            if let Ok(transform_id) = ensure_gumball_node(host, id, operation) {
-                if apply(host, &transform_id) {
-                    new_selection.push(transform_id);
-                    changed = true;
-                }
-            }
-        }
-        if changed {
-            Some((commit_host_snapshot(host_snapshot, &host.host_snapshot), new_selection))
-        } else {
-            None
-        }
-    })
-}
-//#endregion 🔖️Shared
-
-//#region 🔖️TranslateSelection
-//#endregion 🔖️TranslateSelection
-
-//#region 🔖️RotateSelection
-//#endregion 🔖️RotateSelection
-
-//#region 🔖️ScaleSelection
-//#endregion 🔖️ScaleSelection
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "translate-selection")]
@@ -63,15 +20,13 @@ pub struct TranslateSelection {
     pub dz: f64,
 }
 
-fn translate_ids(host_snapshot: &FlowHostSnapshot, ids: &[String], dx: f64, dy: f64, dz: f64) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    match gumball_transform(host_snapshot, ids, "translate", move |host, transform_id| {
+fn translate_ids(host_snapshot: &FlowHostSnapshot, ids: &[String], dx: f64, dy: f64, dz: f64) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    gumball_transform(host_snapshot, ids, "translate", move |host, transform_id| {
         let current = gumball_widget_offset(host, transform_id);
         let next = [current[0] + dx, current[1] + dy, current[2] + dz];
-        host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
-    }) {
-        Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-translate".into()), ..Default::default() },
-        None => Emit::default(),
-    }
+        if next.iter().any(|value| !value.is_finite()) { return Err("Translation values must be finite".into()); }
+        host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).map_err(|error| error.to_string())
+    })
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
@@ -80,13 +35,11 @@ fn translate_ids(host_snapshot: &FlowHostSnapshot, ids: &[String], dx: f64, dy: 
 /// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
 pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
-    Ok(translate_ids(&doc.snapshot.host_snapshot, &ids, payload.dx, payload.dy, payload.dz))
+    translate_ids(&doc.snapshot.host_snapshot, &ids, payload.dx, payload.dy, payload.dz)
 }
 
 /// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
-/// command carries no explicit ids. The created gumball transform widget is no longer auto-reselected
-/// — the framework, not this app, owns `graph`'s selection now, and no `Emit` channel can write it
-/// directly.
+/// command carries no explicit ids. The resulting transform remains selected through interaction writes.
 pub fn apply(
     payload: &TranslateSelection,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
@@ -95,16 +48,22 @@ pub fn apply(
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
-    Ok(translate_ids(&doc.snapshot.host_snapshot, &ids, payload.dx, payload.dy, payload.dz))
+    translate_ids(&doc.snapshot.host_snapshot, &ids, payload.dx, payload.dy, payload.dz)
 }
 
 /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
 /// behavior as `apply` above, but callable without an `app::InteractionView` (which plugin code cannot
 /// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
 /// `protocol::InteractionState` by the caller.
-pub(crate) fn apply_selected(payload: &TranslateSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+pub(crate) fn apply_selected(payload: &TranslateSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, selected);
     translate_ids(&doc.snapshot.host_snapshot, &ids, payload.dx, payload.dy, payload.dz)
+}
+
+/// 🧩️ Applies viewport deltas to the selected components, retaining their topology identifiers.
+pub(crate) fn apply_components(payload: &TranslateSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    crate::editor::generation3d::transform_commands::validate_component_gesture(&doc.snapshot.host_snapshot, &payload.node_ids, selected)?;
+    translate_ids(&doc.snapshot.host_snapshot, selected, payload.dx, payload.dy, payload.dz)
 }
 
 //#region 🧪️Tests

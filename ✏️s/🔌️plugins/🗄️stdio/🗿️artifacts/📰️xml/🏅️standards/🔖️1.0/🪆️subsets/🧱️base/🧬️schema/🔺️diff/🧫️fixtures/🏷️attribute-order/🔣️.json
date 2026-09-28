@@ -1,0 +1,274 @@
+{
+  "states": [
+    [
+      [
+        "a",
+        "α"
+      ],
+      [
+        "b",
+        "β"
+      ],
+      [
+        "c",
+        "γ"
+      ]
+    ],
+    [
+      [
+        "c",
+        "γ"
+      ],
+      [
+        "a",
+        "α"
+      ],
+      [
+        "b",
+        "β"
+      ]
+    ],
+    [
+      [
+        "x",
+        "新"
+      ],
+      [
+        "c",
+        "changed"
+      ],
+      [
+        "b",
+        "β"
+      ]
+    ],
+    [
+      [
+        "b",
+        "β"
+      ],
+      [
+        "z",
+        "📝"
+      ],
+      [
+        "x",
+        "新"
+      ]
+    ],
+    [],
+    [
+      [
+        "b",
+        "again"
+      ],
+      [
+        "a",
+        "α"
+      ],
+      [
+        "c",
+        "γ"
+      ]
+    ]
+  ],
+  "invalidOrders": [
+    [
+      "a",
+      "a",
+      "c"
+    ],
+    [
+      "a",
+      "b"
+    ],
+    [
+      "a",
+      "b",
+      "missing"
+    ]
+  ],
+  "invalidChildDiffs": [
+    {
+      "name": "final-insertion-equals-length",
+      "base": [],
+      "diff": {
+        "added": [
+          {
+            "index": 1,
+            "item": {
+              "kind": "text",
+              "text": "retained"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "null-child-replacement",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "modified": [
+          {
+            "index": 0,
+            "diff": {
+              "kind": "replace",
+              "node": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-removal",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "removed": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "duplicate-removal",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "removed": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "missing-modification",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "modified": [
+          {
+            "index": 1,
+            "diff": {
+              "kind": "text",
+              "text": "edited"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "removed-modification",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "removed": [
+          0
+        ],
+        "modified": [
+          {
+            "index": 0,
+            "diff": {
+              "kind": "text",
+              "text": "edited"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate-modification",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "modified": [
+          {
+            "index": 0,
+            "diff": {
+              "kind": "text",
+              "text": "edited"
+            }
+          },
+          {
+            "index": 0,
+            "diff": {
+              "kind": "text",
+              "text": "edited"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate-addition",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "added": [
+          {
+            "index": 0,
+            "item": {
+              "kind": "text",
+              "text": "retained"
+            }
+          },
+          {
+            "index": 0,
+            "item": {
+              "kind": "text",
+              "text": "retained"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-node-kind",
+      "base": [
+        {
+          "kind": "text",
+          "text": "retained"
+        }
+      ],
+      "diff": {
+        "modified": [
+          {
+            "index": 0,
+            "diff": {
+              "kind": "element",
+              "name": "wrong"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# Build and Runtime Gate 42
+
+The complete WGPU TypeScript census now passes **511/511 across 48 files**. Registered Nx execution used the installed Chromium cache. Receipt: `🗑️generated/astra-runtime/gate34/wgpu-ts42e-full.log`, 2026-09-28 04:36:29 CEST, duration 44.89 seconds.
+
+The earlier census (`wgpu-ts42c-full.log`) had 490 passes and 21 failures. The keyboard test file required its DOM environment; the retained document traversal count needed to include the new projection step; browser worker generation required three newly imported modules in the generator authority. The focused owner/keyboard run passed 29/29 and generation passed 27/27 before the successful complete rerun. Generator source and input paths are sorted deterministically in the taxonomy. The intermediate `wgpu-ts42d-full.log` omitted the installed Playwright cache environment and failed browser startup; it is not a renderer runtime regression.
+
+Native40b failed before assertions because an icon export phase key was a temporary formatted string passed to a static localization-key interface. The source now chooses static keys for every phase. Native42 is the replacement focused run and remains queued behind the shared Cargo artifact lock. No native pass is claimed.
+
+WASM30b failed before artifact publication on four private PaintGesture field accesses in the shared Surface paint consumer. The owner restored parent-module visibility. Replacement WASM31 passed that boundary but stopped on eight borrow conflicts in the shared retained paged-list clone cursor. Its owner has repaired the disjoint inner-state projections; WASM32 is the current replacement build. A fresh published renderer artifact is still required. Browser comparison remains on W28; the TypeScript census does not establish physical parity across the fifteen surface families.
+
+The complete React typecheck ran and failed on missing icon failure translation-schema membership, missing camera projection-frame policy fields, new media host typing/imports, and older test fixture types. Renderer-owned fixes now explicitly preserve camera policy, register the existing bilingual icon message, and provide current typed fixture fields. Media host fixes are assigned to its active owner. The affected runtime suites and a replacement global typecheck are required before calling this gate green.
+
+The affected renderer runtime files now pass **163/163 across 12 files**, including PluginRuntime, Icon host/export/download oracles, Navigator camera and empty dock. Receipt: `react-type-repair42-tests.log`, duration 32.67 seconds. The UI camera/SVG finishing group passes **12/12**, 566 outside-filter skipped, receipt `ui-icon-types42.log`. Projection framing separately passes **4/4**, 708 outside-filter skipped, receipt `camera-policy-types42.log`. Global typecheck will rerun after the active media host source settles.
+
+The accidentally started duplicate native test from the generic WGPU task was stopped only after confirming its owned Cargo PID. Other agents' compiler jobs and caches were preserved.

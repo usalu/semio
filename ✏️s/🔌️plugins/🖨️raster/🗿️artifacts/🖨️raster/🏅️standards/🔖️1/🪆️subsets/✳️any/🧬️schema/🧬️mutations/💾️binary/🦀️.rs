@@ -352,6 +352,7 @@ impl RasterOwnedRetirement {
             DeleteLayer(payload) => RasterMutationFields::String(payload.layer_id),
             ReorderLayers(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.parent_id, third: None },
             RenameLayer(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name), third: None },
+            ChangeLayerLocked(payload) => RasterMutationFields::String(payload.layer_id),
             ChangeLayerVisible(payload) => RasterMutationFields::String(payload.layer_id),
             ChangeLayerOpacity(payload) => RasterMutationFields::String(payload.layer_id),
             ChangeLayerBlendMode(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_blend_mode), third: None },
@@ -361,6 +362,7 @@ impl RasterOwnedRetirement {
             AddLayerAsset(payload) => RasterMutationFields::Asset { id: payload.asset_id, asset: Some(payload.asset) },
             RemoveLayerAsset(payload) => RasterMutationFields::String(payload.asset_id),
             ChangeLayerAdjustmentParameter(payload) => RasterMutationFields::Strings {first:payload.layer_id,second:Some(payload.parameter),third:None},
+            ChangeLayerTransform(payload)=>RasterMutationFields::String(payload.layer_id),
             ChangeLayerMask(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected.and_then(|mask| mask.image_key), third: payload.mask.and_then(|mask| mask.image_key) },
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
         }
@@ -1794,35 +1796,38 @@ impl RasterLayerCloneAuthority {
 
     fn skeleton(source: &RasterLayerNode) -> RasterLayerNode {
         match source {
-            RasterLayerNode::Pixel { visible, opacity, transform, mask, width, height, .. } => RasterLayerNode::Pixel {
+            RasterLayerNode::Pixel { visible, locked, opacity, transform, mask, width, height, .. } => RasterLayerNode::Pixel {
                 id: String::new(),
                 name: String::new(),
                 visible: *visible,
+                locked: *locked,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: transform.clone(),
                 mask: Self::mask(mask),
                 width: *width,
                 height: *height,
                 image_key: None,
             },
-            RasterLayerNode::Group { visible, opacity, transform, mask, children, .. } => RasterLayerNode::Group {
+            RasterLayerNode::Group { visible, locked, opacity, transform, mask, children, .. } => RasterLayerNode::Group {
                 id: String::new(),
                 name: String::new(),
                 visible: *visible,
+                locked: *locked,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: transform.clone(),
                 mask: Self::mask(mask),
                 children: Vec::with_capacity(children.capacity().saturating_add(1)),
             },
-            RasterLayerNode::Adjustment { visible, opacity, transform, .. } => RasterLayerNode::Adjustment {
+            RasterLayerNode::Adjustment { visible, locked, opacity, transform, .. } => RasterLayerNode::Adjustment {
                 id: String::new(),
                 name: String::new(),
                 visible: *visible,
+                locked: *locked,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: transform.clone(),
                 adjustment_kind: String::new(),
                 params: RasterOwnedMap::new(),
             },
@@ -1896,11 +1901,13 @@ impl RasterLayerCloneAuthority {
         let frame = self.frames[self.depth];
         match frame.phase {
             0..=2 => {
+                let locked=crate::standards::v1::subsets::any::schema::layer_locked(source);
                 let (source, target) = &mut Self::strings(source, target)[frame.phase as usize];
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 **target = raster_clone_owned_string(source)?;
+                if frame.phase==0 {digest.observe(&[u8::from(locked)]);}
                 digest.observe(source.as_bytes());
                 self.frames[self.depth].phase += 1;
             }
@@ -2166,7 +2173,7 @@ impl RasterSnapshotBoundsAuthority {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                self.totals.map(&source.assets, 1)?;
+                self.totals.map(&source.assets, usize::from(source.assets.len()<crate::RASTER_OWNED_MAP_CAPACITY))?;
                 self.phase = 7;
             }
             7 => {
@@ -2471,6 +2478,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::ReorderLayers(_) => 3,
             RasterMutation::RenameLayer(_) => 4,
             RasterMutation::ChangeLayerVisible(_) => 5,
+            RasterMutation::ChangeLayerLocked(_) => 16,
             RasterMutation::ChangeLayerOpacity(_) => 6,
             RasterMutation::ChangeLayerBlendMode(_) => 7,
             RasterMutation::MoveLayer(_) => 8,
@@ -2480,6 +2488,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::RemoveLayerAsset(_) => 12,
             RasterMutation::ChangeLayerPixels(_) => 13,
             RasterMutation::ChangeLayerMask(_) => 14,
+            RasterMutation::ChangeLayerTransform(_)=>17,
             RasterMutation::ChangeLayerAdjustmentParameter(_) => 15,
         }
     }
@@ -2609,6 +2618,11 @@ impl RasterMutationDigestAuthority {
                 2 => string_phase!(&value.new_name, 3),
                 _ => Ok(self.finish(digest, cx)),
             },
+            RasterMutation::ChangeLayerLocked(value) => match self.phase {
+                1=>string_phase!(&value.layer_id,2),
+                2=>scalar_phase!(&[u8::from(value.expected),u8::from(value.locked)],3),
+                _=>Ok(self.finish(digest,cx)),
+            },
             RasterMutation::ChangeLayerVisible(value) => match self.phase {
                 1 => string_phase!(&value.layer_id, 2),
                 2 => scalar_phase!(&[u8::from(value.new_visible)], 3),
@@ -2671,11 +2685,20 @@ impl RasterMutationDigestAuthority {
                 }
                 _ => Ok(self.finish(digest,cx)),
             },
+            RasterMutation::ChangeLayerTransform(value)=>match self.phase {
+                1=>string_phase!(&value.layer_id,2),
+                2|3=>{
+                    let transform=if self.phase==2 {&value.expected}else{&value.transform};let mut fields=[0_u8;48];
+                    for (index,number) in transform.as_affine().iter().enumerate(){fields[index*8..index*8+8].copy_from_slice(&number.to_bits().to_be_bytes());}
+                    scalar_phase!(&fields,self.phase+1)
+                }
+                _=>Ok(self.finish(digest,cx)),
+            },
             RasterMutation::ChangeLayerMask(value) => match self.phase {
                 1 => string_phase!(&value.layer_id, 2),
                 2 | 4 => {
                     let mask = if self.phase == 2 { &value.expected } else { &value.mask };
-                    let mut fields = [0_u8; 55];
+                    let mut fields = [0_u8; 63];
                     if let Some(mask) = mask {
                         fields[0] = 1;
                         fields[1] = u8::from(mask.enabled);
@@ -2687,7 +2710,7 @@ impl RasterMutationDigestAuthority {
                         fields[7..11].copy_from_slice(&mask.width.unwrap_or(0).to_be_bytes());
                         fields[11..15].copy_from_slice(&mask.height.unwrap_or(0).to_be_bytes());
                         let t = &mask.transform;
-                        for (index, number) in [t.x, t.y, t.scale_x, t.scale_y, t.rotation].iter().enumerate() {
+                        for (index, number) in [t.x, t.y, t.a, t.b, t.c, t.d].iter().enumerate() {
                             fields[15 + index * 8..23 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
                         }
                     }
@@ -2710,12 +2733,12 @@ impl RasterMutationDigestAuthority {
                 4 => scalar_phase!(&[u8::from(value.content.image_key.is_some())], if value.content.image_key.is_some() { 5 } else { 6 }),
                 5 => string_phase!(value.content.image_key.as_ref().ok_or("raster-store.digest-image-key")?, 6),
                 6 => {
-                    let mut fields = [0_u8; 49];
+                    let mut fields = [0_u8; 57];
                     fields[..4].copy_from_slice(&value.content.width.unwrap_or(0).to_be_bytes());
                     fields[4..8].copy_from_slice(&value.content.height.unwrap_or(0).to_be_bytes());
                     if let Some(transform) = &value.transform {
                         fields[8] = 1;
-                        for (index, number) in [transform.x, transform.y, transform.scale_x, transform.scale_y, transform.rotation].iter().enumerate() {
+                        for (index, number) in [transform.x, transform.y, transform.a, transform.b, transform.c, transform.d].iter().enumerate() {
                             fields[9 + index * 8..17 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
                         }
                     }
@@ -2969,6 +2992,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::DeleteLayer(value) => Some(&value.layer_id),
             RasterMutation::ReorderLayers(value) => Some(&value.layer_id),
             RasterMutation::RenameLayer(value) => Some(&value.layer_id),
+            RasterMutation::ChangeLayerLocked(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerVisible(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerOpacity(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerBlendMode(value) => Some(&value.layer_id),
@@ -2976,6 +3000,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ResizeLayer(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerPixels(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerMask(value) => Some(&value.layer_id),
+            RasterMutation::ChangeLayerTransform(value)=>Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentParameter(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
@@ -3173,6 +3198,12 @@ impl RasterMutationCandidateAuthority {
                             RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
                         *self.retirement = Self::replace_string(name, &value.new_name)?;
                     }
+                    RasterMutation::ChangeLayerLocked(value)=>{
+                        if !raster_reserve_unit(cx){return Ok(false);}
+                        crate::mutations::change_layer_locked::validate(value,snapshot)?;
+                        let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                        *locked=value.locked;
+                    }
                     RasterMutation::ChangeLayerVisible(value) => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
@@ -3239,6 +3270,12 @@ impl RasterMutationCandidateAuthority {
                             *self.retirement=Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry {key,value:Some(old)})));
                         }
                         if let Some((key,number))=replacement {params.insert_pre_admitted(key,number).map_err(|error|error.reason)?;}
+                    }
+                    RasterMutation::ChangeLayerTransform(value)=>{
+                        if !raster_reserve_unit(cx){return Ok(false);}
+                        crate::mutations::change_layer_transform::validate(value,snapshot)?;
+                        let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
+                        *transform=value.transform.clone();
                     }
                     RasterMutation::ChangeLayerMask(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }

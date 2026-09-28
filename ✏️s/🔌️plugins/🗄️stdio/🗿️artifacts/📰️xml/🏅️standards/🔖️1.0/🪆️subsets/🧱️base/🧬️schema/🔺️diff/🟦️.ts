@@ -1,9 +1,10 @@
-import type { XmlDeclaration, XmlDoctype, XmlNode } from '../📸️snapshot/🟦️.ts';
+import { parseXmlDeclaration, parseXmlDoctype, parseXmlNode, type XmlDeclaration, type XmlDoctype, type XmlNode } from '../📸️snapshot/🟦️.ts';
 
 /** 🔺️ Diff for `stdio.xml`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =
  * unchanged, present = set). */
 export interface XmlDiff {
   prolog?: XmlNode[];
+  epilog?: XmlNode[];
   declaration?: XmlDeclaration | null;
   doctype?: XmlDoctype | null;
   root?: XmlNodeDiff;
@@ -13,13 +14,14 @@ export interface XmlDiff {
 export type XmlNodeDiff =
   | { kind: 'element'; name?: string; attributes?: XmlAttributesDiff; children?: XmlChildrenDiff }
   | { kind: 'text'; text?: string }
-  | { kind: 'replace'; node?: XmlNode };
+  | { kind: 'replace'; node?: XmlNode | null };
 
 /** 🏷️ Name-keyed, order-preserving attribute triple. */
 export interface XmlAttributesDiff {
-  removed: string[];
-  modified: XmlAttrModified[];
-  added: XmlAttrAdded[];
+  removed?: string[];
+  modified?: XmlAttrModified[];
+  added?: XmlAttrAdded[];
+  order?: readonly string[];
 }
 
 export interface XmlAttrModified {
@@ -28,16 +30,15 @@ export interface XmlAttrModified {
 }
 
 export interface XmlAttrAdded {
-  index: number;
   name: string;
   value: string;
 }
 
 /** 🌳 Index-keyed, recursive children triple. */
 export interface XmlChildrenDiff {
-  removed: number[];
-  modified: XmlChildModified[];
-  added: XmlChildAdded[];
+  removed?: number[];
+  modified?: XmlChildModified[];
+  added?: XmlChildAdded[];
 }
 
 export interface XmlChildModified {
@@ -100,9 +101,10 @@ export const stdioXml10BaseDiffGuardConstant = <T extends string | number | bool
 export function parseXmlDiff(value: unknown, at = "$"): XmlDiff {
   const row = stdioXml10BaseDiffGuardObject(value, at);
   return {
-    prolog: row["prolog"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => stdioXml10BaseDiffGuardObject(item, `${at}.prolog[${index}]`)),
-    declaration: row["declaration"] === undefined ? undefined : parseNullableXmlDeclaration(row["declaration"], `${at}.declaration`),
-    doctype: row["doctype"] === undefined ? undefined : parseNullableString(row["doctype"], `${at}.doctype`),
+    prolog: row["prolog"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
+    epilog: row["epilog"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseXmlNode(item, `${at}.epilog[${index}]`)),
+    declaration: row["declaration"] === undefined ? undefined : row["declaration"] === null ? null : parseXmlDeclaration(row["declaration"], `${at}.declaration`),
+    doctype: row["doctype"] === undefined ? undefined : row["doctype"] === null ? null : parseXmlDoctype(row["doctype"], `${at}.doctype`),
     root: row["root"] === undefined ? undefined : parseXmlNodeDiff(row["root"], `${at}.root`),
   };
 }
@@ -118,7 +120,6 @@ export function parseXmlAttrModified(value: unknown, at = "$"): XmlAttrModified 
 export function parseXmlAttrAdded(value: unknown, at = "$"): XmlAttrAdded {
   const row = stdioXml10BaseDiffGuardObject(value, at);
   return {
-    index: stdioXml10BaseDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     name: stdioXml10BaseDiffGuardString(row["name"], `${at}.name`),
     value: stdioXml10BaseDiffGuardString(row["value"], `${at}.value`),
   };
@@ -126,10 +127,13 @@ export function parseXmlAttrAdded(value: unknown, at = "$"): XmlAttrAdded {
 
 export function parseXmlAttributesDiff(value: unknown, at = "$"): XmlAttributesDiff {
   const row = stdioXml10BaseDiffGuardObject(value, at);
+  const order = row["order"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["order"], `${at}.order`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.order[${index}]`));
+  if (order && new Set(order).size !== order.length) stdioXml10BaseDiffGuardReject(`${at}.order`, "attribute identities must be unique");
   return {
-    removed: stdioXml10BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.removed[${index}]`)),
-    modified: stdioXml10BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseXmlAttrModified(item, `${at}.modified[${index}]`)),
-    added: stdioXml10BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseXmlAttrAdded(item, `${at}.added[${index}]`)),
+    order,
+    removed: row["removed"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseXmlAttrModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseXmlAttrAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -145,16 +149,16 @@ export function parseXmlChildAdded(value: unknown, at = "$"): XmlChildAdded {
   const row = stdioXml10BaseDiffGuardObject(value, at);
   return {
     index: stdioXml10BaseDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    item: stdioXml10BaseDiffGuardObject(row["item"], `${at}.item`),
+    item: parseXmlNode(row["item"], `${at}.item`),
   };
 }
 
 export function parseXmlChildrenDiff(value: unknown, at = "$"): XmlChildrenDiff {
   const row = stdioXml10BaseDiffGuardObject(value, at);
   return {
-    removed: stdioXml10BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioXml10BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
-    modified: stdioXml10BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseXmlChildModified(item, `${at}.modified[${index}]`)),
-    added: stdioXml10BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseXmlChildAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioXml10BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
+    modified: row["modified"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseXmlChildModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseXmlChildAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -171,4 +175,15 @@ export function parseXmlElementDiff(value: unknown, at = "$"): XmlElementDiff {
     attributes: row["attributes"] === undefined ? undefined : parseXmlAttributesDiff(row["attributes"], `${at}.attributes`),
     children: row["children"] === undefined ? undefined : parseXmlChildrenDiff(row["children"], `${at}.children`),
   };
+}
+
+export function parseXmlNodeDiff(value: unknown, at = "$"): XmlNodeDiff {
+  const row = stdioXml10BaseDiffGuardObject(value, at);
+  const kind = stdioXml10BaseDiffGuardMember(row["kind"], `${at}.kind`, ["element", "text", "replace"] as const);
+  if (kind === "element") {
+    const diff = parseXmlElementDiff(row, at);
+    return { kind, ...diff };
+  }
+  if (kind === "text") return { kind, text: row["text"] === undefined ? undefined : stdioXml10BaseDiffGuardString(row["text"], `${at}.text`) };
+  return { kind, node: row["node"] === undefined ? undefined : row["node"] === null ? null : parseXmlNode(row["node"], `${at}.node`) };
 }

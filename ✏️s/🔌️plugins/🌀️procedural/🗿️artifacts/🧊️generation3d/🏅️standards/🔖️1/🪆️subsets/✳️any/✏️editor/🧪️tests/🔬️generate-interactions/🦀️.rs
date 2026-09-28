@@ -20,11 +20,18 @@ struct GenerateInteractionsFixture {
     version: u8,
     windows: Vec<InteractionWindow>,
     preview_parity: Vec<String>,
+    component_editing: ComponentEditing,
     gumball_verbs: Vec<String>,
     node_graph_edit_operations: Vec<NodeGraphOperation>,
     command_triggers: Vec<CommandTrigger>,
     removed_commands: Vec<RemovedCommand>,
     rename_commit_argument: RenameCommitArgument,
+}
+
+#[derive(serde::Deserialize)]
+struct ComponentEditing {
+    window: String,
+    actions: Vec<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -107,16 +114,18 @@ fn every_window_declares_exactly_the_interaction_surface_the_table_names() {
     }
 }
 
-/// ⚖️ LAW: the two World3d previews are peers. Everything one of them offers for direct manipulation
-/// the other offers too — the gumball trio and the transform utility rail included.
+/// ⚖️ Object transforms share one preview surface; component edits belong to the editor preview.
 #[test]
-fn the_two_previews_offer_one_identical_direct_manipulation_surface() {
+fn the_two_previews_share_object_transforms_and_scope_component_edits() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
     let definition = crate::editor::generation3d::create_generation3d_app();
     let surface = |id: &str| {
         let kind = definition.window_kinds.iter().find(|kind| kind.id == id).unwrap_or_else(|| panic!("{id} window kind"));
-        (kind.actions.iter().map(|action| action.id.clone()).collect::<std::collections::BTreeSet<_>>(), kind.utilities.iter().map(|utility| utility.as_str().to_string()).collect::<Vec<_>>())
+        for action in &fixture.component_editing.actions {
+            assert_eq!(kind.actions.iter().any(|entry| &entry.id == action), id == fixture.component_editing.window, "{id}: {action} ownership");
+        }
+        (kind.actions.iter().filter(|action| !fixture.component_editing.actions.contains(&action.id)).map(|action| action.id.clone()).collect::<std::collections::BTreeSet<_>>(), kind.utilities.iter().map(|utility| utility.as_str().to_string()).collect::<Vec<_>>())
     };
     let mut previews = fixture.preview_parity.iter();
     let first = previews.next().expect("the parity list names two previews");

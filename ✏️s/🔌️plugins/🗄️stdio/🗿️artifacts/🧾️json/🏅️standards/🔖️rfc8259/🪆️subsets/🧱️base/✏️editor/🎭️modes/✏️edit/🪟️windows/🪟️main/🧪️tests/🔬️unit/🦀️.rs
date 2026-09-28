@@ -15,22 +15,27 @@ async fn render_walks_object_and_array_members() {
     let root = section.children.get(0).expect("tree root");
     assert_eq!(root.key.as_str(), JSON_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
     let a = root.children.get(0).expect("child");
-    assert_eq!(a.key.as_str(), "k=a");
+    assert_eq!(a.key.as_str(), "m=0");
     let item0 = a.children.get(0).expect("child");
     assert_eq!(item0.key.as_str(), "i=0", "a node is keyed by its SIBLING segment, never by its path from the root");
 }
 
 #[test]
 fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
-    let document = JsonSnapshot {
-        schema: "stdio.json".into(),
-        value: JsonValue::Object { members: vec![JsonMember { key: "greeting".into(), value: JsonValue::String { value: "Grüße\n%20".into() } }] },
-    };
-    let node = render_editor(&document, semio_framework_plugin::Locale::De, &semio_framework_plugin::TreeWindows::unhosted()).expect("editor render");
+    let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "greeting".into(), value: JsonValue::String { value: "Grüße\n%20".into() } }] } };
+    let node = render_editor(&document, semio_framework_plugin::Locale::De, &semio_framework_plugin::TreeWindows::unhosted(), "json-editor", "revision").expect("editor render");
+    let source = node.children.get(0).expect("source surface");
+    let semio_framework_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
+    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
+    assert_eq!(settings["editAction"], "set-node");
+    assert_eq!(settings["editArguments"]["nodeId"], "$");
+    assert_eq!(settings["editArguments"]["revision"], "revision");
+    assert_eq!(settings["commit"], "explicit");
+    assert_eq!(settings["applyLabel"], "Apply");
+    assert_eq!(settings["discardLabel"], "Discard");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("Grüße\\n%20"), "natural JSON text remains in the draft: {json}");
-    assert!(json.contains("\\\"editAction\\\":\\\"set-node\\\""), "the draft applies through the retained whole-document route: {json}");
-    assert!(json.contains("\\\"nodeId\\\":\\\"$\\\""), "the draft targets the JSON root: {json}");
     assert!(json.contains("Anwenden") && json.contains("Verwerfen"), "draft controls follow the active locale: {json}");
 }
 
@@ -57,10 +62,7 @@ const MEASURED_VIEWPORT_ROWS: u32 = 4;
 /// 🪟️ An everyday document: one member holding an array far past the 32 siblings this window used to
 /// refuse outright.
 fn oversized_document(items: usize) -> JsonSnapshot {
-    JsonSnapshot {
-        schema: "stdio.json".into(),
-        value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: (0..items).map(|index| JsonValue::Number { lexeme: index.to_string() }).collect() } }] },
-    }
+    JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: (0..items).map(|index| JsonValue::Number { lexeme: index.to_string() }).collect() } }] } }
 }
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
@@ -83,7 +85,7 @@ fn oversized_array_stamps_totals_and_never_a_continuation_row() {
 /// 🪟️ Law (b): a node the host closed stamps its total and materialises nothing.
 #[test]
 fn closed_array_stamps_total_and_materialises_no_elements() {
-    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[JSON_ROOT_NODE_ID, "k=a"]), open: Some(false), offset: 0, rows: 0 }]);
+    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[JSON_ROOT_NODE_ID, "m=0"]), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":300"), "a closed array still stamps its extent: {json}");
     assert!(!json.contains("\"i="), "a closed array materialises no elements: {json}");
 }
@@ -91,7 +93,7 @@ fn closed_array_stamps_total_and_materialises_no_elements() {
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw path id.
 #[test]
 fn host_window_materialises_exactly_its_slice() {
-    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[JSON_ROOT_NODE_ID, "k=a"]), open: Some(true), offset: 100, rows: 10 }]);
+    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[JSON_ROOT_NODE_ID, "m=0"]), open: Some(true), offset: 100, rows: 10 }]);
     assert!(json.contains("\"offset\":100"), "the array reports its offset: {json}");
     for index in 100..110 {
         assert!(json.contains(&format!("\"i={index}\"")), "element {index} is inside the window: {json}");
@@ -142,7 +144,7 @@ fn deep_window_body(document: &JsonSnapshot, requests: Vec<TreeWindowRequest>) -
 #[test]
 fn a_deep_containers_window_path_stays_a_view_context_identifier_and_still_streams() {
     let document = deep_document(10, 300);
-    let segments: Vec<String> = (0..10).map(|level| member_segment(&deep_member_name(level))).collect();
+    let segments: Vec<String> = (0..10).map(|_| member_segment(0)).collect();
     let mut keys: Vec<&str> = vec![JSON_ROOT_NODE_ID];
     keys.extend(segments.iter().map(String::as_str));
     let path = window_path(&keys);
@@ -156,16 +158,25 @@ fn a_deep_containers_window_path_stays_a_view_context_identifier_and_still_strea
     assert!(!json.contains("\"i=39\""), "the element before the deep window stays out: {json}");
 }
 
-/// 🪟️ Law (f): repeated member names are true siblings, so each gets its own key — the UI document and
-/// the window ledger both refuse two siblings sharing one.
+/// 🪟️ Law (f): member ids follow exact source ordinals while visible user keys remain untouched.
 #[test]
 fn repeated_member_names_get_distinct_sibling_keys() {
     let document = JsonSnapshot {
         schema: "stdio.json".into(),
-        value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Null] } }, JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Null] } }] },
+        value: JsonValue::Object {
+            members: vec![
+                JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } },
+                JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Null] } },
+                JsonMember { key: format!("literal{}#2", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR), value: JsonValue::Null },
+            ],
+        },
     };
     let json = window_body(&document, Vec::new());
-    assert!(json.contains("\"k=a\""), "the first member keeps the plain key: {json}");
-    assert!(json.contains("\"k=a#2\""), "the repeated member gets its own key: {json}");
+    assert!(json.contains("\"m=0\"") && json.contains("\"m=1\"") && json.contains("\"m=2\""), "all members keep distinct ordinal ids: {json}");
+    assert!(json.matches("a: [1]").count() >= 2, "duplicate user keys remain visible: {json}");
+    assert!(json.contains("#2"), "a literal ordinal-looking suffix remains user data: {json}");
+    assert_eq!(node_at_path_id(&document, &encode_path_id(&[member_segment(0)])), Some(&JsonValue::Array { items: vec![JsonValue::Bool { value: true }] }));
+    assert_eq!(node_at_path_id(&document, &encode_path_id(&[member_segment(1)])), Some(&JsonValue::Array { items: vec![JsonValue::Null] }));
+    assert!(node_at_path_id(&document, &encode_path_id(&["m=01".into()])).is_none(), "non-canonical ordinals cannot alias a member");
 }
 //#endregion 🪟️WindowLaws

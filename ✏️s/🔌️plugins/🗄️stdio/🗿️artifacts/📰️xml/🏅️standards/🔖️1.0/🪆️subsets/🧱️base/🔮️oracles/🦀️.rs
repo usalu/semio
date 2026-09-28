@@ -75,6 +75,7 @@ mod oracles {
 
     #[derive(Clone, Debug, Default, PartialEq)]
     struct XDoctype {
+        prolog_position: usize,
         name: String,
         external_id: Option<XExternalId>,
         entities: Vec<XEntity>,
@@ -86,6 +87,7 @@ mod oracles {
         doctype: Option<XDoctype>,
         prolog: Vec<XNode>,
         root: Option<XNode>,
+        epilog: Vec<XNode>,
     }
     //#endregion 🔖️Tree
 
@@ -200,13 +202,14 @@ mod oracles {
             _ => None,
         };
         let entities = params.array("entities").iter().map(|entry| XEntity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") }).collect();
-        Some(XDoctype { name, external_id, entities })
+        Some(XDoctype { prolog_position: usize_field(params, "prologPosition"), name, external_id, entities })
     }
 
     fn doctype_to_json(doctype: &Option<XDoctype>) -> Json {
         match doctype {
             None => Json::Object(vec![]),
             Some(dt) => Json::Object(vec![
+                ("prologPosition".to_string(), Json::Number(dt.prolog_position as f64)),
                 ("name".to_string(), Json::String(dt.name.clone())),
                 (
                     "externalId".to_string(),
@@ -393,7 +396,7 @@ mod oracles {
                 entities.push(XEntity { parameter, name: entity_name, value });
             }
         }
-        Ok(XDoctype { name, external_id, entities })
+        Ok(XDoctype { prolog_position: 0, name, external_id, entities })
     }
 
     fn skip_ws(bytes: &[u8], pos: &mut usize) {
@@ -447,11 +450,17 @@ mod oracles {
             match event {
                 Event::Eof => break,
                 Event::Decl(decl) => doc.declaration = Some(decl_from_event(&decl)?),
-                Event::DocType(doctype) => doc.doctype = Some(parse_doctype(doctype.as_ref().trim())?),
+                Event::DocType(_) if root_seen => return Err("doctype cannot appear after the root element".to_string()),
+                Event::DocType(_) if doc.doctype.is_some() => return Err("duplicate XML doctype".to_string()),
+                Event::DocType(doctype) => {
+                    let mut doctype = parse_doctype(doctype.as_ref().trim())?;
+                    doctype.prolog_position = doc.prolog.len();
+                    doc.doctype = Some(doctype);
+                }
                 Event::PI(pi) if !root_seen => doc.prolog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().to_string() }),
-                Event::PI(_) => {}
+                Event::PI(pi) => doc.epilog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().to_string() }),
                 Event::Comment(comment) if !root_seen => doc.prolog.push(XNode::Comment(comment.as_ref().to_string())),
-                Event::Comment(_) => {}
+                Event::Comment(comment) => doc.epilog.push(XNode::Comment(comment.as_ref().to_string())),
                 Event::Text(text) => {
                     if !text.as_ref().trim().is_empty() {
                         return Err(if root_seen { "trailing content after root element".to_string() } else { "unexpected text before the root element".to_string() });
@@ -539,19 +548,31 @@ mod oracles {
     }
 
     fn serialize(doc: &XDoc) -> Result<Vec<u8>, String> {
+        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position > doc.prolog.len()) {
+            return Err("doctype prologPosition exceeds prolog length".to_string());
+        }
+        if doc.prolog.iter().chain(&doc.epilog).any(|node| !matches!(node, XNode::Comment(_) | XNode::Pi { .. })) {
+            return Err("XML document boundaries may contain only comments and processing instructions".to_string());
+        }
         let mut writer = Writer::new(Cursor::new(Vec::new()));
         if let Some(decl) = &doc.declaration {
             let standalone = decl.standalone.map(|value| if value { "yes" } else { "no" });
             writer.write_event(Event::Decl(BytesDecl::new(&decl.version, decl.encoding.as_deref(), standalone))).map_err(|error| error.to_string())?;
         }
-        for node in &doc.prolog {
+        for (index, node) in doc.prolog.iter().enumerate() {
+            if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index) {
+                writer.write_event(Event::DocType(BytesText::from_escaped(doctype_content(doc.doctype.as_ref().unwrap())))).map_err(|error| error.to_string())?;
+            }
             write_node(&mut writer, node)?;
         }
-        if let Some(doctype) = &doc.doctype {
+        if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len()) {
             writer.write_event(Event::DocType(BytesText::from_escaped(doctype_content(doctype)))).map_err(|error| error.to_string())?;
         }
         if let Some(root) = &doc.root {
             write_node(&mut writer, root)?;
+        }
+        for node in &doc.epilog {
+            write_node(&mut writer, node)?;
         }
         Ok(writer.into_inner().into_inner())
     }
@@ -782,6 +803,7 @@ mod oracles {
                     None => Json::Null,
                 },
             ),
+            ("epilog".to_string(), Json::Array(doc.epilog.iter().map(node_projection).collect())),
         ]))
     }
     //#endregion 🔖️Projection

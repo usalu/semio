@@ -71,6 +71,12 @@
           "items": {
             "$ref": "#/$defs/XmlNode"
           }
+        },
+        "epilog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
         }
       }
     },
@@ -182,6 +188,10 @@
         "value"
       ],
       "properties": {
+        "prologPosition": {
+          "type": "integer",
+          "minimum": 0
+        },
         "name": {
           "type": "string"
         },

@@ -17,5 +17,6 @@
       -100
     ]
   },
-  "otherChunks": []
+  "otherChunks": [],
+  "chunkOrder": [{ "kind": "format" }, { "kind": "samples" }]
 }

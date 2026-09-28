@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/channel/media-export-wire-v19-fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "channelVersion",
+    "u64Encoding",
+    "handle",
+    "commands",
+    "frames"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "channelVersion": {
+      "const": 19
+    },
+    "u64Encoding": {
+      "const": "unsigned LEB128; JSON model values are canonical unsigned decimal strings"
+    },
+    "handle": {
+      "$ref": "#/$defs/handle"
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submit",
+        "poll",
+        "cancel",
+        "takeChunk"
+      ],
+      "properties": {
+        "submit": {
+          "$ref": "#/$defs/submit"
+        },
+        "poll": {
+          "$ref": "#/$defs/handleCommand"
+        },
+        "cancel": {
+          "$ref": "#/$defs/handleCommand"
+        },
+        "takeChunk": {
+          "$ref": "#/$defs/handleCommand"
+        }
+      }
+    },
+    "frames": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submitted",
+        "status",
+        "chunk",
+        "terminalChunk"
+      ],
+      "properties": {
+        "submitted": {
+          "$ref": "#/$defs/submitted"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "chunk": {
+          "$ref": "#/$defs/chunk"
+        },
+        "terminalChunk": {
+          "$ref": "#/$defs/chunk"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "u64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "handle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "parentDocumentId",
+        "operationId",
+        "baseRevision",
+        "generation"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "parentDocumentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operationId": {
+          "$ref": "#/$defs/u64"
+        },
+        "baseRevision": {
+          "$ref": "#/$defs/u64"
+        },
+        "generation": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "wireRow": {
+      "type": "object",
+      "required": [
+        "fields",
+        "bytes",
+        "hex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "object"
+        },
+        "bytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "hex": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})+$"
+        }
+      }
+    },
+    "submit": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/wireRow"
+        },
+        {
+          "properties": {
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "seq",
+                "port",
+                "expectedParentDocumentId",
+                "expectedBaseRevision"
+              ],
+              "properties": {
+                "seq": {
+                  "$ref": "#/$defs/u64"
+                },
+                "port": {
+                  "const": "playback:out"
+                },
+                "expectedParentDocumentId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expectedBaseRevision": {
+                  "$ref": "#/$defs/u64"
+                }
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "handleCommand": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/wireRow"
+        },
+        {
+          "properties": {
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "seq",
+                "handle"
+              ],
+              "properties": {
+                "seq": {
+                  "$ref": "#/$defs/u64"
+                },
+                "handle": {
+                  "$ref": "#/$defs/handle"
+                }
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "submitted": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/wireRow"
+        },
+        {
+          "properties": {
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "inReplyTo",
+                "handle"
+              ],
+              "properties": {
+                "inReplyTo": {
+                  "$ref": "#/$defs/u64"
+                },
+                "handle": {
+                  "$ref": "#/$defs/handle"
+                }
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "status": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/wireRow"
+        },
+        {
+          "properties": {
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "inReplyTo",
+                "handle",
+                "state",
+                "appliedProgress",
+                "checkpointAvailable",
+                "mimeType",
+                "totalBytes",
+                "detail"
+              ],
+              "properties": {
+                "inReplyTo": {
+                  "$ref": "#/$defs/u64"
+                },
+                "handle": {
+                  "$ref": "#/$defs/handle"
+                },
+                "state": {
+                  "enum": [
+                    "running",
+                    "complete",
+                    "cancelled",
+                    "failed"
+                  ]
+                },
+                "appliedProgress": {
+                  "$ref": "#/$defs/u64"
+                },
+                "checkpointAvailable": {
+                  "type": "boolean"
+                },
+                "mimeType": {
+                  "type": "string"
+                },
+                "totalBytes": {
+                  "$ref": "#/$defs/u64"
+                },
+                "detail": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "chunk": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/wireRow"
+        },
+        {
+          "properties": {
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "inReplyTo",
+                "handle",
+                "data",
+                "terminal"
+              ],
+              "properties": {
+                "inReplyTo": {
+                  "$ref": "#/$defs/u64"
+                },
+                "handle": {
+                  "$ref": "#/$defs/handle"
+                },
+                "data": {
+                  "$ref": "#/$defs/bytes"
+                },
+                "terminal": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    }
+  }
+}

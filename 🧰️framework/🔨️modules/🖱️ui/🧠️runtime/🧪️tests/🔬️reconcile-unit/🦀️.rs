@@ -1097,7 +1097,15 @@ fn census_law_table_document(rows: usize, row: fn(usize) -> crate::TreeNode) -> 
     for column in ["Name", "Kind", "Visibility", "Members", "Updated", "Origin"] {
         columns.try_push(ui_contract::Label::try_from(column).expect("bounded fixture column")).expect("bounded fixture columns");
     }
-    let props = ui_contract::TableProps { label: ui_contract::Label::try_from("Studios").expect("bounded fixture label"), columns, actions_label: Some(ui_contract::Label::try_from("Actions").expect("bounded fixture label")), window: Some(ui_contract::TreeWindow { row_extent: Default::default(), total: 500, offset: 0 }) };
+    let props = ui_contract::TableProps {
+        label: ui_contract::Label::try_from("Studios").expect("bounded fixture label"),
+        columns,
+        row_label: Some(ui_contract::Label::try_from("Row").expect("bounded fixture row label")),
+        column_label: Some(ui_contract::Label::try_from("Column").expect("bounded fixture column label")),
+        actions_label: Some(ui_contract::Label::try_from("Actions").expect("bounded fixture label")),
+        window: Some(ui_contract::TreeWindow { row_extent: Default::default(), total: 500, offset: 0 }),
+        column_window: Some(ui_contract::TreeWindow { row_extent: Default::default(), total: 6, offset: 0 }),
+    };
     let table = crate::TreeNode::try_new("framework.window.table", ui_contract::Component::Table(props)).expect("bounded fixture table");
     tree(table.try_with_children((0..rows).map(row).collect::<Vec<_>>()).unwrap_or_else(|_| panic!("bounded fixture table rows")))
 }

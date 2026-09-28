@@ -684,7 +684,8 @@ async fn non_empty_vec_index_iter_first_mut_and_try_from() {
     assert_eq!(list[2], 3);
     assert_eq!(list.iter().copied().collect::<Vec<_>>(), vec![1, 2, 3]);
     *list.first_mut() = 10;
-    assert_eq!(list[0], 10);
+    list.push(4);
+    assert_eq!(list.iter().copied().collect::<Vec<_>>(), vec![10, 2, 3, 4]);
 
     let from_vec = NonEmptyVec::try_from(vec![9, 8]).unwrap();
     assert_eq!(*from_vec.first(), 9);

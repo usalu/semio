@@ -360,7 +360,7 @@ pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 /// bare (non-`$crate`) identifiers def-site hygiene only for local bindings, not for macro/item paths,
 /// so relying on every one of the ~190 `app_commands!` call sites to already `use
 /// semio_framework_value_derive::{ToValue, FromValue}` would be fragile; `$crate::` sidesteps that.
-pub use semio_framework_value_derive::{FromValue, ToValue};
+pub use semio_framework_value_derive::{FromValue, RetainedClone, RetireOwned, ToValue};
 
 //#region 🧪️Tests
 #[cfg(test)]

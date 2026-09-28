@@ -24,5 +24,15 @@
         "subset": "table"
       }
     }
-  }
+  },
+  "definition": {
+    "steps": [
+      {
+        "id": "step-basics",
+        "title": "Basics",
+        "blocks": []
+      }
+    ]
+  },
+  "responses": []
 }

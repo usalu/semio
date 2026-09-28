@@ -125,18 +125,18 @@ fn pixel_region_rejects_invalid_bounds_and_cancellation_discards_unpublished_pat
 }
 
 #[test]
-fn retained_pixel_region_accepts_uhd_raster_with_bounded_patch_work() {
+fn retained_pixel_region_accepts_dci_4k_raster_with_bounded_patch_work() {
     use protocol::{Mutation, MutationDiff, OpBinary};
-    let width = 3_840;
+    let width = 4_096;
     let height = 2_160;
     let raster_bytes = width * height * 4;
-    assert!(raster_bytes <= patch_pixel_region::MAXIMUM_RASTER_BYTES);
+    assert_eq!(raster_bytes, patch_pixel_region::MAXIMUM_RASTER_BYTES);
     let snapshot = PngSnapshot { width: width as u32, height: height as u32, pixels: vec![7; raster_bytes], ..PngSnapshot::default() };
     let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: width as u32 - 1, y: height as u32 - 1, width: 1, height: 1, red: 9, green: 8, blue: 7, alpha: 6 }));
     let mutations = drive_pixel_region(&command, &snapshot);
     assert_eq!(mutations.len(), 1);
-    assert!(mutations[0].encode_op().expect("bounded UHD patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let edited = mutations[0].diff(&snapshot).diff().apply(&snapshot).expect("bounded UHD patch applies");
+    assert!(mutations[0].encode_op().expect("bounded DCI 4K patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    let edited = mutations[0].diff(&snapshot).diff().apply(&snapshot).expect("bounded DCI 4K patch applies");
     assert_eq!(&edited.pixels[raster_bytes - 4..], &[9, 8, 7, 6]);
     assert!(edited.pixels[..raster_bytes - 4].iter().all(|value| *value == 7));
 }

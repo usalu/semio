@@ -61,9 +61,10 @@
       "required": [
         "x",
         "y",
-        "scaleX",
-        "scaleY",
-        "rotation"
+        "a",
+        "b",
+        "c",
+        "d"
       ],
       "properties": {
         "x": {
@@ -72,13 +73,16 @@
         "y": {
           "type": "number"
         },
-        "scaleX": {
+        "a": {
           "type": "number"
         },
-        "scaleY": {
+        "b": {
           "type": "number"
         },
-        "rotation": {
+        "c": {
+          "type": "number"
+        },
+        "d": {
           "type": "number"
         }
       }

@@ -33,6 +33,8 @@ fn resolve_drop(payload: &MoveLayer, document: &RasterSnapshot) -> Result<Option
         let (parent, index) = locate_layer(&document.layers, &payload.target_row_id).unwrap();
         (parent, index + usize::from(payload.drop_position == "after"))
     };
+    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&payload.layer_id,true).map_err(Fault::from)?;
+    if let Some(parent)=&parent_id {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,parent,false).map_err(Fault::from)?;}
     if source_parent == parent_id && source_index < index { index -= 1; }
     if source_parent == parent_id && source_index == index { return Ok(None); }
     Ok(Some(reorder_layers::mutation::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index }))

@@ -32,7 +32,7 @@ fn representative_raster_document() -> RasterSnapshot {
             RasterLayerNode::Pixel {
                 id: "pixel-1".into(),
                 name: "Pixel One".into(),
-                visible: true,
+                visible: true, locked: false,
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
@@ -44,16 +44,16 @@ fn representative_raster_document() -> RasterSnapshot {
             RasterLayerNode::Group {
                 id: "group-1".into(),
                 name: "Group / Nested".into(),
-                visible: false,
+                visible: false, locked: false,
                 opacity: 0.5,
                 blend_mode: "screen".into(),
-                transform: RasterTransform { x: 1.0, y: -2.0, scale_x: 1.5, scale_y: 0.5, rotation: 12.0 },
+                transform: RasterTransform {x:1.0,y:-2.0,a:1.5,b:0.25,c:-0.5,d:0.75},
                 mask: None,
                 children: vec![
                     RasterLayerNode::Pixel {
                         id: "pixel-2".into(),
                         name: "Child Pixel".into(),
-                        visible: true,
+                        visible: true, locked: false,
                         opacity: 0.75,
                         blend_mode: "multiply".into(),
                         transform: RasterTransform::default(),
@@ -62,10 +62,10 @@ fn representative_raster_document() -> RasterSnapshot {
                         height: None,
                         image_key: None,
                     },
-                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
+                    RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
                 ],
             },
-            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
+            RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     }
 }

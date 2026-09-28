@@ -120,6 +120,23 @@ fn world3d_scene_lanes_mirror_the_language_neutral_declaration() {
 }
 
 #[test]
+fn world3d_presentation_is_typed_and_defaults_to_an_interactive_rectangular_world() {
+    let contract = world3d_lane_contract();
+    let defaults: World3dPresentation = serde_json::from_value(contract["presentation"]["defaults"].clone()).expect("default presentation");
+    assert_eq!(defaults, World3dPresentation::default());
+    let icon: World3dPresentation = serde_json::from_value(contract["presentation"]["icon"].clone()).expect("icon presentation");
+    assert_eq!(icon.viewport_mask, crate::math::SceneViewportMask3d::Ellipse);
+    assert_eq!(icon.clear, World3dPresentationClear::Transparent);
+    assert_eq!(icon.source_aspect, Some(2.0));
+    assert!(!icon.show_grid && !icon.show_gizmo && !icon.interactive);
+    for invalid in contract["presentation"]["rejections"].as_array().expect("rejections") {
+        let decoded = serde_json::from_value::<World3dPresentation>(invalid.clone());
+        let rejected = decoded.is_err() || decoded.is_ok_and(|value| value.source_aspect.is_some_and(|aspect| !aspect.is_finite() || aspect <= 0.0));
+        assert!(rejected, "invalid presentation must be rejected: {invalid}");
+    }
+}
+
+#[test]
 fn world3d_scene_splits_into_the_declared_lanes_and_merges_back() {
     let contract = world3d_lane_contract();
     let round_trip = &contract["roundTrip"];
@@ -583,14 +600,14 @@ fn paint2d_probe_scene() -> Paint2dScene {
         brush_opacity: 1.0,
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
+        paint_target:"pixels".into(),mask_value:255,pixel_selection_json:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),
     }
 }
 
-/// 🚚️ Both paint-2d lanes ALWAYS publish (neither field is optional), so a raster document of any
-/// size keeps only its bounded spine inside `UI_FIXED_BYTES` — the whole reason this lane set exists.
+/// 🚚️ Document, assets and optional pixel coverage preserve their exact paged payloads.
 #[test]
 fn paint2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     let contract = paint2d_lane_contract();
@@ -621,8 +638,9 @@ fn paint2d_spine_stays_inside_the_fixed_surface_doc_for_an_oversized_document() 
     let mut oversized = paint2d_probe_scene();
     oversized.document_sync_json = "x".repeat(64 * 1024);
     oversized.assets_json = "y".repeat(64 * 1024);
+    oversized.pixel_selection_json=Some("s".repeat(40000));
     let (spine, lanes) = oversized.split_lanes();
-    assert_eq!(lanes.len(), 2);
+    assert_eq!(lanes.len(), 3);
     let packed = spine.encode_pack().expect("oversized spine still packs");
     assert!(packed.len() < 4096, "the paint-2d spine must stay tiny whatever the document size, got {} bytes", packed.len());
     assert!(ui_contract::UiFixedBytes::try_from_vec(packed).is_ok(), "the spine must fit the fixed surface doc");
@@ -653,4 +671,12 @@ fn table_lanes_preserve_complete_unicode_documents() {
     restored.lanes.clear();
     assert_eq!(restored, scene);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.rows_json).unwrap(), serde_json::to_value(rows).unwrap());
+}
+
+#[test]
+fn paint2d_absent_pixel_selection_emits_no_coverage_lane(){
+    let (spine,lanes)=paint2d_probe_scene().split_lanes();
+    assert!(spine.pixel_selection_json.is_none());
+    assert_eq!(lanes.len(),2);
+    assert!(!spine.lanes.iter().any(|lane|lane.lane=="pixelSelection"));
 }

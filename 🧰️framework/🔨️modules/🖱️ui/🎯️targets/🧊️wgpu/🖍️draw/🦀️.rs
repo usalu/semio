@@ -1,9 +1,9 @@
 // #region draw
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
-use super::kernel_3d_scene::{Mat4Math, ProceduralGrid3d, ScenePass3d, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH};
+use super::kernel_3d_scene::{Mat4Math, ProceduralGrid3d, ScenePass3d, SceneRenderProfile3d, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH};
 use crate::wgpu::prepared::{PreparedRasterPages, RasterContentIdentity};
-use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER, WORLD_CURVILINEAR_SHADER};
+use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER, WORLD3D_POSTPROCESS_SHADER};
 #[cfg(test)]
 use crate::wgpu::theme::Rgba;
 use crate::wgpu::theme::Theme;
@@ -26,10 +26,12 @@ struct BlurGlobals {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-struct CurvilinearGlobals {
+struct WorldPostprocessGlobals {
     viewport: [f32; 4],
     surface_size: [f32; 2],
     fov_strength: [f32; 2],
+    modes: [u32; 4],
+    clear_color: [f32; 4],
 }
 
 #[repr(C)]
@@ -176,8 +178,10 @@ pub struct PreparedCompositeTarget {
     texture: wgpu::Texture,
     view: wgpu::TextureView,
     world_encoded_view: wgpu::TextureView,
-    curvilinear_scratch: wgpu::Texture,
-    curvilinear_scratch_view: wgpu::TextureView,
+    postprocess_scene_scratch: wgpu::Texture,
+    postprocess_scene_scratch_view: wgpu::TextureView,
+    postprocess_background_scratch: Option<(wgpu::Texture, wgpu::TextureView)>,
+    world_encoded_format: wgpu::TextureFormat,
     sampler: wgpu::Sampler,
     width: u32,
     height: u32,
@@ -205,8 +209,8 @@ impl PreparedCompositeTarget {
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_composite_color_view"), format: Some(format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
         let world_encoded_view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_composite_world_encoded_view"), format: Some(world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
-        let curvilinear_scratch = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("prepared_curvilinear_scratch"),
+        let postprocess_scene_scratch = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("prepared_postprocess_scene_scratch"),
             size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
             mip_level_count: 1,
             sample_count: 1,
@@ -215,9 +219,9 @@ impl PreparedCompositeTarget {
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[world_encoded_format],
         });
-        let curvilinear_scratch_view = curvilinear_scratch.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_curvilinear_scratch_view"), format: Some(world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
+        let postprocess_scene_scratch_view = postprocess_scene_scratch.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_postprocess_scene_scratch_view"), format: Some(world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("prepared_composite_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
-        *target = Some(Self { texture, view, world_encoded_view, curvilinear_scratch, curvilinear_scratch_view, sampler, width, height });
+        *target = Some(Self { texture, view, world_encoded_view, postprocess_scene_scratch, postprocess_scene_scratch_view, postprocess_background_scratch: None, world_encoded_format, sampler, width, height });
     }
 
     pub fn view(&self) -> &wgpu::TextureView {
@@ -228,12 +232,52 @@ impl PreparedCompositeTarget {
         &self.world_encoded_view
     }
 
-    fn copy_to_curvilinear_scratch(&self, encoder: &mut wgpu::CommandEncoder) {
-        encoder.copy_texture_to_texture(
+    pub(crate) fn copy_to_readback(&self, encoder: &mut wgpu::CommandEncoder, buffer: &wgpu::Buffer, bytes_per_row: u32) {
+        encoder.copy_texture_to_buffer(
             wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
-            wgpu::TexelCopyTextureInfo { texture: &self.curvilinear_scratch, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::TexelCopyBufferInfo { buffer, layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(bytes_per_row), rows_per_image: Some(self.height) } },
             wgpu::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
         );
+    }
+
+    fn copy_to_postprocess_scene_scratch(&self, encoder: &mut wgpu::CommandEncoder) {
+        encoder.copy_texture_to_texture(
+            wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::TexelCopyTextureInfo { texture: &self.postprocess_scene_scratch, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
+        );
+    }
+
+    fn ensure_postprocess_background_scratch(&mut self, device: &wgpu::Device) {
+        if self.postprocess_background_scratch.is_some() {
+            return;
+        }
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("prepared_postprocess_background_scratch"),
+            size: wgpu::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.world_encoded_format,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[self.world_encoded_format],
+        });
+        let view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_postprocess_background_scratch_view"), format: Some(self.world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
+        self.postprocess_background_scratch = Some((texture, view));
+    }
+
+    pub(crate) fn copy_to_postprocess_background_scratch(&mut self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
+        self.ensure_postprocess_background_scratch(device);
+        let texture = &self.postprocess_background_scratch.as_ref().expect("background scratch was ensured").0;
+        encoder.copy_texture_to_texture(
+            wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::TexelCopyTextureInfo { texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
+        );
+    }
+
+    fn postprocess_background_view(&self) -> Option<&wgpu::TextureView> {
+        self.postprocess_background_scratch.as_ref().map(|(_, view)| view)
     }
 }
 
@@ -345,7 +389,12 @@ impl World3dGlobals {
             sun: [pass.lighting.sun_color[0], pass.lighting.sun_color[1], pass.lighting.sun_color[2], pass.lighting.sun_intensity],
             material: [pass.neutral_material.metalness, pass.neutral_material.roughness, pass.neutral_material.emissive_intensity, if pass.lighting.sun_enabled { 1.0 } else { 0.0 }],
             material_emissive: [pass.neutral_material.emissive[0], pass.neutral_material.emissive[1], pass.neutral_material.emissive[2], 0.0],
-            shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0],
+            shadow: [
+                if pass.shadow.enabled { 1.0 } else { 0.0 },
+                if pass.render_profile == SceneRenderProfile3d::SvgFlatLit { 1.0 } else { 0.0 },
+                0.0,
+                1.0,
+            ],
         }
     }
 }
@@ -379,6 +428,7 @@ pub struct World3dGpuInstance {
     pub model3: [f32; 4],
     pub color: [f32; 4],
     pub flags: [f32; 4],
+    pub emissive_cutoff: [f32; 4],
 }
 
 #[repr(C)]
@@ -419,6 +469,20 @@ impl World3dGpuInstance {
             model3: [model[12], model[13], model[14], model[15]],
             color,
             flags: [policy as f32, emissive_intensity, metalness, roughness],
+            emissive_cutoff: [0.0, 0.0, 0.0, -1.0],
+        }
+    }
+
+    pub fn from_authored(model: [f32; 16], material: &crate::wgpu::kernel_3d_scene::SceneAuthoredMaterial3d, receives_shadow: bool) -> Self {
+        let policy = (if material.preserve_vertex_color { 1 } else { 0 }) | (if receives_shadow { 2 } else { 0 }) | 4;
+        Self {
+            model0: [model[0], model[1], model[2], model[3]],
+            model1: [model[4], model[5], model[6], model[7]],
+            model2: [model[8], model[9], model[10], model[11]],
+            model3: [model[12], model[13], model[14], model[15]],
+            color: material.base_color,
+            flags: [policy as f32, 0.0, material.metalness, material.roughness],
+            emissive_cutoff: [material.emissive[0], material.emissive[1], material.emissive[2], if material.alpha == crate::wgpu::kernel_3d_scene::SceneMaterialAlpha3d::Mask { material.alpha_cutoff } else { -1.0 }],
         }
     }
 }
@@ -2696,9 +2760,13 @@ pub(crate) struct UiPipelines {
     vector_pipeline: wgpu::RenderPipeline,
     world_pipeline: wgpu::RenderPipeline,
     world_pipeline_translucent: wgpu::RenderPipeline,
+    world_authored_front_pipeline: wgpu::RenderPipeline,
+    world_authored_double_translucent_pipeline: wgpu::RenderPipeline,
     world_standard_translucent_pipeline: wgpu::RenderPipeline,
     world_painted_pipeline: wgpu::RenderPipeline,
     world_painted_pipeline_translucent: wgpu::RenderPipeline,
+    world_authored_painted_front_pipeline: wgpu::RenderPipeline,
+    world_authored_painted_front_translucent_pipeline: wgpu::RenderPipeline,
     world_celebration_pipeline: wgpu::RenderPipeline,
     world_celebration_pipeline_translucent: wgpu::RenderPipeline,
     world_shadow_pipeline: wgpu::RenderPipeline,
@@ -2708,21 +2776,22 @@ pub(crate) struct UiPipelines {
     blur_downsample_pipeline: wgpu::RenderPipeline,
     scene_blit_pipeline: wgpu::RenderPipeline,
     glass_pipeline: wgpu::RenderPipeline,
-    world_curvilinear_pipeline: wgpu::RenderPipeline,
+    world_postprocess_pipeline: wgpu::RenderPipeline,
     quad_vertex_buffer: wgpu::Buffer,
     world_plane_vertex_buffer: wgpu::Buffer,
     world_plane_sampler: wgpu::Sampler,
+    world_material_samplers: Vec<(crate::wgpu::kernel_3d_scene::SceneTextureSampler3d, wgpu::Sampler)>,
     world_grid_uniform_buffer: wgpu::Buffer,
     world_grid_bind_group: wgpu::BindGroup,
     globals_buffer: wgpu::Buffer,
     blur_globals_buffer: wgpu::Buffer,
-    curvilinear_globals_buffer: wgpu::Buffer,
+    postprocess_globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
     world_bind_group_layout: wgpu::BindGroupLayout,
     world_shadow_bind_group_layout: wgpu::BindGroupLayout,
     world_shadow_target: WorldShadowTarget,
     blur_bind_group_layout: wgpu::BindGroupLayout,
-    curvilinear_bind_group_layout: wgpu::BindGroupLayout,
+    postprocess_bind_group_layout: wgpu::BindGroupLayout,
     scene_bind_group_layout: wgpu::BindGroupLayout,
     glyph_texture: wgpu::Texture,
     glyph_sampler: wgpu::Sampler,
@@ -3033,6 +3102,7 @@ impl UiPipelines {
                             wgpu::VertexAttribute { offset: 16, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 32, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 48, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 64, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
                         ],
                     },
                 ],
@@ -3067,6 +3137,7 @@ impl UiPipelines {
                             wgpu::VertexAttribute { offset: 16, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 32, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 48, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 64, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
                         ],
                     },
                 ],
@@ -3168,6 +3239,7 @@ impl UiPipelines {
                             wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
                         ],
                     },
                 ],
@@ -3226,6 +3298,7 @@ impl UiPipelines {
                             wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
                             wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
                         ],
                     },
                 ],
@@ -3317,7 +3390,7 @@ impl UiPipelines {
         let blur_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("blur_downsample_shader"), source: wgpu::ShaderSource::Wgsl(BLUR_DOWNSAMPLE_SHADER.into()) });
         let scene_blit_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("scene_blit_shader"), source: wgpu::ShaderSource::Wgsl(SCENE_BLIT_SHADER.into()) });
         let glass_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("glass_shader"), source: wgpu::ShaderSource::Wgsl(GLASS_SHADER.into()) });
-        let world_curvilinear_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world_curvilinear_shader"), source: wgpu::ShaderSource::Wgsl(WORLD_CURVILINEAR_SHADER.into()) });
+        let world_postprocess_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world_postprocess_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_POSTPROCESS_SHADER.into()) });
 
         let blur_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("blur_downsample_layout"),
@@ -3338,12 +3411,13 @@ impl UiPipelines {
             ],
         });
 
-        let curvilinear_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("world_curvilinear_layout"),
+        let postprocess_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("world_postprocess_layout"),
             entries: &[
-                wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: std::num::NonZeroU64::new(size_of::<CurvilinearGlobals>() as u64) }, count: None },
+                wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: std::num::NonZeroU64::new(size_of::<WorldPostprocessGlobals>() as u64) }, count: None },
                 wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None },
                 wgpu::BindGroupLayoutEntry { binding: 2, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), count: None },
+                wgpu::BindGroupLayoutEntry { binding: 3, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None },
             ],
         });
 
@@ -3389,6 +3463,7 @@ impl UiPipelines {
                 wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
                 wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
                 wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
             ],
         };
         let celebration_instance_layout = || wgpu::VertexBufferLayout {
@@ -3428,6 +3503,38 @@ impl UiPipelines {
             multiview_mask: None,
             cache: None,
         });
+        let world_authored_front_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_front_pipeline"),
+            layout: Some(&world_mesh_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let world_authored_double_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_double_translucent_pipeline"),
+            layout: Some(&world_mesh_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(false)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
         let world_painted_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_painted_pipeline"),
             layout: Some(&world_painted_pipeline_layout),
@@ -3444,6 +3551,38 @@ impl UiPipelines {
             multiview_mask: None,
             cache: None,
         });
+        let world_authored_painted_front_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_painted_front_pipeline"),
+            layout: Some(&world_painted_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_painted_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let world_authored_painted_front_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_painted_front_translucent_pipeline"),
+            layout: Some(&world_painted_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_painted_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
+            depth_stencil: Some(material_depth(false)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
         let world_painted_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_painted_pipeline_translucent"),
             layout: Some(&world_painted_pipeline_layout),
@@ -3455,7 +3594,7 @@ impl UiPipelines {
                 compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
-            depth_stencil: Some(material_depth(true)),
+            depth_stencil: Some(material_depth(false)),
             multisample: Default::default(),
             multiview_mask: None,
             cache: None,
@@ -3506,6 +3645,44 @@ impl UiPipelines {
             mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             ..Default::default()
         });
+        let mut world_material_samplers = Vec::with_capacity(36);
+        for wrap_u in [
+            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::ClampToEdge,
+            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::Repeat,
+            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::MirrorRepeat,
+        ] {
+            for wrap_v in [
+                crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::ClampToEdge,
+                crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::Repeat,
+                crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::MirrorRepeat,
+            ] {
+                for mag_filter in [crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest, crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear] {
+                    for min_filter in [crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest, crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear] {
+                        let descriptor = crate::wgpu::kernel_3d_scene::SceneTextureSampler3d { wrap_u, wrap_v, mag_filter, min_filter };
+                        let address = |mode| match mode {
+                            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::ClampToEdge => wgpu::AddressMode::ClampToEdge,
+                            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::Repeat => wgpu::AddressMode::Repeat,
+                            crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::MirrorRepeat => wgpu::AddressMode::MirrorRepeat,
+                        };
+                        let filter = |mode| match mode {
+                            crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest => wgpu::FilterMode::Nearest,
+                            crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear => wgpu::FilterMode::Linear,
+                        };
+                        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+                            label: Some("world3d_material_sampler"),
+                            address_mode_u: address(wrap_u),
+                            address_mode_v: address(wrap_v),
+                            address_mode_w: wgpu::AddressMode::Repeat,
+                            mag_filter: filter(mag_filter),
+                            min_filter: filter(min_filter),
+                            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+                            ..Default::default()
+                        });
+                        world_material_samplers.push((descriptor, sampler));
+                    }
+                }
+            }
+        }
         let world_textured_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_textured_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout), Some(&scene_bind_group_layout)], immediate_size: 0 });
         let world_textured_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -3601,18 +3778,18 @@ impl UiPipelines {
 
         let blur_globals_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("blur_globals"), contents: bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
-        let curvilinear_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("world_curvilinear_globals"),
-            contents: bytemuck::bytes_of(&CurvilinearGlobals::zeroed()),
+        let postprocess_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("world_postprocess_globals"),
+            contents: bytemuck::bytes_of(&WorldPostprocessGlobals::zeroed()),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let world_curvilinear_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world_curvilinear_pipeline_layout"), bind_group_layouts: &[Some(&curvilinear_bind_group_layout)], immediate_size: 0 });
-        let world_curvilinear_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world_curvilinear_pipeline"),
-            layout: Some(&world_curvilinear_pipeline_layout),
-            vertex: wgpu::VertexState { module: &world_curvilinear_shader, entry_point: Some("vs_main"), buffers: &[], compilation_options: Default::default() },
-            fragment: Some(wgpu::FragmentState { module: &world_curvilinear_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
+        let world_postprocess_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world_postprocess_pipeline_layout"), bind_group_layouts: &[Some(&postprocess_bind_group_layout)], immediate_size: 0 });
+        let world_postprocess_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world_postprocess_pipeline"),
+            layout: Some(&world_postprocess_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_postprocess_shader, entry_point: Some("vs_main"), buffers: &[], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState { module: &world_postprocess_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
@@ -3698,9 +3875,13 @@ impl UiPipelines {
             vector_pipeline,
             world_pipeline,
             world_pipeline_translucent,
+            world_authored_front_pipeline,
+            world_authored_double_translucent_pipeline,
             world_standard_translucent_pipeline,
             world_painted_pipeline,
             world_painted_pipeline_translucent,
+            world_authored_painted_front_pipeline,
+            world_authored_painted_front_translucent_pipeline,
             world_celebration_pipeline,
             world_celebration_pipeline_translucent,
             world_shadow_pipeline,
@@ -3710,21 +3891,22 @@ impl UiPipelines {
             blur_downsample_pipeline,
             scene_blit_pipeline,
             glass_pipeline,
-            world_curvilinear_pipeline,
+            world_postprocess_pipeline,
             quad_vertex_buffer,
             world_plane_vertex_buffer,
             world_plane_sampler,
+            world_material_samplers,
             world_grid_uniform_buffer,
             world_grid_bind_group,
             globals_buffer,
             blur_globals_buffer,
-            curvilinear_globals_buffer,
+            postprocess_globals_buffer,
             world_globals_ring,
             world_bind_group_layout,
             world_shadow_bind_group_layout,
             world_shadow_target,
             blur_bind_group_layout,
-            curvilinear_bind_group_layout,
+            postprocess_bind_group_layout,
             scene_bind_group_layout,
             glyph_texture,
             glyph_sampler,
@@ -4168,13 +4350,13 @@ impl UiPipelines {
     }
 
     /// 🌑 Encodes the fixed scene clear packet without traversing retained draw owners.
-    pub fn clear_prepared_scene<'a>(&'a self, encoder: &mut wgpu::CommandEncoder, scene: &'a SceneColorTarget, depth_view: Option<&'a wgpu::TextureView>) {
+    pub fn clear_prepared_scene<'a>(&'a self, encoder: &mut wgpu::CommandEncoder, scene: &'a SceneColorTarget, depth_view: Option<&'a wgpu::TextureView>, clear: wgpu::Color) {
         let pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_scene_clear"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: scene.mip_view(0),
                 resolve_target: None,
-                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.05, g: 0.05, b: 0.06, a: 1.0 }), store: wgpu::StoreOp::Store },
+                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(clear), store: wgpu::StoreOp::Store },
                 depth_slice: None,
             })],
             depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Clear(1.0), wgpu::LoadOp::Clear(0))),
@@ -4465,6 +4647,26 @@ impl UiPipelines {
                     .upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_celebration")
                     .ok_or("prepared world celebration buffer admission failed")?
             }
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => {
+                painted_bind_group = if let Some(texture_key) = material.base_color_texture.as_deref() {
+                    let Some(raster) = raster_store.get(texture_key) else { return Ok(true) };
+                    let sampler = &self
+                        .world_material_samplers
+                        .iter()
+                        .find(|(descriptor, _)| *descriptor == material.texture_sampler)
+                        .ok_or("authored material sampler was not prepared")?
+                        .1;
+                    Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        label: Some("world3d_authored_bind_group"),
+                        layout: &self.scene_bind_group_layout,
+                        entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&raster.view) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) }],
+                    }))
+                } else {
+                    None
+                };
+                let gpu_instance = World3dGpuInstance::from_authored(instance.model.to_cols_array_m(), material, pass_owner.shadow.enabled);
+                frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_authored").ok_or("prepared world authored buffer admission failed")?
+            }
         };
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
@@ -4498,11 +4700,37 @@ impl UiPipelines {
                 pass.set_pipeline(if draw_owner.translucent { &self.world_celebration_pipeline_translucent } else { &self.world_celebration_pipeline });
                 pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
             }
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => {
+                if material.base_color_texture.is_some() {
+                    pass.set_pipeline(match (draw_owner.translucent, material.double_sided) {
+                        (false, false) => &self.world_authored_painted_front_pipeline,
+                        (false, true) => &self.world_painted_pipeline,
+                        (true, false) => &self.world_authored_painted_front_translucent_pipeline,
+                        (true, true) => &self.world_painted_pipeline_translucent,
+                    });
+                    pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+                    pass.set_bind_group(1, &self.world_shadow_target.bind_group, &[]);
+                    pass.set_bind_group(2, painted_bind_group.as_ref().expect("authored texture owns its bind group"), &[]);
+                } else {
+                    pass.set_pipeline(match (draw_owner.translucent, material.double_sided) {
+                        (false, false) => &self.world_authored_front_pipeline,
+                        (false, true) => &self.world_pipeline,
+                        (true, false) => &self.world_pipeline_translucent,
+                        (true, true) => &self.world_authored_double_translucent_pipeline,
+                    });
+                    pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+                    pass.set_bind_group(1, &self.world_shadow_target.bind_group, &[]);
+                }
+            }
         }
         pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer);
         pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        pass.draw_indexed(0..mesh.index_count, 0, 0..1);
+        let first = draw_owner.first_index.min(mesh.index_count);
+        let end = first.saturating_add(draw_owner.index_count).min(mesh.index_count);
+        if first < end {
+            pass.draw_indexed(first..end, 0, 0..1);
+        }
         pass.set_viewport(0.0, 0.0, width * scale, height * scale, 0.0, 1.0);
         Ok(true)
     }
@@ -4658,8 +4886,8 @@ impl UiPipelines {
         Ok(())
     }
 
-    /// 🐟️ Copies one completed World viewport and remaps it in image space like React's curvilinear pass.
-    pub fn encode_prepared_world_curvilinear(
+    /// 🎭️ Replays one completed World viewport through its image remap and physical viewport mask.
+    pub fn encode_prepared_world_postprocess(
         &self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -4668,26 +4896,33 @@ impl UiPipelines {
         pass_owner: &ScenePass3d,
         scene_scissor: ScissorRect,
     ) -> Result<(), &'static str> {
-        let Some(curvilinear) = pass_owner.curvilinear else { return Err("prepared curvilinear pass had no descriptor") };
+        let curvilinear = pass_owner.curvilinear;
+        let ellipse = pass_owner.viewport_mask == crate::wgpu::kernel_3d_scene::SceneViewportMask3d::Ellipse;
+        if curvilinear.is_none() && !ellipse {
+            return Err("prepared world postprocess pass had no descriptor");
+        }
+        let background = if ellipse { composite.postprocess_background_view().ok_or("prepared ellipse background snapshot was missing")? } else { &composite.postprocess_scene_scratch_view };
         let scale = self.surface_scale;
         let viewport = [pass_owner.viewport[0] * scale, pass_owner.viewport[1] * scale, pass_owner.viewport[2] * scale, pass_owner.viewport[3] * scale];
+        let fov_strength = curvilinear.map_or([0.0, 0.0], |value| [value.fov_radians, value.strength]);
         queue.write_buffer(
-            &self.curvilinear_globals_buffer,
+            &self.postprocess_globals_buffer,
             0,
-            bytemuck::bytes_of(&CurvilinearGlobals { viewport, surface_size: [composite.width as f32, composite.height as f32], fov_strength: [curvilinear.fov_radians, curvilinear.strength] }),
+            bytemuck::bytes_of(&WorldPostprocessGlobals { viewport, surface_size: [composite.width as f32, composite.height as f32], fov_strength, modes: [u32::from(curvilinear.is_some()), u32::from(ellipse), 0, 0], clear_color: [0.0; 4] }),
         );
-        composite.copy_to_curvilinear_scratch(encoder);
+        composite.copy_to_postprocess_scene_scratch(encoder);
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("prepared_world_curvilinear_bind_group"),
-            layout: &self.curvilinear_bind_group_layout,
+            label: Some("prepared_world_postprocess_bind_group"),
+            layout: &self.postprocess_bind_group_layout,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: self.curvilinear_globals_buffer.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&composite.curvilinear_scratch_view) },
+                wgpu::BindGroupEntry { binding: 0, resource: self.postprocess_globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&composite.postprocess_scene_scratch_view) },
                 wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&composite.sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(background) },
             ],
         });
         let mut render = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("prepared_world_curvilinear"),
+            label: Some("prepared_world_postprocess"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: composite.world_encoded_view(), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
@@ -4697,7 +4932,53 @@ impl UiPipelines {
         render.set_viewport(viewport[0], viewport[1], viewport[2].max(1.0), viewport[3].max(1.0), 0.0, 1.0);
         let scene_scissor = self.physical_scissor(scene_scissor);
         render.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
-        render.set_pipeline(&self.world_curvilinear_pipeline);
+        render.set_pipeline(&self.world_postprocess_pipeline);
+        render.set_bind_group(0, &bind_group, &[]);
+        render.draw(0..6, 0..1);
+        Ok(())
+    }
+
+    /// 🫧️ Paints an authored World background after the backdrop snapshot and before any 3D payload.
+    pub fn encode_prepared_world_scene_clear(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        composite: &PreparedCompositeTarget,
+        pass_owner: &ScenePass3d,
+        scene_scissor: ScissorRect,
+    ) -> Result<(), &'static str> {
+        let clear_color = pass_owner.clear_color.ok_or("prepared world scene clear had no color")?;
+        let background = composite.postprocess_background_view().ok_or("prepared world scene clear had no background snapshot")?;
+        let scale = self.surface_scale;
+        let viewport = [pass_owner.viewport[0] * scale, pass_owner.viewport[1] * scale, pass_owner.viewport[2] * scale, pass_owner.viewport[3] * scale];
+        queue.write_buffer(
+            &self.postprocess_globals_buffer,
+            0,
+            bytemuck::bytes_of(&WorldPostprocessGlobals { viewport, surface_size: [composite.width as f32, composite.height as f32], fov_strength: [0.0; 2], modes: [0, 0, 1, 0], clear_color }),
+        );
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("prepared_world_scene_clear_bind_group"),
+            layout: &self.postprocess_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: self.postprocess_globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(background) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&composite.sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(background) },
+            ],
+        });
+        let mut render = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_scene_clear"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: composite.world_encoded_view(), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        render.set_viewport(viewport[0], viewport[1], viewport[2].max(1.0), viewport[3].max(1.0), 0.0, 1.0);
+        let scene_scissor = self.physical_scissor(scene_scissor);
+        render.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        render.set_pipeline(&self.world_postprocess_pipeline);
         render.set_bind_group(0, &bind_group, &[]);
         render.draw(0..6, 0..1);
         Ok(())

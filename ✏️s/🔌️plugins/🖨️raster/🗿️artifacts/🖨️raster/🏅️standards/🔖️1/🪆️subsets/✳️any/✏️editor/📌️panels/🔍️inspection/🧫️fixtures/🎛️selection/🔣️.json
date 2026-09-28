@@ -17,7 +17,11 @@
         "transformY",
         "width",
         "height",
-        "maskPresent"
+        "maskPresent",
+        "transformScaleX",
+        "transformScaleY",
+        "transformRotation",
+        "transformShearX"
       ]
     },
     {
@@ -34,7 +38,11 @@
         "transformY",
         "width",
         "height",
-        "maskPresent"
+        "maskPresent",
+        "transformScaleX",
+        "transformScaleY",
+        "transformRotation",
+        "transformShearX"
       ]
     },
     {
@@ -49,11 +57,12 @@
         "height": null,
         "imageKey": null,
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       },
       "fields": [
@@ -66,7 +75,13 @@
         "maskScaleY",
         "maskRotation",
         "maskWidth",
-        "maskHeight"
+        "maskHeight",
+        "maskLinked",
+        "maskShearX",
+        "transformScaleX",
+        "transformScaleY",
+        "transformRotation",
+        "transformShearX"
       ]
     }
   ],
@@ -92,5 +107,43 @@
     "width": 3,
     "height": 2
   },
-  "blurTrigger": "commit"
+  "blurTrigger": "commit",
+  "layerActions": [
+    {
+      "key": "duplicate",
+      "command": "duplicateLayer",
+      "labels": {
+        "en": "Duplicate Layer",
+        "de": "Ebene duplizieren"
+      }
+    },
+    {
+      "key": "delete",
+      "command": "deleteLayer",
+      "labels": {
+        "en": "Delete Layer",
+        "de": "Ebene löschen"
+      }
+    }
+  ],
+  "maskControls": [
+    {
+      "field": "maskLinked",
+      "trigger": "change",
+      "labels": {
+        "en": "Link mask to layer",
+        "de": "Maske mit Ebene verknüpfen"
+      }
+    },
+    {
+      "field": "maskShearX",
+      "trigger": "commit",
+      "value": "0",
+      "step": 0.01,
+      "labels": {
+        "en": "Mask horizontal shear",
+        "de": "Horizontale Maskenscherung"
+      }
+    }
+  ]
 }

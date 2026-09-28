@@ -1,5 +1,5 @@
 semio forms.form.dsl v1
-schema=forms.form id=building-component version="1" title="Building Component" steps=[ id=identity title=Identity description="Basic component metadata and material selection." blocks=[ id=name label="Component Name" kind=text required=true placeholder="Column A" default="Column A"
+schema=forms.form id=building-component version="1" title="Building Component" definition=steps=[ id=identity title=Identity description="Basic component metadata and material selection." blocks=[ id=name label="Component Name" kind=text required=true placeholder="Column A" default="Column A"
 condition {
 }
 id=description label=Description kind=longText placeholder="Describe the component role" default="Primary structural column"
@@ -14,13 +14,13 @@ condition {
 id=prefab label=Prefab kind=boolean default=true
 condition {
 }
-id=install-date label="Install Date" kind=date default="2026-06-30"
+id=install-date label="Install Date" kind=date
 condition {
 }
 id=accent-color label="Accent Color" kind=color default="#336699"
 condition {
 }
-] id=geometry title=Geometry description="Parametric geometry and dimensional controls." blocks=[ id=info-note label=Note kind=note text="Adjust the procedural column parameters below. Values persist in the form spec and seed Try mode."
+] id=geometry title=Geometry description="Parametric geometry and dimensional controls." blocks=[ id=info-note label=Note kind=note text="Adjust the procedural column parameters below."
 condition {
 }
 id=count label="Instance Count" kind=number min=1 max=20 step=1 default=4
@@ -44,3 +44,6 @@ id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg"
 condition {
 }
 ] ]
+responses=[]
+structure=child_id=building-component-structure target="building-component-structure!s.stdio.semio@v1/value"
+results=child_id=building-component-results target="building-component-results!s.stdio.semio@v1/table"

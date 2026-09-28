@@ -15,6 +15,7 @@ export function parseViewport3dOrbit(value: unknown): Viewport3dOrbit {
 }
 
 export type Viewport3dProjectionKind = "orthographic" | "axonometric" | "oblique" | "onePoint" | "twoPoint" | "threePoint" | "curvilinear";
+export type Viewport3dProjectionFramePolicy = "content" | "preserveCamera";
 export type Viewport3dOrthographicView = "plan" | "top" | "bottom" | "front" | "back" | "left" | "right";
 export type Viewport3dAxonometricVariant = "isometric" | "dimetric" | "trimetric";
 export type Viewport3dAxonometricQuadrant = "ne" | "nw" | "se" | "sw";
@@ -85,6 +86,11 @@ const axonometricHemispheres = ["upper", "lower"] as const;
 const obliqueVariants = ["cabinet", "cavalier", "military"] as const;
 const onePointAxes = ["x", "y", "z"] as const;
 const curvilinearMappings = ["fisheye", "panini"] as const;
+
+/** 📷️ Admits whether an authored camera or a one-shot content frame owns the delivered pose. */
+export function parseViewport3dProjectionFramePolicy(value: unknown): Viewport3dProjectionFramePolicy {
+  return projectionEnum(value, ["content", "preserveCamera"] as const);
+}
 
 /** 📥️ Admits all fifteen required projection presets without coercion or foreign fields. */
 export function parseViewport3dProjectionPreferences(value: unknown): Viewport3dProjectionPreferences {

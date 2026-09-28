@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"name":"Identity", "input":{"source":[1,0,0,1,0,0],"target":[1,0,0,1,0,0],"transform":[1,0,0,1,0,0]},"expected":[1,0,0,1,0,0]},
+    {"name":"Nonuniform Scale and Rotated Mask Require Shear", "input":{"source":[2,0,0,1,10,-4],"target":[1,0,0,1,0,0],"transform":[1,1,-1,1,3,2]},"expected":[2,1,-2,1,16,-2]},
+    {"name":"Nested Rotation into Sheared Parent", "input":{"source":[0,2,-3,0,11,-5],"target":[1,0,1,1,4,6],"transform":[1,0,0,1,2,3]},"expected":[-2,2,-3,0,5,-7]},
+    {"name":"Reflected Parent", "input":{"source":[-2,0,0,3,8,9],"target":[1,0,0,-1,2,4],"transform":[1,0,0,1,-1,2]},"expected":[-2,0,0,-3,8,-11]},
+    {"name":"Fractional Translation", "input":{"source":[1,0,0,1,0.25,-0.5],"target":[1,0,0,1,-0.75,1.5],"transform":[1,0,0,1,0.125,0.25]},"expected":[1,0,0,1,1.125,-1.75]}
+  ],
+  "invalid": [[0,0,0,1,0,0],[1,0,0,0.0000000000001,0,0]],
+  "points": [[0,0],[1,0],[0,1],[-12.5,7.25]]
+}

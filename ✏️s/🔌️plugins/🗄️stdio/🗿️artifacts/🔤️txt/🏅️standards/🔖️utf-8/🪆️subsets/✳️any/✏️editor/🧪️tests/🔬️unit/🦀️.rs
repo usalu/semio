@@ -3,8 +3,8 @@ use super::*;
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
     assert!(txt_command_from_action(TXT_KIT_ACTION_ID, None).is_err());
-    let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(String::new()))]);
-    assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), TxtEditorCommand::ReplaceText { text: String::new() });
+    let args = dsl::DslValue::object([("revision".into(), dsl::DslValue::String("revision".into())), ("text".into(), dsl::DslValue::String(String::new()))]);
+    assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), TxtEditorCommand::ReplaceText { revision: "revision".into(), text: String::new() });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -34,18 +34,34 @@ async fn editor_declares_the_text_window() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn split_text_detects_trailing_newline() {
-    assert_eq!(split_text("a\nb\n"), (vec!["a".to_string(), "b".to_string()], true));
-    assert_eq!(split_text("a\nb"), (vec!["a".to_string(), "b".to_string()], false));
-    assert_eq!(split_text(""), (Vec::new(), false));
+async fn native_body_codec_preserves_crlf_extra_carriage_returns_and_empty_text() {
+    for source in ["a\nb\n", "a\nb", "", "a\r\r\nb\r\n"] {
+        assert_eq!(TxtSnapshot::from_body(source).to_body(), source);
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = TxtEditorCommand::ReplaceText { text: "hello\nworld".into() };
+    let command = TxtEditorCommand::ReplaceText { revision: "revision %20 Grüße 🌍".into(), text: "hello\r\nworld %20 Grüße 🌍".into() };
     let printed = <TxtEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <TxtEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
+    assert!(<TxtEditorCommand as protocol::OpText>::parse_op("replace-text revision=€0 text=00").is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
+    let snapshot = TxtSnapshot::from_body("a\r\r\nb\r\n");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let noop = txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: snapshot.to_body() }, &snapshot, None).expect("same text");
+    assert!(noop.artifact_mutations.is_empty());
+    assert!(txt_emit(&TxtEditorCommand::ReplaceText { revision: "stale".into(), text: String::new() }, &snapshot, None).is_err());
+    let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: "x\r\r\ny\r\n".into() }, &snapshot, None).expect("valid replacement");
+    let mut next = snapshot.clone();
+    for mutation in &emit.artifact_mutations {
+        next = <TxtMutation as protocol::Mutation<TxtSnapshot>>::apply(mutation, &next).expect("native mutation applies");
+    }
+    assert_eq!(next.to_body(), "x\r\r\ny\r\n");
 }
 
 //#region 🎬️ExampleSwitchLaws
@@ -95,10 +111,7 @@ async fn the_curated_example_carries_visible_content() {
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
         let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
-        assert_eq!(
-            txt_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"),
-            TxtEditorCommand::SetActiveExample { example_id: "demo".into() }
-        );
+        assert_eq!(txt_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), TxtEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(txt_command_from_action("noSuchVerb", None).is_err());
 }
@@ -112,9 +125,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<TxtEditor>
 async fn kit_fixture_holding(document: &TxtSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TxtEditor>, _>(async { semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TXT_DOCUMENT_SCHEMA) else {
-        panic!("the example switch hands the host one whole document")
-    };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TXT_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
@@ -135,7 +146,8 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&txt_example_snapshot(crate::examples::demo::ID)).await;
-    dispatch_settled(&mut app, "textEdit", &[("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
+    let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
+    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
     let after = app.snapshot().expect("txt snapshot");
     assert_eq!(after.lines, vec!["alpha".to_string(), "beta".to_string()]);
     assert!(after.trailing_newline);

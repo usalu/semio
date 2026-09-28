@@ -1,5 +1,7 @@
 //! 🎨️ Typed fill editing for the inspector and canvas gradient handles.
 use crate::{FillStyle, GradientStop};
+#[path="🎨️sampling/🦀️.rs"]
+pub mod sampling;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

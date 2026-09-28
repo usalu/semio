@@ -1,0 +1,20 @@
+{
+  "requests": [
+    "first",
+    "unrelated",
+    "replacement"
+  ],
+  "stages": [
+    "queued",
+    "fetching"
+  ],
+  "expected": {
+    "cancelled": [
+      true,
+      false
+    ],
+    "replacementCancelled": false,
+    "duplicateCancelAccepted": true,
+    "staleCancelAccepted": false
+  }
+}

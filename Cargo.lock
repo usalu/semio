@@ -482,6 +482,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "atoi_simd"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3cdb3708a128e559a30fb830e8a77a5022ee6902806925c216658652b452a44"
+dependencies = [
+ "debug_unsafe",
+ "rustversion",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -808,6 +818,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "calamine"
+version = "0.36.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fa68281b1a76b54a62156474adb06bb380a67e07dd60656e3217152b42183f3"
+dependencies = [
+ "atoi_simd",
+ "byteorder",
+ "codepage",
+ "encoding_rs",
+ "fast-float2",
+ "log",
+ "quick-xml 0.41.0",
+ "serde",
+ "zip 8.6.0",
+]
+
+[[package]]
 name = "calloop"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1013,6 +1040,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fa961b519f0b462e3a3b4a34b64d119eeaca1d59af726fe450bbba07a9fc0a1"
 dependencies = [
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "codepage"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdff162541cd8b79de82e2edcc7eff3a8c2a6dc3d75152636028f96d93de3b26"
+dependencies = [
+ "encoding_rs",
 ]
 
 [[package]]
@@ -1451,6 +1487,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
 
 [[package]]
+name = "debug_unsafe"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7eed2c4702fa172d1ce21078faa7c5203e69f5394d48cc436d25928394a867a2"
+
+[[package]]
 name = "debugid"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1773,6 +1815,12 @@ dependencies = [
  "regex-automata",
  "regex-syntax",
 ]
+
+[[package]]
+name = "fast-float2"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6e8948ce679d00a02a94739ea185595dca7118ed04feb991127e443bd3d761f"
 
 [[package]]
 name = "fast-srgb8"
@@ -4734,6 +4782,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.41.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+dependencies = [
+ "encoding_rs",
+ "memchr",
+]
+
+[[package]]
+name = "quick-xml"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41b1177fdf999d2321d3fb46ff47159d9c1fb9ad66a4879f8c50a0b504615e9b"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5061,6 +5128,12 @@ checksum = "47b34b781b31e5d73e9fbc8689c70551fd1ade9a19e3e28cfec8580a79290cc4"
 dependencies = [
  "bytemuck",
 ]
+
+[[package]]
+name = "riff"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c601484456988d75017d86700d3743b949c21cdc7399f940c75e34680d185c5"
 
 [[package]]
 name = "ring"
@@ -6016,6 +6089,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-services",
  "semio-framework-os-shell",
+ "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-replication",
@@ -6994,6 +7068,7 @@ dependencies = [
 name = "semio-s-artifact-draw-drawing"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-async-macros",
@@ -7911,6 +7986,7 @@ name = "semio-s-artifact-raster-raster"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
@@ -8264,6 +8340,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-docx"
 version = "0.1.0"
 dependencies = [
+ "quick-xml 0.42.0",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
@@ -8276,6 +8353,7 @@ dependencies = [
  "semio-s-artifact-stdio-xml",
  "semio-s-artifact-stdio-zip",
  "serde_json",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -8427,6 +8505,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt",
@@ -8757,6 +8836,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-wav"
 version = "0.1.0"
 dependencies = [
+ "riff",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-job",
@@ -8764,6 +8844,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
  "serde_json",
@@ -8773,6 +8854,8 @@ dependencies = [
 name = "semio-s-artifact-stdio-xlsx"
 version = "0.1.0"
 dependencies = [
+ "calamine",
+ "quick-xml 0.42.0",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel",
@@ -8785,12 +8868,14 @@ dependencies = [
  "semio-s-artifact-stdio-xml",
  "semio-s-artifact-stdio-zip",
  "serde_json",
+ "zip 6.0.0",
 ]
 
 [[package]]
 name = "semio-s-artifact-stdio-xml"
 version = "0.1.0"
 dependencies = [
+ "quick-xml 0.39.4",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
@@ -8798,6 +8883,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt",
@@ -8810,6 +8896,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9433,6 +9520,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async-macros",
+ "semio-framework-mesh-engine",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-pack",
@@ -11514,6 +11602,12 @@ name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
+
+[[package]]
+name = "typed-path"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
 
 [[package]]
 name = "typenum"
@@ -14168,6 +14262,20 @@ dependencies = [
  "flate2",
  "indexmap",
  "memchr",
+ "zopfli",
+]
+
+[[package]]
+name = "zip"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+dependencies = [
+ "crc32fast",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "typed-path",
  "zopfli",
 ]
 

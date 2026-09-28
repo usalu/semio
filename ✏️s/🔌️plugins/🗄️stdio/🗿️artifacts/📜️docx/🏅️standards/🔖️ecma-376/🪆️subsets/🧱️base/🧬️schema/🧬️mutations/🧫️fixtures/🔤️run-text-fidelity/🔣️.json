@@ -1,0 +1,22 @@
+{
+  "schema": "semio.stdio.docx.run-text-fidelity.v1",
+  "partPath": "word/document.xml",
+  "cases": [
+    {
+      "id": "split-text-with-unknown-siblings",
+      "targetPath": [0, 0, 0],
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:t>A</w:t><w:tab/><w:t>B</w:t><w:drawing><w:unknown/></w:drawing></w:r></w:p></w:body></w:document>",
+      "replacement": " spaced ",
+      "textElementCount": 2,
+      "preservedLocalNames": ["tab", "drawing", "unknown"]
+    },
+    {
+      "id": "run-without-text",
+      "targetPath": [0, 0, 0],
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:tab/><w:drawing/></w:r></w:p></w:body></w:document>",
+      "replacement": "new",
+      "textElementCount": 1,
+      "preservedLocalNames": ["tab", "drawing"]
+    }
+  ]
+}

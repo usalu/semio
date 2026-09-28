@@ -11,8 +11,13 @@ async fn definition_declares_a_text_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_joins_lines_with_the_line_ending() {
     let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
-    let node = render(&document).expect("render");
+    let node = render(&document, semio_framework_plugin::Locale::En, "revision").expect("render");
     let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
     let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
     assert_eq!(scene.buffer, "a\nb");
+    let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("editable draft settings")).expect("settings JSON");
+    assert_eq!(settings["editAction"], "textEdit");
+    assert_eq!(settings["editArgument"], "text");
+    assert_eq!(settings["editArguments"]["revision"], "revision");
+    assert_eq!(settings["commit"], "explicit");
 }

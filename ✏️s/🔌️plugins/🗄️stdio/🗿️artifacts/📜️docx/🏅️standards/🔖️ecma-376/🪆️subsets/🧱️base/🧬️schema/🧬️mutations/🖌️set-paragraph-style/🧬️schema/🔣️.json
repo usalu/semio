@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/set-paragraph-style/schema.json",
+  "title": "SetParagraphStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "address",
+    "styleId"
+  ],
+  "properties": {
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+    },
+    "styleId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "mutation": {
+      "const": "setParagraphStyle"
+    }
+  }
+}

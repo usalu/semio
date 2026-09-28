@@ -5,6 +5,7 @@ export interface RasterPixelContent { imageKey: string | null; width: number | n
 
 /** 🧬️ RasterMutation union — closed semantic mutation vocabulary for the raster document. */
 export type RasterMutation =
+  | {mutation:"changeLayerLocked";layerId:string;expected:boolean;locked:boolean}
   | {mutation:'changeLayerAdjustmentParameter'; layerId:string; parameter:'brightness'|'contrast'; expected:number|null; value:number|null}
   | { mutation: 'createLayer'; parentId?: string; index: number; layer: RasterLayerNode }
   | { mutation: 'deleteLayer'; layerId: string }

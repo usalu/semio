@@ -5,6 +5,19 @@
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
+#[path="📤️export/🦀️.rs"]
+mod media_export;
+
+#[path="🖼️assets/🔄️replacement/🦀️.rs"]
+pub(crate) mod asset_replacement;
+
+#[path="🖱️selection/🦀️.rs"]
+pub(crate) mod layer_selection;
+
+#[cfg(test)]
+#[path="💾️document/🧪️tests/🦀️.rs"]
+mod document_tests;
+
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::editor::raster::modes::edit;
 use crate::editor::raster::modes::edit::windows::{composite, navigator};
@@ -34,7 +47,7 @@ pub const RASTER_PLAY_CONTROLLER_ID: &str = "raster-play";
 /// concern, not artifact data, so it lives here rather than in any single panel.
 pub const RASTER_TREE_PREFIX: &str = "raster-play-layers";
 /// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
-/// (granularity `layer`, `HierarchyProvider::Flat`, method Pick) — the layer tree binds it and the
+/// (granularity `layer`, `HierarchyProvider::Topology`, method Pick) — the layer tree binds it and the
 /// composite window references it.
 pub const RASTER_INTERACTION_DOMAIN: &str = "layers";
 pub const RASTER_INTERACTION_GRANULARITY: &str = "layer";
@@ -94,6 +107,9 @@ pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_ut
         brush_opacity: runtime.brush_opacity,
         brush_color: runtime.brush_color.clone(),
         brush_hardness: runtime.brush_hardness,
+        paint_target:runtime.paint_target.clone(),
+        mask_value:runtime.mask_value,
+        pixel_selection_json:runtime.pixel_selection.as_ref().map(dsl::json::to_json_string),
         view_mode: view_mode.into(),
         composite_viewport_json: runtime.composite_viewport.as_ref().map(dsl::os_pack::json::to_json_string),
         lanes: Vec::new(),
@@ -252,6 +268,7 @@ mod args_bridge {
         let plain = || fold(args, &[]);
         let layer = || fold(args, LAYER);
         Ok(match action {
+            "exportPng" => RasterCommand::ExportPng(decode(action, plain())?),
             "addLayer" => RasterCommand::AddLayer(decode(action, plain())?),
             "flattenLayers" => RasterCommand::FlattenLayers(decode(action, plain())?),
             "mergeDown" => RasterCommand::MergeDown(decode(action, plain())?),
@@ -269,6 +286,9 @@ mod args_bridge {
             "setBrushSize" => RasterCommand::SetBrushSize(decode(action, fold(args, &[("size", "value")]))?),
             "setBrushColor" => RasterCommand::SetBrushColor(decode(action, plain())?),
             "setBrushHardness" => RasterCommand::SetBrushHardness(decode(action, plain())?),
+            "setPaintTarget"=>RasterCommand::SetPaintTarget(decode(action,plain())?),
+            "setPixelSelection"=>RasterCommand::SetPixelSelection(decode(action,plain())?),
+            "setMaskValue"=>RasterCommand::SetMaskValue(decode(action,plain())?),
             "setBrushOpacity" => RasterCommand::SetBrushOpacity(decode(action, fold(args, &[("opacity", "value")]))?),
             "setCompositeViewport" => RasterCommand::SetCompositeViewport(decode(action, plain())?),
             "setCamera" => RasterCommand::SetCamera(decode(action, plain())?),
@@ -312,12 +332,16 @@ semio_framework_plugin::app_commands! {
         "maskFromSelection" as "mask-from-selection" => mask_from_selection::MaskFromSelection,
         "setBrushColor" as "brush-color" => set_brush_color::SetBrushColor,
         "setBrushHardness" as "brush-hardness" => set_brush_hardness::SetBrushHardness,
+        "setPaintTarget" as "paint-target" => set_paint_target::SetPaintTarget,
+        "setMaskValue" as "mask-value" => set_mask_value::SetMaskValue,
+        "setPixelSelection" as "pixel-selection" => set_pixel_selection::SetPixelSelection,
+        "exportPng" as "export-png" => export_png::ExportPng,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::editor::raster::commands::set_active_example;
+use crate::editor::raster::commands::{set_active_example,export_png,set_paint_target,set_mask_value,set_pixel_selection};
 use crate::editor::raster::commands::{edit_pixels,edit_mask,mask_from_selection,flatten_layers,merge_down};
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
@@ -325,10 +349,7 @@ use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-/// 🧵️ Every `RasterCommand` row, without exception — the retained route table, the manifest's
-/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME command ids, which
-/// is exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩
-/// migrated` must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
+/// 🧵️ Document and session command routes; PNG download has a separate resumable host-only factory.
 const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "addLayer",
     "dropLayerKind",
@@ -352,6 +373,9 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "maskFromSelection",
     "setBrushColor",
     "setBrushHardness",
+    "setPaintTarget",
+    "setMaskValue",
+    "setPixelSelection",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
@@ -389,6 +413,9 @@ const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setBrushOpacity", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setBrushColor", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setBrushHardness", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract {tool_id:"setPaintTarget",lanes:&[ArtifactToolPublicationLane::Config]},
+    ArtifactToolPublicationContract {tool_id:"setMaskValue",lanes:&[ArtifactToolPublicationLane::Config]},
+    ArtifactToolPublicationContract {tool_id:"setPixelSelection",lanes:&[ArtifactToolPublicationLane::Config]},
     ArtifactToolPublicationContract { tool_id: "setCompositeViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -479,6 +506,36 @@ impl ArtifactOwnedToolJobFactory for RasterRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = RASTER_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+struct RasterCommandProofs;
+impl RasterCommandProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<RasterPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.raster.raster@1/*#editor",
+        artifact_schema: "raster.document",
+        factory: "RasterRetainedCommandJobFactory",
+        factory_type: RasterRetainedCommandJobFactory,
+        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "flattenLayers", "mergeDown", "editMask", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness", "setPaintTarget", "setMaskValue", "setPixelSelection"
+        ]
+    }
+
+}
+struct RasterDownloadProofs;
+impl RasterDownloadProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<RasterPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.raster.raster@1/*#editor",
+        artifact_schema: "raster.document",
+        factory: "RasterDownloadJobFactory",
+        factory_type: media_export::RasterDownloadJobFactory,
+        tools: {"exportPng" => ToolExecutionContract::resumable(4096,4096,1,33_554_432,2000,64,1)}
+    }
+}
 
 //#region 📬️StorePreparation
 /// 📬️ The document lane's one-item retained preparation. Without it every route declaring
@@ -1047,26 +1104,19 @@ impl ArtifactEditor for RasterPlayApp {
         Some(std::sync::Arc::new(RasterConfigStorePreparationFactory))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<RasterPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.raster.raster@1/*#editor",
-        artifact_schema: "raster.document",
-        factory: "RasterRetainedCommandJobFactory",
-        factory_type: RasterRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
-        tools: [
-            "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "flattenLayers", "mergeDown", "editMask", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness"
-        ]
+    fn bounded_first_step_tool_proofs()->Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        RasterCommandProofs::bounded_first_step_tool_proofs().into_iter().chain(RasterDownloadProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
-        registry.register(RasterRetainedCommandJobFactory::new(&controller_id))
+        registry.register(RasterRetainedCommandJobFactory::new(&controller_id))?;
+        registry.register(media_export::RasterMediaExportJobFactory::new(&controller_id))?;
+        registry.register(media_export::RasterDownloadJobFactory::new(&controller_id))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if request.tool_id=="exportPng" {return media_export::build_download_job(request);}
         if !RASTER_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -1196,10 +1246,21 @@ impl ArtifactEditor for RasterPlayApp {
         Some(raster_io())
     }
 
-    /// 🎞️ `image:in`/`image:out` (see `crate::io::raster_image_layer_and_asset`,
-    /// `raster_composite_media`) plus the inherited `document:out` default (the pack of
-    /// `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
-    /// body for every port on this app, not just the new ones).
+    /// 📤️ Captures image output in a retained operation with framework-owned cancellation and disposal.
+    fn build_media_export_job(request:semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>)->Result<Option<ArtifactReservedToolJob>,Fault> {
+        if request.port!="image:out"||request.tool_id!=media_export::TOOL_ID {return Ok(None);}
+        Ok(Some(ArtifactReservedToolJob::new(media_export::RasterImageExportJob::new(request))))
+    }
+
+    fn build_snapshot_disposer()->Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
+        Some(Box::new(media_export::RasterExportSnapshotDisposer::default()))
+    }
+
+    fn interaction_topology(doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->semio_framework_plugin::InteractionTopology {
+        semio_framework_plugin::InteractionTopology {domains:std::collections::BTreeMap::from([(RASTER_INTERACTION_DOMAIN.into(),layer_selection::layer_topology(&doc.snapshot.layers))])}
+    }
+
+    /// 📦️ Batch serializers for structured image media and editable artifact packs.
     fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.snapshot),
@@ -1305,6 +1366,11 @@ fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cf
             crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, selected_ids, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
         };
+        let node=if body_key==crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS&&!doc.operations().is_empty() {
+            use semio_framework_plugin::{Buildable,HasBase,HasChildren};
+            let progress=semio_framework_plugin::app::operation_progress::operation_progress_controls(doc.operations(),RASTER_PLAY_CONTROLLER_ID,view_state.locale)?;
+            semio_framework_ui_contract::column().try_id("raster.layers.with-progress").map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress container"))?.try_children([progress,node]).map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress children"))?.try_build().map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress build"))?
+        }else{node};
         Ok(semio_framework_plugin::built_to_component_tree(node))
 }
 //#endregion 🔖️RasterPlayApp
@@ -1419,6 +1485,9 @@ pub fn create_raster_app() -> AppDefinition {
             // stays gone (`🎮️commands/📃️document/🦀️.rs` records why); `setActiveExample` is back as a
             // real, undoable batch of `RasterMutation`s rather than a snapshot swap, so it is an
             // ordinary palette mutation like block2d's and puzzle3d's.
+            .shell_action("exportPng", LocalizedLabel::native("Export PNG", "PNG exportieren"))
+            .action_describe("exportPng", LocalizedLabel::native("Downloads the visible image as PNG with transparency. Layers remain editable.", "Lädt das sichtbare Bild als PNG mit Transparenz herunter. Die Ebenen bleiben bearbeitbar."))
+            .action_interactive_job("exportPng", InteractiveJobClassification::Migrated)
             .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
             .action_with(raster_internal_action("editPixels", LocalizedLabel::native("Edit Pixels", "Pixel bearbeiten"), ActionKind::Mutation))
             .action_describe("editPixels", LocalizedLabel::native("Applies a cancellable pixel operation to the selected layer and records the result in shared history.", "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."))
@@ -1455,7 +1524,7 @@ pub fn create_raster_app() -> AppDefinition {
                 id: RASTER_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Layers", "Ebenen"),
                 granularities: vec![GranularityDefinition { id: RASTER_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Layer", "Ebene"), icon_id: "image".into() }],
-                hierarchy: HierarchyProvider::Flat,
+                hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
                     modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -1471,6 +1540,9 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushColor", LocalizedLabel::native("Set Foreground Color", "Vordergrundfarbe festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushHardness", LocalizedLabel::native("Set Brush Hardness", "Pinselhärte festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setPaintTarget",LocalizedLabel::native("Set Paint Target","Bearbeitungsziel festlegen"),ActionKind::View))
+            .action_with(raster_internal_action("setPixelSelection",LocalizedLabel::native("Set Pixel Selection","Pixelauswahl festlegen"),ActionKind::View))
+            .action_with(raster_internal_action("setMaskValue",LocalizedLabel::native("Set Mask Value","Maskenwert festlegen"),ActionKind::View))
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
@@ -1524,6 +1596,9 @@ pub fn create_raster_app() -> AppDefinition {
             .action_interactive_job("setBrushOpacity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setBrushColor", InteractiveJobClassification::Migrated)
             .action_interactive_job("setBrushHardness", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPaintTarget",InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPixelSelection",InteractiveJobClassification::Migrated)
+            .action_interactive_job("setMaskValue",InteractiveJobClassification::Migrated)
             .action_interactive_job("setCompositeViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", InteractiveJobClassification::Migrated)

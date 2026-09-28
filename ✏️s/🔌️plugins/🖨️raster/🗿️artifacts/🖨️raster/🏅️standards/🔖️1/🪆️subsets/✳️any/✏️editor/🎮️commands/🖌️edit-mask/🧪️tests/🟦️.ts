@@ -7,7 +7,7 @@ import fixture from "../🧫️fixtures/🔣️.json";
 import {editImage,type PixelOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import {maskCoverage} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
 test("mask paint command fixture preserves coverage",async()=>{
-  const command={layerId:"paint",expectedMask:JSON.stringify({enabled:true,linked:true,invert:false,imageKey:"coverage",width:3,height:1,transform:{x:0,y:0,scaleX:1,scaleY:1,rotation:0}}),operation:JSON.stringify(fixture.operation),selection:JSON.stringify(fixture.selection)};
+  const command={layerId:"paint",expectedMask:JSON.stringify({enabled:true,linked:true,invert:false,imageKey:"coverage",width:3,height:1,transform:{x:0.0,y:0.0,a:1.0,b:0.0,c:-0.0,d:1.0}}),operation:JSON.stringify(fixture.operation),selection:JSON.stringify(fixture.selection)};
   expect(new Ajv({strict:false}).compile(schema)(command)).toBe(true);
   const selection=new Uint8Array(fixture.width*fixture.height);
   for(const [start,length,coverage] of fixture.selection)selection.fill(coverage!,start!,start!+length!);

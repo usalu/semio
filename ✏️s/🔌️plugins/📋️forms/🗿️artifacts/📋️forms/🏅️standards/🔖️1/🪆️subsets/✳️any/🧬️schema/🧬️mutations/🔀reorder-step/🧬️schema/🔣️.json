@@ -6,13 +6,13 @@
   "additionalProperties": false,
   "required": [
     "id",
-    "toIndex"
+    "to_index"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "toIndex": {
+    "to_index": {
       "type": "integer",
       "minimum": 0
     }

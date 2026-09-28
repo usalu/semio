@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cancel Typed Operation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operationId",
+    "generation"
+  ],
+  "properties": {
+    "operationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    }
+  }
+}

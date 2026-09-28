@@ -16,6 +16,22 @@
       "text": "Zweite Seite\nAbsatz",
       "revision": "75ecf4240fb987a6",
       "labels": { "apply": "Anwenden", "discard": "Verwerfen", "cancel": "Abbrechen" }
+    },
+    {
+      "locale": "en",
+      "page": 8,
+      "item": 5,
+      "text": "Canonical run",
+      "revision": "f5beaa49ae4dafb8",
+      "staticArguments": {
+        "address": {
+          "partPath": "word/document.xml",
+          "nodePath": [0, 3, 2],
+          "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+          "revision": "context:4d9f"
+        }
+      },
+      "labels": { "apply": "Apply", "discard": "Discard", "cancel": "Cancel" }
     }
   ]
 }

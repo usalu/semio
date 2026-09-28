@@ -300,10 +300,47 @@ export async function selectPixels(width:number,height:number,shape:SelectionSha
   } catch(error) {job.cancel();throw error;}
 }
 
-export function combineSelections(current: Uint8Array, next: Uint8Array, mode: SelectionMerge): Uint8Array {
-  if (current.length !== next.length) invalid("Selection extents differ");
-  if (!["replace","add","subtract","intersect"].includes(mode)) invalid("Unknown selection merge");
-  return next.map((value,i) => mode === "replace" ? value : mode === "add" ? Math.max(value,current[i]!) : mode === "subtract" ? Math.max(0,current[i]!-value) : Math.min(value,current[i]!));
+export class SelectionCombineJob {
+  private output:Uint8Array;
+  private cursor=0;
+  private cancelled=false;
+  constructor(private readonly current:Uint8Array|undefined,private readonly next:Uint8Array,private readonly mode:SelectionMerge) {
+    if(!(next instanceof Uint8Array)||next.length<1||next.length>MAX_IMAGE_PIXELS) invalid("Selection exceeds the pixel budget");
+    validateMask(current,next.length);
+    if(!["replace","add","subtract","intersect"].includes(mode)) invalid("Unknown selection merge");
+    this.output=new Uint8Array(next.length);
+  }
+  advance(pixelBudget=32768):PixelProgress {
+    if(this.cancelled) aborted();
+    if(!Number.isSafeInteger(pixelBudget)||pixelBudget<0) invalid("Invalid selection work budget");
+    const end=Math.min(this.next.length,this.cursor+Math.min(pixelBudget,32768));
+    for(;this.cursor<end;this.cursor++) {
+      const a=this.current?.[this.cursor]??0,b=this.next[this.cursor]!;
+      this.output[this.cursor]=this.mode==="replace"?b:this.mode==="add"?Math.max(a,b):this.mode==="subtract"?Math.max(0,a-b):Math.min(a,b);
+    }
+    return {completed:this.cursor,total:this.next.length,done:this.cursor===this.next.length};
+  }
+  cancel():void {this.cancelled=true;this.output=new Uint8Array();}
+  result():Uint8Array {
+    if(this.cancelled) aborted();
+    if(this.cursor!==this.next.length) invalid("Selection combination is incomplete");
+    return this.output;
+  }
+}
+export async function combineSelections(current:Uint8Array|undefined,next:Uint8Array,mode:SelectionMerge,options:PixelEditOptions={}):Promise<Uint8Array> {
+  if(options.signal?.aborted) aborted();
+  const budget=options.chunkPixels??32768;
+  if(!Number.isSafeInteger(budget)||budget<1) invalid("Invalid selection work budget");
+  const job=new SelectionCombineJob(current,next,mode);
+  try {
+    while(true) {
+      if(options.signal?.aborted) aborted();
+      const progress=job.advance(budget);options.onProgress?.(progress);
+      if(options.signal?.aborted) aborted();
+      if(progress.done) return job.result();
+      await yieldTurn();
+    }
+  } catch(error) {job.cancel();throw error;}
 }
 
 export async function floodSelection(image: PixelImage, x: number, y: number, tolerance: number, options: PixelEditOptions = {}): Promise<Uint8Array> {

@@ -41,6 +41,7 @@ export default defineConfig({
       "../../../../🧱️elements/🔀️Toggle/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🎛️ToggleGroup/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/🌳️Tree/🧪️tests/🔤️text-flow/🟦️.tsx",
       "../../../../🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🪟️Window/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📑️Tabs/🧪️tests/🧩️component/🟦️.tsx",

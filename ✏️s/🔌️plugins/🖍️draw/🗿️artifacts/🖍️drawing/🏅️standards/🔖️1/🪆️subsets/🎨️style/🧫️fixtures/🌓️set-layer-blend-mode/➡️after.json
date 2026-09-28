@@ -6,7 +6,9 @@
   "id": "drawing-carrier-seed",
   "layers": [
     {
-      "attributes": {},
+      "attributes": {
+        "fillRule": "evenodd"
+      },
       "blendMode": "screen",
       "id": "l1",
       "kind": "shape",
@@ -31,7 +33,9 @@
       "visible": true
     },
     {
-      "attributes": {},
+      "attributes": {
+        "fillRule": "evenodd"
+      },
       "blendMode": "multiply",
       "id": "l2",
       "kind": "shape",

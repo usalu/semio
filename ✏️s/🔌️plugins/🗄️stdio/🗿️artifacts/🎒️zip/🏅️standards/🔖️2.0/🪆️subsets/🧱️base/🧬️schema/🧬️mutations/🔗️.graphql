@@ -24,6 +24,7 @@ type ZipMutation {
   mutation: ZipMutationKind!
   snapshot: ZipSnapshot
   comment: String
+  commentUtf8: Boolean
   entry: ZipEntry
   before: String
   name: String

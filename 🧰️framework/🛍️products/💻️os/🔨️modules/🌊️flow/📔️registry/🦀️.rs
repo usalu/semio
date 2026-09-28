@@ -621,22 +621,22 @@ pub fn seed_flow_eval_node_cache(cache: &NeuralCache, node_hash: u64, output_jso
 /// 📚️ Extension-grouped catalogue sections (static widget sections merged at host).
 pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
     let registry = flow_extension_registry();
-    let mut by_extension: BTreeMap<String, Vec<CatalogueItem>> = BTreeMap::new();
+    let mut sections: BTreeMap<String, CatalogueSection> = BTreeMap::new();
     for info in registry.operator_infos() {
-        by_extension.entry(info.extension.clone()).or_default().push(CatalogueItem {
+        let (id, title) = catalogue_section_identity(info);
+        let section = sections.entry(id.clone()).or_insert_with(|| CatalogueSection { id, title, groups: vec![], items: vec![] });
+        section.items.push(CatalogueItem {
             kind: "neuron".into(), neuron_kind: Some(info.id.clone()), action: None, format: None,
             name: info.name.clone(), abbreviation: info.abbreviation.clone(), icon: info.icon.clone(), summary: info.summary.clone(),
         });
     }
-    by_extension
-        .into_iter()
-        .map(|(extension, items)| CatalogueSection {
-            id: extension.clone(),
-            title: titleize_extension(&extension),
-            groups: vec![],
-            items,
-        })
-        .collect()
+    sections.into_values().collect()
+}
+
+fn catalogue_section_identity(info: &neural::OperatorInfo) -> (String, String) {
+    let extension = titleize_extension(&info.extension);
+    if info.group.is_empty() { return (info.extension.clone(), extension); }
+    (format!("{}/{}", info.extension, info.group.join("/")), format!("{} / {}", extension, info.group.join(" / ")))
 }
 
 fn titleize_extension(extension: &str) -> String {

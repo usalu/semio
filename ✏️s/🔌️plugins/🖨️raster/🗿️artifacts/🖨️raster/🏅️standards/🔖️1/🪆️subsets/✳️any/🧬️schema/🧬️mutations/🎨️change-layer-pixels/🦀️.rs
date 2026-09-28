@@ -21,7 +21,7 @@ pub fn validate(payload: &ChangeLayerPixels, base: &RasterSnapshot) -> Result<()
     }
     if payload.content.width.is_some_and(|n| n == 0 || n > 16384) || payload.content.height.is_some_and(|n| n == 0 || n > 16384) { return Err("mutation.invariant"); }
     if let Some(value) = &payload.transform {
-        if [value.x, value.y, value.scale_x, value.scale_y, value.rotation].iter().any(|n| !n.is_finite()) || value.scale_x == 0.0 || value.scale_y == 0.0 { return Err("mutation.invariant"); }
+        semio_framework_pixels::compositing::inverse(value.as_affine()).map_err(|_| "mutation.invariant")?;
     }
     Ok(())
 }
@@ -31,7 +31,7 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerPixel
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         if let Err(code) = validate(self, base) { return protocol::MutationOutcome::error(code, "Pixel content cannot be applied to this image revision.", [self.layer_id.clone()]); }
-        protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { pixel_content: Some(self.content.clone()), pixel_transform: self.transform.clone(), ..Default::default() }))
+        protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { pixel_content: Some(self.content.clone()), transform: self.transform.clone(), ..Default::default() }))
     }
 
     fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {

@@ -8,6 +8,7 @@ async fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
         doctype: None,
         declaration: Some(XmlDeclaration::new("1.0", Some("UTF-8".into()), Some(true))),
         prolog: vec![XmlNode::Comment { text: "generated".into() }],
+        epilog: vec![XmlNode::ProcessingInstruction { target: "done".into(), data: "yes".into() }],
     };
     let value = semio_value_from_xml_document(&doc);
     match &value {

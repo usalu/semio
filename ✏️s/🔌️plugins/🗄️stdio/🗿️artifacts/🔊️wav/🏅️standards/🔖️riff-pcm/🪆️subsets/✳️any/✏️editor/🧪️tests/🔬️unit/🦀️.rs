@@ -13,6 +13,15 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn editor_registers_every_natural_audio_action_as_retained_work() {
+    let definition = create_wav_editor();
+    for action_id in edit_audio::TOOL_IDS {
+        let action = definition.actions.iter().find(|action| action.id == *action_id).expect("natural audio action");
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
     let samples = vec![7u8; 1_048_576];
     let snapshot = WavSnapshot { data: WavData::Raw(samples.clone()), ..WavSnapshot::default() };
@@ -40,6 +49,35 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
     let native = crate::standards::riff_pcm::subsets::any::io::encode_wav(&published);
     let reopened = crate::standards::riff_pcm::subsets::any::io::decode_wav(&native).expect("edited WAV reopens");
     assert_eq!(reopened.data, WavData::Pcm8(vec![1, 2]));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
+    let snapshot = WavSnapshot {
+        data: WavData::Raw(vec![7]),
+        data_pad_byte: 0xA5,
+        other_chunks: vec![crate::standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk { fourcc: "JUNK".into(), data: vec![1, 2, 3], pad_byte: 0x7F }],
+        chunk_order: vec![
+            crate::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Other(0),
+            crate::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Format,
+            crate::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Samples,
+        ],
+        ..WavSnapshot::default()
+    };
+    let provider = WavDetailsProvider::new(&snapshot);
+    assert_eq!(editing::SnapshotDetailsProvider::value(&provider, &[editing::SnapshotDetailPathSegment::Key("dataPadByte".into())],), Some(editing::SnapshotDetailValue::Number(dsl::Number::UInt(0xA5))),);
+    assert_eq!(
+        editing::SnapshotDetailsProvider::value(&provider, &[editing::SnapshotDetailPathSegment::Key("otherChunks".into()), editing::SnapshotDetailPathSegment::Index(0), editing::SnapshotDetailPathSegment::Key("padByte".into()),],),
+        Some(editing::SnapshotDetailValue::Number(dsl::Number::UInt(0x7F))),
+    );
+    let event = editing::SnapshotEditEvent::SetValue { path: "/dataPadByte".into(), value: dsl::DslValue::Number(dsl::Number::UInt(0x5A)) };
+    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("pad byte edit emits");
+    let [mutation] = emit.artifact_mutations.as_slice() else { panic!("pad byte edit must emit one mutation") };
+    assert!(matches!(mutation, WavMutation::PatchSnapshot(_)));
+    let edited = protocol::MutationDiff::apply(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("pad byte mutation applies");
+    assert_eq!(edited.data_pad_byte, 0x5A);
+    assert_eq!(edited.chunk_order, snapshot.chunk_order);
+    assert_eq!(edited.other_chunks, snapshot.other_chunks);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -78,16 +116,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let mut cancelled = store
-        .begin_apply_batch(
-            semio_framework_job::OperationId(1),
-            generation,
-            store.content_revision_now(),
-            "wav-large-sample-cancel".into(),
-            vec![mutation.clone()],
-            None,
-            store::HistoryLane::Document,
-            Some(&factory),
-        )
+        .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "wav-large-sample-cancel".into(), vec![mutation.clone()], None, store::HistoryLane::Document, Some(&factory))
         .expect("bounded patch cancellation candidate admits");
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
     for _ in 0..64 {
@@ -100,7 +129,9 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     }
     assert!(store.cancel_apply_batch(&mut cancelled));
     for _ in 0..64 {
-        if matches!(cancelled.close_step(grant).expect("cancelled publication closes"), store::SnapshotRetirementStep::Complete) { break; }
+        if matches!(cancelled.close_step(grant).expect("cancelled publication closes"), store::SnapshotRetirementStep::Complete) {
+            break;
+        }
     }
     assert!(cancelled.terminal_is_empty());
     drop(cancelled);
@@ -122,7 +153,10 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let mut published = false;
     for _ in 0..64 {
         match store.advance_apply_batch(&mut publication, grant).expect("retained publication advances") {
-            store::ArtifactStoreOneItemAdvance::Published(_) => { published = true; break; }
+            store::ArtifactStoreOneItemAdvance::Published(_) => {
+                published = true;
+                break;
+            }
             store::ArtifactStoreOneItemAdvance::Blocked => panic!("admitted WAV patch blocked"),
             _ => {}
         }
@@ -133,7 +167,9 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert_eq!(samples[edit_index], 9);
     assert!(publication.acknowledge());
     for _ in 0..64 {
-        if matches!(publication.close_step(grant).expect("publication closes"), store::SnapshotRetirementStep::Complete) { break; }
+        if matches!(publication.close_step(grant).expect("publication closes"), store::SnapshotRetirementStep::Complete) {
+            break;
+        }
     }
     assert!(publication.terminal_is_empty());
     drop(publication);
@@ -166,7 +202,10 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let mut metadata_published = false;
     for _ in 0..64 {
         match store.advance_apply_batch(&mut metadata_publication, grant).expect("metadata publication advances") {
-            store::ArtifactStoreOneItemAdvance::Published(_) => { metadata_published = true; break; }
+            store::ArtifactStoreOneItemAdvance::Published(_) => {
+                metadata_published = true;
+                break;
+            }
             store::ArtifactStoreOneItemAdvance::Blocked => panic!("admitted WAV metadata edit blocked"),
             _ => {}
         }
@@ -178,7 +217,9 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert_eq!(samples[edit_index], 9);
     assert!(metadata_publication.acknowledge());
     for _ in 0..64 {
-        if matches!(metadata_publication.close_step(grant).expect("metadata publication closes"), store::SnapshotRetirementStep::Complete) { break; }
+        if matches!(metadata_publication.close_step(grant).expect("metadata publication closes"), store::SnapshotRetirementStep::Complete) {
+            break;
+        }
     }
     assert!(metadata_publication.terminal_is_empty());
     drop(metadata_publication);
@@ -193,7 +234,9 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
 
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<WavSnapshot, WavMutation>::new();
     for _ in 0..100_000 {
-        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store closes"), semio_framework_plugin::PluginCloseStep::Complete) { break; }
+        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store closes"), semio_framework_plugin::PluginCloseStep::Complete) {
+            break;
+        }
     }
     assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }

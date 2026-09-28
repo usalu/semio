@@ -227,6 +227,28 @@ pub fn layer_name(layer: &RasterLayerNode) -> &str {
     }
 }
 
+#[derive(Clone,Copy,Debug,PartialEq,Eq,dsl::ToValue,dsl::FromValue)]
+#[value(rename_all="camelCase")]
+pub struct LayerProtection {pub locked:bool,pub inherited:bool,pub descendant:bool,pub editable:bool,pub structural:bool,pub can_change_lock:bool}
+pub fn layer_locked(layer:&RasterLayerNode)->bool {match layer {RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..}=>*locked}}
+pub fn layer_protection(layers:&[RasterLayerNode],id:&str)->Option<LayerProtection> {
+    fn below(layers:&[RasterLayerNode])->bool {layers.iter().any(|layer|layer_locked(layer)||matches!(layer,RasterLayerNode::Group {children,..} if below(children)))}
+    fn visit(layers:&[RasterLayerNode],id:&str,inherited:bool)->Option<LayerProtection> {
+        for layer in layers {
+            let locked=layer_locked(layer);
+            if layer_node_id(layer)==id {let descendant=matches!(layer,RasterLayerNode::Group {children,..} if below(children));let editable=!locked&&!inherited;return Some(LayerProtection {locked,inherited,descendant,editable,structural:editable&&!descendant,can_change_lock:!inherited});}
+            if let RasterLayerNode::Group {children,..}=layer {if let Some(found)=visit(children,id,inherited||locked){return Some(found);}}
+        }
+        None
+    }
+    visit(layers,id,false)
+}
+
+pub fn require_layer_edit(layers:&[RasterLayerNode],id:&str,structural:bool)->Result<(),&'static str> {
+    let protection=layer_protection(layers,id).ok_or("raster-layer-not-found")?;
+    if if structural {protection.structural}else{protection.editable} {Ok(())}else{Err("raster-layer-locked")}
+}
+
 pub fn layer_visible(layer: &RasterLayerNode) -> bool {
     match layer {
         RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. } => *visible,
@@ -303,18 +325,18 @@ pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode
 /// `raster_image_layer_and_asset`), which need a specific name/width/height rather than
 /// `create_layer_of_kind`'s generic defaults.
 pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
-    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
+    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
 }
 
 fn create_group_layer() -> RasterLayerNode {
-    RasterLayerNode::Group { id: create_raster_id("group"), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() }
+    RasterLayerNode::Group { id: create_raster_id("group"), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() }
 }
 
 fn create_adjustment_layer() -> RasterLayerNode {
     RasterLayerNode::Adjustment {
         id: create_raster_id("adjust"),
         name: "Adjustment".into(),
-        visible: true,
+        visible: true, locked: false,
         opacity: 1.0,
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
@@ -358,7 +380,7 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
             RasterLayerNode::Pixel {
                 id: "backdrop".into(),
                 name: "Backdrop".into(),
-                visible: true,
+                visible: true, locked: false,
                 opacity: 1.0,
                 blend_mode: "normal".into(),
                 transform: RasterTransform::default(),
@@ -367,7 +389,7 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
                 height: Some(1024),
                 image_key: Some("semio-emblem".into()),
             },
-            RasterLayerNode::Adjustment { id: "brighten".into(), name: "Brighten".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params },
+            RasterLayerNode::Adjustment { id: "brighten".into(), name: "Brighten".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params },
         ],
         assets,
     }
@@ -396,10 +418,11 @@ pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
 pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     match layer {
-        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => RasterLayerNode::Pixel {
+        RasterLayerNode::Pixel { name, visible, locked, opacity, blend_mode, transform, mask, width, height, image_key, .. } => RasterLayerNode::Pixel {
             id: create_raster_id("layer"),
             name: format!("{name} copy"),
             visible: *visible,
+            locked: *locked,
             opacity: *opacity,
             blend_mode: blend_mode.clone(),
             transform: transform.clone(),
@@ -408,20 +431,22 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
             height: *height,
             image_key: image_key.clone(),
         },
-        RasterLayerNode::Group { name, visible, opacity, blend_mode, transform, mask, children, .. } => RasterLayerNode::Group {
+        RasterLayerNode::Group { name, visible, locked, opacity, blend_mode, transform, mask, children, .. } => RasterLayerNode::Group {
             id: create_raster_id("group"),
             name: format!("{name} copy"),
             visible: *visible,
+            locked: *locked,
             opacity: *opacity,
             blend_mode: blend_mode.clone(),
             transform: transform.clone(),
             mask: mask.clone(),
             children: children.iter().map(clone_layer).collect(),
         },
-        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, transform, adjustment_kind, params, .. } => RasterLayerNode::Adjustment {
+        RasterLayerNode::Adjustment { name, visible, locked, opacity, blend_mode, transform, adjustment_kind, params, .. } => RasterLayerNode::Adjustment {
             id: create_raster_id("adjust"),
             name: format!("{name} copy"),
             visible: *visible,
+            locked: *locked,
             opacity: *opacity,
             blend_mode: blend_mode.clone(),
             transform: transform.clone(),
@@ -444,3 +469,7 @@ pub use crate::RasterImageAsset;
 pub use crate::RasterLayerNode;
 pub use crate::RasterViewportSize;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[path="🧪️tests/🔒️protection/🦀️.rs"]
+mod protection_tests;

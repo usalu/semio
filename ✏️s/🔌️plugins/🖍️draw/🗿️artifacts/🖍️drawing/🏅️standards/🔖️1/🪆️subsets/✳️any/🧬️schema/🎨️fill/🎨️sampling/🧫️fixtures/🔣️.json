@@ -1,0 +1,683 @@
+[
+  {
+    "name": "solid-alpha",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0.2,
+        0.4,
+        0.6,
+        0.5
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          4,
+          8
+        ],
+        "color": [
+          0.2,
+          0.4,
+          0.6,
+          0.5
+        ]
+      }
+    ]
+  },
+  {
+    "name": "linear-pad-and-interpolation",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          -10,
+          3
+        ],
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "point": [
+          25,
+          9
+        ],
+        "color": [
+          0.75,
+          0,
+          0.25,
+          1
+        ]
+      },
+      {
+        "point": [
+          50,
+          -8
+        ],
+        "color": [
+          0.5,
+          0,
+          0.5,
+          1
+        ]
+      },
+      {
+        "point": [
+          120,
+          0
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "diagonal-projection",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 10,
+      "y1": 20,
+      "x2": 110,
+      "y2": 120,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          110,
+          20
+        ],
+        "color": [
+          0.5,
+          0,
+          0.5,
+          1
+        ]
+      },
+      {
+        "point": [
+          60,
+          70
+        ],
+        "color": [
+          0.5,
+          0,
+          0.5,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "authored-unsorted-stops",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "offset": 0.5,
+          "color": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          25,
+          0
+        ],
+        "color": [
+          0.5,
+          0.5,
+          0,
+          1
+        ]
+      },
+      {
+        "point": [
+          75,
+          0
+        ],
+        "color": [
+          0,
+          0.5,
+          0.5,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "coincident-stop-transition",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.5,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.5,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          49,
+          0
+        ],
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "point": [
+          50,
+          0
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "point": [
+          51,
+          0
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "alpha-interpolation",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            0.25
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            0.75
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          25,
+          0
+        ],
+        "color": [
+          0.75,
+          0,
+          0.25,
+          0.375
+        ]
+      },
+      {
+        "point": [
+          50,
+          0
+        ],
+        "color": [
+          0.5,
+          0,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "point": [
+          75,
+          0
+        ],
+        "color": [
+          0.25,
+          0,
+          0.75,
+          0.625
+        ]
+      }
+    ]
+  },
+  {
+    "name": "radial-distance",
+    "fill": {
+      "kind": "radialGradient",
+      "cx": 10,
+      "cy": 20,
+      "r": 50,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          10,
+          20
+        ],
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "point": [
+          25,
+          40
+        ],
+        "color": [
+          0.5,
+          0,
+          0.5,
+          1
+        ]
+      },
+      {
+        "point": [
+          10,
+          80
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "single-stop",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0.4,
+          "color": [
+            0.25,
+            0.75,
+            0.5,
+            0.8
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          -50,
+          0
+        ],
+        "color": [
+          0.25,
+          0.75,
+          0.5,
+          0.8
+        ]
+      },
+      {
+        "point": [
+          150,
+          0
+        ],
+        "color": [
+          0.25,
+          0.75,
+          0.5,
+          0.8
+        ]
+      }
+    ]
+  },
+  {
+    "name": "empty-gradient",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": []
+    },
+    "samples": [
+      {
+        "point": [
+          50,
+          0
+        ],
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "zero-length-gradient",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 10,
+      "y1": 20,
+      "x2": 10,
+      "y2": 20,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          50,
+          0
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "zero-radius-gradient",
+    "fill": {
+      "kind": "radialGradient",
+      "cx": 10,
+      "cy": 20,
+      "r": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "samples": [
+      {
+        "point": [
+          10,
+          20
+        ],
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "negative-radius",
+    "fill": {
+      "kind": "radialGradient",
+      "cx": 0,
+      "cy": 0,
+      "r": -1,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "invalid-offset",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1.2,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "invalid-color",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        1,
+        0,
+        0,
+        2
+      ]
+    },
+    "error": true
+  }
+]

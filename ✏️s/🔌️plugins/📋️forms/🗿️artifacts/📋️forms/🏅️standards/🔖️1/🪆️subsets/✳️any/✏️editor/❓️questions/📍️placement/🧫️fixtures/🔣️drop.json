@@ -1,0 +1,18 @@
+{
+  "definition": { "steps": [
+    { "id": "one", "title": "One", "blocks": [{ "id": "a", "label": "A", "kind": "text" }, { "id": "b", "label": "B", "kind": "text" }, { "id": "c", "label": "C", "kind": "text" }] },
+    { "id": "two", "title": "Two", "blocks": [{ "id": "d", "label": "D", "kind": "text" }] }
+  ] },
+  "cases": [
+    { "name": "Move Down After a Sibling", "input": { "stepId": "one", "targetId": "b", "position": "after", "movingId": "a" }, "index": 1, "order": ["b", "a", "c"], "patch": [{ "op": "move", "from": "/0", "path": "/1" }] },
+    { "name": "Move Down Before a Sibling", "input": { "stepId": "one", "targetId": "c", "position": "before", "movingId": "a" }, "index": 1, "order": ["b", "a", "c"], "patch": [{ "op": "move", "from": "/0", "path": "/1" }] },
+    { "name": "Move Up Before a Sibling", "input": { "stepId": "one", "targetId": "b", "position": "before", "movingId": "c" }, "index": 1, "order": ["a", "c", "b"], "patch": [{ "op": "move", "from": "/2", "path": "/1" }] },
+    { "name": "Move to the End of a Page", "input": { "stepId": "one", "targetId": "step:one", "position": "inside", "movingId": "a" }, "index": 2, "order": ["b", "c", "a"], "patch": [{ "op": "move", "from": "/0", "path": "/2" }] },
+    { "name": "Drop onto Itself", "input": { "stepId": "one", "targetId": "b", "position": "after", "movingId": "b" }, "index": 1, "order": ["a", "b", "c"], "patch": [] },
+    { "name": "Move onto Another Page", "input": { "stepId": "two", "targetId": "step:two", "position": "inside", "movingId": "a" }, "index": 1, "order": ["d", "a"], "patch": [{ "op": "add", "path": "/1", "value": "a" }] },
+    { "name": "Create After a Sibling", "input": { "stepId": "one", "targetId": "b", "position": "after", "movingId": null }, "index": 2, "order": ["a", "b", "new", "c"], "patch": [{ "op": "add", "path": "/2", "value": "new" }] },
+    { "name": "Reject a Stale Page", "input": { "stepId": "missing", "targetId": "step:missing", "position": "inside", "movingId": "a" }, "error": "missing-step" },
+    { "name": "Reject a Stale Drop Target", "input": { "stepId": "one", "targetId": "missing", "position": "before", "movingId": "a" }, "error": "missing-target" },
+    { "name": "Reject a Target on Another Page", "input": { "stepId": "one", "targetId": "step:two", "position": "inside", "movingId": "a" }, "error": "missing-target" }
+  ]
+}

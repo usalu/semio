@@ -1,5 +1,5 @@
 export interface FormsTryWindowConfig {
-  currentStepIndex: number;
+  currentStepIndex: number; submittedResponseId?: string | null;
 }
 
 export interface FormsTryWindowConfigMutation {

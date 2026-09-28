@@ -1,3 +1,4 @@
+import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts";
 /** 🧬️ Drawing artifact schema — every field with its state class. */
 
 export interface DrawingArtifact {
@@ -15,8 +16,18 @@ export interface DrawingArtifact {
   artboard?: DrawingArtboard;
 }
 
+/** 🎨️ Canonical authored blending operations shared by layers, patches and mutations. */
+export const DRAWING_BLEND_MODES = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"] as const;
+export type BlendMode = typeof DRAWING_BLEND_MODES[number];
+export function parseBlendMode(value:unknown,at="$"):BlendMode {
+  return drawingDrawingArtifactGuardMember(value,at,DRAWING_BLEND_MODES);
+}
+
 export interface DrawingLayerNode {
   kind: string;
+  blendMode?: BlendMode;
+  attributes?: {fillRule?:FillRule;[key:string]:unknown};
+  isolation?:boolean;
   [key: string]: unknown;
 }
 
@@ -96,6 +107,26 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
 
 export function parseDrawingLayerNode(value: unknown, at = "$"): DrawingLayerNode {
   const row = drawingDrawingArtifactGuardObject(value, at);
+  const pending: Array<[Readonly<Record<string,unknown>>,string]> = [[row,at]];
+  while (pending.length) {
+    const [layer,path] = pending.pop()!;
+    drawingDrawingArtifactGuardString(layer.kind,`${path}.kind`);
+    if (layer.blendMode !== undefined) parseBlendMode(layer.blendMode,`${path}.blendMode`);
+    if (layer.attributes !== undefined) {
+      const attributes = drawingDrawingArtifactGuardObject(layer.attributes,`${path}.attributes`);
+      if (attributes.fillRule !== undefined) parseFillRule(attributes.fillRule);
+    }
+    if (layer.kind === "group") {
+      if (layer.isolation !== undefined) drawingDrawingArtifactGuardBoolean(layer.isolation,`${path}.isolation`);
+      if (layer.children !== undefined) {
+        const children = drawingDrawingArtifactGuardArray(layer.children,`${path}.children`);
+        for (let index=children.length-1; index>=0; index--) {
+          const childPath = `${path}.children[${index}]`;
+          pending.push([drawingDrawingArtifactGuardObject(children[index],childPath),childPath]);
+        }
+      }
+    }
+  }
   return {
     ...structuredClone(row),
     kind: drawingDrawingArtifactGuardString(row["kind"], `${at}.kind`),

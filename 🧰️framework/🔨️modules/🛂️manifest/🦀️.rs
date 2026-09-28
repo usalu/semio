@@ -4882,7 +4882,7 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
-    /// 📌️ Host-owned panel state, opaque to the guest — the ONE long string a view context carries.
+    /// 📌️ Host-owned panel state, opaque to the guest and bounded independently of embedded input.
     ///
     /// Contributions are deliberately NOT a view-state field. They are installed into the guest by
     /// the paged `setContributions` command run the host publisher owns
@@ -4900,6 +4900,10 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub session_identity: Option<ViewSessionIdentity>,
+    /// 🧩️ Parent-owned input for one embedded surface; never persisted in the contributor document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub extension_input_json: Option<String>,
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
     /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
@@ -5073,9 +5077,8 @@ const VIEW_CONTEXT_TRACE_CURSOR_DIGITS: usize = 16;
 pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
 /// 🪪️ Identifier-shaped fields nested in `sessionIdentity`: `userId` and `displayName`.
 pub const VIEW_CONTEXT_SESSION_IDENTITY_FIELDS: usize = 2;
-/// 🔢️ Long-string fields: `panelJson` — the only one. Contributions cross by their own paged
-/// `setContributions` run, never inside a view context.
-pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 1;
+/// 🔢️ Bounded opaque inputs: panel state and one embedded surface's parameters.
+pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 2;
 /// 📐️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire
 /// carries bytes.
 const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;

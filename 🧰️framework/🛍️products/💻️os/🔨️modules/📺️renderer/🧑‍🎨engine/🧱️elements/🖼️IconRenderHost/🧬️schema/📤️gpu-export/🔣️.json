@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Icon GPU PNG Export",
+  "type": "object",
+  "required": [
+    "width",
+    "height",
+    "rectangles",
+    "probes",
+    "cancel",
+    "deliveries"
+  ],
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rectangles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rectangle"
+      }
+    },
+    "probes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/probe"
+      }
+    },
+    "cancel": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ownership",
+          "upload",
+          "render",
+          "readback",
+          "encode",
+          "close"
+        ]
+      }
+    },
+    "deliveries": {
+      "const": 1
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "rgba": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "required": [
+        "bounds",
+        "rgba"
+      ],
+      "properties": {
+        "bounds": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "rgba": {
+          "$ref": "#/$defs/rgba"
+        }
+      },
+      "additionalProperties": false
+    },
+    "probe": {
+      "type": "object",
+      "required": [
+        "position",
+        "rgba"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "rgba": {
+          "$ref": "#/$defs/rgba"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

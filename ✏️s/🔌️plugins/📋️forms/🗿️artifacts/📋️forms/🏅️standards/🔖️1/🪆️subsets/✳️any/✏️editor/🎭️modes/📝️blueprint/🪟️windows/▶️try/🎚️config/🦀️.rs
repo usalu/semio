@@ -7,6 +7,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(id = "s.forms.forms.try-window-config", extension = "formstrywindowcfg", layout = "lines")]
 pub struct FormsTryWindowConfig {
     pub current_step_index: u32,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub submitted_response_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]

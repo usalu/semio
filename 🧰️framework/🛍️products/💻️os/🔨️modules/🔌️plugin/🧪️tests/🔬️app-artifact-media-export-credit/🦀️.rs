@@ -13,7 +13,7 @@ mod artifact_media_export_credit_tests {
         let foreign = ArtifactOutputChunks::new(4);
         assert_eq!(foreign.push(vec![1, 2, 3, 4]), Ok(4));
         assert_eq!(foreign.seal(), Ok(4));
-        let result = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "", foreign.clone()).expect("sealed foreign result");
+        let result = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "", "application/octet-stream", foreign.clone()).expect("sealed foreign result");
         assert!(validate_media_export_structure(&result, &chunks, 4, 4).is_err());
         let download = ArtifactDownloadOutput::new("exact.bin", "application/octet-stream", Some("base64".into()), foreign).expect("bounded sealed download");
         assert_eq!(download.handle_encoding(), "semio-segmented-handle-v1:base64");
@@ -32,7 +32,7 @@ mod artifact_media_export_credit_tests {
         assert_eq!(chunks.seal(), Ok(6));
         assert_eq!(credit.credit(8), Ok(8));
         assert_eq!(credit.validate_terminal(), Ok(8));
-        let maximum = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "2d", chunks.clone()).expect("sealed maximum result");
+        let maximum = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "2d", "application/json", chunks.clone()).expect("sealed maximum result");
         assert!(validate_media_export_structure(&maximum, &chunks, credit.bytes(), 8).is_ok());
         assert!(credit.credit(1).is_err());
         assert!(credit.validate_terminal().is_err());
@@ -42,7 +42,7 @@ mod artifact_media_export_credit_tests {
         let plus_one_chunks = ArtifactOutputChunks::new(9);
         assert_eq!(plus_one_chunks.push(b"1234567".to_vec()), Ok(7));
         assert_eq!(plus_one_chunks.seal(), Ok(7));
-        let plus_one = ArtifactMediaExportResult::structured(maximum.media_type, "2d", plus_one_chunks.clone()).expect("sealed plus-one result");
+        let plus_one = ArtifactMediaExportResult::structured(maximum.media_type, "2d", "application/json", plus_one_chunks.clone()).expect("sealed plus-one result");
         assert!(validate_media_export_structure(&plus_one, &plus_one_chunks, under_credited.bytes(), 8).is_err());
     }
 

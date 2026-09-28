@@ -61,8 +61,9 @@ type RasterLayerPatch {
   adjustmentParameters: [RasterAdjustmentParameter!]
   maskContent: RasterMaskContent
   pixelContent: RasterPixelContent
-  pixelTransform: RasterTransform
+  transform: RasterTransform
   name: String
+  locked: Boolean
   visible: Boolean
   opacity: Float
   blendMode: String

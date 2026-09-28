@@ -10,7 +10,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     let mut rect = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect {
         shape.base.attributes.fill = Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 0.5] });
-        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "round".into(), join: "round".into(), dash: None });
+        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: None });
     }
     let mut gradient_rect = create_drawing_shape_layer_rect("Gradient");
     if let DrawingLayerNode::Shape(shape) = &mut gradient_rect {

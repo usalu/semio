@@ -1,5 +1,5 @@
 {
-  "ownedHasScene": true,
-  "wireIdentityMatches": true,
-  "wireHasScene": false
+  "ownerIsolation": true,
+  "wireKeepsDefinition": true,
+  "childReferencesMatch": true
 }

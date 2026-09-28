@@ -1,0 +1,36 @@
+{
+  "width": 96,
+  "height": 64,
+  "shape": "ellipse",
+  "background": "#102030",
+  "camera": { "position": [0, 0, 5], "target": [0, 0, 0], "up": [0, 1, 0], "fov": 50 },
+  "geometry": {
+    "positions": [[-1, -1, 0], [1, -1, 0], [0, 1, 0]],
+    "normals": [[0, 0, 1], [0, 0, 1], [0, 0, 1]],
+    "indices": [0, 1, 2]
+  },
+  "lighting": {
+    "ambientColor": "#203040",
+    "ambientIntensity": 0.01,
+    "sunColor": "#806020",
+    "sunIntensity": 0.75,
+    "sunDirection": [0, 0, 1]
+  },
+  "material": {
+    "color": "#587ca8",
+    "emissive": "#080410",
+    "metalness": 0.93,
+    "roughness": 0.04,
+    "stroke": "#000000"
+  },
+  "expected": {
+    "fill": "rgb(38,44,48)",
+    "stroke": "rgb(0,0,0)",
+    "pathCount": 2,
+    "probes": [
+      { "position": [48, 32], "rgba": [38, 44, 48, 255] },
+      { "position": [48, 5], "rgba": [16, 32, 48, 255] },
+      { "position": [0, 0], "rgba": [0, 0, 0, 0] }
+    ]
+  }
+}

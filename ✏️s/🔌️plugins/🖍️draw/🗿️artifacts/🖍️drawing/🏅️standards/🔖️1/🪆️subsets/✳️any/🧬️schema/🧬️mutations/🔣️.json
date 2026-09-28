@@ -4,80 +4,382 @@
   "title": "DrawingMutation",
   "oneOf": [
     {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "visible"],
-      "properties": {"mutation": {"const": "setLayerVisible"}, "layerId": {"type": "string"}, "visible": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-visible/schema.json#/properties/visible"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "locked"],
-      "properties": {"mutation": {"const": "setLayerLocked"}, "layerId": {"type": "string"}, "locked": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-locked/schema.json#/properties/locked"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "opacity"],
-      "properties": {"mutation": {"const": "setLayerOpacity"}, "layerId": {"type": "string"}, "opacity": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-opacity/schema.json#/properties/opacity"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "blendMode"],
-      "properties": {"mutation": {"const": "setLayerBlendMode"}, "layerId": {"type": "string"}, "blendMode": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-blend-mode/schema.json#/properties/blendMode"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newName"],
-      "properties": {"mutation": {"const": "renameLayer"}, "layerId": {"type": "string"}, "newName": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/rename-layer/schema.json#/properties/newName"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "transform"],
-      "properties": {"mutation": {"const": "updateLayerTransform"}, "layerId": {"type": "string"}, "transform": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-transform/schema.json#/properties/transform"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId"],
-      "properties": {"mutation": {"const": "replaceLayerFill"}, "layerId": {"type": "string"}, "fill": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-fill/schema.json#/properties/fill"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId"],
-      "properties": {"mutation": {"const": "replaceLayerStroke"}, "layerId": {"type": "string"}, "stroke": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-stroke/schema.json#/properties/stroke"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "booleanOperation"],
-      "properties": {"mutation": {"const": "setLayerBooleanOperation"}, "layerId": {"type": "string"}, "booleanOperation": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/set-layer-boolean-operation/schema.json#/properties/booleanOperation"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "params"],
-      "properties": {"mutation": {"const": "updateLayerTraceParams"}, "layerId": {"type": "string"}, "params": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-trace-params/schema.json#/properties/params"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layer"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "visible"
+      ],
       "properties": {
-        "mutation": {"const": "createLayer"},
-        "parentId": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/parentId"},
-        "index": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/index"},
-        "layer": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/layer"}
+        "mutation": {
+          "const": "setLayerVisible"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "visible": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-visible/schema.json#/properties/visible"
+        }
       }
     },
     {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId"],
-      "properties": {"mutation": {"const": "duplicateLayer"}, "layerId": {"type": "string"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId"],
-      "properties": {"mutation": {"const": "deleteLayer"}, "layerId": {"type": "string"}}
-    },
-    {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "index"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "locked"
+      ],
       "properties": {
-        "mutation": {"const": "reorderLayer"}, "layerId": {"type": "string"},
-        "parentId": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json#/properties/parentId"},
-        "index": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json#/properties/index"}
+        "mutation": {
+          "const": "setLayerLocked"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "locked": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-locked/schema.json#/properties/locked"
+        }
       }
     },
     {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "segments"],
-      "properties": {"mutation": {"const": "updatePathGeometry"}, "layerId": {"type": "string", "minLength": 1}, "segments": {"$ref": "https://semio.tech/s/draw/update-path-geometry#/properties/segments"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "opacity"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setLayerOpacity"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "opacity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-opacity/schema.json#/properties/opacity"
+        }
+      }
     },
     {
-      "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "content", "size"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "blendMode"
+      ],
       "properties": {
-        "mutation": {"const": "updateText"}, "layerId": {"type": "string", "minLength": 1},
-        "content": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/update-text/schema.json#/properties/content"},
-        "size": {"$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/update-text/schema.json#/properties/size"}
+        "mutation": {
+          "const": "setLayerBlendMode"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "newName"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "renameLayer"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "newName": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/rename-layer/schema.json#/properties/newName"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "transform"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "updateLayerTransform"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-transform/schema.json#/properties/transform"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceLayerFill"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "fill": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-fill/schema.json#/properties/fill"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceLayerStroke"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "stroke": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-stroke/schema.json#/properties/stroke"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "booleanOperation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setLayerBooleanOperation"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "booleanOperation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/set-layer-boolean-operation/schema.json#/properties/booleanOperation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "updateLayerTraceParams"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-trace-params/schema.json#/properties/params"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layer"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createLayer"
+        },
+        "parentId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/parentId"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/index"
+        },
+        "layer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json#/properties/layer"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "duplicateLayer"
+        },
+        "layerId": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteLayer"
+        },
+        "layerId": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "index"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderLayer"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "parentId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json#/properties/parentId"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json#/properties/index"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "segments"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "updatePathGeometry"
+        },
+        "layerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segments": {
+          "$ref": "https://semio.tech/s/draw/update-path-geometry#/properties/segments"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "content",
+        "size"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "updateText"
+        },
+        "layerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/update-text/schema.json#/properties/content"
+        },
+        "size": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/update-text/schema.json#/properties/size"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "fillRule"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setLayerFillRule"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "fillRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-fill-rule/schema.json#/properties/fillRule"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "layerId",
+        "isolation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setGroupIsolation"
+        },
+        "layerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "isolation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-group-isolation/schema.json#/properties/isolation"
+        }
       }
     }
   ]

@@ -43,7 +43,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
         layer: Box::new(RasterLayerNode::Pixel {
             id: "op-binary-test".into(),
             name: "Op Binary Test".into(),
-            visible: true,
+            visible: true, locked: false,
             opacity: 1.0,
             blend_mode: "normal".into(),
             transform: RasterTransform::default(),
@@ -76,7 +76,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
                 layer: Box::new(RasterLayerNode::Adjustment {
                     id: "adjust-text".into(),
                     name: "Levels".into(),
-                    visible: true,
+                    visible: true, locked: false,
                     opacity: 1.0,
                     blend_mode: "normal".into(),
                     transform: RasterTransform::default(),
@@ -256,9 +256,9 @@ fn raster_store_initializer_zero_budget_advances_no_owner_or_phase() {
 }
 
 fn deeply_nested_raster_snapshot(depth: usize) -> RasterSnapshot {
-    let mut layer = RasterLayerNode::Pixel { id: "leaf".into(), name: "Leaf".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None };
+    let mut layer = RasterLayerNode::Pixel { id: "leaf".into(), name: "Leaf".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None };
     for index in 0..depth {
-        layer = RasterLayerNode::Group { id: format!("group-{index}"), name: format!("Group {index}"), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
+        layer = RasterLayerNode::Group { id: format!("group-{index}"), name: format!("Group {index}"), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
     }
     let mut snapshot = empty_raster_document();
     snapshot.layers.clear();
@@ -322,7 +322,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
     source.layers.push(RasterLayerNode::Pixel {
         id: "mounted-layer".into(),
         name: "Mounted".into(),
-        visible: true,
+        visible: true, locked: false,
         opacity: 1.0,
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
@@ -585,7 +585,7 @@ fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
         let id=crate::standards::v1::subsets::any::schema::layer_node_id(&base.layers[0]).to_owned();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut base.layers[0] {*target=Some(mask.clone());}
         let children=std::mem::take(&mut base.layers);
-        base.layers.push(RasterLayerNode::Group {id:"masked-group".into(),name:"Masked Group".into(),visible:true,opacity:1.0,blend_mode:"normal".into(),transform:RasterTransform::default(),mask:Some(mask.clone()),children});
+        base.layers.push(RasterLayerNode::Group {id:"masked-group".into(),name:"Masked Group".into(),visible:true, locked: false,opacity:1.0,blend_mode:"normal".into(),transform:RasterTransform::default(),mask:Some(mask.clone()),children});
         let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:id,new_name:"Renamed".into()});
         let candidate=drive_raster_candidate(&base,&operation,700+index as u64);
         let RasterLayerNode::Group {mask:group_mask,children,..}=&candidate.layers[0] else {panic!("group missing")};
@@ -787,7 +787,7 @@ fn raster_box_and_arc_control_backings_require_and_report_fixed_credit() {
     assert!(size_of::<RasterSnapshotCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
     assert!(size_of::<RasterLayerCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
     assert!(size_of::<RasterDslValueCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-    let layer = Box::new(RasterLayerNode::Pixel { id: String::new(), name: String::new(), visible: true, opacity: 1.0, blend_mode: String::new(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
+    let layer = Box::new(RasterLayerNode::Pixel { id: String::new(), name: String::new(), visible: true, locked: false, opacity: 1.0, blend_mode: String::new(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
     let mut boxed = RasterOwnedRetirement::new(RasterRetirementOwner::BoxedLayer(Some(layer)));
     assert_eq!(boxed.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
     assert!(matches!(
@@ -979,7 +979,7 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     let mut parsed = <RasterOwnedMap<dsl::DslValue> as dsl::DslField>::from_value(&output).expect("a populated Raster owned map parses its own projection");
     assert_eq!(parsed.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     parsed.retire();
-    let layer = RasterLayerNode::Adjustment { id: "dsl-output".into(), name: "DSL Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
+    let layer = RasterLayerNode::Adjustment { id: "dsl-output".into(), name: "DSL Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
     let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
     assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("cancelled populated output keeps every exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
@@ -1016,7 +1016,7 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
     close_raster_retirement(&mut rejected_retirement);
     drop(rejected_retirement);
 
-    let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
+    let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
     // 🗂️ The public `ToValue` projection of a layer READS its populated parameter map whole (it used
     // to refuse it, which trapped every whole-document route) and must not consume, move or
     // reallocate a single owner while doing so — the pointer identity below is what proves it.
@@ -1115,7 +1115,7 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     close_raster_retirement(&mut rejected_asset_retirement);
     drop(rejected_asset_retirement);
 
-    let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
+    let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
     // 🗜️ The whole-document pack codec READS the populated forest and asset pool (it used to refuse
     // them outright) and must not consume, move or reallocate a single owner while doing so — the
@@ -1148,9 +1148,9 @@ fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
     }
     let mut params = RasterOwnedMap::new();
     params.insert("deep".into(), value).expect("one fixed parameter page");
-    let mut layer = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
+    let mut layer = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
     for index in 1..RASTER_MAXIMUM_NESTED_DEPTH {
-        layer = RasterLayerNode::Group { id: format!("group-{index}"), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
+        layer = RasterLayerNode::Group { id: format!("group-{index}"), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
     }
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
     let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
@@ -1172,10 +1172,10 @@ fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
 fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
     let mut params = RasterOwnedMap::new();
     params.insert("nested".repeat(16), dsl::DslValue::Object(vec![("array".repeat(16), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(64)), dsl::DslValue::String("tail".into())]))])).expect("bounded fixture operation succeeds");
-    let adjustment = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
+    let adjustment = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
     let mut snapshot = empty_raster_document();
     snapshot.title = Some("Nested raster".into());
-    snapshot.layers.push(RasterLayerNode::Group { id: "group".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![adjustment] });
+    snapshot.layers.push(RasterLayerNode::Group { id: "group".into(), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![adjustment] });
     snapshot
         .assets
         .insert(
@@ -1206,12 +1206,13 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
     assert!(raster_clone_owned_string(&"x".repeat(RASTER_OWNED_FIELD_BYTES)).is_ok());
     assert!(raster_clone_owned_string(&"x".repeat(RASTER_OWNED_FIELD_BYTES + 1)).is_err());
     let pixel =
-        || Box::new(RasterLayerNode::Pixel { id: "pixel".into(), name: "Pixel".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
+        || Box::new(RasterLayerNode::Pixel { id: "pixel".into(), name: "Pixel".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
     let mutations = vec![
         RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: Some("root".into()), index: 0, layer: pixel() }),
         RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "pixel".into() }),
         RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "pixel".into(), parent_id: Some("root".into()), index: 1 }),
         RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "pixel".into(), new_name: "Renamed".into() }),
+        RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:"pixel".into(),expected:false,locked:true}),
         RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "pixel".into(), new_visible: false }),
         RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "pixel".into(), new_opacity: 0.5 }),
         RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "pixel".into(), new_blend_mode: "multiply".into() }),
@@ -1227,6 +1228,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
             mask: Some(crate::RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(2), height: Some(3), image_key: Some("next".into()), transform: RasterTransform::default() }),
         }),
         RasterMutation::ChangeLayerAdjustmentParameter(crate::mutations::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.25))}),
+        RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
     ];
     assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {
@@ -1287,7 +1289,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 layer: Box::new(RasterLayerNode::Pixel {
                     id: "command-envelope-pixel".into(),
                     name: "Command Envelope Pixel".into(),
-                    visible: true,
+                    visible: true, locked: false,
                     opacity: 1.0,
                     blend_mode: "normal".into(),
                     transform: RasterTransform::default(),
@@ -1347,4 +1349,34 @@ fn retained_adjustment_parameters_match_cold_apply_and_undo() {
         diff.retire_cold();for document in [before,cold,candidate,restored] {retirement::retire_raster_snapshot(document);}
         operation.retire_cold();inverse.retire_cold();
     }
+}
+
+#[test]
+fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
+    use protocol::Mutation;
+    let mut base=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let asset=crate::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![1,2,3,255]}).unwrap()};
+    for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {let key=format!("capacity-{index}");base.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
+    let before=base.clone();
+    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset});
+    let mut authority=RasterMutationCandidateAuthority::new();let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();let mut fault=None;
+    for _ in 0..200_000 {
+        let mut context=semio_framework_job::StepContext::new(semio_framework_job::OperationId(980),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(64,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
+        match authority.step(&base,&operation,&mut context) {Err(error)=>{fault=Some(error);break;},Ok(true)=>panic!("capacity overflow published"),Ok(false)=>{}}
+    }
+    assert_eq!(fault,Some("raster-map.item-capacity"));assert_eq!(base,before);assert!(authority.take().is_none());
+    for _ in 0..200_000 {if authority.terminal_is_empty(){break;}authority.close_step(1,usize::MAX).unwrap();}
+    assert!(authority.terminal_is_empty());drop(authority);operation.retire_cold();retirement::retire_raster_snapshot(base);retirement::retire_raster_snapshot(before);
+}
+
+#[test]
+fn retained_layer_clone_preserves_protection_during_history_replay() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut base=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();base.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"Accepted history".into()});
+    let candidate=drive_raster_candidate(&base,&operation,981);
+    for row in fixture["cases"].as_array().unwrap() {let id=row["id"].as_str().unwrap();assert_eq!(crate::standards::v1::subsets::any::schema::layer_protection(&candidate.layers,id),crate::standards::v1::subsets::any::schema::layer_protection(&base.layers,id));}
+    let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"locked-pixel".into()});
+    let restored=drive_raster_candidate(&candidate,&operation,982);assert_eq!(restored,base);
+    retirement::retire_raster_snapshot(restored);retirement::retire_raster_snapshot(candidate);retirement::retire_raster_snapshot(base);
 }

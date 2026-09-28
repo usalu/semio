@@ -1,0 +1,17 @@
+{
+  "schema": "semio.ui.tree-disclosure/v1",
+  "branches": [
+    { "id": "node-disclosure-en", "layout": "default", "label": "Anchor 2" },
+    { "id": "node-disclosure-de", "layout": "default", "label": "Anker 2" },
+    { "id": "property-disclosure-en", "layout": "property", "label": "First Handle" },
+    { "id": "property-disclosure-de", "layout": "property", "label": "Erster Griff" }
+  ],
+  "leaves": [
+    { "id": "projection-orthographic-en", "layout": "default", "label": "Orthographic" },
+    { "id": "projection-orthographic-de", "layout": "default", "label": "Orthografisch" }
+  ],
+  "expected": {
+    "branch": { "role": "treeitem", "collapsed": false, "expanded": true, "disclosureButton": true },
+    "leaf": { "role": "treeitem", "expanded": null, "disclosureButton": false }
+  }
+}

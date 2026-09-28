@@ -64,7 +64,10 @@ struct QDecl {
 struct QDoc {
     declaration: Option<QDecl>,
     doctype: Option<String>,
+    doctype_prolog_position: usize,
+    prolog: Vec<QNode>,
     root: Option<QNode>,
+    epilog: Vec<QNode>,
 }
 //#endregion 🔖️Types
 
@@ -119,11 +122,17 @@ fn parse_svg(bytes: &[u8]) -> QDoc {
         }
     }
 
-    fn attach(stack: &mut Vec<(String, Vec<(String, String)>, Vec<QNode>)>, doc: &mut QDoc, node: QNode) {
+    fn attach(stack: &mut Vec<(String, Vec<(String, String)>, Vec<QNode>)>, doc: &mut QDoc, node: QNode, is_misc: bool) {
         if let Some((_, _, children)) = stack.last_mut() {
             children.push(node);
         } else if doc.root.is_none() {
-            doc.root = Some(node);
+            if is_misc {
+                doc.prolog.push(node);
+            } else {
+                doc.root = Some(node);
+            }
+        } else if is_misc {
+            doc.epilog.push(node);
         }
     }
 
@@ -147,14 +156,19 @@ fn parse_svg(bytes: &[u8]) -> QDoc {
             }
             // 📜️ `BytesText::as_ref()` (`AsRef<str>`) — quick-xml 0.42's DocType event carries the
             // raw content between `<!DOCTYPE` and `>` verbatim, never entity-decoded.
-            Event::DocType(raw) => doc.doctype = Some(raw.as_ref().to_string()),
+            Event::DocType(raw) => {
+                assert!(doc.root.is_none(), "doctype cannot appear after the root element");
+                assert!(doc.doctype.is_none(), "duplicate XML doctype");
+                doc.doctype_prolog_position = doc.prolog.len();
+                doc.doctype = Some(raw.as_ref().to_string());
+            }
             Event::PI(pi) => {
                 flush(&mut text_buf, &mut stack);
-                attach(&mut stack, &mut doc, QNode::Pi { target: pi.target().to_string(), data: pi.content().to_string() });
+                attach(&mut stack, &mut doc, QNode::Pi { target: pi.target().to_string(), data: pi.content().to_string() }, true);
             }
             Event::Comment(text) => {
                 flush(&mut text_buf, &mut stack);
-                attach(&mut stack, &mut doc, QNode::Comment(text.as_ref().to_string()));
+                attach(&mut stack, &mut doc, QNode::Comment(text.as_ref().to_string()), true);
             }
             Event::CData(text) => {
                 flush(&mut text_buf, &mut stack);
@@ -181,12 +195,12 @@ fn parse_svg(bytes: &[u8]) -> QDoc {
             Event::Empty(start) => {
                 flush(&mut text_buf, &mut stack);
                 let attrs = read_attrs(&start);
-                attach(&mut stack, &mut doc, QNode::Element { name: start.name().as_ref().to_string(), attrs, children: Vec::new() });
+                attach(&mut stack, &mut doc, QNode::Element { name: start.name().as_ref().to_string(), attrs, children: Vec::new() }, false);
             }
             Event::End(_) => {
                 flush(&mut text_buf, &mut stack);
                 let (name, attrs, children) = stack.pop().expect("svg source: unmatched closing tag");
-                attach(&mut stack, &mut doc, QNode::Element { name, attrs, children });
+                attach(&mut stack, &mut doc, QNode::Element { name, attrs, children }, false);
             }
             Event::Eof => {
                 flush(&mut text_buf, &mut stack);
@@ -239,11 +253,20 @@ fn write_svg(doc: &QDoc) -> Vec<u8> {
         let standalone = decl.standalone.map(|value| if value { "yes" } else { "no" });
         writer.write_event(Event::Decl(BytesDecl::new(&decl.version, decl.encoding.as_deref(), standalone))).expect("write xml declaration");
     }
-    if let Some(raw) = &doc.doctype {
+    for (index, node) in doc.prolog.iter().enumerate() {
+        if doc.doctype.is_some() && doc.doctype_prolog_position == index {
+            writer.write_event(Event::DocType(BytesText::from_escaped(doc.doctype.as_ref().unwrap().as_str()))).expect("write doctype");
+        }
+        write_node(&mut writer, node);
+    }
+    if let Some(raw) = doc.doctype.as_ref().filter(|_| doc.doctype_prolog_position == doc.prolog.len()) {
         writer.write_event(Event::DocType(BytesText::from_escaped(raw.as_str()))).expect("write doctype");
     }
     if let Some(root) = &doc.root {
         write_node(&mut writer, root);
+    }
+    for node in &doc.epilog {
+        write_node(&mut writer, node);
     }
     writer.into_inner()
 }
@@ -293,11 +316,13 @@ fn doc_json(doc: &QDoc) -> String {
         None => "{\"present\":false}".to_string(),
     };
     let doctype = match &doc.doctype {
-        Some(raw) => format!("{{\"present\":true,\"raw\":{}}}", json_str(raw)),
+        Some(raw) => format!("{{\"present\":true,\"raw\":{},\"prologPosition\":{}}}", json_str(raw), doc.doctype_prolog_position),
         None => "{\"present\":false}".to_string(),
     };
     let root = doc.root.as_ref().map(node_json).unwrap_or_else(|| "null".to_string());
-    format!("{{\"declaration\":{declaration},\"doctype\":{doctype},\"root\":{root}}}")
+    let prolog = doc.prolog.iter().map(node_json).collect::<Vec<_>>().join(",");
+    let epilog = doc.epilog.iter().map(node_json).collect::<Vec<_>>().join(",");
+    format!("{{\"declaration\":{declaration},\"doctype\":{doctype},\"prolog\":[{prolog}],\"root\":{root},\"epilog\":[{epilog}]}}")
 }
 //#endregion 🔖️Json
 
@@ -326,7 +351,10 @@ fn base_doc() -> QDoc {
         // included) around this content, and the reader hands the content back the same way — see
         // this crate's own round-trip test.
         doctype: Some("svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"".into()),
+        doctype_prolog_position: 0,
+        prolog: Vec::new(),
         root: Some(root),
+        epilog: Vec::new(),
     }
 }
 //#endregion 🔖️BaseDocument

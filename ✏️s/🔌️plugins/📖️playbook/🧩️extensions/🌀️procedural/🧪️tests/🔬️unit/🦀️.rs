@@ -1,6 +1,29 @@
 use super::*;
 use semio_framework_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
 
+#[semio_framework_async_macros::async_test]
+async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutating_the_document() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️embedded.json")).expect("independent embedded input fixture");
+    let mut app = new_app().await;
+    let before = to_json_string(&app.snapshot().expect("initial payload"));
+    for input in fixture["cases"].as_array().expect("embedded inputs") {
+        let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": "params", "paramsJson": input.to_string() }).to_string()), ..ViewModel::default() };
+        let tree = app.render(BODY_PARAMS, None, &view).await.expect("embedded params");
+        let projection = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire params tree");
+        let tree: serde_json::Value = serde_json::from_str(&projection).expect("independent projection oracle");
+        let children = tree["children"].as_array().expect("parameters");
+        let height = &children[0]["children"][0];
+        assert_eq!(height["component"]["value"].as_f64(), input["params"]["height"].as_f64());
+        assert_eq!(height["bindings"][0]["action"]["scope"], input["controllerId"]);
+        assert_eq!(height["bindings"][0]["args"]["key"], input["questionId"]);
+        assert_eq!(height["bindings"][0]["args"]["windowId"], input["windowId"]);
+        assert_eq!(height["bindings"][0]["args"]["windowKindId"], input["windowKindId"]);
+        assert_eq!(children.len(), 3, "embedded parameter controls expose only parent-owned actions");
+        assert_eq!(to_json_string(&app.snapshot().expect("unmodified payload")), before);
+    }
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
 #[test]
 fn procedural_payload_vectors_match_the_json_oracle() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
@@ -36,6 +59,10 @@ async fn procedural_actor_descriptor_matches_the_json_oracle() {
     assert_eq!(topic["topic"], fixture["topic"]);
     assert_eq!(topic["payload"]["appId"], fixture["appId"]);
     assert_eq!(topic["payload"]["blockKind"], fixture["blockKind"]);
+    let forms_topic = descriptor["contributions"]["topicContributions"].as_array().expect("topics").iter().find(|topic| topic["topic"] == fixture["formsTopic"]).expect("Forms question provider");
+    assert_eq!(forms_topic["payload"]["questionKind"], fixture["blockKind"]);
+    assert_eq!(forms_topic["payload"]["appId"], fixture["appId"]);
+    assert_eq!(forms_topic["payload"]["label"], fixture["formsLabels"]);
     let bodies: Vec<&serde_json::Value> = descriptor["manifest"]["apps"][0]["windowKinds"].as_array().expect("window kinds").iter().map(|window| &window["bodyKey"]).collect();
     assert_eq!(bodies, fixture["windowBodies"].as_array().expect("expected window bodies").iter().collect::<Vec<_>>());
 }
@@ -55,7 +82,7 @@ fn procedural_parameter_controls_match_the_json_oracle() {
             interactive: row["interactive"].as_bool().expect("interactive"),
             ..default_payload()
         };
-        let node = render_question_control(&question, &value, &payload).expect("semantic control");
+        let node = render_question_control(&question, &value, &payload, None).expect("semantic control");
         let control = node.children.get(0).expect("field control");
         let actual = serde_json::to_value(control).expect("independent semantic JSON oracle");
         assert_eq!(actual["component"]["type"], row["component"]);
@@ -112,7 +139,7 @@ async fn module_app_declares_window_kinds() {
 async fn module_manifest_contributes_building_component() {
     let bundle = module_extension_bundle();
     let manifest = bundle.manifest;
-    assert_eq!(manifest.topic_contributions.len(), 1);
+    assert_eq!(manifest.topic_contributions.len(), 2);
     let topic = &manifest.topic_contributions[0];
     assert_eq!(topic.topic, "playbook.blockKind");
     assert!(topic.payload.as_object().is_some());

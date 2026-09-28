@@ -1,0 +1,16 @@
+{
+  "sharedStrings": ["00123", "unrelated"],
+  "cases": [
+    {"id": "numeric-literal", "value": {"kind": "inlineString", "value": "00123"}, "draft": "00123", "reference": "00123", "referenceKind": "string"},
+    {"id": "boolean-literal", "value": {"kind": "inlineString", "value": "true"}, "draft": "true", "reference": "true", "referenceKind": "string"},
+    {"id": "formula-literal", "value": {"kind": "inlineString", "value": "=2+2"}, "draft": "=2+2", "reference": "=2+2", "referenceKind": "string"},
+    {"id": "apostrophe-literal", "value": {"kind": "inlineString", "value": "'literal"}, "draft": "'literal", "reference": "'literal", "referenceKind": "string"},
+    {"id": "empty-literal", "value": {"kind": "inlineString", "value": ""}, "draft": "", "reference": "", "referenceKind": "string"},
+    {"id": "shared-string", "value": {"kind": "sharedString", "value": 0}, "draft": "00123", "reference": "00123", "referenceKind": "string"},
+    {"id": "cached-formula", "value": {"kind": "formula", "expr": "SUM(3,4)", "cached": {"kind": "number", "value": 7}}, "draft": "=SUM(3,4)", "reference": "7", "referenceKind": "number", "formula": "SUM(3,4)"},
+    {"id": "boolean", "value": {"kind": "boolean", "value": false}, "draft": "false", "reference": "false", "referenceKind": "boolean"},
+    {"id": "number", "value": {"kind": "number", "value": 1.25}, "draft": "1.25", "reference": "1.25", "referenceKind": "number"},
+    {"id": "empty-cell", "value": {"kind": "empty"}, "draft": "", "reference": "", "referenceKind": "empty"}
+  ],
+  "sharedStringConflict": {"index": 0, "replacement": "concurrent edit", "draft": "my edit"}
+}

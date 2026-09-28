@@ -1,162 +1,12 @@
-//! ❓️ ❓️ Forms play app commands command — `patch-questions`.
+//! 🩹️ Atomic validated field edits produce undoable document events.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::parse_value_json;
-use crate::schema::{update_block_operation, value_to_dsl};
-use crate::{op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
-use dsl::os_pack::json::{object, Value};
+use crate::editor::forms::questions::patch_question;
+use crate::schema::{locate_question, value_to_dsl};
+use crate::{op::FormMutation, FormsSnapshot};
+use dsl::os_pack::json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️Shell
-/// 🌱️ A blank question of the given `kind`/`id` — every field defaulted to `None`.
-pub fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
-    FormQuestion {
-        id,
-        label,
-        kind,
-        description: None,
-        required: None,
-        placeholder: None,
-        default: None,
-        min: None,
-        max: None,
-        step: None,
-        unit: None,
-        text: None,
-        options: None,
-        fields: None,
-        schema: None,
-        src: None,
-        accept: None,
-        fixture_slug: None,
-        params: None,
-        condition: None,
-    }
-}
-
-/// 🌱️ A freshly created question, seeded with sensible per-kind defaults — shared by `addQuestion` and
-/// `dropQuestionKind`.
-pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
-    match kind {
-        "text" => {
-            let mut question = question_shell(id, "Text".into(), "text".into());
-            question.placeholder = Some("Enter text".into());
-            question
-        }
-        "longText" => {
-            let mut question = question_shell(id, "Long Text".into(), "longText".into());
-            question.placeholder = Some("Enter long text".into());
-            question
-        }
-        "number" => {
-            let mut question = question_shell(id, "Number".into(), "number".into());
-            question.default = Some(value_to_dsl(&Value::from(0)));
-            question.min = Some(0.0);
-            question.max = Some(100.0);
-            question.step = Some(1.0);
-            question
-        }
-        "slider" => {
-            let mut question = question_shell(id, "Slider".into(), "slider".into());
-            question.default = Some(value_to_dsl(&Value::from(50)));
-            question.min = Some(0.0);
-            question.max = Some(100.0);
-            question.step = Some(1.0);
-            question
-        }
-        "boolean" => {
-            let mut question = question_shell(id, "Boolean".into(), "boolean".into());
-            question.default = Some(value_to_dsl(&Value::from(false)));
-            question
-        }
-        "single" | "multi" => {
-            let mut question = question_shell(id, if kind == "single" { "Single Select" } else { "Multi Select" }.into(), kind.into());
-            question.default = if kind == "multi" { Some(value_to_dsl(&Value::Array(vec![]))) } else { None };
-            question.options = Some(vec![crate::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
-            question
-        }
-        "note" => {
-            let mut question = question_shell(id, "Note".into(), "note".into());
-            question.text = Some("Informational note".into());
-            question
-        }
-        "date" => {
-            let mut question = question_shell(id, "Date".into(), "date".into());
-            question.default = Some(value_to_dsl(&Value::from("2026-01-01")));
-            question
-        }
-        "color" => {
-            let mut question = question_shell(id, "Color".into(), "color".into());
-            question.default = Some(value_to_dsl(&Value::from("#336699")));
-            question
-        }
-        "image" => question_shell(id, "Image".into(), "image".into()),
-        "file" => {
-            let mut question = question_shell(id, "File".into(), "file".into());
-            question.accept = Some(".pdf".into());
-            question
-        }
-        "vector" => {
-            let mut question = question_shell(id, "Vector".into(), "vector".into());
-            question.schema = Some("vec3".into());
-            question.step = Some(0.1);
-            question.fields = Some(vec![
-                FormVectorField { key: "x".into(), label: Some("X".into()), value: Some(0.0) },
-                FormVectorField { key: "y".into(), label: Some("Y".into()), value: Some(0.0) },
-                FormVectorField { key: "z".into(), label: Some("Z".into()), value: Some(0.0) },
-            ]);
-            question
-        }
-        "buildingComponent" => {
-            let mut question = question_shell(id, "Building Component".into(), "buildingComponent".into());
-            question.fixture_slug = Some("hexagonal-mushroom-column".into());
-            question.params = Some(value_to_dsl(&object([("height".to_string(), Value::from(6.0)), ("radius".to_string(), Value::from(0.5)), ("sides".to_string(), Value::from(6.0))])));
-            question
-        }
-        _ => question_shell(id, kind.into(), kind.into()),
-    }
-}
-
-/// ✏️ Patches one scalar field of a question by name — every field `PatchQuestions` can address except
-/// `"param"` (routed to [`patch_building_component_param`] instead, since it targets a nested params map).
-pub fn patch_question_field(spec: &FormsSnapshot, question_id: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
-    update_block_operation(spec, question_id, |question| match field {
-        "label" => question.label = raw_value.as_str().unwrap_or("").to_string(),
-        "kind" => question.kind = raw_value.as_str().unwrap_or("text").to_string(),
-        "description" => question.description = raw_value.as_str().map(str::to_string),
-        "placeholder" => question.placeholder = raw_value.as_str().map(str::to_string),
-        "required" => question.required = Some(raw_value.as_bool().unwrap_or(false)),
-        "text" => question.text = raw_value.as_str().map(str::to_string),
-        "default" => question.default = Some(value_to_dsl(raw_value)),
-        "min" => question.min = raw_value.as_f64(),
-        "max" => question.max = raw_value.as_f64(),
-        "step" => question.step = raw_value.as_f64(),
-        "unit" => question.unit = raw_value.as_str().map(str::to_string),
-        "schema" => question.schema = raw_value.as_str().map(str::to_string),
-        "src" => question.src = raw_value.as_str().map(str::to_string),
-        "accept" => question.accept = raw_value.as_str().map(str::to_string),
-        "fixtureSlug" => question.fixture_slug = raw_value.as_str().map(str::to_string),
-        _ => {}
-    })
-}
-
-/// ✏️ Patches one key of a `buildingComponent` question's nested params object.
-pub fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormMutation> {
-    update_block_operation(spec, question_id, |question| {
-        let mut params = question.params.take().unwrap_or(dsl::DslValue::Object(vec![]));
-        if let dsl::DslValue::Object(entries) = &mut params {
-            let value = value_to_dsl(raw_value);
-            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == param_key) {
-                *slot = value;
-            } else {
-                entries.push((param_key.to_string(), value));
-            }
-        }
-        question.params = Some(params);
-    })
-}
-//#endregion 🔖️Shell
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-questions")]
@@ -168,16 +18,32 @@ pub struct PatchQuestions {
 }
 
 pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    let spec = doc.snapshot;
-    let raw_value = parse_value_json(&payload.value_json);
-    let operations: Vec<FormMutation> = if payload.field == "param" {
-        let param_key = payload.param_key.as_deref().unwrap_or("");
-        payload.question_ids.iter().filter_map(|question_id| patch_building_component_param(spec, question_id, param_key, &raw_value)).collect()
-    } else {
-        payload.question_ids.iter().filter_map(|question_id| patch_question_field(spec, question_id, &payload.field, &raw_value)).collect()
-    };
-    if operations.is_empty() {
-        return Ok(Emit::default());
+    let raw_value: Value = dsl::os_pack::json::parse(&payload.value_json).map_err(|_| Fault::from("forms.patch.invalid-json"))?;
+    let mut operations = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for id in &payload.question_ids {
+        if !seen.insert(id) { continue; }
+        let Some(location) = locate_question(doc.snapshot, id) else { continue; };
+        let next = if let Some(field) = payload.field.strip_prefix("condition.") {
+            let mut next = location.question.clone();
+            next.condition = crate::editor::forms::questions::visibility::patch_condition(next.condition.as_ref(), payload.param_key.as_deref().unwrap_or(""), field, &raw_value).map_err(|error| Fault::from(format!("forms.patch.{error}")))?;
+            next
+        } else if payload.field == "param" {
+            let key = payload.param_key.as_deref().filter(|key| !key.trim().is_empty()).ok_or_else(|| Fault::from("forms.patch.parameter-required"))?;
+            let mut next = location.question.clone();
+            let mut params = next.params.take().unwrap_or(dsl::DslValue::Object(Vec::new()));
+            let dsl::DslValue::Object(entries) = &mut params else { return Err(Fault::from("forms.patch.invalid-parameters")); };
+            let value = value_to_dsl(&raw_value);
+            if let Some((_, slot)) = entries.iter_mut().find(|(name, _)| name == key) { *slot = value; }
+            else { entries.push((key.to_owned(), value)); }
+            next.params = Some(params);
+            next
+        } else {
+            patch_question(&location.question, &payload.field, &raw_value).map_err(|error| Fault::from(format!("forms.patch.{error}")))?
+        };
+        if next != location.question {
+            operations.push(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: next }));
+        }
     }
     Ok(Emit { artifact_mutations: operations, coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
 }

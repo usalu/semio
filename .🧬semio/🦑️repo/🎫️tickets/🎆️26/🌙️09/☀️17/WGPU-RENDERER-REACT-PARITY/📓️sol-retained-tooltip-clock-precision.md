@@ -41,3 +41,22 @@ The second retained tooltip law and corrected window-clock law will run through 
 ## Limits
 
 The full UI, native renderer, WASM, and paired-shell gates remain owned by the root agent. This packet does not claim those gates.
+
+## Accepted Document Replacement Follow-up
+
+The tenth UI gate reached the later lifecycle assertions after the clock repair and exposed two distinct issues:
+
+- The reveal law reconciled the presented interaction rebase and then attempted to paint immediately. Reconciliation correctly queued a fresh layout, so the frame stayed pending on `DIRTY_LAYOUT`. The law now drives that required layout before the production paint ladder.
+- The replacement law accepted a new document that reused the same window accessibility generation and document node id. The candidate router therefore rebased the old revealed target, and `acknowledge_presented_input` preserved the tooltip across the accepted document revision change. It now clears the retained tooltip exactly when the acknowledged `presented_revision` changes. Same-revision presentation and interaction candidates continue to preserve accepted tooltip text and geometry.
+
+The source checkpoint changes only the acknowledgement revision boundary and the focused law's scheduler sequence; it adds no retained slot or compatibility path. `git diff --check` is clean. The focused command
+
+`CARGO_BUILD_JOBS=2 NX_DAEMON=false NX_FORCE_REUSE_CACHED_GRAPH=true SEMIO_TEST_LEVEL=long TMPDIR='<ticket>/🗑️generated/sol-tooltip-lifecycle/tmp' bun nx run @semio-tech/ui-rs:test-wgpu-engine --excludeTaskDependencies -- tooltip`
+
+first ran all five matching laws: four passed, while the reveal law exposed that the newly required layout overwrote its manually placed candidate anchor. The law now reapplies the candidate anchor after layout, preserving its actual top-gap contract.
+
+The exact focused rerun
+
+`CARGO_BUILD_JOBS=2 NX_DAEMON=false NX_FORCE_REUSE_CACHED_GRAPH=true SEMIO_TEST_LEVEL=long TMPDIR='<ticket>/🗑️generated/sol-tooltip-lifecycle/tmp' bun nx run @semio-tech/ui-rs:test-wgpu-engine --excludeTaskDependencies -- accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_immediately`
+
+passed 1/1 with 714 skipped; nextest took 0.042 seconds and Nx took 2 minutes 32 seconds. The document-replacement law is running separately through the same target and is not yet claimed.

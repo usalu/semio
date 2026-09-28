@@ -6,7 +6,7 @@ start mutation
 
 artifact-mark = "raster.raster-op"
 mutation = artifact-mark op-stmt+
-op-stmt = create-layer | delete-layer | reorder-layers | rename-layer | change-layer-visible
+op-stmt = create-layer | delete-layer | reorder-layers | rename-layer | change-layer-visible | change-layer-locked
         | change-layer-opacity | change-layer-blend-mode | move-layer | resize-layer
         | change-layer-adjustment-kind | add-layer-asset | remove-layer-asset
 
@@ -24,3 +24,5 @@ add-layer-asset = "add-layer-asset" "id" "=" value block
 remove-layer-asset = "remove-layer-asset" "id" "=" value
 
 value = TEXT | INT | FLOAT | BOOL
+
+change-layer-locked = "change-layer-locked" "id" "=" value "expected" "=" BOOL "locked" "=" BOOL

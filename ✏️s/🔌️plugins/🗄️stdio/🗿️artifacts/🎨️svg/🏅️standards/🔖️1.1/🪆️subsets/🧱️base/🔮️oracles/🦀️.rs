@@ -56,8 +56,10 @@ mod oracles {
     struct QDoc {
         declaration: Option<QDecl>,
         doctype: Option<String>,
+        doctype_prolog_position: usize,
         prolog: Vec<QNode>,
         root: Option<QNode>,
+        epilog: Vec<QNode>,
     }
     //#endregion 🔖️Tree
 
@@ -307,6 +309,8 @@ mod oracles {
                 } else {
                     doc.root = Some(node);
                 }
+            } else if is_misc {
+                doc.epilog.push(node);
             }
         }
 
@@ -328,7 +332,12 @@ mod oracles {
                     let standalone = decl.standalone().transpose().map_err(|error| error.to_string())?.map(|c| c.as_ref() == "yes");
                     doc.declaration = Some(QDecl { version, encoding, standalone });
                 }
-                Event::DocType(raw) => doc.doctype = Some(raw.as_ref().to_string()),
+                Event::DocType(_) if doc.root.is_some() => return Err("doctype cannot appear after the root element".to_string()),
+                Event::DocType(_) if doc.doctype.is_some() => return Err("duplicate XML doctype".to_string()),
+                Event::DocType(raw) => {
+                    doc.doctype_prolog_position = doc.prolog.len();
+                    doc.doctype = Some(raw.as_ref().to_string());
+                }
                 Event::PI(pi) => {
                     flush(&mut text_buf, &mut stack);
                     attach(&mut stack, &mut doc, QNode::Pi { target: pi.target().to_string(), data: pi.content().to_string() }, true);
@@ -417,14 +426,23 @@ mod oracles {
             let standalone = decl.standalone.map(|value| if value { "yes" } else { "no" });
             writer.write_event(Event::Decl(BytesDecl::new(&decl.version, decl.encoding.as_deref(), standalone))).map_err(|error| error.to_string())?;
         }
-        for node in &doc.prolog {
+        if doc.doctype.is_some() && doc.doctype_prolog_position > doc.prolog.len() {
+            return Err("doctype prolog position exceeds prolog length".to_string());
+        }
+        for (index, node) in doc.prolog.iter().enumerate() {
+            if doc.doctype.is_some() && doc.doctype_prolog_position == index {
+                writer.write_event(Event::DocType(BytesText::from_escaped(doc.doctype.as_ref().unwrap().as_str()))).map_err(|error| error.to_string())?;
+            }
             write_node(&mut writer, node)?;
         }
-        if let Some(raw) = &doc.doctype {
+        if let Some(raw) = doc.doctype.as_ref().filter(|_| doc.doctype_prolog_position == doc.prolog.len()) {
             writer.write_event(Event::DocType(BytesText::from_escaped(raw.as_str()))).map_err(|error| error.to_string())?;
         }
         if let Some(root) = &doc.root {
             write_node(&mut writer, root)?;
+        }
+        for node in &doc.epilog {
+            write_node(&mut writer, node)?;
         }
         Ok(writer.into_inner())
     }
@@ -461,6 +479,7 @@ mod oracles {
             }
             "set-doctype" => {
                 doc.doctype = non_empty_str(params, "doctype");
+                doc.doctype_prolog_position = params.get("prologPosition").and_then(json_number).unwrap_or(0.0).max(0.0) as usize;
                 Ok(())
             }
             "insert-element" => {
@@ -566,7 +585,7 @@ mod oracles {
                 ),
                 None => spec("set-declaration", obj(vec![])),
             },
-            "set-doctype" => spec("set-doctype", obj(vec![("doctype", doc.doctype.clone().map(Json::String).unwrap_or(Json::Null))])),
+            "set-doctype" => spec("set-doctype", obj(vec![("doctype", doc.doctype.clone().map(Json::String).unwrap_or(Json::Null)), ("prologPosition", Json::Number(doc.doctype_prolog_position as f64))])),
             "insert-element" => {
                 let parent = json_to_path(params.get("parent").unwrap_or(&Json::Null));
                 let index = json_number(params.get("index").unwrap_or(&Json::Null)).unwrap_or(0.0);
@@ -678,12 +697,13 @@ mod oracles {
             (
                 "doctype",
                 match &doc.doctype {
-                    Some(raw) => obj(vec![("present", Json::Bool(true)), ("raw", Json::String(raw.clone()))]),
+                    Some(raw) => obj(vec![("present", Json::Bool(true)), ("raw", Json::String(raw.clone())), ("prologPosition", Json::Number(doc.doctype_prolog_position as f64))]),
                     None => obj(vec![("present", Json::Bool(false))]),
                 },
             ),
             ("prolog", Json::Array(doc.prolog.iter().map(project_node).collect())),
             ("root", doc.root.as_ref().map(project_node).unwrap_or(Json::Null)),
+            ("epilog", Json::Array(doc.epilog.iter().map(project_node).collect())),
         ]))
     }
 

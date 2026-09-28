@@ -23,7 +23,7 @@
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{
     DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified, NamedTripleDiff,
 };
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
@@ -99,8 +99,7 @@ pub enum DocxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `DocxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `docx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] =
-    &["set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -138,13 +137,13 @@ fn is_xml_part(path: &str) -> bool {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_part(part: &OpcPart) -> Option<XmlDocument> {
-    xml_document_from_text(std::str::from_utf8(&part.bytes).ok()?).ok()
+fn parse_part(part: &DocxXmlPart) -> Option<XmlDocument> {
+    Some(part.document.clone())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn part_text(base: &DocxSnapshot, path: &str) -> Option<String> {
-    String::from_utf8(base.opc.part(path)?.bytes.clone()).ok()
+    base.part_text(path)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -180,7 +179,7 @@ fn declares_namespace(node: &XmlNode, value: &str) -> bool {
 /// 🔎️ Which member of a `[transitional, strict]` pair the package actually declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_pair_member(base: &DocxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter().find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
+    pair.into_iter().find(|candidate| base.xml_parts.iter().filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
@@ -198,7 +197,7 @@ fn root_attribute(document: &XmlDocument, name: &str) -> Option<String> {
 /// 🔎️ The main part's root `conformance` attribute, if it declares one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn conformance_attribute(base: &DocxSnapshot) -> Option<String> {
-    root_attribute(&parse_part(base.opc.part(&main_part_path(base)?)?)?, "conformance")
+    root_attribute(&parse_part(base.xml_part(&main_part_path(base)?)?)?, "conformance")
 }
 
 /// ✍️ Sets — or, with `None`, removes — one attribute on the ROOT element only.
@@ -223,30 +222,20 @@ fn set_root_attribute(document: &mut XmlDocument, name: &str, value: Option<&str
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn stamp_conformance_class(mut snapshot: DocxSnapshot, strict: bool) -> DocxSnapshot {
     let index = usize::from(strict);
-    for part in snapshot.opc.parts.iter_mut() {
-        if !is_xml_part(&part.path) {
-            continue;
-        }
-        let Some(mut document) = parse_part(part) else { continue };
-        let Some(root) = document.root.as_mut() else { continue };
-        let mut changed = retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
-        changed |= retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
-        if changed {
-            part.bytes = serialize(&document);
-        }
+    for part in &mut snapshot.xml_parts {
+        let Some(root) = part.document.root.as_mut() else { continue };
+        retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
+        retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
     }
     for relationships in snapshot.opc.relationships.values_mut() {
-        for relationship in relationships.iter_mut() {
+        for relationship in relationships {
             let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
             relationship.rel_type = format!("{}{}", RELATIONSHIP_NAMESPACES[index], &relationship.rel_type[prefix.len()..]);
         }
     }
     if let Some(path) = main_part_path(&snapshot) {
-        if let Some(part) = snapshot.opc.part(&path).cloned() {
-            if let Some(mut document) = parse_part(&part) {
-                set_root_attribute(&mut document, "conformance", if strict { Some("strict") } else { None });
-                snapshot.opc.set_part(&part.path, &part.content_type, serialize(&document));
-            }
+        if let Some(part) = snapshot.xml_part_mut(&path) {
+            set_root_attribute(&mut part.document, "conformance", strict.then_some("strict"));
         }
     }
     snapshot
@@ -259,7 +248,7 @@ fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcConten
     if parts.is_none() && content_types.is_none() && relationships.is_none() {
         return DocxDiff::default();
     }
-    DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships }), ..Default::default() }
+    DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
 }
 
 /// 🔺️ Sparse per-part diff: the touched parts only, each carrying just the fields that moved.
@@ -290,19 +279,12 @@ fn overrides_diff(base: &DocxSnapshot, path: &str, content_type: Option<&str>) -
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
-    let mut modified = Vec::new();
-    for part in &base.opc.parts {
-        if !is_xml_part(&part.path) {
-            continue;
-        }
-        let Some(mut document) = parse_part(part) else { continue };
-        let Some(root) = document.root.as_mut() else { continue };
-        if !retarget_namespace(root, &from, to) {
-            continue;
-        }
-        modified.push((part.path.clone(), DocxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) }));
+    let mut next = base.clone();
+    for part in &mut next.xml_parts {
+        let Some(root) = part.document.root.as_mut() else { continue };
+        retarget_namespace(root, &from, to);
     }
-    opc_diff(parts_diff(modified, Vec::new(), Vec::new()), None, None)
+    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
@@ -336,12 +318,12 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxDiff {
     let Some(path) = main_part_path(base) else { return DocxDiff::default() };
-    let Some(part) = base.opc.part(&path) else { return DocxDiff::default() };
-    let Some(mut document) = parse_part(part) else { return DocxDiff::default() };
-    if !set_root_attribute(&mut document, "conformance", value) {
+    let mut next = base.clone();
+    let Some(part) = next.xml_part_mut(&path) else { return DocxDiff::default() };
+    if !set_root_attribute(&mut part.document, "conformance", value) {
         return DocxDiff::default();
     }
-    opc_diff(parts_diff(vec![(part.path.clone(), DocxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) })], Vec::new(), Vec::new()), None, None)
+    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
 /// 🧩️ The canonical legacy-VML part body this vocabulary inserts — real VML, so the namespace the
@@ -354,18 +336,29 @@ pub fn vml_markup() -> String {
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, markup: &str) -> DocxDiff {
-    if base.opc.part(path).is_some() {
+    let path = path.trim_start_matches('/').to_string();
+    if base.xml_part(&path).is_some() || base.opc.part(&path).is_some() {
         return DocxDiff::default();
     }
-    let part = OpcPart { path: path.trim_start_matches('/').to_string(), content_type: VML_CONTENT_TYPE.to_string(), bytes: markup.as_bytes().to_vec() };
-    opc_diff(parts_diff(Vec::new(), vec![part], Vec::new()), overrides_diff(base, path, Some(VML_CONTENT_TYPE)), None)
+    let Ok(document) = xml_document_from_text(markup) else { return DocxDiff::default() };
+    let mut next = base.clone();
+    next.opc.content_types.set_override(&path, VML_CONTENT_TYPE);
+    next.xml_parts.push(DocxXmlPart { path, content_type: VML_CONTENT_TYPE.into(), document });
+    next.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
 /// 🔺️ The diff of removing a legacy VML drawing part and its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_remove_vml_part(base: &DocxSnapshot, path: &str) -> DocxDiff {
-    let Some(part) = base.opc.part(path) else { return DocxDiff::default() };
-    opc_diff(parts_diff(Vec::new(), Vec::new(), vec![part.path.clone()]), overrides_diff(base, path, None), None)
+    let path = path.trim_start_matches('/');
+    if base.xml_part(path).is_none() {
+        return DocxDiff::default();
+    }
+    let mut next = base.clone();
+    next.xml_parts.retain(|part| part.path != path);
+    next.opc.content_types.overrides.retain(|(name, _)| name.trim_start_matches('/') != path);
+    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
 /// 🧩️ The canonical markup-compatibility fallback this vocabulary inserts.
@@ -400,13 +393,13 @@ fn diff_strip_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
 /// 🔺️ The diff of rewriting one part's root children.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_root_children(base: &DocxSnapshot, path: &str, edit: impl FnOnce(&mut Vec<XmlNode>) -> bool) -> DocxDiff {
-    let Some(part) = base.opc.part(path) else { return DocxDiff::default() };
-    let Some(mut document) = parse_part(part) else { return DocxDiff::default() };
-    let Some(XmlNode::Element { children, .. }) = document.root.as_mut() else { return DocxDiff::default() };
+    let mut next = base.clone();
+    let Some(part) = next.xml_part_mut(path) else { return DocxDiff::default() };
+    let Some(XmlNode::Element { children, .. }) = part.document.root.as_mut() else { return DocxDiff::default() };
     if !edit(children) {
         return DocxDiff::default();
     }
-    opc_diff(parts_diff(vec![(part.path.clone(), DocxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) })], Vec::new(), Vec::new()), None, None)
+    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 //#endregion 🔖️DiffBuilders
 

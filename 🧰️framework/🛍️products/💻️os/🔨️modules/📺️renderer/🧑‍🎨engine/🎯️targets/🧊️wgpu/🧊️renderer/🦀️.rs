@@ -203,11 +203,11 @@ use infinite_world::world::WORLD_ASSET_RESPONSE_BYTE_CAPACITY;
 use infinite_world::world::{apply_decoded_reference_raster, world3d_reference_url_is_current, DecodedReferenceImage};
 use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
 use infinite_world::world::{
-    begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
+    begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
     seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
     take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId,
     WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES,
-    WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    World3dMeshAsset, World3dMeshAppearance, World3dPrimitiveMaterial, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
@@ -217,6 +217,7 @@ use program_bridge::load_wasm_plugins;
 use program_bridge::parse_plugin_entries;
 use shell::{PointerCapture, PointerHitOwner, ShellState};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -228,7 +229,7 @@ use ui_wgpu::wgpu::{ActionDescriptor, SceneRasterBegin, SceneRasterDescriptor, S
 use semio_framework_async::browser::spawn_local;
 use ui_wgpu::wgpu::{
     apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
-    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor,
+    mesh3d_write_edge, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor,
     Theme,
 };
 #[cfg(target_arch = "wasm32")]
@@ -295,6 +296,9 @@ fn retire_cancelled_renderer_asset_step() -> bool {
 }
 
 fn close_renderer_asset_step() -> bool {
+    if !scenes::icon_export::asset::close_all_step() {
+        return false;
+    }
     let Ok(mut authority) = renderer_asset_io().lock() else { return false };
     authority.begin_close();
     authority.close_step() && authority.terminal_is_empty()
@@ -1211,9 +1215,55 @@ struct GlbPrimitiveSchema {
     position: u16,
     normal: Option<u16>,
     uv: Option<u16>,
+    color: Option<u16>,
     indices: Option<u16>,
+    material: Option<u16>,
     mode: u8,
     position_set: bool,
+}
+
+#[derive(Clone, Copy)]
+struct GlbMaterialSchema {
+    base_color: [f32; 4],
+    emissive: [f32; 3],
+    metalness: f32,
+    roughness: f32,
+    alpha_mode: u8,
+    alpha_cutoff: f32,
+    double_sided: bool,
+    base_color_texture: Option<u16>,
+}
+
+impl Default for GlbMaterialSchema {
+    fn default() -> Self {
+        Self { base_color: [1.0; 4], emissive: [0.0; 3], metalness: 1.0, roughness: 1.0, alpha_mode: 0, alpha_cutoff: 0.5, double_sided: false, base_color_texture: None }
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+struct GlbTextureSchema {
+    sampler: Option<u16>,
+    source: Option<u16>,
+}
+
+#[derive(Clone, Copy, Default)]
+struct GlbImageSchema {
+    view: Option<u16>,
+    mime: u8,
+}
+
+#[derive(Clone, Copy)]
+struct GlbSamplerSchema {
+    wrap_s: u16,
+    wrap_t: u16,
+    mag_filter: Option<u16>,
+    min_filter: Option<u16>,
+}
+
+impl Default for GlbSamplerSchema {
+    fn default() -> Self {
+        Self { wrap_s: 10497, wrap_t: 10497, mag_filter: None, min_filter: None }
+    }
 }
 
 #[derive(Clone, Copy, Default)]
@@ -1253,6 +1303,8 @@ enum GlbNumericArrayKind {
     NodeScale,
     NodeMatrix,
     SceneNodes,
+    MaterialBaseColor,
+    MaterialEmissive,
 }
 
 struct GlbNumericArray {
@@ -1281,7 +1333,7 @@ impl GlbNumericArray {
 
 impl Default for GlbPrimitiveSchema {
     fn default() -> Self {
-        Self { position: 0, normal: None, uv: None, indices: None, mode: 4, position_set: false }
+        Self { position: 0, normal: None, uv: None, color: None, indices: None, material: None, mode: 4, position_set: false }
     }
 }
 
@@ -1293,12 +1345,20 @@ enum GlbSchemaSection {
     Meshes,
     Nodes,
     Scenes,
+    Materials,
+    Textures,
+    Images,
+    Samplers,
 }
 
 struct GlbSchemaOutput {
     accessors: Box<[Option<GlbAccessorSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
     views: Box<[Option<GlbViewSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
     primitives: Box<[Option<GlbPrimitiveSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
+    materials: Box<[Option<GlbMaterialSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
+    textures: Box<[Option<GlbTextureSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
+    images: Box<[Option<GlbImageSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
+    samplers: Box<[Option<GlbSamplerSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
     meshes: Box<[Option<GlbMeshSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
     nodes: Box<[Option<GlbNodeSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
     scenes: Box<[Option<GlbSceneSchema>; GLB_SCHEMA_ITEM_CAPACITY]>,
@@ -1307,6 +1367,10 @@ struct GlbSchemaOutput {
     accessor_len: u16,
     view_len: u16,
     primitive_len: u16,
+    material_len: u16,
+    texture_len: u16,
+    image_len: u16,
+    sampler_len: u16,
     mesh_len: u16,
     node_len: u16,
     scene_len: u16,
@@ -1323,6 +1387,10 @@ impl GlbSchemaOutput {
             accessors: semio_framework_async::boxed_fixed_slots(|| None),
             views: semio_framework_async::boxed_fixed_slots(|| None),
             primitives: semio_framework_async::boxed_fixed_slots(|| None),
+            materials: semio_framework_async::boxed_fixed_slots(|| None),
+            textures: semio_framework_async::boxed_fixed_slots(|| None),
+            images: semio_framework_async::boxed_fixed_slots(|| None),
+            samplers: semio_framework_async::boxed_fixed_slots(|| None),
             meshes: semio_framework_async::boxed_fixed_slots(|| None),
             nodes: semio_framework_async::boxed_fixed_slots(|| None),
             scenes: semio_framework_async::boxed_fixed_slots(|| None),
@@ -1331,6 +1399,10 @@ impl GlbSchemaOutput {
             accessor_len: 0,
             view_len: 0,
             primitive_len: 0,
+            material_len: 0,
+            texture_len: 0,
+            image_len: 0,
+            sampler_len: 0,
             mesh_len: 0,
             node_len: 0,
             scene_len: 0,
@@ -1371,6 +1443,9 @@ impl GlbSchemaOutput {
                 continue;
             }
             let position = self.accessor(primitive.position)?;
+            if primitive.material.is_some_and(|material| material >= self.material_len) {
+                return Err("GLB primitive referenced a missing material");
+            }
             if position.component != 5126 || position.kind != 3 {
                 return Err("GLB POSITION accessor was not FLOAT VEC3");
             }
@@ -1397,6 +1472,13 @@ impl GlbSchemaOutput {
                 let uv_bytes = usize::try_from(uv.count).ok().and_then(|count| count.checked_mul(2)).and_then(|count| count.checked_mul(size_of::<f32>())).ok_or("GLB UV output bytes overflowed")?;
                 output_bytes = output_bytes.checked_add(uv_bytes).ok_or("GLB UV output bytes overflowed")?;
             }
+            if let Some(color) = primitive.color {
+                let color = self.accessor(color)?;
+                if !matches!(color.kind, 3 | 4) || !matches!(color.component, 5121 | 5123 | 5126) || (color.component != 5126 && !color.normalized) || color.count != position.count {
+                    return Err("GLB COLOR_0 accessor had an unsupported shape");
+                }
+                self.validate_accessor_span(color)?;
+            }
             let source_indices = match primitive.indices {
                 Some(indices) => {
                     let indices = self.accessor(indices)?;
@@ -1421,6 +1503,30 @@ impl GlbSchemaOutput {
             if output_bytes > GLB_SCHEMA_OUTPUT_BYTES {
                 return Err("GLB semantic output exceeded fixed byte credits");
             }
+        }
+        for material in self.materials[..usize::from(self.material_len)].iter().flatten() {
+            if material.base_color.iter().chain(material.emissive.iter()).any(|value| !value.is_finite()) || !material.metalness.is_finite() || !material.roughness.is_finite() || !material.alpha_cutoff.is_finite() {
+                return Err("GLB material contained a non-finite scalar");
+            }
+            if material.base_color_texture.is_some_and(|texture| texture >= self.texture_len) {
+                return Err("GLB material referenced a missing texture");
+            }
+        }
+        for texture in self.textures[..usize::from(self.texture_len)].iter().flatten() {
+            if texture.source.is_none_or(|image| image >= self.image_len) || texture.sampler.is_some_and(|sampler| sampler >= self.sampler_len) {
+                return Err("GLB texture referenced a missing image or sampler");
+            }
+        }
+        for image in self.images[..usize::from(self.image_len)].iter().flatten() {
+            if image.view.is_none_or(|view| view >= self.view_len) || image.mime == 0 {
+                return Err("GLB image omitted an embedded bufferView or supported MIME type");
+            }
+        }
+        for sampler in self.samplers[..usize::from(self.sampler_len)].iter().flatten() {
+            glb_texture_wrap(sampler.wrap_s)?;
+            glb_texture_wrap(sampler.wrap_t)?;
+            glb_mag_filter(sampler.mag_filter)?;
+            glb_min_filter(sampler.min_filter)?;
         }
         if output_bytes == 0 {
             return Err("GLB schema contained no triangle primitive output");
@@ -1475,9 +1581,15 @@ struct GlbSchemaCursor {
     current_mesh: Option<GlbMeshSchema>,
     current_node: Option<GlbNodeSchema>,
     current_scene: Option<GlbSceneSchema>,
+    current_material: Option<GlbMaterialSchema>,
+    current_texture: Option<GlbTextureSchema>,
+    current_image: Option<GlbImageSchema>,
+    current_sampler: Option<GlbSamplerSchema>,
     numeric_array: Option<GlbNumericArray>,
     primitives_depth: Option<u16>,
     attributes_depth: Option<u16>,
+    pbr_depth: Option<u16>,
+    base_color_texture_depth: Option<u16>,
     output: GlbSchemaOutput,
     terminal: bool,
 }
@@ -1501,9 +1613,15 @@ impl GlbSchemaCursor {
             current_mesh: None,
             current_node: None,
             current_scene: None,
+            current_material: None,
+            current_texture: None,
+            current_image: None,
+            current_sampler: None,
             numeric_array: None,
             primitives_depth: None,
             attributes_depth: None,
+            pbr_depth: None,
+            base_color_texture_depth: None,
             output: GlbSchemaOutput::new(),
             terminal: false,
         }
@@ -1545,6 +1663,10 @@ impl GlbSchemaCursor {
                 || self.current_mesh.is_some()
                 || self.current_node.is_some()
                 || self.current_scene.is_some()
+                || self.current_material.is_some()
+                || self.current_texture.is_some()
+                || self.current_image.is_some()
+                || self.current_sampler.is_some()
                 || self.numeric_array.is_some()
             {
                 return Err("GLB JSON schema ended with live nested ownership");
@@ -1585,6 +1707,18 @@ impl GlbSchemaCursor {
                     self.current_node = Some(GlbNodeSchema::default());
                 } else if self.section == GlbSchemaSection::Scenes && self.depth == 2 {
                     self.current_scene = Some(GlbSceneSchema::default());
+                } else if self.section == GlbSchemaSection::Materials && self.depth == 2 {
+                    self.current_material = Some(GlbMaterialSchema::default());
+                } else if self.section == GlbSchemaSection::Materials && self.depth == 3 && self.pending_key.as_ref().is_some_and(|key| key.equals("pbrMetallicRoughness")) {
+                    self.pbr_depth = Some(next_depth);
+                } else if self.section == GlbSchemaSection::Materials && self.pbr_depth == Some(self.depth) && self.pending_key.as_ref().is_some_and(|key| key.equals("baseColorTexture")) {
+                    self.base_color_texture_depth = Some(next_depth);
+                } else if self.section == GlbSchemaSection::Textures && self.depth == 2 {
+                    self.current_texture = Some(GlbTextureSchema::default());
+                } else if self.section == GlbSchemaSection::Images && self.depth == 2 {
+                    self.current_image = Some(GlbImageSchema::default());
+                } else if self.section == GlbSchemaSection::Samplers && self.depth == 2 {
+                    self.current_sampler = Some(GlbSamplerSchema::default());
                 }
                 self.depth = next_depth;
                 self.consume_value();
@@ -1605,9 +1739,23 @@ impl GlbSchemaCursor {
                     self.finish_node()?;
                 } else if self.section == GlbSchemaSection::Scenes && self.depth == 3 {
                     self.finish_scene()?;
+                } else if self.section == GlbSchemaSection::Materials && self.depth == 3 {
+                    self.finish_material()?;
+                } else if self.section == GlbSchemaSection::Textures && self.depth == 3 {
+                    self.finish_texture()?;
+                } else if self.section == GlbSchemaSection::Images && self.depth == 3 {
+                    self.finish_image()?;
+                } else if self.section == GlbSchemaSection::Samplers && self.depth == 3 {
+                    self.finish_sampler()?;
                 }
                 if self.attributes_depth == Some(self.depth) {
                     self.attributes_depth = None;
+                }
+                if self.base_color_texture_depth == Some(self.depth) {
+                    self.base_color_texture_depth = None;
+                }
+                if self.pbr_depth == Some(self.depth) {
+                    self.pbr_depth = None;
                 }
                 self.depth -= 1;
                 self.last_string = None;
@@ -1626,6 +1774,14 @@ impl GlbSchemaCursor {
                         GlbSchemaSection::Nodes
                     } else if key.as_ref().is_some_and(|key| key.equals("scenes")) {
                         GlbSchemaSection::Scenes
+                    } else if key.as_ref().is_some_and(|key| key.equals("materials")) {
+                        GlbSchemaSection::Materials
+                    } else if key.as_ref().is_some_and(|key| key.equals("textures")) {
+                        GlbSchemaSection::Textures
+                    } else if key.as_ref().is_some_and(|key| key.equals("images")) {
+                        GlbSchemaSection::Images
+                    } else if key.as_ref().is_some_and(|key| key.equals("samplers")) {
+                        GlbSchemaSection::Samplers
                     } else {
                         GlbSchemaSection::None
                     };
@@ -1649,6 +1805,10 @@ impl GlbSchemaCursor {
                     });
                 } else if self.section == GlbSchemaSection::Scenes && self.depth == 3 && key.as_ref().is_some_and(|key| key.equals("nodes")) {
                     self.numeric_array = Some(GlbNumericArray::new(GlbNumericArrayKind::SceneNodes, next_depth, self.output.scene_root_len));
+                } else if self.section == GlbSchemaSection::Materials && self.pbr_depth == Some(self.depth) && key.as_ref().is_some_and(|key| key.equals("baseColorFactor")) {
+                    self.numeric_array = Some(GlbNumericArray::new(GlbNumericArrayKind::MaterialBaseColor, next_depth, 0));
+                } else if self.section == GlbSchemaSection::Materials && self.depth == 3 && key.as_ref().is_some_and(|key| key.equals("emissiveFactor")) {
+                    self.numeric_array = Some(GlbNumericArray::new(GlbNumericArrayKind::MaterialEmissive, next_depth, 0));
                 }
                 self.depth = next_depth;
                 self.consume_value();
@@ -1741,13 +1901,50 @@ impl GlbSchemaCursor {
                     primitive.normal = Some(index);
                 } else if key.equals("TEXCOORD_0") {
                     primitive.uv = Some(index);
+                } else if key.equals("COLOR_0") {
+                    primitive.color = Some(index);
                 }
             } else if self.depth == 5 {
                 if key.equals("indices") {
                     primitive.indices = Some(u16::try_from(value).map_err(|_| "GLB primitive index accessor exceeded fixed credits")?);
                 } else if key.equals("mode") {
                     primitive.mode = u8::try_from(value).map_err(|_| "GLB primitive mode overflowed")?;
+                } else if key.equals("material") {
+                    primitive.material = Some(u16::try_from(value).map_err(|_| "GLB primitive material index exceeded fixed credits")?);
                 }
+            }
+        } else if self.section == GlbSchemaSection::Materials {
+            let material = self.current_material.as_mut().ok_or("GLB material scalar arrived without an owner")?;
+            if self.pbr_depth == Some(self.depth) && key.equals("metallicFactor") {
+                material.metalness = value.float()?;
+            } else if self.pbr_depth == Some(self.depth) && key.equals("roughnessFactor") {
+                material.roughness = value.float()?;
+            } else if self.base_color_texture_depth == Some(self.depth) && key.equals("index") {
+                material.base_color_texture = Some(u16::try_from(value.unsigned()?).map_err(|_| "GLB material texture index exceeded fixed credits")?);
+            } else if self.depth == 3 && key.equals("alphaCutoff") {
+                material.alpha_cutoff = value.float()?;
+            }
+        } else if self.section == GlbSchemaSection::Textures && self.depth == 3 {
+            let value = u16::try_from(value.unsigned()?).map_err(|_| "GLB texture index exceeded fixed credits")?;
+            let texture = self.current_texture.as_mut().ok_or("GLB texture scalar arrived without an owner")?;
+            if key.equals("sampler") {
+                texture.sampler = Some(value);
+            } else if key.equals("source") {
+                texture.source = Some(value);
+            }
+        } else if self.section == GlbSchemaSection::Images && self.depth == 3 && key.equals("bufferView") {
+            self.current_image.as_mut().ok_or("GLB image bufferView arrived without an owner")?.view = Some(u16::try_from(value.unsigned()?).map_err(|_| "GLB image bufferView exceeded fixed credits")?);
+        } else if self.section == GlbSchemaSection::Samplers && self.depth == 3 {
+            let value = u16::try_from(value.unsigned()?).map_err(|_| "GLB sampler value overflowed")?;
+            let sampler = self.current_sampler.as_mut().ok_or("GLB sampler scalar arrived without an owner")?;
+            if key.equals("wrapS") {
+                sampler.wrap_s = value;
+            } else if key.equals("wrapT") {
+                sampler.wrap_t = value;
+            } else if key.equals("magFilter") {
+                sampler.mag_filter = Some(value);
+            } else if key.equals("minFilter") {
+                sampler.min_filter = Some(value);
             }
         } else if self.section == GlbSchemaSection::Nodes && self.depth == 3 && key.equals("mesh") {
             self.current_node.as_mut().ok_or("GLB node mesh arrived without an owner")?.mesh = Some(u16::try_from(value.unsigned()?).map_err(|_| "GLB node mesh index exceeded fixed credits")?);
@@ -1761,6 +1958,8 @@ impl GlbSchemaCursor {
         let Some(key) = self.pending_key.as_ref() else { return Ok(()) };
         if self.section == GlbSchemaSection::Accessors && self.depth == 3 && key.equals("normalized") {
             self.current_accessor.as_mut().ok_or("GLB accessor normalized flag arrived without an owner")?.normalized = value.ok_or("GLB accessor normalized flag was null")?;
+        } else if self.section == GlbSchemaSection::Materials && self.depth == 3 && key.equals("doubleSided") {
+            self.current_material.as_mut().ok_or("GLB material side flag arrived without an owner")?.double_sided = value.ok_or("GLB material side flag was null")?;
         }
         Ok(())
     }
@@ -1779,6 +1978,10 @@ impl GlbSchemaCursor {
             } else {
                 return Err("GLB accessor type was unsupported");
             };
+        } else if self.section == GlbSchemaSection::Materials && self.depth == 3 && key.equals("alphaMode") {
+            self.current_material.as_mut().ok_or("GLB material alpha mode arrived without an owner")?.alpha_mode = if value.equals("OPAQUE") { 0 } else if value.equals("MASK") { 1 } else if value.equals("BLEND") { 2 } else { return Err("GLB material alpha mode was unsupported") };
+        } else if self.section == GlbSchemaSection::Images && self.depth == 3 && key.equals("mimeType") {
+            self.current_image.as_mut().ok_or("GLB image MIME arrived without an owner")?.mime = if value.equals("image/png") { 1 } else if value.equals("image/jpeg") { 2 } else { return Err("GLB embedded image MIME type was unsupported") };
         }
         Ok(())
     }
@@ -1868,6 +2071,42 @@ impl GlbSchemaCursor {
         Ok(())
     }
 
+    fn finish_material(&mut self) -> Result<(), &'static str> {
+        let material = self.current_material.take().ok_or("GLB material owner was missing")?;
+        let slot = usize::from(self.output.material_len);
+        if slot == GLB_SCHEMA_ITEM_CAPACITY { return Err("GLB material count exceeded fixed item credits") }
+        self.output.materials[slot] = Some(material);
+        self.output.material_len += 1;
+        Ok(())
+    }
+
+    fn finish_texture(&mut self) -> Result<(), &'static str> {
+        let texture = self.current_texture.take().ok_or("GLB texture owner was missing")?;
+        let slot = usize::from(self.output.texture_len);
+        if slot == GLB_SCHEMA_ITEM_CAPACITY { return Err("GLB texture count exceeded fixed item credits") }
+        self.output.textures[slot] = Some(texture);
+        self.output.texture_len += 1;
+        Ok(())
+    }
+
+    fn finish_image(&mut self) -> Result<(), &'static str> {
+        let image = self.current_image.take().ok_or("GLB image owner was missing")?;
+        let slot = usize::from(self.output.image_len);
+        if slot == GLB_SCHEMA_ITEM_CAPACITY { return Err("GLB image count exceeded fixed item credits") }
+        self.output.images[slot] = Some(image);
+        self.output.image_len += 1;
+        Ok(())
+    }
+
+    fn finish_sampler(&mut self) -> Result<(), &'static str> {
+        let sampler = self.current_sampler.take().ok_or("GLB sampler owner was missing")?;
+        let slot = usize::from(self.output.sampler_len);
+        if slot == GLB_SCHEMA_ITEM_CAPACITY { return Err("GLB sampler count exceeded fixed item credits") }
+        self.output.samplers[slot] = Some(sampler);
+        self.output.sampler_len += 1;
+        Ok(())
+    }
+
     fn finish_numeric_array(&mut self) -> Result<(), &'static str> {
         let array = self.numeric_array.take().ok_or("GLB numeric array owner was missing")?;
         match array.kind {
@@ -1904,6 +2143,14 @@ impl GlbSchemaCursor {
                 let scene = self.current_scene.as_mut().ok_or("GLB roots completed without a scene owner")?;
                 scene.node_start = array.start;
                 scene.node_len = array.len;
+            }
+            GlbNumericArrayKind::MaterialBaseColor => {
+                if array.len != 4 { return Err("GLB material base color did not contain four values") }
+                self.current_material.as_mut().ok_or("GLB base color completed without a material owner")?.base_color.copy_from_slice(&array.values[..4]);
+            }
+            GlbNumericArrayKind::MaterialEmissive => {
+                if array.len != 3 { return Err("GLB material emissive did not contain three values") }
+                self.current_material.as_mut().ok_or("GLB emissive completed without a material owner")?.emissive.copy_from_slice(&array.values[..3]);
             }
         }
         Ok(())
@@ -1980,6 +2227,7 @@ struct GlbInstancePlanCursor {
     vertex_count: u32,
     index_count: u32,
     has_uvs: bool,
+    has_colors: bool,
     output_bytes: usize,
 }
 
@@ -1987,7 +2235,7 @@ impl GlbInstancePlanCursor {
     fn new(schema: &GlbSchemaOutput) -> Self {
         let scene = schema.default_scene.or((schema.scene_len != 0).then_some(0));
         let mode = if schema.node_len == 0 { GlbPlanMode::Fallback { primitive: 0 } } else { GlbPlanMode::Roots { scene, index: 0 } };
-        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false, output_bytes: 0 }
+        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false, has_colors: false, output_bytes: 0 }
     }
 
     fn step(&mut self, schema: &GlbSchemaOutput) -> Result<bool, &'static str> {
@@ -2095,7 +2343,9 @@ impl GlbInstancePlanCursor {
         let vertex_count = vertex_base.checked_add(position.count).ok_or("GLB instantiated vertex count overflowed")?;
         let output_index_count = index_base.checked_add(index_count).ok_or("GLB instantiated index count overflowed")?;
         let has_uvs = self.has_uvs || primitive_schema.uv.is_some();
-        let vertex_bytes = usize::try_from(vertex_count).ok().and_then(|count| count.checked_mul(if has_uvs { 32 } else { 24 })).ok_or("GLB instantiated vertex bytes overflowed")?;
+        let has_colors = self.has_colors || primitive_schema.color.is_some();
+        let vertex_stride = 24usize.checked_add(if has_uvs { 8 } else { 0 }).and_then(|stride| stride.checked_add(if has_colors { 16 } else { 0 })).ok_or("GLB instantiated vertex stride overflowed")?;
+        let vertex_bytes = usize::try_from(vertex_count).ok().and_then(|count| count.checked_mul(vertex_stride)).ok_or("GLB instantiated vertex bytes overflowed")?;
         let index_bytes = usize::try_from(output_index_count).ok().and_then(|count| count.checked_mul(4)).ok_or("GLB instantiated index bytes overflowed")?;
         let output_bytes = vertex_bytes.checked_add(index_bytes).ok_or("GLB instantiated output bytes overflowed")?;
         if output_bytes > GLB_SCHEMA_OUTPUT_BYTES {
@@ -2110,6 +2360,7 @@ impl GlbInstancePlanCursor {
         self.vertex_count = vertex_count;
         self.index_count = output_index_count;
         self.has_uvs = has_uvs;
+        self.has_colors = has_colors;
         self.output_bytes = output_bytes;
         Ok(())
     }
@@ -2200,17 +2451,121 @@ fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     }
 }
 
+const GLB_OUTLINE_SCALE: f32 = 1.001;
+
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+struct GlbOutlineEdgeKey {
+    instance: u16,
+    from: [i64; 3],
+    to: [i64; 3],
+}
+
+#[derive(Clone, Copy)]
+struct GlbOutlineEdgeRecord {
+    points: [[f32; 3]; 2],
+    matrix: GlbMatrix,
+    normal: [f32; 3],
+    live: bool,
+}
+
+struct GlbOutlineAccumulator {
+    lookup: HashMap<GlbOutlineEdgeKey, usize>,
+    records: Vec<GlbOutlineEdgeRecord>,
+    segments: Vec<[[f32; 3]; 2]>,
+    maximum_edges: usize,
+    flush: usize,
+}
+
+impl GlbOutlineAccumulator {
+    fn new(maximum_edges: usize) -> Result<Self, &'static str> {
+        let mut lookup = HashMap::new();
+        let mut records = Vec::new();
+        let mut segments = Vec::new();
+        lookup.try_reserve(maximum_edges).map_err(|_| "GLB outline lookup exceeded allocation credits")?;
+        records.try_reserve_exact(maximum_edges).map_err(|_| "GLB outline records exceeded allocation credits")?;
+        segments.try_reserve_exact(maximum_edges).map_err(|_| "GLB outline segments exceeded allocation credits")?;
+        Ok(Self { lookup, records, segments, maximum_edges, flush: 0 })
+    }
+
+    fn point_key(point: [f32; 3]) -> Result<[i64; 3], &'static str> {
+        if !point.iter().all(|value| value.is_finite()) {
+            return Err("GLB outline position was not finite");
+        }
+        let scaled = point.map(|value| (f64::from(value) * 10_000.0 + 0.5).floor());
+        if !scaled.iter().all(|value| *value >= i64::MIN as f64 && *value <= i64::MAX as f64) {
+            return Err("GLB outline position exceeded weld-key credits");
+        }
+        Ok(scaled.map(|value| value as i64))
+    }
+
+    fn transformed(matrix: GlbMatrix, point: [f32; 3]) -> [f32; 3] {
+        glb_transform_point(matrix, point.map(|value| value * GLB_OUTLINE_SCALE))
+    }
+
+    fn push_segment(&mut self, matrix: GlbMatrix, points: [[f32; 3]; 2]) -> Result<(), &'static str> {
+        if self.segments.len() == self.maximum_edges {
+            return Err("GLB outline output exceeded fixed edge credits");
+        }
+        self.segments.push([Self::transformed(matrix, points[0]), Self::transformed(matrix, points[1])]);
+        Ok(())
+    }
+
+    fn push_triangle(&mut self, instance: u16, matrix: GlbMatrix, points: [[f32; 3]; 3]) -> Result<(), &'static str> {
+        let keys = [Self::point_key(points[0])?, Self::point_key(points[1])?, Self::point_key(points[2])?];
+        if keys[0] == keys[1] || keys[1] == keys[2] || keys[2] == keys[0] {
+            return Ok(());
+        }
+        let a = [points[1][0] - points[0][0], points[1][1] - points[0][1], points[1][2] - points[0][2]];
+        let b = [points[2][0] - points[0][0], points[2][1] - points[0][1], points[2][2] - points[0][2]];
+        let normal = glb_normalize([a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]);
+        let threshold = 1.0_f32.to_radians().cos();
+        for edge in 0..3 {
+            let next = (edge + 1) % 3;
+            let key = GlbOutlineEdgeKey { instance, from: keys[edge], to: keys[next] };
+            let reverse = GlbOutlineEdgeKey { instance, from: keys[next], to: keys[edge] };
+            if let Some(index) = self.lookup.get(&reverse).copied().filter(|index| self.records[*index].live) {
+                if normal.iter().zip(self.records[index].normal.iter()).map(|(left, right)| *left * *right).sum::<f32>() <= threshold {
+                    self.push_segment(matrix, [points[edge], points[next]])?;
+                }
+                self.records[index].live = false;
+            } else if !self.lookup.contains_key(&key) {
+                if self.records.len() == self.maximum_edges {
+                    return Err("GLB outline topology exceeded fixed edge credits");
+                }
+                let index = self.records.len();
+                self.records.push(GlbOutlineEdgeRecord { points: [points[edge], points[next]], matrix, normal, live: true });
+                self.lookup.insert(key, index);
+            }
+        }
+        Ok(())
+    }
+
+    fn flush_step(&mut self) -> Result<bool, &'static str> {
+        let Some(record) = self.records.get(self.flush).copied() else { return Ok(true) };
+        self.flush += 1;
+        if record.live {
+            self.push_segment(record.matrix, record.points)?;
+        }
+        Ok(self.flush == self.records.len())
+    }
+}
+
 #[derive(Clone, Copy)]
 enum GlbMaterializePhase {
     Plan,
     Header,
+    TextureBytes,
+    TextureDecode,
+    Outlines,
     Allocate,
     Positions,
     Normals,
     Uvs,
+    Colors,
     Indices,
     GenerateNormals,
     NormalizeNormals,
+    OutlineEdges,
     Seal,
     Ready,
     Closing,
@@ -2221,6 +2576,12 @@ struct GlbMaterializeCursor {
     plan: GlbInstancePlanCursor,
     write: Option<Mesh3dWriteToken>,
     lease: Option<Mesh3dLease>,
+    appearance: Option<infinite_world::world::World3dMeshAppearance>,
+    textures: Vec<(String, SceneRasterLease)>,
+    texture_bytes: Vec<u8>,
+    decoded_texture: Option<DecodedReferenceImage>,
+    texture: u16,
+    outline: Option<GlbOutlineAccumulator>,
     phase: GlbMaterializePhase,
     bin_start: usize,
     bin_bytes: usize,
@@ -2235,7 +2596,7 @@ struct GlbMaterializeCursor {
 impl GlbMaterializeCursor {
     fn new(schema: GlbSchemaOutput) -> Self {
         let plan = GlbInstancePlanCursor::new(&schema);
-        Self { schema, plan, write: None, lease: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
+        Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None, texture: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
     }
 
     fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
@@ -2245,8 +2606,12 @@ impl GlbMaterializeCursor {
                     if self.plan.output_bytes == 0 {
                         return Err("GLB plan produced no reachable triangle output");
                     }
-                    let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: 0, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: 0 };
-                    self.write = Some(mesh3d_begin(owner.generation(), owner.revision(), schema).map_err(glb_mesh_fault)?);
+                    let maximum_edges = usize::try_from(self.plan.index_count).map_err(|_| "GLB outline edge count overflowed")?;
+                    let maximum_outline_bytes = maximum_edges.checked_mul(24).ok_or("GLB outline byte count overflowed")?;
+                    if self.plan.output_bytes.checked_add(maximum_outline_bytes).is_none_or(|bytes| bytes > GLB_SCHEMA_OUTPUT_BYTES) {
+                        return Err("GLB mesh and outline exceeded fixed semantic output credits");
+                    }
+                    self.outline = Some(GlbOutlineAccumulator::new(maximum_edges)?);
                     self.phase = GlbMaterializePhase::Header;
                 }
                 Ok(false)
@@ -2263,12 +2628,124 @@ impl GlbMaterializeCursor {
                     return Err("GLB BIN payload exceeded sealed page credits");
                 }
                 self.validate_bin_spans()?;
-                self.phase = GlbMaterializePhase::Allocate;
+                self.phase = if self.schema.texture_len == 0 { GlbMaterializePhase::Outlines } else { GlbMaterializePhase::TextureBytes };
+                Ok(false)
+            }
+            GlbMaterializePhase::TextureBytes => {
+                if self.texture == self.schema.texture_len {
+                    self.advance_phase(GlbMaterializePhase::Outlines);
+                    return Ok(false);
+                }
+                let texture = self.schema.textures.get(usize::from(self.texture)).and_then(Option::as_ref).ok_or("GLB materializer lost a texture schema")?;
+                let image = self
+                    .schema
+                    .images
+                    .get(usize::from(texture.source.ok_or("GLB texture lost its image source")?))
+                    .and_then(Option::as_ref)
+                    .ok_or("GLB materializer lost an image schema")?;
+                let view = self
+                    .schema
+                    .views
+                    .get(usize::from(image.view.ok_or("GLB image lost its embedded bufferView")?))
+                    .and_then(Option::as_ref)
+                    .ok_or("GLB materializer lost an image bufferView")?;
+                let expected = usize::try_from(view.byte_length).map_err(|_| "GLB image byte count exceeded address credits")?;
+                if self.item == 0 {
+                    self.texture_bytes.clear();
+                    self.texture_bytes.try_reserve_exact(expected).map_err(|_| "GLB image exceeded allocation credits")?;
+                }
+                let cursor = usize::try_from(self.item).map_err(|_| "GLB image cursor exceeded address credits")?;
+                if cursor == expected {
+                    self.decoded_texture = infinite_world::world::decode_reference_image_bytes(&self.texture_bytes);
+                    if self.decoded_texture.is_none() {
+                        return Err("GLB embedded texture decoder refused its image bytes");
+                    }
+                    self.phase = GlbMaterializePhase::TextureDecode;
+                    self.item = 0;
+                    return Ok(false);
+                }
+                let take = (expected - cursor).min(RENDERER_ASSET_PARSE_BLOCK_BYTES);
+                let absolute = self
+                    .bin_start
+                    .checked_add(usize::try_from(view.byte_offset).map_err(|_| "GLB image byte offset exceeded address credits")?)
+                    .and_then(|offset| offset.checked_add(cursor))
+                    .ok_or("GLB image address overflowed")?;
+                for at in absolute..absolute + take {
+                    self.texture_bytes.push(pages.read::<1>(owner, at)?[0]);
+                }
+                self.item = self.item.checked_add(u32::try_from(take).map_err(|_| "GLB image block exceeded cursor credits")?).ok_or("GLB image cursor overflowed")?;
+                Ok(false)
+            }
+            GlbMaterializePhase::TextureDecode => {
+                let decoded = self.decoded_texture.take().ok_or("GLB materializer lost its decoded texture")?;
+                let descriptor = SceneRasterDescriptor {
+                    width: decoded.width,
+                    height: decoded.height,
+                    source_digest: decoded.source_digest,
+                    source_revision: 1,
+                    profile: SceneRasterProfile::MeshBaseColorSrgb,
+                    mesh: None,
+                };
+                let pool = infinite_world::world::world_scene_raster_pool();
+                let raster_owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
+                let lease = match pool.begin(descriptor, raster_owner, SceneRasterWriteMode::Moved) {
+                    SceneRasterBegin::Reused(lease) => lease,
+                    SceneRasterBegin::Writer(writer) => {
+                        let DecodedReferenceImage { width, height, source_digest, pixels } = decoded;
+                        match pool.prepare_moved(writer, pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
+                            Ok(lease) => lease,
+                            Err((pixels, detail)) => {
+                                self.decoded_texture = Some(DecodedReferenceImage { width, height, source_digest, pixels });
+                                return Err(detail);
+                            }
+                        }
+                    }
+                    SceneRasterBegin::Backpressure(_) => {
+                        self.decoded_texture = Some(decoded);
+                        return Ok(false);
+                    }
+                    SceneRasterBegin::Refused(detail) => {
+                        self.decoded_texture = Some(decoded);
+                        return Err(detail);
+                    }
+                };
+                self.textures.push((self.texture_key(owner), lease));
+                self.texture += 1;
+                self.texture_bytes.clear();
+                self.phase = GlbMaterializePhase::TextureBytes;
+                Ok(false)
+            }
+            GlbMaterializePhase::Outlines => {
+                if self.instance == self.plan.instance_len {
+                    let outline = self.outline.as_mut().ok_or("GLB materializer lost its outline owner")?;
+                    if outline.flush_step()? {
+                        let edges = u32::try_from(outline.segments.len()).map_err(|_| "GLB outline output count overflowed")?;
+                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: 0, vertex_ids: 0, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } };
+                        self.write = Some(mesh3d_begin(owner.generation(), owner.revision(), schema).map_err(glb_mesh_fault)?);
+                        self.phase = GlbMaterializePhase::Allocate;
+                    }
+                    return Ok(false);
+                }
+                let instance = self.instance()?;
+                let triangle_count = instance.index_count / 3;
+                if self.item == triangle_count {
+                    self.next_instance();
+                    return Ok(false);
+                }
+                let primitive = self.primitive(instance)?;
+                let mut points = [[0.0; 3]; 3];
+                for component in 0..3u32 {
+                    let index = self.read_output_index(owner, pages, primitive, self.item * 3 + component, instance.vertex_count)?;
+                    let value = self.read_vec(owner, pages, primitive.position, index, 3)?;
+                    points[component as usize] = [value[0], value[1], value[2]];
+                }
+                self.outline.as_mut().ok_or("GLB materializer lost its outline owner")?.push_triangle(self.instance, instance.matrix, points)?;
+                self.item += 1;
                 Ok(false)
             }
             GlbMaterializePhase::Allocate => {
                 if mesh3d_allocate_step(self.write_token()?).map_err(glb_mesh_fault)? {
-                    self.phase = GlbMaterializePhase::Positions;
+                    self.advance_phase(GlbMaterializePhase::Positions);
                 }
                 Ok(false)
             }
@@ -2313,12 +2790,12 @@ impl GlbMaterializeCursor {
             }
             GlbMaterializePhase::Uvs => {
                 if self.instance == self.plan.instance_len {
-                    self.advance_phase(GlbMaterializePhase::Indices);
+                    self.advance_phase(GlbMaterializePhase::Colors);
                     return Ok(false);
                 }
                 let instance = self.instance()?;
                 if !self.plan.has_uvs {
-                    self.advance_phase(GlbMaterializePhase::Indices);
+                    self.advance_phase(GlbMaterializePhase::Colors);
                     return Ok(false);
                 }
                 if self.item == instance.vertex_count {
@@ -2333,6 +2810,32 @@ impl GlbMaterializeCursor {
                     [0.0; 2]
                 };
                 mesh3d_write_vec2(self.write_token()?, Mesh3dField::Uvs, value).map_err(glb_mesh_fault)?;
+                self.item += 1;
+                Ok(false)
+            }
+            GlbMaterializePhase::Colors => {
+                if self.instance == self.plan.instance_len {
+                    self.advance_phase(GlbMaterializePhase::Indices);
+                    return Ok(false);
+                }
+                let instance = self.instance()?;
+                if !self.plan.has_colors {
+                    self.advance_phase(GlbMaterializePhase::Indices);
+                    return Ok(false);
+                }
+                if self.item == instance.vertex_count {
+                    self.next_instance();
+                    return Ok(false);
+                }
+                let primitive = self.primitive(instance)?;
+                let value = if let Some(accessor) = primitive.color {
+                    let accessor_schema = self.schema.accessor(accessor)?;
+                    let value = self.read_vec(owner, pages, accessor, self.item, usize::from(accessor_schema.kind))?;
+                    [value[0], value[1], value[2], if accessor_schema.kind == 4 { value[3] } else { 1.0 }]
+                } else {
+                    [1.0; 4]
+                };
+                mesh3d_write_vec4(self.write_token()?, Mesh3dField::Colors, value).map_err(glb_mesh_fault)?;
                 self.item += 1;
                 Ok(false)
             }
@@ -2405,7 +2908,7 @@ impl GlbMaterializeCursor {
             }
             GlbMaterializePhase::NormalizeNormals => {
                 if self.instance == self.plan.instance_len {
-                    self.phase = GlbMaterializePhase::Seal;
+                    self.advance_phase(GlbMaterializePhase::OutlineEdges);
                     return Ok(false);
                 }
                 let instance = self.instance()?;
@@ -2424,11 +2927,23 @@ impl GlbMaterializeCursor {
                 self.item += 1;
                 Ok(false)
             }
+            GlbMaterializePhase::OutlineEdges => {
+                let outline = self.outline.as_ref().ok_or("GLB materializer lost its outline owner")?;
+                let Some(edge) = outline.segments.get(self.item as usize).copied() else {
+                    self.phase = GlbMaterializePhase::Seal;
+                    return Ok(false);
+                };
+                mesh3d_write_edge(self.write_token()?, edge).map_err(glb_mesh_fault)?;
+                self.item += 1;
+                Ok(false)
+            }
             GlbMaterializePhase::Seal => {
                 let token = self.write.take().ok_or("GLB materializer lost its mesh write claim")?;
                 match mesh3d_seal(token) {
                     Ok(lease) => {
+                        let appearance = self.build_appearance(owner)?;
                         self.lease = Some(lease);
+                        self.appearance = Some(appearance);
                         self.phase = GlbMaterializePhase::Ready;
                         Ok(true)
                     }
@@ -2451,7 +2966,69 @@ impl GlbMaterializeCursor {
                 return Err("GLB bufferView exceeded the BIN payload");
             }
         }
+        for image in self.schema.images[..usize::from(self.schema.image_len)].iter().flatten() {
+            let view = self.schema.views.get(usize::from(image.view.ok_or("GLB image lost its embedded bufferView")?)).and_then(Option::as_ref).ok_or("GLB image referenced a missing bufferView")?;
+            let end = (view.byte_offset as usize).checked_add(view.byte_length as usize).ok_or("GLB image bufferView BIN span overflowed")?;
+            if end > self.bin_bytes {
+                return Err("GLB image bufferView exceeded the BIN payload");
+            }
+        }
         Ok(())
+    }
+
+    fn texture_key(&self, owner: &RendererAssetFetchOwner) -> String {
+        format!("glb:{}:texture:{}", owner.generation(), self.texture)
+    }
+
+    fn build_appearance(&mut self, owner: &RendererAssetFetchOwner) -> Result<World3dMeshAppearance, &'static str> {
+        let mut primitives = Vec::new();
+        primitives.try_reserve_exact(usize::from(self.plan.instance_len)).map_err(|_| "GLB material appearance exceeded allocation credits")?;
+        for instance in self.plan.instances[..usize::from(self.plan.instance_len)].iter().flatten() {
+            let primitive = self.schema.primitives.get(usize::from(instance.primitive)).and_then(Option::as_ref).ok_or("GLB materializer lost a primitive material")?;
+            let material = primitive
+                .material
+                .and_then(|index| self.schema.materials.get(usize::from(index)).and_then(Option::as_ref).copied())
+                .unwrap_or_default();
+            let base_color_texture = material.base_color_texture.map(|texture| format!("glb:{}:texture:{texture}", owner.generation()));
+            let texture_sampler = if let Some(texture) = material.base_color_texture {
+                let texture = self.schema.textures.get(usize::from(texture)).and_then(Option::as_ref).ok_or("GLB materializer lost a texture sampler owner")?;
+                let sampler = texture.sampler.and_then(|index| self.schema.samplers.get(usize::from(index)).and_then(Option::as_ref).copied()).unwrap_or_default();
+                ui_wgpu::wgpu::SceneTextureSampler3d {
+                    wrap_u: glb_texture_wrap(sampler.wrap_s)?,
+                    wrap_v: glb_texture_wrap(sampler.wrap_t)?,
+                    mag_filter: glb_mag_filter(sampler.mag_filter)?,
+                    min_filter: glb_min_filter(sampler.min_filter)?,
+                }
+            } else {
+                Default::default()
+            };
+            primitives.push(World3dPrimitiveMaterial {
+                first_index: instance.index_base,
+                index_count: instance.index_count,
+                material: ui_wgpu::wgpu::SceneAuthoredMaterial3d {
+                    base_color: material.base_color,
+                    emissive: material.emissive,
+                    metalness: material.metalness,
+                    roughness: material.roughness,
+                    alpha: match material.alpha_mode {
+                        0 => ui_wgpu::wgpu::SceneMaterialAlpha3d::Opaque,
+                        1 => ui_wgpu::wgpu::SceneMaterialAlpha3d::Mask,
+                        2 => ui_wgpu::wgpu::SceneMaterialAlpha3d::Blend,
+                        _ => return Err("GLB materializer reached an unsupported alpha mode"),
+                    },
+                    alpha_cutoff: material.alpha_cutoff,
+                    double_sided: material.double_sided,
+                    preserve_vertex_color: primitive.color.is_some(),
+                    base_color_texture,
+                    texture_sampler,
+                },
+            });
+        }
+        let textures = std::mem::take(&mut self.textures);
+        World3dMeshAppearance::new(primitives, textures).map_err(|(_primitives, textures)| {
+            self.textures = textures;
+            "GLB material appearance exceeded fixed owner credits"
+        })
     }
 
     fn read_vec(&self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex, accessor: u16, item: u32, components: usize) -> Result<[f32; 4], &'static str> {
@@ -2519,12 +3096,13 @@ impl GlbMaterializeCursor {
         self.write.ok_or("GLB materializer lost its mesh write claim")
     }
 
-    fn take_mesh_lease(&mut self) -> Option<Mesh3dLease> {
-        self.lease.take()
+    fn take_asset(&mut self) -> Option<World3dMeshAsset> {
+        Some(World3dMeshAsset { mesh: self.lease.take()?, appearance: self.appearance.take()? })
     }
 
-    fn restore_mesh_lease(&mut self, lease: Mesh3dLease) {
-        assert!(self.lease.replace(lease).is_none(), "GLB publication restores exactly one retained lease");
+    fn restore_asset(&mut self, asset: World3dMeshAsset) {
+        assert!(self.lease.replace(asset.mesh).is_none(), "GLB publication restores exactly one retained mesh lease");
+        assert!(self.appearance.replace(asset.appearance).is_none(), "GLB publication restores exactly one retained appearance owner");
     }
 
     fn next_instance(&mut self) {
@@ -2541,6 +3119,10 @@ impl GlbMaterializeCursor {
     }
 
     fn begin_close(&mut self) {
+        self.appearance = None;
+        self.textures.clear();
+        self.decoded_texture = None;
+        self.texture_bytes.clear();
         self.phase = GlbMaterializePhase::Closing;
     }
 
@@ -2551,7 +3133,7 @@ impl GlbMaterializeCursor {
                 Ok(()) | Err(Mesh3dFault::Closing) => {}
                 Err(Mesh3dFault::Stale) => {
                     self.write = None;
-                    return self.lease.is_none();
+                    return self.lease.is_none() && self.appearance.is_none() && self.textures.is_empty();
                 }
                 Err(_) => return false,
             }
@@ -2559,7 +3141,7 @@ impl GlbMaterializeCursor {
                 Ok(true) | Err(Mesh3dFault::Stale) => self.write = None,
                 Ok(false) | Err(_) => return false,
             }
-            return self.lease.is_none();
+            return self.lease.is_none() && self.appearance.is_none() && self.textures.is_empty();
         }
         if let Some(lease) = self.lease {
             match mesh3d_begin_close(lease) {
@@ -2576,6 +3158,31 @@ impl GlbMaterializeCursor {
             }
         }
         true
+    }
+}
+
+fn glb_texture_wrap(value: u16) -> Result<ui_wgpu::wgpu::SceneTextureWrap3d, &'static str> {
+    match value {
+        33071 => Ok(ui_wgpu::wgpu::SceneTextureWrap3d::ClampToEdge),
+        10497 => Ok(ui_wgpu::wgpu::SceneTextureWrap3d::Repeat),
+        33648 => Ok(ui_wgpu::wgpu::SceneTextureWrap3d::MirrorRepeat),
+        _ => Err("GLB texture sampler used an unsupported wrap mode"),
+    }
+}
+
+fn glb_mag_filter(value: Option<u16>) -> Result<ui_wgpu::wgpu::SceneTextureFilter3d, &'static str> {
+    match value {
+        None | Some(9729) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Linear),
+        Some(9728) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Nearest),
+        Some(_) => Err("GLB texture sampler used an unsupported magnification filter"),
+    }
+}
+
+fn glb_min_filter(value: Option<u16>) -> Result<ui_wgpu::wgpu::SceneTextureFilter3d, &'static str> {
+    match value {
+        None | Some(9729 | 9985 | 9987) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Linear),
+        Some(9728 | 9984 | 9986) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Nearest),
+        Some(_) => Err("GLB texture sampler used an unsupported minification filter"),
     }
 }
 
@@ -2853,16 +3460,19 @@ impl RendererAssetProbe {
         self.rejection.take()
     }
 
-    fn take_ready_mesh_lease(&mut self) -> Option<Mesh3dLease> {
-        (matches!(self.phase, RendererAssetProbePhase::Ready) && matches!(self.owner().kind(), WorldAssetRequestKind::Glb)).then(|| self.glb_materialize.as_mut()?.take_mesh_lease()).flatten()
+    fn take_ready_mesh_asset(&mut self) -> Option<World3dMeshAsset> {
+        (matches!(self.phase, RendererAssetProbePhase::Ready) && matches!(self.owner().kind(), WorldAssetRequestKind::Glb)).then(|| self.glb_materialize.as_mut()?.take_asset()).flatten()
     }
 
-    fn restore_ready_mesh_lease(&mut self, lease: Mesh3dLease) {
-        self.glb_materialize.as_mut().expect("ready GLB probe owns its materializer").restore_mesh_lease(lease);
+    fn restore_ready_mesh_asset(&mut self, asset: World3dMeshAsset) {
+        self.glb_materialize.as_mut().expect("ready GLB probe owns its materializer").restore_asset(asset);
     }
 
     fn finish_ready_mesh(&mut self) {
-        assert!(self.glb_materialize.as_ref().is_some_and(|materialize| materialize.lease.is_none()), "published GLB probe relinquished its paged mesh lease");
+        assert!(
+            self.glb_materialize.as_ref().is_some_and(|materialize| materialize.lease.is_none() && materialize.appearance.is_none()),
+            "published GLB probe relinquished its paged mesh and appearance owners"
+        );
         self.owner_mut().begin_close();
         self.phase = RendererAssetProbePhase::Closing;
     }
@@ -11961,6 +12571,7 @@ struct NativeAssetHandoff {
     fetch: Option<RendererAssetFetchOwner>,
     payload: Option<semio_framework_job::RetainedJobPayload>,
     seal: bool,
+    reject: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -12016,6 +12627,7 @@ impl Drop for NativeAssetTransportGuard {
 enum NativeAssetStreamFailure {
     Cancelled,
     CancelledPage { payload: semio_framework_job::RetainedJobPayload },
+    Unavailable(String),
     Fault(String),
     Page { detail: &'static str, payload: semio_framework_job::RetainedJobPayload },
 }
@@ -12409,6 +13021,9 @@ impl RuntimeMailbox {
             drop(runtime);
             return self.close_world_cursor_wake_step();
         };
+        if !interaction.shell.close_icon_export_step() {
+            return false;
+        }
         if interaction.shell.advance_world3d_retirement_step() {
             return false;
         }
@@ -12601,7 +13216,14 @@ impl RuntimeMailbox {
 
     fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner, rejection: Option<(&'static str, WorldAssetRequestKind, String)>) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
-            RendererAssetFetchOwner::Shared(owner) => finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
+            RendererAssetFetchOwner::Shared(owner) => {
+                if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
+                    if let Some((detail, _, _)) = rejection {
+                        scenes::icon_export::asset::reject(owner.token(), detail);
+                    }
+                }
+                finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared)
+            }
             RendererAssetFetchOwner::World { surface, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
                 let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
@@ -12739,6 +13361,9 @@ impl RuntimeMailbox {
 
     /// 🧵️ Advances the private asset owner independently of frame construction and presentation.
     pub(crate) fn asset_decode_step(&self) -> RendererAssetDecodeTurn {
+        if scenes::icon_export::asset::retire_cancelled_step() {
+            return RendererAssetDecodeTurn { kind: RendererAssetDecodeTurnKind::Pending, pending: true, detail: None };
+        }
         let session = self.pump_asset_decode_session_step(false);
         let kind = session.unwrap_or_else(|| if retire_cancelled_renderer_asset_step() { RendererAssetDecodeTurnKind::Pending } else { self.pump_renderer_asset_decode_step() });
         #[cfg(not(target_arch = "wasm32"))]
@@ -12774,6 +13399,17 @@ impl RuntimeMailbox {
                 Some(true) => {}
             }
             log_debug_diagnostic(&format!("[DEBUG] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
+            if matches!(probe.owner(), RendererAssetFetchOwner::Shared(_)) && matches!(probe.owner().kind(), WorldAssetRequestKind::Glb) {
+                let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
+                match scenes::icon_export::asset::publish(probe.owner().owner().token(), asset) {
+                    Ok(()) => probe.finish_ready_mesh(),
+                    Err(asset) => {
+                        probe.restore_ready_mesh_asset(asset);
+                        probe.begin_close();
+                    }
+                }
+                return RendererAssetDecodeTurnKind::Published;
+            }
             if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
                 match probe.owner().kind() {
                     WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
@@ -12871,26 +13507,26 @@ impl RuntimeMailbox {
                     return self.pump_native_reference_decode(probe, surface_token, token, url);
                 }
             }
-            let Some(lease) = probe.take_ready_mesh_lease() else { return RendererAssetDecodeTurnKind::Pending };
+            let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
             let Ok(mut runtime) = self.try_lock() else {
-                probe.restore_ready_mesh_lease(lease);
+                probe.restore_ready_mesh_asset(asset);
                 return RendererAssetDecodeTurnKind::Pending;
             };
             let Some(interaction) = runtime.interaction.as_mut() else {
-                probe.restore_ready_mesh_lease(lease);
+                probe.restore_ready_mesh_asset(asset);
                 return RendererAssetDecodeTurnKind::Pending;
             };
             let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
-                probe.restore_ready_mesh_lease(lease);
+                probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
                 return RendererAssetDecodeTurnKind::Pending;
             };
             if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
-                probe.restore_ready_mesh_lease(lease);
+                probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
                 return RendererAssetDecodeTurnKind::Cancelled;
             }
-            match publish_world3d_asset_mesh_lease(state, probe.owner().url(), lease) {
+            match publish_world3d_asset_mesh(state, probe.owner().url(), asset) {
                 Ok(()) => {
                     log_debug_diagnostic(&format!("[DEBUG] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
@@ -12898,7 +13534,7 @@ impl RuntimeMailbox {
                 }
                 Err(rejected) => {
                     let stale = rejected.fault == WorldDynamicFault::StaleToken;
-                    probe.restore_ready_mesh_lease(rejected.value);
+                    probe.restore_ready_mesh_asset(rejected.value);
                     if stale {
                         probe.begin_close();
                         drop(runtime);
@@ -13103,13 +13739,27 @@ impl RuntimeMailbox {
         self.renderer_asset_current(fetch) != Some(false)
     }
 
-    pub(crate) fn reject_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner) -> bool {
-        let RendererAssetFetchOwner::World { surface: _, surface_token, owner } = fetch else { return true };
-        let Ok(mut runtime) = self.try_lock() else { return false };
-        let Some(interaction) = runtime.interaction.as_mut() else { return false };
-        let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return true };
-        if !world3d_asset_cancellation_requested(state, owner.token()) {
-            mark_world3d_asset_miss(state, owner.url());
+    pub(crate) fn reject_renderer_asset(&self, fetch: &RendererAssetFetchOwner) -> bool {
+        match fetch {
+            RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
+                let Ok(mut runtime) = self.try_lock() else { return false };
+                let Some(interaction) = runtime.interaction.as_mut() else { return false };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return true };
+                if !world3d_asset_cancellation_requested(state, owner.token()) {
+                    mark_world3d_asset_miss(state, owner.url());
+                }
+            }
+            RendererAssetFetchOwner::Shared(owner) => {
+                let Ok(authority) = renderer_asset_io().try_lock() else { return false };
+                let cancelled = authority.cancellation_requested(owner.token());
+                drop(authority);
+                if !cancelled {
+                    if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
+                        scenes::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
+                    }
+                    Self::record_rejected_asset(&("asset transport was unavailable", owner.kind(), owner.url().to_string()));
+                }
+            }
         }
         true
     }
@@ -13318,6 +13968,15 @@ impl RuntimeMailbox {
             }
             return Some(true);
         }
+        if handoff.reject {
+            let fetch = handoff.fetch.as_mut().expect("native handoff owns its rejected request");
+            if !self.reject_renderer_asset(fetch) {
+                return Some(false);
+            }
+            fetch.begin_close();
+            handoff.reject = false;
+            return Some(true);
+        }
         if handoff.seal {
             let fetch = handoff.fetch.as_mut().expect("native handoff owns its request");
             match self.renderer_asset_current(fetch) {
@@ -13351,10 +14010,10 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool) {
+    fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool, reject: bool) {
         let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(slot.is_none(), "one native asset fetch is admitted at a time");
-        *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal });
+        *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal, reject });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -13432,7 +14091,7 @@ impl RuntimeMailbox {
                 if matches!(admission, RendererAssetSealStep::Refused(_)) {
                     fetch.begin_close();
                 }
-                self.retain_native_asset_handoff(fetch, None, false);
+                self.retain_native_asset_handoff(fetch, None, false, false);
                 self.0.native_asset_fetching.store(false, Ordering::Release);
                 if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                     waker();
@@ -13442,29 +14101,33 @@ impl RuntimeMailbox {
         }
         let mailbox = self.clone();
         spawn_app_task(async move {
-            let (payload, seal) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
-                Ok(()) => (None, true),
+            let (payload, seal, reject) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
+                Ok(()) => (None, true, false),
                 Err(NativeAssetStreamFailure::Cancelled) => {
                     fetch.begin_close();
-                    (None, false)
+                    (None, false, false)
                 }
                 Err(NativeAssetStreamFailure::CancelledPage { payload }) => {
                     fetch.begin_close();
-                    (Some(payload), false)
+                    (Some(payload), false, false)
+                }
+                Err(NativeAssetStreamFailure::Unavailable(detail)) => {
+                    log_debug(&format!("native renderer asset unavailable: {detail}"));
+                    (None, false, true)
                 }
                 Err(NativeAssetStreamFailure::Fault(detail)) => {
                     fetch.begin_close();
                     log_debug(&format!("native renderer asset fetch failed: {detail}"));
                     mailbox.record_frame_fault("native renderer asset fetch failed");
-                    (None, false)
+                    (None, false, false)
                 }
                 Err(NativeAssetStreamFailure::Page { detail, payload }) => {
                     fetch.begin_close();
                     mailbox.record_frame_fault(detail);
-                    (Some(payload), false)
+                    (Some(payload), false, false)
                 }
             };
-            mailbox.retain_native_asset_handoff(fetch, payload, seal);
+            mailbox.retain_native_asset_handoff(fetch, payload, seal, reject);
             mailbox.0.native_asset_fetching.store(false, Ordering::Release);
             if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                 waker();
@@ -16814,13 +17477,13 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
     if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
         return stream_native_renderer_http_asset(mailbox, fetch).await;
     }
-    let path = native_renderer_asset_path(fetch.url())?;
+    let path = native_renderer_asset_path(fetch.url()).map_err(NativeAssetStreamFailure::Unavailable)?;
     let mut offset = 0u64;
     loop {
         if mailbox.renderer_asset_cancelled(fetch) {
             return Err(NativeAssetStreamFailure::Cancelled);
         }
-        let value = run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: WORLD_ASSET_RESPONSE_PAGE_BYTES }).await?;
+        let value = run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: WORLD_ASSET_RESPONSE_PAGE_BYTES }).await.map_err(NativeAssetStreamFailure::Unavailable)?;
         #[cfg(test)]
         mailbox.wait_native_asset_page_test_barrier(fetch);
         let semio_framework_os_services::NativeIoValue::Page { mut bytes, eof } = value else { return Err("native renderer asset I/O returned the wrong value".into()) };
@@ -16875,14 +17538,14 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
             transport = Some(mailbox.retain_native_asset_transport(fetch, cancel.clone(), cancellation))
         })
         .await
-        .map_err(|error| if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) { NativeAssetStreamFailure::Cancelled } else { NativeAssetStreamFailure::Fault(error.to_string()) });
+        .map_err(|error| if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) { NativeAssetStreamFailure::Cancelled } else { NativeAssetStreamFailure::Unavailable(error.to_string()) });
     let _transport = transport;
     let (head, mut body) = response?;
     if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
         return Err(NativeAssetStreamFailure::Cancelled);
     }
     if !(200..300).contains(&head.status) {
-        return Err(format!("native renderer asset HTTP status {}", head.status).into());
+        return Err(NativeAssetStreamFailure::Unavailable(format!("native renderer asset HTTP status {}", head.status)));
     }
     if let Some(length) = head.headers.iter().find(|(name, _)| name.eq_ignore_ascii_case("content-length")).and_then(|(_, value)| value.parse::<usize>().ok()) {
         if length > WORLD_ASSET_RESPONSE_BYTE_CAPACITY {
@@ -16897,7 +17560,7 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
         if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
             return Err(NativeAssetStreamFailure::Cancelled);
         }
-        let Some(bytes) = page.map_err(|error| NativeAssetStreamFailure::Fault(error.to_string()))? else { break };
+        let Some(bytes) = page.map_err(|error| NativeAssetStreamFailure::Unavailable(error.to_string()))? else { break };
         if bytes.is_empty() || bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err("native renderer HTTP asset returned an invalid response page".into());
         }
@@ -17654,14 +18317,36 @@ impl AppInteractionState {
     }
 
     /// 🛑️ Clears pointer ownership without manufacturing a successful release.
-    fn handle_pointer_cancel(&mut self, pointer_id: ui_render::PointerId) {
-        if let Some([x, y]) = self.pointer_capture.position(pointer_id) {
+    fn handle_pointer_cancel(&mut self, pointer: ui_render::PointerInfo) {
+        if let Some([x, y]) = self.pointer_capture.position(pointer.id) {
             self.input.pointer_x = x;
             self.input.pointer_y = y;
         }
-        self.pointer_capture.release(pointer_id);
+        if pointer.kind == ui_render::PointerKind::Touch {
+            if let Some(target) = interpreter::captured_scene_pointer(pointer.id) {
+                let outcome = match target.kind {
+                    ui_wgpu::wgpu::SurfaceKind::TiledMap => self
+                        .shell
+                        .tiled_map_states
+                        .get(&target.host_id)
+                        .filter(|surface| surface.window_id == target.window_id)
+                        .map(|surface| scenes::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
+                    ui_wgpu::wgpu::SurfaceKind::Board2d => self
+                        .shell
+                        .board2d_states
+                        .get(&target.host_id)
+                        .filter(|surface| surface.window_id == target.window_id)
+                        .map(|surface| scenes::puzzle_board_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
+                    _ => None,
+                };
+                if let Some(Err(fault)) = outcome {
+                    self.input.record_action_fault(fault);
+                }
+            }
+        }
+        self.pointer_capture.release(pointer.id);
         self.pointer_down = self.pointer_capture.any_active();
-        self.shell.handle_pointer_cancel_for(pointer_id, &mut self.input);
+        self.shell.handle_pointer_cancel_for(pointer.id, &mut self.input);
     }
 
     /// 🎡️ Applies one owned normalized wheel event before the next dispatch can change its target.
@@ -17732,7 +18417,7 @@ impl AppInteractionState {
         Ok(())
     }
 
-    async fn handle_pointer_button(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
+    async fn handle_pointer_button(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
         use ui_wgpu::wgpu::SurfaceKind;
         self.last_pointer_x = x;
         self.last_pointer_y = y;
@@ -17753,33 +18438,33 @@ impl AppInteractionState {
         interpreter::blur_focused_table_stepper_for_pointer(down, button);
         interpreter::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
-            let Some(owner) = self.pointer_capture.press(pointer_id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
+            let Some(owner) = self.pointer_capture.press(pointer.id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
                 self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 return;
             };
             owner
         } else {
-            self.pointer_capture.release(pointer_id)
+            self.pointer_capture.release(pointer.id)
         };
         self.pointer_down = self.pointer_capture.any_active();
         if down {
             self.shell.activate_window_under_pointer(x, y, &self.theme);
         }
         if owner == PointerHitOwner::Chrome {
-            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = self.shell.handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
             return;
         }
-        let Some(target) = (if down { target } else { interpreter::release_scene_pointer(pointer_id) }).filter(|target| self.shell.scene_pointer_target_is_published(target)) else { return };
-        if down && !interpreter::claim_scene_pointer_owner(target.clone(), pointer_id) {
-            self.pointer_capture.release(pointer_id);
+        let Some(target) = (if down { target } else { interpreter::release_scene_pointer(pointer.id) }).filter(|target| self.shell.scene_pointer_target_is_published(target)) else { return };
+        if down && !interpreter::claim_scene_pointer_owner(target.clone(), pointer.id) {
+            self.pointer_capture.release(pointer.id);
             self.pointer_down = self.pointer_capture.any_active();
             self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
             return;
         }
         if down && target.kind == SurfaceKind::World3d && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
-            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = self.shell.handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
         }
@@ -17800,14 +18485,36 @@ impl AppInteractionState {
                 outcome
             }
             SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if down {
+                let touch_handled = pointer.kind == ui_render::PointerKind::Touch
+                    && if down {
+                        scenes::tiled_map_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
+                    } else {
+                        match scenes::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
+                            Ok(handled) => handled,
+                            Err(fault) => return Err(fault),
+                        }
+                    };
+                if touch_handled {
+                    Ok(())
+                } else if down {
                     scenes::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
                 } else {
                     scenes::tiled_map_pointer_up_into(host_id, &surface.surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input).map(|_| ())
                 }
             }),
             SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if down {
+                let touch_handled = pointer.kind == ui_render::PointerKind::Touch
+                    && if down {
+                        scenes::puzzle_board_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
+                    } else {
+                        match scenes::puzzle_board_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
+                            Ok(handled) => handled,
+                            Err(fault) => return Err(fault),
+                        }
+                    };
+                if touch_handled {
+                    Ok(())
+                } else if down {
                     scenes::puzzle_board_pointer_down(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
                     Ok(())
                 } else {
@@ -17821,9 +18528,9 @@ impl AppInteractionState {
         }
     }
 
-    async fn handle_pointer_move(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
+    async fn handle_pointer_move(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
         use ui_wgpu::wgpu::SurfaceKind;
-        let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer_id, x, y).unwrap_or((0.0, 0.0));
+        let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer.id, x, y).unwrap_or((0.0, 0.0));
         self.last_pointer_x = x;
         self.last_pointer_y = y;
         self.pointer_down = self.pointer_capture.any_active();
@@ -17833,14 +18540,14 @@ impl AppInteractionState {
         self.input.pointer_x = x;
         self.input.pointer_y = y;
         self.input.pointer_down = down;
-        let target = match self.pointer_capture.holder(pointer_id) {
-            Some(PointerHitOwner::Surface) => interpreter::captured_scene_pointer(pointer_id),
+        let target = match self.pointer_capture.holder(pointer.id) {
+            Some(PointerHitOwner::Surface) => interpreter::captured_scene_pointer(pointer.id),
             Some(PointerHitOwner::Chrome) => None,
             None => self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme),
         }
         .filter(|target| self.shell.scene_pointer_target_is_published(target));
-        if target.is_none() && self.pointer_capture.holder(pointer_id) != Some(PointerHitOwner::Surface) {
-            self.shell.handle_pointer_move_for(pointer_id, x, y, down, &mut self.input, &self.theme);
+        if target.is_none() && self.pointer_capture.holder(pointer.id) != Some(PointerHitOwner::Surface) {
+            self.shell.handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
         let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
         for (host_id, state) in self.shell.world3d_states.iter_mut() {
@@ -17888,13 +18595,25 @@ impl AppInteractionState {
                 .tiled_map_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
-                .map(|surface| scenes::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())),
+                .map(|surface| {
+                    if pointer.kind == ui_render::PointerKind::Touch && scenes::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
+                        Ok(())
+                    } else {
+                        scenes::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
+                    }
+                }),
             SurfaceKind::Board2d => self
                 .shell
                 .board2d_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
-                .map(|surface| scenes::puzzle_board_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
+                .map(|surface| {
+                    if pointer.kind == ui_render::PointerKind::Touch && scenes::puzzle_board_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
+                        Ok(())
+                    } else {
+                        scenes::puzzle_board_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+                    }
+                }),
             _ => None,
         };
         if let Some(Err(fault)) = outcome {

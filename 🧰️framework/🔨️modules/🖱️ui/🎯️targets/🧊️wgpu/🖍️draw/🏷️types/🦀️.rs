@@ -43,47 +43,48 @@ pub struct UiInstance {
     pub color: [f32; 4],
     pub params: [f32; 4],
     pub uv_rect: [f32; 4],
+    pub clip_ellipse: [f32; 4],
 }
 
 impl UiInstance {
     pub fn solid(rect: [f32; 4], color: Rgba) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_SOLID, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_SOLID, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     pub fn rounded(rect: [f32; 4], color: Rgba, radius: f32, border: f32, border_color: Rgba) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_ROUNDED, border_color.a], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_ROUNDED, border_color.a], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
     pub fn loading_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
     pub fn waiting_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     /// ✅️ Solid, static at-bounds ring for `UiStatus::Finished` in `color` — no animation.
     pub fn finished_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_FINISHED_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_FINISHED_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     /// 💫️ Raised-cosine breathing pulse ring for `UiState::Introducing` in `color`; phase comes from `globals._pad.x` in `UI_SHADER`.
     pub fn introducing_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_INTRODUCING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_INTRODUCING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
     pub fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_GLYPH, 0.0], uv_rect }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_GLYPH, 0.0], uv_rect, clip_ellipse: [0.0; 4] }
     }
 
     pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) -> Self {
-        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_TEXTURED, 0.0], uv_rect }
+        Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_TEXTURED, 0.0], uv_rect, clip_ellipse: [0.0; 4] }
     }
 
     pub fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
-        Self { rect, color: [1.0, 1.0, 1.0, alpha], params: [0.0, 0.0, KIND_RASTER, 0.0], uv_rect }
+        Self { rect, color: [1.0, 1.0, 1.0, alpha], params: [0.0, 0.0, KIND_RASTER, 0.0], uv_rect, clip_ellipse: [0.0; 4] }
     }
 }
 
@@ -315,10 +316,7 @@ impl DrawList {
                     return RasterKeepStepV1::Pending;
                 };
                 cursor.middle += 1;
-                match &draw.material {
-                    crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } => RasterKeepStepV1::Key(texture_key.as_str()),
-                    crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Standard | crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration { .. } => RasterKeepStepV1::Pending,
-                }
+                draw.material.texture_key().map_or(RasterKeepStepV1::Pending,RasterKeepStepV1::Key)
             }
             2 | 3 => {
                 let Some(layer) = self.layers.get(cursor.outer) else {
@@ -362,7 +360,12 @@ fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
     include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d>())?)?;
     for draw in &pass.material_draws {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
-        if let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.material {
+        let texture_key = match &draw.material {
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Standard | crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration {..} => None,
+        };
+        if let Some(texture_key) = texture_key {
             include(texture_key.len(), texture_key.capacity())?;
         }
         include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
@@ -425,6 +428,51 @@ impl DrawList {
             prepared_bytes: 0,
             overlay_route: 0,
         }
+    }
+
+    /// 🧾️ Publishes one balanced retained candidate after its producer reaches the accepted frame
+    /// boundary. Indices are rebased onto the caller's existing frame and the caller's active clip
+    /// and glass context continues across the appended layers.
+    pub(crate) fn append_retained_candidate(&mut self, candidate: &mut Self) -> Result<(), RetainedOutputError> {
+        if !candidate.scissor_stack.is_empty() || !candidate.clip_stack.is_empty() || !candidate.glass_content_stack.is_empty() || candidate.retained_output.is_some() || candidate.overlay_route != 0 {
+            return Err(RetainedOutputError::Capacity);
+        }
+        if !self.claim_retained_output(candidate.prepared_items, candidate.prepared_bytes) {
+            return Err(RetainedOutputError::LimitExceeded);
+        }
+        let layer_offset = self.layers.len();
+        let glass_offset = self.glass_regions.len();
+        let inherited_scissor = self.scissor_stack.last().copied();
+        let inherited_clip = self.clip_stack.last().cloned();
+        let inherited_foreground = self.glass_content_stack.last().copied();
+        for pass in &mut candidate.scene_passes {
+            pass.layer_index = pass.layer_index.checked_add(layer_offset).ok_or(RetainedOutputError::Capacity)?;
+        }
+        for region in &mut candidate.glass_regions {
+            region.layer_index = region.layer_index.checked_add(layer_offset).ok_or(RetainedOutputError::Capacity)?;
+        }
+        for layer in &mut candidate.layers {
+            layer.scissor = match (layer.scissor, inherited_scissor) {
+                (Some(local), Some(parent)) => Some(local.intersect(&parent)),
+                (local, parent) => local.or(parent),
+            };
+            layer.clip = match (&layer.clip, &inherited_clip) {
+                (Some(local), Some(parent)) => Some(local.intersect(parent)),
+                (Some(local), None) => Some(local.clone()),
+                (None, Some(parent)) => Some(parent.clone()),
+                (None, None) => None,
+            };
+            layer.foreground_of = match layer.foreground_of {
+                Some(region) => Some(region.checked_add(glass_offset).ok_or(RetainedOutputError::Capacity)?),
+                None => inherited_foreground,
+            };
+        }
+        self.scene_passes.append(&mut candidate.scene_passes);
+        self.layers.append(&mut candidate.layers);
+        self.glass_regions.append(&mut candidate.glass_regions);
+        candidate.prepared_items = 0;
+        candidate.prepared_bytes = 0;
+        Ok(())
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
@@ -546,7 +594,7 @@ impl DrawList {
                     draw.instances = Vec::new();
                     return false;
                 }
-                if let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &mut draw.material {
+                if let Some(texture_key) = draw.material.texture_key_mut() {
                     if texture_key.pop().is_some() {
                         return false;
                     }

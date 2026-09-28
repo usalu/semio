@@ -9,7 +9,9 @@
     "id",
     "version",
     "structure",
-    "results"
+    "results",
+    "definition",
+    "responses"
   ],
   "properties": {
     "schema": {
@@ -40,6 +42,17 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/table",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
+    },
+    "definition": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json",
+      "x-semio-state": "artifact"
+    },
+    "responses": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+      },
+      "x-semio-state": "artifact"
     }
   }
 }

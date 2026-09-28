@@ -47,6 +47,10 @@ impl PathHitCursor {
         self.finished&&!self.invalid&&((fill&&(self.boundary||if even_odd {self.winding%2!=0}else{self.winding!=0}))||(stroke&&self.stroke))
     }
     pub fn step(&mut self,segments:&[PathSegment])->bool {
+        self.step_with(|index|segments.get(index).cloned())
+    }
+    pub fn step_with(&mut self,segment:impl FnOnce(usize)->Option<PathSegment>)->bool {
+        if self.finished{return true;}
         if self.invalid {self.finished=true;return true;}
         if let Some(piece)=self.work.pop() {
             match piece {
@@ -73,12 +77,12 @@ impl PathHitCursor {
             self.maximum_depth=self.maximum_depth.max(self.work.len());
             return false;
         }
-        let Some(segment)=segments.get(self.next) else {
+        let Some(segment)=segment(self.next) else {
             if self.open {self.line(self.map(self.current),self.map(self.start),false);self.open=false;}
             self.finished=true;return true;
         };
         self.next+=1;
-        match *segment {
+        match segment {
             PathSegment::Move {to}=>{
                 if self.open {self.line(self.map(self.current),self.map(self.start),false);}
                 self.current=to;self.start=to;self.open=true;

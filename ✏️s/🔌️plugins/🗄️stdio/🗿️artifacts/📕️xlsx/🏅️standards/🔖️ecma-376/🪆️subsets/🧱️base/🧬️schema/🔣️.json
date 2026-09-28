@@ -3,23 +3,171 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/artifact.json",
   "title": "XlsxArtifact",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "opc",
+    "xmlParts"
+  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "entries": {
+    "opc": {
+      "$ref": "#/$defs/OpcPackage",
+      "x-semio-state": "artifact"
+    },
+    "xmlParts": {
       "type": "array",
-      "x-semio-state": "artifact",
       "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
+        "$ref": "#/$defs/XlsxXmlPart"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
           }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/OpcRelationship"
+            }
+          }
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "OpcRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "relType",
+        "target",
+        "targetMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "$ref": "#/$defs/OpcTargetMode"
+        }
+      }
+    },
+    "OpcTargetMode": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external"
+      ]
+    },
+    "XlsxXmlPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType",
+        "document"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
         }
       }
     }

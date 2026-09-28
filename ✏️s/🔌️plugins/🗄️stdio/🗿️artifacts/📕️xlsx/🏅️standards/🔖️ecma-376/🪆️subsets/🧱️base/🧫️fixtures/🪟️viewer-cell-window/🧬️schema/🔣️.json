@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sheets", "offset", "rows", "columnOffset", "columns", "expectedKeys", "expectedCells", "labels"],
+  "properties": {
+    "sheets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "values"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "values": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "offset": {"type": "integer", "minimum": 0},
+    "rows": {"type": "integer", "minimum": 1},
+    "columnOffset": {"type": "integer", "minimum": 0, "maximum": 3},
+    "columns": {"type": "integer", "minimum": 1, "maximum": 4},
+    "expectedKeys": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^workbook-cell-[0-9]+$"}},
+    "expectedCells": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string", "minLength": 1}},
+        "de": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

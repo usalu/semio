@@ -1,8 +1,23 @@
-type DocxEntry {
-  name: String!
-  data: [Int!]!
+# 🧬️ Transparent canonical DOCX mutation descriptor roster.
+enum DocxMutationKind {
+  SET_SNAPSHOT
+  INSERT_BLOCK
+  REMOVE_BLOCK
+  SET_BLOCK_CONTENT
+  SET_RUN_TEXT
+  REPLACE_XML_NODE
+  SET_RUN_FORMATTING
+  SET_PARAGRAPH_STYLE
+  INSERT_TABLE_ROW
+  REMOVE_TABLE_ROW
+  INSERT_XML_NODE
+  REMOVE_XML_NODE
+  INSERT_STYLE
+  REMOVE_STYLE
+  SET_STYLE_NAME
+  SET_STYLE_BASED_ON
+  SET_PART
+  REMOVE_PART
 }
-type DocxMutation {
-  schema: String! @state(class: ARTIFACT)
-  entries: [DocxEntry!]! @state(class: ARTIFACT)
-}
+scalar MutationPayload
+input DocxMutationInput { kind: DocxMutationKind!, payload: MutationPayload! }

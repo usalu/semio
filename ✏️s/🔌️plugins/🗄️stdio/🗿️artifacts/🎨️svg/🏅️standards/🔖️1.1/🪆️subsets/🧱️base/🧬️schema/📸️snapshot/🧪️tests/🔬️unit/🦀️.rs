@@ -1,4 +1,57 @@
 use super::*;
+use protocol::MutationDiff;
+use semio_framework_plugin::ArtifactBuilder;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlNode, XmlQuote};
+
+#[semio_framework_async_macros::async_test]
+async fn snapshot_decoders_and_builder_refuse_invalid_document_boundaries() {
+    let mut invalid = crate::schema::empty_svg_snapshot();
+    invalid.doc.doctype = Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype { prolog_position: 1, name: "svg".into(), external_id: None, declarations: Vec::new() });
+
+    let text = crate::schema::mutation_support::encode_snapshot(&invalid);
+    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject an out-of-range doctype position");
+
+    let mut binary = Vec::new();
+    crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
+    assert!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).is_err(), "binary ingress must reject an out-of-range doctype position");
+    assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
+
+    let mut invalid_epilog = crate::schema::empty_svg_snapshot();
+    invalid_epilog.doc.epilog = vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Text { text: "outside".into() }];
+    let text = crate::schema::mutation_support::encode_snapshot(&invalid_epilog);
+    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject a non-miscellaneous epilog node");
+    assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_svg_snapshot_ingress_refuses_unpublishable_declarations() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
+        let mut invalid = crate::schema::empty_svg_snapshot();
+        invalid.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });
+        invalid.doc.declaration =
+            Some(XmlDeclaration { version: "1.0".into(), encoding: Some(case["encoding"].as_str().expect("encoding").into()), standalone: None, quote: if case["quote"] == "single" { XmlQuote::Single } else { XmlQuote::Double } });
+        let expected = case["error"].as_str().expect("error");
+
+        let text = crate::schema::mutation_support::encode_snapshot(&invalid);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).expect_err("structured text ingress"), expected, "{}", case["id"]);
+        let mut binary = Vec::new();
+        crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).expect_err("binary ingress"), expected, "{}", case["id"]);
+        assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
+        assert_eq!(crate::SvgArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
+        let mut artifact = crate::SvgArtifact::default();
+        let before = artifact.clone();
+        assert_eq!(artifact.set_snapshot(invalid.clone()).expect_err("raw artifact replacement"), expected, "{}", case["id"]);
+        assert_eq!(artifact, before, "{} replacement must be atomic", case["id"]);
+        let diff = crate::SvgDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(crate::schema::diff::SvgNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
+        assert!(<crate::SvgDiff as MutationDiff<SvgSnapshot>>::apply(&diff, &crate::schema::empty_svg_snapshot()).is_err(), "{} diff ingress", case["id"]);
+        assert_eq!(write_svg_xml(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
+    }
+
+    let valid = crate::SvgArtifact::from_snapshot(crate::schema::empty_svg_snapshot()).expect("valid raw artifact conversion");
+    assert!(write_svg_xml(&valid.to_snapshot().doc).expect("validated artifact renders").contains("<svg"));
+}
 
 #[semio_framework_async_macros::async_test]
 async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
@@ -64,10 +117,7 @@ async fn artifact_dsl_routes_native_svg_by_its_semio_envelope() {
     assert_eq!(imported, SvgSnapshot::import_utf8(NATIVE.as_bytes()).expect("import_utf8 of the same markup"), "the envelope-less branch IS the lossless native import");
 
     let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-    assert!(
-        <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(),
-        "native svg markup under a semio preamble is not this artifact's structured state DSL"
-    );
+    assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(), "native svg markup under a semio preamble is not this artifact's structured state DSL");
 }
 
 //#region PathGrammar

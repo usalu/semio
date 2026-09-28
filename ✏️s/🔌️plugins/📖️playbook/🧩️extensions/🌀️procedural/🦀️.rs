@@ -272,7 +272,8 @@ fn value_text(value: &str) -> UiAssemblyResult<UiValue> {
     Ok(UiValue::Text(ui_text(value)?))
 }
 
-fn value_map<const N: usize>(mut entries: [(&'static str, UiValue); N]) -> UiAssemblyResult<UiValue> {
+fn value_map(entries: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
+    let mut entries: Vec<_> = entries.into_iter().collect();
     entries.sort_unstable_by(|left, right| left.0.cmp(right.0));
     let mut map = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module action map admission failed"))?;
     for (key, value) in entries {
@@ -517,12 +518,16 @@ fn media_button(payload: &ModuleRenderPayload, format: &str, import: bool) -> Ui
     )
 }
 
-fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
+fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload, parent_window: Option<(&str, &str)>) -> UiAssemblyResult<BuiltNode> {
     let key = question.id.as_str();
     let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural question ids admission failed"))?;
     ui_admit(ids.push(value_text(&payload.question_id)?))?;
     let blueprint = payload.surface == "blueprint";
-    let args = value_map([("questionIds", UiValue::List(ids.finish())), ("field", value_text(if blueprint { "param" } else { "tryParam" })?), ("paramKey", value_text(key)?), ("key", value_text(&payload.question_id)?)])?;
+    let mut args = vec![("questionIds", UiValue::List(ids.finish())), ("field", value_text(if blueprint { "param" } else { "tryParam" })?), ("paramKey", value_text(key)?), ("key", value_text(&payload.question_id)?)];
+    if let Some((id, kind)) = parent_window {
+        args.extend([("windowId", value_text(id)?), ("windowKindId", value_text(kind)?)]);
+    }
+    let args = value_map(args)?;
     let control: BuiltNode = match question.kind.as_str() {
         "text" | "longText" | "number" => {
             let kind = match question.kind.as_str() {
@@ -545,7 +550,7 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
     ui_admit(ui_admit(field.try_child(control))?.try_build())
 }
 
-fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiAssemblyResult<BuiltNode> {
+fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, parent_window: Option<(&str, &str)>, embedded: bool) -> UiAssemblyResult<BuiltNode> {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
@@ -567,14 +572,30 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
         column = ui_admit(column.try_child(text_node(labels.no_procedural_parameters.as_str())?))?;
     }
     for question in visible {
-        let value = values.get(&question.id).cloned().unwrap_or_else(|| pack::json!(0));
-        column = ui_admit(column.try_child(render_question_control(question, &value, payload)?))?;
+        let value = values.get(&question.id).cloned().unwrap_or_else(|| question.default.as_ref().map(json_from_dsl_value).unwrap_or(Value::Null));
+        column = ui_admit(column.try_child(render_question_control(question, &value, payload, parent_window)?))?;
     }
-    for format in SOLID_MEDIA_FORMATS {
+    for format in SOLID_MEDIA_FORMATS.into_iter().filter(|_| !embedded) {
         column = ui_admit(column.try_child(media_button(payload, format, false)?))?;
         column = ui_admit(column.try_child(media_button(payload, format, true)?))?;
     }
     ui_admit(column.try_build())
+}
+
+fn embedded_payload(input: &str, body_key: &str) -> UiAssemblyResult<(ModuleRenderPayload, Option<(String, String)>)> {
+    let error = || PluginAssemblyError::new("procedural.extension-input", "invalid embedded surface input");
+    let props = parse_json(input).map_err(|_| error())?;
+    if props.get("bodyKey").and_then(Value::as_str) != Some(body_key) { return Err(error()); }
+    let json = props.get("paramsJson").and_then(Value::as_str).ok_or_else(error)?;
+    let payload: ModuleRenderPayload = pack::json::from_json_str(json).map_err(|_| error())?;
+    let target = parse_json(json).map_err(|_| error())?;
+    let window = match (target.get("windowId").and_then(Value::as_str), target.get("windowKindId").and_then(Value::as_str)) {
+        (None, None) => None,
+        (Some(id), Some(kind)) if !id.is_empty() && !kind.is_empty() && payload.surface == "try" => Some((id.to_string(), kind.to_string())),
+        _ => return Err(error()),
+    };
+    if payload.question_id.is_empty() || payload.controller_id.is_empty() || !matches!(payload.surface.as_str(), "blueprint" | "try") { return Err(error()); }
+    Ok((payload, window))
 }
 //#endregion 🔖️Params
 
@@ -886,9 +907,12 @@ impl ArtifactApp for ModuleApp {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         let labels = resolve_labels::<ModuleLabels>(view_state);
+        let embedded = view_state.extension_input_json.as_deref().map(|input| embedded_payload(input, body_key)).transpose()?;
+        let payload = embedded.as_ref().map(|(payload, _)| payload).unwrap_or(doc.snapshot);
+        let parent_window = embedded.as_ref().and_then(|(_, window)| window.as_ref()).map(|(id, kind)| (id.as_str(), kind.as_str()));
         match body_key {
-            BODY_PARAMS => render_params_body(doc.snapshot, labels),
-            BODY_PREVIEW => render_preview_body(doc.snapshot),
+            BODY_PARAMS => render_params_body(payload, labels, parent_window, embedded.is_some()),
+            BODY_PREVIEW => render_preview_body(payload),
             _ => text_node(format!("Unknown body: {body_key}")),
         }
         .map(built_to_component_tree)
@@ -956,18 +980,20 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssembly
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
-    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", env!("CARGO_PKG_VERSION")).extends("playbook").depends_on("playbook", semio_framework::tree_pin!()).mode(ExecutionMode::Isolated).contributes_topic(
-        "playbook.blockKind",
-        DslValue::object([
+    let mut bundle = ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", env!("CARGO_PKG_VERSION"))
+        .extends("playbook").depends_on("playbook", semio_framework::tree_pin!()).mode(ExecutionMode::Isolated);
+    for (topic, kind_key) in [("playbook.blockKind", "blockKind"), ("forms.questionKind", "questionKind")] {
+        bundle = bundle.contributes_topic(topic, DslValue::object([
             ("appId".to_string(), DslValue::String(MODULE_APP_ID.to_string())),
-            ("blockKind".to_string(), DslValue::String("buildingComponent".to_string())),
-            ("label".to_string(), DslValue::String("Building Component".to_string())),
+            (kind_key.to_string(), DslValue::String("buildingComponent".to_string())),
+            ("label".to_string(), if topic == "forms.questionKind" { dsl::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil")) } else { DslValue::String("Building Component".to_string()) }),
             ("iconId".to_string(), DslValue::String("building".to_string())),
             ("defaultValueJson".to_string(), DslValue::String(r#"{"height":6,"radius":0.5,"sides":6}"#.to_string())),
             ("paramsBodyKey".to_string(), DslValue::String(BODY_PARAMS.to_string())),
             ("previewBodyKey".to_string(), DslValue::String(BODY_PREVIEW.to_string())),
-        ]),
-    )
+        ]));
+    }
+    bundle
 }
 
 semio_framework_plugin::extension_exports!(module_extension_bundle, module_plugin_bundle, ProceduralModuleApps);

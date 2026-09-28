@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["grant", "cases", "largeCapacity"],
+  "properties": {
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumItems", "maximumBytes", "maximumDepth"],
+      "properties": {
+        "maximumItems": { "type": "integer", "const": 1 },
+        "maximumBytes": { "type": "integer", "minimum": 256, "maximum": 4096 },
+        "maximumDepth": { "type": "integer", "minimum": 1, "maximum": 512 }
+      }
+    },
+    "largeCapacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stringByteLength", "expectedCode"],
+      "properties": {
+        "stringByteLength": { "type": "integer", "minimum": 8192, "maximum": 1048576 },
+        "expectedCode": { "const": "retained-clone.step-grant-too-small" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "initial", "value", "interruptAfterTurns", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["success", "rejection", "cancel", "stale", "fault", "overBudget"] },
+          "initial": { "type": "integer" },
+          "value": { "type": "integer" },
+          "interruptAfterTurns": { "type": "integer", "minimum": 0 },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["published", "value", "history", "terminalEmpty"],
+            "properties": {
+              "published": { "type": "boolean" },
+              "value": { "type": "integer" },
+              "history": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "terminalEmpty": { "const": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -208,19 +208,15 @@ impl DrawingOwnedRetirement {
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
             },
-            DrawingRetirementOwner::Stroke(value) => match self.phase {
-                0 => Ok(Self::release_string(&mut value.cap, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::release_string(&mut value.join, &mut self.phase, 2, maximum_items, maximum_bytes)),
-                _ => {
-                    if let Some(dash) = value.dash.as_mut() {
-                        if dash.pop().is_some() {
-                            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                        }
+            DrawingRetirementOwner::Stroke(value) => {
+                if let Some(dash) = value.dash.as_mut() {
+                    if dash.pop().is_some() {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                     }
-                    value.dash = None;
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
                 }
+                value.dash = None;
+                drop(self.owner.take());
+                Ok(store::SnapshotRetirementStep::Complete)
             },
             DrawingRetirementOwner::Asset(value) => match self.phase {
                 0 => Ok(Self::release_string(&mut value.mime, &mut self.phase, 1, maximum_items, maximum_bytes)),
@@ -289,6 +285,8 @@ impl DrawingOwnedRetirement {
                     SetLayerVisible(payload) => DrawingMutationFields::String(payload.layer_id),
                     SetLayerLocked(payload) => DrawingMutationFields::String(payload.layer_id),
                     SetLayerOpacity(payload) => DrawingMutationFields::String(payload.layer_id),
+                    SetLayerFillRule(payload) => DrawingMutationFields::String(payload.layer_id),
+                    SetGroupIsolation(payload) => DrawingMutationFields::String(payload.layer_id),
                     SetLayerBlendMode(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.blend_mode) },
                     RenameLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name) },
                     UpdateText(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.content) },
@@ -1599,8 +1597,6 @@ impl DrawingSnapshotBoundsAuthority {
         if let Some(stroke) = &base.attributes.stroke {
             total.0 += 1;
             total.1 += size_of::<StrokeStyle>();
-            Self::merge(&mut total, Self::string_owner(&stroke.cap));
-            Self::merge(&mut total, Self::string_owner(&stroke.join));
             if let Some(dash) = &stroke.dash {
                 Self::merge(&mut total, Self::vec_owner(dash));
             }
@@ -1756,7 +1752,7 @@ impl DrawingLayerCloneAuthority {
             opacity: source.opacity,
             blend_mode: String::new(),
             transform: crate::DrawingTransform { x: source.transform.x, y: source.transform.y, scale_x: source.transform.scale_x, scale_y: source.transform.scale_y, rotation: source.transform.rotation, shear: source.transform.shear },
-            attributes: DrawingAttributes::default(),
+            attributes: DrawingAttributes {fill_rule:source.attributes.fill_rule,..Default::default()},
         }
     }
 
@@ -1778,7 +1774,7 @@ impl DrawingLayerCloneAuthority {
             DrawingLayerNode::Path(value) => DrawingLayerNode::Path(crate::DrawingPathBody { base: Self::base_skeleton(&value.base), segments: Vec::with_capacity(value.segments.len()) }),
             DrawingLayerNode::Text(value) => DrawingLayerNode::Text(crate::DrawingTextBody { base: Self::base_skeleton(&value.base), x: value.x, y: value.y, content: String::new(), size: value.size }),
             DrawingLayerNode::Image(value) => DrawingLayerNode::Image(crate::DrawingImageBody { base: Self::base_skeleton(&value.base), image_key: String::new(), width: value.width, height: value.height }),
-            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::DrawingGroupBody { base: Self::base_skeleton(&value.base), children: Vec::with_capacity(if mutation_ready { value.children.len().max(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY) } else { value.children.len() }) }),
+            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::DrawingGroupBody { isolation:value.isolation, base: Self::base_skeleton(&value.base), children: Vec::with_capacity(if mutation_ready { value.children.len().max(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY) } else { value.children.len() }) }),
             DrawingLayerNode::Boolean(value) => DrawingLayerNode::Boolean(crate::DrawingBooleanBody { base: Self::base_skeleton(&value.base), operation: String::new(), children: Vec::with_capacity(value.children.len()) }),
             DrawingLayerNode::Trace(value) => DrawingLayerNode::Trace(crate::DrawingTraceBody {
                 base: Self::base_skeleton(&value.base),
@@ -1887,21 +1883,21 @@ impl DrawingLayerCloneAuthority {
             }
             5 => {
                 target_base.attributes.stroke =
-                    source_base.attributes.stroke.as_ref().map(|stroke| StrokeStyle { color: stroke.color, width: stroke.width, cap: String::new(), join: String::new(), dash: stroke.dash.as_ref().map(|dash| Vec::with_capacity(dash.len())) });
+                    source_base.attributes.stroke.as_ref().map(|stroke| StrokeStyle { color: stroke.color, width: stroke.width, cap: stroke.cap, join: stroke.join, dash: stroke.dash.as_ref().map(|dash| Vec::with_capacity(dash.len())) });
                 &[]
             }
             6 => {
                 if let (Some(source), Some(target)) = (source_base.attributes.stroke.as_ref(), target_base.attributes.stroke.as_mut()) {
-                    target.cap = Self::clone_string(&source.cap)?;
-                    source.cap.as_bytes()
+                    target.cap = source.cap;
+                    source.cap.as_str().as_bytes()
                 } else {
                     &[]
                 }
             }
             7 => {
                 if let (Some(source), Some(target)) = (source_base.attributes.stroke.as_ref(), target_base.attributes.stroke.as_mut()) {
-                    target.join = Self::clone_string(&source.join)?;
-                    source.join.as_bytes()
+                    target.join = source.join;
+                    source.join.as_str().as_bytes()
                 } else {
                     &[]
                 }
@@ -2101,10 +2097,6 @@ impl DrawingLayerCloneWorkAuthority {
             self.add(items, bytes)?;
         }
         if let Some(stroke) = base.attributes.stroke.as_ref() {
-            for value in [&stroke.cap, &stroke.join] {
-                let (items, bytes) = Self::string(value);
-                self.add(items, bytes)?;
-            }
             if let Some(dash) = stroke.dash.as_ref() {
                 let (items, bytes) = Self::vector(dash)?;
                 self.add(items, bytes)?;
@@ -2207,8 +2199,8 @@ fn drawing_fill_clone_work_totals(value: &FillStyle) -> Result<DrawingCloneWorkT
 }
 
 fn drawing_stroke_clone_work_totals(value: &StrokeStyle) -> Result<DrawingCloneWorkTotals, &'static str> {
-    let mut items = 2usize;
-    let mut bytes = value.cap.capacity().checked_add(value.join.capacity()).ok_or("drawing-store.mutation-clone-byte-overflow")?;
+    let mut items = 0usize;
+    let mut bytes = 0usize;
     if let Some(dash) = value.dash.as_ref() {
         let (dash_items, dash_bytes) = DrawingLayerCloneWorkAuthority::vector(dash)?;
         items = items.checked_add(dash_items).ok_or("drawing-store.mutation-clone-item-overflow")?;
@@ -2713,7 +2705,7 @@ impl DrawingStrokeCloneAuthority {
             Some(_) => return Err("drawing-store.stroke-dash-capacity"),
             None => None,
         };
-        Ok(Self { value: std::mem::ManuallyDrop::new(Some(StrokeStyle { color: source.color, width: source.width, cap: String::new(), join: String::new(), dash })), retirement: std::mem::ManuallyDrop::new(None), phase: 0, index: 0, terminal: false })
+        Ok(Self { value: std::mem::ManuallyDrop::new(Some(StrokeStyle { color: source.color, width: source.width, cap: source.cap, join: source.join, dash })), retirement: std::mem::ManuallyDrop::new(None), phase: 0, index: 0, terminal: false })
     }
 
     fn step(&mut self, source: &StrokeStyle, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
@@ -2723,14 +2715,14 @@ impl DrawingStrokeCloneAuthority {
         let target = self.value.as_mut().ok_or("drawing-store.stroke-target")?;
         match self.phase {
             0 => {
-                target.cap = clone_drawing_string(&source.cap)?;
+                target.cap = source.cap;
                 self.phase = 1;
-                cx.consume_fuel(source.cap.len().max(1) as u64);
+                cx.consume_fuel(1);
             }
             1 => {
-                target.join = clone_drawing_string(&source.join)?;
+                target.join = source.join;
                 self.phase = 2;
-                cx.consume_fuel(source.join.len().max(1) as u64);
+                cx.consume_fuel(1);
             }
             2 => {
                 if let Some(value) = source.dash.as_ref().and_then(|values| values.get(self.index)) {
@@ -3166,8 +3158,8 @@ impl DrawingStrokeDigestAuthority {
         match self.phase {
             1..=4 => credit.scalar_f64(digest, 240 + u16::from(self.phase), value.color[(self.phase - 1) as usize], cx)?,
             5 => credit.scalar_f64(digest, 245, value.width, cx)?,
-            6 => credit.observe_owned_string(digest, 246, &value.cap, true, cx)?,
-            7 => credit.observe_owned_string(digest, 247, &value.join, true, cx)?,
+            6 => credit.observe(digest, 246, value.cap.as_str().as_bytes(), cx)?,
+            7 => credit.observe(digest, 247, value.join.as_str().as_bytes(), cx)?,
             8 => credit.observe(digest, 248, &[u8::from(value.dash.is_some())], cx)?,
             9 => {
                 let dash = value.dash.as_ref().ok_or("drawing-store.digest-dash-missing")?;
@@ -3395,10 +3387,12 @@ impl DrawingLayerVariantDigestAuthority {
                 self.terminal = self.phase == 4;
             }
             DrawingLayerNode::Group(value) => {
-                credit.source_vec(&value.children)?;
-                credit.derived_vec(&value.children)?;
-                credit.scalar_usize(digest, 400, value.children.len(), cx)?;
-                self.terminal = true;
+                if self.phase==1 {
+                    credit.source_vec(&value.children)?;
+                    credit.derived_vec(&value.children)?;
+                    credit.scalar_usize(digest,400,value.children.len(),cx)?;
+                    self.phase=2;
+                } else {credit.observe(digest,401,&[u8::from(value.isolation)],cx)?;self.terminal=true;}
             }
             DrawingLayerNode::Boolean(value) => match self.phase {
                 1 => {
@@ -3519,13 +3513,17 @@ impl DrawingLayerDigestAuthority {
                 }
             }
             15 => {
+                credit.observe(digest, 113, &[u8::from(base.attributes.fill_rule == crate::FillRule::Nonzero)], cx)?;
+                self.frames[self.depth].phase = 16;
+            }
+            16 => {
                 let variant = self.variant.get_or_insert_with(DrawingLayerVariantDigestAuthority::new);
                 if variant.step(node, digest, credit, cx)? {
                     self.variant = None;
-                    self.frames[self.depth].phase = 16;
+                    self.frames[self.depth].phase = 17;
                 }
             }
-            16 => {
+            17 => {
                 if let DrawingLayerNode::Group(group) = node {
                     let child = self.frames[self.depth].child;
                     if child < group.children.len() {
@@ -3540,7 +3538,7 @@ impl DrawingLayerDigestAuthority {
                         return Ok(false);
                     }
                 }
-                self.frames[self.depth].phase = 17;
+                self.frames[self.depth].phase = 18;
                 return Ok(false);
             }
             _ => {
@@ -3597,6 +3595,8 @@ impl DrawingMutationDigestAuthority {
             DrawingMutation::ReorderLayer(_) => 14,
             DrawingMutation::UpdatePathGeometry(_) => 15,
             DrawingMutation::UpdateText(_) => 16,
+            DrawingMutation::SetLayerFillRule(_) => 17,
+            DrawingMutation::SetGroupIsolation(_) => 18,
         }
     }
 
@@ -3664,6 +3664,18 @@ impl DrawingMutationDigestAuthority {
                 } else {
                     self.finish(digest, cx)
                 }
+            }
+            DrawingMutation::SetLayerFillRule(value) => {
+                if self.phase == 2 {
+                    self.credit.observe(digest,3,&[u8::from(value.fill_rule==crate::FillRule::Nonzero)],cx)?;
+                    self.phase=3;Ok(false)
+                } else {self.finish(digest,cx)}
+            }
+            DrawingMutation::SetGroupIsolation(value) => {
+                if self.phase == 2 {
+                    self.credit.observe(digest,3,&[u8::from(value.isolation)],cx)?;
+                    self.phase=3;Ok(false)
+                } else {self.finish(digest,cx)}
             }
             DrawingMutation::SetLayerOpacity(value) => {
                 if self.phase == 2 {
@@ -4310,6 +4322,8 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::SetLayerVisible(value) => &value.layer_id,
             DrawingMutation::SetLayerLocked(value) => &value.layer_id,
             DrawingMutation::SetLayerOpacity(value) => &value.layer_id,
+            DrawingMutation::SetLayerFillRule(value) => &value.layer_id,
+            DrawingMutation::SetGroupIsolation(value) => &value.layer_id,
             DrawingMutation::SetLayerBlendMode(value) => &value.layer_id,
             DrawingMutation::RenameLayer(value) => &value.layer_id,
             DrawingMutation::UpdateLayerTransform(value) => &value.layer_id,
@@ -4331,6 +4345,8 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::SetLayerVisible(value) => Some(&value.layer_id),
             DrawingMutation::SetLayerLocked(value) => Some(&value.layer_id),
             DrawingMutation::SetLayerOpacity(value) => Some(&value.layer_id),
+            DrawingMutation::SetLayerFillRule(value) => Some(&value.layer_id),
+            DrawingMutation::SetGroupIsolation(value) => Some(&value.layer_id),
             DrawingMutation::SetLayerBlendMode(value) => Some(&value.layer_id),
             DrawingMutation::RenameLayer(value) => Some(&value.layer_id),
             DrawingMutation::UpdateLayerTransform(value) => Some(&value.layer_id),
@@ -4762,11 +4778,19 @@ impl DrawingMutationCandidateAuthority {
                     DrawingMutation::SetLayerLocked(value) => {
                         crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
                     }
+                    DrawingMutation::SetGroupIsolation(value) => {
+                        let DrawingLayerNode::Group(group)=DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else {return Err("drawing-store.mutation-isolation-target-not-group");};
+                        group.isolation=value.isolation;
+                    }
+                    DrawingMutation::SetLayerFillRule(value) => {
+                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill_rule=value.fill_rule;
+                    }
                     DrawingMutation::SetLayerOpacity(value) if value.opacity.is_finite() => {
                         crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
                     }
                     DrawingMutation::SetLayerOpacity(_) => return Err("drawing-store.mutation-opacity-invalid"),
                     DrawingMutation::SetLayerBlendMode(value) => {
+                        if !crate::DRAWING_BLEND_MODES.contains(&value.blend_mode.as_str()) { return Err("drawing-store.mutation-blend-mode-invalid"); }
                         self.write_overlay_string(
                             &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).blend_mode,
                             &value.blend_mode,

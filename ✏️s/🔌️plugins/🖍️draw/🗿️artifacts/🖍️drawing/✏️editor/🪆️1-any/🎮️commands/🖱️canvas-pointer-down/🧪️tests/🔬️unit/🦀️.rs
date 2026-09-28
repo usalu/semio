@@ -307,7 +307,7 @@ fn prepare_drag(session: &mut DrawingSession, document: &DrawingSnapshot, start:
     query.drag_start=Some(start);
     session.point_query=Some(query);
     for _ in 0..1000 {
-        if session.prepare_layer_move(document,&[]).unwrap() { session.point_query=None; return; }
+        if session.prepare_layer_move(document,&[],&[]).unwrap() { session.point_query=None; return; }
     }
     panic!("Movement preparation did not complete");
 }
@@ -348,7 +348,7 @@ fn selected_handle_previews_are_ephemeral_and_release_one_absolute_transform() {
             let mut session=DrawingSession::with_active_utility("selectDirect");
             session.point_query=Some(query);
             session.step_gesture(drawing_gesture::Event::PointerDown {utility:"selectDirect".into(),world:start,shift:false,ctrl:false,meta:false},&document,&NoConfig::default());
-            while !session.prepare_layer_move(&document,&[id.clone()]).unwrap() {}
+            while !session.prepare_layer_move(&document,&[id.clone()],&[]).unwrap() {}
             assert!(session.layer_move.as_ref().unwrap().handle.is_some());
             session.move_layer_preview(end);
             let preview=session.preview().transformation.unwrap();
@@ -384,4 +384,115 @@ fn point_selection_reaches_the_painted_path_behind_a_concave_frame() {
     while !query.advance(&document){}
     assert_eq!(query.best.unwrap().layer_id,expected);
     eprintln!("[DEBUG] Concave frame picking reaches the painted layer behind its empty bounding area");
+}
+
+#[test]
+fn primitive_picking_uses_painted_contours() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🧫️fixtures/🔷️shapes/🔣️.json")).unwrap();
+    for sample in fixture.as_array().unwrap() {
+        let kind=sample["kind"].as_str().unwrap();
+        let mut shape=crate::DrawingShapeBody {base:crate::schema::default_layer_base("shape"),shape_kind:kind.into(),rect:None,ellipse:None,circle:None,line:None,polygon:None};
+        shape.base.transform=crate::schema::geometry::affine::drawing_matrix_to_transform(serde_json::from_value(sample["matrix"].clone()).unwrap());
+        let geometry=sample["geometry"].clone();
+        match kind {
+            "rect"=>shape.rect=Some(serde_json::from_value(geometry).unwrap()),
+            "ellipse"=>shape.ellipse=Some(serde_json::from_value(geometry).unwrap()),
+            "circle"=>shape.circle=Some(serde_json::from_value(geometry).unwrap()),
+            "line"=>shape.line=Some(serde_json::from_value(geometry).unwrap()),
+            "polygon"=>shape.polygon=Some(serde_json::from_value(geometry).unwrap()),
+            _=>unreachable!(),
+        }
+        shape.base.attributes.fill=sample["fill"].as_bool().unwrap().then_some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
+        shape.base.attributes.stroke=None;
+        let document=DrawingSnapshot {layers:vec![DrawingLayerNode::Shape(shape)],..Default::default()};
+        let mut query=TracePointerJob::new_query(&document,serde_json::from_value(sample["point"].clone()).unwrap(),sample["radius"].as_f64().unwrap(),false);
+        while !query.advance(&document) {}
+        assert_eq!(query.best.is_some(),sample["expected"].as_bool().unwrap(),"{}",sample["name"]);
+        assert!(!query.overflowed);
+        eprintln!("[DEBUG] primitive pick {} completed in {} work units",sample["name"],query.completed_work);
+    }
+}
+
+#[test]
+fn compound_path_picking_uses_the_authored_fill_rule() {
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🌀️rule/🧫️fixtures/🔣️.json")).unwrap();
+    for row in rows.as_array().unwrap() {
+        let segments=crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::path::parse_editable_svg_path(row["path"].as_str().unwrap()).unwrap();
+        let mut layer=create_drawing_path_layer("Compound",segments);
+        let attributes=&mut crate::schema::layer_base_mut(&mut layer).attributes;
+        attributes.fill=Some(crate::FillStyle::Solid {color:[0.0,0.0,0.0,1.0]});
+        attributes.fill_rule=crate::FillRule::parse(row["rule"].as_str().unwrap()).unwrap();
+        let document=DrawingSnapshot {layers:vec![layer],..Default::default()};
+        let mut query=TracePointerJob::new_query(&document,[50.0,50.0],0.0,false);
+        while !query.advance(&document) {}
+        assert!(!query.overflowed);
+        assert_eq!(query.best.is_some(),row["hit"].as_bool().unwrap(),"{}",row["name"]);
+    }
+    eprintln!("[DEBUG] compound path picking follows the same authored fill rule as scene paint");
+}
+
+#[test]
+fn node_marquee_collects_snapshot_bound_anchors_in_bounded_steps() {
+    let mut segments=vec![PathSegment::Move {to:[0.0,0.0]}];
+    for index in 1..5000 {segments.push(PathSegment::Line {to:[index as f64,0.0]});}
+    let geometry=points::geometry_id(&segments).unwrap();
+    let mut path=create_drawing_path_layer("Path",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
+    let document=DrawingSnapshot {layers:vec![path],..Default::default()};
+    let mut query=TracePointerJob::new_marquee(&document,[4.0,-1.0],[6.0,1.0],false);
+    query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
+    let mut steps=0;
+    loop {let before=query.completed_work;let done=query.advance(&document);assert!(query.completed_work-before<=TRACE_POINTER_WORK_PER_STEP);steps+=1;if done {break;}}
+    assert!(steps>1);assert!(!query.overflowed);
+    assert_eq!(query.hits.iter().cloned().collect::<Vec<_>>(),(4..=6).map(|index|points::point_id("path",&geometry,index,PathPoint::Anchor).unwrap()).collect::<Vec<_>>());
+    eprintln!("[DEBUG] 5000-anchor marquee hashes and selects incrementally in {steps} bounded slices");
+}
+
+#[test]
+fn empty_node_press_starts_marquee_without_changing_point_selection() {
+    let path=create_drawing_path_layer("Path",vec![PathSegment::Move {to:[0.0,0.0]},PathSegment::Line {to:[10.0,0.0]}]);
+    let id=layer_id(&path).to_string();let document=DrawingSnapshot {layers:vec![path],..Default::default()};
+    let mut session=DrawingSession::with_active_utility("editNodes");
+    let mut cursor=TracePointerJob::new_query(&document,[-20.0,-20.0],1.0,false);cursor.node_editing=true;cursor.selected_ids=vec![id.clone()];while !cursor.advance(&document) {}
+    let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);query.drag_start=Some([-20.0,-20.0]);session.point_query=Some(query);
+    assert!(session.prepare_layer_move(&document,&[id],&[]).unwrap());assert!(session.node_marquee.is_some());assert!(session.gesture.matches("marqueeing"));assert!(session.point_query.as_ref().unwrap().node_selection.is_none());
+    session.step_gesture(drawing_gesture::Event::Escape,&document,&NoConfig::default());assert!(session.node_marquee.is_none());assert!(session.gesture.matches("idle"));
+}
+
+#[test]
+fn node_publication_uses_merged_point_targets_and_actual_json_byte_limit() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️point-publication/🔣️.json")).unwrap();
+    let ids:Vec<String>=serde_json::from_value(fixture["ids"].clone()).unwrap();
+    let document=DrawingSnapshot::default();
+    let mut cursor=TracePointerJob::new_marquee(&document,[0.0,0.0],[1.0,1.0],false);
+    cursor.hits.try_push("discarded-candidate".into()).unwrap();
+    let mut query=DrawingPointQuery::new("canvasPointerUp",cursor,false,"replace".into(),true);
+    query.node_selection=Some(ids.clone());query.preserve_selection=true;
+    for _ in &ids {assert!(matches!(query.publication_step(),DrawingQueryPublication::Pending));}
+    let DrawingQueryPublication::Complete(targets)=query.publication_step() else {panic!("Expected complete point publication")};
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&targets).unwrap(),fixture["targets"]);
+    let mut query=DrawingPointQuery::new("canvasPointerUp",TracePointerJob::new_query(&document,[0.0,0.0],0.0,false),false,"replace".into(),false);
+    let oversized=format!("{}:{}:0:anchor","\"".repeat(5000),"0".repeat(64));
+    assert!(oversized.len()<DRAWING_QUERY_TARGET_BYTES);
+    query.node_selection=Some(vec![oversized]);
+    assert!(matches!(query.publication_step(),DrawingQueryPublication::Fault));
+    eprintln!("[DEBUG] node publication emits point granularity after merging and refuses escaped output over its byte budget");
+}
+
+#[test]
+fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
+    let segments=(0..=DRAWING_QUERY_HIT_CAPACITY).map(|index|if index==0 {PathSegment::Move {to:[0.0,0.0]}}else {PathSegment::Line {to:[index as f64,0.0]}}).collect();
+    let mut path=create_drawing_path_layer("Many",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
+    let document=DrawingSnapshot {layers:vec![path],..Default::default()};
+    let mut query=TracePointerJob::new_marquee(&document,[-1.0,-1.0],[1000.0,1.0],false);query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
+    while !query.advance(&document) {}
+    assert!(query.overflowed);assert!(query.hits.is_empty());
+    for (visible,locked) in [(false,false),(true,true),(true,false)] {
+        let mut path=create_drawing_path_layer("Child",vec![PathSegment::Move {to:[0.0,0.0]}]);crate::schema::layer_base_mut(&mut path).id="path".into();
+        let mut group=crate::schema::create_drawing_group_layer("Group");
+        if let DrawingLayerNode::Group(group)=&mut group {group.base.visible=visible;group.base.locked=locked;group.children.push(path);}
+        let document=DrawingSnapshot {layers:vec![group],..Default::default()};
+        let mut query=TracePointerJob::new_marquee(&document,[-1.0,-1.0],[1.0,1.0],false);query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
+        while !query.advance(&document) {}
+        assert!(!query.overflowed);assert_eq!(query.hits.len(),usize::from(visible&&!locked));
+    }
 }

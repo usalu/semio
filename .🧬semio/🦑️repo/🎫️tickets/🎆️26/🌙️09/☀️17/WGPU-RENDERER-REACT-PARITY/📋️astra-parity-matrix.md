@@ -1,4 +1,34 @@
-Current checkpoint (2026-09-27 19:22 UTC): WGPU TypeScript7 passed 45 files/485 tests. UI7 passed 704/715; repaired full UI8 and native7 remain pending. WASM19 failed after 11m31 on two renderer integration errors, now source-corrected; a coherent typed-projection build is next. Full React10 is running and has four observed failures (two Paint2D mask cases, a pre-fix title/focus case now focused15/15 green, and paged scene routing now corrected against shared Table/Text Editor fixtures). Fresh activated React confirmed title localization persistence but exposed viewport remount and title-induced unfocus defects. Root fixed title-free maximize identity (mounted15/15); SolCanvas implements session viewport retention and SolFlow full native projection settings, audited by Terra. Graph/Diff/EventFeed CSS Chromium oracles passed2/3/2; instance-title/projection5, World3d interaction18, module-worker freshness1 passed. Fresh WGPU physical acceptance and all fifteen surface families remain required. See integration34 for exact evidence.
+## Checkpoint 42 Browser Census and Media Authority
+
+The goal remains incomplete. Current WGPU TypeScript tests pass **511/511 across 48 files**, including Chromium oracles and deterministic worker generation. Details: `📓️astra-build42.md`. Native40b stopped before assertions on a static localization-key lifetime error; source is repaired and Native42 is queued. WASM30b remains a failed publication attempt; physical WGPU acceptance still uses W28.
+
+Reserved host media slots now survive generic extension resolution through an exact registered ID. Channel v19 TypeScript codec/client passes 24 focused tests, including shared Rust golden bytes, strict Ajv schema validation, and an independent LEB128 oracle. Typed runtime forwarding and real media host lifecycle are being integrated. Resource ownership must include the actual document ID and activation generation, not the controller routing ID. No playback or full media parity claim is made. Details: `📓️astra-media-transport42.md`.
+
+## Historical Checkpoint 41 Export Transport and Publication Gate
+
+The goal remains incomplete. Both browser IconRenderExport decoders now accept the missing WIT variant through one validated boundary: fail-first regression reproduced the drop, then all eight neutral cases passed through both production decoders. Preview and export now share the public mesh URL resolver; its fail-first law and focused status tests pass. Real Chromium frame tests pass 4/4, and actual data-URL download delivery passes both SVG byte/filename cases. The live Shooting reference now generates SVG successfully; its in-app saved-file observation remains unverified. Details: `📓️astra-export-wire41.md`.
+
+The native batch host no longer refuses more than 64 items and scopes cancellation independently for subsequent requests. The neutral Ajv/AbortController oracle passes 6/6; native integration remains pending in native40b. See `📓️astra-export-queue41.md`. The executor's saved UI rerun passes all six focused laws (720 skipped), including same-size viewport-origin publication and production GPU cancellation/readback; receipt `🗑️generated/sol-flow34/ui-six-laws-2.log`, Nextest run `b3550868-1be5-40d3-b4dd-5c4df6795faf`.
+
+WASM30b failed before publication on four private PaintGesture field accesses in the shared Surface paint consumer; its owning Raster chat has the exact diagnostics. The prior dependency prerequisite completed, but this does not establish a renderer build. WGPU physical comparison still uses W28. Native40b is compiling through the shared queue. No fresh WGPU artifact or all-fifteen-family acceptance is claimed.
+
+## Historical Checkpoint 40 Export and Text-Flow Gate
+
+The goal remains incomplete. Shell IconRenderExport now has bounded PNG/GPU and first-party SVG paths, progress/cancel accessibility, once-only delivery, and exact resource retirement before save. The neutral SVG Three/Sharp oracle is agent-reported 2/2 green; fresh native execution is pending native40b. WASM30b is the fresh artifact producer after the current lockfile was reconciled through offline Cargo metadata. No new browser WGPU artifact has been published yet; the comparison tab still uses W28.
+
+The actual React Projection label-order discrepancy has a failing Chromium reproduction and a passing correction: 2/2 tests, twelve English/German label-direction comparisons, and a fresh physical app check with no console errors. Tree label reading order is isolated from pane placement. See `📓️astra-tree-text-flow40.md`.
+
+The six-law UI attempt reported 2 passed, 1 failed, 3 skipped; its same-size viewport-origin atomicity failure is assigned for repair and a logged rerun. Actual Shooting export/download remains unverified after the keyboard-focused reference action yielded no captured download event. See `📓️astra-icon-batch39.md`. All fifteen surface families still require current app-backed acceptance before full parity can be claimed.
+
+## Batch 34 camera and runtime updates
+
+Actual React/Three Icon camera contract: 9/9 passed; native resolver and eight-case matrix law authored, pending executable validation and neutral `preserveCamera` World policy. React asynchronous reference pose and concrete camera/control remount laws: SolFlow reports focused R3F103/103 passed. Physical sealed-WASM23 Orthographic palette drag created the correctly titled/iconed third window and retained both siblings. Remaining current defects include Projection partial painting, Display row order and AX disclosure, and Icon framing/presentation integration.
+
+## Playbook native showcase receipt
+
+The actual Playbook app manifest matches the five language-neutral scene families: native exact law **1/1 passed**, 162 unrelated cases filtered, Nextest 0.045 s, Nx 40m19s including the shared compiler queue. Session 99099 exited 0. Log: `🗑️generated/astra-runtime/gate34/playbook-five-native1.log`. This is manifest validation, not five-surface physical acceptance.
+
+Current checkpoint (2026-09-27 21:20 UTC): full retained UI11 passes716/716, zero skips; fresh WASM23 publishes and runs. Physical checkbox paint and hidden-sibling focus/unfocus retention pass. Projection pane publishes AX rows/actions but paints blank strips and remains a blocker. Actual React image-origin and camera/control remount defects are now identified by runtime23 diagnostics and being repaired consistently. Full native10 stops before assertions on17 in-flight touch-integration errors; Sol owns coherent completion, and queued focused tests continue without another broad batch. Full React13 remains2476 passed/2 concurrent Raster failures pending owner repair. All15 families still require current app-backed acceptance. See integration34 and paired-runtime23.
 
 # Renderer Parity Acceptance Matrix
 

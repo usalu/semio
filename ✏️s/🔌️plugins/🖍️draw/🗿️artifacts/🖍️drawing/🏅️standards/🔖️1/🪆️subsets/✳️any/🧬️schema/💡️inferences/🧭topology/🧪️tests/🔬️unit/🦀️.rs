@@ -10,7 +10,7 @@ fn path_layer(id: &str) -> DrawingLayerNode {
 }
 
 fn group_layer(id: &str, children: Vec<DrawingLayerNode>) -> DrawingLayerNode {
-    DrawingLayerNode::Group(DrawingGroupBody { base: base(id), children })
+    DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: base(id), children })
 }
 
 #[semio_framework_async_macros::async_test]

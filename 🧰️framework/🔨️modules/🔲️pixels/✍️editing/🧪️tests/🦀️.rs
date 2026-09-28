@@ -149,3 +149,35 @@ fn output_initialization_follows_pixel_grants() {
     assert_eq!(job.result().unwrap().pixels,bytes(&case["expectedPixel"]).repeat((width*height) as usize));
     assert_eq!(job.result().unwrap().pixels,oracle.into_raw());
 }
+
+#[test]
+fn selection_combination_neutral_cases_and_bounded_cancellation() {
+    let fixture=fixture();
+    for row in fixture["selectionCombinations"].as_array().unwrap() {
+        let current=row.get("current").map(bytes);let next=bytes(&row["next"]);
+        let mode=match row["mode"].as_str().unwrap() {"replace"=>SelectionMerge::Replace,"add"=>SelectionMerge::Add,"subtract"=>SelectionMerge::Subtract,"intersect"=>SelectionMerge::Intersect,_=>unreachable!()};
+        let mut job=SelectionCombineJob::new(current.as_deref(),&next,mode).unwrap();assert_eq!(job.result(),Err(PixelEditError::Incomplete));assert_eq!(job.advance(0).unwrap().completed,0);
+        while !job.advance(1).unwrap().done {}assert_eq!(job.into_result().unwrap(),bytes(&row["expected"]));
+    }
+    let work=&fixture["selectionCombinationWork"];let next=vec![128;work["length"].as_u64().unwrap() as usize];let current=vec![200;next.len()];
+    let mut job=SelectionCombineJob::new(Some(&current),&next,SelectionMerge::Subtract).unwrap();
+    for expected in work["completed"].as_array().unwrap() {assert_eq!(job.advance(usize::MAX).unwrap().completed,expected.as_u64().unwrap() as usize);}
+    assert!(job.result().unwrap().iter().all(|&value|value==72));job.cancel();assert_eq!(job.result(),Err(PixelEditError::Cancelled));assert_eq!(job.advance(1),Err(PixelEditError::Cancelled));
+    let mut job=SelectionCombineJob::new(None,&next,SelectionMerge::Add).unwrap();job.advance(1).unwrap();job.cancel();assert_eq!(job.into_result(),Err(PixelEditError::Cancelled));
+    assert!(SelectionCombineJob::new(None,&[],SelectionMerge::Add).is_err());assert!(SelectionCombineJob::new(Some(&[0]),&next,SelectionMerge::Add).is_err());
+    let oversized=vec![0;MAX_IMAGE_PIXELS+1];assert!(SelectionCombineJob::new(None,&oversized,SelectionMerge::Add).is_err());
+    assert!(current.iter().all(|&value|value==200));assert!(next.iter().all(|&value|value==128));
+}
+
+#[test]
+fn selection_rasterization_is_bounded_and_cancellable(){
+    let fixture=fixture();let case=&fixture["selectionRasterization"];let width=case["width"].as_u64().unwrap() as u32;let height=case["height"].as_u64().unwrap() as u32;
+    let shape=SelectionShape::Polygon(case["shape"]["points"].as_array().unwrap().iter().map(|point|[point[0].as_f64().unwrap(),point[1].as_f64().unwrap()]).collect());
+    let mut job=PixelSelectionJob::new(width,height,shape.clone()).unwrap();assert_eq!(job.result(),Err(PixelEditError::Incomplete));
+    for (grant,completed) in case["grants"].as_array().unwrap().iter().zip(case["completed"].as_array().unwrap()){
+        let progress=job.advance(grant.as_u64().unwrap() as usize).unwrap();assert_eq!(job.mask.len(),progress.completed*width as usize);assert_eq!(progress,PixelProgress{completed:completed.as_u64().unwrap() as usize,total:height as usize,done:completed.as_u64().unwrap()==u64::from(height)});if !progress.done{assert_eq!(job.result(),Err(PixelEditError::Incomplete));}
+    }
+    assert_eq!(job.into_result().unwrap(),bytes(&case["expected"]));
+    for rows in case["cancelAfterRows"].as_array().unwrap(){let mut job=PixelSelectionJob::new(width,height,shape.clone()).unwrap();if rows.as_u64().unwrap()>0{job.advance(rows.as_u64().unwrap() as usize).unwrap();}job.cancel();assert_eq!(job.result(),Err(PixelEditError::Cancelled));assert_eq!(job.advance(1),Err(PixelEditError::Cancelled));}
+    for rows in case["invalidGrants"].as_array().unwrap(){let mut job=PixelSelectionJob::new(width,height,shape.clone()).unwrap();assert!(job.advance(rows.as_u64().unwrap() as usize).is_err());assert_eq!(job.advance(1).unwrap().completed,1);}
+}

@@ -33,7 +33,7 @@ xlsx-snapshot = "[" hex "," opc-package "," workbook "]"
 # from this artifact's own `../🔺️diff/📝️text` sibling grammar's identical productions (both facets
 # share the SAME `OpcPart`/`OpcContentTypes`/`OpcRelationship`/`OpcTargetMode` full-value shapes,
 # per that facet's own file's citation to docx's identical `opc-diff` restatement precedent) ────
-opc-package = "[" "[" part-list? "]" "," content-types "," rel-map "]"
+opc-package = "[" "[" part-list? "]" "," content-types "," rel-map "," hex "]"
 part-list = opc-part {"," opc-part}*
 opc-part = "[" hex "," hex "," hex "]"
 content-types = "[" "[" ct-entry-list? "]" "," "[" ct-entry-list? "]" "]"

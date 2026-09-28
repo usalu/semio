@@ -16,6 +16,7 @@ export interface XmlMainViewModel {
  * child-index path from the root (only `Text` nodes are real edit targets). */
 export interface XmlSetNode {
   nodeId: string;
+  revision: string;
   value: string;
 }
 

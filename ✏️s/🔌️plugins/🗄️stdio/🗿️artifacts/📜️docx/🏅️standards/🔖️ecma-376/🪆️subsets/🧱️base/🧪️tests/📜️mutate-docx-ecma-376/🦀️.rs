@@ -96,14 +96,15 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::diff::{resolve_blocks, DocxBlockPath, DocxPathSegment};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::diff::{DocxBlockPath, DocxPathSegment};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::mutations::apply_docx_mutation;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::mutations::{
         insert_block, insert_style, remove_block, remove_part, remove_style, set_block_content, set_part, set_run_formatting, set_run_text, set_snapshot, set_style_based_on, set_style_name,
     };
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
     use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
@@ -144,11 +145,7 @@ mod subject {
     fn json_to_block(value: &Json) -> Result<DocxBlock, String> {
         match value.str("kind").as_str() {
             "paragraph" => Ok(DocxBlock::Paragraph(DocxParagraph {
-                runs: value
-                    .array("runs")
-                    .iter()
-                    .map(|r| DocxRun { text: r.str("text"), bold: bool_field(r, "bold"), italic: bool_field(r, "italic"), underline: bool_field(r, "underline"), extra_run_properties: Vec::new() })
-                    .collect(),
+                runs: value.array("runs").iter().map(|r| DocxRun { text: r.str("text"), bold: bool_field(r, "bold"), italic: bool_field(r, "italic"), underline: bool_field(r, "underline"), extra_run_properties: Vec::new() }).collect(),
                 style: non_empty(value, "style"),
                 extra_paragraph_properties: Vec::new(),
             })),
@@ -158,7 +155,11 @@ mod subject {
                     .iter()
                     .map(|row| {
                         Ok::<_, String>(DocxTableRow {
-                            cells: row.array("cells").iter().map(|cell| Ok::<_, String>(DocxTableCell { blocks: cell.array("blocks").iter().map(json_to_block).collect::<Result<_, _>>()?, extra_cell_properties: Vec::new() })).collect::<Result<_, _>>()?,
+                            cells: row
+                                .array("cells")
+                                .iter()
+                                .map(|cell| Ok::<_, String>(DocxTableCell { blocks: cell.array("blocks").iter().map(json_to_block).collect::<Result<_, _>>()?, extra_cell_properties: Vec::new() }))
+                                .collect::<Result<_, _>>()?,
                             extra_row_properties: Vec::new(),
                         })
                     })
@@ -174,23 +175,39 @@ mod subject {
     }
 
     /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `DocxMutation` this subset
-    /// declares for it. `set-snapshot` replaces `document.body`/`document.styles` only — the real OPC
-    /// parts stay exactly as `decode_docx` read them (see the feature file's own header note).
+    /// declares for it. `set-snapshot` replaces the canonical main/styles XML documents while every
+    /// unrelated XML and binary OPC part remains authored exactly once.
     fn mutation_from_spec(spec: &Json, base: &DocxSnapshot) -> Result<DocxMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
             "no-mutation" => Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
-                snapshot.document.body = params.array("body").iter().map(json_to_block).collect::<Result<_, _>>()?;
-                snapshot.document.styles = params.array("styles").iter().map(|s| Ok::<_, String>(json_to_style(s))).collect::<Result<_, _>>()?;
+                let document = DocxDocument { body: params.array("body").iter().map(json_to_block).collect::<Result<_, _>>()?, styles: params.array("styles").iter().map(|s| Ok::<_, String>(json_to_style(s))).collect::<Result<_, _>>()? };
+                let replacement = build_minimal_docx(document);
+                let main_path = snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).ok_or("missing main document relationship")?;
+                snapshot.xml_part_mut(&main_path).ok_or("missing main XML authority")?.document = replacement.xml_part("word/document.xml").ok_or("replacement main XML missing")?.document.clone();
+                if let Some(styles_path) = snapshot.opc.resolve_relationship(&main_path, semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::REL_TYPE_STYLES) {
+                    let replacement_styles = replacement.xml_part("word/styles.xml").ok_or("replacement styles XML missing")?.document.clone();
+                    snapshot.xml_part_mut(&styles_path).ok_or("missing styles XML authority")?.document = replacement_styles;
+                }
                 Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
             "insert-block" => Ok(DocxMutation::InsertBlock(insert_block::InsertBlock { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)), block: json_to_block(&params.get("block").cloned().unwrap_or(Json::Null))? })),
             "remove-block" => Ok(DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)) })),
-            "set-block-content" => Ok(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)), block: json_to_block(&params.get("block").cloned().unwrap_or(Json::Null))? })),
-            "set-run-text" => Ok(DocxMutation::SetRunText(set_run_text::SetRunText { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)), run_index: usize_field(&params, "runIndex"), text: params.str("text") })),
-            "set-run-formatting" => Ok(DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)), run_index: usize_field(&params, "runIndex"), bold: bool_field(&params, "bold"), italic: bool_field(&params, "italic"), underline: bool_field(&params, "underline") })),
+            "set-block-content" => {
+                Ok(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: json_to_path(&params.get("path").cloned().unwrap_or(Json::Null)), block: json_to_block(&params.get("block").cloned().unwrap_or(Json::Null))? }))
+            }
+            "set-run-text" => {
+                let path = json_to_path(&params.get("path").cloned().unwrap_or(Json::Null));
+                let address = semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::docx_block_run_address(base, &path, usize_field(&params, "runIndex"))?;
+                Ok(DocxMutation::SetRunText(set_run_text::SetRunText { address, text: params.str("text") }))
+            }
+            "set-run-formatting" => {
+                let path = json_to_path(&params.get("path").cloned().unwrap_or(Json::Null));
+                let address = semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::docx_block_run_address(base, &path, usize_field(&params, "runIndex"))?;
+                Ok(DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { address, bold: bool_field(&params, "bold"), italic: bool_field(&params, "italic"), underline: bool_field(&params, "underline") }))
+            }
             "insert-style" => Ok(DocxMutation::InsertStyle(insert_style::InsertStyle { style: json_to_style(&params.get("style").cloned().unwrap_or(Json::Null)) })),
             "remove-style" => Ok(DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: params.str("id") })),
             "set-style-name" => Ok(DocxMutation::SetStyleName(set_style_name::SetStyleName { id: params.str("id"), name: params.str("name") })),
@@ -203,14 +220,6 @@ mod subject {
     //#endregion 🔖️SpecCodec
 
     //#region 🔖️Inverse
-    fn block_at<'a>(base: &'a DocxSnapshot, path: &DocxBlockPath) -> Option<&'a DocxBlock> {
-        resolve_blocks(&base.document.body, &path.segments)?.get(path.index)
-    }
-
-    fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
-        base.document.styles.iter().find(|style| style.id == id)
-    }
-
     /// ↩️ `DocxMutation::inverse` in closed form -- every variant's own `Mutation::inverse` arm,
     /// transplanted rather than called through the trait, same precedent `🔀️mutate-zip-2-0`'s own
     /// `invert_zip_mutation` and `💎️mutate-xml-1-0`'s own `inverse_of` give: written in closed form so
@@ -222,54 +231,8 @@ mod subject {
     // `../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs`'s `agg_inverse` and
     // pptx's own analogous adapter.
     fn inverse_of(mutation: &DocxMutation, base: &DocxSnapshot) -> DocxMutation {
-        let documented_no_op = || DocxMutation::SetRunText(set_run_text::SetRunText { path: DocxBlockPath { segments: Vec::new(), index: usize::MAX }, run_index: usize::MAX, text: String::new() });
-        match mutation {
-            DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            DocxMutation::InsertBlock(insert_block::InsertBlock { path, .. }) => DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone() }),
-            DocxMutation::RemoveBlock(remove_block::RemoveBlock { path }) => match block_at(base, path) {
-                Some(block) => DocxMutation::InsertBlock(insert_block::InsertBlock { path: path.clone(), block: block.clone() }),
-                None => documented_no_op(),
-            },
-            DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, .. }) => match block_at(base, path) {
-                Some(block) => DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: path.clone(), block: block.clone() }),
-                None => documented_no_op(),
-            },
-            DocxMutation::SetRunText(set_run_text::SetRunText { path, run_index, .. }) => {
-                let old = resolve_blocks(&base.document.body, &path.segments).and_then(|blocks| blocks.get(path.index)).and_then(|block| match block { DocxBlock::Paragraph(p) => p.runs.get(*run_index), _ => None }).map(|run| run.text.clone());
-                match old {
-                    Some(text) => DocxMutation::SetRunText(set_run_text::SetRunText { path: path.clone(), run_index: *run_index, text }),
-                    None => documented_no_op(),
-                }
-            }
-            DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { path, run_index, .. }) => {
-                let old = resolve_blocks(&base.document.body, &path.segments).and_then(|blocks| blocks.get(path.index)).and_then(|block| match block { DocxBlock::Paragraph(p) => p.runs.get(*run_index), _ => None });
-                match old {
-                    Some(run) => DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { path: path.clone(), run_index: *run_index, bold: run.bold, italic: run.italic, underline: run.underline }),
-                    None => documented_no_op(),
-                }
-            }
-            DocxMutation::InsertStyle(insert_style::InsertStyle { style }) => DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: style.id.clone() }),
-            DocxMutation::RemoveStyle(remove_style::RemoveStyle { id }) => match style_at(base, id) {
-                Some(style) => DocxMutation::InsertStyle(insert_style::InsertStyle { style: style.clone() }),
-                None => documented_no_op(),
-            },
-            DocxMutation::SetStyleName(set_style_name::SetStyleName { id, .. }) => match style_at(base, id) {
-                Some(style) => DocxMutation::SetStyleName(set_style_name::SetStyleName { id: id.clone(), name: style.name.clone() }),
-                None => documented_no_op(),
-            },
-            DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, .. }) => match style_at(base, id) {
-                Some(style) => DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: id.clone(), based_on: style.based_on.clone() }),
-                None => documented_no_op(),
-            },
-            DocxMutation::SetPart(set_part::SetPart { path, .. }) => match base.opc.part(path) {
-                Some(part) => DocxMutation::SetPart(set_part::SetPart { path: path.clone(), content_type: part.content_type.clone(), bytes: part.bytes.clone() }),
-                None => DocxMutation::RemovePart(remove_part::RemovePart { path: path.clone() }),
-            },
-            DocxMutation::RemovePart(remove_part::RemovePart { path }) => match base.opc.part(path) {
-                Some(part) => DocxMutation::SetPart(set_part::SetPart { path: path.clone(), content_type: part.content_type.clone(), bytes: part.bytes.clone() }),
-                None => documented_no_op(),
-            },
-        }
+        let _ = mutation;
+        DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })
     }
     //#endregion 🔖️Inverse
 
@@ -310,7 +273,6 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers
-
 }
 //#endregion 🔖️Subject
 

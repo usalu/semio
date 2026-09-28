@@ -1,5 +1,111 @@
 use super::*;
 
+/// 🧭 Collapses only insignificant spacing outside quoted identifiers in a raw DOCTYPE payload.
+fn normalize_reference_doctype_payload(bytes: &[u8]) -> String {
+    let source = std::str::from_utf8(bytes).expect("UTF-8 doctype payload");
+    let mut normalized = String::new();
+    let mut quote = None;
+    let mut pending_space = false;
+    for character in source.trim().chars() {
+        if let Some(delimiter) = quote {
+            normalized.push(character);
+            if character == delimiter {
+                quote = None;
+            }
+        } else if character == '"' || character == '\'' {
+            if pending_space && !normalized.is_empty() {
+                normalized.push(' ');
+            }
+            pending_space = false;
+            quote = Some(character);
+            normalized.push(character);
+        } else if character.is_whitespace() {
+            pending_space = true;
+        } else {
+            if pending_space && !normalized.is_empty() {
+                normalized.push(' ');
+            }
+            pending_space = false;
+            normalized.push(character);
+        }
+    }
+    normalized
+}
+
+/// 🧭 Reads document boundary order and content with the independent quick-xml parser.
+fn reference_document_boundaries(source: &str) -> Vec<(String, String)> {
+    use quick_xml::{events::Event, Reader};
+    let mut reader = Reader::from_str(source);
+    let mut depth = 0usize;
+    let mut boundaries = Vec::new();
+    loop {
+        match reader.read_event().expect("independent XML boundary reader") {
+            Event::Start(node) => {
+                if depth == 0 {
+                    boundaries.push(("root".into(), String::from_utf8(node.name().as_ref().to_vec()).unwrap()));
+                }
+                depth += 1;
+            }
+            Event::Empty(node) if depth == 0 => boundaries.push(("root".into(), String::from_utf8(node.name().as_ref().to_vec()).unwrap())),
+            Event::End(_) => depth -= 1,
+            Event::DocType(node) => boundaries.push(("doctype".into(), normalize_reference_doctype_payload(node.as_ref()))),
+            Event::Comment(node) if depth == 0 => boundaries.push(("comment".into(), String::from_utf8(node.as_ref().to_vec()).unwrap())),
+            Event::PI(node) if depth == 0 => boundaries.push(("processingInstruction".into(), String::from_utf8(node.as_ref().to_vec()).unwrap())),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    boundaries
+}
+
+fn boundary_kind(node: &XmlNode) -> &'static str {
+    match node {
+        XmlNode::Comment { .. } => "comment",
+        XmlNode::ProcessingInstruction { .. } => "processingInstruction",
+        XmlNode::Element { .. } => "element",
+        XmlNode::Text { .. } => "text",
+        XmlNode::CData { .. } => "cData",
+    }
+}
+
+#[test]
+fn neutral_document_boundary_fixture_round_trips_all_doctype_positions() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    for case in fixture["valid"].as_array().expect("valid cases") {
+        let source = case["source"].as_str().expect("source");
+        let doc = xml_document_from_text(source).unwrap_or_else(|error| panic!("{}: {error}", case["id"]));
+        let doctype = doc.doctype.as_ref().expect("doctype");
+        assert_eq!(doctype.prolog_position, case["doctypePosition"].as_u64().expect("doctype position") as usize, "{}", case["id"]);
+        assert_eq!(doc.prolog.iter().map(boundary_kind).collect::<Vec<_>>(), case["prologKinds"].as_array().expect("prolog kinds").iter().map(|value| value.as_str().expect("kind")).collect::<Vec<_>>(), "{}", case["id"]);
+        assert_eq!(doc.epilog.iter().map(boundary_kind).collect::<Vec<_>>(), case["epilogKinds"].as_array().expect("epilog kinds").iter().map(|value| value.as_str().expect("kind")).collect::<Vec<_>>(), "{}", case["id"]);
+        let exported = xml_document_to_text_checked(&doc).expect("valid authored document");
+        assert_eq!(reference_document_boundaries(&exported), reference_document_boundaries(source), "{} independent boundary ordering and content", case["id"]);
+        let reopened = xml_document_from_text(&exported).expect("exported XML reopens");
+        assert_eq!(reopened, doc, "{}", case["id"]);
+    }
+    println!("[DEBUG] XML exported prolog/doctype/root/epilog boundary order and content match independent quick-xml input projection");
+}
+
+#[test]
+fn neutral_document_boundary_fixture_rejects_invalid_sources_and_authored_state() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    for case in fixture["invalid"].as_array().expect("invalid cases") {
+        let error = xml_document_from_text(case["source"].as_str().expect("source")).expect_err("invalid XML boundary source");
+        assert_eq!(error, case["error"].as_str().expect("error"), "{}", case["id"]);
+    }
+
+    let invalid_position = XmlDocument {
+        prolog: vec![XmlNode::Comment { text: "before".into() }],
+        doctype: Some(XmlDoctype { prolog_position: 2, name: "root".into(), ..Default::default() }),
+        root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }),
+        ..Default::default()
+    };
+    assert_eq!(xml_document_to_text_checked(&invalid_position).expect_err("invalid position"), fixture["invalidAuthored"][0]["error"].as_str().expect("position error"));
+
+    let invalid_epilog = XmlDocument { epilog: vec![XmlNode::Text { text: "not misc".into() }], ..Default::default() };
+    assert_eq!(xml_document_to_text_checked(&invalid_epilog).expect_err("invalid epilog"), fixture["invalidAuthored"][1]["error"].as_str().expect("epilog error"));
+}
+
 //#region 🔖️EscapeAttrRoundTrip
 /// 🧪 Direct proof that [`xml_escape_attr`] escapes all three characters attribute-value
 /// normalization (XML 1.0 §3.3.3) would otherwise silently fold to a single space on the next

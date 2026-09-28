@@ -1,0 +1,42 @@
+{
+  "schema": "stdio.wav.audio-edit.fixture.v1",
+  "before": {
+    "schema": "stdio.wav",
+    "fmt": {
+      "audioFormat": 1,
+      "channels": 2,
+      "sampleRate": 48000,
+      "byteRate": 192000,
+      "blockAlign": 4,
+      "bitsPerSample": 16,
+      "ext": [170, 187, 204]
+    },
+    "data": {
+      "kind": "pcm16",
+      "value": [1, 10, 2, 20, 3, 30]
+    },
+    "fmtPadByte": 90,
+    "otherChunks": [],
+    "chunkOrder": [
+      { "kind": "format" },
+      { "kind": "samples" }
+    ]
+  },
+  "insertChannel": {
+    "channel": 1,
+    "expectedData": [1, 0, 10, 2, 0, 20, 3, 0, 30],
+    "expectedChannels": 3,
+    "expectedBlockAlign": 6,
+    "expectedByteRate": 288000
+  },
+  "setSample": {
+    "frame": 1,
+    "channel": 0,
+    "value": "-9",
+    "expectedData": [1, 10, -9, 20, 3, 30]
+  },
+  "insertFrame": {
+    "frame": 1,
+    "expectedData": [1, 10, 0, 0, 2, 20, 3, 30]
+  }
+}

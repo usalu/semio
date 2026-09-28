@@ -159,3 +159,48 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
     assert!(csv_emit(&CsvEditorCommand::SetCell { row: 0, column: u32::MAX, revision, value: "x".into() }, &source).is_err());
 }
 //#endregion 🪟️KitVerbLaws
+
+#[test]
+fn structural_command_codecs_roundtrip_unicode_and_empty_headers() {
+    for command in [
+        CsvEditorCommand::AddRow { revision: "rév %20".into() },
+        CsvEditorCommand::RemoveRow { row: 7, revision: "rév %20".into() },
+        CsvEditorCommand::AddColumn { revision: "rév %20".into() },
+        CsvEditorCommand::RemoveColumn { column: 3, revision: "rév %20".into() },
+        CsvEditorCommand::SetHeader { column: 2, revision: "rév %20".into(), value: r"\s\n日本語".into() },
+        CsvEditorCommand::SetHeader { column: 0, revision: "rév %20".into(), value: String::new() },
+    ] {
+        let encoded = <CsvEditorCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
+        assert_eq!(<CsvEditorCommand as protocol::OpBinary>::decode_op(&encoded).expect("decode"), command);
+    }
+}
+
+#[test]
+fn blank_csv_can_build_edit_and_remove_a_table_through_structural_mutations() {
+    fn apply(snapshot: &mut CsvSnapshot, command: CsvEditorCommand) {
+        let mut emitted = csv_emit(&command, snapshot).expect("structural edit");
+        assert_eq!(emitted.artifact_mutations.len(), 1);
+        let mutation = emitted.artifact_mutations.pop().expect("one mutation");
+        crate::schema::mutations::apply_csv_mutation(snapshot, &mutation);
+    }
+    let mut snapshot = CsvSnapshot::default();
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::AddColumn { revision });
+    assert_eq!(snapshot.records.len(), 1);
+    assert_eq!(snapshot.records[0].fields.len(), 1);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::SetHeader { column: 0, revision, value: "Name".into() });
+    assert_eq!(snapshot.records[0].fields[0].value, "Name");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::AddRow { revision });
+    assert_eq!(snapshot.records.len(), 2);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::SetCell { row: 0, column: 0, revision, value: "Ada".into() });
+    assert_eq!(snapshot.records[1].fields[0].value, "Ada");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::RemoveRow { row: 0, revision });
+    assert_eq!(snapshot.records.len(), 1);
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    apply(&mut snapshot, CsvEditorCommand::RemoveColumn { column: 0, revision });
+    assert!(snapshot.records[0].fields.is_empty());
+}

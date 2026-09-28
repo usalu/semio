@@ -569,3 +569,64 @@ Native rerun 5119 (`raster-merge-down-native-2.log`) compiled and ran 279 tests:
 A further neutral/native case fills all 64 asset slots before Merge Down. The current publication sequence adds the new asset before releasing obsolete source assets, so this may reject an otherwise capacity-neutral merge. Run 94651 (`raster-merge-down-native-3.log`) includes that regression and the corrected Inspector assertion. It was started after run 5119 completed. This new capacity case was added after run 5119 compiled and is not covered by its 278 passing results. If the regression fails as expected, reorder private batch publication so removed source layers and exclusively owned assets retire before the new asset is inserted, then confirm full inverse/retained behavior.
 
 Layer protection source findings and the planned command/history boundary are recorded in `🔒️layer-protection.md`; no lock implementation has been added yet.
+
+### Capacity-Neutral Layer Baking
+
+Native run 94651 completed with exit 1: **277 passed, two failed, none skipped**. It compiled both full-capacity regressions (including the newly extended Flatten Image fixture). Both failed at asset insertion with `mutation.apply.capacity` / `raster-map.item-capacity`. The corrected Inspector observer passed. The failure confirms that the intermediate 65th asset, rather than the final document size, prevented capacity-neutral baking.
+
+Merge Down and Flatten Image now emit source-layer deletions, exclusively owned source-asset removals, the baked asset insertion, and the replacement layer creation in that order. These remain one retained edit; unrelated pool assets and any assets referenced by surviving layers are preserved. Both cold inverse tests include full 64-entry pools. The flatten neutral fixture additionally retains its original three-asset case.
+
+`raster-merge-capacity-typescript-1.log` completed successfully: **62 passed, zero failed**, exit 0 (session 3001), with the updated neutral fixtures. Native rerun **2118**, `raster-merge-capacity-native-4.log`, is pending. A new registered-app regression loads the full-capacity neutral document and drives both Merge Down and Flatten Image through publication, undo and redo, comparing complete snapshots and rendered pixels. It was added after this run began; only a result with **280 tests** confirms that the new case compiled. No runtime/live acceptance claim is made. The broader editing goal and repo ticket remain open.
+
+The expanded native run 2118 included all **280 tests**: 279 passed, one failed. Both cold full-capacity bake/inverse cases now pass. The loaded-document retained regression exposed a second defect: snapshot preflight always budgeted one extra asset entry, refusing any mutation over a 64-entry map with `raster-store.preflight-map-item-capacity`, including the deletion that should free capacity. Preflight now reserves potential growth only while an unused slot exists. The actual insertion authority still enforces the fixed capacity and retires rejected owners; its existing capacity-plus-one tests remain in the full suite. Native rerun `raster-merge-capacity-native-5.log` is pending. The earlier 279 passing result does not validate this final preflight change.
+
+Added a focused retained candidate regression that fills 64 asset slots, attempts a genuinely new 65th asset, requires `raster-map.item-capacity`, verifies the original snapshot is unchanged, and drains the failed candidate's owner retirement. This closes the difference between the existing raw-map overflow checks and actual mutation admission. It was added while native session **4064** was rebuilding dependencies; **281 tests** confirms its inclusion in `raster-merge-capacity-native-5.log`.
+
+### Capacity Repair Verified
+
+Final native session **4064** completed with exit 0: **281 passed, zero skipped**, `raster-merge-capacity-native-5.log`. Its 281-case census includes the genuine capacity-overflow retained candidate regression. Both commands now pass full-capacity cold pixel/inverse checks and loaded-document retained publication/undo/redo. Inspector EN/DE checks and all prior native Raster tests pass in the same run. Latest Raster TypeScript remains **62 passed**, `raster-merge-capacity-typescript-1.log`; focused whitespace validation passed. No live UI, complete editable-file workflow or multi-user result is inferred from these tests.
+
+This continuation changed the two baking publication sequences; the flatten neutral fixture and native capacity/inverse test; Merge Down's native loaded-document history test and shared fixture helper; snapshot preflight's potential asset-growth budget; the retained native overflow/refusal/retirement regression; this progress record; the acceptance record; and `🧮️selection-combination.md`. No new runtime dependency, permanent executable, launch target, modifying Git operation or worktree was introduced.
+
+Native sessions 94651, 2118 and 4064 are terminal and must not be polled again. Activation 69010 remained live at its last check; preview 4105 remains the known local-only preview, with live browser acceptance still blocked by the recorded policy restriction. Next implementation options are bounded selection combination (research recorded), persisted layer protection, and the other explicitly open acceptance rows. The complete goal and repo ticket remain active.
+
+## Bounded Selection Combination
+
+Implemented the shared schema and Rust/TypeScript `SelectionCombineJob`, with neutral soft-edge fixtures and independent Sharp outputs. Add/subtract/intersect/replace now process no more than 32,768 pixels per grant, expose output only on completion, support zero-grant no-op and cancellation, validate extents, and preserve source coverage. The TypeScript async driver yields between grants and checks abort after progress callbacks. The canvas awaits this final step after shape or wand preparation; it no longer allocates a second full-size zero source when there was no selection. Progress is split between creation and combination instead of restarting at the second phase.
+
+Initial TypeScript red run failed on the missing new job export. `raster-selection-combine-green-1.log` passed **120 tests**, including strict TypeScript checking; native `raster-selection-combine-native-1.log` passed **34 tests**, no skips, exit 0. Both are terminal. The registered mounted run `raster-selection-combine-react-1.log` passed **26 cases**, exit 0 (70923), including cancellation during the actual combination phase via Cancel, Deselect and the canvas Pan tool. The 75% displayed-progress assertion was added after that run started and still needs final-source verification.
+
+A fourth mounted case now switches the host's `activeUtility` during combination. Source inspection found that the external utility effect changes the local tool without aborting ongoing selection work. Session **22030**, `raster-selection-combine-utility-red-1.log`, checks that suspected race before implementation. Full details and remaining source-copy limitations are in `🧮️selection-combination.md`. Layer protection, complete file workflows, native controls, multi-user acceptance and live UI verification remain open. No goal/ticket completion is claimed.
+
+The host-utility red test completed with the expected failure: the combination job advanced twice after a host tool switch. The existing cancellation effect now also depends on `activeUtility`, so host and canvas tool changes both abort unpublished selection work. Mounted final-source run **16852**, `raster-selection-combine-react-2.log`, is pending with 27 cases, including the four combination cancellation paths and the 75% phase-progress assertion. Previously passed shared core results remain applicable because this repair only changes the canvas effect and mounted test.
+
+### Selection Combination Verified; Activation Retry
+
+Final mounted run **16852** completed with exit 0: **27 tests passed**, `raster-selection-combine-react-2.log`. The final source preserves the old selection when Cancel, local Pan or a host utility switch interrupts the actual combination pass; Deselect clears it. All four paths require one grant only, 75% displayed progress before cancellation, no premature command, and correct coverage in a subsequent edit. Shared TypeScript **120 passed** and native **34 passed** remain the current core results. No temporary debug logs or new runtime dependencies were added; existing registered Nx/launch paths are reused.
+
+Activation **69010** is now terminal (exit 130; the log reports a failed component build). Its actual compiler error was E0505 in `stdio/registry/contract/editing/details`: moving a schema while its ID was borrowed. Current source already separates the owned ID before moving the schema, so no unrelated contract edit was made here. Fresh activation `raster-selection-activation-10.log` uses the same registered target, two Cargo jobs and the ticket's existing private Raster target directory. Current-source activation and browser acceptance remain unverified. Never poll 69010 again.
+
+Activation retry handle **74724** was confirmed live after dispatch. Test handles 20721, 30396, 26089, 70923, 22030 and 16852 are terminal. This continuation is concrete implementation and verification progress; the full goal remains active, and no blocked audit or completion claim applies.
+
+
+## September 27 — Layer Protection Integration In Progress
+
+See [Layer Protection](🔒️layer-protection.md) for persisted lock schema, mutation/history wiring, command admission and localized UI integration. Mounted editor protection checks pass (29 total); native publication/history and live acceptance remain open. The goal and existing ticket stay active. Full remaining scope in the acceptance matrix is unchanged.
+
+
+## September 27 — Export Boundary and Adjustment Discovery
+
+[Interactive export inspection](📤️interactive-export.md) identifies the supported framework job seam and the exact synchronous Raster loops that still need replacement. Added a localized Add Adjustment row to the virtualized layer panel, neutral expected actions and panel tests; the existing layer command and brightness/contrast Inspector remain the semantic path. Native validation is pending. Previous turn classification: progress (persisted protection, UI guards and passing focused evidence); current native run 5 was revalidated live rather than restarted on an observation timeout.
+
+
+Current continuation checkpoint: native 5 completed with 281 passing and 15 failing of 296 tests; the catalog and canonical diff fixture repairs are authored. Native 6 (process handle 12565, `raster-lock-native-6.log`) is confirmed live. Activation 11 (54736, `raster-lock-activation-11.log`) is running. TypeScript canonical schema run passes 76 tests. The stronger Add Adjustment dispatch-argument assertions and canonical schema alignment were edited while native 6 was compiling, so verify the final source with a subsequent relevant test if this run's binary predates them. The full objective remains active.
+
+Additional source-confirmed layer workflow gap: Duplicate Layer always inserts at the document root while copying the source's local transform. A nested layer under a transformed group therefore changes its world placement when duplicated. The next repair should insert the duplicate adjacent to its source under the same parent and validate parent protection; copying an own-locked layer is still allowed when that parent is editable. This avoids an unnecessary world-frame conversion and preserves the copied subtree's transforms, masks, lock metadata and asset references. Add neutral nested-transform/parent-lock cases before changing the command; no duplicate-placement change is claimed yet.
+
+
+## September 27 — Sibling Duplication and Inspector Actions
+
+[Duplicate placement](📋️duplicate-placement.md) records the native same-parent insertion repair, copied metadata/history regressions, TypeScript hierarchy oracle and localized Duplicate/Delete Inspector actions. Final TypeScript run 3 passed 84 tests. Native run red-1 compiled the implementation and ran 299 tests: 298 passed, one test-helper error repaired; native green-1 is running (23001). Layer protection native run 6 passed 297 tests. Activation 11 completed successfully (54736 terminal), producing and activating the Raster component. No live browser validation was attempted because the prior navigation policy rejection still applies. The full goal and ticket remain active.
+
+
+Duplicate final native run green-1 completed successfully: 299 tests passed, zero skipped (`raster-duplicate-native-green-1.log`). This verifies same-parent duplication, metadata/inverse assertions and both-language Inspector action bindings/protection. Live browser acceptance remains open.

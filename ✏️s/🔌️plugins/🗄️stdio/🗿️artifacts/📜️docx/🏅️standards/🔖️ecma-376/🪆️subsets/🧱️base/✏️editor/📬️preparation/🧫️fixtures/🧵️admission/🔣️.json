@@ -1,0 +1,17 @@
+{
+  "ownerBytes": 2048,
+  "ownerItems": 128,
+  "ownerDepth": 32,
+  "turnBytes": 4096,
+  "refusedTextBytes": 4096,
+  "recognizedMutations": [
+    "setRunText",
+    "replaceXmlNode",
+    "setRunFormatting",
+    "setParagraphStyle",
+    "insertTableRow",
+    "removeTableRow",
+    "insertXmlNode",
+    "removeXmlNode"
+  ]
+}

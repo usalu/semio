@@ -355,7 +355,7 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), crate::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(crate::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
     let token = fetch.owner().token();
-    runtime.retain_native_asset_handoff(fetch, None, true);
+    runtime.retain_native_asset_handoff(fetch, None, true, false);
     let interaction = runtime.try_lock().unwrap().interaction.take().unwrap();
     let busy_seal = runtime.pump_native_asset_handoff_step(false);
     let retained_before_seal = {
@@ -401,7 +401,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), crate::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(crate::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
-    runtime.retain_native_asset_handoff(fetch, None, true);
+    runtime.retain_native_asset_handoff(fetch, None, true, false);
     let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
@@ -425,6 +425,41 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     assert!(terminal && fault.is_none());
     assert_eq!(sibling_current, Some(true));
     eprintln!("[DEBUG] native component cancellation returned its pending response and preserved the sibling without a frame fault");
+}
+
+/// 🧯️ An unavailable native asset marks only its exact World miss and returns the owner without a frame fault.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let expected = &law["failureIsolation"]["native"];
+    let runtime = runtime_with_component_worlds();
+    let fetch = runtime.take_renderer_asset_step().expect("World A request");
+    let (surface_token, unavailable_url) = match &fetch {
+        crate::RendererAssetFetchOwner::World { surface_token, owner, .. } => (*surface_token, owner.url().to_string()),
+        crate::RendererAssetFetchOwner::Shared(_) => panic!("the fixture request is World-owned"),
+    };
+    runtime.retain_native_asset_handoff(fetch, None, false, true);
+    let interaction = runtime.try_lock().unwrap().interaction.take().unwrap();
+    let busy = runtime.pump_native_asset_handoff_step(false);
+    runtime.try_lock().unwrap().interaction = Some(interaction);
+    let rejected = runtime.pump_native_asset_handoff_step(false);
+    let returned = runtime.pump_native_asset_handoff_step(false);
+    let (exact_miss, sibling_miss) = {
+        let runtime = runtime.try_lock().expect("fixture runtime");
+        let interaction = runtime.interaction.as_ref().expect("fixture interaction");
+        let exact = interaction.shell.world3d_states.get_token(surface_token).expect("exact World");
+        let sibling = interaction.shell.world3d_states.get("component-world-b").expect("sibling World");
+        (infinite_world::world::world3d_asset_url_missed(exact, &unavailable_url), infinite_world::world::world3d_asset_url_missed(sibling, &unavailable_url))
+    };
+    let handoff_terminal = runtime.0.native_asset_handoff.lock().expect("native handoff").is_none();
+    let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("native frame fault").is_some());
+    retire_component_world_fixture(&runtime);
+    assert_eq!((busy, rejected, returned), (Some(false), Some(true), Some(true)));
+    assert_eq!(exact_miss, expected["unavailableMarksOneMiss"].as_bool().expect("unavailable miss"));
+    assert!(!sibling_miss, "an unavailable response cannot poison a sibling World");
+    assert_eq!(frame_faults, expected["unavailableFrameFaults"].as_u64().expect("unavailable frame faults") as usize);
+    assert_eq!(usize::from(!handoff_terminal), expected["terminalOwners"].as_u64().expect("terminal owners") as usize);
 }
 
 /// 🛑️ A component close interrupts its exact stalled native body before the sibling enters the single-fetch lane.

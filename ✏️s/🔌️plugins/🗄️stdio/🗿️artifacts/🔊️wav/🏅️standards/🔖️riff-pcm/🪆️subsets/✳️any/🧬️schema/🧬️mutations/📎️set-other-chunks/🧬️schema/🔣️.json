@@ -24,11 +24,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "fourcc"
+        "fourcc",
+        "data"
       ],
       "properties": {
         "fourcc": {
-          "type": "string"
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^[ -~]{4}$"
         },
         "data": {
           "type": "array",
@@ -37,6 +41,13 @@
             "minimum": 0,
             "maximum": 255
           }
+        },
+        "padByte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 0,
+          "description": "Word-alignment byte; must be zero when data has even length."
         }
       }
     }

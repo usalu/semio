@@ -6,13 +6,13 @@ use crate::{forms_children_from_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
 async fn snapshot_pack_round_trips_with_composed_children() {
     let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
     let (structure, results) = forms_children_from_steps(&steps);
-    let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, structure, results };
+    let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, definition: Default::default(), responses: Vec::new(), structure, results };
     store::os_store::test_support::assert_pack_schema_identity(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn building_component_fixture_pack_agrees_with_dsl() {
-    let spec = dsl::parse_playbook_example_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
+    let spec = dsl::parse_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
     store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);
@@ -20,7 +20,7 @@ async fn building_component_fixture_pack_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn default_fixture_pack_agrees_with_dsl() {
-    let spec = dsl::parse_playbook_example_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
+    let spec = dsl::parse_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
     store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);
@@ -28,7 +28,7 @@ async fn default_fixture_pack_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn onboarding_fixture_pack_agrees_with_dsl() {
-    let spec = dsl::parse_playbook_example_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
+    let spec = dsl::parse_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
     store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);

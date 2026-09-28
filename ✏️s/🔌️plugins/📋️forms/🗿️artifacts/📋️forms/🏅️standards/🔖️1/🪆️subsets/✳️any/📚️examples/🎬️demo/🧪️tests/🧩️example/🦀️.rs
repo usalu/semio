@@ -11,12 +11,7 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    // 🩹️ The demo asset is real playbook-grammar domain content (never regenerated into
-    // `FormsSnapshot`'s own opaque `structure`/`results`-handle wire format — see
-    // `parse_playbook_example_dsl`'s own doc comment, ticket
-    // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM), so it loads through the same bridge
-    // `building_component_spec` uses, not `ArtifactDsl::parse_dsl` directly.
-    let snapshot = crate::document_dsl::parse_playbook_example_dsl(text).expect("demo asset parses as a forms snapshot");
+    let snapshot = crate::document_dsl::parse_dsl(text).expect("demo asset parses as a forms snapshot");
     let inference = crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot);
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot));
 

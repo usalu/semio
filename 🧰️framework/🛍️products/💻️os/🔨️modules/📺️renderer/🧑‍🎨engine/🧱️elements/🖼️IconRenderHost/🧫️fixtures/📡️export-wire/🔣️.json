@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "png-and-svg",
+      "valid": true,
+      "items": [
+        {
+          "filename": "Überblick.png",
+          "request": {
+            "assetUrl": "/mesh/probe.glb",
+            "format": "png",
+            "width": 37,
+            "height": 19,
+            "camera": {
+              "position": [
+                0,
+                0,
+                3
+              ],
+              "target": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "filename": "Seite.svg",
+          "request": {
+            "assetUrl": "/mesh/probe.glb",
+            "format": "svg",
+            "width": 73,
+            "height": 41,
+            "shape": "ellipse",
+            "transparent": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty-batch",
+      "valid": true,
+      "items": []
+    },
+    {
+      "name": "null-request",
+      "valid": true,
+      "items": [
+        {
+          "filename": "rejected.png",
+          "request": null
+        }
+      ]
+    },
+    {
+      "name": "non-list",
+      "valid": false,
+      "items": {}
+    },
+    {
+      "name": "missing-request",
+      "valid": false,
+      "items": [
+        {
+          "filename": "a.png"
+        }
+      ]
+    },
+    {
+      "name": "numeric-filename",
+      "valid": false,
+      "items": [
+        {
+          "filename": 4,
+          "request": {}
+        }
+      ]
+    },
+    {
+      "name": "null-item",
+      "valid": false,
+      "items": [
+        null
+      ]
+    },
+    {
+      "name": "extra-field",
+      "valid": false,
+      "items": [
+        {
+          "filename": "a.png",
+          "request": {},
+          "extra": true
+        }
+      ]
+    }
+  ]
+}

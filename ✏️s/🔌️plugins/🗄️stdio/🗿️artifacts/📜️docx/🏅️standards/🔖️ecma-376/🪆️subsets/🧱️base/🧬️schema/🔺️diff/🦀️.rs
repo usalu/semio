@@ -15,12 +15,14 @@
 //! outside that boundary) — see `glue_followup` in this wave's report for hoisting it to
 //! `zip::opc` so xlsx/pptx/bcf can reuse it verbatim instead of re-deriving their own copy.
 
-use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart};
 use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_xml::schema::diff::{XmlChildrenDiff, XmlDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use std::collections::HashMap;
 
@@ -116,8 +118,10 @@ pub struct DocxParagraphDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub runs: Option<DocxRunsDiff>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = style cleared, `Some(Some(id))` = set.
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub style: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra_paragraph_properties: Option<XmlChildrenDiff>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -131,6 +135,8 @@ pub struct DocxRunDiff {
     pub italic: Option<bool>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub underline: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra_run_properties: Option<XmlChildrenDiff>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -138,6 +144,8 @@ pub struct DocxRunDiff {
 pub struct DocxTableDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rows: Option<DocxTableRowsDiff>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra_table_properties: Option<XmlChildrenDiff>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -145,6 +153,8 @@ pub struct DocxTableDiff {
 pub struct DocxTableRowDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub cells: Option<DocxTableCellsDiff>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra_row_properties: Option<XmlChildrenDiff>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -152,6 +162,8 @@ pub struct DocxTableRowDiff {
 pub struct DocxTableCellDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<DocxBlocksDiff>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra_cell_properties: Option<XmlChildrenDiff>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -160,8 +172,13 @@ pub struct DocxStyleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = based_on cleared, `Some(Some(id))` = set.
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub based_on: Option<Option<String>>,
+}
+
+/// 🏳️ Preserves a present null as an explicit clear; an omitted field remains unchanged.
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -213,6 +230,8 @@ pub struct DocxOpcRelDiff {
 #[value(rename_all = "camelCase")]
 pub struct DocxOpcDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub content_types: Option<DocxOpcContentTypesDiff>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub parts: Option<DocxOpcPartsDiff>,
@@ -220,6 +239,19 @@ pub struct DocxOpcDiff {
     pub relationships: Option<DocxOpcRelationshipsDiff>,
 }
 //#endregion 🔖️OpcDiffTypes
+
+//#region 🔖️XmlPartDiffTypes
+pub type DocxXmlPartsDiff = NamedTripleDiff<String, DocxXmlPartDiff, DocxXmlPart>;
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct DocxXmlPartDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub document: Option<XmlDiff>,
+}
+//#endregion 🔖️XmlPartDiffTypes
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.docx`.
@@ -242,7 +274,7 @@ pub struct DocxDiff {
     pub opc: Option<DocxOpcDiff>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub document: Option<DocxDocumentDiff>,
+    pub xml_parts: Option<DocxXmlPartsDiff>,
 }
 //#endregion 🔖️Diff
 
@@ -296,17 +328,20 @@ fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
             None => leaf.into_blocks_diff(index),
             Some((seg, rest)) => {
                 let inner = go(rest, index, leaf);
-                let cell_diff = DocxTableCellDiff { blocks: Some(inner) };
+                let cell_diff = DocxTableCellDiff { blocks: Some(inner), ..Default::default() };
                 let cells_diff = DocxTableCellsDiff { modified: vec![IndexModified { index: seg.cell, diff: cell_diff }], ..Default::default() };
-                let row_diff = DocxTableRowDiff { cells: Some(cells_diff) };
+                let row_diff = DocxTableRowDiff { cells: Some(cells_diff), ..Default::default() };
                 let rows_diff = DocxTableRowsDiff { modified: vec![IndexModified { index: seg.row, diff: row_diff }], ..Default::default() };
-                let table_diff = DocxBlockDiff::Table(DocxTableDiff { rows: Some(rows_diff) });
+                let table_diff = DocxBlockDiff::Table(DocxTableDiff { rows: Some(rows_diff), ..Default::default() });
                 DocxBlocksDiff { modified: vec![IndexModified { index: seg.block_index, diff: table_diff }], ..Default::default() }
             }
         }
     }
     let body = go(&path.segments, path.index, leaf);
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: Some(body), styles: None }) }
+    {
+        let _ = body;
+        DocxDiff::default()
+    }
 }
 
 /// 🧭️ Resolves the block list a path's segments navigate to (the parent list `path.index` slots
@@ -766,55 +801,41 @@ fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
     let runs = between_indexed(&old.runs, &new.runs, diff_run);
-    let style = if old.style != new.style { Some(new.style.clone()) } else { None };
-    if runs.is_none() && style.is_none() {
-        None
-    } else {
-        Some(DocxParagraphDiff { runs, style })
-    }
+    let style = (old.style != new.style).then(|| new.style.clone());
+    let extra_paragraph_properties = XmlChildrenDiff::between(&old.extra_paragraph_properties, &new.extra_paragraph_properties);
+    (runs.is_some() || style.is_some() || extra_paragraph_properties.is_some()).then_some(DocxParagraphDiff { runs, style, extra_paragraph_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
-    if old == new {
-        return None;
-    }
-    Some(DocxRunDiff {
+    (old != new).then(|| DocxRunDiff {
         text: (old.text != new.text).then(|| new.text.clone()),
         bold: (old.bold != new.bold).then_some(new.bold),
         italic: (old.italic != new.italic).then_some(new.italic),
         underline: (old.underline != new.underline).then_some(new.underline),
+        extra_run_properties: XmlChildrenDiff::between(&old.extra_run_properties, &new.extra_run_properties),
     })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
     let rows = between_indexed(&old.rows, &new.rows, diff_row);
-    if rows.is_none() {
-        None
-    } else {
-        Some(DocxTableDiff { rows })
-    }
+    let extra_table_properties = XmlChildrenDiff::between(&old.extra_table_properties, &new.extra_table_properties);
+    (rows.is_some() || extra_table_properties.is_some()).then_some(DocxTableDiff { rows, extra_table_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
     let cells = between_indexed(&old.cells, &new.cells, diff_cell);
-    if cells.is_none() {
-        None
-    } else {
-        Some(DocxTableRowDiff { cells })
-    }
+    let extra_row_properties = XmlChildrenDiff::between(&old.extra_row_properties, &new.extra_row_properties);
+    (cells.is_some() || extra_row_properties.is_some()).then_some(DocxTableRowDiff { cells, extra_row_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
     let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
-    if blocks.is_none() {
-        None
-    } else {
-        Some(DocxTableCellDiff { blocks })
-    }
+    let extra_cell_properties = XmlChildrenDiff::between(&old.extra_cell_properties, &new.extra_cell_properties);
+    (blocks.is_some() || extra_cell_properties.is_some()).then_some(DocxTableCellDiff { blocks, extra_cell_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -845,14 +866,13 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
                 return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block"));
             };
             if let Some(rd) = &pd.runs {
-                apply_indexed(&mut p.runs, rd, |item, diff| {
-                    apply_run(item, diff);
-                    Ok(())
-                })
-                .map_err(|error| error.under(["runs"]))?;
+                apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
             }
             if let Some(s) = &pd.style {
                 p.style = s.clone();
+            }
+            if let Some(extra) = &pd.extra_paragraph_properties {
+                extra.apply_to(&mut p.extra_paragraph_properties).map_err(|error| error.under(["extraParagraphProperties"]))?;
             }
         }
         DocxBlockDiff::Table(td) => {
@@ -862,39 +882,52 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
             if let Some(rd) = &td.rows {
                 apply_indexed(&mut t.rows, rd, apply_row).map_err(|error| error.under(["rows"]))?;
             }
+            if let Some(extra) = &td.extra_table_properties {
+                extra.apply_to(&mut t.extra_table_properties).map_err(|error| error.under(["extraTableProperties"]))?;
+            }
         }
     }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) {
-    if let Some(v) = &diff.text {
-        run.text = v.clone();
+fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
+    if let Some(value) = &diff.text {
+        run.text = value.clone();
     }
-    if let Some(v) = diff.bold {
-        run.bold = v;
+    if let Some(value) = diff.bold {
+        run.bold = value;
     }
-    if let Some(v) = diff.italic {
-        run.italic = v;
+    if let Some(value) = diff.italic {
+        run.italic = value;
     }
-    if let Some(v) = diff.underline {
-        run.underline = v;
+    if let Some(value) = diff.underline {
+        run.underline = value;
     }
+    if let Some(extra) = &diff.extra_run_properties {
+        extra.apply_to(&mut run.extra_run_properties).map_err(|error| error.under(["extraRunProperties"]))?;
+    }
+    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
-    if let Some(cd) = &diff.cells {
-        apply_indexed(&mut row.cells, cd, apply_cell).map_err(|error| error.under(["cells"]))?;
+    if let Some(diff) = &diff.cells {
+        apply_indexed(&mut row.cells, diff, apply_cell).map_err(|error| error.under(["cells"]))?;
+    }
+    if let Some(extra) = &diff.extra_row_properties {
+        extra.apply_to(&mut row.extra_row_properties).map_err(|error| error.under(["extraRowProperties"]))?;
     }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
-    if let Some(bd) = &diff.blocks {
-        apply_indexed(&mut cell.blocks, bd, apply_block).map_err(|error| error.under(["blocks"]))?;
+    if let Some(diff) = &diff.blocks {
+        apply_indexed(&mut cell.blocks, diff, apply_block).map_err(|error| error.under(["blocks"]))?;
+    }
+    if let Some(extra) = &diff.extra_cell_properties {
+        extra.apply_to(&mut cell.extra_cell_properties).map_err(|error| error.under(["extraCellProperties"]))?;
     }
     Ok(())
 }
@@ -989,12 +1022,18 @@ fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
                 if let Some(style) = &pd.style {
                     paragraph.style = style.clone();
                 }
+                if let Some(extra) = &pd.extra_paragraph_properties {
+                    extra.apply_to(&mut paragraph.extra_paragraph_properties).expect("composed XML properties target the inserted block");
+                }
             }
         }
         DocxBlockDiff::Table(td) => {
             if let DocxBlock::Table(table) = block {
                 if let Some(rows) = &td.rows {
                     apply_indexed_for_absorb(&mut table.rows, rows, apply_row_for_absorb);
+                }
+                if let Some(extra) = &td.extra_table_properties {
+                    extra.apply_to(&mut table.extra_table_properties).expect("composed XML properties target the inserted block");
                 }
             }
         }
@@ -1003,32 +1042,17 @@ fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
-    if let Some(value) = &diff.text {
-        run.text = value.clone();
-    }
-    if let Some(value) = diff.bold {
-        run.bold = value;
-    }
-    if let Some(value) = diff.italic {
-        run.italic = value;
-    }
-    if let Some(value) = diff.underline {
-        run.underline = value;
-    }
+    apply_run(run, diff).expect("composed run diff targets its inserted run");
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
-    if let Some(cells) = &diff.cells {
-        apply_indexed_for_absorb(&mut row.cells, cells, apply_cell_for_absorb);
-    }
+    apply_row(row, diff).expect("composed row diff targets its inserted row");
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
-    if let Some(blocks) = &diff.blocks {
-        apply_indexed_for_absorb(&mut cell.blocks, blocks, apply_block_for_absorb);
-    }
+    apply_cell(cell, diff).expect("composed cell diff targets its inserted cell");
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1047,28 +1071,38 @@ fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
         DocxBlockDiff::Replace { .. } => DocxBlockDiff::Replace { block: base.clone() },
         DocxBlockDiff::Paragraph(pd) => {
             let DocxBlock::Paragraph(p) = base else { return DocxBlockDiff::Replace { block: base.clone() } };
-            DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: pd.runs.as_ref().map(|rd| inverse_indexed(&p.runs, rd, inverse_run)), style: pd.style.as_ref().map(|_| p.style.clone()) })
+            DocxBlockDiff::Paragraph(DocxParagraphDiff {
+                runs: pd.runs.as_ref().map(|rd| inverse_indexed(&p.runs, rd, inverse_run)),
+                style: pd.style.as_ref().map(|_| p.style.clone()),
+                extra_paragraph_properties: pd.extra_paragraph_properties.as_ref().map(|diff| diff.inverse(&p.extra_paragraph_properties)),
+            })
         }
         DocxBlockDiff::Table(td) => {
             let DocxBlock::Table(t) = base else { return DocxBlockDiff::Replace { block: base.clone() } };
-            DocxBlockDiff::Table(DocxTableDiff { rows: td.rows.as_ref().map(|rd| inverse_indexed(&t.rows, rd, inverse_row)) })
+            DocxBlockDiff::Table(DocxTableDiff { rows: td.rows.as_ref().map(|rd| inverse_indexed(&t.rows, rd, inverse_row)), extra_table_properties: td.extra_table_properties.as_ref().map(|diff| diff.inverse(&t.extra_table_properties)) })
         }
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
-    DocxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), underline: diff.underline.map(|_| base.underline) }
+    DocxRunDiff {
+        text: diff.text.as_ref().map(|_| base.text.clone()),
+        bold: diff.bold.map(|_| base.bold),
+        italic: diff.italic.map(|_| base.italic),
+        underline: diff.underline.map(|_| base.underline),
+        extra_run_properties: diff.extra_run_properties.as_ref().map(|diff| diff.inverse(&base.extra_run_properties)),
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
-    DocxTableRowDiff { cells: diff.cells.as_ref().map(|cd| inverse_indexed(&base.cells, cd, inverse_cell)) }
+    DocxTableRowDiff { cells: diff.cells.as_ref().map(|diff| inverse_indexed(&base.cells, diff, inverse_cell)), extra_row_properties: diff.extra_row_properties.as_ref().map(|diff| diff.inverse(&base.extra_row_properties)) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCellDiff {
-    DocxTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
+    DocxTableCellDiff { blocks: diff.blocks.as_ref().map(|diff| inverse_indexed(&base.blocks, diff, inverse_block)), extra_cell_properties: diff.extra_cell_properties.as_ref().map(|diff| diff.inverse(&base.extra_cell_properties)) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1093,6 +1127,16 @@ fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_xml_properties(first: Option<XmlChildrenDiff>, next: Option<XmlChildrenDiff>) -> Option<XmlChildrenDiff> {
+    match (first, next) {
+        (Some(mut first), Some(next)) => {
+            first.absorb(next);
+            Some(first)
+        }
+        (first, next) => next.or(first),
+    }
+}
+
 fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> DocxParagraphDiff {
     if b.style.is_some() {
         a.style = b.style;
@@ -1102,12 +1146,13 @@ fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> Docx
         (x, None) => x,
         (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
     };
+    a.extra_paragraph_properties = absorb_xml_properties(a.extra_paragraph_properties, b.extra_paragraph_properties);
     a
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
-    DocxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), underline: b.underline.or(a.underline) }
+    DocxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), underline: b.underline.or(a.underline), extra_run_properties: absorb_xml_properties(a.extra_run_properties, b.extra_run_properties) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1117,6 +1162,7 @@ fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
         (x, None) => x,
         (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_row_diff, row_with_diff_applied)),
     };
+    a.extra_table_properties = absorb_xml_properties(a.extra_table_properties, b.extra_table_properties);
     a
 }
 
@@ -1127,6 +1173,7 @@ fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRow
         (x, None) => x,
         (Some(ca), Some(cb)) => Some(absorb_indexed(ca, &cb, absorb_cell_diff, cell_with_diff_applied)),
     };
+    a.extra_row_properties = absorb_xml_properties(a.extra_row_properties, b.extra_row_properties);
     a
 }
 
@@ -1137,6 +1184,7 @@ fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTable
         (x, None) => x,
         (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
     };
+    a.extra_cell_properties = absorb_xml_properties(a.extra_cell_properties, b.extra_cell_properties);
     a
 }
 
@@ -1432,10 +1480,11 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
-    if content_types.is_none() && parts.is_none() && relationships.is_none() {
+    let comment = (base.comment != other.comment).then(|| other.comment.clone());
+    if comment.is_none() && content_types.is_none() && parts.is_none() && relationships.is_none() {
         None
     } else {
-        Some(DocxOpcDiff { content_types, parts, relationships })
+        Some(DocxOpcDiff { content_types, parts, relationships, comment })
     }
 }
 
@@ -1464,12 +1513,16 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResu
     if let Some(d) = &diff.relationships {
         apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
+    if let Some(comment) = &diff.comment {
+        opc.comment.clone_from(comment);
+    }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
+        comment: diff.comment.as_ref().map(|_| base.comment.clone()),
         content_types: diff
             .content_types
             .as_ref()
@@ -1482,6 +1535,7 @@ fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
+        comment: b.comment.or(a.comment),
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
             (x, None) => x,
@@ -1512,29 +1566,80 @@ fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
 }
 //#endregion 🔖️OpcDiffLogic
 
+//#region 🔖️XmlPartDiffLogic
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_snapshot(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument) -> XmlSnapshot {
+    XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: document.clone() }
+}
+
+fn diff_xml_part(base: &DocxXmlPart, other: &DocxXmlPart) -> Option<DocxXmlPartDiff> {
+    let document = XmlDiff::between(&xml_snapshot(&base.document), &xml_snapshot(&other.document));
+    let diff = DocxXmlPartDiff { content_type: (base.content_type != other.content_type).then(|| other.content_type.clone()), document: (!document.is_empty()).then_some(document) };
+    (diff.content_type.is_some() || diff.document.is_some()).then_some(diff)
+}
+
+fn apply_xml_part(part: &mut DocxXmlPart, diff: &DocxXmlPartDiff) -> MutationApplyResult<()> {
+    if let Some(content_type) = &diff.content_type {
+        part.content_type.clone_from(content_type);
+    }
+    if let Some(document) = &diff.document {
+        part.document = document.apply(&xml_snapshot(&part.document))?.doc;
+    }
+    Ok(())
+}
+
+fn inverse_xml_part(base: &DocxXmlPart, diff: &DocxXmlPartDiff) -> DocxXmlPartDiff {
+    DocxXmlPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), document: diff.document.as_ref().map(|document| document.inverse(&xml_snapshot(&base.document))) }
+}
+
+fn absorb_xml_part(mut first: DocxXmlPartDiff, second: DocxXmlPartDiff) -> DocxXmlPartDiff {
+    if second.content_type.is_some() {
+        first.content_type = second.content_type;
+    }
+    first.document = match (first.document.take(), second.document) {
+        (None, value) => value,
+        (value, None) => value,
+        (Some(mut left), Some(right)) => {
+            left.absorb(right);
+            Some(left)
+        }
+    };
+    first
+}
+//#endregion 🔖️XmlPartDiffLogic
+
 //#region 🔖️Apply
 impl MutationDiff<DocxSnapshot> for DocxDiff {
     fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
-        if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
+        if let Some(diff) = &self.opc {
+            apply_opc_diff(&mut next.opc, diff).map_err(|error| error.under(["opc"]))?;
         }
-        if let Some(d) = &self.document {
-            apply_document_diff(&mut next.document, d).map_err(|error| error.under(["document"]))?;
+        if let Some(diff) = &self.xml_parts {
+            apply_named(&mut next.xml_parts, diff, |part| part.path.clone(), apply_xml_part).map_err(|error| error.under(["xmlParts"]))?;
         }
+        next.validate_authority().and_then(|()| next.project_document().map(|_| ())).map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
-            (None, x) => x,
-            (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b)),
+            (None, value) => value,
+            (value, None) => value,
+            (Some(left), Some(right)) => Some(absorb_opc_diff(left, right)),
         };
-        self.document = match (self.document.take(), other.document) {
-            (None, x) => x,
-            (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_document_diff(a, b)),
+        self.xml_parts = match (self.xml_parts.take(), other.xml_parts) {
+            (None, value) => value,
+            (value, None) => value,
+            (Some(left), Some(right)) => Some(absorb_named(
+                left,
+                right,
+                |part| part.path.clone(),
+                absorb_xml_part,
+                |part, diff| {
+                    let _ = apply_xml_part(part, diff);
+                },
+            )),
         };
     }
 }
@@ -1543,15 +1648,15 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<DocxSnapshot> for DocxDiff {
     fn inverse(&self, base: &DocxSnapshot) -> Self {
-        DocxDiff { opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)), document: self.document.as_ref().map(|d| inverse_document_diff(&base.document, d)) }
+        DocxDiff { opc: self.opc.as_ref().map(|diff| inverse_opc_diff(&base.opc, diff)), xml_parts: self.xml_parts.as_ref().map(|diff| inverse_named(&base.xml_parts, diff, |part| part.path.clone(), inverse_xml_part)) }
     }
 
     fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
-        DocxDiff { opc: diff_opc(&base.opc, &other.opc), document: diff_document(&base.document, &other.document) }
+        DocxDiff { opc: diff_opc(&base.opc, &other.opc), xml_parts: between_named(&base.xml_parts, &other.xml_parts, |part| part.path.clone(), diff_xml_part) }
     }
 
     fn is_empty(&self) -> bool {
-        self.opc.is_none() && self.document.is_none()
+        self.opc.is_none() && self.xml_parts.is_none()
     }
 }
 //#endregion 🔖️DiffAlgebra
@@ -1564,111 +1669,6 @@ pub fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
     DocxDiff::between(base, next)
 }
 
-/// 🧩 Builds the diff for inserting `block` at `path` (`path.index` = insertion index, FINAL
-/// state).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_block(path: &DocxBlockPath, block: DocxBlock) -> DocxDiff {
-    wrap_body_diff(path, DocxBlockLeaf::Inserted(block))
-}
-
-/// 🧩 Builds the diff for removing the block at `path` (`path.index` = BASE-state index).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_block(path: &DocxBlockPath) -> DocxDiff {
-    wrap_body_diff(path, DocxBlockLeaf::Removed)
-}
-
-/// 🧩 Builds the diff for replacing the block at `path` (BASE-state index) with `new_block`'s full
-/// content, via a real structural comparison against `old_block` (never full-replace unless the
-/// block KIND actually changed).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_block: &DocxBlock) -> DocxDiff {
-    match diff_block(old_block, new_block) {
-        None => DocxDiff::default(),
-        Some(d) => wrap_body_diff(path, DocxBlockLeaf::Modified(d)),
-    }
-}
-
-/// 🧩 Builds the diff for editing one run's text within the paragraph at `path`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, text: &str) -> DocxDiff {
-    let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
-    let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
-    let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
-    if run.text == text {
-        return DocxDiff::default();
-    }
-    let run_diff = DocxRunDiff { text: Some(text.to_string()), bold: None, italic: None, underline: None };
-    let runs_diff = DocxRunsDiff { modified: vec![IndexModified { index: run_index, diff: run_diff }], ..Default::default() };
-    let block_diff = DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: Some(runs_diff), style: None });
-    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff))
-}
-
-/// 🧩 Builds the diff for setting one run's bold/italic/underline flags within the paragraph at
-/// `path`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, bold: bool, italic: bool, underline: bool) -> DocxDiff {
-    let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
-    let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
-    let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
-    let run_diff = DocxRunDiff { text: None, bold: (run.bold != bold).then_some(bold), italic: (run.italic != italic).then_some(italic), underline: (run.underline != underline).then_some(underline) };
-    if run_diff.bold.is_none() && run_diff.italic.is_none() && run_diff.underline.is_none() {
-        return DocxDiff::default();
-    }
-    let runs_diff = DocxRunsDiff { modified: vec![IndexModified { index: run_index, diff: run_diff }], ..Default::default() };
-    let block_diff = DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: Some(runs_diff), style: None });
-    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff))
-}
-
-/// 🧩 Builds the diff for inserting a style.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_style(style: DocxStyle) -> DocxDiff {
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { added: vec![style], ..Default::default() }) }) }
-}
-
-/// 🧩 Builds the diff for removing a style by id.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_style(id: &str) -> DocxDiff {
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { removed: vec![id.to_string()], ..Default::default() }) }) }
-}
-
-/// 🧩 Builds the diff for setting a style's name.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_style_name(id: &str, name: &str) -> DocxDiff {
-    let sd = DocxStyleDiff { name: Some(name.to_string()), based_on: None };
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
-}
-
-/// 🧩 Builds the diff for setting (or clearing, `based_on: None`) a style's `based_on`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_style_based_on(id: &str, based_on: Option<String>) -> DocxDiff {
-    let sd = DocxStyleDiff { name: None, based_on: Some(based_on) };
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
-}
-
-/// 🧩 Builds the diff for setting a raw OPC part (content this typed layer doesn't cover).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Vec<u8>) -> DocxDiff {
-    let p = path.trim_start_matches('/').to_string();
-    match opc.parts.iter().find(|part| part.path == p) {
-        Some(existing) => {
-            let new_part = OpcPart { path: p, content_type: content_type.to_string(), bytes };
-            match diff_part(existing, &new_part) {
-                None => DocxDiff::default(),
-                Some(d) => {
-                    DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { modified: vec![NamedModified { key: existing.path.clone(), diff: d }], ..Default::default() }), relationships: None }), document: None }
-                }
-            }
-        }
-        None => DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { added: vec![OpcPart { path: p, content_type: content_type.to_string(), bytes }], ..Default::default() }), relationships: None }), document: None },
-    }
-}
-
-/// 🧩 Builds the diff for removing a raw OPC part by path.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_part(path: &str) -> DocxDiff {
-    let p = path.trim_start_matches('/').to_string();
-    DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { removed: vec![p], ..Default::default() }), relationships: None }), document: None }
-}
 //#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
@@ -2105,57 +2105,71 @@ fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_run_diff(d: &DocxRunDiff) -> String {
-    format!("[{},{},{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.bold, enc_bool), encode_option(&d.italic, enc_bool), encode_option(&d.underline, enc_bool))
+fn enc_run_diff(diff: &DocxRunDiff) -> String {
+    format!(
+        "[{},{},{},{},{}]",
+        encode_option(&diff.text, |value| enc_str(value)),
+        encode_option(&diff.bold, enc_bool),
+        encode_option(&diff.italic, enc_bool),
+        encode_option(&diff.underline, enc_bool),
+        encode_option(&diff.extra_run_properties, XmlChildrenDiff::encode_text)
+    )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [text, bold, italic, underline] = parts.as_slice() else { return Err(format!("run diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DocxRunDiff { text: decode_option(text, dec_str)?, bold: decode_option(bold, dec_bool)?, italic: decode_option(italic, dec_bool)?, underline: decode_option(underline, dec_bool)? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
-    format!("[{},{}]", encode_option(&pd.runs, enc_runs_diff), encode_option(&pd.style, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [runs, style] = parts.as_slice() else { return Err(format!("paragraph diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff)?, style: decode_option(style, |s| decode_option(s, dec_str))? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_table_diff(d: &DocxTableDiff) -> String {
-    format!("[{}]", encode_option(&d.rows, enc_table_rows_diff))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocxTableDiff { rows: decode_option(inner, dec_table_rows_diff)? })
+fn dec_run_diff(text: &str) -> Result<DocxRunDiff, String> {
+    let fields = split_top_level(strip_brackets(text)?, ',');
+    let [text, bold, italic, underline, extra_run_properties] = fields.as_slice() else { return Err(format!("run diff: expected 5 fields, got {}", fields.len())) };
+    Ok(DocxRunDiff {
+        text: decode_option(text, dec_str)?,
+        bold: decode_option(bold, dec_bool)?,
+        italic: decode_option(italic, dec_bool)?,
+        underline: decode_option(underline, dec_bool)?,
+        extra_run_properties: decode_option(extra_run_properties, XmlChildrenDiff::decode_text)?,
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
-    format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
+fn enc_paragraph_diff(diff: &DocxParagraphDiff) -> String {
+    format!("[{},{},{}]", encode_option(&diff.runs, enc_runs_diff), encode_option(&diff.style, |value| encode_option(value, |value| enc_str(value))), encode_option(&diff.extra_paragraph_properties, XmlChildrenDiff::encode_text))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocxTableRowDiff { cells: decode_option(inner, dec_table_cells_diff)? })
+fn dec_paragraph_diff(text: &str) -> Result<DocxParagraphDiff, String> {
+    let fields = split_top_level(strip_brackets(text)?, ',');
+    let [runs, style, extra_paragraph_properties] = fields.as_slice() else { return Err(format!("paragraph diff: expected 3 fields, got {}", fields.len())) };
+    Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff)?, style: decode_option(style, |value| decode_option(value, dec_str))?, extra_paragraph_properties: decode_option(extra_paragraph_properties, XmlChildrenDiff::decode_text)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
-    format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
+fn enc_table_diff(diff: &DocxTableDiff) -> String {
+    format!("[{},{}]", encode_option(&diff.rows, enc_table_rows_diff), encode_option(&diff.extra_table_properties, XmlChildrenDiff::encode_text))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocxTableCellDiff { blocks: decode_option(inner, dec_blocks_diff)? })
+fn dec_table_diff(text: &str) -> Result<DocxTableDiff, String> {
+    let fields = split_top_level(strip_brackets(text)?, ',');
+    let [rows, extra_table_properties] = fields.as_slice() else { return Err(format!("table diff: expected 2 fields, got {}", fields.len())) };
+    Ok(DocxTableDiff { rows: decode_option(rows, dec_table_rows_diff)?, extra_table_properties: decode_option(extra_table_properties, XmlChildrenDiff::decode_text)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_row_diff(diff: &DocxTableRowDiff) -> String {
+    format!("[{},{}]", encode_option(&diff.cells, enc_table_cells_diff), encode_option(&diff.extra_row_properties, XmlChildrenDiff::encode_text))
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_row_diff(text: &str) -> Result<DocxTableRowDiff, String> {
+    let fields = split_top_level(strip_brackets(text)?, ',');
+    let [cells, extra_row_properties] = fields.as_slice() else { return Err(format!("table_row diff: expected 2 fields, got {}", fields.len())) };
+    Ok(DocxTableRowDiff { cells: decode_option(cells, dec_table_cells_diff)?, extra_row_properties: decode_option(extra_row_properties, XmlChildrenDiff::decode_text)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_cell_diff(diff: &DocxTableCellDiff) -> String {
+    format!("[{},{}]", encode_option(&diff.blocks, enc_blocks_diff), encode_option(&diff.extra_cell_properties, XmlChildrenDiff::encode_text))
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_cell_diff(text: &str) -> Result<DocxTableCellDiff, String> {
+    let fields = split_top_level(strip_brackets(text)?, ',');
+    let [blocks, extra_cell_properties] = fields.as_slice() else { return Err(format!("table_cell diff: expected 2 fields, got {}", fields.len())) };
+    Ok(DocxTableCellDiff { blocks: decode_option(blocks, dec_blocks_diff)?, extra_cell_properties: decode_option(extra_cell_properties, XmlChildrenDiff::decode_text)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2264,14 +2278,14 @@ fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_opc_diff(d: &DocxOpcDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff))
+    format!("[{},{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff), encode_option(&d.comment, |value| enc_str(value)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
-    let [ct, p, rel] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxOpcDiff { content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(rel, dec_relationships_diff)? })
+    let [ct, p, rel, comment] = parts.as_slice() else { return Err(format!("opc diff: expected 4 fields, got {}", parts.len())) };
+    Ok(DocxOpcDiff { comment: decode_option(comment, dec_str)?, content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(rel, dec_relationships_diff)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2783,6 +2797,21 @@ fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesD
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_xml_properties_diff_bin(diff: &Option<XmlChildrenDiff>, output: &mut Vec<u8>) {
+    output.push(u8::from(diff.is_some()));
+    if let Some(diff) = diff {
+        diff.encode_binary(output);
+    }
+}
+
+fn dec_xml_properties_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<XmlChildrenDiff>, String> {
+    match reader.read_u8().map_err(|error| error.to_string())? {
+        0 => Ok(None),
+        1 => XmlChildrenDiff::decode_binary(reader).map(Some),
+        tag => Err(format!("XML properties diff: invalid presence tag {tag}")),
+    }
+}
+
 fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
     out.push(if d.text.is_some() { 1 } else { 0 });
     if let Some(v) = &d.text {
@@ -2800,6 +2829,7 @@ fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
     if let Some(v) = d.underline {
         out.push(v as u8);
     }
+    enc_xml_properties_diff_bin(&d.extra_run_properties, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
@@ -2807,7 +2837,8 @@ fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, S
     let bold = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     let italic = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     let underline = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
-    Ok(DocxRunDiff { text, bold, italic, underline })
+    let extra_run_properties = dec_xml_properties_diff_bin(reader)?;
+    Ok(DocxRunDiff { text, bold, italic, underline, extra_run_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2823,12 +2854,14 @@ fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
             write_str_lp(out, v);
         }
     }
+    enc_xml_properties_diff_bin(&pd.extra_paragraph_properties, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
     let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
     let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
-    Ok(DocxParagraphDiff { runs, style })
+    let extra_paragraph_properties = dec_xml_properties_diff_bin(reader)?;
+    Ok(DocxParagraphDiff { runs, style, extra_paragraph_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2837,11 +2870,13 @@ fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
     if let Some(rows) = &d.rows {
         enc_table_rows_diff_bin(rows, out);
     }
+    enc_xml_properties_diff_bin(&d.extra_table_properties, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
     let rows = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
-    Ok(DocxTableDiff { rows })
+    let extra_table_properties = dec_xml_properties_diff_bin(reader)?;
+    Ok(DocxTableDiff { rows, extra_table_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2850,11 +2885,13 @@ fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
     if let Some(cells) = &d.cells {
         enc_table_cells_diff_bin(cells, out);
     }
+    enc_xml_properties_diff_bin(&d.extra_row_properties, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
     let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
-    Ok(DocxTableRowDiff { cells })
+    let extra_row_properties = dec_xml_properties_diff_bin(reader)?;
+    Ok(DocxTableRowDiff { cells, extra_row_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2863,11 +2900,13 @@ fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
     if let Some(blocks) = &d.blocks {
         enc_blocks_diff_bin(blocks, out);
     }
+    enc_xml_properties_diff_bin(&d.extra_cell_properties, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
     let blocks = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
-    Ok(DocxTableCellDiff { blocks })
+    let extra_cell_properties = dec_xml_properties_diff_bin(reader)?;
+    Ok(DocxTableCellDiff { blocks, extra_cell_properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3029,13 +3068,18 @@ pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
     if let Some(v) = &d.relationships {
         enc_relationships_diff_bin(v, out);
     }
+    out.push(u8::from(d.comment.is_some()));
+    if let Some(comment) = &d.comment {
+        write_str_lp(out, comment);
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
     let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
     let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
     let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
-    Ok(DocxOpcDiff { content_types, parts, relationships })
+    let comment = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    Ok(DocxOpcDiff { content_types, parts, relationships, comment })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3059,74 +3103,25 @@ pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_docx_diff(d: &DocxDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.opc {
-        tokens.push(format!("opc={}", enc_opc_diff(v)));
-    }
-    if let Some(v) = &d.document {
-        tokens.push(format!("document={}", enc_document_diff(v)));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
-    let mut d = DocxDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("opc=") {
-            d.opc = Some(dec_opc_diff(rest)?);
-        } else if let Some(rest) = token.strip_prefix("document=") {
-            d.document = Some(dec_document_diff(rest)?);
-        } else {
-            return Err(format!("docx diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
-
 impl protocol::DiffCodec for DocxDiff {
     fn print_diff(&self) -> String {
-        print_docx_diff(self)
+        dsl::json::to_json_string(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_docx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+
+    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
+        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][document]`), matching
-    /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
-    /// — upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (per this ticket's
-    /// own `📖️grammar-recipe.md` census, 100% of stdio's `DiffCodec` impls were still on that
-    /// shortcut before this pilot ladder). `flags` bits 0/1 mark `opc`/`document` presence; each
-    /// present field's own recursive binary payload follows in that fixed order (see
-    /// `🔖️BinaryCodecs` above).
+
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut flags: u8 = 0;
-        if self.opc.is_some() {
-            flags |= 0b01;
-        }
-        if self.document.is_some() {
-            flags |= 0b10;
-        }
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(opc) = &self.opc {
-            enc_opc_diff_bin(opc, &mut out);
-        }
-        if let Some(document) = &self.document {
-            enc_document_diff_bin(document, &mut out);
-        }
-        Ok(out)
+        let mut bytes = vec![store::pack_rt::OP_BINARY_FORMAT];
+        bytes.extend_from_slice(dsl::json::to_json_string(self).as_bytes());
+        Ok(bytes)
     }
+
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
-        let document = if flags & 0b10 != 0 { Some(dec_document_diff_bin(&mut reader).map_err(|e| malformed("diff document", reader.position(), e))?) } else { None };
-        Ok(DocxDiff { opc, document })
+        let payload = bytes.get(1..).ok_or_else(|| protocol::ProtocolError::Malformed { what: "docx diff", offset: 0, detail: "missing format byte".into() })?;
+        let text = std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })?;
+        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })
     }
 }
 //#endregion 🔖️TopLevel
@@ -3148,49 +3143,27 @@ pub(crate) fn xml_node(name: &str) -> XmlNode {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> DocxSnapshot {
-    let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
-    opc.content_types.set_default("xml", "application/xml");
-    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
-    opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
-    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-    opc.relationships.insert("word/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
-
-    DocxSnapshot::from_parts(
-        opc,
-        DocxDocument {
-            body: vec![
-                DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }),
-                DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
-            ],
-            styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) }, DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: Some("keep".into()) }],
-        },
-    )
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument {
+        body: vec![DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() })],
+        styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) }],
+    });
+    snapshot.opc.set_part("word/media/to-remove.bin", "application/octet-stream", vec![1, 2]);
+    snapshot
 }
 
 #[cfg(test)]
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn snapshot_b() -> DocxSnapshot {
-    let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
-    opc.content_types.set_default("xml", "application/xml");
-    opc.content_types.set_default("added", "application/octet-stream");
-    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
-    opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
-    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-    opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
-
-    DocxSnapshot::from_parts(
-        opc,
-        DocxDocument {
-            body: vec![DocxBlock::Paragraph(DocxParagraph {
-                runs: vec![DocxRun { text: "new".into(), bold: true, italic: true, extra_run_properties: Vec::new(), ..Default::default() }, DocxRun { text: "second".into(), underline: true, ..Default::default() }],
-                style: Some("keep".into()),
-                extra_paragraph_properties: vec![xml_node("pPr")],
-            })],
-            styles: vec![DocxStyle { id: "keep".into(), name: "Keep2".into(), based_on: None }, DocxStyle { id: "added".into(), name: "Added".into(), based_on: None }],
-        },
-    )
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument {
+        body: vec![DocxBlock::Paragraph(DocxParagraph {
+            runs: vec![DocxRun { text: "new".into(), bold: true, italic: true, ..Default::default() }, DocxRun { text: "second".into(), underline: true, ..Default::default() }],
+            style: Some("keep".into()),
+            extra_paragraph_properties: vec![xml_node("pPr")],
+        })],
+        styles: vec![DocxStyle { id: "keep".into(), name: "Keep2".into(), based_on: None }, DocxStyle { id: "added".into(), name: "Added".into(), based_on: None }],
+    });
+    snapshot.opc.set_part("word/media/added.bin", "application/octet-stream", vec![3, 4]);
+    snapshot
 }
 
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both

@@ -4,34 +4,239 @@
   "title": "FormsMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-form-title/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "discardResponse"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/discard-response/schema.json#/properties/id"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-step-description/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "new_title"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "renameStep"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/rename-step/schema.json#/properties/id"
+        },
+        "new_title": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/rename-step/schema.json#/properties/new_title"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-block/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "step_id",
+        "block"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createBlock"
+        },
+        "step_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-block/schema.json#/properties/step_id"
+        },
+        "block": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-block/schema.json#/properties/block"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-block/schema.json#/properties/index"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-step/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "step_id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteBlock"
+        },
+        "step_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/delete-block/schema.json#/properties/step_id"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/delete-block/schema.json#/properties/id"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/delete-block/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "step"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createStep"
+        },
+        "step": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-step/schema.json#/properties/step"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/create-step/schema.json#/properties/index"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/delete-step/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeFormTitle"
+        },
+        "new_title": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-form-title/schema.json#/properties/new_title"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/move-block-to-step/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeStepDescription"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-step-description/schema.json#/properties/id"
+        },
+        "new_description": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-step-description/schema.json#/properties/new_description"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/rename-step/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "block_id",
+        "index",
+        "step_id",
+        "to_step_id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveBlockToStep"
+        },
+        "step_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/move-block-to-step/schema.json#/properties/step_id"
+        },
+        "block_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/move-block-to-step/schema.json#/properties/block_id"
+        },
+        "to_step_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/move-block-to-step/schema.json#/properties/to_step_id"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/move-block-to-step/schema.json#/properties/index"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/reorder-step/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "response"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "commitResponse"
+        },
+        "response": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/commit-response/schema.json#/properties/response"
+        },
+        "index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/commit-response/schema.json#/properties/index"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/replace-block/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "to_index"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderStep"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/reorder-step/schema.json#/properties/id"
+        },
+        "to_index": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/reorder-step/schema.json#/properties/to_index"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "step_id",
+        "block"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceBlock"
+        },
+        "step_id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/replace-block/schema.json#/properties/step_id"
+        },
+        "block": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/replace-block/schema.json#/properties/block"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteStep"
+        },
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/delete-step/schema.json#/properties/id"
+        }
+      }
     }
   ]
 }

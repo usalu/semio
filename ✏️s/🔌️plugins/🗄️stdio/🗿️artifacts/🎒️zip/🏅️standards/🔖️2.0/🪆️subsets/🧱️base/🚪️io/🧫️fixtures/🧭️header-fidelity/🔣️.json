@@ -1,0 +1,51 @@
+{
+  "archiveComment": "é",
+  "archiveCommentUtf8": false,
+  "directory": {
+    "name": "folder/",
+    "compressionMethod": 0,
+    "versionNeeded": 20,
+    "versionMadeBy": 788,
+    "flags": 2048,
+    "modifiedTime": 18828,
+    "modifiedDate": 23677,
+    "localExtraId": 51966,
+    "localExtraData": [0, 255, 17, 34],
+    "centralExtraId": 48879,
+    "centralExtraData": [170, 0, 85],
+    "internalAttributes": 1,
+    "externalAttributes": 1106051088,
+    "comment": ""
+  },
+  "unicodeMember": {
+    "name": "résumé/δ.txt",
+    "legacyName": [114, 130, 115, 117, 109, 130, 46, 116, 120, 116],
+    "data": [0, 1, 2, 3, 255, 65, 65, 65, 65, 65, 65, 65, 65],
+    "compressionMethod": 8,
+    "versionNeeded": 20,
+    "versionMadeBy": 831,
+    "flags": 8,
+    "modifiedTime": 4660,
+    "modifiedDate": 22136,
+    "localExtraId": 4660,
+    "localExtraData": [222, 173, 190, 239],
+    "centralExtraId": 22136,
+    "centralExtraData": [1, 0, 2, 0, 3],
+    "comment": "Kommentar 🎒",
+    "legacyComment": [75, 111, 109, 109, 101, 110, 116, 97, 114],
+    "internalAttributes": 0,
+    "externalAttributes": 2175008768,
+    "dataDescriptorSignature": true
+  },
+  "binaryCommentMember": {
+    "name": "binary-comment.txt",
+    "compressionMethod": 0,
+    "versionNeeded": 20,
+    "versionMadeBy": 45,
+    "flags": 0,
+    "modifiedTime": 0,
+    "modifiedDate": 33,
+    "comment": "\u0000 Ç",
+    "commentBytes": [0, 255, 128]
+  }
+}

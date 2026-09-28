@@ -401,17 +401,17 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
     match event {
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(modifiers));
-            app.handle_pointer_move(pointer.id, x, y, down, button, modifiers).await;
+            app.handle_pointer_move(pointer, x, y, down, button, modifiers).await;
         }
         DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => {
             let modifiers = event_modifiers_to_pointer(modifiers);
-            app.handle_pointer_button(pointer.id, x, y, true, pointer_button_to_i16(button), modifiers).await;
+            app.handle_pointer_button(pointer, x, y, true, pointer_button_to_i16(button), modifiers).await;
         }
         DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => {
             let modifiers = event_modifiers_to_pointer(modifiers);
-            app.handle_pointer_button(pointer.id, x, y, false, pointer_button_to_i16(button), modifiers).await;
+            app.handle_pointer_button(pointer, x, y, false, pointer_button_to_i16(button), modifiers).await;
         }
-        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer.id),
+        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer),
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
             app.handle_pointer_wheel(x, y, delta_x, delta_y, event_modifiers_to_pointer(modifiers));
         }

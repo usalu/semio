@@ -243,7 +243,7 @@ fn opc_diff(parts: Option<XlsxOpcPartsDiff>, content_types: Option<XlsxOpcConten
     if parts.is_none() && content_types.is_none() && relationships.is_none() {
         return XlsxDiff::default();
     }
-    XlsxDiff { opc: Some(XlsxOpcDiff { content_types, parts, relationships }), ..Default::default() }
+    XlsxDiff { opc: Some(XlsxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
 }
 
 /// 🔺️ Sparse per-part diff: the touched parts only, each carrying just the fields that moved.
@@ -252,7 +252,7 @@ fn parts_diff(modified: Vec<(String, XlsxOpcPartDiff)>, added: Vec<OpcPart>, rem
     if modified.is_empty() && added.is_empty() && removed.is_empty() {
         return None;
     }
-    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added })
+    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, order: None })
 }
 
 /// 🔺️ Sparse `[Content_Types].xml` override diff, keyed by the `/`-prefixed part name the typed

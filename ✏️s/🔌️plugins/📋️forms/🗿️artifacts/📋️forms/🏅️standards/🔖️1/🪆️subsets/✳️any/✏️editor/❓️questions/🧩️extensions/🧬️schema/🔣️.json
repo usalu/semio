@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/forms/extension-render",
+  "type": "object",
+  "required": [
+    "params",
+    "questionId",
+    "controllerId",
+    "surface",
+    "interactive"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fixtureSlug": {
+      "type": "string"
+    },
+    "params": {},
+    "questionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "controllerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "surface": {
+      "enum": [
+        "blueprint",
+        "try"
+      ]
+    },
+    "interactive": {
+      "type": "boolean"
+    },
+    "windowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "windowKindId": {
+      "const": "forms-try"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "surface": {
+            "const": "try"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "windowId",
+          "windowKindId"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "windowId"
+              ]
+            },
+            {
+              "required": [
+                "windowKindId"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

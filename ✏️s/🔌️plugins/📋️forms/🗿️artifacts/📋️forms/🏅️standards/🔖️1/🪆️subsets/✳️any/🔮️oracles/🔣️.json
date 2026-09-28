@@ -48,6 +48,30 @@
           ]
         }
       }
+    },
+    {
+      "id": "forms-response-json-patch",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fast-json-patch",
+        "implementation": "RFC 6902 JSON Patch",
+        "version": "3.1.1"
+      },
+      "capabilities": [
+        "forms-response-events"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "notes": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors."
     }
   ],
   "noOracleDecisions": [],
@@ -180,6 +204,40 @@
         "move-block-to-step",
         "replace-block",
         "change-form-title"
+      ]
+    },
+    {
+      "id": "forms-1-responses",
+      "capability": "forms-response-events",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "commit-response",
+        "discard-response"
+      ],
+      "vectors": [
+        {
+          "mutationId": "commit-response",
+          "sourceMutationDirectoryName": "📨️commit-response",
+          "mutationDirectoryName": "📨️commit-response",
+          "scenarios": [
+            {
+              "id": "retry-same-response",
+              "directoryName": "🧪️retry-same-response"
+            }
+          ]
+        },
+        {
+          "mutationId": "discard-response",
+          "sourceMutationDirectoryName": "↩️discard-response",
+          "mutationDirectoryName": "↩️discard-response",
+          "scenarios": [
+            {
+              "id": "reject-missing-response",
+              "directoryName": "🧪️reject-missing-response"
+            }
+          ]
+        }
       ]
     }
   ],
@@ -394,6 +452,47 @@
             {
               "capability": "forms-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "commit-response",
+          "capability": "forms-response-events",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "commit-response",
+            "bridgeVersion": 1,
+            "variant": "CommitResponse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-response-events",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "discard-response",
+          "capability": "forms-response-events",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "discard-response",
+            "bridgeVersion": 1,
+            "variant": "DiscardResponse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-response-events",
+              "qualifyingKind": "third-party-library"
             }
           ]
         }

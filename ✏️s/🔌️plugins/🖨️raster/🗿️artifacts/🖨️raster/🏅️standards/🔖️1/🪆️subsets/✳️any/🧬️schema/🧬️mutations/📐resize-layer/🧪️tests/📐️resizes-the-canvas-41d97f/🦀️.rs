@@ -35,7 +35,7 @@ async fn applies_to_committed_after() {
     assert_eq!(produced, expected_after(), "resize-layer/resizes-the-canvas-layer-to-256-by-128: applied state differs from committed after-snapshot");
     let Some(RasterLayerNode::Pixel { width, height, transform, .. }) = find_layer(&produced.layers, "canvas") else { panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: canvas must still be a pixel layer") };
     assert_eq!((*width, *height), (Some(256), Some(128)), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the extent must be the payload's, width first");
-    assert_eq!((transform.scale_x, transform.scale_y), (1.0, 1.0), "resize-layer/resizes-the-canvas-layer-to-256-by-128: resizing the PIXEL EXTENT must not touch the transform's scale");
+    assert_eq!((transform.a, transform.d), (1.0, 1.0), "resize-layer/resizes-the-canvas-layer-to-256-by-128: resizing the PIXEL EXTENT must not touch the transform's scale");
 }
 
 /// ↩️ `resize-layer` is its own inverse partner: the undo step carries the base's prior extent,

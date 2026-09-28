@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "diagnostic",
+    "locales",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "icon-render-status-v1"
+    },
+    "diagnostic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locale",
+          "labels"
+        ],
+        "properties": {
+          "locale": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "labels": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "empty",
+              "rendering",
+              "failed",
+              "ready"
+            ],
+            "properties": {
+              "empty": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rendering": {
+                "type": "string",
+                "minLength": 1
+              },
+              "failed": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ready": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "state",
+          "request",
+          "resident",
+          "faulted",
+          "assetMiss"
+        ],
+        "properties": {
+          "state": {
+            "enum": [
+              "empty",
+              "rendering",
+              "failed",
+              "ready"
+            ]
+          },
+          "request": {
+            "type": "boolean"
+          },
+          "resident": {
+            "type": "boolean"
+          },
+          "faulted": {
+            "type": "boolean"
+          },
+          "assetMiss": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

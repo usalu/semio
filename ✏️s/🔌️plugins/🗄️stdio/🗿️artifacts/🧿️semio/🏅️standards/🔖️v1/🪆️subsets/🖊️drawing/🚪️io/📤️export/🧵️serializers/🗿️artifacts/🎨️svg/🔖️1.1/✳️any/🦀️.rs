@@ -153,7 +153,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
+        Ok(SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer

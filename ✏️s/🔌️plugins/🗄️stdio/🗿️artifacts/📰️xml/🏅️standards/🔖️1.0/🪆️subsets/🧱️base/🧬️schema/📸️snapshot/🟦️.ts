@@ -27,7 +27,7 @@ export type XmlExternalId =
   | { kind: 'system'; systemId: string }
   | { kind: 'public'; publicId: string; systemId: string };
 export type XmlDtdDeclaration = { kind: 'entity'; parameter: boolean; name: string; value: string };
-export interface XmlDoctype { name: string; externalId?: XmlExternalId; declarations: XmlDtdDeclaration[]; }
+export interface XmlDoctype { prologPosition?: number; name: string; externalId?: XmlExternalId; declarations: XmlDtdDeclaration[]; }
 
 /** 📰 Well-formed XML document root. */
 export interface XmlDocument {
@@ -35,6 +35,7 @@ export interface XmlDocument {
   doctype?: XmlDoctype;
   declaration?: XmlDeclaration;
   prolog: XmlNode[];
+  epilog: XmlNode[];
 }
 
 /** 📸️ Persisted `stdio.xml` snapshot. */
@@ -108,11 +109,22 @@ export function parseXmlAttr(value: unknown, at = "$"): XmlAttr {
 
 export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
+  const version = stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`);
+  const encoding = row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`);
+  const quote = row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember<XmlQuote>(row["quote"], `${at}.quote`, ["double", "single"]);
+  const delimiter = quote === "single" ? "'" : '"';
+  if (version.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value contains its declaration quote delimiter");
+  if (!/^1\.[0-9]+$/u.test(version)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value is not a valid XML VersionNum");
+  if (encoding !== undefined) {
+    if (encoding.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value contains its declaration quote delimiter");
+    if (!/^[A-Za-z][A-Za-z0-9._-]*$/u.test(encoding)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value is not a valid XML EncName");
+    if (encoding.toLowerCase() !== "utf-8") stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value conflicts with the UTF-8 transport");
+  }
   return {
-    version: stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`),
-    encoding: row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`),
+    version,
+    encoding,
     standalone: row["standalone"] === undefined ? undefined : stdioXml10BaseSnapshotGuardBoolean(row["standalone"], `${at}.standalone`),
-    quote: row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember<XmlQuote>(row["quote"], `${at}.quote`, ["double", "single"]),
+    quote,
   };
 }
 
@@ -126,21 +138,56 @@ export function parseXmlDtdDeclaration(value: unknown, at = "$"): XmlDtdDeclarat
   };
 }
 
+export function parseXmlExternalId(value: unknown, at = "$"): XmlExternalId {
+  const row = stdioXml10BaseSnapshotGuardObject(value, at);
+  const kind = stdioXml10BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["system", "public"] as const);
+  if (kind === "system") return { kind, systemId: stdioXml10BaseSnapshotGuardString(row["systemId"], `${at}.systemId`) };
+  return {
+    kind,
+    publicId: stdioXml10BaseSnapshotGuardString(row["publicId"], `${at}.publicId`),
+    systemId: stdioXml10BaseSnapshotGuardString(row["systemId"], `${at}.systemId`),
+  };
+}
+
+export function parseXmlNode(value: unknown, at = "$"): XmlNode {
+  const row = stdioXml10BaseSnapshotGuardObject(value, at);
+  const kind = stdioXml10BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["element", "text", "cData", "comment", "processingInstruction"] as const);
+  if (kind === "element") return {
+    kind,
+    name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
+    attrs: stdioXml10BaseSnapshotGuardArray(row["attrs"], `${at}.attrs`).map((item, index) => parseXmlAttr(item, `${at}.attrs[${index}]`)),
+    children: stdioXml10BaseSnapshotGuardArray(row["children"], `${at}.children`).map((item, index) => parseXmlNode(item, `${at}.children[${index}]`)),
+  };
+  if (kind === "processingInstruction") return {
+    kind,
+    target: stdioXml10BaseSnapshotGuardString(row["target"], `${at}.target`),
+    data: stdioXml10BaseSnapshotGuardString(row["data"], `${at}.data`),
+  };
+  return { kind, text: stdioXml10BaseSnapshotGuardString(row["text"], `${at}.text`) };
+}
+
 export function parseXmlDoctype(value: unknown, at = "$"): XmlDoctype {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
   return {
+    prologPosition: row["prologPosition"] === undefined ? 0 : stdioXml10BaseSnapshotGuardInteger(row["prologPosition"], `${at}.prologPosition`, { minimum: 0 }),
     name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
     externalId: row["externalId"] === undefined ? undefined : parseXmlExternalId(row["externalId"], `${at}.externalId`),
-    declarations: row["declarations"] === undefined ? undefined : stdioXml10BaseSnapshotGuardArray(row["declarations"], `${at}.declarations`).map((item, index) => parseXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
+    declarations: row["declarations"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["declarations"], `${at}.declarations`).map((item, index) => parseXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
   };
 }
 
 export function parseXmlDocument(value: unknown, at = "$"): XmlDocument {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  return {
+  const document = {
     root: row["root"] === undefined ? undefined : parseXmlNode(row["root"], `${at}.root`),
     doctype: row["doctype"] === undefined ? undefined : parseXmlDoctype(row["doctype"], `${at}.doctype`),
     declaration: row["declaration"] === undefined ? undefined : parseXmlDeclaration(row["declaration"], `${at}.declaration`),
-    prolog: stdioXml10BaseSnapshotGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
+    prolog: row["prolog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
+    epilog: row["epilog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseXmlNode(item, `${at}.epilog[${index}]`)),
   };
+  for (const [boundary, nodes] of [["prolog", document.prolog], ["epilog", document.epilog]] as const) {
+    if (nodes.some((node) => node.kind !== "comment" && node.kind !== "processingInstruction")) stdioXml10BaseSnapshotGuardReject(`${at}.${boundary}`, "boundary contains a non-miscellaneous node");
+  }
+  if ((document.doctype?.prologPosition ?? 0) > document.prolog.length) stdioXml10BaseSnapshotGuardReject(`${at}.doctype.prologPosition`, "position exceeds prolog length");
+  return document;
 }

@@ -1,0 +1,7 @@
+[
+  {
+    "mutation": "setGroupIsolation",
+    "layerId": "group-a",
+    "isolation": false
+  }
+]

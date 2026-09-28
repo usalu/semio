@@ -14,7 +14,7 @@ mod tests {
         if let Some(c) = conformance {
             attrs.push(attr("conformance", c));
         }
-        let doc = XmlDocument { root: Some(XmlNode::Element { name: "workbook".into(), attrs, children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }] }), doctype: None, declaration: None, prolog: Vec::new() };
+        let doc = XmlDocument { root: Some(XmlNode::Element { name: "workbook".into(), attrs, children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }] }), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() };
         xml_document_to_text(&doc).into_bytes()
     }
 

@@ -2541,7 +2541,7 @@ impl InteractiveJob for LayoutMediaExportJob {
                 }
                 // 📤️ Same ownership handover as the download route: the media result owns the sealed queue.
                 let chunks = std::mem::replace(&mut self.inner.output_chunks, ArtifactOutputChunks::new(0));
-                let media = match ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, chunks) {
+                let media = match ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, "application/json", chunks) {
                     Ok(media) => media,
                     Err(error) => {
                         let _ = error;

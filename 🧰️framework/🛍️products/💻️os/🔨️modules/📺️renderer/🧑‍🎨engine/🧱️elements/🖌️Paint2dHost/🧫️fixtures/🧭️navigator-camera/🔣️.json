@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "authored-composite-zoom-in",
+      "camera": {
+        "x": 40,
+        "y": -20,
+        "zoom": 2
+      },
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "surface": [
+        100,
+        50,
+        240,
+        160
+      ],
+      "point": [
+        160,
+        90
+      ],
+      "deltaY": -120,
+      "expected": {
+        "x": 20.909090909090907,
+        "y": -30.454545454545467,
+        "zoom": 2.2
+      }
+    },
+    {
+      "id": "missing-composite-viewport",
+      "camera": {
+        "x": -15,
+        "y": 30,
+        "zoom": 0.5
+      },
+      "viewport": null,
+      "surface": [
+        25,
+        80,
+        200,
+        200
+      ],
+      "point": [
+        180,
+        230
+      ],
+      "deltaY": 120,
+      "expected": {
+        "x": 39.44444444444446,
+        "y": 63.333333333333314,
+        "zoom": 0.45
+      }
+    },
+    {
+      "id": "maximum-zoom",
+      "camera": {
+        "x": 30,
+        "y": -10,
+        "zoom": 32
+      },
+      "viewport": {
+        "width": 640,
+        "height": 480
+      },
+      "surface": [
+        100,
+        50,
+        240,
+        160
+      ],
+      "point": [
+        180,
+        130
+      ],
+      "deltaY": -80,
+      "expected": {
+        "x": 30,
+        "y": -10,
+        "zoom": 32
+      }
+    },
+    {
+      "id": "minimum-zoom",
+      "camera": {
+        "x": -40,
+        "y": 55,
+        "zoom": 0.05
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "surface": [
+        0,
+        0,
+        320,
+        240
+      ],
+      "point": [
+        160,
+        120
+      ],
+      "deltaY": 80,
+      "expected": {
+        "x": -40,
+        "y": 55,
+        "zoom": 0.05
+      }
+    }
+  ]
+}

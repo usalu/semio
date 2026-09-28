@@ -1,0 +1,567 @@
+{
+  "schema": "icon-frame-presentation-v1",
+  "tolerance": 1,
+  "cases": [
+    {
+      "id": "landscape",
+      "width": 256,
+      "height": 128,
+      "container": [
+        400,
+        300
+      ],
+      "shape": "rectangle",
+      "footer": null,
+      "expected": {
+        "frame": [
+          0,
+          50,
+          400,
+          200
+        ],
+        "content": [
+          2,
+          52,
+          396,
+          196
+        ],
+        "footer": null,
+        "radius": "0px",
+        "border": 2,
+        "badge": {
+          "bounds": [
+            283.390625,
+            229,
+            110.609375,
+            15
+          ],
+          "fontSize": 10,
+          "lineHeight": 15,
+          "paddingX": 4,
+          "paddingY": 0,
+          "fontFamily": "Share Tech Mono",
+          "probes": [
+            {
+              "relative": [
+                0.05,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.05,
+                0.9
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.9
+              ],
+              "visible": true
+            }
+          ],
+          "lines": [
+            "256×128 · rectangle"
+          ]
+        },
+        "contentProbes": [
+          {
+            "relative": [
+              0.05,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.5,
+              0.5
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.05,
+              0.95
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.95
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "portrait",
+      "width": 128,
+      "height": 256,
+      "container": [
+        400,
+        300
+      ],
+      "shape": "ellipse",
+      "footer": null,
+      "expected": {
+        "frame": [
+          125,
+          0,
+          150,
+          300
+        ],
+        "content": [
+          127,
+          2,
+          146,
+          296
+        ],
+        "footer": null,
+        "radius": "50%",
+        "border": 2,
+        "badge": {
+          "bounds": [
+            169.1875,
+            279,
+            99.8125,
+            15
+          ],
+          "fontSize": 10,
+          "lineHeight": 15,
+          "paddingX": 4,
+          "paddingY": 0,
+          "fontFamily": "Share Tech Mono",
+          "probes": [
+            {
+              "relative": [
+                0.05,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.1
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.05,
+                0.9
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.95,
+                0.9
+              ],
+              "visible": false
+            }
+          ],
+          "lines": [
+            "128×256 · ellipse"
+          ]
+        },
+        "contentProbes": [
+          {
+            "relative": [
+              0.05,
+              0.05
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.95,
+              0.05
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.5,
+              0.5
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.05,
+              0.95
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.95,
+              0.95
+            ],
+            "visible": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "landscape-footer",
+      "width": 256,
+      "height": 128,
+      "container": [
+        400,
+        300
+      ],
+      "shape": "ellipse",
+      "footer": "Sample · 256×128 · PNG",
+      "expected": {
+        "frame": [
+          0,
+          38,
+          400,
+          200
+        ],
+        "content": [
+          2,
+          40,
+          396,
+          196
+        ],
+        "footer": [
+          0,
+          276,
+          400,
+          24
+        ],
+        "radius": "50%",
+        "border": 2,
+        "badge": {
+          "bounds": [
+            294.1875,
+            217,
+            99.8125,
+            15
+          ],
+          "fontSize": 10,
+          "lineHeight": 15,
+          "paddingX": 4,
+          "paddingY": 0,
+          "fontFamily": "Share Tech Mono",
+          "probes": [
+            {
+              "relative": [
+                0.05,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.1
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.05,
+                0.9
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.95,
+                0.9
+              ],
+              "visible": false
+            }
+          ],
+          "lines": [
+            "256×128 · ellipse"
+          ]
+        },
+        "contentProbes": [
+          {
+            "relative": [
+              0.05,
+              0.05
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.95,
+              0.05
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.5,
+              0.5
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.05,
+              0.95
+            ],
+            "visible": false
+          },
+          {
+            "relative": [
+              0.95,
+              0.95
+            ],
+            "visible": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "large-shot",
+      "width": 262144,
+      "height": 131072,
+      "container": [
+        240,
+        180
+      ],
+      "shape": "rectangle",
+      "footer": null,
+      "expected": {
+        "frame": [
+          0,
+          30,
+          240,
+          120
+        ],
+        "content": [
+          2,
+          32,
+          236,
+          116
+        ],
+        "footer": null,
+        "radius": "0px",
+        "border": 2,
+        "badge": {
+          "bounds": [
+            91,
+            129,
+            143,
+            15
+          ],
+          "fontSize": 10,
+          "lineHeight": 15,
+          "paddingX": 4,
+          "paddingY": 0,
+          "fontFamily": "Share Tech Mono",
+          "probes": [
+            {
+              "relative": [
+                0.05,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.05,
+                0.9
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.95,
+                0.9
+              ],
+              "visible": true
+            }
+          ],
+          "lines": [
+            "262144×131072 · rectangle"
+          ]
+        },
+        "contentProbes": [
+          {
+            "relative": [
+              0.05,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.5,
+              0.5
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.05,
+              0.95
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.95
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "narrow-portrait",
+      "width": 32,
+      "height": 256,
+      "container": [
+        400,
+        300
+      ],
+      "shape": "rectangle",
+      "footer": null,
+      "expected": {
+        "frame": [
+          181.25,
+          0,
+          37.5,
+          300
+        ],
+        "content": [
+          183.25,
+          2,
+          33.5,
+          296
+        ],
+        "footer": null,
+        "radius": "0px",
+        "border": 2,
+        "badge": {
+          "bounds": [
+            156.15625,
+            264,
+            56.59375,
+            30
+          ],
+          "fontSize": 10,
+          "lineHeight": 15,
+          "paddingX": 4,
+          "paddingY": 0,
+          "fontFamily": "Share Tech Mono",
+          "probes": [
+            {
+              "relative": [
+                0.05,
+                0.1
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.95,
+                0.1
+              ],
+              "visible": true
+            },
+            {
+              "relative": [
+                0.05,
+                0.9
+              ],
+              "visible": false
+            },
+            {
+              "relative": [
+                0.95,
+                0.9
+              ],
+              "visible": true
+            }
+          ],
+          "lines": [
+            "32×256 ·",
+            "rectangle"
+          ]
+        },
+        "contentProbes": [
+          {
+            "relative": [
+              0.05,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.05
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.5,
+              0.5
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.05,
+              0.95
+            ],
+            "visible": true
+          },
+          {
+            "relative": [
+              0.95,
+              0.95
+            ],
+            "visible": true
+          }
+        ]
+      }
+    }
+  ]
+}

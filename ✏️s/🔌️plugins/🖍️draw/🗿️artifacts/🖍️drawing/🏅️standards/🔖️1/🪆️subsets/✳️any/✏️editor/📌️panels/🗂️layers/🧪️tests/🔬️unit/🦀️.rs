@@ -13,7 +13,7 @@ fn shape_layer(id: &str, name: &str) -> DrawingLayerNode {
 /// `nested` children — so every law below covers the nested container too, not only the section.
 fn oversized_document(top: usize, nested: usize) -> DrawingSnapshot {
     let children = (0..nested).map(|index| shape_layer(&format!("nested-{index}"), &format!("Nested {index}"))).collect();
-    let group = DrawingLayerNode::Group(DrawingGroupBody { base: DrawingLayerBase { id: "group-0".into(), name: "Group 0".into(), ..default_layer_base("Group 0") }, children });
+    let group = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: DrawingLayerBase { id: "group-0".into(), name: "Group 0".into(), ..default_layer_base("Group 0") }, children });
     let mut layers = vec![group];
     layers.extend((1..top).map(|index| shape_layer(&format!("shape-{index}"), &format!("Shape {index}"))));
     DrawingSnapshot { layers, ..Default::default() }

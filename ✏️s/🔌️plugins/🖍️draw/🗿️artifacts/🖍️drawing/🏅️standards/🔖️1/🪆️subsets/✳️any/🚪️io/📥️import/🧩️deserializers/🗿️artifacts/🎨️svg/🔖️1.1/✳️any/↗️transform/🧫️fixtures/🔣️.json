@@ -1,0 +1,219 @@
+[
+  {
+    "name": "identity",
+    "source": "",
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "translation-default",
+    "source": "translate(5)",
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      5,
+      0
+    ]
+  },
+  {
+    "name": "scale-default",
+    "source": "scale(-2)",
+    "matrix": [
+      -2,
+      0,
+      0,
+      -2,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "ordered",
+    "source": "translate(5 7) scale(2 3)",
+    "matrix": [
+      2,
+      0,
+      0,
+      3,
+      5,
+      7
+    ]
+  },
+  {
+    "name": "reverse-order",
+    "source": "scale(2,3) translate(5,7)",
+    "matrix": [
+      2,
+      0,
+      0,
+      3,
+      10,
+      21
+    ]
+  },
+  {
+    "name": "centered-rotation",
+    "source": "rotate(90 10 20)",
+    "matrix": [
+      0,
+      1,
+      -1,
+      0,
+      30,
+      10
+    ]
+  },
+  {
+    "name": "reflection-shear",
+    "source": "matrix(-2 1 3 4 5 6)",
+    "matrix": [
+      -2,
+      1,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  {
+    "name": "skew-x",
+    "source": "skewX(45)",
+    "matrix": [
+      1,
+      0,
+      1,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "skew-y",
+    "source": "skewY(-45)",
+    "matrix": [
+      1,
+      -1,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "collapsed-axis",
+    "source": "matrix(0 0 3 4 8 9)",
+    "matrix": [
+      0,
+      0,
+      3,
+      4,
+      8,
+      9
+    ]
+  },
+  {
+    "name": "scientific",
+    "source": "translate(1e2,-.5) scale(.5)",
+    "matrix": [
+      0.5,
+      0,
+      0,
+      0.5,
+      100,
+      -0.5
+    ]
+  },
+  {
+    "name": "bad-name",
+    "source": "turn(30)",
+    "matrix": null
+  },
+  {
+    "name": "bad-arity",
+    "source": "rotate(45 10)",
+    "matrix": null
+  },
+  {
+    "name": "missing-close",
+    "source": "translate(3",
+    "matrix": null
+  },
+  {
+    "name": "empty-args",
+    "source": "scale()",
+    "matrix": null
+  },
+  {
+    "name": "overflow-number",
+    "source": "scale(1e999)",
+    "matrix": null
+  },
+  {
+    "name": "overflow-composition",
+    "source": "scale(1e308) scale(1e308)",
+    "matrix": null
+  },
+  {
+    "name": "undefined-skew",
+    "source": "skewX(90)",
+    "matrix": null
+  },
+  {
+    "name": "nonfinite",
+    "source": "matrix(NaN 0 0 1 0 0)",
+    "matrix": null
+  },
+  {
+    "name": "trailing-junk",
+    "source": "translate(1) garbage",
+    "matrix": null
+  },
+  {
+    "name": "leading-list-comma",
+    "source": ",scale(2)",
+    "matrix": null
+  },
+  {
+    "name": "trailing-list-comma",
+    "source": "scale(2),",
+    "matrix": null
+  },
+  {
+    "name": "leading-operand-comma",
+    "source": "scale(,2)",
+    "matrix": null
+  },
+  {
+    "name": "trailing-operand-comma",
+    "source": "scale(2,)",
+    "matrix": null
+  },
+  {
+    "name": "repeated-operand-comma",
+    "source": "translate(2,,3)",
+    "matrix": null
+  },
+  {
+    "name": "missing-operand-separator",
+    "source": "translate(2-3)",
+    "matrix": null
+  },
+  {
+    "name": "missing-function-separator",
+    "source": "translate(2)scale(3)",
+    "matrix": null
+  },
+  {
+    "name": "non-svg-whitespace",
+    "source": "scale(2) rotate(30)",
+    "matrix": null
+  }
+]

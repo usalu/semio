@@ -55,6 +55,7 @@ KINDS = (
     "reorder-layers",
     "rename-layer",
     "change-layer-visible",
+    "change-layer-locked",
     "change-layer-opacity",
     "change-layer-blend-mode",
     "move-layer",
@@ -73,6 +74,7 @@ TAGS = {
     "reorder-layers": "reorderLayers",
     "rename-layer": "renameLayer",
     "change-layer-visible": "changeLayerVisible",
+    "change-layer-locked": "changeLayerLocked",
     "change-layer-opacity": "changeLayerOpacity",
     "change-layer-blend-mode": "changeLayerBlendMode",
     "move-layer": "moveLayer",
@@ -85,7 +87,7 @@ TAGS = {
 }
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed schema spells it."""
 
-BASE = ("kind", "id", "name", "visible", "opacity", "blendMode", "transform")
+BASE = ("kind", "id", "name", "visible", "locked", "opacity", "blendMode", "transform")
 """🧱️ The members every layer node carries, whatever its kind."""
 
 EXTRA = {"group": ("mask", "children"), "pixel": ("mask", "width", "height", "imageKey"), "adjustment": ("adjustmentKind", "params")}
@@ -102,7 +104,7 @@ def validate_node(node, path):
     expected = set(BASE) | set(EXTRA[node["kind"]])
     if set(node) != expected:
         raise AssertionError("%s must carry exactly %r, found %r" % (path, sorted(expected), sorted(node)))
-    if set(node["transform"]) != {"x", "y", "scaleX", "scaleY", "rotation"}:
+    if set(node["transform"]) != {"x", "y", "a", "b", "c", "d"}:
         raise AssertionError("%s.transform must carry exactly the five declared members, found %r" % (path, sorted(node["transform"])))
     if node["kind"] == "group":
         for at, child in enumerate(node["children"]):
@@ -237,6 +239,10 @@ def apply_mutation(document, mutation):
         node, _parent, _at = node_of(result, mutation["layerId"], kind)
         if kind == "rename-layer":
             node["name"] = mutation["newName"]
+        elif kind == "change-layer-locked":
+            if node["locked"] != mutation["expected"]:
+                raise AssertionError("Layer protection revision mismatch")
+            node["locked"] = mutation["locked"]
         elif kind == "change-layer-visible":
             node["visible"] = mutation["newVisible"]
         elif kind == "change-layer-opacity":
@@ -297,6 +303,8 @@ def inverse_mutation(document, mutation):
     node, _parent, _at = node_of(document, mutation["layerId"], "inverse of %s" % kind)
     if kind == "rename-layer":
         return {"mutation": TAGS[kind], "layerId": node["id"], "newName": node["name"]}
+    if kind == "change-layer-locked":
+        return {"mutation": TAGS[kind], "layerId": node["id"], "expected": mutation["locked"], "locked": node["locked"]}
     if kind == "change-layer-visible":
         return {"mutation": TAGS[kind], "layerId": node["id"], "newVisible": node["visible"]}
     if kind == "change-layer-opacity":

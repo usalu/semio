@@ -8,4 +8,7 @@ use framework_schema::ArtifactSchema;
 pub struct FormsTryWindowConfig {
     #[state(config)]
     pub current_step_index: u32,
+    #[state(config)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub submitted_response_id: Option<String>,
 }

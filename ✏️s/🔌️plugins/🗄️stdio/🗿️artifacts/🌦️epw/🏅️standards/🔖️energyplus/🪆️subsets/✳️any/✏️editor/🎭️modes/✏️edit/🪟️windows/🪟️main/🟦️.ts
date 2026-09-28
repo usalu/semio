@@ -50,11 +50,12 @@ export interface EpwEditMainViewModel {
   rows: string[][];
 }
 
-/** ✏️ `set-cell` payload shape — mirrors `EpwEditorCommand::SetCell`. `row` indexes
- * `EpwSnapshot.records` directly; `column` is one of `EPW_TABLE_COLUMNS`. */
+/** ✏️ Renderer `set-cell` payload. The Rust command resolves the numeric column to
+ * `EPW_TABLE_COLUMNS`; `revision` guards the addressed typed row. */
 export interface EpwSetCell {
   row: number;
-  column: (typeof EPW_TABLE_COLUMNS)[number];
+  column: number;
+  revision: string;
   value: string;
 }
 

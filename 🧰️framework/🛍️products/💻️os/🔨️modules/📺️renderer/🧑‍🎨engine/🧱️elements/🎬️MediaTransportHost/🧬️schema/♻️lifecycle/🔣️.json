@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "media",
+    "running",
+    "output",
+    "requirements"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instanceId",
+        "controllerId",
+        "parentDocumentId",
+        "windowId",
+        "revision",
+        "outputPort",
+        "generation"
+      ],
+      "properties": {
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "controllerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parentDocumentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "outputPort": {
+          "const": "playback:out"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mediaType",
+        "durationMs",
+        "positionMs",
+        "selection"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "audio",
+            "video"
+          ]
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "positionMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selection": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "running": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "progress",
+        "detail"
+      ],
+      "properties": {
+        "progress": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "detail": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunks",
+        "totalBytes"
+      ],
+      "properties": {
+        "chunks": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "minItems": 1
+          },
+          "minItems": 1
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "autoplay",
+        "pollsPerTurn",
+        "chunksPerTurn",
+        "cancelExactHandle",
+        "revokeOnRevisionOrUnmount",
+        "resetSourceOnRevisionOrUnmount",
+        "controls",
+        "locales",
+        "maximumTotalBytes",
+        "maximumPages"
+      ],
+      "properties": {
+        "autoplay": {
+          "const": false
+        },
+        "pollsPerTurn": {
+          "const": 1
+        },
+        "chunksPerTurn": {
+          "const": 1
+        },
+        "cancelExactHandle": {
+          "const": true
+        },
+        "revokeOnRevisionOrUnmount": {
+          "const": true
+        },
+        "resetSourceOnRevisionOrUnmount": {
+          "const": true
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "play",
+              "pause",
+              "seek",
+              "selectionStart",
+              "selectionEnd",
+              "cancel"
+            ]
+          },
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true
+        },
+        "locales": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "en"
+            },
+            {
+              "const": "de"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "maximumTotalBytes": {
+          "const": 33554432
+        },
+        "maximumPages": {
+          "const": 8192
+        }
+      }
+    }
+  }
+}

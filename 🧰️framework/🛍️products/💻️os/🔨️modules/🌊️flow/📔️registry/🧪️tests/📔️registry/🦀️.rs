@@ -313,3 +313,11 @@ fn a_malformed_contributed_manifest_faults_the_whole_contributions_sync() {
     assert!(!installed_flow_extensions().iter().any(|info| info.plugin_id.as_deref() == Some(plugin)), "a refused contributor must not appear installed");
 }
 //#endregion 🪪️ManifestAdmission
+
+#[test]
+fn catalogue_keeps_authored_operation_families() {
+    let mut info = neural::OperatorInfo { extension: "brep".into(), group: vec!["Mesh Editing".into(), "Faces".into()], ..Default::default() };
+    assert_eq!(catalogue_section_identity(&info), ("brep/Mesh Editing/Faces".into(), "Brep / Mesh Editing / Faces".into()));
+    info.group.clear();
+    assert_eq!(catalogue_section_identity(&info), ("brep".into(), "Brep".into()));
+}

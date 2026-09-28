@@ -15,16 +15,18 @@ pub struct FlattenLayers {pub name:String}
 
 fn prepare(command:&FlattenLayers,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
     if command.name.trim().is_empty()||command.name.chars().count()>120 {return Err(Fault::from("raster.flatten-name-invalid"));}
+    for layer in &document.layers {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
     RasterStackPreparation::new(document).map_err(Fault::from)
 }
 fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
     use crate::mutations::{add_layer_asset,create_layer,delete_layer,remove_layer_asset};
     let (layer,key,asset)=baked_layer(image,origin,name,"flatten");
     let previous=asset_keys_except(&document.layers,&Default::default());
-    let mut mutations=vec![RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset})];
+    let mut mutations=Vec::new();
     mutations.extend(document.layers.iter().map(|layer|RasterMutation::DeleteLayer(delete_layer::DeleteLayer {layer_id:layer_node_id(layer).to_owned()})));
-    mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id:None,index:0,layer:Box::new(layer)}));
     mutations.extend(previous.into_iter().filter(|prior|prior!=&key&&document.assets.contains_key(prior)).map(|asset_id|RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id})));
+    mutations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key,asset}));
+    mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id:None,index:0,layer:Box::new(layer)}));
     Ok(Emit::mutations(mutations))
 }
 pub(crate) fn baked_layer(image:EncodedPngImage,origin:[f64;2],name:&str,prefix:&str)->(RasterLayerNode,String,RasterImageAsset) {

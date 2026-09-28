@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s.forms.forms.snapshot;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🛰️.proto";
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🛰️.proto";
 message FormsSnapshot {
   string schema = 1;
   string id = 2;
@@ -8,4 +10,6 @@ message FormsSnapshot {
   optional string title = 4;
   semio.os.store.ArtifactChild structure = 5;
   semio.os.store.ArtifactChild results = 6;
+  semio.s.forms.forms.definition.FormsDefinition definition = 7;
+  repeated semio.s.forms.forms.response.FormsResponse responses = 8;
 }

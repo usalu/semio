@@ -175,7 +175,7 @@ fn an_exact_chunk_budget_parent_omits_unbindable_derived_insert_controls_without
     let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.boundary-path#editor", &TreeWindows::unhosted()).expect("derived path is safely omitted");
     let id = path_id(&[SnapshotDetailPathSegment::Key(provider.key.clone())]);
     assert!(!contains_key(&rendered, &format!("{id}-add-0")));
-    assert!(contains_key(&rendered, "stdio-snapshot-details-source-draft"));
+    assert!(contains_key(&rendered, SOURCE_ID));
 }
 
 fn contains_key(node: &BuiltNode, key: &str) -> bool {
@@ -187,11 +187,42 @@ fn find_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
 }
 
 #[test]
+fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
+    let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
+    let schema = serde_json::to_string(&fixture["schema"]).unwrap();
+    let snapshot: DslValue = crate::pack::json::from_json_str(&source).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&snapshot)).unwrap(), fixture["snapshot"]);
+    let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);
+    for _ in 0..fixture["repeatCount"].as_u64().unwrap() {
+        let tree = render_snapshot_details_provider(&provider, Locale::En, "test.table-details#editor", &TreeWindows::unhosted()).expect("details first paint");
+        for key in fixture["firstPaintFields"].as_array().unwrap() {
+            assert!(contains_key(&tree, &path_id(&[SnapshotDetailPathSegment::Key(key.as_str().unwrap().into())])), "field {key} must remain reachable");
+        }
+        let path = fixture["foldedPath"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|segment| match segment {
+                serde_json::Value::String(key) => SnapshotDetailPathSegment::Key(key.clone()),
+                serde_json::Value::Number(index) => SnapshotDetailPathSegment::Index(index.as_u64().unwrap() as usize),
+                _ => panic!("fixture path segment"),
+            })
+            .collect::<Vec<_>>();
+        assert!(!contains_key(&tree, &path_id(&path)), "folded collection payload stays unmaterialized");
+        let mut retirement = ui_contract::BuiltTreeRetirement::new(tree);
+        while !retirement.close_step(1, 4096).unwrap().complete {}
+        while !ui_contract::close_ui_value_page_with_grant(1, 4096).unwrap().complete {}
+    }
+    println!("[DEBUG] table details preserved first-paint fields and bounded folded payload over 32 render/retirement cycles");
+}
+
+#[test]
 fn nested_collection_honours_an_explicit_second_page_without_counting_controls_as_rows() {
     let provider = LazyPixels { count: 1_000 };
     let pixels_path = [SnapshotDetailPathSegment::Key("pixels".into())];
     let pixels_id = path_id(&pixels_path);
-    let node_key = [ROOT_SECTION_ID, &format!("{ROOT_PATH_ID}-children"), &format!("{pixels_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR);
+    let node_key = [ROOT_SECTION_ID, &format!("{pixels_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR);
     let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }], tree_viewport_rows: Some(4), ..Default::default() };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
     let node = render_snapshot_details_provider(&provider, Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
@@ -826,7 +857,18 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
     let fallback = find_key(&rendered, &format!("{}-source-fallback", path_id(&[SnapshotDetailPathSegment::Key(provider.0.clone())]))).expect("editable source fallback");
     let surface = fallback.children.get(0).expect("draft surface");
     let semio_framework_ui_contract::Component::Surface(props) = &surface.component else { panic!("fallback must be a text draft") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("draft scene");
+    let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("draft scene");
+    for carrier in &surface.children {
+        let mut payload = String::new();
+        let mut frontier = vec![carrier];
+        while let Some(node) = frontier.pop() {
+            if let semio_framework_ui_contract::Component::Text(text) = &node.component {
+                payload.push_str(&text.packed_payload());
+            }
+            frontier.extend(node.children.iter().rev());
+        }
+        assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload));
+    }
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
     assert_eq!(settings["readOnly"], false);
     assert_eq!(settings["editAction"], super::super::REPLACE_SNAPSHOT_SOURCE_ACTION_ID);

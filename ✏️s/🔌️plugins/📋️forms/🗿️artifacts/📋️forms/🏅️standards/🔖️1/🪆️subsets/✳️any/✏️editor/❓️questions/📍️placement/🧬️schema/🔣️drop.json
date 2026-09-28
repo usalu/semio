@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/forms/question/drop/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stepId", "targetId", "position", "movingId"],
+  "properties": {
+    "stepId": { "type": "string" },
+    "targetId": { "type": "string" },
+    "position": { "enum": ["before", "after", "inside"] },
+    "movingId": { "type": ["string", "null"] }
+  }
+}

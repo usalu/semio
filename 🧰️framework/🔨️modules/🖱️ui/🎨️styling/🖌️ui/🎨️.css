@@ -13,25 +13,11 @@
    answered `CANVAS`, so no pointer could ever reach a row (wave B55, measured 2026-09-13 on :6013). */
 @source "../../";
 
-/* 🩹️ Tailwind v4's production CSS pass silently drops `@layer base` custom properties it decides are
-   "unused" (its content scan only credits a property as used through a Tailwind-generated utility class,
-   never through a plain hand-authored rule elsewhere in this file that reads it via `var()`) — these six
-   are exactly that case (border/scrollbar/hover-fill colors consumed by plain selectors like
-   `[data-slot="navbar"]`, never through a matching utility class), so their `@layer base :root` originals
-   below get pruned in production while every rule that reads them keeps working in dev. Re-declaring them
-   here, outside any `@layer`, sidesteps the pruning: unlayered CSS is always the highest-priority layer
-   in the cascade, so this wins regardless of textual order and regardless of whether Tailwind also keeps
-   or drops the `@layer base` copy. Values must stay in lockstep with the originals in the `:root` block
-   under `@layer base` further down this file. `.dark` is listed beside `:root` because surface chrome
-   leases paint `.dark` on a shell's `.semio-scope` root and clear it from `documentElement`; a custom
-   property computed on bare `html` would inherit light-mode `--foreground` into that subtree and freeze
-   emphasis/hover colors dark (navbar edge, tree hover, `text-emphasized`). */
+/* 🧱️ Derived chrome aliases remain unlayered so production pruning cannot remove them.
+   Each dark root resolves its own inherited theme palette. */
 :root,
 .dark {
-  --border-normal-color: var(--color-gray);
-  --border-emphasized-color: var(--foreground);
   --border-color: var(--border-normal-color);
-  --hover-interactive-fill: var(--border-normal-color);
   --scrollbar-thumb: var(--border-color);
   --scrollbar-thumb-hover: var(--muted-foreground);
   --color-emphasized: var(--foreground);
@@ -78,6 +64,43 @@
 }
 
 /* https://tailwindcss.com/doc/theme */
+/* 🎨️ Both appearance palettes inherit from the owning theme root; semantic aliases resolve locally. */
+:root,
+[data-ui-theme],
+.semio-scope {
+  --base: var(--theme-light-chrome-base, var(--color-light));
+  --panel: var(--theme-light-chrome-panel, var(--color-light-5-7));
+  --foreground: var(--theme-light-chrome-foreground, var(--color-dark));
+  --muted: var(--theme-light-chrome-muted, var(--color-light-8-9));
+  --muted-foreground: var(--theme-light-chrome-muted-foreground, var(--color-dark-dark-gray-2));
+  --accent: var(--theme-light-chrome-accent, var(--color-primary));
+  --accent-foreground: var(--theme-light-chrome-accent-foreground, var(--color-dark));
+  --active-base: var(--theme-light-chrome-active-base, var(--color-primary));
+  --active-foreground: var(--theme-light-chrome-active-foreground, var(--color-dark));
+  --active-hover: var(--theme-light-chrome-active-hover, color-mix(in srgb, var(--color-primary) 80%, var(--color-light)));
+  --hover-interactive-fill: var(--theme-light-chrome-hover-interactive-fill, var(--color-gray));
+  --border-normal-color: var(--theme-light-chrome-border-normal, var(--color-gray));
+  --border-emphasized-color: var(--theme-light-chrome-border-emphasized, var(--color-dark));
+  --border-element-color: var(--theme-light-chrome-border-element, var(--color-gray));
+}
+
+.dark {
+  --base: var(--theme-dark-chrome-base, var(--color-dark));
+  --panel: var(--theme-dark-chrome-panel, var(--color-dark-7-9));
+  --foreground: var(--theme-dark-chrome-foreground, var(--color-light));
+  --muted: var(--theme-dark-chrome-muted, var(--color-dark-8-9));
+  --muted-foreground: var(--theme-dark-chrome-muted-foreground, var(--color-light-5-9));
+  --accent: var(--theme-dark-chrome-accent, var(--color-primary));
+  --accent-foreground: var(--theme-dark-chrome-accent-foreground, var(--color-dark));
+  --active-base: var(--theme-dark-chrome-active-base, var(--color-primary));
+  --active-foreground: var(--theme-dark-chrome-active-foreground, var(--color-dark));
+  --active-hover: var(--theme-dark-chrome-active-hover, color-mix(in srgb, var(--color-primary) 80%, var(--color-light)));
+  --hover-interactive-fill: var(--theme-dark-chrome-hover-interactive-fill, var(--color-dark-4-7));
+  --border-normal-color: var(--theme-dark-chrome-border-normal, var(--color-gray));
+  --border-emphasized-color: var(--theme-dark-chrome-border-emphasized, var(--color-light));
+  --border-element-color: var(--theme-dark-chrome-border-element, var(--color-gray));
+}
+
 /* https://ui.shadcn.com/doc/theming */
 
 .body {
@@ -88,34 +111,21 @@
   :root {
     --spacing-compact: 0.2rem;
     --spacing-touch: 0.275rem;
-    --base: var(--color-light);
     --window: var(--color-light-6-7);
-    --panel: var(--color-light-5-7);
     --temporary: var(--color-light-4-7);
-    --foreground: var(--color-dark);
-    --muted: var(--color-light-8-9);
-    --muted-foreground: var(--color-gray);
-    --accent: var(--color-primary);
     --accent-secondary: var(--color-secondary);
     --accent-tertiary: var(--color-tertiary);
-    --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
     --hover-window: var(--color-light-gray);
     --hover-panel: var(--color-gray-600);
     --element-base: var(--color-gray);
     --element-window: var(--color-gray);
     --element-panel: var(--color-dark-5-9);
-    --active-base: var(--color-primary);
-    --active-foreground: var(--color-dark);
-    --border-normal-color: var(--color-gray);
-    --border-emphasized-color: var(--foreground);
-    --border-element-color: var(--element-base);
     --border-color: var(--border-normal-color);
     --loading-border-duration: 1.6s;
     --waiting-border-duration: 3.2s;
     --introduced-border-duration: 1.6s;
     --celebrate-border-duration: 1.2s;
-    --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
     --info-bg: var(--color-light-8-9);
@@ -572,19 +582,10 @@
 }
 
 .dark {
-  --base: var(--color-dark);
   --window: var(--color-dark-8-9);
-  --panel: var(--color-dark-7-9);
   --temporary: var(--color-dark-gray);
-  --foreground: var(--color-light);
-  --active-base: var(--color-primary);
-  --active-foreground: var(--color-light);
-  --muted: var(--color-dark-8-9);
-  --muted-foreground: var(--color-gray);
-  --accent: var(--color-primary);
   --accent-secondary: var(--color-secondary);
   --accent-tertiary: var(--color-tertiary);
-  --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
   --hover-window: var(--color-dark-gray);
   --hover-panel: var(--color-gray-400);
@@ -867,6 +868,7 @@
   --color-hover-window: var(--hover-window);
   --color-hover-panel: var(--hover-panel);
   --color-active-base: var(--active-base);
+  --color-active-hover: var(--active-hover);
   --color-active-foreground: var(--active-foreground);
   --color-destructive: var(--destructive-border);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -6512,7 +6514,7 @@
 :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="panel-tab-button"])[data-state="on"]:not(:disabled) {
   background-color: var(--active-base);
   border-color: var(--active-base) !important;
-  color: var(--border-emphasized-color);
+  color: var(--active-foreground);
 }
 
 [data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
@@ -6523,8 +6525,8 @@
 [data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
 [data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled),
 [data-slot="footer"] [data-slot="panel-tab-button"][data-state="on"]:hover:not(:disabled) {
-  background-color: color-mix(in oklab, var(--active-base) 90%, black);
-  color: var(--border-emphasized-color);
+  background-color: var(--active-hover);
+  color: var(--active-foreground);
 }
 
 /* 🪜️ One generic [data-level] selector covers all 6 levels (base/window/pane/panel/dialog/menu) —

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "same-winding-hole",
+    "rule": "evenodd",
+    "path": "M0 0L100 0L100 100L0 100Z M25 25L75 25L75 75L25 75Z",
+    "point": [
+      50,
+      50
+    ],
+    "hit": false
+  },
+  {
+    "name": "same-winding-filled",
+    "rule": "nonzero",
+    "path": "M0 0L100 0L100 100L0 100Z M25 25L75 25L75 75L25 75Z",
+    "point": [
+      50,
+      50
+    ],
+    "hit": true
+  },
+  {
+    "name": "opposite-winding-hole",
+    "rule": "nonzero",
+    "path": "M0 0L100 0L100 100L0 100Z M25 25L25 75L75 75L75 25Z",
+    "point": [
+      50,
+      50
+    ],
+    "hit": false
+  },
+  {
+    "name": "opposite-winding-evenodd",
+    "rule": "evenodd",
+    "path": "M0 0L100 0L100 100L0 100Z M25 25L25 75L75 75L75 25Z",
+    "point": [
+      50,
+      50
+    ],
+    "hit": false
+  }
+]

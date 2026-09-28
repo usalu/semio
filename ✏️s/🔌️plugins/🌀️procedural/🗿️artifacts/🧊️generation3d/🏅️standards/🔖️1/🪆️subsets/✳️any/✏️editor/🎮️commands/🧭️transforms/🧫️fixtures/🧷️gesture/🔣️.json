@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "name": "exact-face",
+      "pinned": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": true
+    },
+    {
+      "name": "changed-before-first-delta",
+      "pinned": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.1"
+      ],
+      "valid": false
+    },
+    {
+      "name": "same-components-reordered-and-duplicated",
+      "pinned": [
+        "extrude@meshOut#0.face.1",
+        "extrude@meshOut#0.face.0",
+        "extrude@meshOut#0.face.1"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0",
+        "extrude@meshOut#0.face.1"
+      ],
+      "valid": true
+    },
+    {
+      "name": "extra-component",
+      "pinned": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0",
+        "extrude@meshOut#0.face.1"
+      ],
+      "valid": false
+    },
+    {
+      "name": "different-granularity",
+      "pinned": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.vertex.0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "different-instance",
+      "pinned": [
+        "inset@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "different-list-item",
+      "pinned": [
+        "extrude@meshOut#1.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "instance-only-is-not-a-component-target",
+      "pinned": [
+        "extrude@meshOut#0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "mixed-pinned-instances",
+      "pinned": [
+        "extrude@meshOut#0.face.0",
+        "inset@meshOut#0.face.0"
+      ],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "selection-cleared",
+      "pinned": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "selected": [],
+      "valid": false
+    },
+    {
+      "name": "keyboard-current-selection",
+      "pinned": [],
+      "selected": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "valid": true
+    }
+  ]
+}

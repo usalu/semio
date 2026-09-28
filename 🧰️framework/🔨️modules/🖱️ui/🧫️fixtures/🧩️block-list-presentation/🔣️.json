@@ -4,13 +4,44 @@
     { "locale": "en", "steps": "Steps", "addStep": "Add Step", "delete": "Delete" },
     { "locale": "de", "steps": "Schritte", "addStep": "Schritt hinzufügen", "delete": "Löschen" }
   ],
-  "steps": [],
+  "steps": [
+    {
+      "id": "basics",
+      "title": "Basics",
+      "target": { "granularity": "section", "id": "step:basics" },
+      "blocks": [
+        { "id": "load", "label": "Load", "kind": "load", "target": { "granularity": "field", "id": "load" } }
+      ]
+    },
+    {
+      "id": "schedule",
+      "title": "Schedule",
+      "target": { "granularity": "section", "id": "step:schedule" },
+      "blocks": []
+    }
+  ],
   "palette": [
     { "blockKind": "filter", "label": "Filter", "iconId": "funnel" }
+  ],
+  "targetCases": [
+    { "name": "selected-step", "steps": "fixture", "selectedId": "schedule", "expectedStepId": "schedule" },
+    { "name": "selected-block-parent", "steps": "fixture", "selectedId": "load", "expectedStepId": "basics" },
+    { "name": "stale-selection", "steps": "fixture", "selectedId": "retired", "expectedStepId": "basics" },
+    { "name": "no-selection", "steps": "fixture", "selectedId": null, "expectedStepId": "basics" },
+    { "name": "empty-list", "steps": "empty", "selectedId": null, "expectedStepId": null }
+  ],
+  "selectionCases": [
+    { "label": "Basics", "target": { "granularity": "section", "id": "step:basics" } },
+    { "label": "Load", "target": { "granularity": "field", "id": "load" } }
+  ],
+  "deletionCases": [
+    { "labels": { "en": "Delete: Basics", "de": "Löschen: Basics" }, "action": "removeStep", "args": { "stepId": "basics" } },
+    { "labels": { "en": "Delete: Load", "de": "Löschen: Load" }, "action": "removeBlock", "args": { "stepId": "basics", "blockId": "load" } },
+    { "labels": { "en": "Delete: Schedule", "de": "Löschen: Schedule" }, "action": "removeStep", "args": { "stepId": "schedule" } }
   ],
   "absentVisualText": ["No steps", "Palette"],
   "actions": [
     { "control": "addStep", "action": "addStep", "args": {}, "role": "button" },
-    { "control": "palette.filter", "action": "addBlock", "args": { "kind": "filter" }, "role": "button" }
+    { "control": "palette.filter", "action": "addBlock", "args": { "stepId": "basics", "kind": "filter" }, "role": "button" }
   ]
 }

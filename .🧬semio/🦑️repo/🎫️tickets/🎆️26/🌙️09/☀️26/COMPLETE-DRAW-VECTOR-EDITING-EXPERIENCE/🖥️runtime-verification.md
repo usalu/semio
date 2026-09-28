@@ -108,3 +108,25 @@ Files changed in this checkpoint: Draw inspector implementation, selection fixtu
 ## Initial Framing Checkpoint
 
 The rebuilt component/descriptor sequence passed, but the live Demo still opens too small and off-center. The initial empty-document fit may be consumed before Demo loading. See `📷️canvas-framing.md` for exact passing tests, runtime evidence, pending native handle and next investigation. Initial framing must not be marked complete.
+
+
+## Native Canvas Parity Recheck
+
+The current native scene renderer still has a structural Draw gap. `CanvasLayer` in `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs` (around line 6347) accepts primitive bounds, points, paint, image and text but no path segments or affine transform. `Canvas2dPacketItem` (around line 6410) likewise has only scalar primitive coordinates. Its painter (around line 6789) handles line/circle/text, including a rectangle for the circle packet. Draw publishes `segments` and `transform`, so the forthcoming renderer unit pass alone cannot establish native Draw painting parity. A domain-neutral path record/geometry/painter implementation and native render assertions are required before marking the cross-platform experience complete.
+
+The shared native Draw app state tests are now green at 376/376, but browser verification of the new node tool awaits build 79374 plus explicit activation. Preview server 76268 listens on port 6065 with HMR disabled. The old port 6064 server was stopped after repeated shared reloads interrupted input.
+
+
+On the stable fresh-origin preview before activation, all utility checkboxes were initially unchecked even though Draw falls back internally to selectDirect. Explicitly choosing Direct Select sets it checked and exposes the framework selection method/mode controls. The utility flyout visibly clips its rows at its current width. Both default-tool state agreement and utility layout need user-facing validation/fixes after updating the staged component.
+
+## Native canvas infrastructure validation
+
+The scoped renderer run 44523 completed successfully after the shared tree section traversal fix: 19 canvas2d tests passed, with 1,510 unrelated tests skipped. The run took 18m52s including compilation. This validates the existing native canvas infrastructure; it does not establish Draw path-rendering parity, because the native packet still lacks Draw's path segment and affine transform records.
+
+## Utility activation follow-up
+
+The host's resolveUtilityNodes derives pressed state only from the host-owned activeUtilityByWindowId register; that register starts empty. Draw independently defaults missing utility state to selectDirect. This explains the initial mismatch between working selection behavior and unchecked utility chrome. UtilityRef currently stores only an identifier; a long-term fix needs an explicit initial utility contract shared by both hosts and the guest, rather than a Draw-specific display fallback or choosing the first arbitrary registry entry. Utility overflow placement also needs a browser layout regression covering the bottom-left bar.
+
+## Native vector implementation route
+
+The domain-neutral 2D module already has a Rust PathSegment vocabulary (Move/Line/Quad/Cubic/Arc/Close) in ◻️2d/⚙️engine/🦀️.rs and a TypeScript twin. Native DrawList exposes push_triangle_fan and push_line, but a triangle fan cannot represent arbitrary concave paths or holes. The next native rendering work should add a bounded flattening/tessellation pipeline behind first-party records, preserve fill rules and affine transforms, and test concave/multiple-contour geometry against an independent existing test library. Both CanvasLayer JSON records and borrowed Canvas2dPacketItem pages need coverage; the packet renderer currently only dispatches line/circle/text. Native image and text paths also ignore affine transforms and require explicit parity tests.

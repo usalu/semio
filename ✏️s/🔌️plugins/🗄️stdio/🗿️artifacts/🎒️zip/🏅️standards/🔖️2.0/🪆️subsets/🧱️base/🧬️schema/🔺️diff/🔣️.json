@@ -13,8 +13,13 @@
         "data": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
           }
+        },
+        "metadata": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntryMetadata"
         }
       }
     },
@@ -68,6 +73,9 @@
   "properties": {
     "comment": {
       "type": "string"
+    },
+    "commentUtf8": {
+      "type": "boolean"
     },
     "entries": {
       "$ref": "#/$defs/ZipEntriesDiff"

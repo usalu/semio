@@ -20,7 +20,7 @@
 //! `step-photos` is the committed payload's own id.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index/📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +42,7 @@ fn step(id: &str, title: &str) -> FormStep {
 /// case reorders within — `step-photos`, the committed payload's own id, sits at index 1.
 fn before() -> FormsSnapshot {
     let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
-    materialize_forms_steps(&mut snapshot.structure, vec![step("step-basics", "Basics"), step("step-photos", "Photos"), step("step-summary", "Summary")]);
+    replace_forms_steps(&mut snapshot, vec![step("step-basics", "Basics"), step("step-photos", "Photos"), step("step-summary", "Summary")]);
     snapshot
 }
 

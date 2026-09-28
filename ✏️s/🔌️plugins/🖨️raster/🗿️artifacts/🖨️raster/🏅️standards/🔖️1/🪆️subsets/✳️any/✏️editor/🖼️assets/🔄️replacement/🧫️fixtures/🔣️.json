@@ -1,0 +1,91 @@
+{
+  "cases": [
+    {
+      "name": "replace at capacity",
+      "input": {
+        "count": 64,
+        "capacity": 64,
+        "removable": true,
+        "nextExists": false
+      },
+      "steps": [
+        "detach",
+        "remove",
+        "add",
+        "replace"
+      ]
+    },
+    {
+      "name": "preserve shared at capacity",
+      "input": {
+        "count": 64,
+        "capacity": 64,
+        "removable": false,
+        "nextExists": false
+      },
+      "steps": null
+    },
+    {
+      "name": "reuse at capacity",
+      "input": {
+        "count": 64,
+        "capacity": 64,
+        "removable": false,
+        "nextExists": true
+      },
+      "steps": [
+        "replace"
+      ]
+    },
+    {
+      "name": "reuse and release at capacity",
+      "input": {
+        "count": 64,
+        "capacity": 64,
+        "removable": true,
+        "nextExists": true
+      },
+      "steps": [
+        "replace",
+        "remove"
+      ]
+    },
+    {
+      "name": "replace with headroom",
+      "input": {
+        "count": 63,
+        "capacity": 64,
+        "removable": true,
+        "nextExists": false
+      },
+      "steps": [
+        "add",
+        "replace",
+        "remove"
+      ]
+    },
+    {
+      "name": "shared source with headroom",
+      "input": {
+        "count": 63,
+        "capacity": 64,
+        "removable": false,
+        "nextExists": false
+      },
+      "steps": [
+        "add",
+        "replace"
+      ]
+    },
+    {
+      "name": "blank source at capacity",
+      "input": {
+        "count": 64,
+        "capacity": 64,
+        "removable": false,
+        "nextExists": false
+      },
+      "steps": null
+    }
+  ]
+}

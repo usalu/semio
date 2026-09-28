@@ -1,0 +1,10 @@
+{
+  "maximumFmtExtensionBytes": 65535,
+  "overflowFmtExtensionBytes": 65536,
+  "validFourcc": "JUNK",
+  "invalidFourcc": "💥abc",
+  "validOddFmtPadByte": 90,
+  "validOddDataPadByte": 165,
+  "validOddOtherPadByte": 127,
+  "invalidEvenPadByte": 17
+}

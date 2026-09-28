@@ -2,7 +2,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "locales", "steps", "palette", "absentVisualText", "actions"],
+  "required": ["schemaVersion", "locales", "steps", "palette", "targetCases", "selectionCases", "deletionCases", "absentVisualText", "actions"],
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["granularity", "id"],
+      "properties": {
+        "granularity": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
   "properties": {
     "schemaVersion": { "const": 1 },
     "locales": {
@@ -22,7 +33,31 @@
     },
     "steps": {
       "type": "array",
-      "maxItems": 0
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "blocks"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "target": { "$ref": "#/$defs/target" },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "label", "kind"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "label": { "type": "string", "minLength": 1 },
+                "kind": { "type": "string", "minLength": 1 },
+                "target": { "$ref": "#/$defs/target" }
+              }
+            }
+          }
+        }
+      }
     },
     "palette": {
       "type": "array",
@@ -35,6 +70,54 @@
           "blockKind": { "type": "string", "minLength": 1 },
           "label": { "type": "string", "minLength": 1 },
           "iconId": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "targetCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "steps", "selectedId", "expectedStepId"],
+        "properties": {
+          "name": { "enum": ["selected-step", "selected-block-parent", "stale-selection", "no-selection", "empty-list"] },
+          "steps": { "enum": ["fixture", "empty"] },
+          "selectedId": { "type": ["string", "null"] },
+          "expectedStepId": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "selectionCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "target"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "target": { "$ref": "#/$defs/target" }
+        }
+      }
+    },
+    "deletionCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["labels", "action", "args"],
+        "properties": {
+          "labels": {
+            "type": "object", "additionalProperties": false, "required": ["en", "de"],
+            "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+          },
+          "action": { "enum": ["removeStep", "removeBlock"] },
+          "args": {
+            "type": "object", "additionalProperties": false, "required": ["stepId"],
+            "properties": { "stepId": { "type": "string", "minLength": 1 }, "blockId": { "type": "string", "minLength": 1 } }
+          }
         }
       }
     },
@@ -54,7 +137,14 @@
         "properties": {
           "control": { "type": "string", "minLength": 1 },
           "action": { "enum": ["addStep", "addBlock"] },
-          "args": { "type": "object" },
+          "args": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "stepId": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string", "minLength": 1 }
+            }
+          },
           "role": { "const": "button" }
         }
       }

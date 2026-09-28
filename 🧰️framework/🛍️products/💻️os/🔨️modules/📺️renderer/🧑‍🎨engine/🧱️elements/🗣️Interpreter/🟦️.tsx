@@ -15,6 +15,7 @@
 // #region 🔌️Adapters
 import { createContext, memo, Profiler, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import { packedTextLeaf } from "../🔌️PluginRuntime/🧳️packed-text/🟦️.ts";
+import { MEDIA_TRANSPORT_EXTENSION_ID, MediaTransportHost } from "../🎬️MediaTransportHost/🟦️.tsx";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
   Button,
@@ -1612,9 +1613,9 @@ export function treeWindowRowHeightPx(): number {
 export function treeWindowScrollViewport(root: HTMLElement): HTMLElement | null {
   const view = root.ownerDocument?.defaultView ?? null;
   const isScroller = (candidate: HTMLElement): boolean => {
-    if (candidate.getAttribute("data-slot") === "scroll-area") return true;
-    const overflowY = view?.getComputedStyle(candidate).overflowY;
-    return overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay";
+    if (["scroll-area", "table-window-scroll"].includes(candidate.getAttribute("data-slot") ?? "")) return true;
+    const style = view?.getComputedStyle(candidate);
+    return [style?.overflowX, style?.overflowY].some((overflow) => overflow === "auto" || overflow === "scroll" || overflow === "overlay");
   };
   const candidates: HTMLElement[] = [];
   // 🌳️ `TreeView` wraps `<Tree>` in a `display: contents` div, so the tree's own root is the first
@@ -1666,6 +1667,7 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
   const measured: TreeWindowContainerMeasure[] = [];
   for (const element of Array.from(root.querySelectorAll("[data-tree-window-key]"))) {
     if (!(element instanceof HTMLElement)) continue;
+    if (element.getAttribute("data-tree-window-axis") === "column") continue;
     // 🪟️ The window's IDENTITY is its path; `-key` is the authored node key, which is also the pick target
     // id and is legitimately shared by containers under different parents. `-key` is the fallback only for a
     // top-level container, where the two are the same string anyway.
@@ -1680,6 +1682,35 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
     measured.push({ key, total, rowExtent: treeWindowRowExtentAttribute(element), offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - originTop, height: rect.height, rows: treeWindowRowsUnder(element, originTop) });
   }
   return measured;
+}
+
+export const TABLE_COLUMN_WINDOW_WIDTH_PX = 192;
+export const TABLE_COLUMN_WINDOW_OVERSCAN = 1;
+export const TABLE_COLUMN_WINDOW_MAX = 16;
+
+/** ↔️ Pure horizontal counterpart of one tree-window request. */
+export function tableColumnWindowRequestV1(key: string, total: number, scrollLeft: number, viewportWidth: number, columnWidth: number = TABLE_COLUMN_WINDOW_WIDTH_PX): TreeWindowReportV1 {
+  const count = Math.max(0, Math.floor(total));
+  if (count === 0) return { nodeKey: key, offset: 0, rows: 0 };
+  const width = Number.isFinite(columnWidth) && columnWidth > 0 ? columnWidth : TABLE_COLUMN_WINDOW_WIDTH_PX;
+  const firstVisible = Math.min(count - 1, Math.max(0, Math.floor(Math.max(0, scrollLeft) / width)));
+  const visible = Math.max(1, Math.ceil(Math.max(0, viewportWidth) / width));
+  const rows = Math.min(count, TABLE_COLUMN_WINDOW_MAX, visible + 2 * TABLE_COLUMN_WINDOW_OVERSCAN);
+  return { nodeKey: key, offset: Math.min(Math.max(0, firstVisible - TABLE_COLUMN_WINDOW_OVERSCAN), count - rows), rows };
+}
+
+function tableColumnWindowRequestsUnder(root: HTMLElement): readonly TreeWindowReportV1[] {
+  const requests: TreeWindowReportV1[] = [];
+  for (const element of Array.from(root.querySelectorAll("[data-tree-window-axis='column']"))) {
+    if (!(element instanceof HTMLElement)) continue;
+    const key = element.getAttribute("data-tree-window-path") || element.getAttribute("data-tree-window-key");
+    const scroller = element.closest<HTMLElement>("[data-slot='table-window-scroll']");
+    if (!key || !scroller) continue;
+    const total = treeWindowAttributeNumber(element, "data-tree-window-total");
+    if (total <= 0) continue;
+    requests.push(tableColumnWindowRequestV1(key, total, scroller.scrollLeft, scroller.clientWidth || scroller.getBoundingClientRect().width));
+  }
+  return requests;
 }
 
 /** 📐️ One container's OWN materialised rows, as `{index, top}` in the container's own space. This is what
@@ -1810,7 +1841,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       const viewportHeight = treeWindowViewportMetrics(viewport).height;
       const containers = treeWindowContainersUnder(live, viewport);
       reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
-      const requests = treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
+      const requests = [...treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows })), ...tableColumnWindowRequestsUnder(live)];
       const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
       if (signature === lastReportRef.current) return;
@@ -2227,6 +2258,7 @@ function ProgressView({ record }: { readonly record: UiNodeRecord }) {
 
 function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "extension" }>;
+  if (component.extension === MEDIA_TRANSPORT_EXTENSION_ID) return <MediaTransportHost value={component.props} nodeId={record.id} nodeKey={record.key} />;
   return (
     <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
       <p className="text-muted-foreground text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
@@ -2297,9 +2329,27 @@ export function tableWindowScrollTopForRowV1(index: number, rowPx: number, scrol
 /** 📊️ The shared column track of a table's header and rows: the first (name) column twice as wide as the
  * others, the actions column exactly as wide as the widest materialised action strip — header and rows
  * read the SAME string, so their columns line up however the rows stream. */
-function tableWindowColumnTemplate(columns: number, actions: number): string {
-  const data = columns > 0 ? ["minmax(0, 2fr)", ...Array.from({ length: columns - 1 }, () => "minmax(0, 1fr)")] : [];
-  return [...data, ...(actions > 0 ? [`calc(${actions} * var(--size-medium) + ${actions} * var(--spacing-single))`] : [])].join(" ");
+function tableWindowColumnTemplate(columns: number, actions: number, leading: number, trailing: number): string {
+  const spacer = (count: number) => `minmax(${count * TABLE_COLUMN_WINDOW_WIDTH_PX}px, ${count * TABLE_COLUMN_WINDOW_WIDTH_PX}px)`;
+  return [...(leading > 0 ? [spacer(leading)] : []), ...Array.from({ length: columns }, () => `minmax(${TABLE_COLUMN_WINDOW_WIDTH_PX}px, ${TABLE_COLUMN_WINDOW_WIDTH_PX}px)`), ...(actions > 0 ? [`calc(${actions} * var(--size-medium) + ${actions} * var(--spacing-single))`] : []), ...(trailing > 0 ? [spacer(trailing)] : [])].join(" ");
+}
+
+/** ↔️ Grid-column navigation over the complete logical extent. */
+export function tableWindowNextColumnV1(key: string, current: number, total: number): number | null {
+  if (total <= 0) return null;
+  if (key === "ArrowRight") return Math.min(total - 1, current + 1);
+  if (key === "ArrowLeft") return Math.max(0, current - 1);
+  if (key === "Home") return 0;
+  if (key === "End") return total - 1;
+  return null;
+}
+
+/** ↔️ Horizontal counterpart of `tableWindowScrollTopForRowV1`. */
+export function tableWindowScrollLeftForColumnV1(index: number, columnPx: number, scrollLeft: number, width: number): number {
+  const left = index * columnPx;
+  if (left < scrollLeft) return left;
+  if (left + columnPx > scrollLeft + width) return Math.max(0, left + columnPx - width);
+  return scrollLeft;
 }
 
 /** 📊️ One `Component::Table`: a keyboard- and screen-reader-accessible grid whose rows are the host's
@@ -2316,6 +2366,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   const rootRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const focusRowRef = useRef<number | null>(null);
+  const focusCellRef = useRef<{ readonly row: number; readonly column: number } | null>(null);
   const component = record.component as Extract<Component, { type: "table" }>;
   const rows = useMemo(() => {
     void revision;
@@ -2325,13 +2376,18 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   const window = component.window ?? undefined;
   const total = window ? Math.max(rows.length, Math.floor(window.total)) : rows.length;
   const { leading, trailing } = treeWindowSpacerRows(window ?? { total, offset: 0, rowExtent: "standard" }, rows.length);
+  const columnWindow = component.columnWindow ?? undefined;
+  const columnTotal = columnWindow ? Math.max(component.columns.length, Math.floor(columnWindow.total)) : component.columns.length;
+  const { leading: columnLeading, trailing: columnTrailing } = treeWindowSpacerRows(columnWindow ?? { total: columnTotal, offset: 0, rowExtent: "standard" }, component.columns.length);
   const rowPx = treeRowHeightPx;
   const actionColumns = rows.reduce((widest, row) => Math.max(widest, ((row.component as Extract<Component, { type: "tableRow" }>).rowActions ?? []).length), 0);
   const hasActions = actionColumns > 0;
-  const template = tableWindowColumnTemplate(component.columns.length, actionColumns);
+  const template = tableWindowColumnTemplate(component.columns.length, actionColumns, columnLeading, columnTrailing);
   const [active, setActive] = useState(0);
   const activeRow = active >= leading && active < leading + rows.length ? active : leading;
   const range = useLabel("ui.host.tableRowRange", { from: rows.length > 0 ? leading + 1 : 0, to: leading + rows.length, total });
+  const rowRange = component.rowLabel ? `${component.rowLabel}: ${rows.length > 0 ? leading + 1 : 0}–${leading + rows.length} / ${total}` : range;
+  const columnRange = `${component.columnLabel ? `${component.columnLabel}: ` : ""}${component.columns.length > 0 ? columnLeading + 1 : 0}–${columnLeading + component.columns.length} / ${columnTotal}`;
   useTreeWindowObserver(rootRef, windows, revision, store);
   useEffect(() => {
     const wanted = focusRowRef.current;
@@ -2341,6 +2397,16 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
     focusRowRef.current = null;
     element.focus({ preventScroll: true });
   }, [leading, rows]);
+  useEffect(() => {
+    const wanted = focusCellRef.current;
+    if (!wanted || wanted.column < columnLeading || wanted.column >= columnLeading + component.columns.length) return;
+    const row = rootRef.current?.querySelector<HTMLElement>(`[data-table-row-index="${wanted.row}"]`);
+    const cell = row?.querySelector<HTMLElement>(`[data-table-column-index="${wanted.column}"]`);
+    const target = cell?.querySelector<HTMLElement>("input, textarea, select, button, [contenteditable='true'], [tabindex]") ?? cell;
+    if (!target) return;
+    focusCellRef.current = null;
+    target.focus({ preventScroll: true });
+  }, [columnLeading, component.columns.length, rows]);
   const moveTo = (index: number) => {
     setActive(index);
     focusRowRef.current = index;
@@ -2355,13 +2421,31 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   const activateRow = (row: UiNodeRecord) => {
     if ((row.bindings ?? []).some((binding) => binding.trigger === "activate")) {
       void dispatchTrigger(context, row, "activate");
-      return;
     }
-    const first = ((row.component as Extract<Component, { type: "tableRow" }>).rowActions ?? [])[0];
-    if (first) context.onIntent(context.store.buildIntent(row, first.action));
+  };
+  const moveCell = (row: number, column: number) => {
+    focusCellRef.current = { row, column };
+    const scroller = scrollRef.current;
+    if (scroller) scroller.scrollLeft = tableWindowScrollLeftForColumnV1(column, TABLE_COLUMN_WINDOW_WIDTH_PX, scroller.scrollLeft, scroller.clientWidth);
+    const cell = rootRef.current?.querySelector<HTMLElement>(`[data-table-row-index="${row}"] [data-table-column-index="${column}"]`);
+    const target = cell?.querySelector<HTMLElement>("input, textarea, select, button, [contenteditable='true'], [tabindex]") ?? cell;
+    if (target) {
+      focusCellRef.current = null;
+      target.focus({ preventScroll: true });
+    }
   };
   const onRowKeyDown = (event: import("react").KeyboardEvent<HTMLDivElement>, row: UiNodeRecord, index: number) => {
     if (event.target !== event.currentTarget) {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>("[data-table-column-index]");
+      if (cell && (event.ctrlKey || event.metaKey)) {
+        const current = Number(cell.getAttribute("data-table-column-index"));
+        const next = tableWindowNextColumnV1(event.key, current, columnTotal);
+        if (next !== null) {
+          event.preventDefault();
+          moveCell(index, next);
+          return;
+        }
+      }
       const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-table-row-action]"));
       const position = buttons.indexOf(event.target as HTMLElement);
       if (event.key === "ArrowRight" && position >= 0 && position < buttons.length - 1) buttons[position + 1]!.focus();
@@ -2377,7 +2461,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
       return;
     }
     if (event.key === "ArrowRight") {
-      const first = event.currentTarget.querySelector<HTMLElement>("[data-table-row-action]");
+      const first = event.currentTarget.querySelector<HTMLElement>("[data-table-column-index] input, [data-table-column-index] textarea, [data-table-column-index] select, [data-table-column-index] button, [data-table-column-index] [contenteditable='true'], [data-table-column-index][tabindex]") ?? event.currentTarget.querySelector<HTMLElement>("[data-table-row-action]");
       if (first) {
         event.preventDefault();
         first.focus();
@@ -2393,38 +2477,48 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
   const cellClass = "flex min-w-0 items-center truncate px-single";
   return (
     <div
+      ref={rootRef}
       id={nodeDomId(store, record)}
       data-ui-node-id={record.id}
       data-ui-node-key={record.key}
       role="grid"
       aria-label={component.label}
       aria-rowcount={total + 1}
-      aria-colcount={component.columns.length + (hasActions ? 1 : 0)}
+      aria-colcount={columnTotal + (hasActions ? 1 : 0)}
       aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
       className={cn("flex min-h-0 min-w-0 flex-1 flex-col", activityBorderClass(record))}
       style={layoutSpecStyle(record.layout)}
     >
-      <div role="rowgroup" className={cn("shrink-0", borderNormalTopClass)}>
-        <div role="row" aria-rowindex={1} className="grid min-w-0 text-2xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: template, height: rowPx }}>
-          {component.columns.map((column, position) => (
-            <div key={position} role="columnheader" aria-colindex={position + 1} className={cellClass}>
-              {column}
-            </div>
-          ))}
-          {hasActions ? (
-            <div role="columnheader" aria-colindex={component.columns.length + 1} className={cellClass}>
-              {component.actionsLabel ?? ""}
-            </div>
-          ) : null}
-        </div>
-      </div>
-      <div ref={rootRef} className="contents">
-        <div ref={scrollRef} role="rowgroup" data-slot="table-window-scroll" className="min-h-0 min-w-0 flex-1 overflow-x-hidden" style={{ overflowY: "auto" }}>
+      <div ref={scrollRef} role="rowgroup" data-slot="table-window-scroll" className="min-h-0 min-w-0 flex-1 overflow-auto">
+        <div
+          {...(treeWindowDomAttributes(columnWindow, component.columns.length, `${record.key}.columns`) ?? {})}
+          data-tree-window-axis={columnWindow ? "column" : undefined}
+          className="min-w-0"
+          style={{ width: columnWindow ? columnTotal * TABLE_COLUMN_WINDOW_WIDTH_PX : undefined }}
+        >
+          <div role="row" aria-rowindex={1} className={cn("sticky top-0 z-10 grid min-w-0 bg-background text-2xs font-semibold uppercase tracking-wide text-muted-foreground", borderNormalTopClass)} style={{ gridTemplateColumns: template, height: rowPx }}>
+            {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}
+            {component.columns.map((column, position) => {
+              const logicalColumn = columnLeading + position;
+              return (
+                <div key={logicalColumn} role="columnheader" aria-colindex={logicalColumn + 1} data-tree-window-column={logicalColumn} data-table-column-index={logicalColumn} className={cellClass}>
+                  {column}
+                </div>
+              );
+            })}
+            {hasActions ? (
+              <div role="columnheader" aria-colindex={columnTotal + 1} className={cellClass}>
+                {component.actionsLabel ?? ""}
+              </div>
+            ) : null}
+            {columnTrailing > 0 ? <div aria-hidden="true" data-table-column-spacer="trailing" /> : null}
+          </div>
           <div {...(treeWindowDomAttributes(window, rows.length, record.key) ?? {})} className="min-w-0">
             {leading > 0 ? <div aria-hidden="true" data-tree-window-spacer="leading" style={{ height: leading * rowPx }} /> : null}
             {rows.map((row, position) => {
               const index = leading + position;
               const props = row.component as Extract<Component, { type: "tableRow" }>;
+              const cellNodes = (row.children ?? []).filter((id) => !store.getState().nodes.get(id)?.key.startsWith("row-action-"));
               const name = props.cells[0] ?? row.key;
               return (
                 <div
@@ -2441,20 +2535,31 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                     if (event.target === event.currentTarget) setActive(index);
                   }}
                   onClick={(event) => {
-                    if (event.target === event.currentTarget || !(event.target as HTMLElement).closest("[data-table-row-action]")) moveTo(index);
+                    if (event.target === event.currentTarget) {
+                      moveTo(index);
+                      return;
+                    }
+                    if ((event.target as HTMLElement).closest("input, textarea, select, button, [contenteditable='true'], [role='button'], [role='textbox']")) return;
+                    moveTo(index);
                   }}
-                  onDoubleClick={() => activateRow(row)}
+                  onDoubleClick={(event) => {
+                    if (!(event.target as HTMLElement).closest("input, textarea, select, button, [contenteditable='true'], [role='button'], [role='textbox']")) activateRow(row);
+                  }}
                   onKeyDown={(event) => onRowKeyDown(event, row, index)}
                   className="grid min-w-0 cursor-default border-b border-border/40 text-xs outline-none hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-1 focus-visible:ring-primary"
-                  style={{ gridTemplateColumns: template, height: rowPx }}
+                  style={{ gridTemplateColumns: template, minHeight: rowPx, height: cellNodes.length > 0 ? undefined : rowPx }}
                 >
-                  {component.columns.map((column, cell) => (
-                    <div key={cell} role="gridcell" aria-colindex={cell + 1} className={cellClass} title={props.cells[cell] ?? ""}>
-                      {props.cells[cell] ?? ""}
-                    </div>
-                  ))}
+                  {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}
+                  {component.columns.map((column, cell) => {
+                    const logicalColumn = columnLeading + cell;
+                    return (
+                      <div key={logicalColumn} role="gridcell" aria-colindex={logicalColumn + 1} data-table-column-index={logicalColumn} className={cellClass} title={cellNodes[cell] ? undefined : (props.cells[cell] ?? "")}>
+                        {cellNodes[cell] ? <UiNodeView store={store} id={cellNodes[cell]!} context={context} /> : (props.cells[cell] ?? "")}
+                      </div>
+                    );
+                  })}
                   {hasActions ? (
-                    <div role="gridcell" aria-colindex={component.columns.length + 1} className="flex min-w-0 items-center gap-single px-single">
+                    <div role="gridcell" aria-colindex={columnTotal + 1} className="flex min-w-0 items-center gap-single px-single">
                       {(props.rowActions ?? []).map((action, actionIndex) => {
                         const label = action.label ? `${wireLabel(action.label)}: ${name}` : name;
                         return (
@@ -2463,7 +2568,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                             type="button"
                             variant="ghost"
                             data-table-row-action=""
-                            tabIndex={-1}
+                            tabIndex={0}
                             icon={resolveControlIconNode(action.icon)}
                             aria-label={label}
                             title={label}
@@ -2473,6 +2578,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                       })}
                     </div>
                   ) : null}
+                  {columnTrailing > 0 ? <div aria-hidden="true" data-table-column-spacer="trailing" /> : null}
                 </div>
               );
             })}
@@ -2481,7 +2587,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
         </div>
       </div>
       <div role="status" aria-live="polite" className="shrink-0 px-single text-2xs text-muted-foreground">
-        {range}
+        {rowRange} · {columnRange}
       </div>
     </div>
   );
@@ -2584,7 +2690,11 @@ if (import.meta.vitest) {
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");
   await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowViewportMetrics }, { url: import.meta.url });
   const { registerTests1: registerTableWindowTests } = await import("./🧪️tests/📊️table/🟦️.tsx");
-  await registerTableWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, tableWindowNextRowV1, tableWindowScrollTopForRowV1 }, { url: import.meta.url });
+  await registerTableWindowTests(
+    import.meta.vitest,
+    { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, treeWindowRowHeightPx },
+    { url: import.meta.url },
+  );
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
   await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerOverlayFlowTests } = await import("./🧪️tests/📐️overlay-flow/🟦️.tsx");

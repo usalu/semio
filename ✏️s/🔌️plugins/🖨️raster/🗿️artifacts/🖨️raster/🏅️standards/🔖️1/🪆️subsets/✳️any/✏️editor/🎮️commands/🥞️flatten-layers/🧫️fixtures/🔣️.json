@@ -18,16 +18,18 @@
       "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": -3,
+        "x": -3.0,
         "y": 4.5,
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "mask": null,
       "width": 2,
       "height": 1,
-      "imageKey": "blue"
+      "imageKey": "blue",
+      "locked": false
     },
     {
       "kind": "group",
@@ -37,11 +39,12 @@
       "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 0,
-        "y": 0,
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "mask": null,
       "children": [
@@ -55,16 +58,19 @@
           "transform": {
             "x": -3.5,
             "y": 4.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 1,
           "height": 1,
-          "imageKey": "red"
+          "imageKey": "red",
+          "locked": false
         }
-      ]
+      ],
+      "locked": false
     },
     {
       "kind": "pixel",
@@ -74,16 +80,18 @@
       "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 50,
+        "x": 50.0,
         "y": 4.5,
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "mask": null,
       "width": 1,
       "height": 1,
-      "imageKey": "green"
+      "imageKey": "green",
+      "locked": false
     },
     {
       "kind": "adjustment",
@@ -93,17 +101,19 @@
       "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 0,
-        "y": 0,
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
       },
       "adjustmentKind": "brightnessContrast",
       "params": {
         "brightness": 0.2,
         "contrast": 0
-      }
+      },
+      "locked": false
     }
   ],
   "images": {
@@ -163,5 +173,9 @@
       255,
       255
     ]
-  }
+  },
+  "assetCapacities": [
+    3,
+    64
+  ]
 }

@@ -306,5 +306,180 @@
       "value": "tilted"
     },
     "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillRule",
+      "value": "nonzero"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "fillRule",
+      "value": "evenodd"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "fillRule",
+      "value": "evenOdd"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillRule",
+      "value": null
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "isolation",
+      "value": true
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "isolation",
+      "value": "true"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "normal"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "screen"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "overlay"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "darken"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "lighten"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "colorDodge"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "colorBurn"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "hardLight"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "softLight"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "difference"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "exclusion"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "hue"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "saturation"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "color"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "luminosity"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "color-dodge"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "ColorDodge"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "source-over"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": ""
+    },
+    "accepted": false
   }
 ]

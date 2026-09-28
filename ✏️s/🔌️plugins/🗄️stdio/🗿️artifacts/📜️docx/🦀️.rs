@@ -292,6 +292,8 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🏷️namespaces/🦀️.rs"]
+                    pub(crate) mod namespaces;
                     #[path = "."]
                     pub mod import {
                         #[path = "."]

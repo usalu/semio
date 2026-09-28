@@ -2252,33 +2252,50 @@ export function orbitCameraViewRigApplyToken(seedKey: string | number, projectio
   return `${seedKey}:${projection}`;
 }
 
-/** @emoji 🔑️ Whether {@link WorldOrbitCameraViewRigSeed} should apply props.state (false on camera remount with same token). */
-export function shouldApplyOrbitCameraViewRigSeed(lastToken: string | null, nextToken: string): boolean {
-  return lastToken !== nextToken;
+/** @emoji 🔑️ Whether a seed, camera, or controls identity needs the owned pose applied. */
+export function shouldApplyOrbitCameraViewRigSeed(
+  lastToken: string | null,
+  nextToken: string,
+  lastCamera: object | null,
+  nextCamera: object | null,
+  lastControls: object | null,
+  nextControls: object | null,
+): boolean {
+  return lastToken !== nextToken || lastCamera !== nextCamera || lastControls !== nextControls;
 }
 
-function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
-  const getThree = useThree((s) => s.get);
-  const invalidate = useThree((s) => s.invalidate);
+function WorldOrbitCameraViewRigSeedApply(props: {
+  readonly camera: Camera;
+  readonly controls: OrbitControlsTarget | null;
+  readonly invalidate: () => void;
+  readonly state: WorldCameraState;
+  readonly seedKey: string | number;
+}): null {
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
+  const lastCamera = reactHostPort.useRef<Camera | null>(null);
+  const lastControls = reactHostPort.useRef<OrbitControlsTarget | null>(null);
   const stateRef = reactHostPort.useRef(props.state);
   stateRef.current = props.state;
   const projection = props.state.projection ?? "perspective";
-  const controlsReady = useThree((s) => s.controls) != null;
   reactHostPort.useLayoutEffect(() => {
-    const { camera, controls } = getThree();
-    if (!camera) {
-      return;
-    }
-    const token = `${orbitCameraViewRigApplyToken(props.seedKey, projection)}:controls:${controlsReady ? 1 : 0}`;
-    if (!shouldApplyOrbitCameraViewRigSeed(lastApplyToken.current, token)) {
+    const token = orbitCameraViewRigApplyToken(props.seedKey, projection);
+    if (!shouldApplyOrbitCameraViewRigSeed(lastApplyToken.current, token, lastCamera.current, props.camera, lastControls.current, props.controls)) {
       return;
     }
     lastApplyToken.current = token;
-    applyWorldCameraState(camera, stateRef.current, controls as OrbitControlsTarget | null);
-    invalidate();
-  }, [controlsReady, getThree, invalidate, projection, props.seedKey]);
+    lastCamera.current = props.camera;
+    lastControls.current = props.controls;
+    applyWorldCameraState(props.camera, stateRef.current, props.controls);
+    props.invalidate();
+  }, [projection, props.camera, props.controls, props.invalidate, props.seedKey]);
   return null;
+}
+
+function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): ReactElement {
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const invalidate = useThree((s) => s.invalidate);
+  return <WorldOrbitCameraViewRigSeedApply camera={camera} controls={controls} invalidate={invalidate} state={props.state} seedKey={props.seedKey} />;
 }
 // #endregion 📷️OrbitCameraView
 
@@ -2372,6 +2389,8 @@ const WORLD_PROJECTION_DEFAULT_DISTANCE = 600;
 const WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT = 640;
 /** @emoji 📷️ Default padding around content when framing a projection pane. */
 const WORLD_PROJECTION_FRAME_PADDING = 1.35;
+/** @emoji 🖼️ Authored width for a reference plane that omits `widthWorld`. */
+export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
 
 export type WorldSceneContentBounds = {
   readonly center: Vec3;
@@ -2405,7 +2424,7 @@ export function worldSceneContentBounds(
   }
   for (const reference of references) {
     if (reference.hidden) continue;
-    const half = Math.max(reference.widthWorld ?? 1, 1e-3) * 0.5;
+    const half = Math.max(reference.widthWorld ?? WORLD_REFERENCE_DEFAULT_WIDTH, 1e-3) * 0.5;
     const [x, y, z] = reference.origin;
     expand(x - half, y - half, z);
     expand(x + half, y + half, z);
@@ -3856,8 +3875,6 @@ export interface WorldReferenceRelocatePayload {
   readonly after: GumballPose;
 }
 
-export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
-
 export const WORLD_REFERENCE_SELECTED_BACKGROUND_CSS = semanticVar("active-base");
 export const WORLD_REFERENCE_SELECTED_OUTLINE_CSS = tokenVar("primary");
 export const WORLD_REFERENCE_HOVER_BACKGROUND_CSS = semanticVar("hover-base");
@@ -3900,6 +3917,12 @@ export function applyWorldReferencePose(group: Group, reference: Pick<WorldRefer
   group.quaternion.set(quat[0], quat[1], quat[2], quat[3]);
   const scale = worldReferenceScaleVec(reference.scale);
   group.scale.set(scale[0], scale[1], scale[2]);
+}
+
+/** 🪝️ Applies a reference pose at the moment its async-media group actually mounts. */
+export function mountWorldReferencePose(group: Group | null, reference: Pick<WorldReferenceProps, "origin" | "orientation" | "scale">): Group | null {
+  if (group) applyWorldReferencePose(group, reference);
+  return group;
 }
 
 /** @emoji 🖼️ Writes a gumball pose back onto persisted reference props. */
@@ -4033,6 +4056,12 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }) {
   const groupRef = reactHostPort.useRef<Group>(null);
+  const mountGroup = reactHostPort.useCallback(
+    (group: Group | null) => {
+      groupRef.current = mountWorldReferencePose(group, props.reference);
+    },
+    [props.reference.origin, props.reference.orientation, props.reference.scale],
+  );
   const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
   const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
   const selectable = worldEntitySelectable(props.reference);
@@ -4072,11 +4101,6 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   reactHostPort.useLayoutEffect(() => {
     if (media) invalidate();
   }, [invalidate, media]);
-  reactHostPort.useLayoutEffect(() => {
-    if (groupRef.current) {
-      applyWorldReferencePose(groupRef.current, props.reference);
-    }
-  }, [props.reference.origin, props.reference.orientation, props.reference.scale]);
   const mediaAspect = media ? media.width / media.height : 1;
   const [planeWidth, planeHeight] = reactHostPort.useMemo(() => worldReferencePlaneSize(props.reference, mediaAspect), [props.reference, mediaAspect]);
   const opacityBase = props.reference.opacity ?? 1;
@@ -4096,7 +4120,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
   return (
     <>
-      <group ref={groupRef} visible={renderMode.visible} userData={{ worldReferenceId: props.reference.id }}>
+      <group ref={mountGroup} visible={renderMode.visible} userData={{ worldReferenceId: props.reference.id }}>
         {appearance.backgroundColor ? (
           <mesh raycast={worldRaycastNone} renderOrder={-11}>
             <planeGeometry args={[planeWidth, planeHeight]} />
@@ -4445,11 +4469,13 @@ export type WorldR3fTestDependencies = {
   readonly WORLD_PROJECTION_COMMAND: typeof WORLD_PROJECTION_COMMAND;
   readonly WORLD_PROJECTION_KINDS: typeof WORLD_PROJECTION_KINDS;
   readonly WORLD_REFERENCE_SELECTED_CONTENT_OPACITY: typeof WORLD_REFERENCE_SELECTED_CONTENT_OPACITY;
+  readonly WorldOrbitCameraViewRigSeedApply: typeof WorldOrbitCameraViewRigSeedApply;
   readonly adaptiveOrbitCameraFar: typeof adaptiveOrbitCameraFar;
   readonly applyOrbitProjectionToCameraState: typeof applyOrbitProjectionToCameraState;
   readonly applyWorldMeshEdgeBorders: typeof applyWorldMeshEdgeBorders;
   readonly applyWorldOrbitMouseButtonsIdle: typeof applyWorldOrbitMouseButtonsIdle;
   readonly applyWorldReferenceTransform: typeof applyWorldReferenceTransform;
+  readonly mountWorldReferencePose: typeof mountWorldReferencePose;
   readonly applyWorldVolumeTransform: typeof applyWorldVolumeTransform;
   readonly cameraGridFadeDistance: typeof cameraGridFadeDistance;
   readonly cameraGridVisibleRadius: typeof cameraGridVisibleRadius;
@@ -4521,6 +4547,6 @@ export type WorldR3fTestDependencies = {
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️chunkkey/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, WorldOrbitCameraViewRigSeedApply, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, mountWorldReferencePose, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

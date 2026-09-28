@@ -420,7 +420,7 @@ async fn vec3_dot_cross_length_lerp() {
 async fn vec3_normalize_zero_vector_returns_zero() {
     assert_eq!(Vec3::ZERO.normalize(), Vec3::ZERO);
     let tiny = Vec3::new(1e-9, 0.0, 0.0);
-    assert_eq!(tiny.normalize(), Vec3::ZERO);
+    assert_eq!(tiny.normalize(), Vec3::new(1.0, 0.0, 0.0));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -505,15 +505,15 @@ async fn from_face_loops_bridges_hole_and_skips_degenerate_outer() {
 #[semio_framework_async_macros::async_test]
 async fn cylinder_prim_has_expected_topology() {
     let mesh = HalfedgeMesh::cylinder_prim(1.0, 2.0, 8).unwrap();
-    assert_eq!(mesh.face_count(), 8 * 3);
-    assert_eq!(mesh.vertex_count(), 8 * 2 + 2);
+    assert_eq!(mesh.face_count(), 8 + 2);
+    assert_eq!(mesh.vertex_count(), 8 * 2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cone_prim_has_expected_topology() {
     let mesh = HalfedgeMesh::cone_prim(1.0, 2.0, 6).unwrap();
-    assert_eq!(mesh.face_count(), 6 * 2);
-    assert_eq!(mesh.vertex_count(), 6 + 2);
+    assert_eq!(mesh.face_count(), 6 + 1);
+    assert_eq!(mesh.vertex_count(), 6 + 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -605,23 +605,21 @@ async fn bevel_edges_rejects_empty_and_runs_on_selection() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn loop_cut_rejects_zero_cuts_and_adds_rings() {
+async fn loop_cut_requires_selected_edges_and_positive_cuts() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-    assert_eq!(mesh.loop_cut(&[], 0), Err(MeshKernelError::InvalidInput("cuts must be > 0".into())));
-    let before = mesh.face_count();
-    mesh.loop_cut(&[], 1).unwrap();
-    assert!(mesh.face_count() > before);
+    assert!(mesh.loop_cut(&[EdgeId(0)], 0).is_err());
+    assert_eq!(mesh.loop_cut(&[], 1), Err(MeshKernelError::EmptySelection));
+    mesh.loop_cut(&[EdgeId(0)], 1).unwrap();
+    assert_eq!(mesh.face_count(), 10);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn knife_cut_on_quad_face_adds_split_triangles() {
-    // Quad lies in the XZ plane (y=0); the cut plane (x from cut_dir, z=1 from cut_a/cut_b) crosses
-    // both z-varying edges of the quad transversally, so knife_cut must find two hits and add faces.
+async fn knife_cut_on_quad_face_replaces_the_original_surface() {
     let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 0.0, 2.0], [0.0, 0.0, 2.0]];
     let mut mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
-    let before = mesh.face_count();
     mesh.knife_cut(FaceId(0), Vec3::new(0.0, -1.0, 1.0), Vec3::new(1.0, -1.0, 1.0)).unwrap();
-    assert!(mesh.face_count() > before, "two valid plane hits on the quad must add new split faces");
+    assert_eq!(mesh.face_count(), 2);
+    assert_eq!(mesh.vertex_count(), 6);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -671,7 +669,7 @@ async fn subdivide_faces_rejects_empty_and_quadruples_selected_face() {
     assert_eq!(mesh.subdivide_faces(&[]), Err(MeshKernelError::EmptySelection));
     let before = mesh.face_count();
     mesh.subdivide_faces(&[FaceId(0)]).unwrap();
-    assert_eq!(mesh.face_count(), before - 1 + 8, "a quad face fans 4 edge-midpoint pairs to the centroid into 8 triangles");
+    assert_eq!(mesh.face_count(), before - 1 + 4, "a quad is split into four triangles without creating T-junctions");
 }
 
 #[semio_framework_async_macros::async_test]

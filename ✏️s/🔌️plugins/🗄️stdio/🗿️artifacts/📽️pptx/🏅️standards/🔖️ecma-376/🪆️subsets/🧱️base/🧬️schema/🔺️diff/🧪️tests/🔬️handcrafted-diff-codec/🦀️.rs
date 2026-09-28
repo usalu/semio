@@ -71,3 +71,54 @@ async fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
     assert_eq!(absorbed.apply(&base).unwrap(), base);
     assert!(PptxDiff::between(&sourced, &sourced).is_empty());
 }
+
+#[test]
+fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
+    use crate::schema::mutations::{set_snapshot, PptxMutation};
+    use protocol::{MutationDiff, OpBinary, OpText, ToValue};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
+    let mut before = PptxSnapshot::default();
+    before.opc.comment = fixture["before"].as_str().unwrap().into();
+    let mut after = before.clone();
+    after.opc.comment = fixture["after"].as_str().unwrap().into();
+    let diff = PptxDiff::between(&before, &after);
+    assert!(!diff.is_empty(), "a comment-only edit is a persisted change");
+    for replay in [PptxDiff::parse_diff(&diff.print_diff()).unwrap(), PptxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
+        assert_eq!(replay.apply(&before).unwrap(), after);
+        assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+    }
+    let mut cleared = after.clone();
+    cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
+    let mut combined = diff;
+    combined.absorb(PptxDiff::between(&after, &cleared));
+    assert_eq!(combined.apply(&before).unwrap(), cleared, "an empty comment remains an explicit edit");
+    let mutation = PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: after.clone() });
+    for replay in [PptxMutation::parse_op(&mutation.print_op()).unwrap(), PptxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap()] {
+        assert_eq!(replay, mutation, "complete snapshot replay preserves the archive comment");
+    }
+    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
+    assert_eq!(oracle["opc"]["comment"], fixture["after"]);
+    println!("[DEBUG] Pptx archive comment text/binary diff, inverse, absorption and snapshot replay preserve Unicode and empty text");
+}
+
+#[test]
+fn placeholder_kind_diff_has_distinct_shape_discriminator_and_replays_exactly() {
+    use protocol::{FromValue, ToValue};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️placeholder-kind/🔣️.json")).unwrap();
+    let shape_diff = PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind: Some(fixture["afterKind"].as_str().unwrap().into()), ..Default::default() });
+    let wire = shape_diff.to_value();
+    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&wire)).unwrap();
+    assert_eq!(oracle, fixture["expectedDiff"]);
+    assert_eq!(PptxShapeDiff::from_value(wire).unwrap(), shape_diff);
+    let before = elem_snapshot(vec![PptxSlide { shapes: vec![PptxShape::Placeholder { kind: fixture["beforeKind"].as_str().unwrap().into(), text_frame: vec![PptxParagraph::text("Untouched 🧾")], position: PptxTransform::default() }] }]);
+    let mut after = before.clone();
+    let PptxShape::Placeholder { kind, .. } = &mut after.presentation.slides[0].shapes[0] else { unreachable!() };
+    *kind = fixture["afterKind"].as_str().unwrap().into();
+    let diff = PptxDiff::between(&before, &after);
+    assert!(!diff.is_empty());
+    for replay in [PptxDiff::parse_diff(&diff.print_diff()).unwrap(), PptxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
+        assert_eq!(replay.apply(&before).unwrap(), after);
+        assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+    }
+    println!("[DEBUG] PPTX placeholder kind diff keeps shapeKind and kind distinct through JSON, text, binary and inverse replay");
+}

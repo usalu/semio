@@ -15,6 +15,35 @@
     "pageBytes": 4096,
     "expectedDataSteps": 17,
     "cancelAfterBytes": 8192,
-    "expectedCloseSteps": 3
+    "expectedCloseSteps": 3,
+    "interruptedUnicode": "🧾ß",
+    "partialByteStops": [1, 2, 3, 4, 5, 6]
+  },
+  "commandAdmission": {
+    "maximumBytes": 8,
+    "cases": [
+      { "id": "empty", "value": "", "accepted": true },
+      { "id": "exact-boundary", "value": "12345678", "accepted": true },
+      { "id": "one-byte-over", "value": "123456789", "accepted": false },
+      { "id": "unicode-byte-over", "value": "🧾🧾a", "accepted": false }
+    ]
+  },
+  "structuralCopy": {
+    "runCount": 4096,
+    "tableRowCount": 1024,
+    "meshVertexCount": 8192,
+    "brepVertexCount": 8192,
+    "nurbsPointCount": 4096,
+    "textureByteLength": 2097152,
+    "pageBytes": 7,
+    "cancelAfterTurns": [1, 4096, 8192]
+  },
+  "documentCopy": {
+    "siblingByteLength": 2097152,
+    "replacementText": "β",
+    "replacementRepeats": 65536,
+    "pageBytes": 4096,
+    "cancelAfterTurns": 32,
+    "minimumCompleteTurns": 500
   }
 }

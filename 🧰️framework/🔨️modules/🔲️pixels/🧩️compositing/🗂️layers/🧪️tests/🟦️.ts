@@ -68,7 +68,7 @@ test("constant inverted and disabled masks preserve their distinct meaning",()=>
 });
 test("invalid identifiers transforms assets and grants are rejected",()=>{
   expect(()=>new RasterStackJob({layers:[layer(),layer()],images:images()})).toThrow();
-  const singular=layer();singular.transform.scaleX=0;
+  const singular=layer();singular.transform.a=0;
   expect(()=>new RasterStackJob({layers:[singular],images:images()})).toThrow();
   expect(()=>new RasterStackJob({layers:[layer()],images:{}})).toThrow();
   const job=new RasterStackJob({layers:[layer()],images:images()});
@@ -77,6 +77,6 @@ test("invalid identifiers transforms assets and grants are rejected",()=>{
 });
 test("blank pixels remain valid at the maximum group depth",()=>{
   let source=layer();if(source.kind!=="pixel")throw new Error("Expected pixel fixture");source.imageKey=null;source.mask=null;
-  for(let depth=0;depth<32;depth++)source={kind:"group",id:`group-${depth}`,visible:true,opacity:1,blendMode:"normal",transform:{x:0,y:0,scaleX:1,scaleY:1,rotation:0},children:[source]};
+  for(let depth=0;depth<32;depth++)source={kind:"group",id:`group-${depth}`,visible:true,opacity:1,blendMode:"normal",transform:{x:0.0,y:0.0,a:1.0,b:0.0,c:-0.0,d:1.0},children:[source]};
   const result=finish(new RasterStackJob({layers:[source],images:{}}));expect(result.image.pixels).toEqual(new Uint8Array(12));
 });

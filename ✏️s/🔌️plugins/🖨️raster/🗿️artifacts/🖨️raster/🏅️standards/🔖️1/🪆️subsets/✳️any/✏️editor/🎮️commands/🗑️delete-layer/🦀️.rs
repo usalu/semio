@@ -14,14 +14,10 @@ pub struct DeleteLayer {
     pub layer_id: String,
 }
 
-/// 🕹️ No longer prunes selection here (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-/// the `"layers"` domain's selection is framework-owned `InteractionState` now, not this config —
-/// `RasterConfigMutation::SetSelection` is deleted. `"layers"` is declared `HierarchyProvider::Flat`,
-/// so a deleted-but-still-selected id is a documented, framework-level gap (Flat domains are never
-/// auto-pruned by `validate_state`; see the ticket's `w3b-summary.md`), not something this command
-/// can restore without re-declaring the domain as `Topology`.
+/// 🕹️ Deletes the layer; framework topology validation prunes its selection after publication.
 pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
+    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&payload.layer_id,true).map_err(Fault::from)?;
     if find_layer(&document.layers, &payload.layer_id).is_none() {
         return Ok(Emit::default());
     }

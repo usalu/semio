@@ -11,6 +11,7 @@ use super::*;
 #[dsl(keyword = "set-archive-comment")]
 pub struct SetArchiveComment {
     pub(crate) comment: String,
+    pub(crate) comment_utf8: bool,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetArchiveComment {

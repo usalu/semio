@@ -30,7 +30,7 @@ async fn raster_config_default_matches_brush_controls() {
 
 #[semio_framework_async_macros::async_test]
 async fn raster_config_dsl_round_trips() {
-    let config = RasterConfig { brush_size: 40.0, brush_opacity: 0.5, brush_color: "#e07020".into(), brush_hardness: 0.25, composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }), camera: RasterCamera { x: 5.0, y: -3.0, zoom: 2.0 } };
+    let config = RasterConfig { brush_size: 40.0, brush_opacity: 0.5, brush_color: "#e07020".into(), brush_hardness: 0.25,paint_target:"mask".into(),mask_value:96,pixel_selection:None,composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }), camera: RasterCamera { x: 5.0, y: -3.0, zoom: 2.0 } };
     store::os_store::test_support::assert_dsl_round_trip(&config);
 }
 
@@ -61,5 +61,45 @@ async fn brush_style_shared_vectors_preserve_session_state_and_reject_invalid_va
     }
     for value in [f64::NAN, f64::INFINITY, -0.1, 1.1] {
         assert_eq!(RasterConfigMutation::SetBrushHardness { value }.diff(&base).diff(), &base);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mask_paint_config_shared_vectors_round_trip_and_restore(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-paint/🔣️.json")).unwrap();let base=RasterConfig::default();
+    for row in fixture["cases"].as_array().unwrap(){
+        let target=RasterConfigMutation::SetPaintTarget{value:row["target"].as_str().unwrap().into()};let value=RasterConfigMutation::SetMaskValue{value:row["value"].as_u64().unwrap() as u32};let next=target.diff(&base).diff().clone();let next=value.diff(&next).diff().clone();assert_eq!(next.paint_target,row["target"].as_str().unwrap());assert_eq!(next.mask_value,row["value"].as_u64().unwrap() as u32);assert_eq!(target.inverse(&base)[0].diff(&next).diff(),&base);store::os_store::test_support::assert_dsl_round_trip(&next);store::os_store::test_support::assert_op_line_round_trip(&target);store::os_store::test_support::assert_op_line_round_trip(&value);
+    }
+    for value in fixture["invalidTargets"].as_array().unwrap(){assert_eq!(RasterConfigMutation::SetPaintTarget{value:value.as_str().unwrap().into()}.diff(&base).diff(),&base);}
+    assert_eq!(RasterConfigMutation::SetMaskValue{value:256}.diff(&base).diff(),&base);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn completed_selection_contract_round_trips_and_survives_style_changes(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️pixel-selection/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){
+        let selection:RasterPixelSelection=dsl::json::from_json_str(&row["selection"].to_string()).unwrap();
+        let mut coverage=vec![0;selection.validate().unwrap()];
+        for (start,end,alpha) in selection.spans().unwrap(){coverage[start..end].fill(alpha);}
+        assert_eq!(coverage,row["coverage"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect::<Vec<_>>());
+        let base=RasterConfig{paint_target:selection.target.clone(),..Default::default()};
+        let op=RasterConfigMutation::SetPixelSelection{selection:Some(selection.clone())};
+        let next=op.diff(&base).diff().clone();assert_eq!(next.pixel_selection,Some(selection));
+        assert_eq!(RasterConfigMutation::SetBrushSize{value:12.0}.diff(&next).diff().pixel_selection,next.pixel_selection);
+        assert_eq!(RasterConfigMutation::SetPaintTarget{value:next.paint_target.clone()}.diff(&next).diff(),&next);
+        let target=if next.paint_target=="pixels"{"mask"}else{"pixels"};
+        assert!(RasterConfigMutation::SetPaintTarget{value:target.into()}.diff(&next).diff().pixel_selection.is_none());
+        assert!(RasterConfigMutation::SetPixelSelection{selection:None}.diff(&next).diff().pixel_selection.is_none());
+        assert_eq!(op.inverse(&base)[0].diff(&next).diff(),&base);
+        store::os_store::test_support::assert_dsl_round_trip(&next);
+        store::os_store::test_support::assert_op_line_round_trip(&op);
+        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetPixelSelection{selection:None});
+    }
+    let base=&fixture["cases"][0]["selection"];
+    for invalid in fixture["invalid"].as_array().unwrap(){
+        let mut value=base.clone();for(key,item)in invalid.as_object().unwrap(){value[key]=item.clone();}
+        let selection:RasterPixelSelection=dsl::json::from_json_str(&value.to_string()).unwrap();
+        assert!(selection.validate().is_err(),"{value}");
+        let config=RasterConfig::default();assert_eq!(RasterConfigMutation::SetPixelSelection{selection:Some(selection)}.diff(&config).diff(),&config);
     }
 }

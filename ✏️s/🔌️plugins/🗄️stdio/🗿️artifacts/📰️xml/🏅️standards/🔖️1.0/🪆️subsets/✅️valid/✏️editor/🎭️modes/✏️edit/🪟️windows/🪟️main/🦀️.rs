@@ -4,10 +4,10 @@
 //! `Text` nodes are real `set-node` edit targets (`XmlMutation::SetText`'s own documented scope);
 //! `Element`/`CData`/`Comment`/`ProcessingInstruction` nodes render read-only in this window.
 
-use crate::schema::snapshot::{xml_document_to_text, XmlNode};
+use crate::schema::snapshot::{xml_document_to_text_checked, XmlNode};
 use crate::XmlSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -54,17 +54,36 @@ pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framew
 }
 
 /// 📝️ Adds the natural XML source draft to the structured tree for editor hosts.
-pub fn render_editor(document: &XmlSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let tree = render(document, windows)?;
-    semio_s_artifact_stdio_contract::editing::render_file_source_editor(
-        "stdio-xml-valid-source",
-        xml_document_to_text(&document.doc),
-        "xml",
-        "set-node",
-        XML_ROOT_NODE_ID,
-        locale,
-        tree,
-    )
+pub fn render_editor(document: &XmlSnapshot, locale: Locale, windows: &TreeWindows<'_>, controller_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let root = match &document.doc.root {
+        Some(node) => node_view(XML_ROOT_NODE_ID.to_string(), node),
+        None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
+    };
+    let tree = TreeWindowKit::render_editable_nodes_windowed(&TreeView { roots: vec![root] }, windows, controller_id, |path, _| {
+        let XmlNode::Text { text } = node_at_path(document.doc.root.as_ref()?, path)? else { return None };
+        UiText::try_from_str(text)?;
+        let mut arguments = UiMapBuilder::try_new()?;
+        arguments.try_insert("nodeId".into(), UiValue::Text(UiText::try_from_str(path)?)).ok()?;
+        arguments.try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision)?)).ok()?;
+        Some(EditableTreeNode::new(text, "set-node", UiValue::Map(arguments.finish())))
+    })?;
+    let source = xml_document_to_text_checked(&document.doc).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.xml.invalid-document", message))?;
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-xml-valid-source", source, "xml", "set-node", XML_ROOT_NODE_ID, revision, locale, tree)
+}
+
+fn node_at_path<'a>(root: &'a XmlNode, node_id: &str) -> Option<&'a XmlNode> {
+    let mut node = root;
+    let mut segments = node_id.split(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+    (segments.next()? == XML_ROOT_NODE_ID).then_some(())?;
+    for segment in segments {
+        let index = segment.parse::<usize>().ok()?;
+        if index.to_string() != segment {
+            return None;
+        }
+        let XmlNode::Element { children, .. } = node else { return None };
+        node = children.get(index)?;
+    }
+    Some(node)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

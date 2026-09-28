@@ -110,7 +110,7 @@ pub struct PptxSlideDiff {
 /// field diffs; `Replace` covers a shape-KIND change, incl. anything involving `Other`, whose
 /// logical XML node is never sub-diffed).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "shapeKind", rename_all = "camelCase")]
 pub enum PptxShapeDiff {
     TextBox(PptxTextBoxDiff),
     Picture(PptxPictureDiff),
@@ -227,6 +227,8 @@ pub struct PptxOpcRelDiff {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PptxOpcDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub content_types: Option<PptxOpcContentTypesDiff>,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1306,10 +1308,11 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
-    if content_types.is_none() && parts.is_none() && relationships.is_none() {
+    let comment = (base.comment != other.comment).then(|| other.comment.clone());
+    if comment.is_none() && content_types.is_none() && parts.is_none() && relationships.is_none() {
         None
     } else {
-        Some(PptxOpcDiff { content_types, parts, relationships })
+        Some(PptxOpcDiff { content_types, parts, relationships, comment })
     }
 }
 
@@ -1338,12 +1341,16 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResu
     if let Some(d) = &diff.relationships {
         apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
+    if let Some(comment) = &diff.comment {
+        opc.comment.clone_from(comment);
+    }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
+        comment: diff.comment.as_ref().map(|_| base.comment.clone()),
         content_types: diff
             .content_types
             .as_ref()
@@ -1356,6 +1363,7 @@ fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
+        comment: b.comment.or(a.comment),
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
             (x, None) => x,

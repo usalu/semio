@@ -29,3 +29,5 @@ test("merge command rejects malformed targets",()=>{
   const validate=new Ajv().compile(schema);
   for(const value of [{},{layerId:""},{layerId:" "},{layerId:"x",extra:1}])expect(validate(value)).toBe(false);
 });
+
+for(const row of fixture.protected)test(row.name,()=>{expect(()=>mergeDownPlan(row.layers,row.layerId)).toThrow("raster-layer-locked");});

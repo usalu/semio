@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name":"Sheared Mask Placement","transform":{"x":16.0,"y":-2.0,"a":2.0,"b":1.0,"c":-2.0,"d":1.0}},
+    {"name":"Reflected Layer Placement","transform":{"x":8.0,"y":-11.0,"a":-2.0,"b":0.0,"c":0.0,"d":-3.0}},
+    {"name":"Nested Parent Placement","transform":{"x":5.0,"y":-7.0,"a":-2.0,"b":2.0,"c":-3.0,"d":0.0}}
+  ],
+  "fields": ["x","y","a","b","c","d"]
+}

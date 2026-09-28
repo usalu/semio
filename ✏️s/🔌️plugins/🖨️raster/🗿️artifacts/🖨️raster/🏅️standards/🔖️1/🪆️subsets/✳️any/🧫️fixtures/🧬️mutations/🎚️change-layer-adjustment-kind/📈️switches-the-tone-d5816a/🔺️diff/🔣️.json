@@ -18,7 +18,8 @@
           "transformY": null,
           "width": null,
           "height": null,
-          "adjustmentKind": "curves"
+          "adjustmentKind": "curves",
+          "locked": null
         }
       }
     ],

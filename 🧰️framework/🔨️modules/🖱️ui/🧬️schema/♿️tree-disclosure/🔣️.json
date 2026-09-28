@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/ui/tree-disclosure-v1.json",
+  "title": "Tree disclosure accessibility",
+  "description": "The shared React and retained-WGPU contract for branch disclosure and inert leaf rows. Only a row with real nested tree items exposes an expanded state and disclosure action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "branches", "leaves", "expected"],
+  "$defs": {
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "layout", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "layout": { "enum": ["default", "property"] },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "const": "semio.ui.tree-disclosure/v1" },
+    "branches": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/row" } },
+    "leaves": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/row" } },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "leaf"],
+      "properties": {
+        "branch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["role", "collapsed", "expanded", "disclosureButton"],
+          "properties": {
+            "role": { "const": "treeitem" },
+            "collapsed": { "const": false },
+            "expanded": { "const": true },
+            "disclosureButton": { "const": true }
+          }
+        },
+        "leaf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["role", "expanded", "disclosureButton"],
+          "properties": {
+            "role": { "const": "treeitem" },
+            "expanded": { "type": "null" },
+            "disclosureButton": { "const": false }
+          }
+        }
+      }
+    }
+  }
+}

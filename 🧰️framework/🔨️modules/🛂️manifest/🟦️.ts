@@ -864,11 +864,13 @@ export type PluginViewState = {
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
-  /** 📌️ Host-owned panel state, opaque to the guest. The ONE long string a view context carries —
-   * contributions are NOT a view-state field: they are installed into the guest by the paged
+  /** 📌️ Host-owned panel state, opaque to the guest. Registry
+   * contributions are not a view-state field: they are installed into the guest by the paged
    * `setContributions` command run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), which the guest folds
    * into its own registry, so a refresh crosses a reference-free, bounded context. */
   readonly panelJson?: string;
+  /** 🧩️ Parent-owned input for one embedded surface; never persisted in the contributor document. */
+  readonly extensionInputJson?: string;
   /** 🪪️ Current authenticated OS session identity for this call. Plugins consume this
    * ephemeral value directly and never persist an app/document copy. */
   readonly sessionIdentity?: Readonly<{ readonly userId: string; readonly displayName: string }>;
@@ -970,11 +972,8 @@ export function publicInvocationStringPages(text: string): readonly string[] {
  * `VIEW_CONTEXT_LONG_STRING_CHARS` (`🛂️manifest/🦀️.rs`) and pinned against the schema by
  * `🧪️tests/🔬️view-context-capacity/🦀️.rs`. */
 export const VIEW_CONTEXT_LONG_STRING_CHARS = 65_536;
-/** 📏️ Long-string fields a view context may carry: `panelJson`, and nothing else. Contributions are
- * installed by the paged `setContributions` run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), never
- * carried here — the aggregated closure is 248 635 characters
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export const VIEW_CONTEXT_LONG_STRING_FIELDS = ["panelJson"] as const;
+/** 📏️ Bounded opaque inputs: panel state and one embedded surface's parameters. */
+export const VIEW_CONTEXT_LONG_STRING_FIELDS = ["panelJson", "extensionInputJson"] as const;
 //#endregion 📏️ViewContextCapacity
 
 /** 🪟️ Admits an explicit host projection before it crosses a process boundary. */

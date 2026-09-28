@@ -1,0 +1,21 @@
+{
+  "valid": [
+    { "partPath": "xl/worksheets/sheet1.xml", "nodePath": [0, 0, 0], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0123456789abcdef" },
+    { "partPath": "custom/Überblick.xml", "nodePath": [2, 4], "namespaceUri": "http://purl.oclc.org/ooxml/spreadsheetml/main", "localName": "c", "revision": "ffffffffffffffff" }
+  ],
+  "invalid": [
+    null,
+    [],
+    {},
+    { "partPath": "", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "/xl/sheet.xml", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/../sheet.xml", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [-1], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [0.5], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [9007199254740992], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [], "namespaceUri": "urn:foreign", "localName": "c", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "row", "revision": "0000000000000000" },
+    { "partPath": "xl/sheet.xml", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "ABCDEF0123456789" },
+    { "partPath": "xl/sheet.xml", "nodePath": [], "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "localName": "c", "revision": "0000000000000000", "sheetName": "Sheet1" }
+  ]
+}

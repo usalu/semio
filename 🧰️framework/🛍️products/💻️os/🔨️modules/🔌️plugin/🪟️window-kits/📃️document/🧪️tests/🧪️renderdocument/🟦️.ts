@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
+import type { UiValue } from "@semio-tech/framework";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -10,6 +11,7 @@ type Fixture = {
     readonly item: number;
     readonly text: string;
     readonly revision: string;
+    readonly staticArguments?: Readonly<Record<string, UiValue>>;
     readonly labels: { readonly apply: string; readonly discard: string; readonly cancel: string };
   }[];
 };
@@ -31,13 +33,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       for (const testCase of fixture.cases) {
-        expect(editableDocumentDraft({ pageIndex: testCase.page, itemIndex: testCase.item, text: testCase.text }, testCase.locale)).toEqual({
+        const draft = editableDocumentDraft({ pageIndex: testCase.page, itemIndex: testCase.item, text: testCase.text, arguments: testCase.staticArguments }, testCase.locale);
+        expect(draft).toEqual({
           page: testCase.page,
           item: testCase.item,
           revision: testCase.revision,
           text: testCase.text,
           labels: testCase.labels,
+          arguments: testCase.staticArguments ?? { page: testCase.page, item: testCase.item, revision: testCase.revision },
         });
+        if (testCase.staticArguments) {
+          expect(draft.arguments).not.toBe(testCase.staticArguments);
+          expect(draft.arguments.address).not.toBe(testCase.staticArguments.address);
+          expect(draft.arguments).not.toHaveProperty("page");
+        }
       }
     });
   });

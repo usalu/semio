@@ -6,8 +6,31 @@
       "data": [
         104,
         105
-      ]
+      ],
+      "metadata": {
+        "compressionMethod": 8,
+        "local": {
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": []
+        },
+        "central": {
+          "versionMadeBy": 45,
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": [],
+          "comment": "",
+          "internalAttributes": 0,
+          "externalAttributes": 0
+        },
+        "dataDescriptorSignature": false
+      }
     }
   ],
-  "comment": ""
+  "comment": "",
+  "commentUtf8": true
 }

@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "name": "object IDs",
+      "selection": {
+        "ids": [
+          "part-a",
+          "part-b"
+        ],
+        "selectionMode": "object"
+      },
+      "expected": {
+        "mode": "object",
+        "ids": [
+          "part-a",
+          "part-b"
+        ]
+      }
+    },
+    {
+      "name": "full component targets",
+      "selection": {
+        "ids": [
+          "part@meshOut#0"
+        ],
+        "componentIds": [
+          1,
+          4
+        ],
+        "selectionMode": "face",
+        "gumballSelectionIds": [
+          "part@meshOut#0.face.1",
+          "part@meshOut#0.face.4"
+        ]
+      },
+      "expected": {
+        "mode": "face",
+        "ids": [
+          "part@meshOut#0.face.1",
+          "part@meshOut#0.face.4"
+        ]
+      }
+    },
+    {
+      "name": "explicitly empty targets",
+      "selection": {
+        "ids": [
+          "part@meshOut#0"
+        ],
+        "selectionMode": "face",
+        "gumballSelectionIds": []
+      },
+      "expected": {
+        "mode": "face",
+        "ids": []
+      }
+    },
+    {
+      "name": "component indices are not object IDs",
+      "selection": {
+        "componentIds": [
+          3,
+          8
+        ],
+        "granularity": "edge"
+      },
+      "expected": {
+        "mode": "edge",
+        "ids": []
+      }
+    },
+    {
+      "name": "mode precedence",
+      "selection": {
+        "ids": [
+          "part"
+        ],
+        "selectionMode": "vertex",
+        "granularity": "object"
+      },
+      "expected": {
+        "mode": "vertex",
+        "ids": [
+          "part"
+        ]
+      }
+    },
+    {
+      "name": "no selection",
+      "selection": {},
+      "expected": {
+        "mode": "object",
+        "ids": []
+      }
+    }
+  ],
+  "translation": {
+    "before": [
+      0,
+      0,
+      0
+    ],
+    "after": [
+      1,
+      2,
+      3
+    ]
+  }
+}

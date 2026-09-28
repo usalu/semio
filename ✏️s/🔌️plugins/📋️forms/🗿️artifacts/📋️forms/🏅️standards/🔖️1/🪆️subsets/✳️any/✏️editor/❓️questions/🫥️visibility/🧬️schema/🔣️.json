@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:forms.visibilityEdit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "field",
+    "value"
+  ],
+  "properties": {
+    "path": {
+      "type": "string",
+      "pattern": "^(\\d+(/\\d+)*)?$"
+    },
+    "field": {
+      "enum": [
+        "kind",
+        "name",
+        "value",
+        "valueType",
+        "add",
+        "remove"
+      ]
+    },
+    "value": {}
+  }
+}

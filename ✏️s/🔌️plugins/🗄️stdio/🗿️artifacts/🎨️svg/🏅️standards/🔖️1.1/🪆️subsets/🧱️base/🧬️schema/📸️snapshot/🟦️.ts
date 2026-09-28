@@ -1,4 +1,4 @@
-import type { XmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseXmlDocument, type XmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 
 /** 📸️ Persisted logical SVG document. */
 export interface SvgSnapshot {
@@ -57,6 +57,6 @@ export function parseSvgSnapshot(value: unknown, at = "$"): SvgSnapshot {
   const row = stdioSvg11BaseSnapshotGuardObject(value, at);
   return {
     schema: stdioSvg11BaseSnapshotGuardString(row["schema"], `${at}.schema`),
-    doc: stdioSvg11BaseSnapshotGuardObject(row["doc"], `${at}.doc`),
+    doc: parseXmlDocument(row["doc"], `${at}.doc`),
   };
 }

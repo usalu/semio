@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mesh Component Transform",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "selection", "operation", "vector", "angle", "pivot"],
+  "properties": {
+    "mode": { "enum": ["vertex", "edge", "face"] },
+    "selection": { "type": "array", "minItems": 1, "maxItems": 600000, "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+    "operation": { "enum": ["translate", "rotate", "scale"] },
+    "vector": { "$ref": "#/$defs/point" },
+    "angle": { "type": "number" },
+    "pivot": { "oneOf": [{ "const": "selection" }, { "$ref": "#/$defs/point" }] }
+  },
+  "$defs": {
+    "point": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+  }
+}

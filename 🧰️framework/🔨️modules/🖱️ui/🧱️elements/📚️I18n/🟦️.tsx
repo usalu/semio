@@ -481,6 +481,7 @@ export type UiTranslationSchema = {
       readonly noPlacement: UiLabelValue;
       readonly canvasUnavailable: UiLabelValue;
       readonly rendering: UiLabelValue;
+      readonly iconRenderFailed: UiLabelValue;
       readonly documentPlaceholder: UiLabelValue;
       readonly languageDocument: UiLabelValue;
       readonly iconShot: UiLabelValue;

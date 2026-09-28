@@ -1,0 +1,203 @@
+{
+  "cases": [
+    {
+      "name": "append first response",
+      "before": [],
+      "event": {
+        "mutation": "commitResponse",
+        "response": {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      },
+      "after": [
+        {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retry same response is idempotent",
+      "before": [
+        {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      ],
+      "event": {
+        "mutation": "commitResponse",
+        "response": {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      },
+      "after": [
+        {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "conflicting response identity fails",
+      "before": [
+        {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      ],
+      "event": {
+        "mutation": "commitResponse",
+        "response": {
+          "id": "response-1",
+          "submittedAt": 1790545740001,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      },
+      "error": "duplicate-response"
+    },
+    {
+      "name": "retract response",
+      "before": [
+        {
+          "id": "response-1",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "v1",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "age",
+              "label": "Age",
+              "kind": "number",
+              "value": 36
+            }
+          ]
+        }
+      ],
+      "event": {
+        "mutation": "discardResponse",
+        "id": "response-1"
+      },
+      "after": []
+    },
+    {
+      "name": "missing response cannot be retracted",
+      "before": [],
+      "event": {
+        "mutation": "discardResponse",
+        "id": "missing"
+      },
+      "error": "missing-response"
+    }
+  ]
+}

@@ -12,5 +12,11 @@ async fn export_fixture_downloads_the_forms_dsl_text() {
     let mut app = forms_app().await;
     app.dispatch_typed(FormsCommand::ExportFixture(ExportFixture {}), &meta("local")).await.expect("dispatch");
     let receipt = settle(&mut app).await;
-    assert!(!receipt.effects.is_empty(), "exportFixture must emit a host effect");
+    let (filename, data) = receipt.effects.iter().find_map(|effect| match effect {
+        semio_framework::kernel::Effect::DownloadMediaExport { filename, data, .. } => Some((filename, data)),
+        _ => None,
+    }).expect("Export Form download");
+    assert_eq!(filename, &format!("{}.forms", app.snapshot().unwrap().id));
+    let decoded = forms_dsl::parse_dsl(data).expect("export is a valid native Forms document");
+    assert_eq!(decoded, app.snapshot().unwrap());
 }

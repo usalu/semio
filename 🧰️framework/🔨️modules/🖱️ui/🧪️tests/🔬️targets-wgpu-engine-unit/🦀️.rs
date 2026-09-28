@@ -550,6 +550,8 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     assert_eq!(ui.windows.get(window_id).and_then(|window| window.presented_tooltip.as_ref()).map(|tooltip| tooltip.label.as_str()), Some(expected_label));
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    drive_layout(&mut ui, window_id, 240.0, 180.0, &mut atlas);
+    place_tooltip_anchor(&mut ui.windows.get_mut(window_id).expect("tooltip window").tree, anchor, [240.0, 180.0]);
     let surface = ui.surface_token(window_id).expect("tooltip surface");
     let theme = ui.theme;
     let tooltip = retained_tooltip_paint(ui.windows.get_mut(window_id).expect("tooltip window"), surface, &mut atlas, &theme).expect("accepted tooltip paint");
@@ -571,7 +573,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
             step => panic!("tooltip frame answered {step:?}: {}", ui.paint_stall_census(window_id)),
         }
     }
-    assert!(ready, "tooltip frame completes");
+    assert!(ready, "tooltip frame completes: {}", ui.paint_stall_census(window_id));
     assert!(frame_draw.layers.iter().any(|layer| !layer.overlay_ui_instances.is_empty()), "the production ladder composites the tooltip after retained content");
 
     ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerMove { x: 0.0, y: 179.0, modifiers: Default::default() });
@@ -1553,6 +1555,34 @@ impl SceneHost for RecordingSceneHost {
     }
 }
 
+struct BackpressureSceneHost {
+    calls: usize,
+    released: bool,
+    external_completed: u64,
+}
+
+impl SceneHost for BackpressureSceneHost {
+    fn paint_slot_step(&mut self, slot: &SceneSlot<'_>, cursor: &mut ScenePaintCursor, _draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) -> ScenePaintStep {
+        self.calls += 1;
+        match cursor.bind(slot.node) {
+            Ok(true) => {}
+            Ok(false) => return ScenePaintStep::Pending,
+            Err(_) => return ScenePaintStep::Fault,
+        }
+        if !self.released {
+            return ScenePaintStep::Pending;
+        }
+        if self.external_completed == 0 {
+            self.external_completed = 1;
+            return if cursor.observe_external_progress(1).is_ok() { ScenePaintStep::Pending } else { ScenePaintStep::Fault };
+        }
+        if cursor.advance_phase().is_err() {
+            return ScenePaintStep::Fault;
+        }
+        cursor.finish()
+    }
+}
+
 //#region 🖱️SceneAtTests
 /// 🖱️ `Ui::scene_at` answers the `ComponentScene` leaf under a window-local point with its identity
 /// AND the absolute rect it was laid out at — the two things a right-click needs before any event is
@@ -1733,6 +1763,114 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
     let popup = settle(&mut ui, &mut atlas, body);
     assert_eq!(overlay_instances(&popup), 0, "a SelectPopup owns its own surface — the ladder must not paint a second one over it");
+}
+
+#[test]
+fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
+    let body = Rect::new(12.0, 18.0, 240.0, 160.0);
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("atomic-frame", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("Accepted label"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
+    drive_layout(&mut ui, "atomic-frame", body.w, body.h, &mut atlas);
+    let mut target = DrawList::default();
+    target.push_solid([1.0, 2.0, 3.0, 4.0], crate::wgpu::theme::Rgba::new(0.1, 0.2, 0.3, 1.0));
+    let baseline_layers = target.layers.len();
+    let baseline_quads = target.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>();
+    let mut prior_progress = None;
+    let mut progress_changes = 0;
+    for _ in 0..262_144 {
+        match ui.frame_into_step::<RecordingSceneHost>("atomic-frame", body, &mut atlas, None, None, &mut target) {
+            UiFrameStep::Pending => {
+                let progress = ui.paint_frame_progress("atomic-frame").expect("pending frame progress");
+                progress_changes += usize::from(prior_progress.is_none_or(|prior| progress != prior));
+                prior_progress = Some(progress);
+                assert_eq!(target.layers.len(), baseline_layers, "an in-flight retained frame cannot publish layers");
+                assert_eq!(target.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>(), baseline_quads, "an in-flight retained frame cannot publish quads");
+                assert!(ui.window_hit_targets("atomic-frame").is_empty(), "an in-flight retained frame cannot publish hit targets");
+            }
+            UiFrameStep::Ready => {
+                assert!(target.layers.len() > baseline_layers);
+                assert!(target.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>() > baseline_quads);
+                assert!(ui.paint_census("atomic-frame").is_some_and(|census| census.glyphs > 0));
+                assert!(progress_changes > 0, "owned cursor work must move the retained progress witness before publication");
+                return;
+            }
+            step => panic!("atomic retained frame answered {step:?}: {}", ui.paint_stall_census("atomic-frame")),
+        }
+    }
+    panic!("atomic retained frame never completed: {}", ui.paint_stall_census("atomic-frame"));
+}
+
+#[test]
+fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_external_work() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    assert_eq!(fixture["sceneBackpressure"]["externalCompleted"], serde_json::json!([0, 0, 1]));
+    let body = Rect::new(0.0, 0.0, 240.0, 160.0);
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    let mut host = BackpressureSceneHost { calls: 0, released: false, external_completed: 0 };
+    ui.apply_tree("scene-backpressure", &stack_ui(vec![component_scene_ui("surface.backpressure")]));
+    drive_layout(&mut ui, "scene-backpressure", body.w, body.h, &mut atlas);
+    let mut target = DrawList::default();
+    for _ in 0..262_144 {
+        assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target), UiFrameStep::Pending);
+        if host.calls == 1 {
+            break;
+        }
+    }
+    assert_eq!(host.calls, 1, "the scene cursor reaches its bound backpressure phase");
+    let after_bind = ui.paint_frame_progress("scene-backpressure").expect("bound scene progress");
+    assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target), UiFrameStep::Pending);
+    assert_eq!(host.calls, 2);
+    assert_eq!(ui.paint_frame_progress("scene-backpressure"), Some(after_bind), "Pending with the same scene and external cursor is not work");
+    host.released = true;
+    assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target), UiFrameStep::Pending);
+    assert_ne!(ui.paint_frame_progress("scene-backpressure"), Some(after_bind), "the producer's completed-work cursor is retained progress");
+    for _ in 0..262_144 {
+        match ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target) {
+            UiFrameStep::Pending => {}
+            UiFrameStep::Ready => return,
+            step => panic!("backpressure frame answered {step:?}"),
+        }
+    }
+    panic!("released scene frame never completed");
+}
+
+#[test]
+fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    let rect = |value: &serde_json::Value| {
+        let values = value.as_array().expect("fixture rect");
+        Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32)
+    };
+    let initial = rect(&fixture["sameSizeOriginMove"]["initial"]);
+    let moved = rect(&fixture["sameSizeOriginMove"]["moved"]);
+    assert_eq!((initial.w, initial.h), (moved.w, moved.h));
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("moved-origin", &stack_ui(vec![button_ui("target", "Target")]));
+    drive_layout(&mut ui, "moved-origin", initial.w, initial.h, &mut atlas);
+    let mut target = DrawList::default();
+    let baseline = UiFramePaintCensus::of(&target);
+    for _ in 0..262_144 {
+        assert_eq!(ui.frame_into_step::<RecordingSceneHost>("moved-origin", initial, &mut atlas, None, None, &mut target), UiFrameStep::Pending);
+        let candidate_items = ui.windows.get("moved-origin").and_then(|window| window.paint_frame.as_ref()).map_or(0, |frame| UiFramePaintCensus::of(&frame.candidate).quads);
+        if candidate_items > 0 {
+            break;
+        }
+    }
+    assert_eq!(UiFramePaintCensus::of(&target), baseline, "the first-origin candidate remains unpublished");
+    for _ in 0..262_144 {
+        match ui.frame_into_step::<RecordingSceneHost>("moved-origin", moved, &mut atlas, None, None, &mut target) {
+            UiFrameStep::Pending => assert_eq!(UiFramePaintCensus::of(&target), baseline, "discard and repaint stay atomic"),
+            UiFrameStep::Ready => break,
+            step => panic!("moved-origin frame answered {step:?}"),
+        }
+    }
+    let instances: Vec<_> = target.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter())).collect();
+    assert!(!instances.is_empty());
+    assert!(instances.iter().all(|instance| instance.rect[0] >= moved.x && instance.rect[1] >= moved.y), "no geometry from the discarded origin may publish");
+    assert!(ui.window_hit_targets("moved-origin").iter().all(|hit| hit.rect.x >= moved.x && hit.rect.y >= moved.y), "hit publication shares the accepted viewport origin");
 }
 //#endregion 🪟️OverlayBodyTests
 
@@ -2112,6 +2250,26 @@ fn golden_select() {
 }
 
 #[test]
+fn checkbox_checked_state_does_not_paint_a_selection_outline() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).unwrap();
+    let paint = &fixture["checkboxPaint"];
+    let width = paint["availableWidth"].as_f64().unwrap() as f32;
+    let height = paint["availableHeight"].as_f64().unwrap() as f32;
+    let side = paint["controlSide"].as_f64().unwrap() as f32;
+    for checked in paint["checkedStates"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        let toggle = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Checkbox, id: "checkbox".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(checked), menu: None });
+        ui.apply_tree("checkbox-paint", &leaf(toggle));
+        drive_layout(&mut ui, "checkbox-paint", width, height, &mut atlas);
+        let draw = ui.frame::<RecordingSceneHost>("checkbox-paint", width, height, &mut atlas, None, None).expect("checkbox frame");
+        let painted: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter())).collect();
+        assert!(!painted.is_empty());
+        assert!(painted.iter().all(|instance| instance.rect[2] <= side + 0.01 && instance.rect[0] >= 0.0), "checked={checked}: a checkbox must not outline its {width}px allocation");
+    }
+}
+
+#[test]
 fn golden_toggle() {
     // 🚫️ `presence.selected` is intentionally NOT exercised here: the shared `presence_overlay`
     // now draws an outset accent ring for ANY selected element (see
@@ -2210,6 +2368,65 @@ fn golden_tree() {
         interaction_domain: None,
     });
     assert_equivalent("Tree", &node);
+}
+
+/// 🌳️ Clickable identity rows preserve the label pixels painted by their owning Tree.
+#[test]
+fn retained_tree_action_rows_do_not_overpaint_their_labels() {
+    let samples: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/🌳️Tree/🧫️fixtures/♿️actions/🔣️.json")).unwrap();
+    for sample in samples.as_array().unwrap() {
+        let label = sample["label"].as_str().unwrap();
+        let item = UiTreeItemNode {
+            window: None,
+            granularity: None,
+            id: sample["id"].as_str().unwrap().into(),
+            label: Label::data(label),
+            description: None,
+            icon_id: None,
+            presence: UiPresence::default(),
+            default_open: None,
+            action: Some(action()),
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            inline_toolbar: None,
+            detail: None,
+            dimmed: None,
+            menu: None,
+        };
+        let node = UiNode::Tree(UiTreeNode {
+            presentation: Default::default(),
+            sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "section".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+            presence: UiPresence::default(),
+            drop_action: None,
+            menu: None,
+            interaction_domain: None,
+        });
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        let mut draw = DrawList::default();
+        let bounds = Rect::new(120.0, 300.0, 300.0, 48.0);
+        ui.apply_tree("tree-paint", &node);
+        drive_layout(&mut ui, "tree-paint", bounds.w, bounds.h, &mut atlas);
+        let mut completed = false;
+        for _ in 0..16_384 {
+            match ui.frame_into_step::<RecordingSceneHost>("tree-paint", bounds, &mut atlas, None, None, &mut draw) {
+                UiFrameStep::Pending => {}
+                UiFrameStep::Ready => {
+                    completed = true;
+                    break;
+                }
+                step => panic!("tree paint failed: {step:?}"),
+            }
+        }
+        assert!(completed, "{label}: retained frame completes");
+        let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+        assert!(instances.iter().filter(|item| item.params[2] == crate::wgpu::draw::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
+        assert!(instances.iter().all(|item| item.params[2] == crate::wgpu::draw::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
+        assert!(ui.window_hit_targets("tree-paint").iter().any(|hit| hit.action.is_some()), "{label}: suppressing identity paint must retain activation");
+    }
 }
 
 /// KNOWN GAP: `reconcile` only expands `Field`/`Section` into a real retained child for their
@@ -2318,7 +2535,7 @@ fn golden_component_scene_known_gap() {
 
 #[test]
 fn golden_external_slot_known_gap() {
-    let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None });
+    let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default(), menu: None });
     let (instances, _, _) = retained_stats(&node);
     assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
 }
@@ -2360,7 +2577,7 @@ fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
     }
     assert!(paints(&collapsed_group) < open, "a collapsed Group paints its header only — its children are not drawn");
 
-    let slot = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None });
+    let slot = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default(), menu: None });
     assert!(paints(&slot) > 0, "an ExternalSlot must paint its placeholder chrome and its body_key");
 
     let scene = component_scene_ui("surf");

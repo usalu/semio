@@ -1,0 +1,108 @@
+{
+  "title": "Editable Layers / Bearbeitbare Ebenen",
+  "layers": [
+    {
+      "visible": true,
+      "locked": false,
+      "opacity": 0.65,
+      "blendMode": "normal",
+      "transform": {
+        "x": 12.0,
+        "y": -7.0,
+        "a": 1.3594616805549748,
+        "b": 0.6339273926110491,
+        "c": -0.31696369630552457,
+        "d": 0.6797308402774874
+      },
+      "kind": "group",
+      "id": "group",
+      "name": "Artwork",
+      "mask": {
+        "enabled": true,
+        "linked": true,
+        "invert": false,
+        "width": 2,
+        "height": 2,
+        "imageKey": "semio-emblem",
+        "transform": {
+          "x": -2.0,
+          "y": 3.0,
+          "a": 0.984807753012208,
+          "b": -0.17364817766693033,
+          "c": 0.34729635533386066,
+          "d": 1.969615506024416
+        }
+      },
+      "children": [
+        {
+          "visible": true,
+          "locked": false,
+          "opacity": 0.65,
+          "blendMode": "normal",
+          "transform": {
+            "x": 12.0,
+            "y": -7.0,
+            "a": 1.3594616805549748,
+            "b": 0.6339273926110491,
+            "c": -0.31696369630552457,
+            "d": 0.6797308402774874
+          },
+          "kind": "pixel",
+          "id": "paint",
+          "name": "Paint",
+          "width": 2,
+          "height": 2,
+          "imageKey": "semio-emblem",
+          "mask": {
+            "enabled": true,
+            "linked": false,
+            "invert": true,
+            "width": 2,
+            "height": 2,
+            "imageKey": "semio-emblem",
+            "transform": {
+              "x": -2.0,
+              "y": 3.0,
+              "a": 0.984807753012208,
+              "b": -0.17364817766693033,
+              "c": 0.34729635533386066,
+              "d": 1.969615506024416
+            }
+          }
+        },
+        {
+          "visible": true,
+          "locked": true,
+          "opacity": 0.65,
+          "blendMode": "normal",
+          "transform": {
+            "x": 12.0,
+            "y": -7.0,
+            "a": 1.3594616805549748,
+            "b": 0.6339273926110491,
+            "c": -0.31696369630552457,
+            "d": 0.6797308402774874
+          },
+          "kind": "adjustment",
+          "id": "tone",
+          "name": "Tone",
+          "adjustmentKind": "brightnessContrast",
+          "params": {
+            "brightness": 0.12,
+            "contrast": 0.08
+          }
+        }
+      ]
+    }
+  ],
+  "rename": {
+    "id": "paint",
+    "before": "Paint",
+    "after": "Retouched / Retuschiert"
+  },
+  "pngBase64": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC",
+  "assetSize": [
+    2,
+    2
+  ]
+}

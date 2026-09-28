@@ -396,6 +396,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "defaultWidthWorld",
         "origin",
         "widthWorld",
         "sourceNaturalSize",
@@ -404,6 +405,9 @@
         "originMeaning"
       ],
       "properties": {
+        "defaultWidthWorld": {
+          "const": 10
+        },
         "origin": {
           "$ref": "#/definitions/vec3Number"
         },

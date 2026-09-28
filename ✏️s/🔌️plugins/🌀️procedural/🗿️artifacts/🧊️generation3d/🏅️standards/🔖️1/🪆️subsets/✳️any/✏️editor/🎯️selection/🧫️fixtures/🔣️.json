@@ -1,0 +1,164 @@
+{
+  "valid": [
+    {
+      "id": "box@meshOut#0.face.2",
+      "instance": "box@meshOut#0",
+      "widget": "box",
+      "channel": "meshOut",
+      "index": 0,
+      "granularity": "face",
+      "component": 2
+    },
+    {
+      "id": "part.v2@mesh.Out#12.vertex.17",
+      "instance": "part.v2@mesh.Out#12",
+      "widget": "part.v2",
+      "channel": "mesh.Out",
+      "index": 12,
+      "granularity": "vertex",
+      "component": 17
+    },
+    {
+      "id": "Körper@Netz#3.edge.0",
+      "instance": "Körper@Netz#3",
+      "widget": "Körper",
+      "channel": "Netz",
+      "index": 3,
+      "granularity": "edge",
+      "component": 0
+    }
+  ],
+  "invalid": [
+    "box",
+    "box@meshOut",
+    "box@meshOut#0",
+    "box@meshOut#0.face.-1",
+    "box@meshOut#0.face.1.2",
+    "box@meshOut#0.point.1",
+    "@meshOut#0.face.1",
+    "box@#0.face.1",
+    "box@meshOut#01.face.1",
+    "box@meshOut#0.face.01",
+    "box@meshOut#0.face.",
+    "box@meshOut#-1.face.2",
+    "box@meshOut#0.face.2\n"
+  ],
+  "groups": [
+    {
+      "ids": [
+        "box@meshOut#0.face.2",
+        "box@meshOut#0.face.0",
+        "box@meshOut#0.face.2"
+      ],
+      "granularity": "face",
+      "instance": "box@meshOut#0",
+      "components": [
+        0,
+        2
+      ]
+    },
+    {
+      "ids": [
+        "box@meshOut#0.vertex.4"
+      ],
+      "granularity": "vertex",
+      "instance": "box@meshOut#0",
+      "components": [
+        4
+      ]
+    },
+    {
+      "ids": [
+        "box@meshOut#0.face.2",
+        "box@meshOut#1.face.2"
+      ],
+      "error": true
+    },
+    {
+      "ids": [
+        "box@meshOut#0.face.2",
+        "box@meshOut#0.edge.2"
+      ],
+      "error": true
+    },
+    {
+      "ids": [
+        "box@meshOut#0.face.2",
+        "invalid"
+      ],
+      "error": true
+    },
+    {
+      "ids": [],
+      "error": true
+    },
+    {
+      "ids": [
+        "box@meshOut#0.edge.0"
+      ],
+      "granularity": "edge",
+      "instance": "box@meshOut#0",
+      "components": [
+        0
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "window": "procedural-preview",
+      "granularity": "face",
+      "components": true
+    },
+    {
+      "window": "procedural-preview",
+      "granularity": "vertex",
+      "components": true
+    },
+    {
+      "window": "procedural-preview",
+      "granularity": "edge",
+      "components": true
+    },
+    {
+      "window": "procedural-preview",
+      "granularity": "object",
+      "components": false
+    },
+    {
+      "window": "procedural-main",
+      "granularity": "face",
+      "components": false
+    },
+    {
+      "window": "procedural-generate-preview",
+      "granularity": "face",
+      "components": false
+    }
+  ],
+  "quickActions": [
+    {
+      "granularity": "face",
+      "operations": [
+        "extrude",
+        "inset",
+        "subdivide",
+        "flip",
+        "deleteFaces"
+      ]
+    },
+    {
+      "granularity": "edge",
+      "operations": [
+        "loopCut"
+      ]
+    },
+    {
+      "granularity": "vertex",
+      "operations": []
+    },
+    {
+      "granularity": "object",
+      "operations": []
+    }
+  ]
+}

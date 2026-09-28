@@ -8,9 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRunText {
-    pub(crate) path: DocxBlockPath,
-    pub(crate) run_index: usize,
-    pub(crate) text: String,
+    pub address: DocxXmlAddress,
+    pub text: String,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunText {
@@ -26,7 +25,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunText {
         protocol::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()
     }
 }
 //#endregion 🔖️Payload

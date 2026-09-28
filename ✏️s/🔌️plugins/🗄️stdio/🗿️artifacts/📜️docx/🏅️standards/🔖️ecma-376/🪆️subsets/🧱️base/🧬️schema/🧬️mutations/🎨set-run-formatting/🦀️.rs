@@ -8,11 +8,10 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRunFormatting {
-    pub(crate) path: DocxBlockPath,
-    pub(crate) run_index: usize,
-    pub(crate) bold: bool,
-    pub(crate) italic: bool,
-    pub(crate) underline: bool,
+    pub address: DocxXmlAddress,
+    pub bold: bool,
+    pub italic: bool,
+    pub underline: bool,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunFormatting {
@@ -28,7 +27,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunFormatting {
         protocol::LocalizedLabel::native("Set run formatting", "Formatierung des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()
     }
 }
 //#endregion 🔖️Payload

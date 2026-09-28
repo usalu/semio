@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "url": "/mesh/🧊️base.glb",
+      "transport": "/mesh/🌱️metabolism/🧱️bases/⬛️base/🧊️base.glb"
+    },
+    {
+      "url": "https://assets.example/mesh.glb",
+      "transport": "https://assets.example/mesh.glb"
+    },
+    {
+      "url": "data:model/gltf+json;base64,e30=",
+      "transport": "data:model/gltf+json;base64,e30="
+    }
+  ]
+}

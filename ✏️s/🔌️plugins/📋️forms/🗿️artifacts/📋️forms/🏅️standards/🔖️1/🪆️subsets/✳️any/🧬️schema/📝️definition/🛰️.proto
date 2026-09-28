@@ -1,0 +1,41 @@
+syntax = "proto3";
+package semio.s.forms.forms.definition;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message FormQuestionOption { string value = 1; string label = 2; }
+message FormVectorField { string key = 1; optional string label = 2; optional double value = 3; }
+message FormExprPair { FormExpr left = 1; FormExpr right = 2; }
+message FormExprGroup { repeated FormExpr items = 1; }
+message FormExpr {
+  oneof expression {
+    semio.framework.value.DslValue constant = 1;
+    string variable = 2;
+    FormExprPair equals = 3;
+    FormExprGroup all = 4;
+    FormExprGroup any = 5;
+    FormExpr truthy = 6;
+  }
+}
+message FormQuestion {
+  string id = 1;
+  string label = 2;
+  string kind = 3;
+  optional string description = 4;
+  optional bool required = 5;
+  optional string placeholder = 6;
+  semio.framework.value.DslValue default = 7;
+  optional double min = 8;
+  optional double max = 9;
+  optional double step = 10;
+  optional string unit = 11;
+  optional string text = 12;
+  repeated FormQuestionOption options = 13;
+  repeated FormVectorField fields = 14;
+  optional string schema = 15;
+  optional string src = 16;
+  optional string accept = 17;
+  optional string fixture_slug = 18;
+  semio.framework.value.DslValue params = 19;
+  FormExpr condition = 20;
+}
+message FormStep { string id = 1; string title = 2; optional string description = 3; repeated FormQuestion blocks = 4; }
+message FormsDefinition { repeated FormStep steps = 1; }

@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_const_matches_enum_variants_in_declaration_order` proves enum, constant
 /// and manifest never drift apart. Declared here rather than in the case adapter so the adapter,
 /// this module's own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]

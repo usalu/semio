@@ -13,7 +13,7 @@ message ZipSnapshot {
 }
 
 message SetSnapshot { ZipSnapshot snapshot = 1; }
-message SetArchiveComment { string comment = 1; }
+message SetArchiveComment { string comment = 1; bool comment_utf8 = 2; }
 message AddEntry { ZipEntry entry = 1; optional string before = 2; }
 message RemoveEntry { string name = 1; }
 message RenameEntry { string name = 1; string new_name = 2; }

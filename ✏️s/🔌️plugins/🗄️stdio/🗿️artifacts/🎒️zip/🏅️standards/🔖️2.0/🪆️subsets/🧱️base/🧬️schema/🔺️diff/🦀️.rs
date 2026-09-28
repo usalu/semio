@@ -1,6 +1,7 @@
 //! 🔺️ Sparse logical ZIP diffs over member names, decompressed payloads, ordering, and archive comment.
 
 use crate::ZipSnapshot;
+use crate::schema::snapshot::ZipEntryMetadata;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -14,6 +15,8 @@ pub struct ZipEntryDiff {
     pub name: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<u8>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<ZipEntryMetadata>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -52,6 +55,9 @@ pub struct ZipDiff {
     pub comment: Option<String>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub comment_utf8: Option<bool>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub entries: Option<ZipEntriesDiff>,
 }
 //#endregion 🔖️Model
@@ -65,11 +71,18 @@ fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
     if let Some(data) = &diff.data {
         entry.data = data.clone();
     }
+    if let Some(metadata) = &diff.metadata {
+        entry.metadata = metadata.clone();
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entry_between(base: &ZipEntry, other: &ZipEntry) -> ZipEntryDiff {
-    ZipEntryDiff { name: (base.name != other.name).then(|| other.name.clone()), data: (base.data != other.data).then(|| other.data.clone()) }
+    ZipEntryDiff {
+        name: (base.name != other.name).then(|| other.name.clone()),
+        data: (base.data != other.data).then(|| other.data.clone()),
+        metadata: (base.metadata != other.metadata).then(|| other.metadata.clone()),
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -79,6 +92,9 @@ fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
     }
     if other.data.is_some() {
         base.data = other.data;
+    }
+    if other.metadata.is_some() {
+        base.metadata = other.metadata;
     }
 }
 
@@ -152,6 +168,9 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
         if let Some(comment) = &self.comment {
             next.comment = comment.clone();
         }
+        if let Some(comment_utf8) = self.comment_utf8 {
+            next.comment_utf8 = comment_utf8;
+        }
         if let Some(diff) = &self.entries {
             let removed: HashSet<&str> = diff.removed.iter().map(String::as_str).collect();
             next.entries.retain(|entry| !removed.contains(entry.name.as_str()));
@@ -166,12 +185,17 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
                 next.entries = order.iter().map(|name| entries.remove(name).expect("validated ZIP order")).collect();
             }
         }
+        crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&next)
+            .map_err(|error| MutationApplyError::new("stdio.zip.serialization.invalid-state", error.to_string()).at(["entries"]))?;
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
         if other.comment.is_some() {
             self.comment = other.comment;
+        }
+        if other.comment_utf8.is_some() {
+            self.comment_utf8 = other.comment_utf8;
         }
         self.entries = absorb_entries(self.entries.take(), other.entries);
     }
@@ -225,6 +249,7 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
 
     fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
         let comment = (base.comment != other.comment).then(|| other.comment.clone());
+        let comment_utf8 = (base.comment_utf8 != other.comment_utf8).then_some(other.comment_utf8);
         let base_names: HashSet<&str> = base.entries.iter().map(|entry| entry.name.as_str()).collect();
         let other_names: HashSet<&str> = other.entries.iter().map(|entry| entry.name.as_str()).collect();
         let removed = base.entries.iter().filter(|entry| !other_names.contains(entry.name.as_str())).map(|entry| entry.name.clone()).collect();
@@ -241,11 +266,11 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
         let natural_order = base.entries.iter().filter(|entry| other_names.contains(entry.name.as_str())).map(|entry| entry.name.as_str()).chain(added.iter().map(|entry| entry.name.as_str()));
         let order = (!natural_order.eq(other.entries.iter().map(|entry| entry.name.as_str()))).then(|| other.entries.iter().map(|entry| entry.name.clone()).collect());
         let entries = ZipEntriesDiff { removed, modified, added, order };
-        Self { comment, entries: (!entries.is_empty()).then_some(entries) }
+        Self { comment, comment_utf8, entries: (!entries.is_empty()).then_some(entries) }
     }
 
     fn is_empty(&self) -> bool {
-        self.comment.is_none() && self.entries.as_ref().is_none_or(ZipEntriesDiff::is_empty)
+        self.comment.is_none() && self.comment_utf8.is_none() && self.entries.as_ref().is_none_or(ZipEntriesDiff::is_empty)
     }
 }
 //#endregion 🔖️Algebra
@@ -257,8 +282,8 @@ pub fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_archive_comment(comment: &str) -> ZipDiff {
-    ZipDiff { comment: Some(comment.into()), entries: None }
+pub fn diff_set_archive_comment(comment: &str, comment_utf8: bool) -> ZipDiff {
+    ZipDiff { comment: Some(comment.into()), comment_utf8: Some(comment_utf8), entries: None }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -273,27 +298,27 @@ pub fn diff_add_entry(base: &ZipSnapshot, entry: ZipEntry, before: Option<&str>)
         }
         names
     });
-    ZipDiff { comment: None, entries: Some(ZipEntriesDiff { added: vec![entry], order, ..Default::default() }) }
+    ZipDiff { comment: None, comment_utf8: None, entries: Some(ZipEntriesDiff { added: vec![entry], order, ..Default::default() }) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_entry(name: &str) -> ZipDiff {
-    ZipDiff { comment: None, entries: Some(ZipEntriesDiff { removed: vec![name.into()], ..Default::default() }) }
+    ZipDiff { comment: None, comment_utf8: None, entries: Some(ZipEntriesDiff { removed: vec![name.into()], ..Default::default() }) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_entry_field(name: &str, diff: ZipEntryDiff) -> ZipDiff {
-    ZipDiff { comment: None, entries: Some(ZipEntriesDiff { modified: vec![ZipEntryModified { name: name.into(), diff }], ..Default::default() }) }
+    ZipDiff { comment: None, comment_utf8: None, entries: Some(ZipEntriesDiff { modified: vec![ZipEntryModified { name: name.into(), diff }], ..Default::default() }) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_rename_entry(name: &str, new_name: &str) -> ZipDiff {
-    diff_entry_field(name, ZipEntryDiff { name: Some(new_name.into()), data: None })
+    diff_entry_field(name, ZipEntryDiff { name: Some(new_name.into()), data: None, metadata: None })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
-    diff_entry_field(name, ZipEntryDiff { name: None, data: Some(data) })
+    diff_entry_field(name, ZipEntryDiff { name: None, data: Some(data), metadata: None })
 }
 //#endregion 🔖️Builders
 
@@ -330,8 +355,8 @@ impl protocol::DiffCodec for ZipDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
-    let base = ZipSnapshot { entries: vec![ZipEntry { name: "before.txt".into(), data: b"before".to_vec() }], ..Default::default() };
-    let other = ZipSnapshot { entries: vec![ZipEntry { name: "after.txt".into(), data: b"after".to_vec() }], comment: "archive".into(), ..Default::default() };
+    let base = ZipSnapshot { entries: vec![ZipEntry { name: "before.txt".into(), data: b"before".to_vec(), ..Default::default() }], ..Default::default() };
+    let other = ZipSnapshot { entries: vec![ZipEntry { name: "after.txt".into(), data: b"after".to_vec(), ..Default::default() }], comment: "archive".into(), ..Default::default() };
     vec![ZipDiff::default(), ZipDiff::between(&base, &other), ZipDiff::between(&other, &base)]
 }
 

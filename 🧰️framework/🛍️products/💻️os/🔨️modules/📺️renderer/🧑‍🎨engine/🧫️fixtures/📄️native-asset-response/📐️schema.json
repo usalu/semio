@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.native-asset-response.v8",
+  "$id": "semio.native-asset-response.v9",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "pageBytes", "patternPeriod", "cases", "referenceDecodeRetirement", "transportCancellation", "localPageCancellation", "rendererIoContention"],
+  "required": ["schema", "pageBytes", "patternPeriod", "cases", "referenceDecodeRetirement", "transportCancellation", "localPageCancellation", "failureIsolation", "rendererIoContention"],
   "properties": {
     "$schema": { "const": "./📐️schema.json" },
-    "schema": { "const": "semio.native-asset-response.v8" },
+    "schema": { "const": "semio.native-asset-response.v9" },
     "pageBytes": { "const": 16384 },
     "patternPeriod": { "const": 251 },
     "cases": {
@@ -111,6 +111,41 @@
         "pageRetirementTurns": { "const": 1 },
         "terminalNativeOwners": { "const": 0 },
         "frameFaults": { "const": 0 }
+      }
+    },
+    "failureIsolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["browser", "native"],
+      "properties": {
+        "browser": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "detail", "errorType", "referenceImage", "disposition"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "detail": { "type": "string", "minLength": 1 },
+              "errorType": { "enum": ["error", "typeError", "abortError"] },
+              "referenceImage": { "type": "boolean" },
+              "disposition": { "enum": ["missing", "fault", "cancelled"] }
+            }
+          }
+        },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unavailableMarksOneMiss", "unavailableFrameFaults", "cancelledMarksMiss", "capacityFrameFaults", "terminalOwners"],
+          "properties": {
+            "unavailableMarksOneMiss": { "const": true },
+            "unavailableFrameFaults": { "const": 0 },
+            "cancelledMarksMiss": { "const": false },
+            "capacityFrameFaults": { "const": 1 },
+            "terminalOwners": { "const": 0 }
+          }
+        }
       }
     },
     "rendererIoContention": {

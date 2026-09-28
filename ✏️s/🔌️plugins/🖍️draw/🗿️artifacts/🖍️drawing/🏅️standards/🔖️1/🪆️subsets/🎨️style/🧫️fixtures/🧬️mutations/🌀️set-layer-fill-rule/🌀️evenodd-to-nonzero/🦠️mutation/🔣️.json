@@ -1,0 +1,5 @@
+{
+  "mutation": "setLayerFillRule",
+  "layerId": "shape-a",
+  "fillRule": "nonzero"
+}

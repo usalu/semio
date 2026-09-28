@@ -1,0 +1,8 @@
+{
+  "initial": "Initial",
+  "cases": [
+    { "name": "unchanged", "paragraph": {}, "style": {}, "expected": "Initial" },
+    { "name": "clear", "paragraph": { "style": null }, "style": { "basedOn": null }, "expected": null },
+    { "name": "set", "paragraph": { "style": "Heading" }, "style": { "basedOn": "Heading" }, "expected": "Heading" }
+  ]
+}

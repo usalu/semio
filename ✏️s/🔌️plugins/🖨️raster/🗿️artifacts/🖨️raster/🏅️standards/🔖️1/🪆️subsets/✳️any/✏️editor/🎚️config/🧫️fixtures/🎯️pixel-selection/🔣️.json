@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "name": "Empty selection",
+      "selection": {
+        "layerId": "paint",
+        "target": "pixels",
+        "width": 3,
+        "height": 2,
+        "spans": "[]"
+      },
+      "coverage": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Partial coverage",
+      "selection": {
+        "layerId": "paint",
+        "target": "pixels",
+        "width": 3,
+        "height": 2,
+        "spans": "[[0,2,255],[3,1,128],[5,1,64]]"
+      },
+      "coverage": [
+        255,
+        255,
+        0,
+        128,
+        0,
+        64
+      ]
+    },
+    {
+      "name": "Mask coverage",
+      "selection": {
+        "layerId": "group",
+        "target": "mask",
+        "width": 2,
+        "height": 2,
+        "spans": "[[1,2,255]]"
+      },
+      "coverage": [
+        0,
+        255,
+        255,
+        0
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "layerId": ""
+    },
+    {
+      "target": "all"
+    },
+    {
+      "width": 0
+    },
+    {
+      "height": 16385
+    },
+    {
+      "width": 16384,
+      "height": 16384
+    },
+    {
+      "spans": "[[0,0,255]]"
+    },
+    {
+      "spans": "[[0,2,255],[1,1,255]]"
+    },
+    {
+      "spans": "[[5,2,255]]"
+    },
+    {
+      "spans": "[[0,1,256]]"
+    },
+    {
+      "spans": "[[0,1,-1]]"
+    },
+    {
+      "spans": "[[0.5,1,255]]"
+    },
+    {
+      "spans": "[[0,1.5,255]]"
+    },
+    {
+      "spans": "[[0,1,255,1]]"
+    },
+    {
+      "spans": "{}"
+    },
+    {
+      "spans": "["
+    }
+  ]
+}

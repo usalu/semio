@@ -23,6 +23,7 @@ message RasterAdjustmentParameter { string parameter = 1; optional double value 
 message RasterLayerPatch {
   optional string name = 1;
   optional bool visible = 2;
+  optional bool locked = 14;
   optional double opacity = 3;
   optional string blend_mode = 4;
   optional double transform_x = 5;
@@ -31,7 +32,7 @@ message RasterLayerPatch {
   optional uint32 height = 8;
   optional string adjustment_kind = 9;
   optional RasterPixelContent pixel_content = 10;
-  optional semio.s.raster.raster.artifact.RasterTransform pixel_transform = 11;
+  optional semio.s.raster.raster.artifact.RasterTransform transform = 11;
   optional RasterMaskContent mask_content = 12;
   repeated RasterAdjustmentParameter adjustment_parameters = 13;
 }

@@ -1,0 +1,248 @@
+{
+  "layers": [
+    {
+      "kind": "group",
+      "id": "container",
+      "name": "container",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "locked-pixel",
+          "name": "locked-pixel",
+          "visible": true,
+          "locked": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "width": 1,
+          "height": 1
+        },
+        {
+          "kind": "pixel",
+          "id": "editable-pixel",
+          "name": "editable-pixel",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "width": 1,
+          "height": 1
+        }
+      ]
+    },
+    {
+      "kind": "group",
+      "id": "locked-group",
+      "name": "locked-group",
+      "visible": true,
+      "locked": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "inherited-pixel",
+          "name": "inherited-pixel",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "width": 1,
+          "height": 1
+        }
+      ]
+    },
+    {
+      "kind": "adjustment",
+      "id": "locked-adjustment",
+      "name": "locked-adjustment",
+      "visible": true,
+      "locked": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "adjustmentKind": "brightnessContrast",
+      "params": {}
+    },
+    {
+      "kind": "pixel",
+      "id": "outside",
+      "name": "outside",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0
+      },
+      "width": 1,
+      "height": 1
+    }
+  ],
+  "cases": [
+    {
+      "id": "container",
+      "expected": {
+        "locked": false,
+        "inherited": false,
+        "descendant": true,
+        "editable": true,
+        "structural": false,
+        "canChangeLock": true
+      }
+    },
+    {
+      "id": "locked-pixel",
+      "expected": {
+        "locked": true,
+        "inherited": false,
+        "descendant": false,
+        "editable": false,
+        "structural": false,
+        "canChangeLock": true
+      }
+    },
+    {
+      "id": "editable-pixel",
+      "expected": {
+        "locked": false,
+        "inherited": false,
+        "descendant": false,
+        "editable": true,
+        "structural": true,
+        "canChangeLock": true
+      }
+    },
+    {
+      "id": "locked-group",
+      "expected": {
+        "locked": true,
+        "inherited": false,
+        "descendant": false,
+        "editable": false,
+        "structural": false,
+        "canChangeLock": true
+      }
+    },
+    {
+      "id": "inherited-pixel",
+      "expected": {
+        "locked": false,
+        "inherited": true,
+        "descendant": false,
+        "editable": false,
+        "structural": false,
+        "canChangeLock": false
+      }
+    },
+    {
+      "id": "locked-adjustment",
+      "expected": {
+        "locked": true,
+        "inherited": false,
+        "descendant": false,
+        "editable": false,
+        "structural": false,
+        "canChangeLock": true
+      }
+    },
+    {
+      "id": "outside",
+      "expected": {
+        "locked": false,
+        "inherited": false,
+        "descendant": false,
+        "editable": true,
+        "structural": true,
+        "canChangeLock": true
+      }
+    }
+  ],
+  "changes": [
+    {
+      "id": "locked-pixel",
+      "expected": true,
+      "locked": false,
+      "accepted": true
+    },
+    {
+      "id": "editable-pixel",
+      "expected": false,
+      "locked": true,
+      "accepted": true
+    },
+    {
+      "id": "locked-adjustment",
+      "expected": true,
+      "locked": false,
+      "accepted": true
+    },
+    {
+      "id": "locked-group",
+      "expected": true,
+      "locked": false,
+      "accepted": true
+    },
+    {
+      "id": "locked-pixel",
+      "expected": false,
+      "locked": false,
+      "accepted": false
+    }
+  ]
+}

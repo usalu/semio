@@ -427,6 +427,127 @@
           "description": "Replaces alpha toward a target byte with opacity multiplied by selection coverage exactly once. RGB is preserved."
         }
       ]
+    },
+    "SelectionCombination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "next",
+        "mode"
+      ],
+      "description": "Combines soft selection coverage without mutating inputs. Missing current coverage is zero. Result is available only after completion; cancellation discards it. Processing grants contain at most 32768 pixels.",
+      "properties": {
+        "current": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16777216,
+          "items": {
+            "$ref": "#/$defs/Byte"
+          }
+        },
+        "next": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16777216,
+          "items": {
+            "$ref": "#/$defs/Byte"
+          }
+        },
+        "mode": {
+          "enum": [
+            "replace",
+            "add",
+            "subtract",
+            "intersect"
+          ]
+        }
+      }
+    },
+    "SelectionShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "rectangle",
+                "ellipse"
+              ]
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "points"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polygon"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 4096,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SelectionRasterization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "shape"
+      ],
+      "description": "Rasterizes sample-center coverage in grants of 1–64 rows. Progress counts rows; results are unavailable before completion. Cancellation discards every partial result. Total pixels cannot exceed 16777216.",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "shape": {
+          "$ref": "#/$defs/SelectionShape"
+        }
+      }
     }
   }
 }

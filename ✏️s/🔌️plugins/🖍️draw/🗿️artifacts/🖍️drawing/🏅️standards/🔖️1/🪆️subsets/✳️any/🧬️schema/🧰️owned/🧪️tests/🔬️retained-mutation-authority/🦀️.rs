@@ -1,3 +1,4 @@
+use crate::mutations::SetLayerFillRule;
 use super::*;
 use crate::mutations::{
     CreateLayer, DeleteLayer, DuplicateLayer, RenameLayer, ReorderLayer, ReplaceLayerFill, ReplaceLayerStroke, SetLayerBlendMode, SetLayerBooleanOperation, SetLayerLocked, SetLayerOpacity, SetLayerVisible, UpdateLayerTraceParams,
@@ -295,7 +296,7 @@ fn rich_layer() -> DrawingLayerNode {
     base.blend_mode = "multiply".into();
     base.transform = crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5, shear: 0.75 };
     base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.25, color: [0.1, 0.2, 0.3, 0.4] }] });
-    base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0]) });
+    base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0]) });
     if let DrawingLayerNode::Group(value) = &mut group {
         value.children.push(crate::schema::create_drawing_shape_layer_rect("Shape"));
         value.children.push(crate::schema::create_drawing_path_layer(
@@ -338,7 +339,7 @@ fn rich_child(layer: &mut DrawingLayerNode, index: usize) -> &mut DrawingLayerNo
 }
 
 #[test]
-fn retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners() {
+fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_owners() {
     let source = nested_snapshot();
     let group = crate::schema::layer_id(source.layers.last().expect("group")).to_string();
     let (shape, boolean, trace) = match source.layers.last().expect("group") {
@@ -346,9 +347,11 @@ fn retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_
         _ => unreachable!("Drawing fixture group remains exact"),
     };
     let mutations = vec![
+        crate::mutations::set_group_isolation(group.clone(),true),
         DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: shape.clone(), visible: false }),
         DrawingMutation::SetLayerLocked(SetLayerLocked { layer_id: shape.clone(), locked: true }),
         DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: shape.clone(), opacity: 0.5 }),
+        DrawingMutation::SetLayerFillRule(SetLayerFillRule {layer_id:shape.clone(),fill_rule:crate::FillRule::Nonzero}),
         DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: shape.clone(), blend_mode: "multiply".into() }),
         DrawingMutation::RenameLayer(RenameLayer { layer_id: shape.clone(), new_name: "Renamed".into() }),
         DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: shape.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5, shear: 0.75 } }),
@@ -356,7 +359,7 @@ fn retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_
             layer_id: shape.clone(),
             fill: Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] }),
         }),
-        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0]) }) }),
+        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0]) }) }),
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "subtract".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }])) }),
@@ -903,6 +906,8 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     let mut variants = Vec::new();
 
     let modifiers: &[fn(&mut DrawingLayerNode)] = &[
+        |value| if let DrawingLayerNode::Group(group)=value {group.isolation=true;},
+        |value| crate::schema::layer_base_mut(value).attributes.fill_rule = crate::FillRule::Nonzero,
         |value| crate::schema::layer_base_mut(value).id = "different-id".into(),
         |value| crate::schema::layer_base_mut(value).name = "different-name".into(),
         |value| crate::schema::layer_base_mut(value).transform.x = 9.0,
@@ -938,8 +943,8 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         |value| crate::schema::layer_base_mut(value).attributes.stroke = None,
         |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").color[0] = 0.9,
         |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").width = 9.0,
-        |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").cap = "square".into(),
-        |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").join = "round".into(),
+        |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").cap = crate::StrokeCap::Square,
+        |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").join = crate::StrokeJoin::Round,
         |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").dash.as_mut().expect("dash")[0] = 9.0,
         |value| {
             if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
@@ -1052,7 +1057,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     crate::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::LinearGradient { x1: 1.0, y1: 2.0, x2: 3.0, y2: 4.0, stops: vec![GradientStop { offset: 0.5, color: [0.1, 0.2, 0.8, 0.4] }] });
     variants.push(value);
     let mut value = baseline.clone();
-    crate::schema::layer_base_mut(&mut value).attributes.stroke = Some(StrokeStyle { color: [0.9, 0.6, 0.7, 0.8], width: 3.0, cap: "square".into(), join: "round".into(), dash: Some(vec![2.0, 3.0]) });
+    crate::schema::layer_base_mut(&mut value).attributes.stroke = Some(StrokeStyle { color: [0.9, 0.6, 0.7, 0.8], width: 3.0, cap: crate::StrokeCap::Square, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 3.0]) });
     variants.push(value);
     let mut value = baseline.clone();
     if let DrawingLayerNode::Group(group) = &mut value {
@@ -1099,7 +1104,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::RenameLayer(RenameLayer { layer_id: id.clone(), new_name: "renamed".into() }),
         DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0, shear: 0.0 } }),
         DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: id.clone(), fill: Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 0.4] }) }),
-        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: id.clone(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0]) }) }),
+        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: id.clone(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0]) }) }),
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersect".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: id.clone(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some("parent".into()), index: Some(2), layer: Box::new(baseline.clone()) }),
@@ -1114,6 +1119,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     }
     assert_mutation_digest_distinct(DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: "layer".into(), visible: false }), DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: "layer".into(), visible: true }));
     assert_mutation_digest_distinct(DrawingMutation::SetLayerLocked(SetLayerLocked { layer_id: "layer".into(), locked: false }), DrawingMutation::SetLayerLocked(SetLayerLocked { layer_id: "layer".into(), locked: true }));
+    assert_mutation_digest_distinct(DrawingMutation::SetLayerFillRule(SetLayerFillRule {layer_id:"layer".into(),fill_rule:crate::FillRule::Evenodd}),DrawingMutation::SetLayerFillRule(SetLayerFillRule {layer_id:"layer".into(),fill_rule:crate::FillRule::Nonzero}));
     assert_mutation_digest_distinct(DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: "layer".into(), opacity: 0.25 }), DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: "layer".into(), opacity: 0.5 }));
     assert_mutation_digest_distinct(
         DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: "layer".into(), blend_mode: "multiply".into() }),
@@ -1138,11 +1144,11 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     );
     assert_mutation_digest_distinct(
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: None }),
-        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 1.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0]) }) }),
+        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 1.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0]) }) }),
     );
     assert_mutation_digest_distinct(
-        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 1.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0]) }) }),
-        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.9, 0.2, 0.3, 0.4], width: 2.0, cap: "square".into(), join: "round".into(), dash: Some(vec![2.0]) }) }),
+        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 1.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0]) }) }),
+        DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: "layer".into(), stroke: Some(StrokeStyle { color: [0.9, 0.2, 0.3, 0.4], width: 2.0, cap: crate::StrokeCap::Square, join: crate::StrokeJoin::Round, dash: Some(vec![2.0]) }) }),
     );
     assert_mutation_digest_distinct(
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: "layer".into(), boolean_operation: "union".into() }),
@@ -1565,4 +1571,35 @@ fn retained_text_edit_cancellation_keeps_the_complete_document() {
     drain_snapshot(source);
     drain_snapshot(expected);
     drain_mutation(mutation);
+}
+
+#[test]
+fn isolation_mutation_digest_observes_the_boolean() {
+    assert_mutation_digest_distinct(crate::mutations::set_group_isolation("group".into(),false),crate::mutations::set_group_isolation("group".into(),true));
+}
+
+#[test]
+fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
+        let source = nested_snapshot();
+        let id = crate::schema::layer_id(&source.layers[0]).to_owned();
+        let mode = case["patch"]["value"].as_str().unwrap();
+        let operation = crate::mutations::set_layer_blend_mode(id,mode.into());
+        let result = apply(source.clone(),&operation);
+        if case["accepted"] == true {
+            let actual = result.expect("canonical mode applies");
+            let mut expected = source.clone();
+            crate::schema::layer_base_mut(&mut expected.layers[0]).blend_mode = mode.into();
+            assert_eq!(actual,expected);
+            drain_snapshot(actual);drain_snapshot(expected);
+        } else {
+            let (actual,error) = result.expect_err("invalid mode is refused");
+            assert_eq!(error,"drawing-store.mutation-blend-mode-invalid");
+            assert_eq!(actual,source);
+            drain_snapshot(actual);
+        }
+        drain_snapshot(source);drain_mutation(operation);
+    }
+    eprintln!("[DEBUG] retained blend mutations preserve exact documents and release candidate owners after rejection");
 }

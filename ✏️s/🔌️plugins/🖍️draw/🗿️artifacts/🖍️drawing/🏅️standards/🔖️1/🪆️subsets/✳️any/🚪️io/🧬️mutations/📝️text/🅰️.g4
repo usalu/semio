@@ -7,9 +7,11 @@ grammar Draw_drawing_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'drawing.drawing.mutations' ;
 
-mutation: setLayerVisible | setLayerLocked | setLayerOpacity | setLayerBlendMode | renameLayer | updateLayerTransform | replaceLayerFill | replaceLayerStroke | setLayerBooleanOperation | updateLayerTraceParams | createLayer | duplicateLayer | deleteLayer | reorderLayer ;
+mutation: setLayerVisible | setLayerLocked | setLayerOpacity | setLayerBlendMode | renameLayer | updateLayerTransform | replaceLayerFill | replaceLayerStroke | setLayerBooleanOperation | updateLayerTraceParams | createLayer | duplicateLayer | deleteLayer | reorderLayer | setLayerFillRule ;
 setLayerVisible: 'set-layer-visible' SP id SP bool ;
 setLayerLocked: 'set-layer-locked' SP id SP bool ;
+setLayerFillRule: 'set-layer-fill-rule' SP id SP fillRule ;
+fillRule: 'evenodd' | 'nonzero' ;
 setLayerOpacity: 'set-layer-opacity' SP id SP number ;
 setLayerBlendMode: 'set-layer-blend-mode' SP id SP text ;
 renameLayer: 'rename-layer' SP id SP text ;
@@ -22,9 +24,11 @@ createLayer: 'create-layer' SP optId SP optNumber SP layer ;
 duplicateLayer: 'duplicate-layer' SP id ;
 deleteLayer: 'delete-layer' SP id ;
 reorderLayer: 'reorder-layer' SP id SP optId SP number ;
-transformBlock: 'transform' '{' 'x=' number SP 'y=' number SP 'scale-x=' number SP 'scale-y=' number SP 'rotation=' number 'rad' '}' ;
+transformBlock: 'transform' '{' 'x=' number SP 'y=' number SP 'scale-x=' number SP 'scale-y=' number SP 'shear=' number SP 'rotation=' number 'rad' '}' ;
 traceParamsBlock: 'params' '{' 'threshold=' number SP 'simplify-epsilon=' number '}' ;
-strokeBlock: 'stroke' '{' 'color=' number4 SP 'width=' number SP 'cap=' text SP 'join=' text optDash '}' ;
+strokeBlock: 'stroke' '{' 'color=' number4 SP 'width=' number SP 'cap=' strokeCap SP 'join=' strokeJoin optDash '}' ;
+strokeCap: 'butt' | 'round' | 'square' ;
+strokeJoin: 'miter' | 'round' | 'bevel' ;
 optDash: (SP 'dash=' numberList)? ;
 fillBlock: 'fill' '{' fill? '}' ;
 fill: solidFill | linearGradientFill | radialGradientFill ;

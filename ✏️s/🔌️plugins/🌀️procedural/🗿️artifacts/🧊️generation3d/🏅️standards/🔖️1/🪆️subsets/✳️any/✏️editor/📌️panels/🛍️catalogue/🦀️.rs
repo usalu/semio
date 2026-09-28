@@ -67,7 +67,7 @@ fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framewo
     let mut node = tree_item_with_action_draggable(
         identity::item_key(&item.kind, item.neuron_kind.as_deref(), item.format.as_deref(), item.action.as_deref()),
         item.name.clone(),
-        None,
+        (!item.summary.is_empty()).then(|| item.summary.clone()),
         ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("addWidget", Some(args))?,
         &widget_drag_json(item),
     )?;

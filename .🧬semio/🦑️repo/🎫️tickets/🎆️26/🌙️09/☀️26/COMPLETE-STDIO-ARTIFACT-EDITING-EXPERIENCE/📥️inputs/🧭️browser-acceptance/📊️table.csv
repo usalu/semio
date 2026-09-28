@@ -1,0 +1,5 @@
+Name,Note,Value
+Alpha,"Quoted, comma",1
+Äpfel,"Line one
+Line two",
+"Quote ""inside""",Original,3

@@ -17,6 +17,7 @@
         "locked",
         "opacity",
         "blendMode",
+        "fillRule",
         "fillColor",
         "strokeWidth",
         "transformX",

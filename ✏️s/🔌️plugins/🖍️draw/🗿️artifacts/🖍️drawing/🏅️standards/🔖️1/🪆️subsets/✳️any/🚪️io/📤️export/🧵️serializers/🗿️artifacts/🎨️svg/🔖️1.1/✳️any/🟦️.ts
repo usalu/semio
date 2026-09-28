@@ -3,6 +3,7 @@ import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type Pa
 
 export interface DrawingSvgNode {
   readonly id: string;
+  readonly groups?: readonly {readonly id:string;readonly opacity:number;readonly blendMode:string}[];
   readonly transform: readonly number[];
   readonly segments: readonly PathSegment[];
   readonly fill?: FillStyle;
@@ -25,11 +26,24 @@ const blendModes: Readonly<Record<string,string>> = {normal:"normal",multiply:"m
 export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: readonly [number,number,number,number]): string {
   if (!viewBox.every(Number.isFinite) || viewBox[2] <= 0 || viewBox[3] <= 0) throw new Error("SVG view box must have finite coordinates and positive dimensions");
   const defs: string[] = [], children: string[] = [];
+  let active:NonNullable<DrawingSvgNode["groups"]>=[];
+  const opened=new Set<string>();
   for (const [index,node] of nodes.entries()) {
     if (!node.visible) continue;
     if (!finiteNumbers(node)) throw new Error(`SVG layer ${node.id} geometry and paint must be finite`);
     if (node.opacity <= 0) continue;
     if (node.transform.length !== 6 || !node.transform.every(Number.isFinite)) throw new Error("SVG layer transform must be finite");
+    const groups=node.groups??[];
+    let common=0;
+    while(common<active.length && common<groups.length && active[common]!.id===groups[common]!.id && active[common]!.opacity===groups[common]!.opacity && active[common]!.blendMode===groups[common]!.blendMode) common++;
+    for(let i=active.length;i>common;i--) children.push("</g>");
+    for(const group of groups.slice(common)) {
+      if(typeof group.id!=="string" || !group.id || opened.has(group.id) || !Number.isFinite(group.opacity) || group.opacity<0 || group.opacity>1 || !Object.hasOwn(blendModes,group.blendMode)) throw new Error("Invalid scene compositing hierarchy");
+      opened.add(group.id);
+      const attrs={"data-group-id":group.id,opacity:group.opacity,style:`isolation:isolate;mix-blend-mode:${blendModes[group.blendMode]}`};
+      children.push(`<g${Object.entries(attrs).map(([key,value])=>` ${key}="${escape(value)}"`).join("")}>`);
+    }
+    active=groups;
     const paint: Record<string,string | number> = {fill:"none",stroke:"none","fill-rule":node.fillRule ?? "evenodd"};
     if (node.fill?.kind === "solid") { paint.fill = rgb(node.fill.color); paint["fill-opacity"] = node.fill.color[3]; }
     else if (node.fill) {
@@ -56,5 +70,6 @@ export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: rea
     if (node.blendMode !== "normal") wrapper.style = `mix-blend-mode:${blendModes[node.blendMode] ?? "normal"}`;
     children.push(element("g",wrapper,leaf));
   }
+  for(const _group of active) children.push("</g>");
   return element("svg",{version:"1.1",xmlns:"http://www.w3.org/2000/svg","xmlns:xlink":"http://www.w3.org/1999/xlink",width:viewBox[2],height:viewBox[3],viewBox:viewBox.join(" ")},(defs.length ? element("defs",{},defs.join("")) : "") + children.join(""));
 }

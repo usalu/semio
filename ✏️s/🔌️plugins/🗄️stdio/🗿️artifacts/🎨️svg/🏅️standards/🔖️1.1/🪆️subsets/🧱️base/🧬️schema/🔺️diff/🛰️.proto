@@ -12,6 +12,7 @@ message SvgDiff {
   optional NullableString doctype = 2;
   optional SvgNodeDiff root = 3;
   optional XmlNodeList prolog = 4;
+  optional XmlNodeList epilog = 5;
 }
 
 message XmlNodeList {

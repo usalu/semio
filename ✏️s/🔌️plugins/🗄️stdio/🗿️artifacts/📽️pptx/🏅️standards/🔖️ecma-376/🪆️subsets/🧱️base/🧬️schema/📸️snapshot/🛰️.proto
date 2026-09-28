@@ -8,8 +8,17 @@ message OpcRelationshipOwner { string owner = 1; repeated OpcRelationship relati
 message OpcPackage { OpcContentTypes content_types = 1; repeated OpcPart parts = 2; repeated OpcRelationshipOwner relationships = 3; }
 message XmlAttr { string name = 1; string value = 2; }
 message XmlNode { string kind = 1; string name = 2; repeated XmlAttr attrs = 3; repeated XmlNode children = 4; string text = 5; string target = 6; string data = 7; }
-message XmlDeclaration { string version = 1; optional string encoding = 2; optional bool standalone = 3; }
-message XmlDocument { optional XmlDeclaration declaration = 1; repeated XmlNode prolog = 2; optional XmlNode root = 3; }
+message XmlDeclaration {
+  enum Quote { DOUBLE = 0; SINGLE = 1; }
+  string version = 1;
+  optional string encoding = 2;
+  optional bool standalone = 3;
+  optional Quote quote = 4;
+}
+message XmlExternalId { string kind = 1; optional string public_id = 2; string system_id = 3; }
+message XmlDtdDeclaration { string kind = 1; bool parameter = 2; string name = 3; string value = 4; }
+message XmlDoctype { string name = 1; optional XmlExternalId external_id = 2; repeated XmlDtdDeclaration declarations = 3; uint64 prolog_position = 4; }
+message XmlDocument { optional XmlDeclaration declaration = 1; repeated XmlNode prolog = 2; optional XmlNode root = 3; optional XmlDoctype doctype = 4; repeated XmlNode epilog = 5; }
 message PptxXmlPart { string path = 1; string content_type = 2; XmlDocument document = 3; }
 message PptxTransform { sint64 x = 1; sint64 y = 2; sint64 cx = 3; sint64 cy = 4; }
 message PptxRun { string text = 1; bool bold = 2; bool italic = 3; optional uint32 font_size = 4; }

@@ -1,0 +1,44 @@
+{
+  "source": {
+    "title": "Retained clone — Ä 🧬",
+    "optional": "lokal-first",
+    "choice": {
+      "kind": "nested",
+      "rows": [
+        { "id": 1, "text": "English" },
+        { "id": 2, "text": "Deutsch" },
+        { "id": 3, "text": "日本語" }
+      ]
+    },
+    "choices": [
+      { "kind": "unit" },
+      { "kind": "text", "text": "βeta" },
+      { "kind": "nested", "rows": [{ "id": 4, "text": "recursive" }] }
+    ],
+    "fixedArray": [0, 1, 2, 3],
+    "pair": ["tuple β", 42],
+    "triple": ["Deutsch", 7, "日本語"],
+    "labels": {
+      "de": "Dokument",
+      "en": "Document",
+      "slash/key": "RFC6901",
+      "tilde~key": "escaped"
+    }
+  },
+  "payloadByteLength": 2097152,
+  "payloadModulo": 251,
+  "recursiveDepth": 256,
+  "grant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4194304,
+    "maximumDepth": 512
+  },
+  "insufficientCapacityBytes": 1048576,
+  "immutableLease": {
+    "captured": "abcd",
+    "externalAfterCapture": "zbyd",
+    "expected": "abcd"
+  },
+  "cancellationStops": [0, 1, 2, 3, 8, 17, 520, 560, 620]
+}

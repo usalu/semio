@@ -235,7 +235,7 @@ async fn change_form_title_round_trips_including_clearing() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(FormMutation::kinds().len(), 10);
+    assert_eq!(FormMutation::kinds().len(), 12);
     let mutation = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-step");
     assert_eq!(mutation.semantics().record, "RenamedStep");

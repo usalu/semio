@@ -9,7 +9,7 @@ use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{layer_row_id, raster_action, ui_label, ui_value_map, ui_value_text, RASTER_INTERACTION_DOMAIN, RASTER_INTERACTION_GRANULARITY, RASTER_PLAY_CONTROLLER_ID, RASTER_TREE_PREFIX};
 use crate::standards::v1::subsets::any::schema::layer_name;
-use crate::standards::v1::subsets::any::schema::layer_visible;
+use crate::standards::v1::subsets::any::schema::{layer_visible,layer_protection,layer_node_id};
 use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{
@@ -41,17 +41,18 @@ fn row_text(value: &str, stage: &'static str) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", stage))
 }
 
-/// 🌳️ One row of the layer tree's single logical roster: the two fixed "add" buttons first, then the
+/// 🌳️ One row of the layer tree's single logical roster: the three fixed "add" buttons first, then the
 /// document's top-level layers. ONE windowed section over the whole roster.
 enum LayersRow<'a> {
     Add(&'static str, LabelText, &'static str),
     Layer(&'a RasterLayerNode),
     Flatten(LabelText,LabelText),
+    Export(LabelText),
 }
 
 fn layers_rows<'a>(document: &'a RasterDocument, labels: &RasterPlayLabels) -> Vec<LayersRow<'a>> {
-    let mut rows = vec![LayersRow::Add("pixel", labels.add_pixel, "image"), LayersRow::Add("group", labels.add_group, "folder-plus")];
-    if !document.layers.is_empty() {rows.push(LayersRow::Flatten(labels.flatten_image,labels.flattened_image));}
+    let mut rows = vec![LayersRow::Add("pixel", labels.add_pixel, "image"), LayersRow::Add("group", labels.add_group, "folder-plus"), LayersRow::Add("adjustment",labels.add_adjustment,"sliders-horizontal")];
+    if !document.layers.is_empty() {rows.push(LayersRow::Flatten(labels.flatten_image,labels.flattened_image));rows.push(LayersRow::Export(labels.export_png));}
     rows.extend(document.layers.iter().map(LayersRow::Layer));
     rows
 }
@@ -71,23 +72,25 @@ fn add_row(kind: &str, label: LabelText, icon: &str) -> UiAssemblyResult<BuiltNo
 ///
 /// 🪟️ Recursive: a `Group` is a windowed container of its own at every depth, so an expanded group
 /// costs the first paint one slice instead of its whole subtree.
-fn layer_tree_item(windows: &TreeWindows<'_>, layer: &RasterLayerNode, labels: &RasterPlayLabels) -> UiAssemblyResult<BuiltNode> {
+fn layer_tree_item(windows: &TreeWindows<'_>, layer: &RasterLayerNode, labels: &RasterPlayLabels, document: &RasterDocument) -> UiAssemblyResult<BuiltNode> {
     let (description, icon_id) = match layer {
         RasterLayerNode::Pixel { .. } => (labels.pixel_layer.as_str(), "image"),
         RasterLayerNode::Group { .. } => (labels.group_layer.as_str(), "folder"),
         RasterLayerNode::Adjustment { .. } => (labels.adjustment_layer.as_str(), "sliders-horizontal"),
     };
+    let protection=layer_protection(&document.layers,layer_node_id(layer)).expect("rendered layer belongs to the document");
+    let description=if protection.editable {description.to_owned()} else {format!("{description} · {}",labels.locked.as_str())};
     let row_id = layer_row_id(layer);
     let item = ui::tree_item(ui_label(layer_name(layer))?)
         .try_id(&row_id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "raster layer row id admission failed"))?
-        .description(row_text(description, "raster layer description admission failed")?)
+        .description(row_text(&description, "raster layer description admission failed")?)
         .icon(row_text(icon_id, "raster layer icon admission failed")?)
         .granularity(row_text(RASTER_INTERACTION_GRANULARITY, "raster layer granularity admission failed")?)
-        .draggable(true)
+        .draggable(protection.structural)
         .dimmed(!layer_visible(layer));
     match layer {
-        RasterLayerNode::Group { children, .. } => tree_window_item(windows, item, &row_id, true, children, |child| layer_tree_item(windows, child, labels)),
+        RasterLayerNode::Group { children, .. } => tree_window_item(windows, item, &row_id, true, children, |child| layer_tree_item(windows, child, labels, document)),
         _ => item.default_open(false).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "raster layer row admission failed")),
     }
 }
@@ -103,8 +106,13 @@ pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &Raste
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)?
         .window_section(windows, RASTER_TREE_PREFIX, Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &rows, |row| match row {
             LayersRow::Add(kind, label, icon) => add_row(kind, *label, icon),
-            LayersRow::Flatten(label,name) => tree_item_with_action(format!("{RASTER_TREE_PREFIX}.flatten"),ui_label(label.as_str())?,None,raster_action("flattenLayers",Some(ui_value_map([("name",ui_value_text(name.as_str())?)])?))?),
-            LayersRow::Layer(layer) => layer_tree_item(windows, layer, labels),
+            LayersRow::Export(label)=>tree_item_with_action(format!("{RASTER_TREE_PREFIX}.export-png"),ui_label(label.as_str())?,None,raster_action("exportPng",None)?),
+            LayersRow::Flatten(label,name) => {
+                let mut item=tree_item_with_action(format!("{RASTER_TREE_PREFIX}.flatten"),ui_label(label.as_str())?,None,raster_action("flattenLayers",Some(ui_value_map([("name",ui_value_text(name.as_str())?)])?))?)?;
+                item.disabled=document.layers.iter().any(|layer|layer_protection(&document.layers,layer_node_id(layer)).is_none_or(|policy|!policy.structural));
+                Ok(item)
+            },
+            LayersRow::Layer(layer) => layer_tree_item(windows, layer, labels, document),
         })?
         .interaction_domain(RASTER_PLAY_CONTROLLER_ID, RASTER_INTERACTION_DOMAIN)?
         .build()

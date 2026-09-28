@@ -1,0 +1,10 @@
+{
+  "arguments": {"path":"/rows/1/1","value":"Überraschung 🧾\nSecond, line \"quoted\""},
+  "maximumTurns": 16384,
+  "cases": [
+    {"name":"value-after-render","dropKind":"value","liveSibling":false},
+    {"name":"last-built-page-hands-back-value","dropKind":"built","liveSibling":false},
+    {"name":"live-sibling-does-not-arm-retirement","dropKind":"built","liveSibling":true},
+    {"name":"document-hands-back-arguments","dropKind":"document","liveSibling":true}
+  ]
+}

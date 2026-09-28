@@ -483,22 +483,24 @@ pub fn default_blend() -> String {
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterTransform {
-    #[value(default)]
     pub x: f64,
-    #[value(default)]
     pub y: f64,
-    #[value(default = "default_one")]
-    pub scale_x: f64,
-    #[value(default = "default_one")]
-    pub scale_y: f64,
-    #[dsl(angle = "deg")]
-    #[value(default)]
-    pub rotation: f64,
+    pub a: f64,
+    pub b: f64,
+    pub c: f64,
+    pub d: f64,
 }
 
 impl Default for RasterTransform {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
+    fn default() -> Self { Self { x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0 } }
+}
+
+impl RasterTransform {
+    /// 📐️ Coefficients in the shared compositor's affine order.
+    pub fn as_affine(&self)->semio_framework_pixels::compositing::CompositeAffine { [self.a,self.b,self.c,self.d,self.x,self.y] }
+    /// 🧭️ Keeps the full placement returned by coordinate-frame conversion.
+    pub fn from_affine(value:semio_framework_pixels::compositing::CompositeAffine)->Self {
+        let [a,b,c,d,x,y]=value;Self {x,y,a,b,c,d}
     }
 }
 
@@ -527,6 +529,8 @@ pub enum RasterLayerNode {
         name: String,
         #[value(default = "default_true")]
         visible: bool,
+        #[value(default)]
+        locked: bool,
         #[value(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
@@ -548,6 +552,8 @@ pub enum RasterLayerNode {
         name: String,
         #[value(default = "default_true")]
         visible: bool,
+        #[value(default)]
+        locked: bool,
         #[value(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
@@ -567,6 +573,8 @@ pub enum RasterLayerNode {
         name: String,
         #[value(default = "default_true")]
         visible: bool,
+        #[value(default)]
+        locked: bool,
         #[value(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
@@ -782,9 +790,10 @@ pub struct RasterLayerPatch {
     pub pixel_content: Option<RasterPixelContent>,
     #[dsl(block)]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub pixel_transform: Option<RasterTransform>,
+    pub transform: Option<RasterTransform>,
     pub name: Option<String>,
     pub visible: Option<bool>,
+    pub locked: Option<bool>,
     pub opacity: Option<f32>,
     #[dsl(key = "blend")]
     pub blend_mode: Option<String>,
@@ -1091,6 +1100,8 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-the-sketch-73921a/🦀️.rs"]
                             mod tests_renames_the_sketch_layer_to_final_linework;
                         }
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-layer-locked/🦀️.rs"]
+                        pub mod change_layer_locked;
                         #[path = "."]
                         pub mod change_layer_visible {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-layer-visible/🦀️.rs"]
@@ -1186,6 +1197,8 @@ pub mod standards {
                         pub mod change_layer_pixels;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask/🦀️.rs"]
                         pub mod change_layer_mask;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🦀️.rs"]
+                        pub mod change_layer_transform;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🦀️.rs"]
                         pub mod change_layer_adjustment_parameter;
                         #[path = "."]
@@ -1452,6 +1465,9 @@ pub mod editor {
         mod component;
         pub use component::*;
 
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🦀️.rs"]
+        pub mod selection;
+
         #[path = "."]
         pub mod config {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
@@ -1502,6 +1518,12 @@ pub mod editor {
             pub mod set_brush_color;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-hardness/🦀️.rs"]
             pub mod set_brush_hardness;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-mask-value/🦀️.rs"]
+            pub mod set_mask_value;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-paint-target/🦀️.rs"]
+            pub mod set_paint_target;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-pixel-selection/🦀️.rs"]
+            pub mod set_pixel_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️set-brush-size/🦀️.rs"]
             pub mod set_brush_size;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
@@ -1516,6 +1538,8 @@ pub mod editor {
             pub mod edit_mask;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🦀️.rs"]
             pub mod flatten_layers;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-png/🦀️.rs"]
+            pub mod export_png;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🦀️.rs"]
             pub mod merge_down;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🦀️.rs"]

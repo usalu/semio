@@ -60,12 +60,14 @@ type DrawingLayerPatchEntry {
 
 # 🩹 Mirrors Rust `DrawingLayerPatch` — sparse layer field patch (JSON blobs for complex nested values:
 # transform/fill/stroke/trace params are re-serialized rather than typed directly).
+enum FillRule { evenodd nonzero }
 type DrawingLayerPatch {
   visible: Boolean
   locked: Boolean
   name: String
   opacity: Float
   blendMode: String
+  fillRule: FillRule
   transformJson: String
   fillJson: String
   strokeJson: String

@@ -7,8 +7,8 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useState } from "react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
-import { IconShotFrame, iconRenderPort, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
-import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
+import { IconShotFrame, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
+import { renderIconRequest } from "./🚚️request/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️IconRenderHost
@@ -16,13 +16,10 @@ import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼�
 export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const scene = node.iconRender;
   const requestJson = scene?.requestJson;
-  // 🧊️ Same public-id → transport-path resolution the world-3d host applies: the guest names a mesh by
-  // its catalog url (`/mesh/🧊️base.glb`); the server only serves the nested transport path.
   const request = useMemo<IconRenderRequest | null>(() => {
     if (!requestJson) return null;
     try {
-      const parsed = JSON.parse(requestJson) as IconRenderRequest;
-      return { ...parsed, assetUrl: meshAssetTransportUrl(parsed.assetUrl) };
+      return JSON.parse(requestJson) as IconRenderRequest;
     } catch {
       return null;
     }
@@ -32,13 +29,13 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const iconShotLabel = useLabel("ui.host.iconShot");
   const renderingLabel = useLabel("ui.host.rendering");
+  const failedLabel = useLabel("ui.host.iconRenderFailed");
   useEffect(() => {
     setPreview(null);
     setError(null);
     if (!request) return;
     let cancelled = false;
-    void iconRenderPort
-      .render(request)
+    void renderIconRequest(request)
       .then((result) => {
         if (!cancelled) setPreview(result.dataUrl);
       })
@@ -53,7 +50,7 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
     return <div className="flex h-full items-center justify-center text-sm opacity-60">{emptySceneLabel}</div>;
   }
   const content = error ? (
-    <div className="flex h-full items-center justify-center p-4 text-sm text-destructive">{error}</div>
+    <div className="flex h-full flex-col items-center justify-center p-4 text-center text-sm text-destructive"><span>{failedLabel}</span><span>{error}</span></div>
   ) : preview ? (
     <img alt={scene.footer ?? iconShotLabel} className="block h-full w-full" src={preview} />
   ) : (

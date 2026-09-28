@@ -1,0 +1,28 @@
+{
+  "locales": [
+    {
+      "id": "en",
+      "text": "Drag windows from Display in the navbar, or restore a saved layout."
+    },
+    {
+      "id": "de",
+      "text": "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen."
+    }
+  ],
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 640,
+      "wraps": false
+    },
+    {
+      "width": 240,
+      "height": 180,
+      "wraps": true
+    }
+  ],
+  "fontSize": 12.8,
+  "lineHeight": 19.2,
+  "padding": 0,
+  "centerTolerance": 1
+}

@@ -6,7 +6,8 @@ fn sweep_a() -> WavSnapshot {
     WavSnapshot {
         fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None },
         data: WavData::Pcm16(vec![0, 1, -1]),
-        other_chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2, 3, 4] }],
+        other_chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2, 3, 4], pad_byte: 0 }],
+        chunk_order: vec![WavChunkRef::Format, WavChunkRef::Other(0), WavChunkRef::Samples],
         ..WavSnapshot::default()
     }
 }
@@ -15,7 +16,10 @@ fn sweep_b() -> WavSnapshot {
     WavSnapshot {
         fmt: WavFmt { audio_format: 3, channels: 2, sample_rate: 48000, byte_rate: 384000, block_align: 8, bits_per_sample: 32, ext: Some(vec![0xAA, 0xBB]) },
         data: WavData::Float32(vec![0.5, -0.5]),
-        other_chunks: vec![RiffChunk { fourcc: "LIST".into(), data: b"INFO".to_vec() }],
+        fmt_pad_byte: 0x11,
+        data_pad_byte: 0x22,
+        other_chunks: vec![RiffChunk { fourcc: "LIST".into(), data: b"INFO".to_vec(), pad_byte: 0 }],
+        chunk_order: vec![WavChunkRef::Other(0), WavChunkRef::Format, WavChunkRef::Samples],
         ..WavSnapshot::default()
     }
 }
@@ -29,13 +33,19 @@ async fn field_sweep_between_covers_every_field() {
     let ab = WavDiff::between(&a, &b);
     assert!(ab.fmt.is_some());
     assert!(ab.data.is_some());
+    assert!(ab.fmt_pad_byte.is_some());
+    assert!(ab.data_pad_byte.is_some());
     assert!(ab.other_chunks.is_some());
+    assert!(ab.chunk_order.is_some());
     assert_eq!(ab.apply(&a).unwrap(), b);
 
     let ba = WavDiff::between(&b, &a);
     assert!(ba.fmt.is_some());
     assert!(ba.data.is_some());
+    assert!(ba.fmt_pad_byte.is_some());
+    assert!(ba.data_pad_byte.is_some());
     assert!(ba.other_chunks.is_some());
+    assert!(ba.chunk_order.is_some());
     assert_eq!(ba.apply(&b).unwrap(), a);
 
     assert!(WavDiff::between(&a, &a).is_empty());
@@ -74,7 +84,7 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     // Associativity over a triple.
     let da = diff_set_fmt(sweep_b().fmt);
     let db = diff_set_data(WavData::Pcm8(vec![7]));
-    let dc = diff_set_other_chunks(vec![RiffChunk { fourcc: "cue ".into(), data: vec![] }]);
+    let dc = diff_set_other_chunks(&sweep_a(), vec![RiffChunk { fourcc: "cue ".into(), data: vec![], pad_byte: 0 }]);
     let mut left = da.clone();
     left.absorb(db.clone());
     left.absorb(dc.clone());
@@ -113,7 +123,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
         diff_set_data(WavData::Pcm16(vec![])),
         diff_set_data(WavData::Pcm8(vec![1, 2, 3])),
         diff_set_data(WavData::Float32(vec![1.5, -2.5])),
-        diff_set_other_chunks(vec![RiffChunk { fourcc: "fact".into(), data: vec![] }, RiffChunk { fourcc: "LIST".into(), data: vec![0xDE, 0xAD] }]),
+        diff_set_other_chunks(&WavSnapshot::default(), vec![RiffChunk { fourcc: "fact".into(), data: vec![], pad_byte: 0 }, RiffChunk { fourcc: "LIST".into(), data: vec![0xDE, 0xAD], pad_byte: 0 }]),
     ];
     for d in cases {
         let printed = d.print_diff();

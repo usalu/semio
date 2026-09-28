@@ -222,3 +222,63 @@ The language-neutral editable-document fixture carries English and German Unicod
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/{4️⃣1.4,7️⃣1.7}/🪆️subsets/*/✏️editor/🦀️.rs` and their primary-window Rust modules/tests
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
+
+## Retained Native Publication Preparation
+
+The base DOCX `set-page` route now uses two independent cooperative phases. `DocxSetPageWork` checks the paragraph revision and equality in 4 KiB UTF-8 byte pages, then copies the submitted Unicode text through `RetainedTextCopy`. The Store preparation route pages the inverse text and every owned field of the post snapshot, including OPC part byte payloads, before beginning the canonical one-item seal. Cancellation retires partial strings and byte buffers in bounded grants; it does not iterate one work item per byte. A language-neutral fixture carries a 2 MiB unchanged sibling, Unicode replacement, page budget, cancellation point, and expected digest. The TypeScript implementation validates it with Ajv and Node's independent SHA-256 implementation.
+
+The first focused native DOCX attempt exposed unrelated concurrent framework compilation, then the shipping component located an invariant lifetime in the borrowed canonical mutation encoder. `canonical_index` and the static `setRunText` discriminator now shorten into the borrowed root lifetime. The second focused attempt again stopped before DOCX at the concurrently introduced move-only tree-action argument type; that owner removed the invalid `Clone` derive. The third warm focused run is active as session `26009`, redirected to `🗑️generated/docx-retained-preparation-native-3.log`. No native DOCX pass is claimed until this run executes the two `post_copy` laws and a subsequent registered action filter executes publication, stale refusal, no-op history, undo, and redo.
+
+The language-neutral retained-native TypeScript suite passed 81 tests and 279 assertions. Its exact log is `🗑️generated/retained-native-document-ts.log`.
+
+## Semio Vertex Native Route Follow-up
+
+The only two editor roots whose native command rosters lacked factories were Semio Mesh and Semio B-rep. Both now mount the shared native factory and an editor-owned retained work cursor. B-rep resolves exactly one vertex record per replay step. Mesh resolves exactly one mesh or primitive record per replay step, then validates the addressed vertex. Identical points complete without a mutation; missing targets fault without publication; localized replay previews are available in English and German. Registered host-action laws cover publication, missing-target refusal, snapshot preservation, undo, and redo.
+
+The B-rep binary decoder now derives the vertex-id byte length with checked subtraction from the actual frame length. A forged `u32::MAX` prefix over a short frame returns `Malformed` on 32-bit and 64-bit targets without overflowing address arithmetic. Its unit regression constructs that frame without a large allocation.
+
+These Semio source laws remain pending native execution. Their command work is cooperatively bounded, while their current generic Store preparation still derives and applies the sparse diff through aggregate-owned vectors. Large-model Store publication therefore remains an explicit unproven gap until the roots add format-specific paged post-snapshot preparation comparable to DOCX; the factory mount is not reported as complete large-model boundedness.
+
+### Retained-native checkpoint handoff
+
+The shipping component build `🗑️generated/full-catalog-component-current-12.log` compiled `semio-s-artifact-stdio-docx` after the canonical lifetime repair and advanced to PPTX. This proves the DOCX library compiles in the shipping component graph; it does not execute the focused Store preparation laws.
+
+The focused DOCX command remains alive in exec session `26009` and Cargo processes `47567` / `47578`, with no rustc child while another logical task owns the active native lane. Its log is `🗑️generated/docx-retained-preparation-native-3.log`. Preserve that process. The intended next filters after it passes are `registered_page_draft` and `retained_page_edit`; neither has been launched or reported as passing.
+
+The Semio Mesh/B-rep source checkpoint is syntax- and rustfmt-clean. The check log is `🗑️generated/semio-native-route-rustfmt-check.log`. Their registered action laws have not executed. The full component build had not yet reached Semio when this checkpoint was written.
+
+### Structural retained preparation checkpoint
+
+The retained-native wire admission now measures the exact `OpBinary` command before a job is constructed and rejects malformed or oversized encodings with stable faults. `RetainedTextCopy` no longer constructs a `String` from unchecked partial UTF-8 bytes; partial pages remain bytes until a complete checked conversion. The language-neutral retained-native fixture covers split multibyte code points, accepted and refused command extents, a 2 MiB untouched sibling, large Mesh/B-rep structural collections, and cancellation points. Its Rust and TypeScript laws have been authored; the extended laws have not yet executed in the current queue.
+
+The base DOCX preparation replaced aggregate paragraph/table cloning turns with a recursive `DocxBlockCopy` cursor. It pages run text, table rows/cells, nested blocks, XML attributes/children, and cancellation retirement with a depth limit. Laws cover 4,096 runs, 1,024 rows, early cancellation, and deep cancellation. The focused DOCX process remains queued in Cargo and has not reached these assertions.
+
+Semio now has a shared structural Store preparation driver and two domain cursors. Mesh pages schema/id/material strings, numeric vertex/index buffers, colors, UVs, and texture bytes. B-rep pages vertex/edge/loop/face/shell/solid/coedge strings plus NURBS control points, weights, and knots. Both count the complete target collection and require exactly one target before sealing, retain an exact inverse, and retire partial owners on cancellation. Their direct reducers use the same exact-target helper, so missing or duplicate targets do not emit history. The large laws use 8,192 vertices, a 2 MiB Mesh texture, and a 4,096-point B-rep NURBS payload.
+
+The live shipping component build `🗑️generated/full-catalog-component-current-12.log` cannot validate these structural preparation modules. Its Semio rlib was written at `2026-09-27 23:36:55`, while the shared structural preparation source was written at `23:48:54` and the Mesh/B-rep domain cursors at `23:58:39`. The later plugin link reused that older Semio rlib. The current structural source is rustfmt-parse-clean only; a fresh focused Semio compile and its unit/runtime laws are required. No duplicate native job was launched while the existing component and DOCX jobs remained active.
+
+The independent TypeScript/Ajv run `@semio-tech/stdio-snapshot-editing-js:test --excludeTaskDependencies` passed 82 tests with 305 assertions in 8.7 seconds, including the retained-native structural oracle. Log: `🗑️generated/retained-native-structural-ts.log`. The fresh Rust command `@semio-tech/stdio-semio-rs:test --excludeTaskDependencies -- --lib structural_copy -- --nocapture` is active as exec session `93040`, with log `🗑️generated/semio-structural-preparation-native-1.log`; it has entered the artifact test runner and remains queued in Cargo, so no Rust result is claimed.
+
+Real wrapped DOCX, Mesh, and B-rep command laws now encode the complete command, admit its exact byte length, and reject a limit one byte lower. These exercise DOCX revision plus text, both Mesh target identifiers, and the B-rep vertex identifier rather than an abstract surrogate command. They are rustfmt-clean and pending native execution. The earlier DOCX registered-route process ended after 54m37s in the already-repaired upstream table-label diagnostics before its assertion. Its fresh retry is exec session `94934`, log `🗑️generated/docx-registered-route-native-2.log`, filtered to `registered_page_draft`; no result is claimed yet.
+
+Additional scoped files:
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🧱️structure/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/✏️editor/📬️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs`
+
+Current scoped files:
+
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🧬️schema/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`

@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"name":"Identity Controls","input":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0,"shearX":0},"expected":[1,0,0,1,0,0]},
+    {"name":"Horizontal Shear","input":{"x":3,"y":-2,"scaleX":2,"scaleY":4,"rotation":0,"shearX":0.5},"expected":[2,0,2,4,3,-2]},
+    {"name":"Rotated Shear","input":{"x":8,"y":9,"scaleX":2,"scaleY":3,"rotation":90,"shearX":2},"expected":[0,2,-3,6,8,9]},
+    {"name":"Reflected Vertical Scale","input":{"x":-1,"y":0.25,"scaleX":2,"scaleY":-3,"rotation":0,"shearX":-0.5},"expected":[2,0,1.5,-3,-1,0.25]},
+    {"name":"Reflected Horizontal Scale","input":{"x":0,"y":0,"scaleX":-2,"scaleY":3,"rotation":0,"shearX":0},"expected":[-2,0,0,3,0,0]},
+    {"name":"Double Reflection","input":{"x":5,"y":6,"scaleX":-2,"scaleY":-3,"rotation":180,"shearX":0.25},"expected":[2,0,0.75,3,5,6]}
+  ]
+}

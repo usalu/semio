@@ -1,6 +1,6 @@
 import { SnapshotEditError, snapshotEditSource, snapshotFromEditSource, type SnapshotEditEvent, type SnapshotValue } from "../🟦️.js";
 
-export type SnapshotPatchEdit = { operation: "set" | "insert"; value: SnapshotValue } | { operation: "remove" };
+export type SnapshotPatchEdit = { operation: "set" | "insert"; value: SnapshotValue } | { operation: "insertAt"; value: SnapshotValue; index: number } | { operation: "remove" };
 export interface SnapshotValuePatch { path: string[]; edit: SnapshotPatchEdit }
 export interface SnapshotPatch { edits: SnapshotValuePatch[] }
 export const SNAPSHOT_PATCH_MAX_BYTES = 1_048_576;
@@ -62,6 +62,7 @@ function applyOne(snapshot: SnapshotValue, row: SnapshotValuePatch): SnapshotVal
     const key = path[depth];
     const leaf = depth + 1 === path.length;
     if (Array.isArray(value)) {
+      if (leaf && row.edit.operation === "insertAt") return fail(path, "positioned insertion requires an object parent");
       const position = index(key, value.length, leaf && row.edit.operation === "insert", path);
       const next = value.slice();
       if (!leaf) next[position] = descend(value[position], depth + 1);
@@ -72,8 +73,15 @@ function applyOne(snapshot: SnapshotValue, row: SnapshotValuePatch): SnapshotVal
     }
     if (!dictionary(value)) return fail(path, "the addressed parent is a scalar");
     const exists = Object.hasOwn(value, key);
-    if ((!leaf || row.edit.operation !== "insert") && !exists) return fail(path, "the addressed field does not exist");
-    if (leaf && row.edit.operation === "insert" && exists) return fail(path, "the object key already exists");
+    const insert = row.edit.operation === "insert" || row.edit.operation === "insertAt";
+    if ((!leaf || !insert) && !exists) return fail(path, "the addressed field does not exist");
+    if (leaf && insert && exists) return fail(path, "the object key already exists");
+    if (leaf && row.edit.operation === "insertAt") {
+      const entries = Object.entries(value);
+      if (!Number.isSafeInteger(row.edit.index) || row.edit.index < 0 || row.edit.index > entries.length) return fail(path, "object insertion index is out of range");
+      entries.splice(row.edit.index, 0, [key, structuredClone(row.edit.value)]);
+      return Object.fromEntries(entries);
+    }
     const next = { ...value };
     if (leaf && row.edit.operation === "remove") delete next[key];
     else Object.defineProperty(next, key, { value: leaf ? structuredClone((row.edit as { value: SnapshotValue }).value) : descend(value[key], depth + 1), enumerable: true, writable: true, configurable: true });
@@ -106,7 +114,8 @@ export function prepareSnapshotPatch(snapshot: SnapshotValue, event: SnapshotEdi
       const path = decodePointer(event.path), parent = path.slice(0, -1);
       if (path.length === 0 || !dictionary(at(snapshot, parent))) return fail(path, "only an object key can be renamed");
       const value = at(snapshot, path);
-      edits = path.at(-1) === event.key ? [] : [{ path, edit: { operation: "remove" } }, { path: [...parent, event.key], edit: { operation: "insert", value } }];
+      const index = Object.keys(at(snapshot, parent) as Record<string, SnapshotValue>).indexOf(path.at(-1)!);
+      edits = path.at(-1) === event.key ? [] : [{ path, edit: { operation: "remove" } }, { path: [...parent, event.key], edit: { operation: "insertAt", value, index } }];
       break;
     }
   }
@@ -129,7 +138,13 @@ export function inverseSnapshotPatch(snapshot: SnapshotValue, patch: SnapshotPat
   let current = snapshot;
   for (const row of patch.edits) {
     const path = normalizePath(current, row);
-    const edit: SnapshotPatchEdit = row.edit.operation === "insert" ? { operation: "remove" } : { operation: row.edit.operation === "set" ? "set" : "insert", value: at(current, path) };
+    let edit: SnapshotPatchEdit;
+    if (row.edit.operation === "insert" || row.edit.operation === "insertAt") edit = { operation: "remove" };
+    else if (row.edit.operation === "set") edit = { operation: "set", value: at(current, path) };
+    else {
+      const parent = at(current, path.slice(0, -1));
+      edit = dictionary(parent) ? { operation: "insertAt", value: at(current, path), index: Object.keys(parent).indexOf(path.at(-1)!) } : { operation: "insert", value: at(current, path) };
+    }
     current = applyOne(current, row);
     edits.unshift({ path, edit });
   }

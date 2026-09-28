@@ -47,6 +47,12 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-adjustment-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-locked/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-transform/schema.json"
     }
   ]
 }

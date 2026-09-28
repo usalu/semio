@@ -129,7 +129,7 @@ mod subject {
                     Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as u8) } else { None }).collect(),
                     _ => Vec::new(),
                 };
-                RiffChunk { fourcc: entry.str("fourcc"), data }
+                RiffChunk { fourcc: entry.str("fourcc"), data, pad_byte: number(entry, "padByte", 0.0) as u8 }
             })
             .collect()
     }
@@ -146,7 +146,10 @@ mod subject {
                     schema: original.schema.clone(),
                     fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))),
                     data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))),
+                    fmt_pad_byte: 0,
+                    data_pad_byte: 0,
                     other_chunks: riff_chunks_from_json(&params, "otherChunks"),
+                    chunk_order: vec![semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Format, semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Samples],
                 },
             })),
             other => Err(format!("test case does not know mutation kind {other:?}")),
@@ -163,7 +166,7 @@ mod subject {
             WavMutation::PatchSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
             WavMutation::SetFmt(_) => WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: original.fmt.clone() }),
             WavMutation::SetData(_) => WavMutation::SetData(mutations::set_data::SetData { data: original.data.clone() }),
-            WavMutation::SetOtherChunks(_) => WavMutation::SetOtherChunks(mutations::set_other_chunks::SetOtherChunks { chunks: original.other_chunks.clone() }),
+            WavMutation::SetOtherChunks(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
         }
     }
     //#endregion 🔖️SpecReading

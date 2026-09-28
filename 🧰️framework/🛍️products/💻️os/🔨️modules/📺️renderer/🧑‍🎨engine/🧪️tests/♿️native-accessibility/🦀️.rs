@@ -40,7 +40,14 @@ fn consumer_nodes(tree: &accesskit_consumer::Tree) -> HashMap<String, (Option<St
     out
 }
 
-const ACTIONS: [(&str, accesskit::Action); 4] = [("Click", accesskit::Action::Click), ("Focus", accesskit::Action::Focus), ("SetValue", accesskit::Action::SetValue), ("Blur", accesskit::Action::Blur)];
+const ACTIONS: [(&str, accesskit::Action); 6] = [
+    ("Click", accesskit::Action::Click),
+    ("Focus", accesskit::Action::Focus),
+    ("SetValue", accesskit::Action::SetValue),
+    ("Blur", accesskit::Action::Blur),
+    ("Expand", accesskit::Action::Expand),
+    ("Collapse", accesskit::Action::Collapse),
+];
 
 #[test]
 fn the_platform_tree_is_the_fixture_tree_as_accesskit_reads_it() {
@@ -108,6 +115,8 @@ fn every_platform_action_is_the_shell_event_the_fixture_names() {
             "Focus" => accesskit::Action::Focus,
             "Blur" => accesskit::Action::Blur,
             "SetValue" => accesskit::Action::SetValue,
+            "Expand" => accesskit::Action::Expand,
+            "Collapse" => accesskit::Action::Collapse,
             _ => accesskit::Action::ScrollIntoView,
         };
         let data = case["value"].as_str().map(|value| accesskit::ActionData::Value(value.into()));

@@ -51,7 +51,7 @@ pub trait FromValue: Sized {
                 *self = <Self as FromValue>::from_value(value)?;
                 Ok(())
             }
-            ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the value root")),
+            ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the value root")),
             ValueEdit::Remove => Err(ValueError::new("cannot remove the value root")),
         }
     }
@@ -63,6 +63,8 @@ pub trait FromValue: Sized {
 pub enum ValueEdit {
     Set(DslValue),
     Insert(DslValue),
+    /// 🗂️ Places an ordered object member; intrinsically ordered maps retain their key semantics.
+    InsertAt { index: usize, value: DslValue },
     Remove,
 }
 
@@ -341,11 +343,11 @@ impl<T: FromValue> FromValue for Option<T> {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(value) if self.is_none() => {
+                ValueEdit::Insert(value) | ValueEdit::InsertAt { value, .. } if self.is_none() => {
                     *self = Some(T::from_value(value)?);
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert an already-present optional value")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert an already-present optional value")),
                 ValueEdit::Remove if self.is_some() => {
                     *self = None;
                     Ok(())
@@ -415,7 +417,7 @@ impl<T: FromValue> FromValue for Vec<T> {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the array root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the array root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the array root")),
             };
         };
@@ -429,6 +431,7 @@ impl<T: FromValue> FromValue for Vec<T> {
                 self[index] = T::from_value(value).map_err(|error| error.under(segment))?;
                 Ok(())
             }
+            ValueEdit::InsertAt { .. } => Err(ValueError::new("positioned insertion requires an object parent")),
             ValueEdit::Insert(value) => {
                 let index = path_index(segment, self.len(), true)?;
                 let value = T::from_value(value).map_err(|error| error.under(segment))?;
@@ -486,7 +489,7 @@ impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the array root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the array root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the array root")),
             };
         };
@@ -499,6 +502,7 @@ impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
                 let index = path_index(segment, self.len(), false)?;
                 self[index] = T::from_value(value).map_err(|error| error.under(segment))?;
             }
+            ValueEdit::InsertAt { .. } => return Err(ValueError::new("positioned insertion requires an object parent")),
             ValueEdit::Insert(value) => {
                 let index = path_index(segment, self.len(), true)?;
                 let value = T::from_value(value).map_err(|error| error.under(segment))?;
@@ -554,7 +558,7 @@ impl<T: FromValue, const N: usize> FromValue for [T; N] {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed array")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert into a fixed array")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove a fixed array")),
             };
         };
@@ -564,7 +568,7 @@ impl<T: FromValue, const N: usize> FromValue for [T; N] {
                 self[index] = T::from_value(value).map_err(|error| error.under(segment))?;
                 Ok(())
             }
-            (true, ValueEdit::Insert(_)) => Err(ValueError::new("cannot insert into a fixed array")),
+            (true, ValueEdit::Insert(_)) | (true, ValueEdit::InsertAt { .. }) => Err(ValueError::new("cannot insert into a fixed array")),
             (true, ValueEdit::Remove) => Err(ValueError::new("cannot remove a fixed array")),
             (false, edit) => self[index].edit_value_at_path(rest, edit).map_err(|error| error.under(segment)),
         }
@@ -602,7 +606,7 @@ impl<T: FromValue> FromValue for Box<T> {
                     *self = Box::new(T::from_value(value)?);
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the boxed value root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the boxed value root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the boxed value root")),
             };
         }
@@ -652,7 +656,7 @@ impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the set root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the set root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the set root")),
             };
         };
@@ -672,7 +676,8 @@ impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
                     values[index] = replacement;
                     Ok(())
                 }
-                ValueEdit::Insert(value) => {
+                ValueEdit::InsertAt { .. } => Err(ValueError::new("positioned insertion requires an object parent")),
+            ValueEdit::Insert(value) => {
                     let index = path_index(segment, values.len(), true)?;
                     let value = T::from_value(value).map_err(|error| error.under(segment))?;
                     let ordered = index.checked_sub(1).is_none_or(|previous| values[previous] < value) && values.get(index).is_none_or(|next| value < *next);
@@ -734,7 +739,7 @@ impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the map root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the map root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the map root")),
             };
         };
@@ -747,7 +752,7 @@ impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
                 let target = self.get_mut(*key).ok_or_else(|| ValueError::new(format!("missing object key `{key}`")))?;
                 *target = replacement;
             }
-            ValueEdit::Insert(value) => {
+            ValueEdit::Insert(value) | ValueEdit::InsertAt { value, .. } => {
                 if self.contains_key(*key) {
                     return Err(ValueError::new(format!("object key `{key}` already exists")));
                 }
@@ -829,7 +834,7 @@ impl FromValue for DslValue {
                     *self = value;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the value root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the value root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the value root")),
             };
         };
@@ -844,6 +849,7 @@ impl FromValue for DslValue {
                         let index = path_index(segment, items.len(), false)?;
                         items[index] = value;
                     }
+                    ValueEdit::InsertAt { .. } => return Err(ValueError::new("positioned insertion requires an object parent")),
                     ValueEdit::Insert(value) => {
                         let index = path_index(segment, items.len(), true)?;
                         items.insert(index, value);
@@ -870,6 +876,12 @@ impl FromValue for DslValue {
                             return Err(ValueError::new(format!("object key `{segment}` already exists")));
                         }
                         entries.push(((*segment).to_owned(), value));
+                    }
+                    ValueEdit::InsertAt { index: position, value } => {
+                        if index.is_some() || position > entries.len() {
+                            return Err(ValueError::new("ordered insertion requires an absent key and an in-range position"));
+                        }
+                        entries.insert(position, ((*segment).to_owned(), value));
                     }
                     ValueEdit::Remove => {
                         entries.remove(index.ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?);
@@ -955,7 +967,7 @@ impl<A: FromValue, B: FromValue> FromValue for (A, B) {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed tuple")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert into a fixed tuple")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove a fixed tuple")),
             };
         };
@@ -1033,7 +1045,7 @@ impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed tuple")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert into a fixed tuple")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove a fixed tuple")),
             };
         };
@@ -1122,7 +1134,7 @@ where
                     *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
-                ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the map root")),
+                ValueEdit::Insert(_) | ValueEdit::InsertAt { .. } => Err(ValueError::new("cannot insert at the map root")),
                 ValueEdit::Remove => Err(ValueError::new("cannot remove the map root")),
             };
         };
@@ -1136,7 +1148,7 @@ where
                 let target = self.get_mut(&key).ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
                 *target = replacement;
             }
-            ValueEdit::Insert(value) => {
+            ValueEdit::Insert(value) | ValueEdit::InsertAt { value, .. } => {
                 if self.contains_key(&key) {
                     return Err(ValueError::new(format!("object key `{segment}` already exists")));
                 }

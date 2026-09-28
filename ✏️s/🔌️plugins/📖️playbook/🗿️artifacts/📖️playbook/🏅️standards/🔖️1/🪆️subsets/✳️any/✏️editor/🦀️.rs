@@ -16,6 +16,7 @@ use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::activity as activity_window;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
 use crate::editor::playbook::modes::builder::windows::changes as changes_window;
+use crate::editor::playbook::modes::builder::windows::files as files_window;
 use crate::editor::playbook::modes::builder::windows::source as source_window;
 use crate::editor::playbook::modes::builder::windows::steps as steps_window;
 use crate::flatten_playbook_blocks;
@@ -37,6 +38,7 @@ pub use builder_window::PLAYBOOK_PLAY_BODY_BUILDER;
 pub use builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER;
 pub use changes_window::PLAYBOOK_PLAY_BODY_CHANGES;
 pub use changes_window::PLAYBOOK_PLAY_WINDOW_CHANGES;
+pub use files_window::{PLAYBOOK_PLAY_BODY_FILES, PLAYBOOK_PLAY_WINDOW_FILES};
 pub use activity_window::{PLAYBOOK_PLAY_BODY_ACTIVITY, PLAYBOOK_PLAY_WINDOW_ACTIVITY};
 pub use source_window::{PLAYBOOK_PLAY_BODY_SOURCE, PLAYBOOK_PLAY_WINDOW_SOURCE};
 pub use steps_window::{PLAYBOOK_PLAY_BODY_STEPS, PLAYBOOK_PLAY_WINDOW_STEPS};
@@ -673,13 +675,14 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
             PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_framework_plugin::built_to_component_tree(changes_window::render(doc.snapshot)?)),
             PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps_window::render(doc.snapshot)?)),
             PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_framework_plugin::built_to_component_tree(activity_window::render(doc.snapshot)?)),
             PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_framework_plugin::built_to_component_tree(source_window::render(doc.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_FILES => Ok(semio_framework_plugin::built_to_component_tree(files_window::render(doc.snapshot, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -702,6 +705,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(changes_window::definition())
         .window_kind_def(activity_window::definition())
         .window_kind_def(source_window::definition())
+        .window_kind_def(files_window::definition())
         .default_layout(builder::layout())
         .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
         .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))

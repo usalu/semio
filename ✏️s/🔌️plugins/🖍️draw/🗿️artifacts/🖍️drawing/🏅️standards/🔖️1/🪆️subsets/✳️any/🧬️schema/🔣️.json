@@ -53,8 +53,65 @@
       "properties": {
         "kind": {
           "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "stroke": {
+              "$ref": "#/$defs/StrokeStyle"
+            },
+            "fillRule": {
+              "$ref": "#/$defs/FillRule"
+            }
+          }
+        },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity"
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "group"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/DrawingLayerNode"
+                }
+              },
+              "isolation": {
+                "type": "boolean",
+                "default": false,
+                "description": "Composite the group on a transparent backdrop before blending it into its parent."
+              }
+            }
+          }
+        }
+      ]
     },
     "DrawingImageAsset": {
       "title": "DrawingImageAsset",
@@ -271,6 +328,62 @@
           }
         }
       ]
+    },
+    "StrokeCap": {
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "StrokeJoin": {
+      "enum": [
+        "miter",
+        "round",
+        "bevel"
+      ]
+    },
+    "StrokeStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "width",
+        "cap",
+        "join"
+      ],
+      "properties": {
+        "color": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "width": {
+          "type": "number"
+        },
+        "cap": {
+          "$ref": "#/$defs/StrokeCap"
+        },
+        "join": {
+          "$ref": "#/$defs/StrokeJoin"
+        },
+        "dash": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "FillRule": {
+      "enum": [
+        "evenodd",
+        "nonzero"
+      ],
+      "default": "evenodd"
     }
   }
 }

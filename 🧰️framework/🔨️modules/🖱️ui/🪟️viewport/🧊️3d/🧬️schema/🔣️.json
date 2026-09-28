@@ -24,6 +24,9 @@
     "projectionKind": {
       "enum": ["orthographic", "axonometric", "oblique", "onePoint", "twoPoint", "threePoint", "curvilinear"]
     },
+    "projectionFramePolicy": {
+      "enum": ["content", "preserveCamera"]
+    },
     "orthographicView": {
       "enum": ["plan", "top", "bottom", "front", "back", "left", "right"]
     },

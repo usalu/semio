@@ -39,6 +39,7 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
+import { renderIconRequest } from "../🖼️IconRenderHost/🚚️request/🟦️.ts";
 import {
   type ActionDescriptor,
   type ActionInvocation,
@@ -114,6 +115,9 @@ import {
   type ProgramHotSwapEvent,
   RECORD_TUTORIAL_ACTION_ID,
   resolveExternalSlots,
+  hasExternalSlots,
+  retireContributorInstances,
+  type ContributorInstance,
   resolveLayoutForMode,
   resolveModeTools,
   resolvePlaygroundDefaultAppId,
@@ -320,7 +324,6 @@ import {
   getTutorialCameraDriver,
   Icon,
   type IconName,
-  iconRenderPort,
   insertWindowAtDropZone,
   resolveStackPathForWindowId,
   splitWithWindow,
@@ -414,6 +417,7 @@ import {
   type TreeWindowContextValue,
 } from "../🗣️Interpreter/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
+import { MEDIA_TRANSPORT_EXTENSION_ID, MediaTransportOwnerContext, type MediaTransportOwner } from "../🎬️MediaTransportHost/🟦️.tsx";
 import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, spaceAdministrationNameValid, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
 import { createHubConnectionFetchPortV1, type HubConnectionPortV1 } from "../🔗️HubConnection/🟦️.tsx";
@@ -543,7 +547,7 @@ import {
   flattenPanelTabLeaves,
   groupOpenWithEntries,
   introductionTargetsWindow,
-  isEditableEventTarget,
+  controlOwnsKeyboardEvent,
   isMutationKindDefinition,
   isOsCommandAddress,
   keyboardEventMatchesChord,
@@ -2480,7 +2484,9 @@ function FrameworkOsShellInner({
   const clipboardFragmentRef = useRef<unknown>(undefined);
   const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshSlotsRef = useRef(new Map<string, SpawnedRefreshSlotV1>());
-  const contributorInstancesRef = useRef<Map<string, number>>(new Map());
+  const contributorInstancesRef = useRef<Map<string, ContributorInstance>>(new Map());
+  const contributorPassesRef = useRef<Map<string, symbol>>(new Map());
+  const externalSlotNodesRef = useRef<Map<string, BuiltNode>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
   const extraWindowCounterRef = useRef(0);
   // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
@@ -4555,11 +4561,7 @@ function FrameworkOsShellInner({
         for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
           await current.handle.destroyApp(spawned.instanceId).catch(() => {});
         }
-        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
-        if (contributorInstanceId != null) {
-          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
-          contributorInstancesRef.current.delete(pluginId);
-        }
+        await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.pluginId === pluginId);
         if (hostMode && activeSession) {
           const currentPanel = parsePanelState(activeSession.viewState);
           const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
@@ -4638,11 +4640,7 @@ function FrameworkOsShellInner({
         for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
           await current.handle.destroyApp(spawned.instanceId).catch(() => {});
         }
-        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
-        if (contributorInstanceId != null) {
-          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
-          contributorInstancesRef.current.delete(pluginId);
-        }
+        await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.pluginId === pluginId);
         if (hostMode && sessionRef.current) {
           const activeSession = sessionRef.current;
           const currentPanel = parsePanelState(activeSession.viewState);
@@ -4859,11 +4857,7 @@ function FrameworkOsShellInner({
       try {
         const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === extensionId);
         if (current) {
-          const contributorInstanceId = contributorInstancesRef.current.get(extensionId);
-          if (contributorInstanceId != null) {
-            await current.handle.destroyApp(contributorInstanceId).catch(() => {});
-            contributorInstancesRef.current.delete(extensionId);
-          }
+          await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.pluginId === extensionId);
           dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId: extensionId });
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "available" });
           await current.handle.dispose();
@@ -5426,11 +5420,9 @@ function FrameworkOsShellInner({
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
         if (plugin) retirements.push(destroyDetachedApp(plugin, spawned.instanceId).catch(() => {}));
       }
-      for (const [pluginId, instanceId] of contributorInstancesRef.current) {
-        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId)?.handle;
-        if (plugin) retirements.push(destroyDetachedApp(plugin, instanceId).catch(() => {}));
-      }
-      contributorInstancesRef.current.clear();
+      contributorPassesRef.current.clear();
+      externalSlotNodesRef.current.clear();
+      retirements.push(retireContributorInstances(contributorInstancesRef.current));
       const handles = loadedPluginsRef.current.map((entry) => entry.handle);
       void Promise.allSettled(retirements).then(() => Promise.allSettled(handles.map(handle => handle.dispose()))).then(() => undefined);
     };
@@ -5601,24 +5593,26 @@ function FrameworkOsShellInner({
           if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, session.pluginId, environment.hostMode)) continue;
           const isActive = pluginEntry.handle.pluginId === session.pluginId;
           const targetApp = isActive ? environment.session.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
-          const instanceId = targetApp ? (isActive ? session.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
-          const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
-          const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
-          if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
-          // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
-          // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
-          // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
-          // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
-          // receives page 0 of 1 so the addressed schema matches.
-          const args = takesPageRun ? { json, page: 0, pageCount: 1 } : { json };
-          try {
-            const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
-            const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);
-            if (contributionResponse.requestedEffects?.length) {
-              environment.dispatchDeferredEffects(pluginEntry.handle.pluginId, instanceId, contributionResponse.requestedEffects);
+          const instances = isActive ? [session.instanceId] : await Promise.all([...contributorInstancesRef.current.values()].filter((entry) => entry.pluginId === pluginEntry.handle.pluginId && entry.appId === targetApp?.id).map((entry) => entry.instance));
+          for (const instanceId of instances) {
+            const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
+            const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
+            if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
+            // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
+            // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
+            // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
+            // receives page 0 of 1 so the addressed schema matches.
+            const args = takesPageRun ? { json, page: 0, pageCount: 1 } : { json };
+            try {
+              const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
+              const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);
+              if (contributionResponse.requestedEffects?.length) {
+                environment.dispatchDeferredEffects(pluginEntry.handle.pluginId, instanceId, contributionResponse.requestedEffects);
+              }
+            } catch (error) {
+              console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
             }
-          } catch (error) {
-            console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
           }
         }
       },
@@ -5736,6 +5730,9 @@ function FrameworkOsShellInner({
       // fetch regardless of what scope this particular call was given.
       let scope = scopeArg;
       if (isSessionSwitch) {
+        await retireContributorInstances(contributorInstancesRef.current, (entry) => !entry.ownerId.startsWith(`${nextSession.pluginId}:${nextSession.instanceId}:`));
+        contributorPassesRef.current.clear();
+        externalSlotNodesRef.current.clear();
         uiRefreshCacheRef.current = new Map();
         scope = { kind: "full" };
         // 🪟️ Tree windows name authored keys of the app that is going away; carrying them into the next
@@ -5815,6 +5812,9 @@ function FrameworkOsShellInner({
         const skipped = new Map(unmountedSkippedWindowBodiesRef.current);
         for (const instance of unmountedWindowInstances) {
           cache.delete(`window:${instance.id}`);
+          const ownerId = `${nextSession.pluginId}:${nextSession.instanceId}:window:${instance.id}`;
+          externalSlotNodesRef.current.delete(ownerId);
+          await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.ownerId === ownerId);
           skipped.set(instance.id, instance.bodyKey);
         }
         unmountedSkippedWindowBodiesRef.current = skipped;
@@ -5825,40 +5825,24 @@ function FrameworkOsShellInner({
           program.refreshUi(nextSession.instanceId, request),
         );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
-        // 🩹️ `resolveExternalSlots`/`ensureContributorInstance`'s `PluginWasmHandle` (kernel/component.ts,
-        // `manifest`/`enqueue`/`outcomes`/`dispose` — an actor/turn handle) is
-        // a genuinely DIFFERENT abstraction from this file's own `PluginWasmHandle` (`PluginRuntime`'s,
-        // `manifest: PluginManifest`) — PluginRuntime's own import already renames kernel's to
-        // `KernelPluginWasmHandle` to keep the two apart. Read both call sites (`ensureContributorInstance`
-        // only calls `.createApp`; `resolveExternalSlots` only checks the handle's truthiness — the
-        // external-slot render path itself is an explicit, documented stub, "the dedicated follow-up work
-        // package", always returning "Extension unavailable") before building a REAL adapter rather than
-        // casting past the mismatch: `createApp`/`destroyApp` forward to this file's real handle and
-        // `manifest` is its admitted manifest; `enqueue`/`outcomes`/`dispose` are genuinely never invoked by
-        // either function today, so they're honest no-op/empty implementations, not a fabricated claim.
         const slotContext = {
-          plugins: new Map(
-            loadedPlugins.map((entry) => [
-              entry.handle.pluginId,
-              {
-                manifest: entry.handle.manifest as unknown as import("@semio-tech/framework").PluginManifest,
-                createApp: entry.handle.createApp,
-                destroyApp: entry.handle.destroyApp,
-                takeSegmentedDownloadChunk: entry.handle.takeSegmentedDownloadChunk,
-                enqueue: () => {},
-                outcomes: (async function* () {})(),
-                dispose: async () => {},
-              },
-            ]),
-          ),
+          plugins: new Map(loadedPlugins.filter((entry) => !extensionLedgerRef.current.some((extension) => extension.extensionId === entry.handle.pluginId && !extension.enabled)).map((entry) => [entry.handle.pluginId, entry.handle])),
           contributorInstances: contributorInstancesRef.current,
+          contributorPasses: contributorPassesRef.current,
           viewState,
+          onError: (extension: string, error: unknown) => console.error("[os-shell] extension render failed", extension, error),
+          hostExtensions: new Set([MEDIA_TRANSPORT_EXTENSION_ID]),
         };
-        // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
-        // later no-operation refresh reuses the already-resolved cached value instead of re-resolving.
-        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as BuiltNode, slotContext) } : entry);
+        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse, section: string): Promise<PluginUiRefreshSectionResponse> => {
+          const ownerId = `${nextSession.pluginId}:${nextSession.instanceId}:${section}:${entry.key}`;
+          const raw = (entry.value as BuiltNode | undefined) ?? externalSlotNodesRef.current.get(ownerId);
+          if (!raw) return entry;
+          if (hasExternalSlots(raw)) externalSlotNodesRef.current.set(ownerId, raw);
+          else externalSlotNodesRef.current.delete(ownerId);
+          return { ...entry, value: await resolveExternalSlots(raw, { ...slotContext, ownerId }) };
+        };
         const [resolvedWindows, resolvedPanels] = await hopTrace.timeAsync("refresh.slots", { instanceId: nextSession.instanceId, scope: scope.kind }, () =>
-          Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]),
+          Promise.all([Promise.all((response.windows ?? []).map((entry) => resolveIfChanged(entry, "window"))), Promise.all((response.panels ?? []).map((entry) => resolveIfChanged(entry, "panel")))]),
         );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
@@ -6693,7 +6677,7 @@ function FrameworkOsShellInner({
         if ("iconRenderExport" in effect) {
           for (const item of effect.iconRenderExport.items) {
             try {
-              const result = await iconRenderPort.render(item.request as Parameters<typeof iconRenderPort.render>[0]);
+              const result = await renderIconRequest(item.request as Parameters<typeof renderIconRequest>[0]);
               downloadDataUrl(item.filename, result.dataUrl);
             } catch (error) {
               console.error(`icon render export failed for ${item.filename}`, error);
@@ -10275,7 +10259,7 @@ function FrameworkOsShellInner({
   // shell) for every keystroke on the page regardless of which shell the user was actually using.
   const handleAppKeydown = useCallback(
     (event: globalThis.KeyboardEvent) => {
-      if (event.defaultPrevented) return;
+      if (event.defaultPrevented || controlOwnsKeyboardEvent(event)) return;
       if (!session) return;
       // ⌨️ Chords belong to the program that OWNS the canvas. Reading `session.app` unconditionally
       // meant a spawned foreign editor's own verbs — and the framework-universal undo/redo chords —
@@ -10286,13 +10270,6 @@ function FrameworkOsShellInner({
           .split(",")
           .map((key) => key.trim().toLowerCase())
           .filter(Boolean);
-      const isEditableTarget = (target: EventTarget | null) => {
-        if (!(target instanceof HTMLElement)) return false;
-        const tag = target.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-        if (target.isContentEditable) return true;
-        return target.closest("[contenteditable='true'], [role='textbox']") != null;
-      };
       const instances = focusedWindowInstancesRef.current;
       const focusedWindowId = activeWindowIdRef.current ?? (focusedSpawnedId !== null ? (instances[0]?.id ?? null) : (session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null));
       // 🪟️ Only the windows the ACTIVE MODE mounts, in layout order. A verb owned by a window this mode
@@ -10309,7 +10286,6 @@ function FrameworkOsShellInner({
         const kind = keyApp.windowKinds.find((entry) => entry.id === windowKindId);
         return kind ? resolveWindowActions(keyApp, kind).find((action) => action.id === actionId) : undefined;
       };
-      if (isEditableTarget(event.target)) return;
       // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
       // the active mode-level tool, when nothing is being typed.
       if (event.key === "Escape") {
@@ -11197,7 +11173,7 @@ function FrameworkOsShellInner({
 
   const handleCommandKeydown = useCallback(
     (event: globalThis.KeyboardEvent) => {
-      if (event.defaultPrevented || isEditableEventTarget(event.target)) return;
+      if (event.defaultPrevented || controlOwnsKeyboardEvent(event)) return;
       for (const entry of [...resolvedCommands].reverse()) {
         if (!entry.definition.inPalette) continue;
         const entryKey = commandAddressKey(entry.address);
@@ -12192,6 +12168,8 @@ function FrameworkOsShellInner({
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
+    const primaryMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    const primaryMediaOwner = (windowId: string): MediaTransportOwner | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle } : null;
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
       introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
@@ -12216,6 +12194,8 @@ function FrameworkOsShellInner({
     if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
       const spawned = activeSpawnedEntry;
       const spawnedApp = activeSpawnedApp;
+      const spawnedMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
+      const spawnedMediaOwner = (windowId: string): MediaTransportOwner | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle } : null;
       const spawnedWorld3dViews = world3dWindowViewRegistry.scope(`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`);
       const spawnedKindById = new Map(spawnedApp.windowKinds.map((kind) => [kind.id, kind] as const));
       const spawnedDeclaredTitles = new Map(resolveFrameworkLayoutSeed(spawnedApp.defaultLayout, withLocalizedWindowKindLabels(spawnedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).extraInstances.map((extra) => [extra.id, extra.title] as const));
@@ -12249,7 +12229,7 @@ function FrameworkOsShellInner({
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                    {body ? <InterpretedUiNode store={builtNodeStoreFor(`spawned:${windowId}`, body)} onAction={onActionStable} onIntent={onIntentStable} /> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
+                    {body ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode store={builtNodeStoreFor(`spawned:${windowId}`, body)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
               </World3dWindowViewStoreContext.Provider>
@@ -12287,7 +12267,7 @@ function FrameworkOsShellInner({
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                   <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                  <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && browserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent); }} />
+                  <MediaTransportOwnerContext.Provider value={browserActorStore === undefined ? primaryMediaOwner(kind.id) : null}><InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && browserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent); }} /></MediaTransportOwnerContext.Provider>
                   </TreeWindowContext.Provider>
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
@@ -12336,7 +12316,7 @@ function FrameworkOsShellInner({
                   <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                     {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                     <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                      <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} />
+                      <MediaTransportOwnerContext.Provider value={primaryMediaOwner(instance.id)}><InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider>
                     </TreeWindowContext.Provider>
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>

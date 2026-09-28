@@ -153,6 +153,13 @@ fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioVa
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDoctype, store::PackError> {
     let entries = expect_entries(v)?;
+    let prolog_position = match find(&entries, "prologPosition") {
+        None => 0,
+        Some(raw) => match resolve(&raw, nodes, visiting)? {
+            SemioValue::Int { lexeme } => lexeme.parse::<usize>().map_err(|_| err(format!("value->xml: invalid doctype prologPosition {lexeme:?}")))?,
+            other => return Err(err(format!("value->xml: doctype prologPosition must be Int, got {other:?}"))),
+        },
+    };
     let name = expect_str(&resolve(&find(&entries, "name").ok_or_else(|| err("value->xml: doctype missing name"))?, nodes, visiting)?)?;
     let external_id = match find(&entries, "externalId") {
         None => None,
@@ -193,7 +200,7 @@ fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>
             .collect::<Result<Vec<_>, store::PackError>>()?,
         Some(other) => return Err(err(format!("value->xml: declarations must be List, got {other:?}"))),
     };
-    Ok(XmlDoctype { name, external_id, declarations })
+    Ok(XmlDoctype { prolog_position, name, external_id, declarations })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -234,7 +241,14 @@ pub fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
         },
         None => Vec::new(),
     };
-    Ok(XmlDocument { root, doctype, declaration, prolog })
+    let epilog = match find(&entries, "epilog") {
+        Some(raw) => match resolve(&raw, nodes, visiting)? {
+            SemioValue::List { items } => items.iter().map(|node| xml_node_from_semio(node, nodes, visiting)).collect::<Result<Vec<_>, store::PackError>>()?,
+            other => return Err(err(format!("value->xml: \"epilog\" must be a List, got {other:?}"))),
+        },
+        None => Vec::new(),
+    };
+    Ok(XmlDocument { root, doctype, declaration, prolog, epilog })
 }
 //#endregion 🔖️Convert
 

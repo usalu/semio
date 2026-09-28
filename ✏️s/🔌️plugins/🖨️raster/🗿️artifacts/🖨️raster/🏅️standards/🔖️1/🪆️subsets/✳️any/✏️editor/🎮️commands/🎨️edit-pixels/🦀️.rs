@@ -1,5 +1,6 @@
 //! 🎨️ Authoritative pixel editing: validate the base revision, compute privately, publish an undoable image.
 use crate::editor::raster::{RasterCommand, RasterPlayApp};
+use crate::editor::raster::selection::selection_spans;
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
 use crate::{RasterImageAsset, RasterLayerNode, RasterMutation, RasterSnapshot};
@@ -101,29 +102,6 @@ fn parse_selection(json: Option<&str>, count: usize) -> Result<Option<Vec<u8>>, 
     Ok(Some(mask))
 }
 
-pub(super) fn selection_spans(json:&str,count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
-    if json.len()>40000 {return Err(fault("Selection exceeds transport budget"));}
-    let value = dsl::os_pack::json::parse(json).map_err(|_| fault("Invalid selection JSON"))?;
-    let spans = value.as_array().ok_or_else(|| fault("Selection must contain spans"))?;
-    let mut result=Vec::with_capacity(spans.len());
-    let mut previous = 0;
-    for span in spans {
-        let values = span.as_array().ok_or_else(|| fault("Invalid selection span"))?;
-        if values.len() != 3 { return Err(fault("Invalid selection span")); }
-        let mut triple = [0_usize; 3];
-        for (i, item) in values.iter().enumerate() {
-            let number = item.as_f64().ok_or_else(|| fault("Invalid selection span"))?;
-            if !number.is_finite() || number.fract() != 0.0 || number < 0.0 || number > count.max(255) as f64 { return Err(fault("Invalid selection span")); }
-            triple[i] = number as usize;
-        }
-        let [start, length, coverage] = triple;
-        let end = start.checked_add(length).ok_or_else(|| fault("Selection overflow"))?;
-        if start < previous || length == 0 || end > count || coverage > 255 { return Err(fault("Selection spans overlap or exceed image")); }
-        result.push((start,end,coverage as u8));
-        previous = end;
-    }
-    Ok(result)
-}
 
 fn visible_path(layers: &[RasterLayerNode], id: &str, ancestors_visible: bool) -> Option<bool> {
     for layer in layers {
@@ -173,6 +151,7 @@ impl PreparingEdit {
 }
 
 fn prepare(command: &EditPixels, document: &RasterSnapshot) -> Result<PreparingEdit, Fault> {
+    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&command.layer_id,false).map_err(Fault::from)?;
     let layer = find_layer(&document.layers, &command.layer_id).ok_or_else(|| fault("Select a pixel layer"))?;
     let RasterLayerNode::Pixel { width, height, image_key, visible, .. } = layer else { return Err(fault("This layer has no editable pixels")); };
     if !visible || visible_path(&document.layers, &command.layer_id, true) != Some(true) { return Err(fault("Show the layer and its groups before editing its pixels")); }
@@ -189,21 +168,21 @@ fn prepare(command: &EditPixels, document: &RasterSnapshot) -> Result<PreparingE
     let selection=command.selection.as_ref().map(|_|Vec::with_capacity(count));
     let mut layer = layer.clone();
     if let RasterLayerNode::Pixel { width, height, transform, .. } = &mut layer {
-        transform.scale_x *= f64::from(width.unwrap_or(image.width)) / f64::from(image.width);
-        transform.scale_y *= f64::from(height.unwrap_or(image.height)) / f64::from(image.height);
-        if let PixelOperation::Crop { x, y, width, height } = &operation {
-            let dx = (f64::from(*x) + f64::from(*width) / 2.0 - f64::from(image.width) / 2.0) * transform.scale_x;
-            let dy = (f64::from(*y) + f64::from(*height) / 2.0 - f64::from(image.height) / 2.0) * transform.scale_y;
-            let (sin, cos) = transform.rotation.to_radians().sin_cos();
-            transform.x += cos * dx - sin * dy;
-            transform.y += sin * dx + cos * dy;
+        let scale_x=f64::from(width.unwrap_or(image.width))/f64::from(image.width);
+        let scale_y=f64::from(height.unwrap_or(image.height))/f64::from(image.height);
+        transform.a*=scale_x;transform.b*=scale_x;transform.c*=scale_y;transform.d*=scale_y;
+        if let PixelOperation::Crop {x,y,width,height}=&operation {
+            let dx=f64::from(*x)+f64::from(*width)/2.0-f64::from(image.width)/2.0;
+            let dy=f64::from(*y)+f64::from(*height)/2.0-f64::from(image.height)/2.0;
+            transform.x+=transform.a*dx+transform.c*dy;
+            transform.y+=transform.b*dx+transform.d*dy;
         }
     }
     let (parent, index) = locate_layer(&document.layers, &command.layer_id).ok_or_else(|| fault("Layer tree address is missing"))?;
     Ok(PreparingEdit {image,operation,selection,spans,span:0,layer,parent,index})
 }
 
-fn publish(image: EncodedPngImage, layer: RasterLayerNode, _parent_id: Option<String>, _index: usize, document: &RasterSnapshot) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+fn publish(mut image: EncodedPngImage, layer: RasterLayerNode, _parent_id: Option<String>, _index: usize, document: &RasterSnapshot) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     use crate::mutations::{add_layer_asset, change_layer_pixels, remove_layer_asset};
     let layer_id = layer_node_id(&layer).to_string();
     let RasterLayerNode::Pixel { image_key: previous_key, transform, .. } = layer else { return Err(fault("This layer has no editable pixels")); };
@@ -213,25 +192,26 @@ fn publish(image: EncodedPngImage, layer: RasterLayerNode, _parent_id: Option<St
     let resized = original_size != (image.width, image.height);
     let key = format!("pixels-{layer_id}-{:016x}", image.content_hash);
     if previous_key.as_ref() == Some(&key) { return Ok(Emit::default()); }
-    let mut operations = Vec::new();
-    if !document.assets.contains_key(&key) {
-        operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: key.clone(), asset: RasterImageAsset { mime: "image/png".into(), data: image.data } }));
-    }
-    operations.push(RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels {
-        layer_id: layer_id.clone(), expected_image_key: previous_key.clone(),
-        content: crate::RasterPixelContent { image_key: Some(key), width: if resized { Some(image.width) } else { *width }, height: if resized { Some(image.height) } else { *height } },
-        transform: resized.then_some(transform),
+    use crate::editor::raster::asset_replacement::{replacement_steps,Step};
+    let removable=previous_key.as_ref().is_some_and(|previous|document.assets.contains_key(previous)&&!flatten_raster_layers(&document.layers).iter().any(|node|match node {
+        RasterLayerNode::Pixel {image_key,mask,..}=>(layer_node_id(node)!=layer_id&&image_key.as_ref()==Some(previous))||mask.as_ref().and_then(|mask|mask.image_key.as_ref())==Some(previous),
+        RasterLayerNode::Group {mask,..}=>mask.as_ref().and_then(|mask|mask.image_key.as_ref())==Some(previous),
+        _=>false,
     }));
-    if let Some(previous) = previous_key {
-        let shared = flatten_raster_layers(&document.layers).iter().any(|node| {
-            match node {
-                RasterLayerNode::Pixel { image_key, mask, .. } => (layer_node_id(node)!=layer_id&&image_key.as_deref()==Some(previous.as_str()))||mask.as_ref().and_then(|m|m.image_key.as_deref())==Some(previous.as_str()),
-                RasterLayerNode::Group {mask,..}=>mask.as_ref().and_then(|m|m.image_key.as_deref())==Some(previous.as_str()),
-                _ => false,
+    let plan=replacement_steps(document.assets.len(),crate::RASTER_OWNED_MAP_CAPACITY,removable,document.assets.contains_key(&key)).map_err(Fault::from)?;
+    let mut expected=previous_key.clone();let mut operations=Vec::new();
+    for step in plan {
+        match step {
+            Step::Detach=>{
+                operations.push(RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels {layer_id:layer_id.clone(),expected_image_key:expected.take(),content:crate::RasterPixelContent {image_key:None,width:*width,height:*height},transform:None}));
             }
-        });
-        if !shared && document.assets.contains_key(&previous) {
-            operations.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: previous }));
+            Step::Remove=>operations.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id:previous_key.as_ref().unwrap().clone()})),
+            Step::Add=>operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:RasterImageAsset {mime:"image/png".into(),data:std::mem::take(&mut image.data)}})),
+            Step::Replace=>operations.push(RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels {
+                layer_id:layer_id.clone(),expected_image_key:expected.clone(),
+                content:crate::RasterPixelContent {image_key:Some(key.clone()),width:if resized {Some(image.width)}else{*width},height:if resized {Some(image.height)}else{*height}},
+                transform:resized.then(||transform.clone()),
+            })),
         }
     }
     Ok(Emit::mutations(operations))

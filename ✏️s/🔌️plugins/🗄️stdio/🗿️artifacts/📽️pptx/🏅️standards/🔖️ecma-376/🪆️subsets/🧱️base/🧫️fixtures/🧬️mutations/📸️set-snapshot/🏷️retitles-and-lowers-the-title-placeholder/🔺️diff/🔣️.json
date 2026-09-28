@@ -10,7 +10,7 @@
                 {
                   "index": 0,
                   "diff": {
-                    "kind": "placeholder",
+                    "shapeKind": "placeholder",
                     "textFrame": {
                       "modified": [
                         {

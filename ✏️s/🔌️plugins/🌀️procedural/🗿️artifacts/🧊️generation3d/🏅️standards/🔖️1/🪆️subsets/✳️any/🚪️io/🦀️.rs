@@ -110,6 +110,28 @@ pub mod mesh_bridge {
     /// that turns it into real BRep geometry, and a preview sink. `preview: true` on the neuron is
     /// what puts the imported mesh in the 3D window (`widget_previews`).
     pub fn import_document(neuron_kind: &str, data_text: String) -> Generation3dSnapshot {
+        import_graph(neuron_kind, data_text, "geometry")
+    }
+
+    /// 🥽️ Preserves an indexed triangle mesh as editable polygon data in the procedural graph.
+    pub fn import_mesh_data(mesh: &MeshData) -> Result<Generation3dSnapshot, store::TextError> {
+        if mesh.positions.len() < 9 || mesh.positions.len() > 300_000 || mesh.positions.len() % 3 != 0 || mesh.positions.iter().any(|value| !value.is_finite()) {
+            return Err(io_error("mesh import requires 3..100000 finite three-dimensional vertices"));
+        }
+        if mesh.indices.is_empty() || mesh.indices.len() > 300_000 || mesh.indices.len() % 3 != 0 {
+            return Err(io_error("mesh import requires 1..100000 indexed triangles"));
+        }
+        if mesh.indices.iter().any(|id| *id as usize >= mesh.positions.len() / 3) || mesh.indices.chunks_exact(3).any(|triangle| triangle[0] == triangle[1] || triangle[1] == triangle[2] || triangle[0] == triangle[2]) {
+            return Err(io_error("mesh import contains an invalid triangle index"));
+        }
+        let vertices = protocol::json::array(mesh.positions.chunks_exact(3).map(|point| protocol::json::array(point.iter().map(|coordinate| protocol::json::Value::from(*coordinate as f64)))));
+        let faces = protocol::json::array(mesh.indices.chunks_exact(3).map(|triangle| protocol::json::array(triangle.iter().map(|id| protocol::json::Value::from(*id)))));
+        let data = protocol::json::object([("vertices".into(), vertices), ("faces".into(), faces)]).to_string();
+        if data.len() > 16_000_000 { return Err(io_error("mesh input exceeds 16 MB")); }
+        Ok(import_graph("brep.mesh.construct", data, "meshOut"))
+    }
+
+    fn import_graph(neuron_kind: &str, data_text: String, output_port: &str) -> Generation3dSnapshot {
         let mut layout = OrderedMap::new();
         layout.insert(IMPORT_SOURCE_WIDGET.to_string(), WidgetLayout { x: 0.0, y: 0.0 });
         layout.insert(IMPORT_GEOMETRY_WIDGET.to_string(), WidgetLayout { x: 260.0, y: 0.0 });
@@ -124,7 +146,7 @@ pub mod mesh_bridge {
             ],
             synapses: vec![
                 SynapseSpec { id: "imported-data".into(), from: IMPORT_SOURCE_WIDGET.into(), to: IMPORT_GEOMETRY_WIDGET.into(), from_port: "text".into(), to_port: "data".into() },
-                SynapseSpec { id: "imported-geometry".into(), from: IMPORT_GEOMETRY_WIDGET.into(), to: IMPORT_PREVIEW_WIDGET.into(), from_port: "geometry".into(), to_port: String::new() },
+                SynapseSpec { id: "imported-geometry".into(), from: IMPORT_GEOMETRY_WIDGET.into(), to: IMPORT_PREVIEW_WIDGET.into(), from_port: output_port.into(), to_port: String::new() },
             ],
             layout,
         };

@@ -1,46 +1,92 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffCodec, MutationDiff};
 
-/// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `DocxDiff` grammar — exercises the
-/// recursive enum tree (`DocxBlockDiff`'s `Paragraph`/`Table` variants, incl. a nested
-/// table-cell block list), both `style`/`based_on` tri-states, the OPC layer's content-types/
-/// parts/relationships-by-owner triples, and every removed/modified/added flavor via a real
-/// `between()` result in both directions.
 #[semio_framework_async_macros::async_test]
-async fn diff_codec_text_binary_roundtrip_law() {
-    let a = snapshot_a();
-    let b = snapshot_b();
-    let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)];
-    for d in cases {
-        let printed = d.print_diff();
-        assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-        let parsed = DocxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
-        assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+async fn canonical_xml_and_opc_diff_text_binary_replay_is_exact() {
+    let before = snapshot_a();
+    let after = snapshot_b();
+    let diff = DocxDiff::between(&before, &after);
+    assert!(diff.xml_parts.is_some(), "semantic changes must be expressed against canonical XML parts");
+    assert!(diff.opc.is_some(), "binary package changes must be expressed against OPC state");
 
-        let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-        let decoded = DocxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
-        assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+    for replay in [diff.clone(), DocxDiff::parse_diff(&diff.print_diff()).expect("text replay"), DocxDiff::decode_diff(&diff.encode_diff().expect("binary encode")).expect("binary replay")] {
+        assert_eq!(replay.apply(&before).expect("diff applies"), after);
+        assert_eq!(replay.inverse(&before).apply(&after).expect("inverse applies"), before);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_demo_diff_round_trips_without_semantic_shadow_state() {
+    for diff in demo_diff_cases() {
+        let text = diff.print_diff();
+        assert_eq!(DocxDiff::parse_diff(&text).expect("text replay"), diff);
+        let binary = diff.encode_diff().expect("binary encode");
+        assert_eq!(DocxDiff::decode_diff(&binary).expect("binary replay"), diff);
+    }
+}
+
+#[test]
+fn canonical_fixture_clears_only_the_main_xml_declaration() {
+    use protocol::command::DiffAlgebra;
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
+    use std::io::Read;
+
+    let fixture_text = include_str!("../../../🧫️fixtures/🧹️clear-main-declaration/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text).expect("third-party JSON parser accepts the neutral fixture");
+    let fixture_diff = serde_json::to_string(&fixture["diff"]).expect("fixture diff serializes");
+    let diff: DocxDiff = dsl::os_pack::json::from_json_str(&fixture_diff).expect("canonical DOCX diff decodes");
+
+    let mut before = DocxSnapshot::default();
+    let main_path = fixture["mainPart"].as_str().unwrap();
+    before.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = Some(XmlDeclaration::new("1.0", Some("UTF-8".into()), Some(true)));
+    before.validate_authority().expect("authored base is valid");
+    let source = before.clone();
+
+    let after = diff.apply(&before).expect("fixture diff applies");
+    assert_eq!(before, source, "diff replay never rewrites its source");
+    let main = after.xml_parts.iter().find(|part| part.path == main_path).unwrap();
+    assert!(main.document.declaration.is_none());
+    let mut expected = source.clone();
+    expected.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = None;
+    assert_eq!(after, expected, "the sparse fixture changes only the canonical XML declaration");
+
+    let derived = DocxDiff::between(&source, &after);
+    assert_eq!(derived, diff, "the neutral fixture is the exact canonical between-diff");
+    assert_eq!(diff.inverse(&source).apply(&after).expect("inverse applies"), source);
+    for replay in [DocxDiff::parse_diff(&diff.print_diff()).expect("text replay"), DocxDiff::decode_diff(&diff.encode_diff().expect("binary encode")).expect("binary replay")] {
+        assert_eq!(replay.apply(&before).expect("codec replay applies"), after);
     }
 
-    // Field sweep: confirm every collection flavor and both tri-states actually got exercised
-    // above, not just "it round-trips" (an all-`None`/empty diff would round-trip trivially).
-    let diff_ab = DocxDiff::between(&a, &b);
-    let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
-    assert!(opc_diff.content_types.as_ref().expect("content_types diff present").defaults.as_ref().expect("defaults diff present").added.len() > 0);
-    let parts = opc_diff.parts.as_ref().expect("parts diff present");
-    assert!(!parts.removed.is_empty() && !parts.modified.is_empty() && !parts.added.is_empty(), "opc.parts: not every flavor exercised");
-    let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
-    assert!(!rels.removed.is_empty() && !rels.added.is_empty(), "opc.relationships: owner removed/added not exercised");
-    let doc_diff = diff_ab.document.as_ref().expect("document diff present");
-    let body_diff = doc_diff.body.as_ref().expect("body diff present");
-    assert!(!body_diff.removed.is_empty(), "body: removed not exercised");
-    assert_eq!(body_diff.modified.len(), 1);
-    let DocxBlockDiff::Paragraph(p_diff) = &body_diff.modified[0].diff else { panic!("expected paragraph diff") };
-    assert_eq!(p_diff.style, Some(Some("keep".to_string())), "style tri-state Some(Some(_)) not exercised");
-    let runs_diff = p_diff.runs.as_ref().expect("runs diff present");
-    assert!(!runs_diff.modified.is_empty() && !runs_diff.added.is_empty(), "runs: modified/added not exercised");
-    let styles_diff = doc_diff.styles.as_ref().expect("styles diff present");
-    assert!(!styles_diff.removed.is_empty() && !styles_diff.added.is_empty(), "styles: removed/added not exercised");
-    let style_mod = styles_diff.modified.iter().find(|m| m.key == "keep").expect("keep style modified");
-    assert_eq!(style_mod.diff.based_on, Some(None), "based_on tri-state Some(None) not exercised");
+    let bytes = crate::standards::v_ecma_376::subsets::base::io::encode_docx(&after).expect("declaration-free package publishes");
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("third-party ZIP reader opens package");
+    let mut xml = String::new();
+    archive.by_name(main_path).unwrap().read_to_string(&mut xml).unwrap();
+    assert!(!xml.starts_with("<?xml"), "independent package inspection observes the cleared declaration");
+}
+
+#[test]
+fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
+    use crate::schema::mutations::{set_snapshot, DocxMutation};
+    use protocol::{MutationDiff, OpBinary, OpText, ToValue};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
+    let mut before = DocxSnapshot::default();
+    before.opc.comment = fixture["before"].as_str().unwrap().into();
+    let mut after = before.clone();
+    after.opc.comment = fixture["after"].as_str().unwrap().into();
+    let diff = DocxDiff::between(&before, &after);
+    assert!(!diff.is_empty());
+    for replay in [DocxDiff::parse_diff(&diff.print_diff()).unwrap(), DocxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
+        assert_eq!(replay.apply(&before).unwrap(), after);
+        assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+    }
+    let mut cleared = after.clone();
+    cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
+    let mut combined = diff;
+    combined.absorb(DocxDiff::between(&after, &cleared));
+    assert_eq!(combined.apply(&before).unwrap(), cleared);
+    let mutation = DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: after.clone() });
+    assert_eq!(DocxMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+    assert_eq!(DocxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
+    assert_eq!(oracle["opc"]["comment"], fixture["after"]);
 }

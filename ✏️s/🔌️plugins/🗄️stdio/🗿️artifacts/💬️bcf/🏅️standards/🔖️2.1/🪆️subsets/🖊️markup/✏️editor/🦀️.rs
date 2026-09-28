@@ -4,7 +4,7 @@
 
 use crate::editor::bcf::modes::edit;
 use crate::editor::bcf::modes::edit::windows::main;
-use crate::standards::v2_1::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, BcfMutation};
+use crate::standards::v2_1::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, set_topic_markup::SetTopicMarkup, BcfMutation};
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -122,17 +122,23 @@ fn bcf_emit_at_revision(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot, can
             if current_revision != *revision {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.bcf.table-conflict"), "The BCF document changed before this cell draft was applied."));
             }
-            let mut next = snapshot.clone();
-            let topic = next.topics.get_mut(*row as usize).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.bcf.row-stale"), format!("BCF topic row {row} no longer exists")))?;
-            match column {
-                0 => topic.guid = value.clone(),
-                1 => topic.title = value.clone(),
-                2 => topic.status = value.clone(),
-                3 => topic.priority = value.clone(),
-                4 => topic.creation_author = value.clone(),
+            let topic = snapshot.topics.get(*row as usize).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.bcf.row-stale"), format!("BCF topic row {row} no longer exists")))?;
+            let mutation = match column {
+                0 => {
+                    if topic.guid == *value {
+                        return Ok(Emit::default());
+                    }
+                    let mut next = snapshot.clone();
+                    next.topics[*row as usize].guid = value.clone();
+                    BcfMutation::SetSnapshot(SetSnapshot { snapshot: next })
+                }
+                1 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: Some(value.clone()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }),
+                2 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: None, description: None, status: Some(value.clone()), priority: None, labels: None, creation_date: None, creation_author: None }),
+                3 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: None, description: None, status: None, priority: Some(value.clone()), labels: None, creation_date: None, creation_author: None }),
+                4 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: None, description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: Some(value.clone()) }),
                 _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.bcf.column-stale"), format!("BCF topic column {column} does not exist"))),
-            }
-            Ok(Emit::mutations(vec![BcfMutation::SetSnapshot(SetSnapshot { snapshot: next })]))
+            };
+            Ok(Emit::mutations(vec![mutation]))
         }
         BcfAnyEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-bcf-snapshot-edit-routed-to-native-reducer")),
     }
@@ -373,7 +379,7 @@ impl ArtifactEditor for BcfAnyEditor {
                     .render_operation()
                     .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
                     .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
-                main::render_revisioned(doc.snapshot, &revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render_revisioned(doc.snapshot, &revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,

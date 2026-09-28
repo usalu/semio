@@ -1,0 +1,21 @@
+{
+  "schema": "semio.stdio.epw.editor.set-cell.fixture.v1",
+  "cases": [
+    {
+      "id": "unicode-empty-safe",
+      "args": {
+        "row": 1,
+        "column": 2,
+        "revision": "row-ä-🌍",
+        "value": ""
+      },
+      "command": {
+        "row": 1,
+        "column": "day",
+        "revision": "row-ä-🌍",
+        "value": ""
+      }
+    }
+  ]
+}
+

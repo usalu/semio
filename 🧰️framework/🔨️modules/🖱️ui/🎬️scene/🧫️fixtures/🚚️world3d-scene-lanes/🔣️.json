@@ -99,6 +99,12 @@
       "optional": true
     },
     {
+      "lane": "presentation",
+      "field": "presentationJson",
+      "bodyKey": "framework.scene.world3d.presentation",
+      "optional": true
+    },
+    {
       "lane": "chunking",
       "field": "chunkingJson",
       "bodyKey": "framework.scene.world3d.chunking",
@@ -155,13 +161,15 @@
       "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}]",
       "selectionJson": "{\"method\":\"rectangle\",\"mode\":\"replace\",\"ids\":[],\"hoveredId\":null}",
       "lodJson": "{\"maxInstances\":8000}",
-      "domainId": "puzzle3d"
+      "domainId": "puzzle3d",
+      "presentationJson": "{\"showGrid\":false,\"showGizmo\":false,\"interactive\":false,\"viewportMask\":\"ellipse\",\"clear\":\"transparent\",\"sourceAspect\":2.0}"
     },
     "laneTexts": {
       "framework.scene.world3d.meshes": "[{\"id\":\"box\",\"kind\":\"box\"}]",
       "framework.scene.world3d.instances": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}]",
       "framework.scene.world3d.selection": "{\"method\":\"rectangle\",\"mode\":\"replace\",\"ids\":[],\"hoveredId\":null}",
-      "framework.scene.world3d.lod": "{\"maxInstances\":8000}"
+      "framework.scene.world3d.lod": "{\"maxInstances\":8000}",
+      "framework.scene.world3d.presentation": "{\"showGrid\":false,\"showGizmo\":false,\"interactive\":false,\"viewportMask\":\"ellipse\",\"clear\":\"transparent\",\"sourceAspect\":2.0}"
     },
     "spine": {
       "cameraJson": "{\"position\":[4,4,4],\"target\":[0,0,0]}",
@@ -189,6 +197,11 @@
           "lane": "lod",
           "bytes": 21,
           "hash": "6f17a197d81f9c25"
+        },
+        {
+          "lane": "presentation",
+          "bytes": 122,
+          "hash": "ab491ad014ea0d00"
         }
       ]
     }
@@ -201,5 +214,43 @@
     "payloadBytes": 26000,
     "expectedLeaves": 2,
     "expectedLeafDepth": 1
+  },
+  "presentation": {
+    "$comment": "The default interactive World remains unchanged. Icon-like isolated rendering disables chrome/input, preserves its authored aspect in a physically different inner frame, and leaves the destination outside its ellipse untouched.",
+    "defaults": {
+      "showGrid": true,
+      "showGizmo": true,
+      "interactive": true,
+      "viewportMask": "rectangle",
+      "clear": "theme"
+    },
+    "icon": {
+      "showGrid": false,
+      "showGizmo": false,
+      "interactive": false,
+      "viewportMask": "ellipse",
+      "clear": "transparent",
+      "sourceAspect": 2.0
+    },
+    "rejections": [
+      {
+        "sourceAspect": 0
+      },
+      {
+        "sourceAspect": -1
+      },
+      {
+        "viewportMask": "circle"
+      },
+      {
+        "clear": "canvas"
+      },
+      {
+        "interactive": "false"
+      },
+      {
+        "legacyClip": true
+      }
+    ]
   }
 }

@@ -15,13 +15,16 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": "{\"x\":24.0,\"y\":-8.0,\"scaleX\":2.0,\"scaleY\":1.5,\"rotation\":0.0}",
+          "transformJson": "{\"x\":24.0,\"y\":-8.0,\"scaleX\":2.0,\"scaleY\":1.5,\"shear\":0.0,\"rotation\":0.0}",
           "fillJson": null,
           "strokeJson": null,
           "booleanOperation": null,
           "traceParamsJson": null,
           "layerJson": null,
-          "pathSegments": null
+          "pathSegments": null,
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null
         }
       }
     ],

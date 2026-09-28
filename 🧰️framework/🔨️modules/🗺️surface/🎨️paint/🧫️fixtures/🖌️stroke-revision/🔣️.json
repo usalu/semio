@@ -1,0 +1,177 @@
+{
+  "document": {
+    "schema": "raster.document",
+    "layers": [
+      {
+        "kind": "pixel",
+        "id": "paint",
+        "name": "Paint",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "width": 2,
+        "height": 2,
+        "imageKey": null,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "a": 1,
+          "b": 0,
+          "c": 0,
+          "d": 1
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "unchanged",
+      "patch": [],
+      "cancel": false,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "rename",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/name",
+          "value": "Renamed"
+        }
+      ],
+      "cancel": false,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "lock",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/locked",
+          "value": true
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "hide",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/visible",
+          "value": false
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "move",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/transform/x",
+          "value": 1
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "resize",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/width",
+          "value": 4
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "image",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/imageKey",
+          "value": "new-image"
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "delete",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/layers/0"
+        }
+      ],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "clear selection",
+      "patch": [],
+      "cancel": true,
+      "selected": [],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "switch tool",
+      "patch": [],
+      "cancel": true,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintEraser"
+    },
+    {
+      "name": "same tool",
+      "patch": [],
+      "cancel": false,
+      "selected": [
+        "paint"
+      ],
+      "utility": "paintBrush"
+    },
+    {
+      "name": "additional selection",
+      "patch": [],
+      "cancel": false,
+      "selected": [
+        "paint",
+        "other"
+      ],
+      "utility": "paintBrush"
+    }
+  ]
+}

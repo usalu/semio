@@ -13,6 +13,8 @@ await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-wav")
 if (command === "test") {
   const mutations = resolve(import.meta.dir, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
   const test = resolve(mutations, "🧪️tests/🟦️.test.ts");
-  await runOwnedCommand(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", resolve(mutations, "🟦️.ts"), resolve(mutations, "📝️text/🟦️.ts"), resolve(mutations, "💾️binary/🟦️.ts"), test], getWorkspaceRoot(), "wav-mutation-facet-types", 120_000);
-  await runOwnedCommand(process.execPath, ["test", test], getWorkspaceRoot(), "wav-mutation-facet-contract", 120_000);
+  const audioEdit = resolve(import.meta.dir, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎮️commands/🔊️edit-audio");
+  const audioTest = resolve(audioEdit, "🧪️tests/🟦️.test.ts");
+  await runOwnedCommand(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", resolve(mutations, "🟦️.ts"), resolve(mutations, "📝️text/🟦️.ts"), resolve(mutations, "💾️binary/🟦️.ts"), test, resolve(audioEdit, "🟦️.ts"), audioTest], getWorkspaceRoot(), "wav-mutation-facet-types", 120_000);
+  await runOwnedCommand(process.execPath, ["test", test, audioTest], getWorkspaceRoot(), "wav-mutation-facet-contract", 120_000);
 }

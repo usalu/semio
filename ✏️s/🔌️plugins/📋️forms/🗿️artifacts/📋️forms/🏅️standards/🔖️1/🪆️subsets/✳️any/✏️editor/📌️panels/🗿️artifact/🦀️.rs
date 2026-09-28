@@ -58,12 +58,12 @@ fn question_row(question: &FormQuestion) -> UiAssemblyResult<BuiltNode> {
 
 /// 🎯️ One step row: a `"section"` pick target keyed by its canonical tree id, draggable, and itself
 /// a windowed container over the questions it owns.
-fn step_row(step: &FormStep, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+fn step_row(step: &FormStep, windows: &TreeWindows<'_>, labels: &FormsLabels) -> UiAssemblyResult<BuiltNode> {
     let id = forms_play_step_tree_id(&step.id);
     let item = ui::tree_item(ui_label(&step.title)?)
         .try_id(&id)
         .map_err(|_| PluginAssemblyError::new("ui.document", "forms step id admission failed"))?
-        .description(UiText::clipped(&format!("{} questions", step.blocks.len())))
+        .description(UiText::clipped(&format!("{} {}", step.blocks.len(), labels.questions.as_str())))
         .icon(ui_text("list-tree", "forms step icon admission failed")?)
         .draggable(true)
         .granularity(ui_text(FORMS_INTERACTION_GRANULARITY_SECTION, "forms section granularity admission failed")?);
@@ -91,7 +91,7 @@ pub fn render(spec: &FormsSnapshot, labels: &FormsLabels, windows: &TreeWindows<
             Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?),
             true,
             &steps,
-            |step| step_row(step, windows),
+            |step| step_row(step, windows, labels),
             labels.no_steps_tree_item.as_str(),
         )?
         .interaction_domain(FORMS_PLAY_APP_ID, FORMS_INTERACTION_FIELDS)?

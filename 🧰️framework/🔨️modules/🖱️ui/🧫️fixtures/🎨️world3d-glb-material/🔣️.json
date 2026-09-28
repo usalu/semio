@@ -1,0 +1,64 @@
+{
+  "schema": "framework.world3d.glb-material/v1",
+  "asset": "🧊️two-primitive.glb",
+  "primitiveOrder": ["vertex-alpha-blend", "textured-alpha-mask"],
+  "publication": {
+    "workUnit": "onePrimitiveMaterialFieldPerStep",
+    "ownership": "primitiveLocal",
+    "commit": "geometryAndMaterialsTogether",
+    "cancellation": "retirePartialWithoutPublication",
+    "override": "replaceEveryPrimitiveMaterial"
+  },
+  "cases": [
+    {
+      "id": "vertex-alpha-blend",
+      "baseColorFactor": [0.8, 0.2, 0.1, 0.75],
+      "metalness": 0.65,
+      "roughness": 0.2,
+      "emissiveFactor": [0.1, 0.05, 0.02],
+      "alphaMode": "BLEND",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "vertexColor": { "itemSize": 4, "normalized": true, "bytes": [255, 0, 0, 128, 0, 255, 0, 255, 0, 0, 255, 64] },
+      "texture": null,
+      "expectedThree": {
+        "color": [0.8, 0.2, 0.1],
+        "opacity": 0.75,
+        "metalness": 0.65,
+        "roughness": 0.2,
+        "emissive": [0.1, 0.05, 0.02],
+        "transparent": true,
+        "alphaTest": 0,
+        "side": "DoubleSide",
+        "depthWrite": false,
+        "vertexColors": true,
+        "mapColorSpace": null
+      }
+    },
+    {
+      "id": "textured-alpha-mask",
+      "baseColorFactor": [0.1, 0.3, 0.9, 1],
+      "metalness": 0.05,
+      "roughness": 0.85,
+      "emissiveFactor": [0, 0.1, 0.2],
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.37,
+      "doubleSided": false,
+      "vertexColor": null,
+      "texture": { "mimeType": "image/png", "wrapS": "ClampToEdgeWrapping", "wrapT": "MirroredRepeatWrapping", "magFilter": "LinearFilter", "minFilter": "NearestFilter" },
+      "expectedThree": {
+        "color": [0.1, 0.3, 0.9],
+        "opacity": 1,
+        "metalness": 0.05,
+        "roughness": 0.85,
+        "emissive": [0, 0.1, 0.2],
+        "transparent": false,
+        "alphaTest": 0.37,
+        "side": "FrontSide",
+        "depthWrite": true,
+        "vertexColors": false,
+        "mapColorSpace": "srgb"
+      }
+    }
+  ]
+}

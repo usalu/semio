@@ -1,0 +1,29 @@
+{
+  "schema": "stdio.wav",
+  "fmt": {
+    "audioFormat": 1,
+    "channels": 1,
+    "sampleRate": 8000,
+    "byteRate": 16000,
+    "blockAlign": 2,
+    "bitsPerSample": 16
+  },
+  "data": {
+    "kind": "pcm16",
+    "value": [1, -1]
+  },
+  "otherChunks": [
+    { "fourcc": "JUNK", "data": [1, 2, 3], "padByte": 165 },
+    { "fourcc": "fmt ", "data": [1, 0, 1, 0, 64, 31, 0, 0, 128, 62, 0, 0, 2, 0, 16, 0] },
+    { "fourcc": "LIST", "data": [73, 78, 70, 79] },
+    { "fourcc": "data", "data": [9, 0, 10, 0] }
+  ],
+  "chunkOrder": [
+    { "kind": "other", "value": 0 },
+    { "kind": "format" },
+    { "kind": "other", "value": 1 },
+    { "kind": "other", "value": 2 },
+    { "kind": "samples" },
+    { "kind": "other", "value": 3 }
+  ]
+}

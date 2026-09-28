@@ -1,0 +1,5 @@
+# Flow Owner Acceptance — Batch34
+
+The physical runner already checks exact WGPU nodeGraphEdit connect/disconnect wire rows and actual geometry, but only React waits for an owner hostSnapshotJson. A new native app-backed test now feeds those same narrow rows into the real registered Flow app, waits for Child/Ui/Terminal, reads the republished main scene, obtains its owner-assigned synapse ID, disconnects that ID, and checks both the persisted child and the public scene. Existing move coverage already asserts the persisted child position and published layout.add. The connect/disconnect test also preserves prior edges, widget layout, and content-child identity.
+
+The source is staged at the node-graph-edit command unit suite. No Cargo command was launched: the existing renderer projection queue and WASM25 are active. This is an unrun owner-boundary law, not a new physical acceptance receipt. Gesture cancellation remains independently covered upstream; this test cannot establish that the WGPU producer emitted nothing on cancellation.

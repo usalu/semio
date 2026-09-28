@@ -2374,7 +2374,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("masks ellipse shots with a rounded frame", () => {
-      expect(iconShotFrameClass("ellipse")).toBe("rounded-full");
+      expect(iconShotFrameClass("ellipse")).toBe("rounded-[50%]");
       expect(iconShotFrameClass("rectangle")).toBe("rounded-none");
     });
   });
@@ -10412,12 +10412,12 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(resolveControlLabelId("ui.fullscreen.toggle")).toBe("ui.fullscreen.toggle");
       });
   
-      it("keeps emphasized label styling on pressed navbar toggles", () => {
+      it("uses the active foreground on pressed navbar toggles", () => {
         const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
         expect(markup).toContain('data-state="on"');
         expect(markup).toContain("data-[state=on]:bg-active-base");
         expect(markup).toContain("data-[state=on]:border-active-base");
-        expect(markup).toContain("data-[state=on]:text-emphasized");
+        expect(markup).toContain("data-[state=on]:text-active-foreground");
         expect(markup).not.toContain("data-[state=on]:bg-hover-interactive-fill");
       });
   

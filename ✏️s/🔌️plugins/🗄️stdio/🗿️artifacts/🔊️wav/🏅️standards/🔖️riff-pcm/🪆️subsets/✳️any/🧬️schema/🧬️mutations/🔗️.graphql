@@ -1,9 +1,32 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type WavMutationEntry {
-  key: String!
-  value: String!
+enum WavMutationTag {
+  SET_SNAPSHOT
+  PATCH_SNAPSHOT
+  SET_FMT
+  SET_DATA
+  PATCH_DATA
+  SET_OTHER_CHUNKS
 }
-type WavMutation {
-  schema: String! @state(class: ARTIFACT)
-  entries: [WavMutationEntry!]! @state(class: ARTIFACT)
+input WavMutationFmt { audioFormat: Int!, channels: Int!, sampleRate: Int!, byteRate: Int!, blockAlign: Int!, bitsPerSample: Int!, ext: [Int!] }
+input WavMutationData { kind: String!, value: [Float!]! }
+input WavMutationRiffChunk { fourcc: String!, data: [Int!]!, padByte: Int }
+input WavMutationChunkRef { kind: String!, value: Int }
+input WavMutationSnapshot {
+  schema: String!
+  fmt: WavMutationFmt!
+  data: WavMutationData!
+  fmtPadByte: Int
+  dataPadByte: Int
+  otherChunks: [WavMutationRiffChunk!]!
+  chunkOrder: [WavMutationChunkRef!]!
+}
+input WavMutationInput {
+  mutation: WavMutationTag!
+  snapshot: WavMutationSnapshot
+  patchWire: String
+  fmt: WavMutationFmt
+  data: WavMutationData
+  index: Int
+  removeCount: Int
+  moveTo: Int
+  chunks: [WavMutationRiffChunk!]
 }

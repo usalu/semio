@@ -1,14 +1,14 @@
 //! 🔣️ Json editor — `main` window: a real, directly editable tree of the whole `JsonValue`, built
-//! from the framework `TreeWindowKit` (contract §2.6). Every node is keyed by its SIBLING segment
-//! (`k=<member>` / `i=<index>`, the root by [`JSON_ROOT_NODE_ID`]); its window identity is the PATH
+//! from the framework `TreeWindowKit` (contract §2.6). Every node is keyed by its SIBLING ordinal
+//! (`m=<member-index>` / `i=<item-index>`, the root by [`JSON_ROOT_NODE_ID`]); its window identity is the PATH
 //! the SDK composes from its ancestors' keys, and `set-node` addresses a node by that same path, so
 //! the editor's own `handle` applies `JsonMutation::SetScalar` there, replacing whichever subtree
 //! previously lived at it.
 
 use crate::schema::snapshot::{write_json_pretty, JsonMember, JsonValue};
 use crate::JsonSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -29,41 +29,17 @@ pub fn definition() -> WindowKindDefinition {
 /// with any sibling that does the same.
 pub const JSON_ROOT_NODE_ID: &str = "$";
 
-/// 🧭️ One node's key is its SIBLING segment — `k=<member>` for an object member, `i=<index>` for an
+/// 🧭️ One node's key is its SIBLING segment — `m=<index>` for an object member, `i=<index>` for an
 /// array element — NEVER the path from the document root. Window identity is already the container
 /// PATH (its ancestors' keys, then its own, joined by `TREE_WINDOW_PATH_SEPARATOR`), and a path is a
 /// view-context identifier capped at 256 code points: a key that repeated its own ancestry made that
 /// path grow quadratically and put any document deeper than about seven levels out of the host's
 /// reach entirely.
 ///
-/// 🔑️ The separator glyph is folded out of a member name, because a key carrying it would make the
-/// composed path ambiguous and is refused at assembly with `ui.tree-window.separator-in-key`.
-pub fn member_segment(key: &str) -> String {
-    format!("k={}", key.replace(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR, "\u{fffd}"))
-}
-
-/// 🆔️ `segment`, made unique among the siblings already emitted. rfc8259's base grammar lets one
-/// object repeat a member name, and two true siblings sharing a key are refused twice over — by the
-/// UI document (`DuplicateSiblingKey`) and by the window ledger (`ui.tree-window.duplicate-key`).
-fn unique_sibling_key(segment: &str, seen: &mut Vec<String>) -> String {
-    let mut key = segment.to_string();
-    let mut ordinal = 1usize;
-    while seen.iter().any(|taken| taken == &key) {
-        ordinal += 1;
-        key = format!("{segment}#{ordinal}");
-    }
-    seen.push(key.clone());
-    key
-}
-
-/// 🧭️ Drops the `#<n>` disambiguator [`unique_sibling_key`] adds to a repeated member name. A member
-/// genuinely named `…#2` is indistinguishable here — repeated member names were never addressable by
-/// `JsonPathSegment::Key` either, which resolves by name.
-pub fn strip_sibling_ordinal(segment: &str) -> &str {
-    match segment.rsplit_once('#') {
-        Some((head, ordinal)) if !head.is_empty() && !ordinal.is_empty() && ordinal.chars().all(|character| character.is_ascii_digit()) => head,
-        _ => segment,
-    }
+/// 🔢️ Object members use their source-order ordinal, so duplicate names, literal `#2` suffixes and
+/// the tree separator remain exact user data in the visible label instead of leaking into UI ids.
+pub fn member_segment(index: usize) -> String {
+    format!("m={index}")
 }
 
 /// 🧭️ The `set-node` id of the node reached by `segments` (sibling segments, outermost first) — the
@@ -80,6 +56,30 @@ pub fn encode_path_id(segments: &[String]) -> String {
         path.push_str(segment);
     }
     path
+}
+
+fn canonical_index(segment: &str, prefix: &str) -> Option<usize> {
+    let value = segment.strip_prefix(prefix)?;
+    let index = value.parse::<usize>().ok()?;
+    (index.to_string() == value).then_some(index)
+}
+
+/// 🧭️ Resolves a row id through the exact source-order member/item ordinals it carries.
+pub fn node_at_path_id<'a>(document: &'a JsonSnapshot, node_id: &str) -> Option<&'a JsonValue> {
+    let mut value = &document.value;
+    if node_id == JSON_ROOT_NODE_ID {
+        return Some(value);
+    }
+    let mut segments = node_id.split(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+    (segments.next()? == JSON_ROOT_NODE_ID).then_some(())?;
+    for segment in segments {
+        value = match value {
+            JsonValue::Object { members } => &members.get(canonical_index(segment, "m=")?)?.value,
+            JsonValue::Array { items } => items.get(canonical_index(segment, "i=")?)?,
+            _ => return None,
+        };
+    }
+    Some(value)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -104,17 +104,17 @@ pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_frame
 }
 
 /// 📝️ Adds the natural RFC 8259 source draft to the structured tree for editor hosts.
-pub fn render_editor(document: &JsonSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let tree = render(document, windows)?;
-    semio_s_artifact_stdio_contract::editing::render_file_source_editor(
-        "stdio-json-source",
-        write_json_pretty(&document.value),
-        "json",
-        "set-node",
-        JSON_ROOT_NODE_ID,
-        locale,
-        tree,
-    )
+pub fn render_editor(document: &JsonSnapshot, locale: Locale, windows: &TreeWindows<'_>, controller_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let view = TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] };
+    let tree = TreeWindowKit::render_editable_nodes_windowed(&view, windows, controller_id, |path, _| {
+        let source = write_json_pretty(node_at_path_id(document, path)?);
+        UiText::try_from_str(&source)?;
+        let mut arguments = UiMapBuilder::try_new()?;
+        arguments.try_insert("nodeId".into(), UiValue::Text(UiText::try_from_str(path)?)).ok()?;
+        arguments.try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision)?)).ok()?;
+        Some(EditableTreeNode::new(source, "set-node", UiValue::Map(arguments.finish())))
+    })?;
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-json-source", write_json_pretty(&document.value), "json", "set-node", JSON_ROOT_NODE_ID, revision, locale, tree)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -122,8 +122,7 @@ fn node_view(key: String, key_label: Option<&str>, value: &JsonValue) -> TreeNod
     let prefix = key_label.map(|label| format!("{label}: ")).unwrap_or_default();
     match value {
         JsonValue::Object { members } => {
-            let mut seen: Vec<String> = Vec::new();
-            let children = members.iter().map(|member: &JsonMember| node_view(unique_sibling_key(&member_segment(&member.key), &mut seen), Some(&member.key), &member.value)).collect();
+            let children = members.iter().enumerate().map(|(index, member): (usize, &JsonMember)| node_view(member_segment(index), Some(&member.key), &member.value)).collect();
             TreeNodeView { id: key, label: format!("{prefix}{{{}}}", members.len()), children }
         }
         JsonValue::Array { items } => {

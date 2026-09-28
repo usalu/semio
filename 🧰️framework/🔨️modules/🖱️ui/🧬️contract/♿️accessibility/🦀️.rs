@@ -281,9 +281,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         expanded: match &record.component {
             crate::Component::Select(_) => Some(false),
             crate::Component::TreeSection(props) => Some(props.default_open.unwrap_or(true)),
-            crate::Component::TreeItem(props)
-                if props.default_open.is_some() || record.children.iter().any(|child| Some(*child) != props.inline_toolbar && Some(*child) != props.detail) =>
-            {
+            crate::Component::TreeItem(props) if record.children.iter().any(|child| Some(*child) != props.inline_toolbar && Some(*child) != props.detail) => {
                 Some(props.default_open.unwrap_or(true))
             }
             _ => None,

@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "tolerance",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "icon-frame-presentation-v1"
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "width",
+          "height",
+          "container",
+          "shape",
+          "footer",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "container": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "shape": {
+            "enum": [
+              "rectangle",
+              "ellipse"
+            ]
+          },
+          "footer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "frame",
+              "content",
+              "footer",
+              "radius",
+              "border",
+              "badge",
+              "contentProbes"
+            ],
+            "properties": {
+              "frame": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "content": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "footer": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "radius": {
+                "enum": [
+                  "0px",
+                  "50%"
+                ]
+              },
+              "border": {
+                "const": 2
+              },
+              "badge": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bounds",
+                  "fontSize",
+                  "lineHeight",
+                  "paddingX",
+                  "paddingY",
+                  "fontFamily",
+                  "probes",
+                  "lines"
+                ],
+                "properties": {
+                  "bounds": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "fontSize": {
+                    "const": 10
+                  },
+                  "lineHeight": {
+                    "const": 15
+                  },
+                  "paddingX": {
+                    "const": 4
+                  },
+                  "paddingY": {
+                    "const": 0
+                  },
+                  "fontFamily": {
+                    "const": "Share Tech Mono"
+                  },
+                  "probes": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "relative",
+                        "visible"
+                      ],
+                      "properties": {
+                        "relative": {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "visible": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "lines": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "contentProbes": {
+                "type": "array",
+                "minItems": 5,
+                "maxItems": 5,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "relative",
+                    "visible"
+                  ],
+                  "properties": {
+                    "relative": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "visible": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

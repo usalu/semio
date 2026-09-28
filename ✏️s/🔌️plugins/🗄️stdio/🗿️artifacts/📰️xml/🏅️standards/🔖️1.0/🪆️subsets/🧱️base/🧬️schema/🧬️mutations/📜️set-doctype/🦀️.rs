@@ -32,7 +32,7 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
 
     fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(XmlDiff { prolog: None, declaration: None, doctype: Some(payload.doctype.clone()), root: None }),
+            Self::Apply(payload) => protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: None, doctype: Some(payload.doctype.clone()), root: None }),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
         }
     }

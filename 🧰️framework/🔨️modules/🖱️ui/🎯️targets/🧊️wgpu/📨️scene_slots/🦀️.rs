@@ -44,6 +44,7 @@ pub struct ScenePaintCursor {
     item: usize,
     page: usize,
     byte: usize,
+    external_completed: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -91,6 +92,7 @@ impl ScenePaintCursor {
         self.item = 0;
         self.page = 0;
         self.byte = 0;
+        self.external_completed = 0;
         Ok(())
     }
 
@@ -121,12 +123,26 @@ impl ScenePaintCursor {
         Ok(())
     }
 
+    /// 📊️ Records an owned producer's exact completed-work cursor while this scene phase waits.
+    pub fn observe_external_progress(&mut self, completed: u64) -> Result<(), ScenePaintCursorError> {
+        if completed < self.external_completed {
+            return Err(ScenePaintCursorError::CounterExhausted);
+        }
+        self.external_completed = completed;
+        Ok(())
+    }
+
+    pub(crate) const fn progress_witness(&self) -> (bool, u16, usize, usize, usize, u64) {
+        (self.node.is_some(), self.phase, self.item, self.page, self.byte, self.external_completed)
+    }
+
     pub fn finish(&mut self) -> ScenePaintStep {
         self.node = None;
         self.phase = 0;
         self.item = 0;
         self.page = 0;
         self.byte = 0;
+        self.external_completed = 0;
         ScenePaintStep::Complete
     }
 
@@ -136,6 +152,7 @@ impl ScenePaintCursor {
             self.item = 0;
             self.page = 0;
             self.byte = 0;
+            self.external_completed = 0;
             return false;
         }
         true

@@ -1,0 +1,26 @@
+{
+  "schema": "forms.form",
+  "id": "default",
+  "version": "1",
+  "title": "Contact",
+  "definition": {
+    "steps": [{
+      "id": "contact",
+      "title": "Contact",
+      "blocks": [
+        { "id": "name", "label": "Name", "kind": "text", "required": true, "placeholder": "Your name" },
+        { "id": "email", "label": "Email", "kind": "text", "required": true, "placeholder": "you@example.com" },
+        { "id": "message", "label": "Message", "kind": "longText", "placeholder": "How can we help?" }
+      ]
+    }]
+  },
+  "responses": [],
+  "structure": {
+    "childId": "contact-structure",
+    "target": { "artifactId": "contact-structure", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "value" } }
+  },
+  "results": {
+    "childId": "contact-results",
+    "target": { "artifactId": "contact-results", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } }
+  }
+}

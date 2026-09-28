@@ -28,7 +28,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-            type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
+            type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
             async fn dispatch(app: &mut FormsApp, command: FormsCommand, view: &ViewModel) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("forms-try-window-ownership") };
@@ -61,9 +61,17 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             };
             let left = all.for_window_instance("forms-try-left").expect("left Forms Try window");
             let right = all.for_window_instance("forms-try-right").expect("right Forms Try window");
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<FormsPlayApp>>(manifest).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
             app.bind_instance_id(91).await;
             let outcome: Result<(), String> = async {
+                dispatch(
+                    &mut app,
+                    FormsCommand::SetSpecJson(crate::editor::forms::commands::set_spec_json::SetSpecJson {
+                        json: dsl::json::to_string(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&document()))),
+                    }),
+                    &left,
+                )
+                .await?;
                 dispatch(
                     &mut app,
                     FormsCommand::SetContributions(set_contributions::SetContributions { json: "[{\"pluginId\":\"host\",\"topicContribution\":{}}]".into() }),
@@ -95,7 +103,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 }
 
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<FormsPlayApp>>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                 reopened.bind_instance_id(92).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let restored = artifact_app_laws::capture_fixture_window_config::<FormsTryWindowConfigOwner, _, _>(&mut *reopened, &left)
@@ -222,7 +230,7 @@ fn forms_try_window_ownership_keeps_same_kind_windows_and_document_bytes_isolate
     assert_eq!(app_config_reloaded, app_config);
 
     let left_config = FormsTryWindowConfig::default();
-    let right_config = FormsTryWindowConfig { current_step_index: 0 };
+    let right_config = FormsTryWindowConfig::default();
     let left_transient = FormsTryWindowTransient::default();
     let right_transient = FormsTryWindowTransient::default();
     let advanced = next_step::handle_window(
@@ -275,7 +283,7 @@ fn forms_try_window_ownership_keeps_same_kind_windows_and_document_bytes_isolate
     .expect("reset left Try window");
     assert_eq!(reset_config, FormsTryWindowConfig::default());
     assert!(reset.transient.expect("left reset transient").try_values.is_empty());
-    assert_eq!(right_config, FormsTryWindowConfig { current_step_index: 0 });
+    assert_eq!(right_config, FormsTryWindowConfig::default());
     assert!(right_transient.try_values.is_empty());
     assert_eq!(document.encode_pack(), document_before);
 

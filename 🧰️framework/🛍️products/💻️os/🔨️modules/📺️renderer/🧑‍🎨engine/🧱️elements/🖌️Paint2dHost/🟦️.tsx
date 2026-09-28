@@ -726,7 +726,7 @@ function Paint2dCanvasSurface({
       {!isNavigator ? (
         <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       ) : null}
-      {!isNavigator && <PixelEditingOverlay documentJson={scene.documentSyncJson} assetsJson={scene.assetsJson} assetExtentsJson={paintWitness.assetsJson} selectionJson={scene.selectionJson} activeUtility={scene.activeUtility} brushSize={scene.brushSize} brushOpacity={scene.brushOpacity} brushColor={scene.brushColor} brushHardness={scene.brushHardness} camera={cameraRef} container={containerRef} dispatch={dispatch} onWheel={onWheel} onCameraChange={next=>{cameraRef.current=next;sessionRef.current?.setCamera(next.x,next.y,next.zoom);sessionRef.current?.renderFrame();dispatch("setCamera",{camera:next});}} />}
+      {!isNavigator && <PixelEditingOverlay documentJson={scene.documentSyncJson} assetsJson={scene.assetsJson} assetExtentsJson={paintWitness.assetsJson} selectionJson={scene.selectionJson} pixelSelectionJson={scene.pixelSelectionJson} activeUtility={scene.activeUtility} brushSize={scene.brushSize} brushOpacity={scene.brushOpacity} brushColor={scene.brushColor} brushHardness={scene.brushHardness} paintTarget={scene.paintTarget} maskValue={scene.maskValue} camera={cameraRef} container={containerRef} dispatch={dispatch} onWheel={onWheel} onCameraChange={next=>{cameraRef.current=next;sessionRef.current?.setCamera(next.x,next.y,next.zoom);sessionRef.current?.renderFrame();dispatch("setCamera",{camera:next});}} />}
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}

@@ -9,6 +9,7 @@ use super::change_layer_adjustment_kind;
 use super::change_layer_blend_mode;
 use super::change_layer_opacity;
 use super::change_layer_visible;
+use super::change_layer_locked;
 use super::create_layer;
 use super::delete_layer;
 use super::move_layer;
@@ -18,6 +19,7 @@ use super::reorder_layers;
 use super::resize_layer;
 use super::change_layer_pixels;
 use super::change_layer_mask;
+use super::change_layer_transform;
 use super::change_layer_adjustment_parameter;
 //#endregion 🔖️Leaves
 
@@ -34,6 +36,7 @@ pub enum RasterMutation {
     ReorderLayers(reorder_layers::ReorderLayers),
     RenameLayer(rename_layer::RenameLayer),
     ChangeLayerVisible(change_layer_visible::ChangeLayerVisible),
+    ChangeLayerLocked(change_layer_locked::ChangeLayerLocked),
     ChangeLayerOpacity(change_layer_opacity::ChangeLayerOpacity),
     ChangeLayerBlendMode(change_layer_blend_mode::ChangeLayerBlendMode),
     MoveLayer(move_layer::MoveLayer),
@@ -43,6 +46,7 @@ pub enum RasterMutation {
     RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset),
     ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels),
     ChangeLayerMask(change_layer_mask::ChangeLayerMask),
+    ChangeLayerTransform(change_layer_transform::ChangeLayerTransform),
     ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter),
 }
 
@@ -229,12 +233,11 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `RasterMutation` variant, in declaration order — the vocabulary
 /// the `raster-1-any` catalog (`../../🔣️oracle.json`) declares and the
-/// `🖨️mutate-raster-1` exhaustive case measures itself against. Ten address the recursive layer tree;
-/// the last two join that tree to the document's root `assets` pool by id.
+/// `🖨️mutate-raster-1` exhaustive case measures itself against. 
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
 pub const KINDS: &[&str] =
-    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-adjustment-parameter"];
+    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

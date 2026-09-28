@@ -65,3 +65,8 @@ The later [affine transform checkpoint](↗️affine-transforms.md) removes the 
 ### Shared Canvas Handles
 
 [Transform handles](🎛️transform-handles.md) corrects the earlier selection-hook assumption: the current request-context hook supplies InteractionView. Nine painted handles now connect to retained pointer preparation, absolute matrix preview and release-only commits. The TS suite passes 75 tests / 1,373 assertions. Native registered-editor and browser checks are still unverified; large render work, Boolean/trace bounds and remaining handle accessibility/snapping are open.
+
+
+## Stable Browser Movement
+
+On port 6065, after selecting Orange Wedge, a drag from (420,360) to (440,375) committed Position X=7.532956685499059 and Y=5.649717514124291, consistent with the canvas zoom 2.655. The document-layer name stayed Orange Wedge. A single Command-Z restored X=0 and Y=0 in the inspector. AX updates arrived asynchronously after the pointer command rather than in the first immediate snapshot. Browser error/warning logs were empty before this journey. This is a running-app movement/undo confirmation, separate from the new node-drag tool still awaiting activation.

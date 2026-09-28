@@ -23,6 +23,8 @@ message RenameLayer {
   string new_name = 2;
 }
 
+message ChangeLayerLocked { string layer_id = 1; bool expected = 2; bool locked = 3; }
+
 message ChangeLayerVisible {
   string layer_id = 1;
   bool new_visible = 2;
@@ -82,6 +84,7 @@ message ChangeLayerMask {
   optional semio.s.raster.raster.artifact.RasterLayerMask mask = 3;
 }
 message ChangeLayerAdjustmentParameter { string layer_id = 1; string parameter = 2; optional double expected = 3; optional double value = 4; }
+message ChangeLayerTransform {string layer_id = 1; semio.s.raster.raster.artifact.RasterTransform expected = 2; semio.s.raster.raster.artifact.RasterTransform transform = 3;}
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -89,6 +92,7 @@ message RasterMutation {
     ReorderLayers reorder_layers = 3;
     RenameLayer rename_layer = 4;
     ChangeLayerVisible change_layer_visible = 5;
+    ChangeLayerLocked change_layer_locked = 16;
     ChangeLayerOpacity change_layer_opacity = 6;
     ChangeLayerBlendMode change_layer_blend_mode = 7;
     MoveLayer move_layer = 8;
@@ -98,6 +102,7 @@ message RasterMutation {
     RemoveLayerAsset remove_layer_asset = 12;
     ChangeLayerPixels change_layer_pixels = 13;
     ChangeLayerMask change_layer_mask = 14;
+    ChangeLayerTransform change_layer_transform = 17;
     ChangeLayerAdjustmentParameter change_layer_adjustment_parameter = 15;
   }
 }

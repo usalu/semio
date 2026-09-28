@@ -19,7 +19,7 @@ import type { ReorderStep } from "./🔀reorder-step/🦠️mutation/🟦️.ts"
 import type { ReplaceBlock } from "./🔁replace-block/🦠️mutation/🟦️.ts";
 
 
-export type DslValue = Record<string, unknown>;
+export type DslValue = null | boolean | number | string | DslValue[] | { [key: string]: DslValue };
 
 export interface FormQuestionOption {
   value: string;
@@ -87,4 +87,5 @@ export type FormsMutation =
   | ({ mutation: 'deleteBlock' } & DeleteBlock)
   | ({ mutation: 'moveBlockToStep' } & MoveBlockToStep)
   | ({ mutation: 'replaceBlock' } & ReplaceBlock)
-  | ({ mutation: 'changeFormTitle' } & ChangeFormTitle);
+  | ({ mutation: 'changeFormTitle' } & ChangeFormTitle)
+  | import('../📨️response/🟦️.ts').FormsResponseEvent;

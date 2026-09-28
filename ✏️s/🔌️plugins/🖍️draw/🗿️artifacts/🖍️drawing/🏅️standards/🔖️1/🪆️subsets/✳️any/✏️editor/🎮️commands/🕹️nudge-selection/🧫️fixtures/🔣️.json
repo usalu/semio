@@ -1,0 +1,66 @@
+[
+  {
+    "action": "nudgeSelectionLeft",
+    "keys": "left",
+    "delta": [
+      -1,
+      0
+    ]
+  },
+  {
+    "action": "nudgeSelectionLeftFast",
+    "keys": "shift+left",
+    "delta": [
+      -10,
+      0
+    ]
+  },
+  {
+    "action": "nudgeSelectionRight",
+    "keys": "right",
+    "delta": [
+      1,
+      0
+    ]
+  },
+  {
+    "action": "nudgeSelectionRightFast",
+    "keys": "shift+right",
+    "delta": [
+      10,
+      0
+    ]
+  },
+  {
+    "action": "nudgeSelectionUp",
+    "keys": "up",
+    "delta": [
+      0,
+      -1
+    ]
+  },
+  {
+    "action": "nudgeSelectionUpFast",
+    "keys": "shift+up",
+    "delta": [
+      0,
+      -10
+    ]
+  },
+  {
+    "action": "nudgeSelectionDown",
+    "keys": "down",
+    "delta": [
+      0,
+      1
+    ]
+  },
+  {
+    "action": "nudgeSelectionDownFast",
+    "keys": "shift+down",
+    "delta": [
+      0,
+      10
+    ]
+  }
+]

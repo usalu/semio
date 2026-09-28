@@ -1,6 +1,32 @@
 syntax = "proto3";
 package semio.s.forms.forms.mutation;
-message JsonMutation {
-  string schema = 1;
-  string value_wire = 2;
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🛰️.proto";
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🛰️.proto";
+message CreateStep { semio.s.forms.forms.definition.FormStep step = 1; optional uint32 index = 2; }
+message DeleteStep { string id = 1; }
+message ReorderStep { string id = 1; uint32 to_index = 2; }
+message RenameStep { string id = 1; string new_title = 2; }
+message ChangeStepDescription { string id = 1; optional string new_description = 2; }
+message CreateBlock { string step_id = 1; semio.s.forms.forms.definition.FormQuestion block = 2; optional uint32 index = 3; }
+message DeleteBlock { string step_id = 1; string id = 2; }
+message MoveBlockToStep { string step_id = 1; string block_id = 2; string to_step_id = 3; uint32 index = 4; }
+message ReplaceBlock { string step_id = 1; semio.s.forms.forms.definition.FormQuestion block = 2; }
+message ChangeFormTitle { optional string new_title = 1; }
+message CommitResponse { semio.s.forms.forms.response.FormsResponse response = 1; optional uint32 index = 2; }
+message DiscardResponse { string id = 1; }
+message FormsMutation {
+  oneof mutation {
+    CreateStep create_step = 1;
+    DeleteStep delete_step = 2;
+    ReorderStep reorder_step = 3;
+    RenameStep rename_step = 4;
+    ChangeStepDescription change_step_description = 5;
+    CreateBlock create_block = 6;
+    DeleteBlock delete_block = 7;
+    MoveBlockToStep move_block_to_step = 8;
+    ReplaceBlock replace_block = 9;
+    ChangeFormTitle change_form_title = 10;
+    CommitResponse commit_response = 11;
+    DiscardResponse discard_response = 12;
+  }
 }

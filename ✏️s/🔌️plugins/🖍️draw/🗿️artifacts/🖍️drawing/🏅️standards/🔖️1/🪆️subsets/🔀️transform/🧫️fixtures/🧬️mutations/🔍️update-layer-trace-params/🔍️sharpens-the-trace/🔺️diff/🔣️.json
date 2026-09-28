@@ -21,7 +21,10 @@
           "booleanOperation": null,
           "traceParamsJson": "{\"threshold\":0.8,\"simplifyEpsilon\":0.25}",
           "layerJson": null,
-          "pathSegments": null
+          "pathSegments": null,
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null
         }
       }
     ],

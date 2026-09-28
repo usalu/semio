@@ -1,0 +1,5 @@
+# 📨️ Immutable response metadata and typed answers.
+# import DslValue from "../📝️definition/🔗️.graphql"
+scalar UnixMilliseconds
+type FormsAnswer { questionId: String!, label: String!, kind: String!, value: DslValue! }
+type FormsResponse { id: String!, submittedAt: UnixMilliseconds!, definitionVersion: String!, answers: [FormsAnswer!]! }

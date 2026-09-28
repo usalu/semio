@@ -577,6 +577,8 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
     pass.material_draws.push(crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d {
         mesh_key: "painted-mesh".into(),
         mesh_version: 1,
+        first_index: 0,
+        index_count: u32::MAX,
         instances: vec![crate::wgpu::kernel_3d_scene::Instance3d {
             id: "painted-instance".into(),
             model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]),
@@ -588,6 +590,15 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
         material: crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key: "mesh-paint".into() },
         translucent: false,
     });
+    for texture in [None,Some("authored-base-color".to_string())] {
+        pass.material_draws.push(crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d {
+            mesh_key:"authored-mesh".into(),mesh_version:1,first_index:0,index_count:3,instances:Vec::new(),translucent:false,
+            material:crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(crate::wgpu::kernel_3d_scene::SceneAuthoredMaterial3d {
+                base_color:[1.0;4],emissive:[0.0;3],metalness:0.0,roughness:1.0,alpha:crate::wgpu::kernel_3d_scene::SceneMaterialAlpha3d::Opaque,
+                alpha_cutoff:0.5,double_sided:false,preserve_vertex_color:false,base_color_texture:texture,texture_sampler:Default::default(),
+            }),
+        });
+    }
     draw.scene_passes.push(pass);
     draw.layers[0].raster_instances.push(("world-paint".into(), UiInstance::raster([0.0; 4], [0.0, 0.0, 1.0, 1.0], 1.0)));
     draw.layers[0].overlay_raster_instances.push(("overlay-image".into(), UiInstance::raster([0.0; 4], [0.0, 0.0, 1.0, 1.0], 1.0)));
@@ -603,7 +614,7 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
         }
     }
     ledger.seal_candidate(owner).expect("candidate seals");
-    assert_eq!(ledger.counts(), (0, 4, 0));
+    assert_eq!(ledger.counts(), (0, 5, 0));
 }
 
 #[test]

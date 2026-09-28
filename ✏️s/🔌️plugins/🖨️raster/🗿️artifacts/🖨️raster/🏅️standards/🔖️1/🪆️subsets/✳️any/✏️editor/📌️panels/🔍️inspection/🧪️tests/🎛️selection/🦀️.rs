@@ -5,7 +5,7 @@ use super::*;
 fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut document: RasterDocument = dsl::json::from_json_str(r#"{"schema":"raster.document","id":"inspection","title":"Inspection","layers":[{"kind":"pixel","id":"paint.foreground","name":"123","mask":null,"width":32,"height":32,"imageKey":null},{"kind":"pixel","id":"paint.background","name":"Background","mask":null,"width":64,"height":64,"imageKey":null}]}"#).unwrap();
-    for labels in [&RasterPlayLabels::NATIVE_EN, &RasterPlayLabels::NATIVE_DE] {
+    for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for case in fixture["cases"].as_array().unwrap() {
             let ids: Vec<String> = serde_json::from_value(case["selection"].clone()).unwrap();
             if let crate::RasterLayerNode::Pixel { mask, .. } = &mut document.layers[0] {
@@ -18,6 +18,18 @@ fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
             while let Some(node) = pending.pop() {
                 if node["component"]["commit"] == "blur" {
                     assert_eq!(node["bindings"][0]["trigger"], fixture["blurTrigger"], "{}", node["key"]);
+                }
+                if case.get("mask").is_some() {
+                    for control in fixture["maskControls"].as_array().unwrap() {
+                        if node["key"] == format!("raster-inspector.{}.input",control["field"].as_str().unwrap()) {
+                            assert_eq!(node["bindings"][0]["trigger"],control["trigger"]);
+                            assert_eq!(node["bindings"][0]["action"]["name"],"patchLayers");
+                            assert_eq!(node["bindings"][0]["args"]["field"],control["field"]);
+                            assert!(node.to_string().contains(control["labels"][locale].as_str().unwrap()));
+                            if let Some(value)=control.get("value") {assert_eq!(&node["component"]["value"],value);}
+                            if let Some(step)=control.get("step") {assert_eq!(&node["component"]["step"],step);}
+                        }
+                    }
                 }
                 pending.extend(node["children"].as_array().unwrap());
             }
@@ -92,4 +104,83 @@ fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
         }
     }
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn inspector_protection_controls_follow_the_neutral_capabilities() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
+        for case in fixture["cases"].as_array().unwrap() {
+            let tree=render(&document,&RasterConfig::default(),&[case["id"].as_str().unwrap().into()],labels).unwrap();
+            let mut pending=vec![&tree];let mut lock_found=false;
+            while let Some(node)=pending.pop() {
+                let key=node.key.as_str();
+                let enabled=match key {
+                    "raster-inspector.locked.input"=>{lock_found=true;Some(case["expected"]["canChangeLock"].as_bool().unwrap())},
+                    "raster-inspector.visible.input"=>Some(true),
+                    "raster-inspector.name.input"|"raster-inspector.opacity.input"|"raster-inspector.maskPresent.input"=>Some(case["expected"]["editable"].as_bool().unwrap()),
+                    "raster-inspector.transformX.input"|"raster-inspector.transformScaleX.input"|"raster-inspector.transformScaleY.input"|"raster-inspector.transformRotation.input"|"raster-inspector.transformShearX.input"|"raster-inspector.width.input"=>Some(case["expected"]["structural"].as_bool().unwrap()),
+                    _=>None,
+                };
+                if let Some(enabled)=enabled {assert_eq!(node.disabled,!enabled,"{} {key}",case["id"]);}
+                pending.extend(node.children.iter());
+            }
+            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            assert!(lock_found);assert!(text.contains(labels.locked.as_str()));
+        }
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn inspector_layer_actions_are_localized_and_protection_aware() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&protection["layers"].to_string()).unwrap();
+    for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
+        for case in protection["cases"].as_array().unwrap() {
+            let id=case["id"].as_str().unwrap();
+            let tree=render(&document,&RasterConfig::default(),&[id.into()],labels).unwrap();
+            for action in fixture["layerActions"].as_array().unwrap() {
+                let key=format!("raster-inspector.{}",action["key"].as_str().unwrap());let mut pending=vec![&tree];let mut found=false;
+                while let Some(node)=pending.pop() {
+                    if node.key.as_str()==key {found=true;let enabled=if action["key"]=="duplicate" {!case["expected"]["inherited"].as_bool().unwrap()}else{case["expected"]["structural"].as_bool().unwrap()};assert_eq!(node.disabled,!enabled,"{id} {key}");}
+                    pending.extend(node.children.iter());
+                }
+                assert!(found,"{key}");
+            }
+            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];
+            while let Some(node)=pending.pop() {
+                for action in fixture["layerActions"].as_array().unwrap() {if node["key"]==format!("raster-inspector.{}",action["key"].as_str().unwrap()) {assert_eq!(node["bindings"][0]["action"]["name"],action["command"]);assert_eq!(node["bindings"][0]["args"]["layerId"],id);assert!(node.to_string().contains(action["labels"][locale].as_str().unwrap()));}}
+                pending.extend(node["children"].as_array().unwrap());
+            }
+        }
+        for ids in [vec![],vec!["outside".into(),"editable-pixel".into()]] {
+            let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();assert!(!text.contains("duplicateLayer"));assert!(!text.contains("deleteLayer"));
+        }
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn inspector_layer_transform_controls_use_localized_commit_bindings(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
+    for kind in ["pixel","group"] {
+        let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind(kind));let id=layer_node_id(&document.layers[0]).to_owned();
+        for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
+            let tree=render(&document,&RasterConfig::default(),&[id.clone()],labels).unwrap();
+            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];let mut found=0;
+            while let Some(node)=pending.pop(){
+                for row in fixture["controls"].as_array().unwrap(){let field=row["field"].as_str().unwrap();if node["key"]==format!("raster-inspector.{field}.input"){
+                    found+=1;assert_eq!(node["bindings"][0]["trigger"],"commit");assert_eq!(node["bindings"][0]["action"]["name"],"patchLayers");assert_eq!(node["bindings"][0]["args"]["field"],field);assert!(node.to_string().contains(fixture["labels"][locale][field].as_str().unwrap()));
+                }}
+                pending.extend(node["children"].as_array().unwrap());
+            }
+            assert_eq!(found,4);
+        }
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    }
 }

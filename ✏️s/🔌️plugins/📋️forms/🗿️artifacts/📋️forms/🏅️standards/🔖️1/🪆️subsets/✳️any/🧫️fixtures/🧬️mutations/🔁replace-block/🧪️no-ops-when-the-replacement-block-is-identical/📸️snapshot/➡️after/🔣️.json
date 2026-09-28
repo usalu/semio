@@ -24,5 +24,22 @@
         "subset": "table"
       }
     }
-  }
+  },
+  "definition": {
+    "steps": [
+      {
+        "id": "step-basics",
+        "title": "Basics",
+        "blocks": [
+          {
+            "id": "q-site-name",
+            "label": "Site name",
+            "kind": "text",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "responses": []
 }

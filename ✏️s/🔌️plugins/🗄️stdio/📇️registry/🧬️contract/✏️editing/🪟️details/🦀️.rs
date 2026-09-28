@@ -5,8 +5,8 @@ use crate::kernel::{ArtifactDsl, DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::{
-    tree_window_indexed_section, ActionId, Buildable, BuiltNode, HasBase, HasChildren, InteractiveJobClassification, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiListBuilder, UiMapBuilder, UiText,
-    UiValue, WindowKindDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    tree_window_indexed_section, ActionId, Buildable, BuiltNode, HasBase, HasChildren, InteractiveJobClassification, Locale, LocalizedLabel, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiListBuilder, UiMapBuilder, UiText, UiValue,
+    WindowKindDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 use semio_framework_ui_contract as ui_contract;
 use std::collections::{HashMap, HashSet};
@@ -361,6 +361,16 @@ fn schema_enum_constraint(schema: &DslValue) -> Option<Vec<&DslValue>> {
     }
 }
 
+fn schema_discriminator_constraint(schema: &DslValue) -> Option<Vec<&DslValue>> {
+    if let Some(value) = object_field(schema, "const") {
+        return Some(vec![value]);
+    }
+    match object_field(schema, "enum") {
+        Some(DslValue::Array(values)) if values.len() == 1 => Some(values.iter().collect()),
+        _ => None,
+    }
+}
+
 fn schema_accepts_shape(root: &DslValue, schema: &DslValue, shape: &ValueShape) -> bool {
     let Some(schema) = resolved_schema(root, schema, 0) else { return false };
     let accepts = |kind: &str| match kind {
@@ -408,7 +418,7 @@ fn selected_union_member<'a>(
             .iter()
             .map(|(_, member)| {
                 let member = resolved_schema(root, member, 0)?;
-                schema_enum_constraint(object_field(object_field(member, "properties")?, key)?)
+                schema_discriminator_constraint(object_field(object_field(member, "properties")?, key)?)
             })
             .collect::<Option<Vec<_>>>();
         let Some(constraints) = constraints else { continue };
@@ -1534,7 +1544,7 @@ fn variant_control(id: &str, title: &str, path: &str, template: DslValue, labels
 
 /// 📝️ Renders an artifact's natural file source beside its structured canvas, with an explicit
 /// localized Apply/Discard draft routed through the artifact-owned whole-document action.
-pub fn render_file_source_editor(surface_id: &str, source: String, language: &str, action_id: &str, root_node_id: &str, locale: Locale, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+pub fn render_file_source_editor(surface_id: &str, source: String, language: &str, action_id: &str, root_node_id: &str, revision: &str, locale: Locale, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
     let labels = labels(locale);
     let source = TextWindowKit::render_draft(&TextDraftView {
         surface_id: surface_id.into(),
@@ -1542,7 +1552,7 @@ pub fn render_file_source_editor(surface_id: &str, source: String, language: &st
         language: Some(language.into()),
         action_id: action_id.into(),
         argument: "value".into(),
-        arguments: Some(ui_args([("nodeId", ui_text_value(root_node_id)?)])?),
+        arguments: Some(ui_args([("nodeId", ui_text_value(root_node_id)?), ("revision", ui_text_value(revision)?)])?),
         apply_label: labels.apply.into(),
         discard_label: labels.discard.into(),
         conflict_label: labels.conflict.into(),
@@ -1628,7 +1638,7 @@ fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(provider: &P, path: 
     let variant_count = provider.variant_count(path, labels.locale);
     if variant_count > 0 {
         let variants_id = format!("{id}-variants");
-        let variants = tree_window_indexed_section(windows, &variants_id, label(labels.switch_to)?, false, variant_count, |index| {
+        let variants = tree_window_indexed_section(windows, &variants_id, label(labels.switch_to)?, true, variant_count, |index| {
             let variant = provider.variant(path, labels.locale, index).ok_or_else(|| error("ui.snapshot-details.variant"))?;
             let title = format!("{} {}", labels.switch_to, variant.label);
             variant_control(&format!("{id}-variant-{index}"), &title, &pointer(path), variant.value, labels, controller_id)
@@ -1643,7 +1653,7 @@ fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(provider: &P, path: 
         let property_count = provider.missing_property_count(path);
         if property_count > 0 {
             let properties_id = format!("{id}-missing-properties");
-            let properties = tree_window_indexed_section(windows, &properties_id, label(labels.add)?, false, property_count, |index| {
+            let properties = tree_window_indexed_section(windows, &properties_id, label(labels.add)?, true, property_count, |index| {
                 let (key, template) = provider.missing_property_template(path, index).ok_or_else(|| error("ui.snapshot-details.missing-property"))?;
                 let mut property = path.to_vec();
                 property.push(SnapshotDetailPathSegment::Key(key.clone()));
@@ -1759,20 +1769,32 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
         }
         let count = provider.child_count(path);
         let children_id = format!("{id}-children");
-        let children = tree_window_indexed_section(windows, &children_id, Default::default(), true, count, |index| {
-            let (segment, title, key, array_index) = if matches!(value, SnapshotDetailValue::Object) {
-                let key = provider.object_key(path, index).ok_or_else(|| error("ui.snapshot-details.object-key"))?;
-                (SnapshotDetailPathSegment::Key(key.clone()), key.clone(), Some(key), None)
-            } else {
-                (SnapshotDetailPathSegment::Index(index), format!("{} {}", labels.item, index + 1), None, Some((index, count)))
-            };
-            let mut child_path = path.to_vec();
-            child_path.push(segment);
-            detail_node(provider, &child_path, &title, key.as_deref(), array_index, labels, controller_id, windows)
-        })?;
+        let children_label = if labels.locale == Locale::De { "Einträge" } else { "Items" };
+        let children = tree_window_indexed_section(windows, &children_id, label(children_label)?, false, count, |index| detail_child(provider, path, &value, index, count, labels, controller_id, windows))?;
         builder = builder.try_child(children).map_err(|_| error("ui.snapshot-details.item-children"))?;
     }
     builder.try_build().map_err(|_| error("ui.snapshot-details.item"))
+}
+
+fn detail_child<P: SnapshotDetailsProvider + ?Sized>(
+    provider: &P,
+    path: &[SnapshotDetailPathSegment],
+    value: &SnapshotDetailValue,
+    index: usize,
+    count: usize,
+    labels: Labels,
+    controller_id: &str,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    let (segment, title, key, array_index) = if matches!(value, SnapshotDetailValue::Object) {
+        let key = provider.object_key(path, index).ok_or_else(|| error("ui.snapshot-details.object-key"))?;
+        (SnapshotDetailPathSegment::Key(key.clone()), key.clone(), Some(key), None)
+    } else {
+        (SnapshotDetailPathSegment::Index(index), format!("{} {}", labels.item, index + 1), None, Some((index, count)))
+    };
+    let mut child_path = path.to_vec();
+    child_path.push(segment);
+    detail_node(provider, &child_path, &title, key.as_deref(), array_index, labels, controller_id, windows)
 }
 
 fn source_row(source: String, labels: Labels) -> UiAssemblyResult<BuiltNode> {
@@ -1813,15 +1835,38 @@ pub fn snapshot_details_split_layout(main_window_kind_id: &str, main_title: &str
 
 pub fn render_snapshot_details_provider<P: SnapshotDetailsProvider + ?Sized>(provider: &P, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let labels = labels(locale);
-    let mut builder = PanelTreeBuilder::new(ROOT_ID)?;
+    let mut builder = ui_contract::tree().try_id(ROOT_ID).map_err(|_| error("ui.snapshot-details.root-id"))?;
     if provider.has_source() {
-        builder = builder.window_section(windows, SOURCE_ID, Some(label(labels.source)?), false, &[()], |_| {
+        let source = semio_framework_plugin::tree_window_section(windows, SOURCE_ID, label(labels.source)?, false, &[()], |_| {
             let source = provider.source().ok_or_else(|| error("ui.snapshot-details.source-unavailable"))?;
             source_row(source, labels)
         })?;
+        builder = builder.try_child(source).map_err(|_| error("ui.snapshot-details.source-section"))?;
     }
-    builder = builder.window_section(windows, ROOT_SECTION_ID, Some(label(labels.details)?), true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows))?;
-    builder.build()
+    let value = provider.value(&[]).ok_or_else(|| error("ui.snapshot-details.root-value"))?;
+    let fields = if matches!(value, SnapshotDetailValue::Object | SnapshotDetailValue::Array) {
+        let controls = provider.variant_count(&[], locale) > 0
+            || (provider.allows_collection_insert(&[])
+                && (provider.missing_property_count(&[]) > 0 || (collection_insert_path(provider, &[], &value).is_some() && (provider.allows_untyped_creation(&[]) || provider.creation_template(&[], true).is_some()))));
+        let count = provider.child_count(&[]);
+        tree_window_indexed_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, count + usize::from(controls), |index| {
+            if controls && index == 0 {
+                let controls = collection_controls(provider, &[], &value, ROOT_PATH_ID, labels, controller_id, windows)?;
+                return ui_contract::tree_item(label(labels.details)?)
+                    .default_open(true)
+                    .try_id(ROOT_PATH_ID)
+                    .map_err(|_| error("ui.snapshot-details.root-controls-id"))?
+                    .try_child(controls)
+                    .map_err(|_| error("ui.snapshot-details.root-controls"))?
+                    .try_build()
+                    .map_err(|_| error("ui.snapshot-details.root-controls"));
+            }
+            detail_child(provider, &[], &value, index - usize::from(controls), count, labels, controller_id, windows)
+        })?
+    } else {
+        semio_framework_plugin::tree_window_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows))?
+    };
+    builder.try_child(fields).map_err(|_| error("ui.snapshot-details.fields"))?.try_build().map_err(|_| error("ui.snapshot-details.root"))
 }
 
 pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(snapshot: &S, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {

@@ -6,11 +6,14 @@
 
 // #region 🔌️Adapters
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
+import Ajv from "ajv";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 import { Board2dHost, BOARD_2D_ZOOM_BOUNDS, board2dPinchCamera } from "../../🟦️.tsx";
 import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
+import surfacePinchFixture from "../../../../🧫️fixtures/🤏️surface-pinch/🔣️.json";
+import surfacePinchSchema from "../../../../🧬️schema/🤏️surface-pinch/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🧪️Harness
@@ -116,10 +119,16 @@ function pointerBatch(dispatch: () => void): void {
 // #region 🤏️PinchLaws
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
 describe("🤏️ board 2d pinch math", () => {
+  it("accepts the language-neutral surface pinch contract", () => {
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(surfacePinchSchema);
+    expect(validate(surfacePinchFixture), JSON.stringify(validate.errors)).toBe(true);
+  });
+
   it("spreading two fingers zooms in about their centroid, within the engine's own bounds", () => {
     const camera = board2dPinchCamera(JSON.stringify({ x: 0, y: 0, zoom: 1 }), { scale: 2, panX: 0, panY: 0, rotation: 0, centroidX: 400, centroidY: 300 }, { w: 800, h: 600 })!;
     expect(camera.zoom).toBeCloseTo(2, 10);
@@ -142,6 +151,42 @@ describe("🤏️ board 2d pinch math", () => {
 });
 
 describe("🤏️ board 2d two-finger gesture", () => {
+  it("publishes one camera after the final lift and admits a fresh successor contact", async () => {
+    const session = createStubSession();
+    const { canvas, actions } = await mountBoard(session);
+    vi.useFakeTimers();
+    const row = surfacePinchFixture.gestures.spread;
+    const board = surfacePinchFixture.surfaces.board2d;
+
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", row.down[0].pointerId, row.down[0].x, row.down[0].y)));
+    const callsBeforeTransfer = session.calls.length;
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", row.down[1].pointerId, row.down[1].x, row.down[1].y)));
+    expect(session.calls.slice(callsBeforeTransfer).filter((call) => call === "pointerUpScreen")).toHaveLength(board.transfer.syntheticPointerUps);
+    expect(session.calls.slice(callsBeforeTransfer).filter((call) => call === "cancelAreaSelect")).toHaveLength(1);
+
+    pointerBatch(() => {
+      for (const event of row.move) window.dispatchEvent(pointer("pointermove", event.pointerId, event.x, event.y));
+    });
+    expect(actions.filter((entry) => entry.action === "setCamera")).toHaveLength(board.moves.cameraPublications);
+    expect(session.camera.zoom).toBeCloseTo(row.expectedCamera.zoom, 6);
+    expect(session.camera.x).toBeCloseTo(row.expectedCamera.x, 6);
+    expect(session.camera.y).toBeCloseTo(row.expectedCamera.y, 6);
+
+    const callsBeforeLifts = session.calls.length;
+    pointerBatch(() => {
+      window.dispatchEvent(pointer("pointerup", row.move[1].pointerId, row.move[1].x, row.move[1].y));
+      window.dispatchEvent(pointer("pointerup", row.move[0].pointerId, row.move[0].x, row.move[0].y));
+    });
+    expect(session.calls.slice(callsBeforeLifts).filter((call) => call === "pointerUpScreen")).toHaveLength(board.lifts.pointerUps);
+    await act(async () => vi.advanceTimersByTimeAsync(350));
+    expect(actions.filter((entry) => entry.action === "setCamera")).toHaveLength(board.lifts.cameraPublications);
+    expect(actions.filter((entry) => entry.action === "interactionSelect" || entry.action === "clearSelection")).toHaveLength(board.lifts.selectionPublications);
+
+    const pointerDownsBeforeSuccessor = session.calls.filter((call) => call === "pointerDownScreen").length;
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 3, 100, 100)));
+    expect(session.calls.filter((call) => call === "pointerDownScreen")).toHaveLength(pointerDownsBeforeSuccessor + 1);
+  });
+
   it("a second contact cancels the marquee lane and the pinch drives the camera silently", async () => {
     const session = createStubSession();
     const { canvas, actions } = await mountBoard(session);

@@ -5,7 +5,7 @@
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
 use crate::op::FormMutation;
-use crate::schema::building_component_spec;
+use crate::schema::empty_forms_snapshot;
 use crate::viewer::forms::modes::view;
 use crate::viewer::forms::modes::view::windows::try_wizard;
 use crate::{FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
@@ -41,6 +41,7 @@ pub struct FormsViewer;
 
 impl ArtifactViewer for FormsViewer {
     type Snapshot = FormsSnapshot;
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Mutation = FormMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
@@ -52,13 +53,17 @@ impl ArtifactViewer for FormsViewer {
 
     const DIALECT: Dialect = FORMS_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::forms_genesis_child_pack(snapshot, slot, child_id)
+    }
+
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
         crate::forms_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> FormsSnapshot {
-        building_component_spec()
+        empty_forms_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `FormsViewCommand::Noop` variant never carries a config

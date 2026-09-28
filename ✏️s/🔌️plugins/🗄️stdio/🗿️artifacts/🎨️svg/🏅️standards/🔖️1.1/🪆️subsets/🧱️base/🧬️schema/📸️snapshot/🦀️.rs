@@ -2,7 +2,7 @@
 
 use crate::STDIO_SVG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text_checked, XmlAttr, XmlDocument, XmlNode};
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -18,7 +18,7 @@ pub struct SvgSnapshot {
 
 impl Default for SvgSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
+        Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } }
     }
 }
 //#endregion 🔖️Snapshot
@@ -38,8 +38,8 @@ pub fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_svg_xml(doc: &XmlDocument) -> String {
-    xml_document_to_text(doc)
+pub fn write_svg_xml(doc: &XmlDocument) -> Result<String, String> {
+    xml_document_to_text_checked(doc)
 }
 
 impl SvgSnapshot {
@@ -59,7 +59,7 @@ impl SvgSnapshot {
     /// 📤️ Deterministically materializes SVG from the logical XML model.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(write_svg_xml(&self.doc).into_bytes())
+        Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
     }
 }
 //#endregion 🔖️SvgCodec
@@ -1255,7 +1255,7 @@ pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
-    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new() }
+    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new(), epilog: Vec::new() }
 }
 //#endregion 🔖️TypedElementModel
 

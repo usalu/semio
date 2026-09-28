@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/renderer/projection-pane.json",
+  "title": "Projection Pane Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "windowId", "windowSegment", "paneId", "body", "selectedTemplateId", "rows"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "windowId": { "type": "string", "minLength": 1 },
+    "windowSegment": { "type": "string", "minLength": 1 },
+    "paneId": { "type": "string", "minLength": 1 },
+    "selectedTemplateId": { "type": "string", "minLength": 1 },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor", "widthPx", "role", "inline", "direction"],
+      "properties": {
+        "anchor": { "const": "bottom-right" },
+        "widthPx": { "const": 300 },
+        "role": { "const": "tree" },
+        "inline": { "const": "rtl" },
+        "direction": { "const": "down" }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["templateId", "id", "label", "icon", "depth", "disclosure", "selected", "action"],
+        "properties": {
+          "templateId": { "type": "string", "minLength": 1 },
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "icon": { "type": "string", "pattern": "^projection-" },
+          "depth": { "type": "integer", "minimum": 0, "maximum": 2 },
+          "disclosure": { "type": "boolean" },
+          "selected": { "type": "boolean" },
+          "action": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["controllerId", "action", "args"],
+            "properties": {
+              "controllerId": { "const": "framework" },
+              "action": { "const": "setWorldProjectionTemplate" },
+              "args": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["windowId", "templateId"],
+                "properties": {
+                  "windowId": { "type": "string", "minLength": 1 },
+                  "templateId": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

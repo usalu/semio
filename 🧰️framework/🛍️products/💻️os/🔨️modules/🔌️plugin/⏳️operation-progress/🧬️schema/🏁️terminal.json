@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cancelled Operation Terminal Outcome",
+  "type": "object",
+  "required": [
+    "userRequested",
+    "workerFault",
+    "lane"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "userRequested": {
+      "type": "boolean"
+    },
+    "workerFault": {
+      "type": "boolean"
+    },
+    "lane": {
+      "enum": [
+        "terminal",
+        "fault"
+      ]
+    }
+  },
+  "if": {
+    "properties": {
+      "userRequested": {
+        "const": true
+      },
+      "workerFault": {
+        "const": false
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "lane": {
+        "const": "terminal"
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "lane": {
+        "const": "fault"
+      }
+    }
+  }
+}

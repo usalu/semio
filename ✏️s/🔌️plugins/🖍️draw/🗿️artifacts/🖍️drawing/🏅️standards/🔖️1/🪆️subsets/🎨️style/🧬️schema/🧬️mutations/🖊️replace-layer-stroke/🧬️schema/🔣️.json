@@ -34,10 +34,18 @@
           "type": "number"
         },
         "cap": {
-          "type": "string"
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
         },
         "join": {
-          "type": "string"
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
         },
         "dash": {
           "type": "array",

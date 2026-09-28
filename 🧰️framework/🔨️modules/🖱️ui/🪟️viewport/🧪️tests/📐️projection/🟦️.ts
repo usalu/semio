@@ -7,6 +7,7 @@ import fixture from "../../🧫️fixtures/📐️projection/🔣️.json";
 import {
   defaultViewport3dProjectionPreferences,
   deriveActiveProjection,
+  parseViewport3dProjectionFramePolicy,
   parseViewport3dProjectionPreferences,
   parseViewport3dProjectionSpec,
 } from "../../🧊️3d/🧬️schema/🟦️.ts";
@@ -21,6 +22,17 @@ export function testViewport3dProjectionValues(): void {
   const specSchema = ajv.getSchema(`${schema.$id}#/$defs/projectionSpec`);
   assert.ok(preferencesSchema);
   assert.ok(specSchema);
+  const framePolicySchema = ajv.getSchema(`${schema.$id}#/$defs/projectionFramePolicy`);
+  assert.ok(framePolicySchema);
+
+  for (const row of fixture.framePolicies) {
+    assert.equal(framePolicySchema(row.value), true, row.name);
+    assert.equal(parseViewport3dProjectionFramePolicy(row.value), row.value, row.name);
+  }
+  for (const value of fixture.framePolicyRejections) {
+    assert.equal(framePolicySchema(value), false, String(value));
+    assert.throws(() => parseViewport3dProjectionFramePolicy(value), TypeError, String(value));
+  }
 
   const defaults = defaultViewport3dProjectionPreferences();
   assert.deepEqual(defaults, fixture.defaultPreferences);

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-locked/schema.json",
+  "title": "ChangeLayerLocked",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "expected",
+    "locked"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "type": "boolean"
+    },
+    "locked": {
+      "type": "boolean"
+    }
+  }
+}

@@ -523,45 +523,7 @@ export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], pr
   return [...selected.values()];
 }
 
-export type ExternalSlotResolverContext = {
-  readonly plugins: ReadonlyMap<string, PluginWasmHandle>;
-  readonly contributorInstances: Map<string, number>;
-  readonly viewState: PluginViewState;
-};
-
-export async function ensureContributorInstance(pluginId: string, appId: string, context: ExternalSlotResolverContext): Promise<number | null> {
-  const existing = context.contributorInstances.get(pluginId);
-  if (existing != null) return existing;
-  const handle = context.plugins.get(pluginId);
-  if (!handle) return null;
-  const instanceId = await handle.createApp(appId);
-  context.contributorInstances.set(pluginId, instanceId);
-  return instanceId;
-}
-
-export async function resolveExternalSlots(node: BuiltNode, context: ExternalSlotResolverContext): Promise<BuiltNode> {
-  if (node.component.type === "extension") {
-    const [pluginId = "", appId = pluginId] = node.component.extension.split("/");
-    const handle = context.plugins.get(pluginId);
-    if (!handle) {
-      return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
-    }
-    const instanceId = await ensureContributorInstance(pluginId, appId, context);
-    if (instanceId == null) {
-      return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
-    }
-    // 🚧️ Rendering a contributor's UI body now goes through `AppChannelClient.refreshUi`
-    // (`RefreshUi` → `UiSection` over the app-channel handle, os-product `🔖️AppChannelClient` region)
-    // instead of the removed per-verb `render`/`renderWithDocument`. Wiring that dispatch loop into this
-    // exact call site is the dedicated follow-up work package this ticket flags for the React
-    // renderer's dispatch/refresh loops — until then an external slot degrades to unavailable
-    // rather than silently guessing at `SectionProbe.kind`/body-key framing.
-    return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
-  }
-  if (node.children.length === 0) return node;
-  const children = await Promise.all(node.children.map((child) => resolveExternalSlots(child, context)));
-  return children.every((child, index) => child === node.children[index]) ? node : { ...node, children };
-}
+export { resolveExternalSlots, hasExternalSlots, ensureContributorInstance, retireContributorInstances, type ExternalSlotResolverContext, type ExternalSlotContributor, type ContributorInstance } from "./🧩️extensions/🟦️.ts";
 
 export type PluginRegistryEntry = {
   readonly pluginId: string;

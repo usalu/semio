@@ -1,9 +1,8 @@
 //! 🧱️ Forms play app — the blueprint window: the drag/drop playbook builder authoring the form.
 
 use crate::editor::forms::config::FormsConfig;
-use crate::editor::forms::terminology::FormsLabels;
 use crate::FormsSnapshot;
-use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";
@@ -15,7 +14,7 @@ const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_BLUEPRINT.into(),
-        label: LocalizedLabel::native("Blueprint", "Entwurf"),
+        label: LocalizedLabel::native("Design", "Entwurf"),
         body_key: FORMS_PLAY_BODY_BLUEPRINT.into(),
         surface_kind: SurfaceKind::BlockList,
         icon_id: "clipboard-list".into(),
@@ -34,14 +33,30 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
-/// `InteractionView` (a known SDK gap — matches `gis2d`'s and `note`'s inspection panel precedent), so
-/// this block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`)
-/// can no longer be driven from live framework selection — it always renders with none highlighted now.
-pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// 🕹️ Projects the framework-owned selection into the blueprint's selected card.
+pub fn render(spec: &FormsSnapshot, config: &FormsConfig, view: &semio_framework_plugin::ViewModel, selected: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = crate::editor::forms::parse_contributions(config);
-    let palette: Vec<BlockPaletteEntry> = crate::editor::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
-    semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&crate::mutations::as_playbook_spec(spec), &palette, None))
+    let palette = crate::editor::forms::catalogue_kinds(&contributions, view).into_iter()
+        .map(|(kind, label, icon)| dsl::json!({ "blockKind": kind, "label": label, "iconId": icon.as_str() })).collect();
+    let steps = spec.definition.steps.iter().map(|step| {
+        let blocks = step.blocks.iter().map(|question| dsl::json!({
+            "id": question.id, "label": question.label, "kind": question.kind,
+            "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_FIELD, "id": question.id }
+        })).collect();
+        dsl::json!({
+            "id": step.id, "title": step.title, "description": step.description,
+            "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_SECTION, "id": crate::schema::forms_play_step_tree_id(&step.id) },
+            "blocks": dsl::json::Value::Array(blocks)
+        })
+    }).collect();
+    let scene = semio_framework_plugin::BlockListScene {
+        steps_json: dsl::json::to_string(&dsl::json::Value::Array(steps)),
+        palette_json: dsl::json::to_string(&dsl::json::Value::Array(palette)),
+        selected_id: selected.map(|id| id.strip_prefix("step:").unwrap_or(id).into()),
+        dragging_id: None,
+        domain_id: Some(crate::editor::forms::FORMS_INTERACTION_FIELDS.into()),
+    };
+    semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
 }
 //#endregion 🔖️Render
 

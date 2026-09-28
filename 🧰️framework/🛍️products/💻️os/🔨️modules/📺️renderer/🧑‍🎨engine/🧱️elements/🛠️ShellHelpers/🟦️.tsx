@@ -4430,11 +4430,16 @@ export function actionRequiresStagedForm(action: Pick<ActionDefinition, "args">)
 /** 🧰️ The decision a bound hotkey makes for one action (P4). */
 /** ⌨️ True when a keydown's target is a text-editing surface (input/textarea/select/contenteditable) — hotkeys never fire while the user is typing. */
 export function isEditableEventTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-  if (target.isContentEditable) return true;
-  return target.closest("[contenteditable='true'], [role='textbox']") != null;
+  if (!(target instanceof Element)) return false;
+  if (target instanceof HTMLElement && target.isContentEditable) return true;
+  return target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],[role="searchbox"]') !== null;
+}
+
+/** 🎹️ Focused widgets own ordinary keys; text editors also retain modified editing chords. */
+export function controlOwnsKeyboardEvent(event: KeyboardEventLike & { readonly target: EventTarget | null; readonly isComposing?: boolean }): boolean {
+  if (event.isComposing || isEditableEventTarget(event.target)) return true;
+  if (event.ctrlKey || event.metaKey || event.altKey || !(event.target instanceof Element)) return false;
+  return event.target.closest('button,a[href],summary,audio[controls],video[controls],[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="combobox"],[role="listbox"],[role="option"],[role="menu"],[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"],[role="slider"],[role="spinbutton"],[role="tab"],[role="tree"],[role="treeitem"],[role="gridcell"]') !== null;
 }
 
 /** 🩹️ Structural, not `React.KeyboardEvent`/`globalThis.KeyboardEvent` specifically —

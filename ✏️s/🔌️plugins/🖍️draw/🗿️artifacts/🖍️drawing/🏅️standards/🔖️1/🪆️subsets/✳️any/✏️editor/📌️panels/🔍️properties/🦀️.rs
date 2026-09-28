@@ -49,6 +49,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
         ("locked", labels.locked, base.locked.to_string(), InputKind::Text, true, None, None),
         ("opacity", labels.opacity, base.opacity.to_string(), InputKind::Number, false, Some(0.0), Some(1.0)),
         ("blendMode", labels.blend_mode, base.blend_mode.clone(), InputKind::Text, false, None, None),
+        ("fillRule", labels.fill_rule, base.attributes.fill_rule.as_str().into(), InputKind::Text, false, None, None),
         ("fillEnabled", labels.fill_enabled, base.attributes.fill.is_some().to_string(), InputKind::Text, true, None, None),
         ("strokeEnabled", labels.stroke_enabled, base.attributes.stroke.is_some().to_string(), InputKind::Text, true, None, None),
         ("strokeColor", labels.stroke_color, base.attributes.stroke.as_ref().map(|stroke| rgba_to_hex(stroke.color)).unwrap_or_else(|| "#000000".into()), InputKind::Color, false, None, None),
@@ -66,6 +67,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
     ] {
         rows.push(Field { key, label, value, kind, toggle, min, max });
     }
+    if let DrawingLayerNode::Group(group)=layer {rows.push(Field {key:"isolation",label:labels.isolation,value:group.isolation.to_string(),kind:InputKind::Text,toggle:true,min:None,max:None});}
     if let DrawingLayerNode::Text(text) = layer {
         rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.clone(), kind: InputKind::LongText, toggle: false, min: None, max: None });
         rows.push(Field { key: "textSize", label: labels.text_size, value: text.size.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.1), max: None });
@@ -89,18 +91,23 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
     let args = args.ok_or_else(error)?;
     let id = format!("{ROOT}.{}.input", field.key);
     let disabled = selected.iter().any(|layer| crate::schema::drawing_layer_is_locked(document, &layer_base(layer).id)) && !matches!(field.key, "locked" | "visible");
-    let control = if field.toggle {
+    let control = if field.toggle && !mixed {
         ui::toggle(field.value == "true").try_id(&id).map_err(|_| error())?.try_label(field.label.as_str()).map_err(|_| error())?.disabled(disabled)
             .try_on_with(Trigger::Change, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
-    } else if matches!(field.key, "blendMode" | "booleanOperation" | "strokeCap" | "strokeJoin") {
-        let choices: &[(&str, LabelText)] = if field.key == "blendMode" {
-            &[("normal", labels.blend_normal), ("multiply", labels.blend_multiply), ("screen", labels.blend_screen), ("overlay", labels.blend_overlay), ("darken", labels.blend_darken), ("lighten", labels.blend_lighten)]
+    } else if field.toggle || matches!(field.key, "blendMode" | "booleanOperation" | "strokeCap" | "strokeJoin" | "fillRule") {
+        let choices: &[(&str, LabelText)] = if field.toggle {
+            &[("false",labels.toggle_off),("true",labels.toggle_on)]
+        } else if field.key == "blendMode" {
+            &[("normal", labels.blend_normal), ("multiply", labels.blend_multiply), ("screen", labels.blend_screen), ("overlay", labels.blend_overlay), ("darken", labels.blend_darken), ("lighten", labels.blend_lighten), ("colorDodge", labels.blend_color_dodge), ("colorBurn", labels.blend_color_burn), ("hardLight", labels.blend_hard_light), ("softLight", labels.blend_soft_light), ("difference", labels.blend_difference), ("exclusion", labels.blend_exclusion), ("hue", labels.blend_hue), ("saturation", labels.blend_saturation), ("color", labels.blend_color), ("luminosity", labels.blend_luminosity)]
+        } else if field.key == "fillRule" {
+            &[("evenodd",labels.fill_evenodd),("nonzero",labels.fill_nonzero)]
         } else if field.key == "strokeCap" {
             &[("butt", labels.cap_butt), ("round", labels.stroke_round), ("square", labels.cap_square)]
         } else if field.key == "strokeJoin" {
             &[("miter", labels.join_miter), ("round", labels.stroke_round), ("bevel", labels.join_bevel)]
         } else { &[("union", labels.boolean_union), ("intersect", labels.boolean_intersect), ("subtract", labels.boolean_subtract), ("exclude", labels.boolean_exclude)] };
         let mut input = ui::select(text(if mixed { "" } else { &field.value })?).try_id(&id).map_err(|_| error())?.try_label(field.label.as_str()).map_err(|_| error())?.disabled(disabled);
+        if mixed { input = input.placeholder(ui::Label(text(labels.mixed.as_str())?)); }
         for (value, label) in choices { input = input.try_item(text(value)?, ui::Label(text(label.as_str())?)).map_err(|_| error())?; }
         input.try_on_with(Trigger::Change, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
     } else {
@@ -125,6 +132,7 @@ fn node_row(layer_id: &str, index: usize, segment: &PathSegment, join_target: Op
         PathSegment::Close => {}
     }
     for (point, label, coordinates) in points {
+        let mut controls = Vec::with_capacity(2);
         for (axis, value) in [("x", coordinates[0]), ("y", coordinates[1])] {
             let edit = ui_value_map([("axis", ui_value_text(axis)?), ("index", ui_value_number(index as f64)), ("kind", ui_value_text("coordinate")?), ("point", ui_value_text(point)?), ("value", ui_value_number(value))])?;
             let args = ui_value_map([("edit", edit), ("layerId", ui_value_text(layer_id)?)])?;
@@ -132,7 +140,14 @@ fn node_row(layer_id: &str, index: usize, segment: &PathSegment, join_target: Op
             let input = ui::input(InputKind::Number).value(text(&value.to_string())?).step(0.1).commit(text("blur")?).disabled(disabled)
                 .try_id(format!("{id}.{point}.{axis}")).map_err(|_| error())?.try_label(format!("{} {}", label.as_str(), axis.to_uppercase())).map_err(|_| error())?
                 .try_on_with(Trigger::Commit, action, args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())?;
-            row = row.try_child(input).map_err(|_| error())?;
+            controls.push(input);
+        }
+        if point == "anchor" {
+            row = row.try_children(controls).map_err(|_| error())?;
+        } else {
+            let handle = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("{id}.{point}")).map_err(|_| error())?
+                .try_children(controls).map_err(|_| error())?.try_build().map_err(|_| error())?;
+            row = row.try_child(handle).map_err(|_| error())?;
         }
     }
     if !disabled {
@@ -183,7 +198,7 @@ fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, label
     let mut select = ui::select(text(kind)?).disabled(disabled).try_id("drawing-inspector.fill.type").map_err(|_| error())?.try_label(labels.fill_type.as_str()).map_err(|_| error())?;
     for (value,label) in [("none",labels.fill_none),("solid",labels.fill_solid),("linearGradient",labels.fill_linear),("radialGradient",labels.fill_radial)] { select = select.try_item(text(value)?,ui::Label(text(label.as_str())?)).map_err(|_| error())?; }
     let select = select.try_on_with(Trigger::Change,action,args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())?;
-    let mut row = ui::tree_item(ui::Label(text(labels.fill_type.as_str())?)).try_id("drawing-inspector.fill.controls").map_err(|_| error())?.try_child(select).map_err(|_| error())?;
+    let mut row = ui::tree_item(ui::Label(text(labels.fill_type.as_str())?)).default_open(true).try_id("drawing-inspector.fill.controls").map_err(|_| error())?.try_child(select).map_err(|_| error())?;
     let coordinates = match fill {
         Some(FillStyle::LinearGradient { x1,y1,x2,y2,.. }) => vec![("x1",*x1,labels.gradient_start_x),("y1",*y1,labels.gradient_start_y),("x2",*x2,labels.gradient_end_x),("y2",*y2,labels.gradient_end_y)],
         Some(FillStyle::RadialGradient { cx,cy,r,.. }) => vec![("cx",*cx,labels.gradient_center_x),("cy",*cy,labels.gradient_center_y),("r",*r,labels.gradient_radius)],
@@ -191,7 +206,10 @@ fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, label
     };
     for (axis,value,label) in coordinates {
         let edit = ui_value_map([("kind",ui_value_text("coordinate")?),("axis",ui_value_text(axis)?),("value",ui_value_number(value))])?;
-        row = row.try_child(fill_input(layer_id,&format!("{ROOT}.fill.{axis}"),label,InputKind::Number,&value.to_string(),edit,disabled)?).map_err(|_| error())?;
+        let field = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("{ROOT}.fill.{axis}.row")).map_err(|_| error())?
+            .try_child(fill_input(layer_id,&format!("{ROOT}.fill.{axis}"),label,InputKind::Number,&value.to_string(),edit,disabled)?).map_err(|_| error())?
+            .try_build().map_err(|_| error())?;
+        row = row.try_child(field).map_err(|_| error())?;
     }
     if let Some(FillStyle::Solid { color }) = fill {
         let edit = ui_value_map([("kind",ui_value_text("alpha")?),("value",ui_value_number(color[3]))])?;
@@ -210,11 +228,18 @@ fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, label
 
 fn stop_row(layer_id: &str, index: usize, stop: &crate::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.fill.stop.{index}");
-    let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).try_id(&id).map_err(|_| error())?;
+    let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).default_open(true).try_id(&id).map_err(|_| error())?;
     for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,rgba_to_hex(stop.color)),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {
         let value_arg = if input == InputKind::Color { ui_value_text(&value)? } else { ui_value_number(if kind == "alpha" { stop.color[3] } else { stop.offset }) };
         let edit = ui_value_map([("kind",ui_value_text(kind)?),("index",ui_value_number(index as f64)),("value",value_arg)])?;
-        row = row.try_child(fill_input(layer_id,&format!("{id}.{kind}"),label,input,&value,edit,disabled)?).map_err(|_| error())?;
+        let control = fill_input(layer_id,&format!("{id}.{kind}"),label,input,&value,edit,disabled)?;
+        if kind == "color" {
+            row = row.try_child(control).map_err(|_| error())?;
+        } else {
+            let field = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("{id}.{kind}.row")).map_err(|_| error())?
+                .try_child(control).map_err(|_| error())?.try_build().map_err(|_| error())?;
+            row = row.try_child(field).map_err(|_| error())?;
+        }
     }
     if removable && !disabled {
         let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("removeStop")?),("index",ui_value_number(index as f64))])?)])?;
@@ -228,7 +253,8 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
     let Some(first) = selected.first() else { return semio_framework_plugin::built_text_node(Label::data(labels.select_hint.as_str())).map_err(|_| error()) };
     let all_fields = selected.iter().map(|layer| fields(layer, labels)).collect::<Vec<_>>();
     let rows = fields(first, labels).into_iter().filter(|field| all_fields.iter().all(|fields| fields.iter().any(|other| other.key == field.key))).collect::<Vec<_>>();
-    let mut actions = vec![("group", labels.group), ("duplicate", labels.duplicate), ("delete", labels.delete), ("bringToFront", labels.bring_front), ("sendToBack", labels.send_back), ("alignLeft", labels.align_left), ("alignCenter", labels.align_center), ("alignRight", labels.align_right), ("alignTop", labels.align_top), ("alignMiddle", labels.align_middle), ("alignBottom", labels.align_bottom), ("distributeHorizontal", labels.distribute_horizontal), ("distributeVertical", labels.distribute_vertical)];
+    let mut actions = vec![("group", labels.group), ("duplicate", labels.duplicate), ("delete", labels.delete), ("bringForward", labels.bring_forward), ("sendBackward", labels.send_backward), ("bringToFront", labels.bring_front), ("sendToBack", labels.send_back), ("alignLeft", labels.align_left), ("alignCenter", labels.align_center), ("alignRight", labels.align_right), ("alignTop", labels.align_top), ("alignMiddle", labels.align_middle), ("alignBottom", labels.align_bottom), ("distributeHorizontal", labels.distribute_horizontal), ("distributeVertical", labels.distribute_vertical)];
+    if selected.iter().all(|layer|matches!(layer,DrawingLayerNode::Group(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) {actions.insert(1,("ungroup",labels.ungroup));}
     if selected.iter().any(|layer| matches!(layer,DrawingLayerNode::Shape(_))) && selected.iter().all(|layer| matches!(layer,DrawingLayerNode::Shape(_) | DrawingLayerNode::Path(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) { actions.insert(0,("toPath",labels.convert_to_path)); }
     let mut tree = PanelTreeBuilder::new(ROOT)?.window_section(windows, ROOT, Some(ui::Label(text(&format!("{} · {}", labels.layer.as_str(), selected.len()))?)), true, &rows, |field| {
         let mixed = all_fields.iter().any(|fields| fields.iter().any(|other| other.key == field.key && other.value != field.value));

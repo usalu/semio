@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.forms.forms.response;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message FormsAnswer { string question_id = 1; string label = 2; string kind = 3; semio.framework.value.DslValue value = 4; }
+message FormsResponse { string id = 1; uint64 submitted_at = 2; string definition_version = 3; repeated FormsAnswer answers = 4; }
+message FormsResponsesChange { repeated FormsResponse responses = 1; }

@@ -1,0 +1,68 @@
+{
+  "schema": "icon-render-status-v1",
+  "diagnostic": "mesh decode refused",
+  "locales": [
+    {
+      "locale": "en",
+      "labels": {
+        "empty": "No scene",
+        "rendering": "Rendering…",
+        "failed": "Icon rendering failed",
+        "ready": null
+      }
+    },
+    {
+      "locale": "de",
+      "labels": {
+        "empty": "Keine Szene",
+        "rendering": "Wird gerendert…",
+        "failed": "Symbol konnte nicht gerendert werden",
+        "ready": null
+      }
+    }
+  ],
+  "cases": [
+    {
+      "state": "empty",
+      "request": false,
+      "resident": false,
+      "faulted": false,
+      "assetMiss": false
+    },
+    {
+      "state": "rendering",
+      "request": true,
+      "resident": false,
+      "faulted": false,
+      "assetMiss": false
+    },
+    {
+      "state": "failed",
+      "request": true,
+      "resident": false,
+      "faulted": true,
+      "assetMiss": false
+    },
+    {
+      "state": "failed",
+      "request": true,
+      "resident": false,
+      "faulted": false,
+      "assetMiss": true
+    },
+    {
+      "state": "ready",
+      "request": true,
+      "resident": true,
+      "faulted": false,
+      "assetMiss": false
+    },
+    {
+      "state": "ready",
+      "request": true,
+      "resident": true,
+      "faulted": true,
+      "assetMiss": false
+    }
+  ]
+}

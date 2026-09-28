@@ -1,0 +1,11 @@
+# XML Document Boundary Fidelity
+
+The XML native parser reads post-root miscellaneous nodes with `skip_misc` and discards the returned nodes. Its exporter writes every prolog node before the doctype regardless of where the doctype appeared among those nodes. This loses comments and processing instructions after the root, and changes the order of nodes before the root. Canonical Office XML cannot claim full fidelity until these logical document boundaries are represented.
+
+The next coherent XML slice should introduce `XmlDocument.epilog` for trailing comments/processing instructions and a doctype position among prolog nodes, with one position authority. Both must be schema-first, exposed to Details, and carried through XML/SVG snapshot, mutation, diff, inverse, composition, text and binary codecs, public JSON/TypeScript/Protobuf/GraphQL, OPC compact XML export, all typed copies/retirement and hand-authored examples. No retained raw document beside the typed tree is acceptable.
+
+Neutral cases must cover comments and PIs on both sides of the root, doctype before/between/after prolog nodes, quoted brackets and greater-than signs in external identifiers, invalid duplicate doctypes and trailing doctype, and independent parser comparison. Tests must prove unrelated root text edits preserve the boundaries, explicit epilog edits replay/invert, and export/reopen retains full order. This is source-backed research only; the new model is not yet implemented and there is no native pass claim.
+
+## Remaining XML Format Coverage
+
+Root checked the production snapshot model and doctype parser after the boundary repair. `XmlDtdDeclaration` still models only internal ENTITY declarations; `parse_doctype` explicitly refuses all other DTD declaration forms. This is an honest refusal, but ELEMENT/ATTLIST/NOTATION declarations, external entity declarations, and retained parameter-entity references remain outside a complete XML editing experience. The current boundary pass must not be reported as complete XML 1.0 format support. The following format-completion cut must model those declaration forms and preserve their ordered positions through schema, codecs, diff, Details, and independent parser tests. Byte-encoding coverage also remains distinct from declaration validation and requires an explicit UTF-8/UTF-16 import/export contract.

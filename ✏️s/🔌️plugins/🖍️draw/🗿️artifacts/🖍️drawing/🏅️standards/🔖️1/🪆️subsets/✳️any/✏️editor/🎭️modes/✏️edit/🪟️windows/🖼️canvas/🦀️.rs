@@ -81,14 +81,64 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 }
 
 /// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
-pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let scene_nodes = crate::schema::flatten_drawing_document_with_transformation(document,preview.transformation.as_ref());
+pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+    let mut scene_nodes = crate::schema::flatten_drawing_document_with_transformation(document,preview.transformation.as_ref());
+    if let Some(movement)=&preview.node_translation {
+        let references=movement.point_ids.iter().filter_map(|id|crate::editor::drawing::interaction::points::parse_point_id(id)).collect::<Vec<_>>();
+        for node in &mut scene_nodes {
+            let selected=references.iter().filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
+            if selected.is_empty() {continue;}
+            let geometry=crate::editor::drawing::interaction::points::geometry_id(&node.segments);
+            if selected.iter().any(|point|Some(point.geometry)!=geometry.as_deref()) {continue;}
+            let points=selected.iter().map(|point|crate::schema::geometry::editing::PathPointRef {index:point.index,point:point.point}).collect::<Vec<_>>();
+            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(&node.segments,&points,node.transform,movement.delta) {node.segments=segments;}
+        }
+    }
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
     records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
+    }
+    if active_utility=="editNodes" {
+        let zoom=config.viewport.zoom.max(1e-6);
+        for node in scene_nodes.iter().filter(|node|selection.contains(&node.id)) {
+            if !matches!(crate::schema::find_drawing_layer(document,&node.id),Some(crate::DrawingLayerNode::Path(_))) || crate::schema::drawing_layer_is_locked(document,&node.id) {continue;}
+            let [a,b,c,d,e,f]=node.transform;
+            let world=|point:[f64;2]|[a*point[0]+c*point[1]+e,b*point[0]+d*point[1]+f];
+            let selected=point_selection.iter().filter_map(|id|crate::editor::drawing::interaction::points::parse_point_id(id)).filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
+            let geometry=if selected.is_empty() {None} else {match crate::schema::find_drawing_layer(document,&node.id) {Some(crate::DrawingLayerNode::Path(path))=>crate::editor::drawing::interaction::points::geometry_id(&path.segments),_=>None}};
+            let selected_point=|index,point|selected.iter().any(|reference|reference.index==index && reference.point==point && Some(reference.geometry)==geometry.as_deref());
+            let mut anchors=Vec::new();let mut controls=Vec::new();let mut stems=Vec::new();
+            let mut selected_anchors=Vec::new();let mut selected_controls=Vec::new();
+            let mut previous=[0.0,0.0];let mut start=previous;
+            for (index,segment) in node.segments.iter().enumerate() {
+                let to=match segment {PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Quad {to,..}|PathSegment::Cubic {to,..}|PathSegment::Arc {to,..}=>*to,PathSegment::Close=>{previous=start;continue;}};
+                let mut control=|point:[f64;2],anchor:[f64;2],kind| {
+                    let [x,y]=world(point);let radius=4.0/zoom;
+                    let target=if selected_point(index,kind) {&mut selected_controls} else {&mut controls};
+                    target.extend([PathSegment::Move {to:[x,y-radius]},PathSegment::Line {to:[x+radius,y]},PathSegment::Line {to:[x,y+radius]},PathSegment::Line {to:[x-radius,y]},PathSegment::Close]);
+                    stems.extend([PathSegment::Move {to:world(anchor)},PathSegment::Line {to:[x,y]}]);
+                };
+                match segment {
+                    PathSegment::Move {..}=>start=to,
+                    PathSegment::Quad {ctrl,..}=>{control(*ctrl,previous,crate::schema::geometry::editing::PathPoint::Control1);stems.extend([PathSegment::Move {to:world(*ctrl)},PathSegment::Line {to:world(to)}]);},
+                    PathSegment::Cubic {ctrl1,ctrl2,..}=>{control(*ctrl1,previous,crate::schema::geometry::editing::PathPoint::Control1);control(*ctrl2,to,crate::schema::geometry::editing::PathPoint::Control2);},
+                    _=>{},
+                }
+                let [x,y]=world(to);let radius=4.0/zoom;
+                let target=if selected_point(index,crate::schema::geometry::editing::PathPoint::Anchor) {&mut selected_anchors} else {&mut anchors};
+                target.extend([PathSegment::Move {to:[x-radius,y-radius]},PathSegment::Line {to:[x+radius,y-radius]},PathSegment::Line {to:[x+radius,y+radius]},PathSegment::Line {to:[x-radius,y+radius]},PathSegment::Close]);
+                previous=to;
+            }
+            let identity=[1.0,0.0,0.0,1.0,0.0,0.0];
+            records.push(overlay_record(&format!("overlay:node:{}:stems",node.id),identity,&stems,None,DRAWING_OVERLAY_MARQUEE_STROKE,1.0/zoom));
+            records.push(overlay_record(&format!("overlay:node:{}:controls",node.id),identity,&controls,Some([1.0;4]),DRAWING_OVERLAY_MARQUEE_STROKE,1.0/zoom));
+            records.push(overlay_record(&format!("overlay:node:{}:anchors",node.id),identity,&anchors,Some([1.0;4]),DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
+            records.push(overlay_record(&format!("overlay:node:{}:selected-controls",node.id),identity,&selected_controls,Some(DRAWING_OVERLAY_MARQUEE_STROKE),DRAWING_OVERLAY_MARQUEE_STROKE,1.0/zoom));
+            records.push(overlay_record(&format!("overlay:node:{}:selected-anchors",node.id),identity,&selected_anchors,Some(DRAWING_OVERLAY_SELECTION_STROKE),DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
+        }
     }
     if active_utility=="selectDirect" {
         if let Some(bounds)=crate::editor::drawing::commands::canvas_pointer_down::selected_transform_bounds(document,selection) {

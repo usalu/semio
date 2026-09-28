@@ -14,6 +14,7 @@ import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/�
 import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "./🧩️asset-cancellation/🟦️.ts";
+import { browserAssetFailureDisposition } from "./🧩️asset-failure/🟦️.ts";
 
 //#region 🔖️Bindings
 /** @emoji 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
@@ -298,6 +299,7 @@ let closing = false;
 let failed = false;
 let quarantined: { readonly code: string; readonly detail: string } | undefined;
 let lastFrame = { cursor: "default", fullscreen: null as boolean | null };
+let lastWorld3dAcceptedFrameDiagnostic: string | undefined;
 let pendingFault: { readonly code: string; readonly detail: string } | undefined;
 let runtimeCloseComplete = false;
 let jobsCloseComplete = false;
@@ -410,6 +412,7 @@ function runFrameTurn(): boolean {
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
     post({ kind: "frame", lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    publishWorld3dAcceptedFrameDiagnostic(input.generation);
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else if (assetCancellationStep === "idle") scheduleAssetPump();
     else if (assetCancellationStep === "returned" && !assetPumping) {
@@ -421,6 +424,27 @@ function runFrameTurn(): boolean {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
     return false;
   }
+}
+
+/** @emoji 🩺️ Projects the accepted World3d visual inputs into a changed-only page-visible receipt. */
+function publishWorld3dAcceptedFrameDiagnostic(generation: number): void {
+  if (diagnosticsStamp !== true || !bindings?.dumpMeshStats) return;
+  try {
+    const dump = JSON.parse(bindings.dumpMeshStats()) as { readonly surfaces?: readonly Record<string, unknown>[] };
+    const surfaces = (dump.surfaces ?? []).map((surface) => ({
+      surfaceId: surface.surfaceId,
+      paneId: surface.paneId,
+      rect: surface.rect,
+      bboxMin: surface.bboxMin,
+      bboxMax: surface.bboxMax,
+      camera: surface.camera,
+      liveCamera: surface.liveCamera,
+    }));
+    const json = JSON.stringify({ surfaces });
+    if (json === lastWorld3dAcceptedFrameDiagnostic) return;
+    lastWorld3dAcceptedFrameDiagnostic = json;
+    post({ kind: "diagnostic", lifecycle, channel: "world3d-accepted-frame", generation, frameSequence, json });
+  } catch {}
 }
 
 function runAssetDecodeTurn(): boolean {
@@ -837,10 +861,10 @@ async function pumpAsset(): Promise<void> {
     if (!sealed) throw new Error("asset-seal-busy: the renderer never freed its interaction state for the sealed response");
     frameTurns?.request("assetDecode");
   } catch (error) {
-    const cancelled = error instanceof DOMException && error.name === "AbortError";
-    if (runtime && !cancelled) {
+    const disposition = browserAssetFailureDisposition(error, activeRequest?.referenceImage === true);
+    if (runtime) {
       try {
-        if (activeRequest?.referenceImage && !cancelled) {
+        if (activeRequest && disposition === "missing") {
           let rejected = false;
           for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !rejected; attempt++) {
             rejected = ownedStep("asset-reject", () => runtime!.rejectAssetResponse());
@@ -850,8 +874,8 @@ async function pumpAsset(): Promise<void> {
         } else ownedStep("asset-abort", () => runtime!.abortAssetResponse());
       } catch {}
     }
-    if (activeRequest?.referenceImage && !closing && !closed && !failed) post({ kind: "wake", lifecycle });
-    if (!activeRequest?.referenceImage && !cancelled && !closing && !closed) fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
+    if (activeRequest && disposition === "missing" && !closing && !closed && !failed) post({ kind: "wake", lifecycle });
+    if (disposition === "fault" && !closing && !closed) fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
   } finally {
     if (assetAbort === responseController) assetAbort = undefined;
     assetPumping = false;

@@ -20,7 +20,7 @@
 //! byte for byte; only the step's `title` is this case's own fixture value.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical/📸️snapshot/➡️after/🔣️.json");
@@ -43,7 +43,7 @@ fn before() -> FormsSnapshot {
     let FormMutation::ReplaceBlock(payload) = mutation() else {
         panic!("no-ops-when-the-replacement-block-is-identical's committed mutation must be a replace-block");
     };
-    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![payload.block.clone()] }]);
+    replace_forms_steps(&mut snapshot, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![payload.block.clone()] }]);
     snapshot
 }
 

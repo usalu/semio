@@ -18,6 +18,7 @@ pub(crate) fn plan<'a>(document:&'a RasterSnapshot,layer_id:&str)->Result<(Optio
     let siblings=match parent.as_deref().and_then(|id|find_layer(&document.layers,id)) {Some(RasterLayerNode::Group {children,..})=>children.as_slice(),_=>document.layers.as_slice()};
     let pair=&siblings[index-1..=index];
     if pair.iter().any(|layer|!layer_visible(layer)||layer_blend_mode(layer)!="normal"||matches!(layer,RasterLayerNode::Adjustment {..})) {return Err(Fault::from("raster.merge-backdrop-dependent"));}
+    for layer in pair {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
     Ok((parent,index-1,pair))
 }
 pub(crate) fn prepare(command:&MergeDown,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
@@ -32,10 +33,11 @@ pub(crate) fn publish(image:EncodedPngImage,origin:[f64;2],command:&MergeDown,do
     let ids:std::collections::BTreeSet<_>=layers.iter().map(layer_node_id).collect();
     let previous=asset_keys_except(layers,&Default::default());
     let retained=asset_keys_except(&document.layers,&ids);
-    let mut mutations=vec![RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset})];
+    let mut mutations=Vec::new();
     mutations.extend(layers.iter().map(|layer|RasterMutation::DeleteLayer(delete_layer::DeleteLayer {layer_id:layer_node_id(layer).to_owned()})));
-    mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id,index,layer:Box::new(layer)}));
     mutations.extend(previous.difference(&retained).filter(|prior|*prior!=&key&&document.assets.contains_key(prior)).map(|asset_id|RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id:asset_id.clone()})));
+    mutations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key,asset}));
+    mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id,index,layer:Box::new(layer)}));
     Ok(Emit::mutations(mutations))
 }
 pub fn handle(_payload:&MergeDown,_doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {Err(Fault::from("raster.merge-requires-retained-work"))}

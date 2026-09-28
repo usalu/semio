@@ -2,10 +2,9 @@
 //! in the workbook (same projection the sibling mutation-capable surface's own window renders —
 //! independent read, no edit affordances).
 
-use crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::{render_xlsx_cell_value, xlsx_flat_cells};
 use crate::XlsxSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::app::{TableWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -24,11 +23,8 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `XlsxSnapshot -> BuiltNode` read: one row per cell, columns `sheet`/`row`/`col`/`value` —
 /// no command-driven cell edits (a viewer declares none).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XlsxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let shared_strings = &document.workbook.shared_strings;
-    let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
-    let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    crate::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view::windows::main::render(document, locale, windows)
 }
 //#endregion 🔖️Render
 

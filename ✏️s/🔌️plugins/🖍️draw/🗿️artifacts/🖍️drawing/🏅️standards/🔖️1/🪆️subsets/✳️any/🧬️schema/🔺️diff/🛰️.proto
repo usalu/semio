@@ -17,6 +17,7 @@ message DrawingLayerAddition {
 }
 message DrawingLayerPatchEntry { string id = 1; DrawingLayerPatch patch = 2; }
 message DrawingPathSegments { repeated semio.s.draw.drawing.artifact.PathSegment values = 1; }
+enum FillRule { FILL_RULE_EVENODD = 0; FILL_RULE_NONZERO = 1; }
 message DrawingLayerPatch {
   optional bool visible = 1;
   optional bool locked = 2;
@@ -32,6 +33,7 @@ message DrawingLayerPatch {
   optional DrawingPathSegments path_segments = 12;
   optional string text_content = 13;
   optional double text_size = 14;
+  optional FillRule fill_rule = 15;
 }
 message DrawingDiff {
   optional semio.s.draw.drawing.artifact.DrawingArtifact artifact = 1;

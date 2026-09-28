@@ -7,7 +7,9 @@ import { applyPatch } from "fast-json-patch";
 import { describe, expect, it } from "bun:test";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../🎮️commands/✏️set-node/🔣️schema.json";
-import { ArchiveTextCursor, archiveEntryNodeId, archiveTextRevision, editArchiveText, ZIP_MAXIMUM_TEXT_BYTES } from "../🟦️.ts";
+import checkpointSchema from "../🧵️retained/🔣️schema.json";
+import commentMutationSchema from "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💬set-archive-comment/🧬️schema/🔣️.json";
+import { ArchiveTextCursor, archiveCommentUtf8AfterEdit, archiveEntryNodeId, archiveTextRevision, editArchiveText, ZIP_MAXIMUM_TEXT_BYTES } from "../🟦️.ts";
 import { parseZipSnapshot } from "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 
 const archiveSchema = () => new Ajv2020().addKeyword({
@@ -43,11 +45,17 @@ describe("guarded archive text editing", () => {
     oracle.writeBigUInt64LE(BigInt(fixture.snapshot.entries.length), 24);
     oracle.write(archiveTextRevision(`${event.nodeId}\0${event.revision}\0${event.value}`), 32, "ascii");
     expect(checkpoint).toEqual(new Uint8Array(oracle));
+    expect(new Ajv2020({ strict: false }).compile(checkpointSchema)(Array.from(checkpoint))).toBe(true);
+    expect(() => cursor.advance(fixture.snapshot, { ...event, value: "changed while scanning" })).toThrow("stdio.zip.checkpoint-context");
+    expect(cursor.checkpoint()).toEqual(checkpoint);
     const resumed = new ArchiveTextCursor();
     resumed.restore(checkpoint);
     expect(resumed.scannedEntries).toBe(fixture.retainedResolution.resumeAfterEntries);
     for (let index = resumed.scannedEntries; index < fixture.snapshot.entries.length; index++) expect(resumed.advance(fixture.snapshot, event)).toBeUndefined();
-    expect(resumed.advance(fixture.snapshot, event)).toEqual(editArchiveText(fixture.snapshot, event));
+    const resumedMutations = resumed.advance(fixture.snapshot, event)!;
+    expect(resumedMutations).toEqual([{ mutation: "renameEntry", name: fixture.rename.name, newName: fixture.rename.value }]);
+    const result = applyZipDiff(fixture.snapshot, parseZipDiff({ entries: { modified: [{ name: fixture.rename.name, diff: { name: fixture.rename.value } }] } }));
+    expect(result).toEqual(applyPatch(structuredClone(fixture.snapshot), [{ op: "replace", path: "/entries/0/name", value: fixture.rename.value }]).newDocument);
     const wrongCommand = new ArchiveTextCursor();
     wrongCommand.restore(checkpoint);
     expect(() => wrongCommand.advance(fixture.snapshot, { ...event, value: "different.txt" })).toThrow("stdio.zip.checkpoint-context");
@@ -89,12 +97,34 @@ describe("guarded archive text editing", () => {
     for (const row of fixture.textByteBoundaries) {
       const edit = { nodeId: "comment", value: row.text.repeat(row.repeat), revision: archiveTextRevision(fixture.snapshot.comment) };
       expect(validate(edit)).toBe(row.valid);
-      if (row.valid) expect(editArchiveText(fixture.snapshot, edit)).toEqual([{ mutation: "setArchiveComment", comment: edit.value }]);
+      if (row.valid) expect(editArchiveText(fixture.snapshot, edit)).toEqual([{ mutation: "setArchiveComment", comment: edit.value, commentUtf8: true }]);
       else expect(() => editArchiveText(fixture.snapshot, edit)).toThrow("stdio.zip.text-too-large");
     }
   });
+  it("refuses invalid byte values consistently across snapshot and sparse diff schemas", () => {
+    const validateSnapshot = new Ajv({ strict: false }).compile(snapshotSchema);
+    const validateDiff = new Ajv({ strict: false }).addSchema(snapshotSchema).compile(diffSchema);
+    for (const byte of fixture.invalidPayloadBytes) {
+      const snapshot = { ...fixture.snapshot, entries: [{ name: "invalid.bin", data: [byte] }] };
+      const diff = { entries: { modified: [{ name: fixture.rename.name, diff: { data: [byte] } }] } };
+      expect(validateSnapshot(snapshot)).toBe(false);
+      expect(validateDiff(diff)).toBe(false);
+      expect(() => parseZipSnapshot(snapshot)).toThrow();
+      expect(() => parseZipDiff(diff)).toThrow();
+    }
+    expect(parseZipDiff({ entries: { added: [{ name: "empty.txt" }] } }).entries!.added[0]!.data).toEqual([]);
+  });
   it("supplies the shared empty archive defaults before editing", () => {
     expect(parseZipSnapshot(fixture.omittedDefaults)).toEqual(fixture.defaultSnapshot);
+  });
+  it("retains complete entry header state and refuses invalid compression metadata", () => {
+    expect(parseZipSnapshot(fixture.snapshot)).toEqual(fixture.snapshot);
+    const changed = structuredClone(fixture.snapshot);
+    changed.entries[0]!.metadata.compressionMethod = 7 as 0;
+    expect(() => parseZipSnapshot(changed)).toThrow("compressionMethod");
+    const invalidExtra = structuredClone(fixture.snapshot);
+    invalidExtra.entries[0]!.metadata.local.extraFields.push({ id: 0xcafe, data: [256] });
+    expect(() => parseZipSnapshot(invalidExtra)).toThrow("extraFields");
   });
   it("matches the neutral reordered rename with an independent JSON Patch oracle", () => {
     const snapshot = structuredClone(fixture.snapshot);
@@ -125,7 +155,21 @@ describe("guarded archive text editing", () => {
     snapshot.entries.push({ ...snapshot.entries[0]! });
     expect(() => editArchiveText(snapshot, edit)).toThrow("stdio.zip.target-ambiguous");
     const comment = { nodeId: "comment", value: "", revision: archiveTextRevision(snapshot.comment) };
-    expect(editArchiveText(snapshot, comment)).toEqual([{ mutation: "setArchiveComment", comment: "" }]);
+    expect(editArchiveText(snapshot, comment)).toEqual([{ mutation: "setArchiveComment", comment: "", commentUtf8: true }]);
     expect(() => editArchiveText({ ...snapshot, comment: "Changed remotely" }, comment)).toThrow("stdio.zip.draft-conflict");
+  });
+
+  it("promotes a CP437 archive comment atomically when the replacement needs UTF-8", () => {
+    const snapshot = { ...structuredClone(fixture.snapshot), comment: "é", commentUtf8: false };
+    const event = { nodeId: "comment", value: "edited 🎒", revision: archiveTextRevision(snapshot.comment) };
+    expect(editArchiveText(snapshot, event)).toEqual([{ mutation: "setArchiveComment", comment: event.value, commentUtf8: true }]);
+    expect(archiveCommentUtf8AfterEdit(false, "é")).toBe(false);
+    expect(archiveCommentUtf8AfterEdit(false, "plain ASCII")).toBe(true);
+  });
+
+  it("requires the atomic archive-comment encoding in the schema", () => {
+    const validate = new Ajv({ strict: false }).compile(commentMutationSchema);
+    expect(validate({ mutation: "setArchiveComment", comment: "edited 🎒", commentUtf8: true })).toBe(true);
+    expect(validate({ mutation: "setArchiveComment", comment: "edited 🎒" })).toBe(false);
   });
 });

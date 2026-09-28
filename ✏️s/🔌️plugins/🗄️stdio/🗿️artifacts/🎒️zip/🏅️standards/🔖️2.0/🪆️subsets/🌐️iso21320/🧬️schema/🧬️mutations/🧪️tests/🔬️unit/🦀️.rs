@@ -2,17 +2,17 @@ use super::*;
 use protocol::Mutation as _;
 
 fn entry(name: &str, data: &[u8]) -> ZipEntry {
-    ZipEntry { name: name.into(), data: data.to_vec() }
+    ZipEntry { name: name.into(), data: data.to_vec(), ..Default::default() }
 }
 
 fn base_snapshot() -> ZipSnapshot {
-    ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("bild.jpg", b"jpegbytes"), entry("notiz.txt", b"text")], comment: "Bestand".into() }
+    ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("bild.jpg", b"jpegbytes"), entry("notiz.txt", b"text")], comment: "Bestand".into(), ..Default::default() }
 }
 
 fn every_kind() -> Vec<ZipIso21320Mutation> {
     vec![
         ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
-        ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "geaendert".into() }),
+        ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "geaendert".into(), comment_utf8: true }),
         ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry("beleg.png", b"png"), before: None }),
         ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry("beleg.txt", b"text"), before: None }),
         ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: "notiz.txt".into() }),

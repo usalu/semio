@@ -1,9 +1,9 @@
-/** 🧬️ ZipArtifact schema. */
-export interface ZipEntry {
-  name: string;
-  data: number[];
-}
-export interface ZipArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: ZipEntry[];
-}
+/** 🧬️ ZipArtifact uses the same complete persisted shape as ZipSnapshot. */
+export type {
+  ZipCentralHeaderMetadata,
+  ZipEntry,
+  ZipEntryMetadata,
+  ZipExtraField,
+  ZipLocalHeaderMetadata,
+  ZipSnapshot as ZipArtifact,
+} from './📸️snapshot/🟦️.ts';

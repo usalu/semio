@@ -1,5 +1,6 @@
-//! 🧬️ WavSnapshot — a typed `fmt ` chunk + typed `data` samples + any other RIFF chunk
-//! verbatim. Real byte-accurate RIFF/WAVE codec (see `⚙️engine`), not a container placeholder.
+//! 🧬️ WavSnapshot — typed primary `fmt `/`data` chunks plus the complete ordered RIFF
+//! chunk sequence. Duplicate canonical chunks remain verbatim auxiliary chunks, so every admitted
+//! recording can preserve chunk order and multiplicity through an edit.
 
 /// 📦️ Owned by `wav`: the `fmt ` chunk's fields, typed. `ext` carries the extensible/non-PCM
 /// tail (`cbSize` bytes) verbatim when present — `None` for the plain 16-byte PCM form. NO type
@@ -45,21 +46,97 @@ impl Default for WavData {
     }
 }
 
-/// 📦️ Owned by `wav`: any RIFF chunk other than `fmt `/`data`, retained byte-for-byte
-/// (`LIST`/`INFO`/`fact`/`cue `/…).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 📦️ Owned by `wav`: any auxiliary or duplicate canonical RIFF chunk, retained byte-for-byte
+/// together with its word-alignment pad byte.
+pub(crate) fn is_zero_byte(value: &u8) -> bool {
+    *value == 0
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
     #[value(default)]
     pub data: Vec<u8>,
+    #[value(default, skip_serializing_if = "is_zero_byte")]
+    pub pad_byte: u8,
+}
+
+/// 🧭️ One position in the top-level RIFF/WAVE chunk sequence. `Format` and `Samples`
+/// reference the typed primary chunks; `Other` references `other_chunks[index]`. A duplicate
+/// `fmt `/`data` chunk is deliberately an `Other` entry so its original payload survives exactly.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
+pub enum WavChunkRef {
+    Format,
+    Samples,
+    Other(u64),
 }
 
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_WAV_DOCUMENT_SCHEMA: &str = "stdio.wav";
+pub const MAXIMUM_FMT_EXTENSION_BYTES: usize = u16::MAX as usize;
 //#endregion 🔖️Ids
+
+/// 🚫️ One WAV snapshot field that cannot be represented exactly on the RIFF wire.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WavSerializationIssue {
+    pub code: &'static str,
+    pub message: String,
+    pub target: Vec<String>,
+}
+
+fn serialization_issue(code: &'static str, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> WavSerializationIssue {
+    WavSerializationIssue { code, message: message.into(), target: target.into_iter().map(Into::into).collect() }
+}
+
+fn pad_is_representable(pad_byte: u8, payload_is_odd: bool, target: &'static str) -> Result<(), WavSerializationIssue> {
+    if pad_byte != 0 && !payload_is_odd {
+        return Err(serialization_issue(
+            "stdio.wav.serialization.invalid-pad-byte",
+            format!("{target} is nonzero but its RIFF chunk payload has even length and carries no pad byte"),
+            [target],
+        ));
+    }
+    Ok(())
+}
+
+/// 🧭️ Refuses snapshot states that cannot survive one exact RIFF/WAVE save and reopen.
+pub fn validate_wav_serialization(snapshot: &WavSnapshot) -> Result<(), WavSerializationIssue> {
+    let ext_len = snapshot.fmt.ext.as_ref().map_or(0, Vec::len);
+    if ext_len > MAXIMUM_FMT_EXTENSION_BYTES {
+        return Err(serialization_issue(
+            "stdio.wav.serialization.fmt-extension-too-large",
+            format!("fmt.ext contains {ext_len} bytes; RIFF/WAVE cbSize can declare at most {MAXIMUM_FMT_EXTENSION_BYTES}"),
+            ["fmt", "ext"],
+        ));
+    }
+    let fmt_payload_is_odd = snapshot.fmt.ext.as_ref().is_some_and(|ext| !ext.len().is_multiple_of(2));
+    pad_is_representable(snapshot.fmt_pad_byte, fmt_payload_is_odd, "fmtPadByte")?;
+    let data_payload_is_odd = match &snapshot.data {
+        WavData::Pcm8(bytes) | WavData::Raw(bytes) => !bytes.len().is_multiple_of(2),
+        WavData::Pcm16(_) | WavData::Float32(_) => false,
+    };
+    pad_is_representable(snapshot.data_pad_byte, data_payload_is_odd, "dataPadByte")?;
+    for (index, chunk) in snapshot.other_chunks.iter().enumerate() {
+        let bytes = chunk.fourcc.as_bytes();
+        if bytes.len() != 4 || !bytes.iter().all(|byte| byte.is_ascii_graphic() || *byte == b' ') {
+            return Err(serialization_issue(
+                "stdio.wav.serialization.invalid-fourcc",
+                format!("otherChunks[{index}].fourcc must contain exactly four printable ASCII wire bytes"),
+                ["otherChunks".to_string(), index.to_string(), "fourcc".to_string()],
+            ));
+        }
+        pad_is_representable(chunk.pad_byte, !chunk.data.len().is_multiple_of(2), "padByte").map_err(|mut issue| {
+            issue.message = format!("otherChunks[{index}].padByte is nonzero but its RIFF chunk payload has even length and carries no pad byte");
+            issue.target = vec!["otherChunks".into(), index.to_string(), "padByte".into()];
+            issue
+        })?;
+    }
+    Ok(())
+}
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -73,13 +150,22 @@ pub struct WavSnapshot {
     #[state(artifact)]
     pub data: WavData,
     #[state(artifact)]
+    #[value(default, skip_serializing_if = "is_zero_byte")]
+    pub fmt_pad_byte: u8,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "is_zero_byte")]
+    pub data_pad_byte: u8,
+    #[state(artifact)]
     #[value(default)]
     pub other_chunks: Vec<RiffChunk>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub chunk_order: Vec<WavChunkRef>,
 }
 
 impl Default for WavSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), other_chunks: Default::default() }
+        Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), fmt_pad_byte: 0, data_pad_byte: 0, other_chunks: Vec::new(), chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples] }
     }
 }
 //#endregion 🔖️Snapshot
@@ -125,7 +211,7 @@ impl store::ArtifactDsl for WavSnapshot {
 impl store::ArtifactPack for WavSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::standards::riff_pcm::subsets::any::io::encode_wav(self);
+        let raw = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }

@@ -9,10 +9,10 @@
 
 use super::super::super::{attr, XlsxError, REL_TYPE_SHARED_STRINGS, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, SML_NS, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE};
 use crate::{
-    schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
+    schema::snapshot::{xlsx_part_is_xml, XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook, XlsxXmlPart},
     XlsxSnapshot,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
@@ -25,6 +25,7 @@ fn sst_to_xml(shared: &[String]) -> XmlDocument {
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
+        epilog: Vec::new(),
     }
 }
 //#endregion 🔖️SharedStringsXml
@@ -44,6 +45,7 @@ fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
+        epilog: Vec::new(),
     }
 }
 //#endregion 🔖️WorkbookXml
@@ -83,6 +85,7 @@ fn cached_value_xml(cached: &XlsxCellValue) -> (Option<semio_s_artifact_stdio_xm
         XlsxCellValue::SharedString(idx) => (Some(attr("t", "s")), Some(v_element(&idx.to_string()))),
         XlsxCellValue::InlineString(s) => (Some(attr("t", "str")), Some(v_element(s))),
         XlsxCellValue::Boolean(b) => (Some(attr("t", "b")), Some(v_element(if *b { "1" } else { "0" }))),
+        XlsxCellValue::Error(error) => (Some(attr("t", "e")), Some(v_element(error))),
         XlsxCellValue::Formula { .. } => (None, None),
         XlsxCellValue::Empty => (None, None),
     }
@@ -106,6 +109,10 @@ fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
             attrs.push(attr("t", "b"));
             XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(if *b { "1" } else { "0" })] }
         }
+        XlsxCellValue::Error(error) => {
+            attrs.push(attr("t", "e"));
+            XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(error)] }
+        }
         XlsxCellValue::Formula { expr, cached } => {
             let mut children = vec![f_element(expr)];
             if let Some(cached) = cached {
@@ -127,7 +134,7 @@ fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
 /// `<row>`-then-`<c>` nesting, sorted ascending on both axes (spec order, and needed for
 /// deterministic bytes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
+pub(crate) fn worksheet_to_xml_with_namespace(sheet: &XlsxSheet, namespace: &str) -> XmlDocument {
     let mut by_row: std::collections::BTreeMap<u32, Vec<&XlsxCell>> = std::collections::BTreeMap::new();
     for cell in &sheet.cells {
         by_row.entry(cell.row).or_default().push(cell);
@@ -141,11 +148,16 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
         })
         .collect();
     XmlDocument {
-        root: Some(XmlNode::Element { name: "worksheet".into(), attrs: vec![attr("xmlns", SML_NS)], children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }] }),
+        root: Some(XmlNode::Element { name: "worksheet".into(), attrs: vec![attr("xmlns", namespace)], children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }] }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
+        epilog: Vec::new(),
     }
+}
+
+fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
+    worksheet_to_xml_with_namespace(sheet, SML_NS)
 }
 //#endregion 🔖️WorksheetXml
 
@@ -156,22 +168,6 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn is_rel_type(rel_type: &str, suffix: &str) -> bool {
     rel_type.ends_with(suffix)
-}
-
-/// 🆔 The lowest `rIdN` not already spoken for — relationship ids are unique per owner part
-/// (ECMA-376 Part 2 §9.3), so a regenerated worksheet pointer may never collide with a preserved
-/// `styles`/`theme`/`calcChain` one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fresh_rel_id(taken: &mut Vec<String>) -> String {
-    let mut n = 1usize;
-    loop {
-        let candidate = format!("rId{n}");
-        if !taken.iter().any(|id| id == &candidate) {
-            taken.push(candidate.clone());
-            return candidate;
-        }
-        n += 1;
-    }
 }
 
 /// 🔗️ `xl/workbook.xml`'s relationship list, regenerated for the sheet list this snapshot carries
@@ -193,11 +189,11 @@ fn workbook_relationships(existing: &[OpcRelationship], sheet_count: usize) -> (
     let prior_worksheet_ids: Vec<String> = existing.iter().filter(|r| is_rel_type(&r.rel_type, "/worksheet")).map(|r| r.id.clone()).collect();
     let worksheets: Vec<OpcRelationship> = (0..sheet_count)
         .map(|i| {
-            let id = prior_worksheet_ids.get(i).cloned().unwrap_or_else(|| fresh_rel_id(&mut taken));
+            let id = prior_worksheet_ids.get(i).cloned().unwrap_or_else(|| semio_s_artifact_stdio_zip::opc::fresh_relationship_id(&mut taken));
             OpcRelationship { id, rel_type: worksheet_type.clone(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal }
         })
         .collect();
-    let shared_strings_id = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map_or_else(|| fresh_rel_id(&mut taken), |r| r.id.clone());
+    let shared_strings_id = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map_or_else(|| semio_s_artifact_stdio_zip::opc::fresh_relationship_id(&mut taken), |r| r.id.clone());
     let shared_strings = OpcRelationship { id: shared_strings_id, rel_type: shared_strings_type, target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal };
 
     let rids = worksheets.iter().map(|r| r.id.clone()).collect();
@@ -271,7 +267,7 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     }
 
     if !opc.relationships_for("").iter().any(|r| is_rel_type(&r.rel_type, "/officeDocument")) {
-        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
+        opc.add_generated_relationship("", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
     }
 
     // 🔤️ Path-ascending is this format's part NORMAL FORM, and it has to be: `retain` above keeps
@@ -293,13 +289,33 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
 pub fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     regenerate_workbook_parts(&mut opc, &workbook);
-    XlsxSnapshot::from_parts(opc, workbook)
+    let mut xml_parts = Vec::new();
+    let mut binary_parts = Vec::new();
+    for part in std::mem::take(&mut opc.parts) {
+        if xlsx_part_is_xml(&part.path, &part.content_type) {
+            let text = String::from_utf8(part.bytes).expect("minimal XLSX XML is UTF-8");
+            let document = xml_document_from_text(&text).expect("minimal XLSX XML parses");
+            xml_parts.push(XlsxXmlPart { path: part.path, content_type: part.content_type, document });
+        } else {
+            binary_parts.push(part);
+        }
+    }
+    opc.parts = binary_parts;
+    XlsxSnapshot::from_parts(opc, xml_parts)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
+    snap.validate_authority()?;
     let mut opc = snap.opc.clone();
-    regenerate_workbook_parts(&mut opc, &snap.workbook);
+    let mut paths: std::collections::HashSet<String> = opc.parts.iter().map(|part| part.path.clone()).collect();
+    for part in &snap.xml_parts {
+        if !paths.insert(part.path.clone()) {
+            return Err(XlsxError::Malformed(format!("duplicate OPC part authority: {}", part.path)));
+        }
+        let text = xml_document_to_text_checked(&part.document).map_err(|detail| XlsxError::Xml { part: part.path.clone(), detail })?;
+        opc.set_part(&part.path, &part.content_type, text.into_bytes());
+    }
     Ok(semio_s_artifact_stdio_zip::opc::encode_opc_with_package_order(&opc)?)
 }
 //#endregion 🔖️Codec

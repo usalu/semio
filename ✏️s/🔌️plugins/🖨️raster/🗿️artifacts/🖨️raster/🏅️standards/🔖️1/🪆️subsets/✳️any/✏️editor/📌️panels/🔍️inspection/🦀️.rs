@@ -2,7 +2,7 @@
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text};
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
 use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID};
@@ -23,28 +23,35 @@ fn value(layer: &RasterLayerNode, field: &str, document: &RasterDocument) -> Str
         "name" => layer_name(layer).into(),
         "brightness" | "contrast" => if let RasterLayerNode::Adjustment {params,..}=layer {params.get(field).and_then(dsl::DslValue::as_f64).unwrap_or(0.0).to_string()} else {String::new()},
         "visible" => layer_visible(layer).to_string(),
+        "locked" => layer_locked(layer).to_string(),
         "opacity" => layer_opacity(layer).to_string(),
         "blendMode" => layer_blend_mode(layer).into(),
+        "transformScaleX"|"transformScaleY"|"transformRotation"|"transformShearX"=>{
+            let Ok(controls)=semio_framework_pixels::compositing::frames::decompose(layer_transform(layer).as_affine()) else {return String::new();};
+            match field {"transformScaleX"=>controls.scale_x,"transformScaleY"=>controls.scale_y,"transformRotation"=>controls.rotation,_=>controls.shear_x}.to_string()
+        }
         "transformX" => layer_transform(layer).x.to_string(),
         "transformY" => layer_transform(layer).y.to_string(),
         "width" => if let RasterLayerNode::Pixel { width, .. } = layer { width.unwrap_or(512).to_string() } else { String::new() },
-        "maskPresent" | "maskEnabled" | "maskInvert" => {
+        "maskPresent" | "maskEnabled" | "maskInvert" | "maskLinked" => {
             let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = layer else { return String::new(); };
             match field {
                 "maskPresent" => mask.is_some(),
                 "maskEnabled" => mask.as_ref().is_some_and(|mask| mask.enabled),
+                "maskLinked" => mask.as_ref().is_some_and(|mask| mask.linked),
                 _ => mask.as_ref().is_some_and(|mask| mask.invert),
             }.to_string()
         }
-        "maskX" | "maskY" | "maskScaleX" | "maskScaleY" | "maskRotation" | "maskWidth" | "maskHeight" => {
+        "maskX" | "maskY" | "maskScaleX" | "maskScaleY" | "maskRotation" | "maskShearX" | "maskWidth" | "maskHeight" => {
             let (RasterLayerNode::Pixel { mask: Some(mask), .. } | RasterLayerNode::Group { mask: Some(mask), .. }) = layer else { return String::new(); };
             let image = mask.image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<crate::SemioImageSnapshot>());
             match field {
                 "maskX" => mask.transform.x.to_string(),
                 "maskY" => mask.transform.y.to_string(),
-                "maskScaleX" => mask.transform.scale_x.to_string(),
-                "maskScaleY" => mask.transform.scale_y.to_string(),
-                "maskRotation" => mask.transform.rotation.to_string(),
+                "maskScaleX" | "maskScaleY" | "maskRotation" | "maskShearX" => {
+                    let Ok(controls)=semio_framework_pixels::compositing::frames::decompose(mask.transform.as_affine()) else {return String::new();};
+                    match field {"maskScaleX"=>controls.scale_x,"maskScaleY"=>controls.scale_y,"maskRotation"=>controls.rotation,_=>controls.shear_x}.to_string()
+                },
                 "maskWidth" => mask.width.or_else(|| image.map(|image| image.width)).unwrap_or(512).to_string(),
                 _ => mask.height.or_else(|| image.map(|image| image.height)).unwrap_or(512).to_string(),
             }
@@ -61,7 +68,7 @@ fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], label
     let (action, args) = raster_action("patchLayers", Some(args))?;
     let args = args.ok_or_else(capacity)?;
     let id = format!("{ROOT}.{field}.input");
-    let control = if matches!(field, "visible" | "maskPresent" | "maskEnabled" | "maskInvert") {
+    let mut control = if matches!(field, "locked" | "visible" | "maskPresent" | "maskEnabled" | "maskInvert" | "maskLinked") {
         ui::toggle(initial == "true").try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?.try_on_with(Trigger::Change, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
     } else if field == "blendMode" {
         let mut input = ui::select(text(if mixed { "" } else { &initial })?).try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?;
@@ -76,27 +83,38 @@ fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], label
         if matches!(field,"brightness"|"contrast") {input=input.min(-1.0).max(1.0).step(0.01);}
         if field == "opacity" { input = input.min(0.0).max(1.0).step(0.01); }
         if matches!(field, "width" | "height" | "maskWidth" | "maskHeight") { input = input.min(1.0).max(16384.0).step(1.0); }
-        if matches!(field, "maskScaleX" | "maskScaleY") { input = input.step(0.01); }
+        if matches!(field, "maskScaleX" | "maskScaleY" | "maskShearX" | "transformScaleX" | "transformScaleY" | "transformShearX") { input = input.step(0.01); }
         input.try_on_with(Trigger::Commit, action, args).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?
     };
-    ui::tree_item(ui_label(label.as_str())?).try_id(format!("{ROOT}.{field}")).map_err(|_| capacity())?.try_child(control).map_err(|_| capacity())?.try_build().map_err(|_| capacity())
+    control.disabled=selected.iter().any(|layer|layer_protection(&document.layers,layer_node_id(layer)).is_none_or(|policy|match field {
+        "visible"=>false,
+        "locked"=>!policy.can_change_lock,
+        "transformX"|"transformY"|"transformScaleX"|"transformScaleY"|"transformRotation"|"transformShearX"|"width"|"height"=>!policy.structural,
+        _=>!policy.editable,
+    }));
+    let disabled=control.disabled;
+    let mut row=ui::tree_item(ui_label(label.as_str())?).try_id(format!("{ROOT}.{field}")).map_err(|_| capacity())?.try_child(control).map_err(|_| capacity())?;
+    if disabled {row=row.description(text(labels.locked_hint.as_str())?);}
+    row.try_build().map_err(|_|capacity())
 }
 
 pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &[String], labels: &RasterPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let selected: Vec<_> = selected_ids.iter().filter_map(|id| find_layer(&document.layers, id)).collect();
     let mut rows = Vec::new();
     if !selected.is_empty() {
-        for (field, label) in [("name", labels.name), ("visible", labels.visible), ("opacity", labels.opacity), ("blendMode", labels.blend_mode)] {
+        for (field, label) in [("name", labels.name), ("visible", labels.visible), ("locked", labels.locked), ("opacity", labels.opacity), ("blendMode", labels.blend_mode)] {
             rows.push(field_row(field, label, &selected, labels, document)?);
         }
         if selected.iter().all(|layer| matches!(layer, RasterLayerNode::Pixel { .. } | RasterLayerNode::Group { .. })) {
             rows.push(field_row("transformX",labels.position_x,&selected,labels,document)?);
             rows.push(field_row("transformY",labels.position_y,&selected,labels,document)?);
+            for (field,label) in [("transformScaleX",labels.scale_x),("transformScaleY",labels.scale_y),("transformRotation",labels.rotation),("transformShearX",labels.shear_x)] {rows.push(field_row(field,label,&selected,labels,document)?);}
             rows.push(field_row("maskPresent", labels.mask_present, &selected, labels, document)?);
             if selected.iter().all(|layer| value(layer, "maskPresent", document) == "true") {
                 rows.push(field_row("maskEnabled", labels.mask_enabled, &selected, labels, document)?);
                 rows.push(field_row("maskInvert", labels.mask_invert, &selected, labels, document)?);
-                for (field,label) in [("maskX",labels.mask_x),("maskY",labels.mask_y),("maskScaleX",labels.mask_scale_x),("maskScaleY",labels.mask_scale_y),("maskRotation",labels.mask_rotation),("maskWidth",labels.mask_width),("maskHeight",labels.mask_height)] {
+                rows.push(field_row("maskLinked", labels.mask_linked, &selected, labels, document)?);
+                for (field,label) in [("maskX",labels.mask_x),("maskY",labels.mask_y),("maskScaleX",labels.mask_scale_x),("maskScaleY",labels.mask_scale_y),("maskRotation",labels.mask_rotation),("maskShearX",labels.mask_shear_x),("maskWidth",labels.mask_width),("maskHeight",labels.mask_height)] {
                     rows.push(field_row(field,label,&selected,labels,document)?);
                 }
             }
@@ -112,6 +130,14 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
     }
     if selected.len()==1 {
         let id=layer_node_id(selected[0]);
+        let duplicate=crate::editor::raster::commands::duplicate_layer::plan(document,id).is_ok();
+        let delete=layer_protection(&document.layers,id).is_some_and(|policy|policy.structural);
+        for (key,command,label,enabled) in [("duplicate","duplicateLayer",labels.duplicate_layer,duplicate),("delete","deleteLayer",labels.delete_layer,delete)] {
+            let (action,args)=raster_action(command,Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
+            let mut row=ui::tree_item(ui_label(label.as_str())?).try_id(format!("{ROOT}.{key}")).map_err(|_|capacity())?.disabled(!enabled);
+            if !enabled {row=row.description(text(labels.locked_hint.as_str())?);}
+            rows.push(row.try_on_with(Trigger::Activate,action,args.ok_or_else(capacity)?).map_err(|_|capacity())?.try_build().map_err(|_|capacity())?);
+        }
         let supported=crate::editor::raster::commands::merge_down::plan(document,id).is_ok();
         let (action,args)=raster_action("mergeDown",Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
         rows.push(ui::tree_item(ui_label(labels.merge_down.as_str())?).try_id(format!("{ROOT}.merge-down")).map_err(|_|capacity())?.description(text(labels.merge_down_hint.as_str())?).disabled(!supported)

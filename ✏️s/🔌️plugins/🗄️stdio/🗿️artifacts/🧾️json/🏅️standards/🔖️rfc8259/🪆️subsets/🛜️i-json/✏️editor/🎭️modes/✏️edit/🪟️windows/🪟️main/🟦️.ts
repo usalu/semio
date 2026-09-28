@@ -12,11 +12,12 @@ export interface JsonMainViewModel {
   roots: JsonMainNode[];
 }
 
-/** ✏️ `set-node` payload shape — mirrors `JsonIJsonIJsonEditorCommand::SetScalar`. `nodeId` is the
- * `k=<key>`/`i=<index>` path encoding (`/`-joined, root is `""`) the Rust window's
+/** ✏️ `set-node` payload shape — mirrors `JsonIJsonIJsonEditorCommand::SetNode`. `nodeId` is the
+ * `m=<member-index>`/`i=<index>` source-ordinal path encoding (root is `$`) the Rust window's
  * `encode_path_id` produces. */
 export interface JsonSetNode {
   nodeId: string;
+  revision: string;
   value: string;
 }
 

@@ -1,0 +1,26 @@
+{
+  "valid": [
+    { "partPath": "word/document.xml", "nodePath": [0, 1, 2], "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r", "revision": "0123456789abcdef" },
+    { "partPath": "custom/Überblick.xml", "nodePath": [], "expectedName": "{}metadata", "revision": "0000000000000000" },
+    { "partPath": "custom/data.xml", "nodePath": [0], "expectedName": "#text", "revision": "ffffffffffffffff" }
+  ],
+  "invalid": [
+    null,
+    [],
+    {},
+    { "partPath": "", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "/word/document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word//document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/../document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "./document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml/", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word\\document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml", "nodePath": [-1], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml", "nodePath": [0.5], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml", "nodePath": [9007199254740992], "expectedName": "{}r", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml", "nodePath": [], "expectedName": "", "revision": "0000000000000000" },
+    { "partPath": "word/document.xml", "nodePath": [], "expectedName": "{}r", "revision": "ABCDEF0123456789" },
+    { "partPath": "word/document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000" },
+    { "partPath": "word/document.xml", "nodePath": [], "expectedName": "{}r", "revision": "0000000000000000", "runIndex": 0 }
+  ]
+}

@@ -6,7 +6,7 @@ import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../.
 test("shared source image preparation preserves the composite",async()=>{
   const {width,height,pixel,references,maximumPixelsPerGrant}=fixture;
   const pixels=Uint8Array.from({length:width*height*4},(_,i)=>pixel[i%4]!);
-  const transform={x:0,y:0,rotation:0,scaleX:1,scaleY:1};
+  const transform={x:0.0,y:0.0,a:1.0,b:0.0,c:-0.0,d:1.0};
   const layers:RasterStackLayer[]=Array.from({length:references},(_,i)=>({kind:"pixel",id:String(i),visible:true,opacity:1,blendMode:"normal",width,height,imageKey:"source",transform,mask:null}));
   const job=new RasterStackJob({layers,images:{source:{width,height,pixels}}});
   while(!job.advance(maximumPixelsPerGrant).done){}

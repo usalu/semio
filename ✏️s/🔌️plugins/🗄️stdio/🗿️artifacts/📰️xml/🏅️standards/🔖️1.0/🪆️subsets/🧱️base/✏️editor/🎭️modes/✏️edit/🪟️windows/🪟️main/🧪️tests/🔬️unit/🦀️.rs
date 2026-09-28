@@ -11,7 +11,13 @@ async fn definition_declares_a_tree_window() {
 async fn render_walks_element_children() {
     let document = XmlSnapshot {
         schema: "stdio.xml".into(),
-        doc: crate::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }), doctype: None, declaration: None, prolog: Vec::new() },
+        doc: crate::schema::snapshot::XmlDocument {
+            root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }),
+            doctype: None,
+            declaration: None,
+            prolog: Vec::new(),
+            epilog: Vec::new(),
+        },
     };
     let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     let section = node.children.get(0).expect("tree section");
@@ -30,14 +36,29 @@ fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
             doctype: None,
             declaration: None,
             prolog: Vec::new(),
+            epilog: Vec::new(),
         },
     };
-    let node = render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("editor render");
+    let node = render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").expect("editor render");
+    let source = node.children.get(0).expect("source surface");
+    let semio_framework_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
+    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
+    assert_eq!(settings["editAction"], "set-node");
+    assert_eq!(settings["editArguments"]["nodeId"], "$");
+    assert_eq!(settings["editArguments"]["revision"], "revision");
+    assert_eq!(settings["commit"], "explicit");
+    assert_eq!(settings["applyLabel"], "Apply");
+    assert_eq!(settings["discardLabel"], "Discard");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("Grüße\\n%20"), "natural XML text remains in the draft: {json}");
-    assert!(json.contains("\\\"editAction\\\":\\\"set-node\\\""), "the draft applies through the retained whole-document route: {json}");
-    assert!(json.contains("\\\"nodeId\\\":\\\"$\\\""), "the draft targets the XML root: {json}");
-    assert!(json.contains("Apply") && json.contains("Discard"), "draft controls follow the active locale: {json}");
+}
+
+#[test]
+fn editor_render_refuses_invalid_declaration_without_panicking() {
+    let mut document = XmlSnapshot::default();
+    document.doc.declaration = Some(crate::schema::snapshot::XmlDeclaration::new("1.0", Some("ISO-8859-1".into()), None));
+    assert!(render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").is_err());
 }
 
 //#region 🪟️WindowLaws
@@ -70,6 +91,7 @@ fn oversized_document(children: usize) -> XmlSnapshot {
             doctype: None,
             declaration: None,
             prolog: Vec::new(),
+            epilog: Vec::new(),
         },
     }
 }

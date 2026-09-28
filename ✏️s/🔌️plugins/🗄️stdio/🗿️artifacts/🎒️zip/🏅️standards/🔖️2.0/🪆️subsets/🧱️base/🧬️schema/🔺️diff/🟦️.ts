@@ -1,9 +1,10 @@
-import type { ZipSnapshot } from '../📸️snapshot/🟦️.ts';
+import { parseZipEntry as parseSnapshotZipEntry, parseZipEntryMetadata, type ZipSnapshot, type ZipEntry, type ZipEntryMetadata } from '../📸️snapshot/🟦️.ts';
+export type { ZipEntry, ZipEntryMetadata } from '../📸️snapshot/🟦️.ts';
 
-export interface ZipEntryDiff { name?: string; data?: number[]; }
+export interface ZipEntryDiff { name?: string; data?: number[]; metadata?: ZipEntryMetadata; }
 export interface ZipEntryModified { name: string; diff: ZipEntryDiff; }
 export interface ZipEntriesDiff { removed: string[]; modified: ZipEntryModified[]; added: ZipEntry[]; order?: string[]; }
-export interface ZipDiff { comment?: string; entries?: ZipEntriesDiff; }
+export interface ZipDiff { comment?: string; commentUtf8?: boolean; entries?: ZipEntriesDiff; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -56,28 +57,21 @@ export function parseZipDiff(value: unknown, at = "$"): ZipDiff {
   const row = stdioZip20BaseDiffGuardObject(value, at);
   return {
     comment: row["comment"] === undefined ? undefined : stdioZip20BaseDiffGuardString(row["comment"], `${at}.comment`),
+    commentUtf8: row["commentUtf8"] === undefined ? undefined : stdioZip20BaseDiffGuardBoolean(row["commentUtf8"], `${at}.commentUtf8`),
     entries: row["entries"] === undefined ? undefined : parseZipEntriesDiff(row["entries"], `${at}.entries`),
   };
 }
 
-export interface ZipEntry {
-  readonly name: string;
-  readonly data: number[];
-}
-
 export function parseZipEntry(value: unknown, at = "$"): ZipEntry {
-  const row = stdioZip20BaseDiffGuardObject(value, at);
-  return {
-    name: stdioZip20BaseDiffGuardString(row["name"], `${at}.name`),
-    data: stdioZip20BaseDiffGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseDiffGuardInteger(item, `${at}.data[${index}]`)),
-  };
+  return parseSnapshotZipEntry(value, at);
 }
 
 export function parseZipEntryDiff(value: unknown, at = "$"): ZipEntryDiff {
   const row = stdioZip20BaseDiffGuardObject(value, at);
   return {
     name: row["name"] === undefined ? undefined : stdioZip20BaseDiffGuardString(row["name"], `${at}.name`),
-    data: row["data"] === undefined ? undefined : stdioZip20BaseDiffGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseDiffGuardInteger(item, `${at}.data[${index}]`)),
+    data: row["data"] === undefined ? undefined : stdioZip20BaseDiffGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseDiffGuardInteger(item, `${at}.data[${index}]`, { minimum: 0, maximum: 255 })),
+    metadata: row["metadata"] === undefined ? undefined : parseZipEntryMetadata(row["metadata"], `${at}.metadata`),
   };
 }
 
@@ -103,6 +97,7 @@ export function parseZipEntriesDiff(value: unknown, at = "$"): ZipEntriesDiff {
 export function applyZipDiff(base: ZipSnapshot, diff: ZipDiff): ZipSnapshot {
   const next = structuredClone(base);
   if (diff.comment !== undefined) next.comment = diff.comment;
+  if (diff.commentUtf8 !== undefined) next.commentUtf8 = diff.commentUtf8;
   if (diff.entries === undefined) return next;
   const changes = diff.entries;
   const names = new Set(base.entries.map((entry) => entry.name));
@@ -137,8 +132,9 @@ export function applyZipDiff(base: ZipSnapshot, diff: ZipDiff): ZipSnapshot {
     const target = byName.get(entry.name)!;
     if (entry.diff.name !== undefined) target.name = entry.diff.name;
     if (entry.diff.data !== undefined) target.data = [...entry.diff.data];
+    if (entry.diff.metadata !== undefined) target.metadata = structuredClone(entry.diff.metadata);
   }
-  next.entries.push(...changes.added.map((entry) => ({ name: entry.name, data: [...entry.data] })));
+  next.entries.push(...changes.added.map((entry) => structuredClone(entry)));
   if (changes.order !== undefined) {
     const finalEntries = new Map(next.entries.map((entry) => [entry.name, entry]));
     next.entries = changes.order.map((name) => finalEntries.get(name)!);
@@ -150,5 +146,5 @@ export function applyZipDiff(base: ZipSnapshot, diff: ZipDiff): ZipSnapshot {
 export function zipInsertionDiff(base: ZipSnapshot, entry: ZipEntry, before?: string): ZipDiff {
   if (before !== undefined && !base.entries.some((existing) => existing.name === before)) throw new Error("mutation.apply.missing-target");
   const order = before === undefined ? undefined : base.entries.flatMap((existing) => existing.name === before ? [entry.name, existing.name] : [existing.name]);
-  return { entries: { removed: [], modified: [], added: [{ name: entry.name, data: [...entry.data] }], order } };
+  return { entries: { removed: [], modified: [], added: [structuredClone(entry)], order } };
 }

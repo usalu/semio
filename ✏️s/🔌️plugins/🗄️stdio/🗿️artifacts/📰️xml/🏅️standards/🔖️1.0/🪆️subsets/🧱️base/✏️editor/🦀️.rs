@@ -10,13 +10,13 @@ use crate::editor::xml_any::modes::edit::windows::main;
 use crate::schema::mutations::{SetTextMutation, SetTextPayload, XmlNodePath};
 use crate::schema::snapshot::XmlNode;
 use crate::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId,
-    SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
+    Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — verified against the artifact's own `🚪️io`/`🧬️schema` `DIALECT`
@@ -30,10 +30,18 @@ pub const XML_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", 
 /// child-index path encoding.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum XmlAnyEditorCommand {
-    SetNode { node_id: String, value: String },
-    EditSnapshot { event: SnapshotEditEvent },
+    SetNode {
+        node_id: String,
+        revision: String,
+        value: String,
+    },
+    EditSnapshot {
+        event: SnapshotEditEvent,
+    },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
-    SetActiveExample { example_id: String },
+    SetActiveExample {
+        example_id: String,
+    },
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
@@ -41,10 +49,19 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) {
+    let bytes = text.as_bytes();
+    if !bytes.len().is_multiple_of(2) {
         return Err("odd-length hex string".into());
     }
-    (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+    fn nibble(byte: u8) -> Result<u8, String> {
+        match byte {
+            b'0'..=b'9' => Ok(byte - b'0'),
+            b'a'..=b'f' => Ok(byte - b'a' + 10),
+            b'A'..=b'F' => Ok(byte - b'A' + 10),
+            _ => Err(format!("non-hex byte 0x{byte:02x}")),
+        }
+    }
+    bytes.chunks_exact(2).map(|pair| Ok((nibble(pair[0])? << 4) | nibble(pair[1])?)).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -53,8 +70,22 @@ fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
         return Ok(Vec::new());
     }
     let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
-    let segments: Vec<&str> = node_id.split(separator).collect();
-    segments.into_iter().filter(|segment| !segment.is_empty() && *segment != main::XML_ROOT_NODE_ID).map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()
+    let mut segments = node_id.split(separator);
+    if segments.next() != Some(main::XML_ROOT_NODE_ID) {
+        return Err("xml editor command: node path must begin with exactly one root segment".into());
+    }
+    segments
+        .map(|segment| {
+            if segment.is_empty() || segment == main::XML_ROOT_NODE_ID {
+                return Err(format!("non-canonical XML node segment {segment:?}"));
+            }
+            let index = segment.parse::<usize>().map_err(|error| error.to_string())?;
+            if index.to_string() != segment {
+                return Err(format!("non-canonical XML node index {segment:?}"));
+            }
+            Ok(index)
+        })
+        .collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -72,7 +103,9 @@ fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
 impl protocol::OpText for XmlAnyEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            XmlAnyEditorCommand::SetNode { node_id, value } => format!("set-node node-id={} value={}", hex_encode(node_id.as_bytes()), hex_encode(value.as_bytes())),
+            XmlAnyEditorCommand::SetNode { node_id, revision, value } => {
+                format!("set-node node-id={} revision={} value={}", hex_encode(node_id.as_bytes()), hex_encode(revision.as_bytes()), hex_encode(value.as_bytes()))
+            }
             XmlAnyEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
             XmlAnyEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
@@ -90,6 +123,7 @@ impl protocol::OpText for XmlAnyEditorCommand {
         }
         let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("xml editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut node_id = None;
+        let mut revision = None;
         let mut value = None;
         for token in rest.split(' ') {
             let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("xml editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
@@ -97,12 +131,14 @@ impl protocol::OpText for XmlAnyEditorCommand {
                 .map_err(|error| store::TextError::new(format!("xml editor command: invalid field utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
             match key {
                 "node-id" => node_id = Some(decoded),
+                "revision" => revision = Some(decoded),
                 "value" => value = Some(decoded),
                 _ => {}
             }
         }
-        let (node_id, value) = node_id.zip(value).ok_or_else(|| store::TextError::new("xml editor command: missing node-id/value", dsl::TextSpan::at(1, 1)))?;
-        Ok(XmlAnyEditorCommand::SetNode { node_id, value })
+        let (node_id, revision, value) =
+            node_id.zip(revision).zip(value).map(|((node_id, revision), value)| (node_id, revision, value)).ok_or_else(|| store::TextError::new("xml editor command: missing node-id/revision/value", dsl::TextSpan::at(1, 1)))?;
+        Ok(XmlAnyEditorCommand::SetNode { node_id, revision, value })
     }
 }
 
@@ -182,13 +218,10 @@ fn xml_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Re
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(XmlAnyEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         XML_ANY_KIT_ACTION_ID => Ok(XmlAnyEditorCommand::SetNode {
             node_id: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "nodeId")?,
+            revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?,
             value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
         }),
-        other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.xml.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-node)"),
-        )),
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-node)"))),
     }
 }
 
@@ -210,40 +243,33 @@ fn xml_any_retained_extent(_command: &XmlAnyEditorCommand, _snapshot: &XmlSnapsh
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `set-node` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let (node_id, value) = match command {
+fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (node_id, revision, value) = match command {
         XmlAnyEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
-                ..Default::default()
-            })
+            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
         }
-        XmlAnyEditorCommand::SetNode { node_id, value } => (node_id, value),
+        XmlAnyEditorCommand::SetNode { node_id, revision, value } => (node_id, revision, value),
         XmlAnyEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-xml-snapshot-edit-routed-to-native-reducer")),
     };
-    if node_id == main::XML_ROOT_NODE_ID {
-        let next = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(value).map_err(|error| {
-            Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-source"), error.to_string())
-        })?;
-        return Ok(Emit {
-            artifact_mutations: vec![XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })],
-            description: Some("Replace XML source".into()),
-            ..Default::default()
-        });
+    let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
+    if revision != &current_revision {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.stale-node-edit"), "the XML document changed while this node draft was open"));
     }
-    let path = decode_node_id(node_id)
-        .map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-node-path"), detail))?;
-    let root = snapshot.doc.root.as_ref().ok_or_else(|| {
-        Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.missing-root"), "The XML document has no root node to edit.")
-    })?;
-    let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else {
-        return Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.xml.node-is-not-text"),
-            "The addressed XML node is not a text node.",
-        ));
+    if node_id == main::XML_ROOT_NODE_ID {
+        let next = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(value).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-source"), error.to_string()))?;
+        if &next == snapshot {
+            return Ok(Emit::default());
+        }
+        return Ok(Emit { artifact_mutations: vec![XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })], description: Some("Replace XML source".into()), ..Default::default() });
+    }
+    let path = decode_node_id(node_id).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-node-path"), detail))?;
+    let root = snapshot.doc.root.as_ref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.missing-root"), "The XML document has no root node to edit."))?;
+    let Some(XmlNode::Text { text }) = resolve_node(root, &path) else {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.node-is-not-text"), "The addressed XML node is not a text node."));
     };
+    if text == value {
+        return Ok(Emit::default());
+    }
     Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(path), text: value.clone() }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
 }
 
@@ -257,9 +283,9 @@ fn xml_any_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<XmlAnyEditor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    xml_any_emit(command, snapshot)
+    xml_any_emit(command, snapshot, Some(operation.canonical_base_revision))
 }
 
 struct XmlAnyRetainedCommandJobFactory {
@@ -485,13 +511,17 @@ impl ArtifactEditor for XmlAnyEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             XmlAnyEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => xml_any_emit(command, doc.snapshot),
+            _ => xml_any_emit(command, doc.snapshot, doc.operation_optional().map(|operation| operation.canonical_base_revision)),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render_editor(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let revision =
+                    doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
+                main::render_editor(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), "s.stdio.xml@1.0/*#editor", &revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -512,11 +542,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XmlAnyE
         }
     }
 
-
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XmlMutation::SetSnapshot(
-            crate::schema::mutations::set_snapshot::SetSnapshot { snapshot },
-        ))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor

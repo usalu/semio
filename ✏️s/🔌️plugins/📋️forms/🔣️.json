@@ -36,16 +36,50 @@
             "id": "blueprint",
             "label": {
               "native": {
-                "en": "Blueprint",
+                "en": "Design",
                 "de": "Entwurf"
               },
               "reuse": {
-                "en": "Blueprint",
+                "en": "Design",
                 "de": "Entwurf"
               }
             },
             "iconId": "cad-shape",
             "tools": [],
+            "commands": []
+          },
+          {
+            "id": "fill",
+            "label": {
+              "native": {
+                "en": "Fill Form",
+                "de": "Formular ausfüllen"
+              },
+              "reuse": {
+                "en": "Fill Form",
+                "de": "Formular ausfüllen"
+              }
+            },
+            "iconId": "play",
+            "tools": [],
+            "layoutId": "forms-fill",
+            "commands": []
+          },
+          {
+            "id": "responses",
+            "label": {
+              "native": {
+                "en": "Responses",
+                "de": "Antworten"
+              },
+              "reuse": {
+                "en": "Responses",
+                "de": "Antworten"
+              }
+            },
+            "iconId": "list-checks",
+            "tools": [],
+            "layoutId": "forms-responses",
             "commands": []
           }
         ],
@@ -55,11 +89,11 @@
             "id": "forms-blueprint",
             "label": {
               "native": {
-                "en": "Blueprint",
+                "en": "Design",
                 "de": "Entwurf"
               },
               "reuse": {
-                "en": "Blueprint",
+                "en": "Design",
                 "de": "Entwurf"
               }
             },
@@ -670,6 +704,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -682,12 +761,12 @@
             "id": "forms-try",
             "label": {
               "native": {
-                "en": "Try",
-                "de": "Testen"
+                "en": "Fill Form",
+                "de": "Formular ausfüllen"
               },
               "reuse": {
-                "en": "Try",
-                "de": "Testen"
+                "en": "Fill Form",
+                "de": "Formular ausfüllen"
               }
             },
             "bodyKey": "forms.play.try",
@@ -1297,6 +1376,721 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "forms-responses",
+            "label": {
+              "native": {
+                "en": "Responses",
+                "de": "Antworten"
+              },
+              "reuse": {
+                "en": "Responses",
+                "de": "Antworten"
+              }
+            },
+            "bodyKey": "forms.play.responses",
+            "surfaceKind": "canvas-2d",
+            "iconId": "list-checks",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -1364,7 +2158,7 @@
             }
           },
           {
-            "id": "addQuestion",
+            "id": "addBlock",
             "label": {
               "native": {
                 "en": "Add Question",
@@ -1613,7 +2407,7 @@
             }
           },
           {
-            "id": "removeQuestion",
+            "id": "removeBlock",
             "label": {
               "native": {
                 "en": "Remove Question",
@@ -2049,7 +2843,7 @@
             }
           },
           {
-            "id": "moveQuestion",
+            "id": "moveBlock",
             "label": {
               "native": {
                 "en": "Move Question",
@@ -2254,12 +3048,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one named property of one step — its title, description or visibility condition.",
-                  "de": "Setzt eine benannte Eigenschaft eines Schritts — Titel, Beschreibung oder Sichtbarkeitsbedingung."
+                  "en": "Changes a page title or description.",
+                  "de": "Ändert den Titel oder die Beschreibung einer Seite."
                 },
                 "reuse": {
-                  "en": "Sets one named property of one step — its title, description or visibility condition.",
-                  "de": "Setzt eine benannte Eigenschaft eines Schritts — Titel, Beschreibung oder Sichtbarkeitsbedingung."
+                  "en": "Changes a page title or description.",
+                  "de": "Ändert den Titel oder die Beschreibung einer Seite."
                 }
               }
             }
@@ -2308,12 +3102,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets the form's own top-level properties — its title, description and submission settings.",
-                  "de": "Setzt die Eigenschaften des Formulars selbst — Titel, Beschreibung und Absendeeinstellungen."
+                  "en": "Changes the form title.",
+                  "de": "Ändert den Formulartitel."
                 },
                 "reuse": {
-                  "en": "Sets the form's own top-level properties — its title, description and submission settings.",
-                  "de": "Setzt die Eigenschaften des Formulars selbst — Titel, Beschreibung und Absendeeinstellungen."
+                  "en": "Changes the form title.",
+                  "de": "Ändert den Formulartitel."
                 }
               }
             }
@@ -2377,12 +3171,12 @@
             "id": "setActiveExample",
             "label": {
               "native": {
-                "en": "Set Active Example",
-                "de": "Aktives Beispiel festlegen"
+                "en": "Use Form Template",
+                "de": "Formularvorlage verwenden"
               },
               "reuse": {
-                "en": "Set Active Example",
-                "de": "Aktives Beispiel festlegen"
+                "en": "Use Form Template",
+                "de": "Formularvorlage verwenden"
               }
             },
             "kind": "mutation",
@@ -2392,27 +3186,40 @@
                 "id": "exampleId",
                 "label": {
                   "native": {
-                    "en": "Example",
-                    "de": "Beispiel"
+                    "en": "Template",
+                    "de": "Vorlage"
                   },
                   "reuse": {
-                    "en": "Example",
-                    "de": "Beispiel"
+                    "en": "Template",
+                    "de": "Vorlage"
                   }
                 },
                 "schema": {
                   "kind": "string",
                   "options": [
                     {
+                      "value": "",
+                      "label": {
+                        "native": {
+                          "en": "Blank Form",
+                          "de": "Leeres Formular"
+                        },
+                        "reuse": {
+                          "en": "Blank Form",
+                          "de": "Leeres Formular"
+                        }
+                      }
+                    },
+                    {
                       "value": "default",
                       "label": {
                         "native": {
-                          "en": "Default",
-                          "de": "Standard"
+                          "en": "Contact",
+                          "de": "Kontakt"
                         },
                         "reuse": {
-                          "en": "Default",
-                          "de": "Standard"
+                          "en": "Contact",
+                          "de": "Kontakt"
                         }
                       }
                     },
@@ -2477,12 +3284,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Replaces the whole form with one of the plugin's declared playground examples.",
-                  "de": "Ersetzt das gesamte Formular durch eines der deklarierten Beispiele des Plugins."
+                  "en": "Replaces the form design with a template. Existing answers stay with this form.",
+                  "de": "Ersetzt den Formularentwurf durch eine Vorlage. Vorhandene Antworten bleiben in diesem Formular."
                 },
                 "reuse": {
-                  "en": "Replaces the whole form with one of the plugin's declared playground examples.",
-                  "de": "Ersetzt das gesamte Formular durch eines der deklarierten Beispiele des Plugins."
+                  "en": "Replaces the form design with a template. Existing answers stay with this form.",
+                  "de": "Ersetzt den Formularentwurf durch eine Vorlage. Vorhandene Antworten bleiben in diesem Formular."
                 }
               }
             }
@@ -2491,12 +3298,12 @@
             "id": "setSpecJson",
             "label": {
               "native": {
-                "en": "Set Spec JSON",
-                "de": "Spezifikations-JSON festlegen"
+                "en": "Import Form Design JSON",
+                "de": "Formularentwurf aus JSON importieren"
               },
               "reuse": {
-                "en": "Set Spec JSON",
-                "de": "Spezifikations-JSON festlegen"
+                "en": "Import Form Design JSON",
+                "de": "Formularentwurf aus JSON importieren"
               }
             },
             "kind": "mutation",
@@ -2520,7 +3327,7 @@
                 "required": false
               }
             ],
-            "inPalette": false,
+            "inPalette": true,
             "semantics": {
               "effects": {
                 "writes": [
@@ -2549,12 +3356,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Loads a whole form specification from JSON text.",
-                  "de": "Lädt eine vollständige Formularspezifikation aus JSON-Text."
+                  "en": "Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.",
+                  "de": "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."
                 },
                 "reuse": {
-                  "en": "Loads a whole form specification from JSON text.",
-                  "de": "Lädt eine vollständige Formularspezifikation aus JSON-Text."
+                  "en": "Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.",
+                  "de": "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."
                 }
               }
             }
@@ -2847,33 +3654,32 @@
                 "de": "Absenden"
               }
             },
-            "kind": "view",
-            "iconId": "eye",
+            "kind": "mutation",
+            "iconId": "sparkles",
             "args": [],
             "inPalette": true,
             "semantics": {
               "effects": {
-                "reads": [
-                  "config:{self}"
+                "writes": [
+                  "artifact:{self}"
                 ],
                 "external": false,
                 "destructive": false,
-                "reversible": false
+                "reversible": true
               },
               "policy": {
                 "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
+                  "artifacts.write"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
-                "preview": "none",
+                "preview": "diff",
                 "undo": {
-                  "kind": "none"
+                  "kind": "inverse"
                 },
                 "idempotency": "none",
-                "expectedRevision": false,
+                "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -2894,12 +3700,12 @@
             "id": "exportFixture",
             "label": {
               "native": {
-                "en": "Export Fixture",
-                "de": "Fixture exportieren"
+                "en": "Export Form",
+                "de": "Formular exportieren"
               },
               "reuse": {
-                "en": "Export Fixture",
-                "de": "Fixture exportieren"
+                "en": "Export Form",
+                "de": "Formular exportieren"
               }
             },
             "kind": "shell",
@@ -2909,14 +3715,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": true,
+                "destructive": false,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "whenDestructive"
+                "approval": "never"
               },
               "execution": {
                 "preview": "none",
@@ -2931,12 +3737,164 @@
               },
               "description": {
                 "native": {
-                  "en": "Hands the form specification to the host as a downloadable JSON fixture.",
-                  "de": "Übergibt die Formularspezifikation dem Host als herunterladbares JSON-Fixture."
+                  "en": "Downloads a Forms document containing its design and saved answers.",
+                  "de": "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."
                 },
                 "reuse": {
-                  "en": "Hands the form specification to the host as a downloadable JSON fixture.",
-                  "de": "Übergibt die Formularspezifikation dem Host als herunterladbares JSON-Fixture."
+                  "en": "Downloads a Forms document containing its design and saved answers.",
+                  "de": "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."
+                }
+              }
+            }
+          },
+          {
+            "id": "exportResponses",
+            "label": {
+              "native": {
+                "en": "Export Responses",
+                "de": "Antworten exportieren"
+              },
+              "reuse": {
+                "en": "Export Responses",
+                "de": "Antworten exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [
+              {
+                "id": "format",
+                "label": {
+                  "native": {
+                    "en": "Format",
+                    "de": "Format"
+                  },
+                  "reuse": {
+                    "en": "Format",
+                    "de": "Format"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "json",
+                      "label": {
+                        "native": {
+                          "en": "JSON",
+                          "de": "JSON"
+                        },
+                        "reuse": {
+                          "en": "JSON",
+                          "de": "JSON"
+                        }
+                      }
+                    },
+                    {
+                      "value": "csv",
+                      "label": {
+                        "native": {
+                          "en": "CSV",
+                          "de": "CSV"
+                        },
+                        "reuse": {
+                          "en": "CSV",
+                          "de": "CSV"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "json"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Downloads stored submissions with their original labels and typed answer values.",
+                  "de": "Lädt gespeicherte Antworten mit ihren ursprünglichen Bezeichnungen und typisierten Werten herunter."
+                },
+                "reuse": {
+                  "en": "Downloads stored submissions with their original labels and typed answer values.",
+                  "de": "Lädt gespeicherte Antworten mit ihren ursprünglichen Bezeichnungen und typisierten Werten herunter."
+                }
+              }
+            }
+          },
+          {
+            "id": "discardResponse",
+            "label": {
+              "native": {
+                "en": "Remove Response",
+                "de": "Antwort entfernen"
+              },
+              "reuse": {
+                "en": "Remove Response",
+                "de": "Antwort entfernen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one saved response. Undo restores it.",
+                  "de": "Entfernt eine gespeicherte Antwort. Rückgängig stellt sie wieder her."
+                },
+                "reuse": {
+                  "en": "Removes one saved response. Undo restores it.",
+                  "de": "Entfernt eine gespeicherte Antwort. Rückgängig stellt sie wieder her."
                 }
               }
             }
@@ -4174,7 +5132,54 @@
             }
           }
         ],
-        "namedLayouts": [],
+        "namedLayouts": [
+          {
+            "id": "forms-fill",
+            "label": "Fill Form",
+            "iconId": "play",
+            "layout": {
+              "root": {
+                "kind": "row",
+                "children": [
+                  {
+                    "kind": "stack",
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "forms-try",
+                        "title": "forms-try"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "origin": "builtin"
+          },
+          {
+            "id": "forms-responses",
+            "label": "Responses",
+            "iconId": "list-checks",
+            "layout": {
+              "root": {
+                "kind": "row",
+                "children": [
+                  {
+                    "kind": "stack",
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "forms-responses",
+                        "title": "forms-responses"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "origin": "builtin"
+          }
+        ],
         "defaultLayout": {
           "root": {
             "kind": "row",
@@ -4186,7 +5191,7 @@
                   {
                     "kind": "window",
                     "windowKindId": "forms-blueprint",
-                    "title": "Blueprint"
+                    "title": "forms-blueprint"
                   }
                 ]
               },
@@ -4197,7 +5202,7 @@
                   {
                     "kind": "window",
                     "windowKindId": "forms-try",
-                    "title": "Try"
+                    "title": "forms-try"
                   }
                 ]
               }
@@ -4329,7 +5334,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -5417,7 +6468,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio forms.form.dsl v1\nschema=forms.form id=building-component version=\"1\" title=\"Building Component\" steps=[ id=identity title=Identity description=\"Basic component metadata and material selection.\" blocks=[ id=name label=\"Component Name\" kind=text required=true placeholder=\"Column A\" default=\"Column A\"\ncondition {\n}\nid=description label=Description kind=longText placeholder=\"Describe the component role\" default=\"Primary structural column\"\ncondition {\n}\nid=material label=Material kind=single required=true default=\"concrete\" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]\ncondition {\n}\nid=tags label=Tags kind=multi default=[ \"structural\" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]\ncondition {\n}\nid=prefab label=Prefab kind=boolean default=true\ncondition {\n}\nid=install-date label=\"Install Date\" kind=date default=\"2026-06-30\"\ncondition {\n}\nid=accent-color label=\"Accent Color\" kind=color default=\"#336699\"\ncondition {\n}\n] id=geometry title=Geometry description=\"Parametric geometry and dimensional controls.\" blocks=[ id=info-note label=Note kind=note text=\"Adjust the procedural column parameters below. Values persist in the form spec and seed Try mode.\"\ncondition {\n}\nid=count label=\"Instance Count\" kind=number min=1 max=20 step=1 default=4\ncondition {\n}\nid=height-factor label=\"Height Factor\" kind=slider min=0 max=10 step=0.5 unit=m default=6\ncondition {\n}\nid=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]\ncondition {\n}\nid=geometry label=\"Hexagonal Column\" kind=buildingComponent description=\"Parametric column geometry from procedural flow.\" required=true fixture-slug=hexagonal-mushroom-column params={\n  height=6 radius=0.5 sides=6\n}\ncondition {\n}\nid=reference-image label=Reference kind=image src=\"\"\ncondition {\n}\nid=spec-file label=\"Spec Sheet\" kind=file accept=\".pdf,.dwg\"\ncondition {\n}\n] ]\n",
+        "artifactJson": "semio forms.form.dsl v1\nschema=forms.form id=building-component version=\"1\" title=\"Building Component\" definition=steps=[ id=identity title=Identity description=\"Basic component metadata and material selection.\" blocks=[ id=name label=\"Component Name\" kind=text required=true placeholder=\"Column A\" default=\"Column A\"\ncondition {\n}\nid=description label=Description kind=longText placeholder=\"Describe the component role\" default=\"Primary structural column\"\ncondition {\n}\nid=material label=Material kind=single required=true default=\"concrete\" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]\ncondition {\n}\nid=tags label=Tags kind=multi default=[ \"structural\" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]\ncondition {\n}\nid=prefab label=Prefab kind=boolean default=true\ncondition {\n}\nid=install-date label=\"Install Date\" kind=date\ncondition {\n}\nid=accent-color label=\"Accent Color\" kind=color default=\"#336699\"\ncondition {\n}\n] id=geometry title=Geometry description=\"Parametric geometry and dimensional controls.\" blocks=[ id=info-note label=Note kind=note text=\"Adjust the procedural column parameters below.\"\ncondition {\n}\nid=count label=\"Instance Count\" kind=number min=1 max=20 step=1 default=4\ncondition {\n}\nid=height-factor label=\"Height Factor\" kind=slider min=0 max=10 step=0.5 unit=m default=6\ncondition {\n}\nid=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]\ncondition {\n}\nid=geometry label=\"Hexagonal Column\" kind=buildingComponent description=\"Parametric column geometry from procedural flow.\" required=true fixture-slug=hexagonal-mushroom-column params={\n  height=6 radius=0.5 sides=6\n}\ncondition {\n}\nid=reference-image label=Reference kind=image src=\"\"\ncondition {\n}\nid=spec-file label=\"Spec Sheet\" kind=file accept=\".pdf,.dwg\"\ncondition {\n}\n] ]\nresponses=[]\nstructure=child_id=building-component-structure target=\"building-component-structure!s.stdio.semio@v1/value\"\nresults=child_id=building-component-results target=\"building-component-results!s.stdio.semio@v1/table\"\n",
         "dialect": {
           "artifactKind": "s.forms.forms",
           "standard": "1",
@@ -5561,8 +6612,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4ac1fec616dda28fe1f61b0a4a08e67116d1e8ffc412dadbd45051bf9a823336",
-    "coreWasmSha256": "4afd577dc5b2389ca5feaefabd8afc8755fe79719089c3fc07f6f9ec797e836c",
-    "descriptorSha256": "a4b54e00f567808d3504b864705154a666c9ed288ac51ea6ad4c652eff376fcb"
+    "wasmSha256": "3f3465664b7dd29abdf35416f19560be61c0858784ab179c4f9cf4ad624d873f",
+    "coreWasmSha256": "711d408cc5f67cfebe70c930afccf6866760d06052fd3cc8437d57a037fb1364",
+    "descriptorSha256": "b69b080502c4d6730bb37c9d6a91fcd851e348e3065b8ed92613f03c8ec1adf6"
   }
 }

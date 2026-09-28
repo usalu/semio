@@ -1,3 +1,4 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,7 @@ type GenerateInteractionsFixture = {
   readonly format: string;
   readonly version: number;
   readonly windows: readonly InteractionWindow[];
+  readonly componentEditing: { readonly window: string; readonly actions: readonly string[] };
   readonly previewParity: readonly string[];
   readonly gumballVerbs: readonly string[];
   readonly nodeGraphEditOperations: readonly NodeGraphOperation[];
@@ -78,7 +80,9 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   const previews = fixture.previewParity.map((id) => byId.get(id)!);
   for (const preview of previews) {
     assert.equal(preview.surfaceKind, "world3d", `${preview.id} must be a world3d surface`);
-    assert.deepEqual([...preview.actions].sort(), [...previews[0].actions].sort(), `${preview.id} diverges from ${previews[0].id}`);
+    for (const action of fixture.componentEditing.actions) assert.equal(preview.actions.includes(action), preview.id === fixture.componentEditing.window, `${preview.id}: ${action} ownership`);
+    const objectActions = (window: InteractionWindow) => window.actions.filter(action => !fixture.componentEditing.actions.includes(action)).sort();
+    assert.deepEqual(objectActions(preview), objectActions(previews[0]), `${preview.id} diverges from ${previews[0].id}`);
     assert.deepEqual(preview.utilities, previews[0].utilities, `${preview.id} has a different utility rail`);
     for (const verb of fixture.gumballVerbs) assert.ok(preview.actions.includes(verb), `${preview.id} must own ${verb}`);
     assert.equal(gumballVisible(preview, ["extrude@solid#0"], "move"), true, `${preview.id} must show a gumball for a selection under the move utility`);
@@ -122,4 +126,4 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   );
 }
 
-if (import.meta.main) testGeneration3dGenerateModeInteractionContract();
+test("generation preview interaction ownership", testGeneration3dGenerateModeInteractionContract);

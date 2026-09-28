@@ -103,23 +103,20 @@
       ]
     },
     "docx": {
-      "path": "/document/body",
-      "value": [
-        {
-          "kind": "paragraph",
-          "runs": [
-            {
-              "text": "Edited",
-              "bold": false,
-              "italic": false,
-              "underline": false,
-              "extraRunProperties": []
-            }
-          ],
-          "style": null,
-          "extraParagraphProperties": []
-        }
-      ]
+      "path": "/xmlParts/0/document/root/attrs/0/value",
+      "value": "urn:semio:docx:catalog:base"
+    },
+    "s.stdio.docx@ecma-376/*#editor": {
+      "path": "/xmlParts/0/document/root/attrs/0/value",
+      "value": "urn:semio:docx:catalog:any"
+    },
+    "s.stdio.docx@ecma-376/strict#editor": {
+      "path": "/xmlParts/0/document/root/attrs/0/value",
+      "value": "urn:semio:docx:catalog:strict"
+    },
+    "s.stdio.docx@ecma-376/transitional#editor": {
+      "path": "/xmlParts/0/document/root/attrs/0/value",
+      "value": "urn:semio:docx:catalog:transitional"
     },
     "pptx": {
       "path": "/presentation/slides",

@@ -1,0 +1,25 @@
+# Bounded Selection Combination
+
+Status: implemented in TypeScript/Rust and the canvas; shared tests pass. Final mounted verification passed all 27 cases. The initial findings below explain the change.
+
+The original shared pixel `combineSelections` performed a synchronous `Uint8Array.map` across the full selection. Its Rust counterpart `combine_selections` similarly collected the whole result in one call. The browser overlay invokes the TypeScript helper after both contiguous-color selection and shape selection. Shape/flood generation is cancellable, but this final full-image pass is not. The overlay also allocates an additional zero-filled full-size array when there is no current selection.
+
+Implement one bounded selection-combination job in the shared pixel domain, with matching Rust and TypeScript contracts, neutral vectors and an independent oracle. Retain exact soft-coverage semantics: replace uses next; add uses maximum; subtract saturates current minus next; intersect uses minimum. Undefined current coverage is zero for this local selection operation, distinct from the unrestricted edit mask interpretation. Validate extents and budget before allocation. Expose completion, progress, cancellation and a result only after completion. Avoid an extra full-size zero source allocation.
+
+The browser must await this operation within its existing `run` transaction and pass the same abort signal/progress callback used for shape or flood preparation. Publish `setMask` only after a final abort check. Cancellation must preserve the previous selection, and target/tool changes must not publish an old result. Mounted coverage should cancel during combination, not merely during preceding shape generation. Existing Select All/Invert helpers already demonstrate the expected preservation and keyboard behavior but do not cover this separate pass.
+
+Relevant source paths: shared pixels `🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts` and `🦀️.rs`; mounted overlay `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx`.
+
+## Implementation and Initial Evidence
+
+Selection combination now has a shared schema and eight neutral soft-coverage cases, including missing-current behavior for every mode. TypeScript and Rust implement `SelectionCombineJob`, with at most 32,768 pixels per advance, zero-grant no-op, incomplete-result refusal, cancellation, extent validation and input preservation. Rust borrows immutable sources and initializes output incrementally. TypeScript's async `combineSelections` drives the job, yields between grants, checks cancellation after progress callbacks, and removes the previous extra zero-source allocation. The sole production caller in the canvas now awaits combination for both shape and contiguous-color selections before publishing. Shape and combination phases each occupy half of displayed progress.
+
+Sharp independently verifies every neutral output with lighten/darken composites, saturated linear subtraction and raw replace. TypeScript red run `raster-selection-combine-red-1.log` failed on the missing job export (64 passed, one failed file). Green run `raster-selection-combine-green-1.log` passed **120 tests**, exit 0 (session 30396), including strict TypeScript verification. Native `raster-selection-combine-native-1.log` passed **34 tests**, zero skipped, exit 0 (session 26089). No synchronous Rust combination wrapper remains; repository-wide caller inspection found no native consumer to migrate.
+
+Mounted run **70923** (`raster-selection-combine-react-1.log`) is pending. Its three new cases schedule Cancel, Deselect or Pan after the actual first combination grant, then verify only one grant ran and inspect the subsequent authoritative command's selection. The final source additionally observes 75% progress at cancellation; this assertion and progress weighting were added after the first mounted run started, so that run alone may not validate the final source. Existing source-image copying and allocation responsiveness remain separate open work. Activation 69010 was revalidated live; no browser-policy workaround was attempted.
+
+The first mounted run completed: 26 tests passed, exit 0. The additional host-utility red test (`raster-selection-combine-utility-red-1.log`, session 22030) failed as expected: the combine job advanced twice after the utility switch instead of stopping after one grant. Added `activeUtility` to the existing operation-cancellation effect dependencies; completed/pending authoritative submissions keep their separate receipt lifecycle. Final 27-case run **16852**, `raster-selection-combine-react-2.log`, covers this repair and the explicit 75% progress assertion.
+
+## Final Mounted Result
+
+`raster-selection-combine-react-2.log` completed with exit 0 (session 16852): **27 tests passed**, including all four combination cancellation paths and the final progress assertion. This verifies current mounted canvas behavior, not live browser acceptance or the separately tracked broad renderer census. Focused whitespace validation passed.

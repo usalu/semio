@@ -4,9 +4,20 @@
   "title": "Retained Toggle Semantics",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "cases"],
+  "required": ["schemaVersion", "cases", "checkboxPaint"],
   "properties": {
     "schemaVersion": { "const": 1 },
+    "checkboxPaint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["availableWidth", "availableHeight", "controlSide", "outlineWidth", "checkedStates"],
+      "properties": {
+        "availableWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "availableHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "controlSide": { "type": "number", "exclusiveMinimum": 0 },
+        "outlineWidth": { "const": 0 },
+        "checkedStates": { "const": [false, true] }
+      }
+    },
     "cases": {
       "type": "array",
       "minItems": 2,

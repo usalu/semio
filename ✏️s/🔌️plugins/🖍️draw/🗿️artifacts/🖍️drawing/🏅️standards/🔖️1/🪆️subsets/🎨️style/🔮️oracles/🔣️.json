@@ -32,6 +32,36 @@
         "win32-x64"
       ],
       "notes": "The unit twin applies independent replace operations to content and size, compares the complete nested document, and restores the original fields. This verifies text facet editing, not font metrics or rasterization."
+    },
+    {
+      "id": "json-patch-drawing-fill-rule-edit",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fast-json-patch",
+        "implementation": "RFC 6902 JSON Patch",
+        "version": "3.1.1"
+      },
+      "capabilities": [
+        "drawing-fill-rule-edit"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "notes": "Independent JSON Patch replaces only attributes.fillRule and verifies the complete document and inverse."
     }
   ],
   "noOracleDecisions": [],
@@ -46,7 +76,8 @@
         "replace-layer-stroke",
         "set-layer-blend-mode",
         "set-layer-opacity",
-        "update-text"
+        "update-text",
+        "set-layer-fill-rule"
       ],
       "vectors": [
         {
@@ -101,6 +132,17 @@
             {
               "id": "edit-caption",
               "directoryName": "📝️edit-caption"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-fill-rule",
+          "sourceMutationDirectoryName": "🌀️set-layer-fill-rule",
+          "mutationDirectoryName": "🌀️set-layer-fill-rule",
+          "scenarios": [
+            {
+              "id": "evenodd-to-nonzero",
+              "directoryName": "🌀️evenodd-to-nonzero"
             }
           ]
         }
@@ -284,6 +326,40 @@
               "layer-identity-and-appearance-preserved"
             ]
           }
+        },
+        {
+          "id": "set-layer-fill-rule",
+          "capability": "drawing-1-style-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-fill-rule",
+            "bridgeVersion": 1,
+            "variant": "SetLayerFillRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-fill-rule-edit",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-drawing-fill-rule-edit"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "authored-fill-rule-preserved"
+            ],
+            "enclosing": [
+              "unrelated-layer-fields-preserved"
+            ]
+          },
+          "notes": "The shared fixture checks the complete document and inverse against fast-json-patch. Native projection and picking tests cover compound-path winding."
         }
       ]
     }

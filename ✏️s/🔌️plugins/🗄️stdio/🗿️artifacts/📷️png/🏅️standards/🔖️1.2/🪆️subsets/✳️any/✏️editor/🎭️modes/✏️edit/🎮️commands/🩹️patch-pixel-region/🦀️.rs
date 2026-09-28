@@ -9,7 +9,7 @@ use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSche
 pub const ACTION_ID: &str = "set-pixel-region";
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.png.command.patch-pixel-region.v1";
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;
-pub const MAXIMUM_RASTER_BYTES: usize = 32 * 1_024 * 1_024;
+pub const MAXIMUM_RASTER_BYTES: usize = 4_096 * 2_160 * 4;
 pub const PATCH_PAYLOAD_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 4;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(128);
 
@@ -74,7 +74,7 @@ impl PatchPixelRegion {
             return Err(fault("stdio.png.pixel-region.noncanonical-raster", format!("PNG raster has {} bytes; expected {expected}", snapshot.pixels.len())));
         }
         if expected > MAXIMUM_RASTER_BYTES {
-            return Err(fault("stdio.png.pixel-region.raster-too-large", format!("PNG raster exceeds the {MAXIMUM_RASTER_BYTES}-byte interactive editing ceiling")));
+            return Err(fault("stdio.png.pixel-region.raster-too-large", format!("PNG raster exceeds the {MAXIMUM_RASTER_BYTES}-byte RGBA8 interactive editing ceiling (equal to 4096×2160 pixels)")));
         }
         let right = self.x.checked_add(self.width).ok_or_else(|| fault("stdio.png.pixel-region.bounds-overflow", "Pixel region x + width overflows"))?;
         let bottom = self.y.checked_add(self.height).ok_or_else(|| fault("stdio.png.pixel-region.bounds-overflow", "Pixel region y + height overflows"))?;

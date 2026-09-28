@@ -173,7 +173,7 @@ fn parse_rfc3339_ms(s: &str) -> Option<i64> {
 
 /// @emoji 📆️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
 /// millisecond component is nonzero. The single source of truth for the tag-1/2 round trip.
-fn format_rfc3339_ms(epoch_ms: i64) -> String {
+pub fn format_rfc3339_ms(epoch_ms: i64) -> String {
     let days = epoch_ms.div_euclid(86_400_000);
     let rem_ms = epoch_ms.rem_euclid(86_400_000);
     let (year, month, day) = civil_from_days(days);

@@ -28,7 +28,7 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAY
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_TRY.into(),
-        label: LocalizedLabel::native("Try", "Testen"),
+        label: LocalizedLabel::native("Fill Form", "Formular ausfüllen"),
         body_key: FORMS_PLAY_BODY_TRY.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "play".into(),
@@ -184,7 +184,10 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
         }
         "image" => ui_admit(ui_admit(ui::image(ui_text_value(image_question_src(question))?).alt(ui_label(label)?).try_id(format!("forms-try.{key}.image")))?.try_build())?,
         "note" => return display(&format!("forms-try.{key}.note"), question.text.as_deref().unwrap_or(label), false),
-        kind if is_extension_question_kind(kind) => return render_extension_question(question, values, contributions, "try", true),
+        kind if is_extension_question_kind(kind) => {
+            let (window_id, _) = window_owner(view)?;
+            render_extension_question(question, values, contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Try { window_id }, true, labels)?
+        }
         _ => return display(&format!("forms-try.{key}.unsupported"), &format!("Unsupported kind: {}", question.kind), false),
     };
     try_field(question, error, child)
@@ -212,6 +215,12 @@ pub fn render(
     labels: &FormsLabels,
     view: &semio_framework_plugin::ViewModel,
 ) -> UiAssemblyResult<ui::BuiltNode> {
+    if window_config.submitted_response_id.as_ref().is_some_and(|id| spec.responses.iter().any(|response| &response.id == id)) {
+        return stack(ui::Axis::Vertical, vec![
+            display("forms-try.submitted", labels.submitted.as_str(), true)?,
+            navigation("forms-try.respond-again", labels.respond_again.as_str(), "rotate-ccw", "resetTry", false, view)?,
+        ]);
+    }
     let steps = crate::forms_steps(spec);
     if steps.is_empty() {
         return display("forms-try.empty", labels.no_steps_in_form.as_str(), false);
@@ -224,7 +233,7 @@ pub fn render(
     let visible = visible_questions(step, &validation_values);
     let errors = step_errors(step, &validation_values);
     let advance = can_advance(step, &validation_values);
-    let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.block_id.as_str(), error.message.as_str())).collect();
+    let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.question_id.as_str(), labels.answer_error(&error.code))).collect();
     let mut children = vec![
         display("forms-try.title", spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?,
         display("forms-try.progress", &format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?,

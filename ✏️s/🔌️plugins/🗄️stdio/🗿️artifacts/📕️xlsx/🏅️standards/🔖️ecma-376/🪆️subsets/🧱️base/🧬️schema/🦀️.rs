@@ -1,6 +1,6 @@
 //! 🧬️ XlsxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::XlsxWorkbook;
+use crate::schema::snapshot::{XlsxWorkbook, XlsxXmlPart};
 use crate::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
@@ -18,7 +18,7 @@ pub struct XlsxArtifact {
     pub opc: OpcPackage,
     #[state(artifact)]
     #[value(default)]
-    pub workbook: XlsxWorkbook,
+    pub xml_parts: Vec<XlsxXmlPart>,
 }
 //#endregion Artifact
 
@@ -33,13 +33,13 @@ impl XlsxArtifact {
     /// 📸️ Persisted subset.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> XlsxSnapshot {
-        XlsxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), workbook: self.workbook.clone() }
+        XlsxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
-        Self { schema: snapshot.schema, opc: snapshot.opc, workbook: snapshot.workbook }
+        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -47,7 +47,7 @@ impl XlsxArtifact {
     pub fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
-        self.workbook = snapshot.workbook;
+        self.xml_parts = snapshot.xml_parts;
     }
 }
 //#endregion Conversions
@@ -138,23 +138,21 @@ pub mod derived_construction {
         /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
-            self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
-            self.rebuild()
+            let mut workbook = self.snapshot.project_workbook().unwrap_or_default();
+            workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook);
+            self
         }
 
         /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
         /// `(row: index, col: 0..)` coordinates left-to-right.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
-            if let Some(sheet) = self.snapshot.workbook.sheets.last_mut() {
+            let mut workbook = self.snapshot.project_workbook().unwrap_or_default();
+            if let Some(sheet) = workbook.sheets.last_mut() {
                 sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
             }
-            self.rebuild()
-        }
-
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        fn rebuild(mut self) -> Self {
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook);
             self
         }
     }

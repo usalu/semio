@@ -18,7 +18,7 @@
 //! real delete would have carried away with it.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold/📸️snapshot/➡️after/🔣️.json");
@@ -36,7 +36,7 @@ fn expected_after() -> FormsSnapshot {
 /// `step-basics` — every step EXCEPT the one the committed payload addresses.
 fn before() -> FormsSnapshot {
     let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
-    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: "step-basics".into(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
+    replace_forms_steps(&mut snapshot, vec![FormStep { id: "step-basics".into(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 

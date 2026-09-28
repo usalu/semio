@@ -48,15 +48,18 @@ fn segmented_download_slot_table_retires_every_chunk_as_it_is_taken() {
     let expected = payload.len().div_ceil(ArtifactOutputChunks::CHUNK_BYTES);
     assert_eq!(chunks.chunks_remaining(), expected, "a 145 714 B payload occupies exactly {expected} outstanding slots");
     assert_eq!(chunks.bytes(), payload.len());
+    assert_eq!(chunks.bytes_remaining(), payload.len());
     chunks.seal().expect("seal");
     let mut drained = Vec::new();
     let mut taken = 0usize;
     while let Some(chunk) = chunks.take_chunk().expect("take") {
         taken += 1;
         assert_eq!(chunks.chunks_remaining(), expected - taken, "each taken chunk must RETIRE from the outstanding table, or the table saturates");
+        assert_eq!(chunks.bytes_remaining(), payload.len() - drained.len() - chunk.len(), "each taken chunk retires its exact outstanding byte count");
         drained.extend_from_slice(&chunk);
     }
     assert_eq!(taken, expected);
     assert_eq!(chunks.chunks_remaining(), 0, "a fully drained output retains nothing");
+    assert_eq!(chunks.bytes_remaining(), 0, "a fully drained output retains no byte authority");
     assert_eq!(drained, payload);
 }

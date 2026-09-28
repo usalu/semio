@@ -2,75 +2,8 @@
 # `FormMutation` (sibling `🦀️.rs`), same declaration order as the sibling `🟦️.ts`
 # this file matches field-for-field.
 
-scalar DslValue
-
-type FormQuestionOption {
-  value: String!
-  label: String!
-}
-
-type FormVectorField {
-  key: String!
-  label: String
-  value: Float
-}
-
-type FormExprConst {
-  value: DslValue!
-}
-
-type FormExprVar {
-  name: String!
-}
-
-type FormExprEq {
-  left: FormExpr!
-  right: FormExpr!
-}
-
-type FormExprAnd {
-  items: [FormExpr!]!
-}
-
-type FormExprOr {
-  items: [FormExpr!]!
-}
-
-type FormExprTruthy {
-  expr: FormExpr!
-}
-
-union FormExpr = FormExprConst | FormExprVar | FormExprEq | FormExprAnd | FormExprOr | FormExprTruthy
-
-type FormQuestion {
-  id: String!
-  label: String!
-  kind: String!
-  description: String
-  required: Boolean
-  placeholder: String
-  default: DslValue
-  min: Float
-  max: Float
-  step: Float
-  unit: String
-  text: String
-  options: [FormQuestionOption!]
-  fields: [FormVectorField!]
-  schema: String
-  src: String
-  accept: String
-  fixtureSlug: String
-  params: DslValue
-  condition: FormExpr
-}
-
-type FormStep {
-  id: String!
-  title: String!
-  description: String
-  blocks: [FormQuestion!]!
-}
+# import FormStep, FormQuestion from "../📝️definition/🔗️.graphql"
+# import FormsResponse from "../📨️response/🔗️.graphql"
 
 type CreateStep {
   step: FormStep!
@@ -123,6 +56,15 @@ type ChangeFormTitle {
   newTitle: String
 }
 
+type CommitResponse {
+  response: FormsResponse!
+  index: Int
+}
+
+type DiscardResponse {
+  id: String!
+}
+
 union FormsMutation =
     CreateStep
   | DeleteStep
@@ -134,3 +76,5 @@ union FormsMutation =
   | MoveBlockToStep
   | ReplaceBlock
   | ChangeFormTitle
+  | CommitResponse
+  | DiscardResponse

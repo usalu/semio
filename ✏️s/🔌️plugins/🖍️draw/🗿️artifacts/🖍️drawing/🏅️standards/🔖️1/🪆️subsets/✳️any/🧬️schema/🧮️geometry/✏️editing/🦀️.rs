@@ -6,6 +6,8 @@ use crate::PathSegment;
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathEdit {
+    DeletePoints { points: Vec<PathPointRef> },
+    Translate { points: Vec<PathPointRef>, delta: [f64;2] },
     Position { index: usize, point: PathPoint, to: [f64;2] },
     Coordinate { index: usize, point: PathPoint, axis: PathAxis, value: f64 },
     Split { index: usize, t: f64 },
@@ -15,6 +17,14 @@ pub enum PathEdit {
     Open { index: usize },
     Convert { index: usize, target: SegmentType },
     Join { index: usize, other: usize },
+}
+
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[dsl(keyword = "path-point")]
+pub struct PathPointRef {
+    pub index: usize,
+    pub point: PathPoint,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
@@ -61,6 +71,40 @@ fn contours(segments: &[PathSegment]) -> Result<Vec<(usize, usize)>, &'static st
 pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<PathSegment>, &'static str> {
     if !source.iter().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
     let ranges = contours(source)?;
+    if let PathEdit::Translate {points,delta}=operation {return translate_path_points(source,points,*delta);}
+    if let PathEdit::DeletePoints {points}=operation {
+        if points.is_empty() {return Ok(source.to_vec());}
+        if points.len()>4096 {return Err("Point selection exceeds editing capacity");}
+        let mut output=source.to_vec();
+        let mut removed=std::collections::BTreeSet::new();
+        for point in points {
+            let segment=source.get(point.index).ok_or("Missing path node")?;
+            if matches!(segment,PathSegment::Close) {return Err("Missing path node");}
+            if point.point==PathPoint::Anchor {removed.insert(point.index);continue;}
+            match (segment,point.point) {
+                (PathSegment::Quad {to,..},PathPoint::Control1)=>output[point.index]=PathSegment::Line {to:*to},
+                (PathSegment::Cubic {..},PathPoint::Control1|PathPoint::Control2)=>{
+                    let previous=point.index.checked_sub(1).and_then(|index|source.get(index)).and_then(endpoint).ok_or("Missing previous anchor")?;
+                    let PathSegment::Cubic {ctrl1,ctrl2,to}=&mut output[point.index] else {unreachable!()};
+                    if point.point==PathPoint::Control1 {*ctrl1=previous;}else {*ctrl2=*to;}
+                }
+                _=>return Err("This node has no selected handle"),
+            }
+        }
+        let mut result=Vec::new();
+        for &(start,end) in &ranges {
+            let closed=matches!(source[end-1],PathSegment::Close);
+            let mut kept=0;
+            for (index,segment) in output.iter().enumerate().take(end-usize::from(closed)).skip(start) {
+                if removed.contains(&index) {continue;}
+                result.push(if kept==0 {PathSegment::Move {to:endpoint(segment).ok_or("Invalid contour")?}}else {segment.clone()});
+                kept+=1;
+            }
+            if closed && kept>1 {result.push(PathSegment::Close);}
+        }
+        return Ok(result);
+    }
+
     if let PathEdit::Join { index,other } = *operation {
         if index == other { return Err("Choose two different endpoints"); }
         let range = |index| ranges.iter().copied().find(|(start,end)| (index == *start || index == end-1) && !matches!(source[end-1],PathSegment::Close)).ok_or("Choose endpoints of open contours");
@@ -99,7 +143,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
         }
         return Ok(output);
     }
-    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } => unreachable!() };
+    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!() };
     let item = source.get(index).ok_or("Missing path node")?;
     let (start, end) = ranges.into_iter().find(|(start, end)| index >= *start && index < *end).ok_or("Missing contour")?;
     let mut output = source.to_vec();
@@ -145,37 +189,16 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
             _ => { output.remove(index); }
         },
         PathEdit::Coordinate { point, .. } | PathEdit::Position { point, .. } => {
-            let coordinates=match *operation {
-                PathEdit::Position {to,..}=>[Some(to[0]),Some(to[1])],
-                PathEdit::Coordinate {axis:PathAxis::X,value,..}=>[Some(value),None],
-                PathEdit::Coordinate {value,..}=>[None,Some(value)],
+            let mut to=drag_path_point(item,point,[1.0,0.0,0.0,1.0,0.0,0.0],[0.0,0.0],[0.0,0.0],false).ok_or("This node has no selected handle")?;
+            match *operation {
+                PathEdit::Position {to:position,..}=>to=position,
+                PathEdit::Coordinate {axis:PathAxis::X,value,..}=>to[0]=value,
+                PathEdit::Coordinate {value,..}=>to[1]=value,
                 _=>unreachable!(),
-            };
-            if !coordinates.iter().flatten().all(|value|value.is_finite()) {return Err("Invalid coordinate");}
-            for (axis,value) in coordinates.into_iter().enumerate() {
-                let Some(value)=value else {continue;};
-                if point == PathPoint::Anchor {
-                    let delta = value - endpoint(item).ok_or("Select an anchor")?[axis];
-                    match &mut output[index] {
-                        PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Arc { to, .. } => to[axis] = value,
-                        PathSegment::Quad { to, ctrl } => { to[axis] = value; ctrl[axis] += delta; }
-                        PathSegment::Cubic { to, ctrl2, .. } => { to[axis] = value; ctrl2[axis] += delta; }
-                        PathSegment::Close => return Err("Select an anchor"),
-                    }
-                    match output.get_mut(index + 1) {
-                        Some(PathSegment::Quad { ctrl, .. }) => ctrl[axis] += delta,
-                        Some(PathSegment::Cubic { ctrl1, .. }) => ctrl1[axis] += delta,
-                        _ => {}
-                    }
-                } else {
-                    match (&mut output[index], point) {
-                        (PathSegment::Cubic { ctrl1, .. }, PathPoint::Control1) => ctrl1[axis] = value,
-                        (PathSegment::Cubic { ctrl2, .. }, PathPoint::Control2) => ctrl2[axis] = value,
-                        (PathSegment::Quad { ctrl, .. }, PathPoint::Control1) => ctrl[axis] = value,
-                        _ => return Err("This node has no selected handle"),
-                    }
-                }
             }
+            let (segment,next)=patch_path_point(item,source.get(index+1),point,to)?;
+            output[index]=segment;
+            if let Some(next)=next {output[index+1]=next;}
         }
         PathEdit::Split { t, .. } => {
             if !(t > 0.0 && t < 1.0) { return Err("Split position must be between zero and one"); }
@@ -200,7 +223,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
             };
             output.splice(index..index + 1, replacements);
         }
-        PathEdit::Reverse | PathEdit::Join { .. } => unreachable!(),
+        PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!(),
     }
     if !output.iter().all(crate::schema::valid_path_segment) { return Err("The edit exceeds finite coordinates"); }
     Ok(output)
@@ -225,4 +248,90 @@ pub fn drag_path_point(segment: &PathSegment,point: PathPoint,matrix: [f64;6],st
     if constrained {if dx.abs()>=dy.abs(){dy=0.0;}else{dx=0.0;}}
     let result=[local[0]+inverted[0]*dx+inverted[2]*dy,local[1]+inverted[1]*dx+inverted[3]*dy];
     result.iter().all(|value|value.is_finite()).then_some(result)
+}
+
+/// 🩹 Copies only a positioned node and, when needed, its outgoing tangent segment.
+pub fn patch_path_point(segment: &PathSegment,next: Option<&PathSegment>,point: PathPoint,to: [f64;2]) -> Result<(PathSegment,Option<PathSegment>),&'static str> {
+    if !to.iter().all(|value|value.is_finite()) || !crate::schema::valid_path_segment(segment) {return Err("Invalid coordinate");}
+    let mut output=segment.clone();
+    let mut following=None;
+    if point==PathPoint::Anchor {
+        let origin=endpoint(segment).ok_or("Select an anchor")?;
+        let delta=[to[0]-origin[0],to[1]-origin[1]];
+        let translate=|value:&mut [f64;2]|{value[0]+=delta[0];value[1]+=delta[1];};
+        match &mut output {
+            PathSegment::Move {to:target}|PathSegment::Line {to:target}|PathSegment::Arc {to:target,..}=>*target=to,
+            PathSegment::Quad {to:target,ctrl}=>{*target=to;translate(ctrl);},
+            PathSegment::Cubic {to:target,ctrl2,..}=>{*target=to;translate(ctrl2);},
+            PathSegment::Close=>return Err("Select an anchor"),
+        }
+        following=match next {
+            Some(PathSegment::Quad {ctrl,to})=>{let mut ctrl=*ctrl;translate(&mut ctrl);Some(PathSegment::Quad {ctrl,to:*to})},
+            Some(PathSegment::Cubic {ctrl1,ctrl2,to})=>{let mut ctrl1=*ctrl1;translate(&mut ctrl1);Some(PathSegment::Cubic {ctrl1,ctrl2:*ctrl2,to:*to})},
+            _=>None,
+        };
+    } else {
+        match (&mut output,point) {
+            (PathSegment::Cubic {ctrl1,..},PathPoint::Control1)=>*ctrl1=to,
+            (PathSegment::Cubic {ctrl2,..},PathPoint::Control2)=>*ctrl2=to,
+            (PathSegment::Quad {ctrl,..},PathPoint::Control1)=>*ctrl=to,
+            _=>return Err("This node has no selected handle"),
+        }
+    }
+    if !crate::schema::valid_path_segment(&output) || following.as_ref().is_some_and(|segment|!crate::schema::valid_path_segment(segment)) {return Err("The edit exceeds finite coordinates");}
+    Ok((output,following))
+}
+
+/// 🎯 Returns the nearest anchor or control in world coordinates; anchors win coincident ties.
+pub fn path_point_hit(segment:&PathSegment,matrix:[f64;6],world:[f64;2],tolerance:f64)->Option<(PathPoint,f64)> {
+    if tolerance<0.0 || !tolerance.is_finite() || !matrix.iter().chain(world.iter()).all(|value|value.is_finite()) {return None;}
+    let mut nearest=None;
+    for point in [PathPoint::Anchor,PathPoint::Control1,PathPoint::Control2] {
+        let Some(local)=drag_path_point(segment,point,[1.0,0.0,0.0,1.0,0.0,0.0],[0.0,0.0],[0.0,0.0],false) else {continue;};
+        let [a,b,c,d,e,f]=matrix;
+        let distance=(a*local[0]+c*local[1]+e-world[0]).hypot(b*local[0]+d*local[1]+f-world[1]);
+        if distance<=tolerance && nearest.is_none_or(|(_,previous)|distance<previous) {nearest=Some((point,distance));}
+    }
+    nearest
+}
+
+/// ↔️ Moves the union of selected coordinates and attached tangents exactly once.
+fn translate_path_points(source:&[PathSegment],points:&[PathPointRef],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
+    if points.is_empty() {return Err("Select at least one path point");}
+    if !delta.iter().all(|value|value.is_finite()) {return Err("Invalid translation");}
+    let mut masks=vec![0_u8;source.len()];
+    for target in points {
+        let segment=source.get(target.index).ok_or("Missing path node")?;
+        let bit=match (segment,target.point) {
+            (PathSegment::Close,_)=>return Err("Select a path point"),
+            (_,PathPoint::Anchor)=>1,
+            (PathSegment::Quad {..}|PathSegment::Cubic {..},PathPoint::Control1)=>2,
+            (PathSegment::Cubic {..},PathPoint::Control2)=>4,
+            _=>return Err("This node has no selected handle"),
+        };
+        masks[target.index]|=bit;
+        if target.point==PathPoint::Anchor {
+            masks[target.index]|=match segment {PathSegment::Quad {..}=>2,PathSegment::Cubic {..}=>4,_=>0};
+            if matches!(source.get(target.index+1),Some(PathSegment::Quad {..}|PathSegment::Cubic {..})) {masks[target.index+1]|=2;}
+        }
+    }
+    let mut output=source.to_vec();
+    for (segment,mask) in output.iter_mut().zip(masks) {
+        let shift=|point:&mut [f64;2],bit:u8| {if mask&bit!=0 {point[0]+=delta[0];point[1]+=delta[1];}};
+        match segment {
+            PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Arc {to,..}=>shift(to,1),
+            PathSegment::Quad {to,ctrl}=>{shift(to,1);shift(ctrl,2);},
+            PathSegment::Cubic {to,ctrl1,ctrl2}=>{shift(to,1);shift(ctrl1,2);shift(ctrl2,4);},
+            PathSegment::Close=>{},
+        }
+        if !crate::schema::valid_path_segment(segment) {return Err("The edit exceeds finite coordinates");}
+    }
+    Ok(output)
+}
+
+/// 🌍️ Translate selected coordinates in document axes without applying the affine origin.
+pub fn translate_world_path_points(source:&[PathSegment],points:&[PathPointRef],matrix:[f64;6],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
+    let basis=super::inverse([matrix[0],matrix[1],matrix[2],matrix[3],0.0,0.0]).ok_or("Cannot move points through a singular transform")?;
+    if !matrix.iter().chain(delta.iter()).all(|value|value.is_finite()) {return Err("Cannot move points by a nonfinite displacement");}
+    edit_path(source,&PathEdit::Translate {points:points.to_vec(),delta:[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]]})
 }

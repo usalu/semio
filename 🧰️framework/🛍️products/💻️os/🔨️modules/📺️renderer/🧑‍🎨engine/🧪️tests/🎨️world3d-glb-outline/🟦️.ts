@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
 import { BufferGeometry, EdgesGeometry, Float32BufferAttribute } from "three";
 import { describe, expect, it } from "vitest";
+import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -63,5 +64,11 @@ describe("🎨️ render-only GLB outlines", () => {
     }
     expect(fixture.semanticEdgeIds).toHaveLength(0);
   });
-});
 
+  it("uses the production React stroke authority for default, color and disabled outlines", () => {
+    for (const record of fixture.iconStrokeCases) {
+      expect(resolveIconRenderStroke(record.stroke ?? undefined), record.id).toBe(record.color);
+      expect(record.enabled, record.id).toBe(record.color !== null);
+    }
+  });
+});

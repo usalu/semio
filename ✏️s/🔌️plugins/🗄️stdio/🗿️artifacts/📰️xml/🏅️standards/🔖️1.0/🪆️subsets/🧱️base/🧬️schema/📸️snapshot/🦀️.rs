@@ -60,17 +60,27 @@ pub struct XmlDocument {
     /// 🧭 Logical comments and processing instructions preceding the root element.
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub prolog: Vec<XmlNode>,
+    /// 🧹 Logical comments and processing instructions following the root element.
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub epilog: Vec<XmlNode>,
 }
 
 /// 📜️ Logical XML document type declaration.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDoctype {
+    /// 🧭 Number of logical prolog nodes preceding this declaration.
+    #[value(default, skip_serializing_if = "is_zero")]
+    pub prolog_position: usize,
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub external_id: Option<XmlExternalId>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub declarations: Vec<XmlDtdDeclaration>,
+}
+
+fn is_zero(value: &usize) -> bool {
+    *value == 0
 }
 
 impl From<&str> for XmlDoctype {
@@ -203,7 +213,7 @@ impl XmlSnapshot {
     /// 📤️ Deterministically materializes XML from the logical model.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(xml_document_to_text(&self.doc).into_bytes())
+        Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
     }
 }
 //#endregion 🔖️Snapshot
@@ -309,6 +319,12 @@ fn xml_unescape_text(s: &str) -> Result<String, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
+    xml_document_to_text_checked(doc).expect("valid XML document boundaries")
+}
+
+/// 📤 Validates and deterministically materializes one logical XML document.
+pub fn xml_document_to_text_checked(doc: &XmlDocument) -> Result<String, String> {
+    validate_xml_document_boundaries(doc)?;
     let mut out = String::new();
     if let Some(decl) = &doc.declaration {
         let quote = decl.quote.as_char();
@@ -330,18 +346,65 @@ pub fn xml_document_to_text(doc: &XmlDocument) -> String {
         }
         out.push_str("?>\n");
     }
-    for node in &doc.prolog {
+    for (index, node) in doc.prolog.iter().enumerate() {
+        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index) {
+            xml_doctype_to_text(doc.doctype.as_ref().expect("checked doctype"), &mut out);
+            out.push('\n');
+        }
         xml_node_to_text(node, 0, &mut out);
         out.push('\n');
     }
-    if let Some(doctype) = &doc.doctype {
+    if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len()) {
         xml_doctype_to_text(doctype, &mut out);
         out.push('\n');
     }
     if let Some(node) = &doc.root {
         xml_node_to_text(node, 0, &mut out);
     }
-    out
+    for node in &doc.epilog {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        xml_node_to_text(node, 0, &mut out);
+    }
+    Ok(out)
+}
+
+/// 🛡️ Rejects declaration or boundary state that cannot be published by the UTF-8 XML codec.
+pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String> {
+    if let Some(declaration) = &doc.declaration {
+        let delimiter = declaration.quote.as_char();
+        if declaration.version.contains(delimiter) {
+            return Err(format!("XML declaration version contains its {} quote delimiter", if delimiter == '"' { "double" } else { "single" }));
+        }
+        let valid_version = declaration.version.strip_prefix("1.").is_some_and(|minor| !minor.is_empty() && minor.chars().all(|character| character.is_ascii_digit()));
+        if !valid_version {
+            return Err(format!("XML declaration version {} is not a valid VersionNum", declaration.version));
+        }
+        if let Some(encoding) = &declaration.encoding {
+            if encoding.contains(delimiter) {
+                return Err(format!("XML declaration encoding contains its {} quote delimiter", if delimiter == '"' { "double" } else { "single" }));
+            }
+            let mut characters = encoding.chars();
+            if !characters.next().is_some_and(|character| character.is_ascii_alphabetic()) || !characters.all(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')) {
+                return Err(format!("XML declaration encoding {encoding} is not a valid EncName"));
+            }
+            if !encoding.eq_ignore_ascii_case("UTF-8") {
+                return Err(format!("XML UTF-8 transport cannot declare encoding {encoding}"));
+            }
+        }
+    }
+    for (boundary, nodes) in [("prolog", &doc.prolog), ("epilog", &doc.epilog)] {
+        if nodes.iter().any(|node| !matches!(node, XmlNode::Comment { .. } | XmlNode::ProcessingInstruction { .. })) {
+            return Err(format!("XML {boundary} may contain only comments and processing instructions"));
+        }
+    }
+    if let Some(doctype) = &doc.doctype {
+        if doctype.prolog_position > doc.prolog.len() {
+            return Err(format!("DOCTYPE prolog position {} exceeds prolog length {}", doctype.prolog_position, doc.prolog.len()));
+        }
+    }
+    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -458,13 +521,15 @@ pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
     }
     let mut pos = 0;
     let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
-    let (doctype, prolog) = skip_misc(trimmed, &mut pos)?;
+    let (doctype, prolog) = parse_misc(trimmed, &mut pos, true)?;
     let root = parse_node(trimmed, &mut pos)?;
-    let _ = skip_misc(trimmed, &mut pos)?;
+    let (_, epilog) = parse_misc(trimmed, &mut pos, false)?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
-    Ok(XmlDocument { root: Some(root), doctype, declaration, prolog })
+    let document = XmlDocument { root: Some(root), doctype, declaration, prolog, epilog };
+    validate_xml_document_boundaries(&document)?;
+    Ok(document)
 }
 
 /// 🏳️ Parses the leading `<?xml version="1.0" encoding="..." standalone="..."?>` declaration, if
@@ -509,7 +574,9 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
                 quote = delimiter;
             }
             "encoding" => encoding = Some(value),
-            "standalone" => standalone = Some(value == "yes"),
+            "standalone" if value == "yes" => standalone = Some(true),
+            "standalone" if value == "no" => standalone = Some(false),
+            "standalone" => return Err("xml declaration standalone must be yes or no".into()),
             other => return Err(format!("unknown xml declaration attribute {other}")),
         }
     }
@@ -519,7 +586,7 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
 
 /// 🚧️ Parses prolog processing instructions, comments, and a typed document declaration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<XmlNode>), String> {
+fn parse_misc(s: &str, pos: &mut usize, allow_doctype: bool) -> Result<(Option<XmlDoctype>, Vec<XmlNode>), String> {
     let mut doctype = None;
     let mut nodes = Vec::new();
     loop {
@@ -542,17 +609,32 @@ fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<XmlNod
             continue;
         }
         if s[*pos..].starts_with("<!DOCTYPE") || s[*pos..].starts_with("<!doctype") {
+            if !allow_doctype {
+                return Err("DOCTYPE declaration cannot appear after root element".into());
+            }
+            if doctype.is_some() {
+                return Err("duplicate DOCTYPE declaration".into());
+            }
             let start = *pos;
             *pos += "<!DOCTYPE".len();
             let mut depth = 0i32;
+            let mut quote = None;
             loop {
                 if *pos >= s.len() {
                     return Err("unclosed DOCTYPE declaration".into());
                 }
                 let byte = s.as_bytes()[*pos];
+                if let Some(delimiter) = quote {
+                    if byte == delimiter {
+                        quote = None;
+                    }
+                    *pos += 1;
+                    continue;
+                }
                 match byte {
+                    b'\'' | b'"' => quote = Some(byte),
                     b'[' => depth += 1,
-                    b']' => depth -= 1,
+                    b']' if depth > 0 => depth -= 1,
                     b'>' if depth <= 0 => {
                         *pos += 1;
                         break;
@@ -561,7 +643,9 @@ fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<XmlNod
                 }
                 *pos += 1;
             }
-            doctype = Some(parse_doctype(&s[start..*pos])?);
+            let mut parsed = parse_doctype(&s[start..*pos])?;
+            parsed.prolog_position = nodes.len();
+            doctype = Some(parsed);
             continue;
         }
         break;
@@ -624,7 +708,7 @@ fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
     if pos != text.len() {
         return Err("trailing content in XML document type declaration".into());
     }
-    Ok(XmlDoctype { name, external_id, declarations })
+    Ok(XmlDoctype { prolog_position: 0, name, external_id, declarations })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

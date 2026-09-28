@@ -17,6 +17,18 @@ impl kernel::OpBinary for NativeCommand {
 
 crate::snapshot_editing_command_roster!(NativeCommand, ["native"]);
 
+struct RawNativeCommand(String);
+
+impl kernel::OpBinary for RawNativeCommand {
+    fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> {
+        Ok(self.0.as_bytes().to_vec())
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, kernel::ProtocolError> {
+        String::from_utf8(bytes.to_vec()).map(Self).map_err(|error| kernel::ProtocolError::Malformed { what: "raw native fixture", offset: 0, detail: error.to_string() })
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(deny_unknown_fields)]
 struct FixtureSnapshot {
@@ -201,20 +213,61 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     assert_eq!(data_steps, text_copy["expectedDataSteps"].as_u64().expect("data steps") as usize);
     assert_eq!(copy.take().expect("completed text owner"), source);
 
+    let unicode = text_copy["interruptedUnicode"].as_str().expect("unicode interruption source");
+    for stop in text_copy["partialByteStops"].as_array().expect("partial byte stops").iter().map(|value| value.as_u64().expect("partial byte stop") as usize) {
+        let mut interrupted = RetainedTextCopy::default();
+        assert_eq!(interrupted.advance(unicode, stop).expect("reserve interrupted text"), Some(0));
+        assert_eq!(interrupted.advance(unicode, stop).expect("copy interrupted bytes"), Some(stop));
+        let partial = interrupted.take_partial_bytes();
+        assert_eq!(partial, unicode.as_bytes()[..stop]);
+        assert_eq!(String::from_utf8(partial).is_ok(), unicode.is_char_boundary(stop));
+    }
+
+    let command_admission = &fixture["commandAdmission"];
+    let maximum_bytes = command_admission["maximumBytes"].as_u64().expect("maximum command bytes") as usize;
+    for row in command_admission["cases"].as_array().expect("command admission cases") {
+        let value = row["value"].as_str().expect("command value");
+        let result = admit_bounded_native_command(&RawNativeCommand(value.into()), maximum_bytes);
+        assert_eq!(result.is_ok(), row["accepted"].as_bool().expect("admission result"), "{}", row["id"]);
+    }
+
     let mut cancelled = RetainedTextCopy::default();
     cancelled.advance(&source, page_bytes).expect("reserve cancelled owner");
     let cancel_after = text_copy["cancelAfterBytes"].as_u64().expect("cancel bytes") as usize;
-    while cancelled.advance(&source, page_bytes).expect("copy cancelled text").is_some() && !cancelled.is_complete() {
-        if cancel_after <= page_bytes * text_copy["expectedCloseSteps"].as_u64().expect("close steps") as usize - page_bytes {
-            break;
-        }
+    let mut copied = 0usize;
+    while copied < cancel_after {
+        copied += cancelled.advance(&source, page_bytes).expect("copy cancelled text").expect("positive byte grant");
     }
+    assert_eq!(copied, cancel_after);
     let mut close_steps = 0usize;
     while !cancelled.terminal_is_empty() {
         close_steps += 1;
         cancelled.close_step(1, page_bytes);
     }
     assert_eq!(close_steps, text_copy["expectedCloseSteps"].as_u64().expect("close steps") as usize);
+
+    let document_copy = &fixture["documentCopy"];
+    let sibling_length = document_copy["siblingByteLength"].as_u64().expect("sibling byte length") as usize;
+    let page_bytes = document_copy["pageBytes"].as_u64().expect("document page bytes") as usize;
+    let sibling: Vec<u8> = (0..sibling_length).map(|index| (index % 251) as u8).collect();
+    let mut copy = RetainedBytesCopy::default();
+    assert_eq!(copy.advance(&sibling, page_bytes).expect("reserve byte owner"), Some(0));
+    let mut data_steps = 0usize;
+    while !copy.is_complete() {
+        assert!(copy.advance(&sibling, page_bytes).expect("copy one byte page").expect("positive byte grant") <= page_bytes);
+        data_steps += 1;
+    }
+    assert!(data_steps > document_copy["minimumCompleteTurns"].as_u64().expect("minimum complete turns") as usize);
+    assert_eq!(copy.take().expect("completed byte owner"), sibling);
+
+    let mut cancelled = RetainedBytesCopy::default();
+    cancelled.advance(&sibling, page_bytes).expect("reserve cancelled byte owner");
+    for _ in 0..document_copy["cancelAfterTurns"].as_u64().expect("cancel after turns") {
+        assert!(cancelled.advance(&sibling, page_bytes).expect("copy cancelled byte page").expect("positive byte grant") <= page_bytes);
+    }
+    while !cancelled.terminal_is_empty() {
+        cancelled.close_step(1, page_bytes);
+    }
 }
 
 #[test]

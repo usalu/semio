@@ -10,11 +10,12 @@
         "height": 1,
         "imageKey": "mask-alpha",
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     },
@@ -28,11 +29,12 @@
         "height": 32,
         "imageKey": "mask-ä",
         "transform": {
-          "x": -12,
-          "y": 7,
-          "scaleX": -1,
-          "scaleY": 2,
-          "rotation": 90
+          "x": -12.0,
+          "y": 7.0,
+          "a": -6.123233995736766e-17,
+          "b": -1.0,
+          "c": -2.0,
+          "d": 1.2246467991473532e-16
         }
       }
     },
@@ -43,11 +45,12 @@
         "linked": true,
         "invert": false,
         "transform": {
-          "x": 0,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0
+          "x": 0.0,
+          "y": 0.0,
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0
         }
       }
     }

@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "name": "Canonical Saved Form",
+      "source": "{\"schema\": \"forms.form\", \"id\": \"imported-survey\", \"version\": \"1\", \"title\": \"Imported Survey\", \"structure\": {\"childId\": \"forms-value\", \"target\": {\"artifactId\": \"forms-value\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"value\"}}}, \"results\": {\"childId\": \"forms-table\", \"target\": {\"artifactId\": \"forms-table\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"table\"}}}, \"definition\": {\"steps\": [{\"id\": \"contact\", \"title\": \"Imported Contact\", \"blocks\": [{\"id\": \"name\", \"kind\": \"text\", \"label\": \"Name\", \"required\": true}, {\"id\": \"age\", \"kind\": \"number\", \"label\": \"Age\", \"min\": 0, \"max\": 120}, {\"id\": \"followUp\", \"kind\": \"text\", \"label\": \"Follow Up\", \"condition\": {\"kind\": \"truthy\", \"expr\": {\"kind\": \"var\", \"name\": \"name\"}}}]}]}, \"responses\": []}",
+      "valid": true
+    },
+    {
+      "name": "Reject Another Artifact",
+      "source": "{\"schema\": \"playbook.spec\", \"id\": \"site-survey\", \"version\": \"1\", \"title\": \"Site Survey\", \"structure\": {\"childId\": \"forms-value\", \"target\": {\"artifactId\": \"forms-value\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"value\"}}}, \"results\": {\"childId\": \"forms-table\", \"target\": {\"artifactId\": \"forms-table\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"table\"}}}, \"definition\": {\"steps\": [{\"id\": \"contact\", \"title\": \"Contact\", \"blocks\": [{\"id\": \"name\", \"kind\": \"text\", \"label\": \"Name\", \"required\": true}, {\"id\": \"age\", \"kind\": \"number\", \"label\": \"Age\", \"min\": 0, \"max\": 120}, {\"id\": \"followUp\", \"kind\": \"text\", \"label\": \"Follow Up\", \"condition\": {\"kind\": \"truthy\", \"expr\": {\"kind\": \"var\", \"name\": \"name\"}}}]}]}, \"responses\": [{\"id\": \"response-1\", \"submittedAt\": 1790545740000, \"definitionVersion\": \"v1\", \"answers\": [{\"questionId\": \"name\", \"label\": \"Name\", \"kind\": \"text\", \"value\": \"Ada\"}, {\"questionId\": \"age\", \"label\": \"Age\", \"kind\": \"number\", \"value\": 36}]}]}",
+      "valid": false
+    },
+    {
+      "name": "Reject Ambiguous Question Identity",
+      "source": "{\"schema\": \"forms.form\", \"id\": \"site-survey\", \"version\": \"1\", \"title\": \"Site Survey\", \"structure\": {\"childId\": \"forms-value\", \"target\": {\"artifactId\": \"forms-value\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"value\"}}}, \"results\": {\"childId\": \"forms-table\", \"target\": {\"artifactId\": \"forms-table\", \"dialect\": {\"artifactKind\": \"s.stdio.semio\", \"standard\": \"v1\", \"subset\": \"table\"}}}, \"definition\": {\"steps\": [{\"id\": \"contact\", \"title\": \"Contact\", \"blocks\": [{\"id\": \"name\", \"kind\": \"text\", \"label\": \"Name\", \"required\": true}, {\"id\": \"age\", \"kind\": \"number\", \"label\": \"Age\", \"min\": 0, \"max\": 120}, {\"id\": \"followUp\", \"kind\": \"text\", \"label\": \"Follow Up\", \"condition\": {\"kind\": \"truthy\", \"expr\": {\"kind\": \"var\", \"name\": \"name\"}}}, {\"id\": \"name\", \"kind\": \"text\", \"label\": \"Name\", \"required\": true}]}]}, \"responses\": [{\"id\": \"response-1\", \"submittedAt\": 1790545740000, \"definitionVersion\": \"v1\", \"answers\": [{\"questionId\": \"name\", \"label\": \"Name\", \"kind\": \"text\", \"value\": \"Ada\"}, {\"questionId\": \"age\", \"label\": \"Age\", \"kind\": \"number\", \"value\": 36}]}]}",
+      "valid": false
+    },
+    {
+      "name": "Reject Undeclared Step Envelope",
+      "source": "{\"schema\": \"forms.form\", \"id\": \"site-survey\", \"version\": \"1\", \"title\": \"Site Survey\", \"steps\": [{\"id\": \"contact\", \"title\": \"Contact\", \"blocks\": [{\"id\": \"name\", \"kind\": \"text\", \"label\": \"Name\", \"required\": true}, {\"id\": \"age\", \"kind\": \"number\", \"label\": \"Age\", \"min\": 0, \"max\": 120}, {\"id\": \"followUp\", \"kind\": \"text\", \"label\": \"Follow Up\", \"condition\": {\"kind\": \"truthy\", \"expr\": {\"kind\": \"var\", \"name\": \"name\"}}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "Reject Invalid JSON",
+      "source": "{ broken",
+      "valid": false
+    }
+  ]
+}

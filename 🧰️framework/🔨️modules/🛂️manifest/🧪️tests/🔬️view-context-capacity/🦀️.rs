@@ -62,6 +62,7 @@ async fn a_capacity_filled_context_fits_the_bound() {
         active_utility_by_window_id: (0..VIEW_CONTEXT_UTILITY_ENTRIES).map(|index| (format!("{index}{}", identifier()), identifier())).collect(),
         active_tool_id: Some(identifier()),
         panel_json: Some(long()),
+        extension_input_json: Some(long()),
         session_identity: Some(ViewSessionIdentity { user_id: identifier(), display_name: identifier() }),
         locale: Locale::En,
         terminology: Terminology::Native,
@@ -88,7 +89,7 @@ async fn contributions_are_not_a_view_context_field() {
     let schema = schema();
     assert!(schema["properties"].get("contributionsJson").is_none(), "contributionsJson must not be a view-context property");
     assert!(schema["additionalProperties"].as_bool() == Some(false), "the schema must refuse any re-added long field");
-    assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 1, "panelJson is the only long string a view context carries");
+    assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 2, "panel state and a single embedded surface input are bounded independently");
     let view = crate::ViewModel { panel_json: Some("p".into()), locale: crate::Locale::En, terminology: crate::Terminology::Native, ..Default::default() };
     let encoded = serde_json::to_string(&view).unwrap();
     assert!(!encoded.contains("contributionsJson"), "the guest projection must not emit contributionsJson: {encoded}");

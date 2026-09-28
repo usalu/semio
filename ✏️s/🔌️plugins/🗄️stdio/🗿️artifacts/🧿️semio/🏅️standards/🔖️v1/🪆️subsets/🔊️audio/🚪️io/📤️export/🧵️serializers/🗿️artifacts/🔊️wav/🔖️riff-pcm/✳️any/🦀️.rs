@@ -38,7 +38,7 @@ impl ArtifactSerializer for SemioAudioToWav {
         }
         let block_align = channels * 4;
         let fmt = WavFmt { audio_format: 3, channels, sample_rate: from.sample_rate, byte_rate: from.sample_rate * block_align as u32, block_align, bits_per_sample: 32, ext: None };
-        Ok(WavSnapshot { schema: "stdio.wav".into(), fmt, data: WavData::Float32(interleaved), other_chunks: Vec::new() })
+        Ok(WavSnapshot { fmt, data: WavData::Float32(interleaved), ..WavSnapshot::default() })
     }
 }
 

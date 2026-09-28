@@ -1,0 +1,8 @@
+{
+  "beforeKind": "title",
+  "afterKind": "body",
+  "expectedDiff": {
+    "shapeKind": "placeholder",
+    "kind": "body"
+  }
+}

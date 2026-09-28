@@ -1,0 +1,103 @@
+{
+  "schema": "semio.stdio.docx.namespace-formatting.v1",
+  "cases": [
+    {
+      "id": "transitional-alias",
+      "namespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+      "documentXml": "<a:document xmlns:a=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><a:body><a:p><a:pPr><a:pStyle a:val=\"Heading\"/></a:pPr><a:r><a:rPr><a:b a:val=\"0\"/><a:i a:val=\"false\"/><a:u a:val=\"none\"/></a:rPr><a:t>Grüße 文字</a:t></a:r></a:p></a:body></a:document>",
+      "stylesXml": "<a:styles xmlns:a=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><a:style a:type=\"paragraph\" a:styleId=\"Heading\"><a:name a:val=\"Heading title\"/><a:basedOn a:val=\"Normal\"/></a:style></a:styles>",
+      "styleIds": [
+        "Heading"
+      ],
+      "paragraphStyle": "Heading",
+      "format": [
+        false,
+        false,
+        false
+      ],
+      "retainedMarkers": []
+    },
+    {
+      "id": "transitional-default",
+      "namespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+      "documentXml": "<document xmlns=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:v=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><body><p><pPr><pStyle v:val=\"Heading\"/></pPr><r><rPr><b v:val=\"on\"/><i v:val=\"1\"/><u v:val=\"single\"/></rPr><t>Grüße 文字</t></r></p></body></document>",
+      "stylesXml": "<styles xmlns=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:v=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><style v:type=\"paragraph\" v:styleId=\"Heading\"><name v:val=\"Heading title\"/><basedOn v:val=\"Normal\"/></style></styles>",
+      "styleIds": [
+        "Heading"
+      ],
+      "paragraphStyle": "Heading",
+      "format": [
+        true,
+        true,
+        true
+      ],
+      "retainedMarkers": []
+    },
+    {
+      "id": "strict-alias",
+      "namespace": "http://purl.oclc.org/ooxml/wordprocessingml/main",
+      "documentXml": "<a:document xmlns:a=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"><a:body><a:p><a:pPr><a:pStyle a:val=\"Heading\"/></a:pPr><a:r><a:rPr><a:b a:val=\"off\"/><a:i/><a:u a:val=\"double\"/></a:rPr><a:t>Grüße 文字</a:t></a:r></a:p></a:body></a:document>",
+      "stylesXml": "<a:styles xmlns:a=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"><a:style a:type=\"paragraph\" a:styleId=\"Heading\"><a:name a:val=\"Heading title\"/><a:basedOn a:val=\"Normal\"/></a:style></a:styles>",
+      "styleIds": [
+        "Heading"
+      ],
+      "paragraphStyle": "Heading",
+      "format": [
+        false,
+        true,
+        true
+      ],
+      "retainedMarkers": []
+    },
+    {
+      "id": "strict-default",
+      "namespace": "http://purl.oclc.org/ooxml/wordprocessingml/main",
+      "documentXml": "<document xmlns=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" xmlns:v=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"><body><p><pPr><pStyle v:val=\"Heading\"/></pPr><r><rPr><b/><i v:val=\"off\"/><u v:val=\"none\"/></rPr><t>Grüße 文字</t></r></p></body></document>",
+      "stylesXml": "<styles xmlns=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" xmlns:v=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"><style v:type=\"paragraph\" v:styleId=\"Heading\"><name v:val=\"Heading title\"/><basedOn v:val=\"Normal\"/></style></styles>",
+      "styleIds": [
+        "Heading"
+      ],
+      "paragraphStyle": "Heading",
+      "format": [
+        true,
+        false,
+        false
+      ],
+      "retainedMarkers": []
+    },
+    {
+      "id": "local-prefix-shadowing",
+      "namespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+      "documentXml": "<a:document xmlns:a=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><a:body><a:p><b:pPr xmlns:b=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:a=\"urn:foreign\"><b:pStyle b:val=\"Heading\" xmlns:f=\"urn:format\" f:trace=\"kept-style\"/></b:pPr><a:r><b:rPr xmlns:b=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:a=\"urn:foreign\"><a:b/><b:b b:val=\"false\" xmlns:f=\"urn:format\" f:trace=\"kept-bold\"><!--kept-property-comment--></b:b><b:i/><b:u b:val=\"none\"/></b:rPr><a:t>Grüße 文字</a:t></a:r></a:p></a:body></a:document>",
+      "stylesXml": "<a:styles xmlns:a=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><b:style xmlns:b=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:a=\"urn:foreign\" a:styleId=\"Wrong\" b:styleId=\"Heading\" b:type=\"paragraph\"><b:name b:val=\"Heading title\"/><b:basedOn b:val=\"Normal\"/></b:style></a:styles>",
+      "styleIds": [
+        "Heading"
+      ],
+      "paragraphStyle": "Heading",
+      "format": [
+        false,
+        true,
+        false
+      ],
+      "retainedMarkers": [
+        "f:trace=\"kept-bold\"",
+        "<!--kept-property-comment-->",
+        "f:trace=\"kept-style\""
+      ]
+    },
+    {
+      "id": "unqualified-and-foreign-attributes",
+      "namespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+      "documentXml": "<document xmlns=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:f=\"urn:foreign\"><body><p><pPr><pStyle val=\"Wrong\" f:val=\"Wrong\"/></pPr><r><rPr><b val=\"0\"/><i f:val=\"false\"/><u f:val=\"none\"/></rPr><t>Grüße 文字</t></r></p></body></document>",
+      "stylesXml": "<styles xmlns=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:f=\"urn:foreign\"><style styleId=\"Wrong\" type=\"paragraph\"/><style f:styleId=\"Wrong\" f:type=\"paragraph\"/></styles>",
+      "styleIds": [],
+      "paragraphStyle": null,
+      "format": [
+        true,
+        true,
+        true
+      ],
+      "retainedMarkers": []
+    }
+  ]
+}

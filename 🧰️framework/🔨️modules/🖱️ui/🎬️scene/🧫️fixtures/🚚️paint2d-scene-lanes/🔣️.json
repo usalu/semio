@@ -1,5 +1,5 @@
 {
-  "$comment": "🚚️ The one language-neutral declaration of the paint-2d scene lane carrier — the raster twin of 🚚️canvas2d-scene-lanes and 🚚️board2d-scene-lanes. Rust pins Paint2dSceneLane / PAINT2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins PAINT2D_SCENE_LANES / paint2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. Both lanes always publish: the documentSync channel carries the whole RasterSession document and assets carries one entry per imported bitmap, so either outgrows the 32 KiB surface doc on a real painting — before these lanes existed scene_surface.encode refused the whole surface instead of paging.",
+  "$comment": "🚚️ Shared paged paint scene contract. Document and assets always publish; completed pixel coverage is an optional lane to keep the scene header bounded.",
   "schema": "paint-2d@1",
   "laneKeyPrefix": "framework.scene.paint2d.",
   "spineFields": [
@@ -7,12 +7,15 @@
     "assetsJson",
     "cameraJson",
     "selectionJson",
+    "pixelSelectionJson",
     "hoveredId",
     "activeUtility",
     "brushSize",
     "brushOpacity",
     "brushColor",
     "brushHardness",
+    "paintTarget",
+    "maskValue",
     "viewMode",
     "compositeViewportJson",
     "lanes"
@@ -29,6 +32,12 @@
       "field": "assetsJson",
       "bodyKey": "framework.scene.paint2d.assets",
       "optional": false
+    },
+    {
+      "lane": "pixelSelection",
+      "field": "pixelSelectionJson",
+      "bodyKey": "framework.scene.paint2d.pixelSelection",
+      "optional": true
     }
   ],
   "roundTrip": {
@@ -42,11 +51,15 @@
       "brushOpacity": 1.0,
       "viewMode": "composite",
       "brushColor": "#e07020",
-      "brushHardness": 0.25
+      "brushHardness": 0.25,
+      "paintTarget": "pixels",
+      "maskValue": 255,
+      "pixelSelectionJson": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":\"[[0,2,255],[3,1,128]]\"}"
     },
     "laneTexts": {
       "framework.scene.paint2d.documentSync": "{\"revision\":3,\"layers\":[{\"id\":\"base\",\"kind\":\"raster\"}]}",
-      "framework.scene.paint2d.assets": "[{\"id\":\"photo\",\"url\":\"data:image/png;base64,iVBORw0KGgo=\"}]"
+      "framework.scene.paint2d.assets": "[{\"id\":\"photo\",\"url\":\"data:image/png;base64,iVBORw0KGgo=\"}]",
+      "framework.scene.paint2d.pixelSelection": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":\"[[0,2,255],[3,1,128]]\"}"
     },
     "spine": {
       "documentSyncJson": "",
@@ -67,10 +80,17 @@
           "lane": "assets",
           "bytes": 59,
           "hash": "4ae639c70f2cf7e4"
+        },
+        {
+          "lane": "pixelSelection",
+          "bytes": 89,
+          "hash": "46fa0925ac0347e0"
         }
       ],
       "brushColor": "#e07020",
-      "brushHardness": 0.25
+      "brushHardness": 0.25,
+      "paintTarget": "pixels",
+      "maskValue": 255
     }
   }
 }

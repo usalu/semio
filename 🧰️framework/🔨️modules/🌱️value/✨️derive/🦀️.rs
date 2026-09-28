@@ -3,6 +3,9 @@
 #[path = "⚙️expansion/🦀️.rs"]
 mod component;
 
+#[path = "🧬️retained-clone/🦀️.rs"]
+mod retained_clone;
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
@@ -18,4 +21,18 @@ pub fn derive_to_value(input: TokenStream) -> TokenStream {
 pub fn derive_from_value(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     component::expand_from_value(&derive_input).unwrap_or_else(|e| e.to_compile_error()).into()
+}
+
+/// 🧬️ Implements bounded native-owner cloning for a struct or enum.
+#[proc_macro_derive(RetainedClone)]
+pub fn derive_retained_clone(input: TokenStream) -> TokenStream {
+    let derive_input = parse_macro_input!(input as DeriveInput);
+    retained_clone::expand_retained_clone(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()
+}
+
+/// ♻️ Implements exact incremental retirement for every owned field of a struct or enum.
+#[proc_macro_derive(RetireOwned)]
+pub fn derive_retire_owned(input: TokenStream) -> TokenStream {
+    let derive_input = parse_macro_input!(input as DeriveInput);
+    retained_clone::expand_retire_owned(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()
 }

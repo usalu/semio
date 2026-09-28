@@ -5,7 +5,13 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../.
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("bun", ["test", resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.test.ts"), resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"), ...segments], { cwd: this.repoRoot });
+    runCmd("bun", [
+      "test",
+      resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.test.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts"),
+      ...segments,
+    ], { cwd: this.repoRoot });
   }
 }
 

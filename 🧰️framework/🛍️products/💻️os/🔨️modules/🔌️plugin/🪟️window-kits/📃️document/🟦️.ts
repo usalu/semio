@@ -1,12 +1,7 @@
 // #region 📄️DocumentWindowKit
 /// <reference types="vitest/importMeta" />
-/** @emoji 📄️ `@semio-tech/plugin-window-kits` — TS twin of Rust `DocumentWindowKit` (`framework.window.document`).
- * ⚠️ The Rust twin is deliberately still on the old `ui_wgpu::wgpu::UiNode` return type this wave (see
- * `🔌️plugin/🦀️.rs` `#region 🔖️WindowKits`'s own doc comment, ticket
- * SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers`) — this file gets ahead of it onto the
- * new semantic contract (`BuiltNode`) since nothing currently constrains the two to match
- * simultaneously and no production code calls `renderDocument` yet; re-verify parity once Rust migrates. */
-import type { BuiltNode, Component, LayoutSpec, StyleSpec, AccessibilitySpec } from "@semio-tech/framework";
+/** 📄️ Shared document view and addressed draft contracts for the semantic document window. */
+import type { BuiltNode, Component, LayoutSpec, StyleSpec, AccessibilitySpec, UiValue } from "@semio-tech/framework";
 
 /** 🆔️ Frozen kind id — twin of Rust `DocumentWindowKit::KIND_ID`. */
 export const DOCUMENT_WINDOW_KIND_ID = "framework.window.document";
@@ -26,6 +21,7 @@ export type EditableDocumentPage = {
   readonly pageIndex: number;
   readonly itemIndex: number;
   readonly text: string;
+  readonly arguments?: Readonly<Record<string, UiValue>>;
 };
 
 /** ✏️ Settings consumed by the shared explicit text-draft host. */
@@ -34,6 +30,7 @@ export type EditableDocumentDraft = {
   readonly item: number;
   readonly revision: string;
   readonly text: string;
+  readonly arguments: Readonly<Record<string, UiValue>>;
   readonly labels: { readonly apply: string; readonly discard: string; readonly cancel: string };
 };
 
@@ -46,11 +43,13 @@ export function documentTextRevision(text: string): string {
 
 /** ✏️ Produces one localized, prefilled document draft contract. */
 export function editableDocumentDraft(page: EditableDocumentPage, locale: "en" | "de"): EditableDocumentDraft {
+  const revision = documentTextRevision(page.text);
   return {
     page: page.pageIndex,
     item: page.itemIndex,
-    revision: documentTextRevision(page.text),
+    revision,
     text: page.text,
+    arguments: page.arguments === undefined ? { page: page.pageIndex, item: page.itemIndex, revision } : structuredClone(page.arguments),
     labels: locale === "de" ? { apply: "Anwenden", discard: "Verwerfen", cancel: "Abbrechen" } : { apply: "Apply", discard: "Discard", cancel: "Cancel" },
   };
 }

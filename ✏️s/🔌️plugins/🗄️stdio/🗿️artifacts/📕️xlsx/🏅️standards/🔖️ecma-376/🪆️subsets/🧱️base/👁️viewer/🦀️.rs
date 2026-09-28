@@ -20,14 +20,6 @@ pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", stand
 //#endregion 🔖️Dialect
 
 //#region 🔖️TableProjection
-/// 🧮 Read-only twin of the sibling mutation-capable surface's own cell-flattening helper — see
-/// that file's doc comment for the flattening rationale. Duplicated rather than shared (viewer
-/// purity).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
-    document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
-}
-
 /// 🔎 Read-only twin of the sibling mutation-capable surface's own cell-value renderer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
@@ -36,6 +28,7 @@ pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[St
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
         XlsxCellValue::InlineString(text) => text.clone(),
         XlsxCellValue::Boolean(flag) => flag.to_string(),
+        XlsxCellValue::Error(error) => error.clone(),
         XlsxCellValue::Formula { expr, cached } => match cached {
             Some(cached) => format!("={expr} ({})", render_xlsx_cell_value(cached, shared_strings)),
             None => format!("={expr}"),
@@ -98,9 +91,9 @@ impl ArtifactViewer for XlsxViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

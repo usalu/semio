@@ -3,19 +3,42 @@
 //! magic-shape sniff. Zip/OPC/XML byte-level work is never reimplemented here: it is reused from
 //! the shared `semio_s_artifact_stdio_zip::opc` layer.
 
-use super::super::super::{attr_val, column_index, column_letters_of, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT};
+use super::super::super::{
+    attribute_value, column_index, column_letters_of, element_matches, expanded_element_name, namespace_scope, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, R_NS, R_NS_STRICT, SML_NS,
+    SML_NS_STRICT,
+};
 use crate::{
-    schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
+    schema::snapshot::{xlsx_part_is_xml, XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook, XlsxXmlPart},
     XlsxSnapshot,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
+const SPREADSHEETML_NAMESPACES: [&str; 2] = [SML_NS, SML_NS_STRICT];
+const OFFICE_RELATIONSHIP_NAMESPACES: [&str; 2] = [R_NS, R_NS_STRICT];
+
+fn spreadsheet_root<'a>(doc: &'a XmlDocument, part: &str, local: &str) -> Result<(&'a XmlNode, Vec<(String, String)>, String), XlsxError> {
+    let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
+    let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
+    let scope = namespace_scope(&[], root);
+    if !element_matches(root, &scope, &SPREADSHEETML_NAMESPACES, local).map_err(&bad)? {
+        let actual = match root {
+            XmlNode::Element { name, .. } => expanded_element_name(name, &scope).map_err(&bad)?.1,
+            _ => return Err(bad("root is not an element".into())),
+        };
+        return Err(bad(format!("expected SpreadsheetML <{local}>, got <{actual}>")));
+    }
+    let XmlNode::Element { name, .. } = root else { unreachable!() };
+    let namespace = expanded_element_name(name, &scope).map_err(&bad)?.0;
+    Ok((root, scope, namespace))
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn collect_text(node: &XmlNode, out: &mut String) {
+fn collect_text(node: &XmlNode, parent_scope: &[(String, String)], namespace: &str, out: &mut String) -> Result<(), String> {
+    let scope = namespace_scope(parent_scope, node);
     if let XmlNode::Element { name, children, .. } = node {
-        if name == "t" {
+        if expanded_element_name(name, &scope)? == (namespace.into(), "t".into()) {
             for c in children {
                 if let XmlNode::Text { text } = c {
                     out.push_str(text);
@@ -23,28 +46,25 @@ fn collect_text(node: &XmlNode, out: &mut String) {
             }
         } else {
             for c in children {
-                collect_text(c, out);
+                collect_text(c, &scope, namespace, out)?;
             }
         }
     }
+    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn shared_strings_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
-    let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
-    let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
-    if name != "sst" {
-        return Err(bad(format!("expected <sst>, got <{name}>")));
-    }
+    let (root, root_scope, namespace) = spreadsheet_root(doc, part, "sst")?;
+    let XmlNode::Element { children, .. } = root else { unreachable!() };
     let mut out = Vec::new();
     for si in children {
-        if let XmlNode::Element { name, .. } = si {
-            if name == "si" {
-                let mut text = String::new();
-                collect_text(si, &mut text);
-                out.push(text);
-            }
+        let scope = namespace_scope(&root_scope, si);
+        if element_matches(si, &scope, &[namespace.as_str()], "si").map_err(&bad)? {
+            let mut text = String::new();
+            collect_text(si, &root_scope, &namespace, &mut text).map_err(&bad)?;
+            out.push(text);
         }
     }
     Ok(out)
@@ -60,26 +80,26 @@ struct SheetRef {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRef>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
-    let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
-    let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
-    if name != "workbook" {
-        return Err(bad(format!("expected <workbook>, got <{name}>")));
+    let (root, root_scope, namespace) = spreadsheet_root(doc, part, "workbook")?;
+    let XmlNode::Element { children, .. } = root else { unreachable!() };
+    let mut sheets_match = None;
+    for child in children {
+        let scope = namespace_scope(&root_scope, child);
+        if element_matches(child, &scope, &[namespace.as_str()], "sheets").map_err(&bad)? {
+            let XmlNode::Element { children, .. } = child else { unreachable!() };
+            sheets_match = Some((children, scope));
+            break;
+        }
     }
-    let sheets_el = children
-        .iter()
-        .find_map(|c| match c {
-            XmlNode::Element { name, children, .. } if name == "sheets" => Some(children),
-            _ => None,
-        })
-        .ok_or_else(|| bad("missing <sheets>".into()))?;
+    let (sheets_el, sheets_scope) = sheets_match.ok_or_else(|| bad("missing SpreadsheetML <sheets>".into()))?;
     let mut out = Vec::new();
     for s in sheets_el {
-        let XmlNode::Element { name, attrs, .. } = s else { continue };
-        if name != "sheet" {
+        let scope = namespace_scope(&sheets_scope, s);
+        if !element_matches(s, &scope, &[namespace.as_str()], "sheet").map_err(&bad)? {
             continue;
         }
-        let sheet_name = attr_val(attrs, "name").ok_or_else(|| bad("<sheet> missing name".into()))?.to_string();
-        let r_id = attr_val(attrs, "r:id").ok_or_else(|| bad("<sheet> missing r:id".into()))?.to_string();
+        let sheet_name = attribute_value(s, &scope, &[""], "name").map_err(&bad)?.ok_or_else(|| bad("<sheet> missing unprefixed name".into()))?.to_string();
+        let r_id = attribute_value(s, &scope, &OFFICE_RELATIONSHIP_NAMESPACES, "id").map_err(&bad)?.ok_or_else(|| bad("<sheet> missing namespaced relationship id".into()))?.to_string();
         out.push(SheetRef { name: sheet_name, r_id });
     }
     Ok(out)
@@ -88,35 +108,21 @@ fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRe
 
 //#region 🔖️WorksheetXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_v_text(children: &[XmlNode]) -> Option<String> {
-    children.iter().find_map(|c| match c {
-        XmlNode::Element { name, children, .. } if name == "v" => {
+fn child_text(children: &[XmlNode], parent_scope: &[(String, String)], namespace: &str, local: &str) -> Result<Option<String>, String> {
+    for child in children {
+        let scope = namespace_scope(parent_scope, child);
+        if element_matches(child, &scope, &[namespace], local)? {
+            let XmlNode::Element { children, .. } = child else { unreachable!() };
             let mut text = String::new();
-            for t in children {
-                if let XmlNode::Text { text: t } = t {
-                    text.push_str(t);
+            for node in children {
+                if let XmlNode::Text { text: value } = node {
+                    text.push_str(value);
                 }
             }
-            Some(text)
+            return Ok(Some(text));
         }
-        _ => None,
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_f_text(children: &[XmlNode]) -> Option<String> {
-    children.iter().find_map(|c| match c {
-        XmlNode::Element { name, children, .. } if name == "f" => {
-            let mut text = String::new();
-            for t in children {
-                if let XmlNode::Text { text: t } = t {
-                    text.push_str(t);
-                }
-            }
-            Some(text)
-        }
-        _ => None,
-    })
+    }
+    Ok(None)
 }
 
 /// 🔎️ Resolves a non-formula `<c>`'s value/cached-value given its `t` attribute (`None` =
@@ -126,36 +132,35 @@ fn find_f_text(children: &[XmlNode]) -> Option<String> {
 /// `InlineString` (a documented normalization: this union has no dedicated error/formula-string
 /// variant for a BARE cell — see `Formula.cached`, which IS typed, for the formula case).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+fn extract_typed_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+    let child_text = |local| child_text(children, cell_scope, namespace, local).map_err(|detail| XlsxError::Xml { part: part.into(), detail });
     match t {
         Some("s") => {
-            let v = find_v_text(children).ok_or_else(|| XlsxError::Xml { part: part.into(), detail: "t=\"s\" cell missing <v>".into() })?;
+            let v = child_text("v")?.ok_or_else(|| XlsxError::Xml { part: part.into(), detail: "t=\"s\" cell missing <v>".into() })?;
             let idx: usize = v.trim().parse().map_err(|_| XlsxError::Malformed(format!("cell in {part}: shared-string index {v:?} is not an integer")))?;
             if idx >= sst_len {
                 return Err(XlsxError::Malformed(format!("cell in {part}: shared-string index {idx} out of range ({sst_len} entries)")));
             }
             Ok(XlsxCellValue::SharedString(idx))
         }
-        Some("str") => Ok(XlsxCellValue::InlineString(find_v_text(children).unwrap_or_default())),
+        Some("str") => Ok(XlsxCellValue::InlineString(child_text("v")?.unwrap_or_default())),
         Some("inlineStr") => {
-            let is_children = children.iter().find_map(|c| match c {
-                XmlNode::Element { name, children, .. } if name == "is" => Some(children),
-                _ => None,
-            });
             let mut text = String::new();
-            if let Some(is_children) = is_children {
-                for c in is_children {
-                    collect_text(c, &mut text);
+            for child in children {
+                let scope = namespace_scope(cell_scope, child);
+                if element_matches(child, &scope, &[namespace], "is").map_err(|detail| XlsxError::Xml { part: part.into(), detail })? {
+                    collect_text(child, cell_scope, namespace, &mut text).map_err(|detail| XlsxError::Xml { part: part.into(), detail })?;
+                    break;
                 }
             }
             Ok(XlsxCellValue::InlineString(text))
         }
         Some("b") => {
-            let v = find_v_text(children).unwrap_or_default();
+            let v = child_text("v")?.unwrap_or_default();
             Ok(XlsxCellValue::Boolean(v.trim() == "1" || v.trim().eq_ignore_ascii_case("true")))
         }
-        Some("e") => Ok(XlsxCellValue::InlineString(find_v_text(children).unwrap_or_default())),
-        None | Some(_) => match find_v_text(children) {
+        Some("e") => Ok(XlsxCellValue::Error(child_text("v")?.unwrap_or_default())),
+        None | Some(_) => match child_text("v")? {
             Some(v) => v.trim().parse::<f64>().map(XlsxCellValue::Number).map_err(|_| XlsxError::Malformed(format!("cell in {part}: invalid numeric value {v:?}"))),
             None => Ok(XlsxCellValue::Empty),
         },
@@ -166,12 +171,13 @@ fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, pa
 /// cell (ECMA-376 §18.3.1.40); its `cached` is the SAME `<v>`/`t` pair, re-typed by
 /// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
-    if let Some(expr) = find_f_text(children) {
-        let cached = if find_v_text(children).is_some() { Some(Box::new(extract_typed_value(children, t, sst_len, part)?)) } else { None };
+fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+    if let Some(expr) = child_text(children, cell_scope, namespace, "f").map_err(|detail| XlsxError::Xml { part: part.into(), detail })? {
+        let cached =
+            if child_text(children, cell_scope, namespace, "v").map_err(|detail| XlsxError::Xml { part: part.into(), detail })?.is_some() { Some(Box::new(extract_typed_value(children, cell_scope, namespace, t, sst_len, part)?)) } else { None };
         return Ok(XlsxCellValue::Formula { expr, cached });
     }
-    extract_typed_value(children, t, sst_len, part)
+    extract_typed_value(children, cell_scope, namespace, t, sst_len, part)
 }
 
 /// 🌳 Flattens `<sheetData>`'s `<row>`-then-`<c>` nesting into `sheet.cells`'s sparse
@@ -181,34 +187,39 @@ fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, par
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
-    let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
-    let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
-    if name != "worksheet" {
-        return Err(bad(format!("expected <worksheet>, got <{name}>")));
+    let (root, root_scope, namespace) = spreadsheet_root(doc, part, "worksheet")?;
+    let XmlNode::Element { children, .. } = root else { unreachable!() };
+    let mut sheet_data_match = None;
+    for child in children {
+        let scope = namespace_scope(&root_scope, child);
+        if element_matches(child, &scope, &[namespace.as_str()], "sheetData").map_err(&bad)? {
+            let XmlNode::Element { children, .. } = child else { unreachable!() };
+            sheet_data_match = Some((children, scope));
+            break;
+        }
     }
-    let sheet_data = children
-        .iter()
-        .find_map(|c| match c {
-            XmlNode::Element { name, children, .. } if name == "sheetData" => Some(children),
-            _ => None,
-        })
-        .ok_or_else(|| bad("missing <sheetData>".into()))?;
+    let (sheet_data, sheet_data_scope) = sheet_data_match.ok_or_else(|| bad("missing SpreadsheetML <sheetData>".into()))?;
     let mut cells = Vec::new();
     for row_node in sheet_data {
-        let XmlNode::Element { name, attrs, children: row_children } = row_node else { continue };
-        if name != "row" {
+        let row_scope = namespace_scope(&sheet_data_scope, row_node);
+        let XmlNode::Element { children: row_children, .. } = row_node else { continue };
+        if !element_matches(row_node, &row_scope, &[namespace.as_str()], "row").map_err(&bad)? {
             continue;
         }
-        let row = attr_val(attrs, "r").ok_or_else(|| bad("<row> missing r".into()))?.parse::<u32>().map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
+        let row = attribute_value(row_node, &row_scope, &[""], "r").map_err(&bad)?.ok_or_else(|| bad("<row> missing unprefixed r".into()))?.parse::<u32>().map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
         for c_node in row_children {
-            let XmlNode::Element { name, attrs, children: c_children } = c_node else { continue };
-            if name != "c" {
+            let cell_scope = namespace_scope(&row_scope, c_node);
+            let XmlNode::Element { children: c_children, .. } = c_node else { continue };
+            if !element_matches(c_node, &cell_scope, &[namespace.as_str()], "c").map_err(&bad)? {
                 continue;
             }
-            let reference = attr_val(attrs, "r").ok_or_else(|| bad("<c> missing r".into()))?;
+            let reference = attribute_value(c_node, &cell_scope, &[""], "r").map_err(&bad)?.ok_or_else(|| bad("<c> missing unprefixed r".into()))?;
             let col = column_index(column_letters_of(reference)).ok_or_else(|| bad(format!("<c> r={reference:?} has no valid column-letter prefix")))?;
-            let t = attr_val(attrs, "t");
-            let value = extract_cell_value(c_children, t, sst_len, part)?;
+            if reference.trim_start_matches(|character: char| character.is_ascii_alphabetic()) != row.to_string() {
+                return Err(bad(format!("<c> r={reference:?} does not belong to row {row}")));
+            }
+            let t = attribute_value(c_node, &cell_scope, &[""], "t").map_err(&bad)?;
+            let value = extract_cell_value(c_children, &cell_scope, &namespace, t, sst_len, part)?;
             cells.push(XlsxCell { row, col, value });
         }
     }
@@ -218,25 +229,20 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
 
 //#region 🔖️Codec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
-    let opc = opc::decode_opc(data)?;
+pub fn project_snapshot_workbook(snapshot: &XlsxSnapshot) -> Result<XlsxWorkbook, XlsxError> {
     // 🏅️ Recognizes either the Transitional or Strict officeDocument relationship TYPE (see the
     // `REL_TYPE_OFFICE_DOCUMENT_STRICT` doc comment above) -- additive, doesn't change decode for
     // any existing Transitional package.
-    let workbook_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT)).ok_or(XlsxError::MissingWorkbookRelationship)?;
-    let workbook_bytes = opc.part_bytes(&workbook_path).ok_or_else(|| XlsxError::MissingPart(workbook_path.clone()))?;
-    let workbook_text = String::from_utf8(workbook_bytes.to_vec()).map_err(|_| XlsxError::Xml { part: workbook_path.clone(), detail: "not valid utf-8".into() })?;
-    let workbook_xml = xml_document_from_text(&workbook_text).map_err(|e| XlsxError::Xml { part: workbook_path.clone(), detail: e })?;
-    let sheet_refs = workbook_sheets_from_xml(&workbook_xml, &workbook_path)?;
+    let workbook_path = snapshot.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT)).ok_or(XlsxError::MissingWorkbookRelationship)?;
+    let workbook_xml = &snapshot.xml_part(&workbook_path).ok_or_else(|| XlsxError::MissingPart(workbook_path.clone()))?.document;
+    let sheet_refs = workbook_sheets_from_xml(workbook_xml, &workbook_path)?;
 
-    let workbook_rels = opc.relationships_for(&workbook_path);
+    let workbook_rels = snapshot.opc.relationships_for(&workbook_path);
     let shared_strings = match workbook_rels.iter().find(|r| r.rel_type == REL_TYPE_SHARED_STRINGS || r.rel_type == REL_TYPE_SHARED_STRINGS_STRICT) {
         Some(rel) => {
             let path = opc::resolve_relationship_target(&workbook_path, &rel.target);
-            let bytes = opc.part_bytes(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?;
-            let text = String::from_utf8(bytes.to_vec()).map_err(|_| XlsxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
-            let doc = xml_document_from_text(&text).map_err(|e| XlsxError::Xml { part: path.clone(), detail: e })?;
-            shared_strings_from_xml(&doc, &path)?
+            let doc = &snapshot.xml_part(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?.document;
+            shared_strings_from_xml(doc, &path)?
         }
         None => Vec::new(),
     };
@@ -246,27 +252,42 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     for sheet_ref in &sheet_refs {
         let rel = workbook_rels.iter().find(|r| r.id == sheet_ref.r_id).ok_or_else(|| XlsxError::Malformed(format!("sheet {:?} references unknown relationship id {}", sheet_ref.name, sheet_ref.r_id)))?;
         let path = opc::resolve_relationship_target(&workbook_path, &rel.target);
-        let bytes = opc.part_bytes(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?;
-        let text = String::from_utf8(bytes.to_vec()).map_err(|_| XlsxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
-        let doc = xml_document_from_text(&text).map_err(|e| XlsxError::Xml { part: path.clone(), detail: e })?;
-        let cells = worksheet_cells_from_xml(&doc, sst_len, &path)?;
+        let doc = &snapshot.xml_part(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?.document;
+        let cells = worksheet_cells_from_xml(doc, sst_len, &path)?;
         sheets.push(XlsxSheet { name: sheet_ref.name.clone(), cells });
     }
 
-    Ok(XlsxSnapshot::from_parts(opc, XlsxWorkbook { sheets, shared_strings }))
+    Ok(XlsxWorkbook { sheets, shared_strings })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
+    let mut opc = opc::decode_opc(data)?;
+    let mut xml_parts = Vec::new();
+    let mut binary_parts = Vec::new();
+    for part in std::mem::take(&mut opc.parts) {
+        if xlsx_part_is_xml(&part.path, &part.content_type) {
+            let text = String::from_utf8(part.bytes).map_err(|_| XlsxError::Xml { part: part.path.clone(), detail: "not valid utf-8".into() })?;
+            let document = xml_document_from_text(&text).map_err(|detail| XlsxError::Xml { part: part.path.clone(), detail })?;
+            xml_parts.push(XlsxXmlPart { path: part.path, content_type: part.content_type, document });
+        } else {
+            binary_parts.push(part);
+        }
+    }
+    opc.parts = binary_parts;
+    let snapshot = XlsxSnapshot::from_parts(opc, xml_parts);
+    snapshot.validate_authority()?;
+    Ok(snapshot)
 }
 //#endregion 🔖️Codec
 
 //#region 🔖️Sniff
-/// 🕵️ Real xlsx sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
-/// `xl/` — disambiguates from docx/pptx sharing the same zip magic and OPC shape.
+/// 🕵️ Real xlsx sniff: OPC-shaped bytes whose root officeDocument relationship resolves to a
+/// SpreadsheetML workbook content type, independent from the package author's chosen part path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
     let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
-    match path {
-        Some(path) => path.starts_with("xl/"),
-        None => false,
-    }
+    path.and_then(|path| opc.content_types.resolve(&path)).is_some_and(|content_type| content_type.contains("spreadsheetml.sheet.main"))
 }
 //#endregion 🔖️Sniff

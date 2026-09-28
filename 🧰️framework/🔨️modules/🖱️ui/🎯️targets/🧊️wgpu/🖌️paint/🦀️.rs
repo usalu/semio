@@ -450,7 +450,11 @@ fn retained_caret_step(value: &str, caret: usize, bounds: Rect, size: f32, align
 }
 
 fn retained_presence_step(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) -> RetainedNodePaintStep {
-    if retained_fixed_output(draw, |draw| presence_overlay(draw, bounds, theme, presence)).is_err() {
+    retained_presence_step_with_selection(draw, bounds, theme, presence, presence.selected)
+}
+
+fn retained_presence_step_with_selection(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence, selected: bool) -> RetainedNodePaintStep {
+    if retained_fixed_output(draw, |draw| presence_overlay(draw, bounds, theme, presence, selected)).is_err() {
         RetainedNodePaintStep::Fault
     } else {
         RetainedNodePaintStep::Complete
@@ -1018,7 +1022,7 @@ pub(crate) fn paint_node_step_with_driver(
             cursor.advance(1);
             return step;
         }
-        return match retained_presence_step(draw, bounds, theme, presence) {
+        return match retained_presence_step_with_selection(draw, bounds, theme, presence, node_selection_outline(&node.spec.0)) {
             RetainedNodePaintStep::Complete => cursor.finish(),
             step => step,
         };
@@ -1052,7 +1056,12 @@ pub(crate) fn paint_node_step_with_driver(
             }
             UiNode::Stack(stack) => {
                 if cursor.phase == 0 {
-                    let result = retained_fixed_output(draw, |draw| paint_stack_frame(stack, bounds, flags, theme, draw));
+                    let owns_chrome = tree.authored_tree_item(id).is_none() && tree.authored_tree_section(id).is_none();
+                    let result = retained_fixed_output(draw, |draw| {
+                        if owns_chrome {
+                            paint_stack_frame(stack, bounds, flags, theme, draw);
+                        }
+                    });
                     cursor.advance(1);
                     if result.is_err() {
                         RetainedNodePaintStep::Fault
@@ -1330,7 +1339,7 @@ pub(crate) fn paint_node_step_with_driver(
                         step => step,
                     }
                 }
-                _ => retained_presence_step(draw, bounds, theme, presence),
+                _ => retained_presence_step_with_selection(draw, bounds, theme, presence, node_selection_outline(&node.spec.0)),
             },
             UiNode::KeyValue(key_value) => {
                 if key_value.entries.len() > RETAINED_NODE_COLLECTION_ITEMS {
@@ -1768,7 +1777,7 @@ pub(crate) fn paint_node_step_with_driver(
                         RetainedNodePaintStep::Pending
                     }
                 } else if cursor.phase == 1 {
-                    match retained_text_node_step(slot.body_key.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                    match retained_text_node_step(slot.host_status.as_deref().unwrap_or(slot.body_key.as_str()), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                         RetainedNodePaintStep::Complete => {
                             cursor.advance(2);
                             RetainedNodePaintStep::Pending
@@ -2461,18 +2470,18 @@ fn sync_tree_item_drag_source(tree: &mut UiTree, parent: NodeId, item: &UiTreeIt
 /// outset accent ring for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
 /// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
 /// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
-fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) {
+fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence, selected: bool) {
     if presence.state == UiState::Disabled {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel.with_alpha(0.35));
     }
-    let ring_color = if presence.selected { theme.selected } else { theme.border_normal };
+    let ring_color = if selected { theme.selected } else { theme.border_normal };
     match presence.status {
         UiStatus::Loading => paint_loading_border(draw, bounds, ring_color, theme),
         UiStatus::Waiting => paint_waiting_border(draw, bounds, ring_color, theme),
         UiStatus::Finished => draw.push_finished_border([bounds.x, bounds.y, bounds.w, bounds.h], ring_color, theme.border_radius, theme.stroke_hairline),
         UiStatus::Idle => {}
     }
-    if presence.selected {
+    if selected {
         let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
         push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
     } else if presence.state == UiState::Previewed {
@@ -2487,6 +2496,11 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
         let turns = celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds);
         draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], celebrate_color(theme, turns), theme.border_radius, celebrate_stroke(theme, turns));
     }
+}
+
+/// ☑️ Checkbox selection represents checkedness, which is painted by the compact control itself.
+fn node_selection_outline(node: &UiNode) -> bool {
+    node.presence().selected && !matches!(node, UiNode::Toggle(toggle) if toggle.appearance == ui_contract::ToggleAppearance::Checkbox)
 }
 
 #[cfg(test)]
@@ -2522,7 +2536,7 @@ pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y
     let bounds = Rect::new(abs_x, abs_y, layout.width, layout.height);
     if matches!(presence.status, UiStatus::Loading | UiStatus::Waiting) {
         draw.push_solid([bounds.x + theme.padding_standard, bounds.y + theme.padding_standard, (bounds.w - theme.padding_standard * 2.0).max(0.0), (bounds.h - theme.padding_standard * 2.0).max(0.0)], theme.button_hover);
-        presence_overlay(draw, bounds, theme, presence);
+        presence_overlay(draw, bounds, theme, presence, node_selection_outline(&node.spec.0));
         return;
     }
     // 🖱️ Authored `presence.hover` (default false) composes with live pointer hover: every variant's
@@ -2574,7 +2588,7 @@ pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y
         }
         UiNode::ExternalSlot(slot) => paint_external_slot(slot, bounds, theme, atlas, draw),
     }
-    presence_overlay(draw, bounds, theme, presence);
+    presence_overlay(draw, bounds, theme, presence, node_selection_outline(&node.spec.0));
 }
 
 //#region 📶️Progress
@@ -3291,7 +3305,7 @@ fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Them
 #[cfg(test)]
 fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
-    draw_text_on(draw, atlas, &node.body_key, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
+    draw_text_on(draw, atlas, node.host_status.as_deref().unwrap_or(node.body_key.as_str()), bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
 }
 
 //#region 🖼️UiImageSources

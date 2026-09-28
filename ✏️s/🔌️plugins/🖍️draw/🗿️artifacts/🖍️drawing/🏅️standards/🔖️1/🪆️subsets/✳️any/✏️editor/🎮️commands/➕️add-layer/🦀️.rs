@@ -24,7 +24,7 @@ pub(crate) fn initialize_appearance(layer: &mut crate::DrawingLayerNode) {
     if attributes.fill.is_some() || attributes.stroke.is_some() { return; }
     if filled { attributes.fill=Some(FillStyle::Solid { color:[0.2,0.7,0.65,1.0] }); }
     else if text { attributes.fill=Some(FillStyle::Solid { color:[0.0,0.0,0.0,1.0] }); }
-    if outlined { attributes.stroke=Some(StrokeStyle { color:[0.1,0.15,0.2,1.0],width:2.0,cap:"round".into(),join:"round".into(),dash:None }); }
+    if outlined { attributes.stroke=Some(StrokeStyle { color:[0.1,0.15,0.2,1.0],width:2.0,cap: crate::StrokeCap::Round,join: crate::StrokeJoin::Round,dash:None }); }
 }
 
 pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) -> Result<crate::DrawingLayerNode, Fault> {

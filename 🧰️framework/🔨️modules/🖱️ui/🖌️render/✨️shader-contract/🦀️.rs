@@ -766,6 +766,10 @@ fn world3d_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
     return mix(display_linear, world3d_linear_to_srgb(display_linear), clamp(globals.shadow.w, 0.0, 1.0));
 }
 
+fn world3d_svg_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+    return world3d_linear_to_srgb(clamp(linear_rgb, vec3<f32>(0.0), vec3<f32>(1.0)));
+}
+
 fn world3d_interleaved_gradient_noise(position: vec2<f32>) -> f32 {
 return fract(52.9829189 * fract(dot(position, vec2<f32>(0.06711056, 0.00583715))));
 }
@@ -811,9 +815,24 @@ return indirect * base_color * (1.0 - metalness) * WORLD3D_RECIPROCAL_PI + direc
 }
 
 @fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {
 let n = normalize(in.normal);
 let v = normalize(globals.camera_position.xyz - in.world_position);
+if (globals.shadow.y > 0.5) {
+    if (!front_facing) {
+        discard;
+    }
+    var face_normal = normalize(cross(dpdx(in.world_position), dpdy(in.world_position)));
+    if (dot(face_normal, n) < 0.0) {
+        face_normal = -face_normal;
+    }
+    var svg_light = globals.ambient.rgb;
+    if (globals.material.w > 0.5) {
+        svg_light = svg_light + globals.sun.rgb * globals.sun.a * max(dot(face_normal, normalize(globals.light_dir.xyz)), 0.0);
+    }
+    let svg_color = svg_light * in.color.rgb + globals.material_emissive.rgb;
+    return vec4<f32>(world3d_svg_attachment_output(svg_color), in.color.a);
+}
 let metalness = clamp(in.flags.z, 0.0, 1.0);
 let normal_derivative = max(abs(dpdx(in.normal)), abs(dpdy(in.normal)));
 let geometry_roughness = max(max(normal_derivative.x, normal_derivative.y), normal_derivative.z);
@@ -948,9 +967,14 @@ let display_linear = world3d_output_transform(linear_rgb);
 return mix(display_linear, world3d_linear_to_srgb(display_linear), clamp(globals.shadow.w, 0.0, 1.0));
 }
 
+fn world3d_svg_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+return world3d_linear_to_srgb(clamp(linear_rgb, vec3<f32>(0.0), vec3<f32>(1.0)));
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-return vec4<f32>(world3d_attachment_output(in.color.rgb), in.color.a);
+let color = select(world3d_attachment_output(in.color.rgb), world3d_svg_attachment_output(in.color.rgb), globals.shadow.y > 0.5);
+return vec4<f32>(color, in.color.a);
 }
 "#;
 

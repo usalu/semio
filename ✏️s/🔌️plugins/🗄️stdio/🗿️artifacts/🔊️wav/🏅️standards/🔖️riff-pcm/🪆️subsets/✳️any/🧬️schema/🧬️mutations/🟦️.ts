@@ -18,15 +18,24 @@ export type WavData =
   | Readonly<{ kind: "float32"; value: readonly number[] }>
   | Readonly<{ kind: "raw"; value: readonly number[] }>;
 
-/** 📦️ Verbatim retained RIFF chunk outside `fmt ` and `data`. */
-export type RiffChunk = Readonly<{ fourcc: string; data: readonly number[] }>;
+/** 📦️ Verbatim retained auxiliary or duplicate canonical RIFF chunk. */
+export type RiffChunk = Readonly<{ fourcc: string; data: readonly number[]; padByte?: number }>;
+
+/** 🧭️ One position in the complete top-level RIFF/WAVE chunk sequence. */
+export type WavChunkRef =
+  | Readonly<{ kind: "format" }>
+  | Readonly<{ kind: "samples" }>
+  | Readonly<{ kind: "other"; value: number }>;
 
 /** 🧬️ Authoritative typed WAV snapshot shape used by aggregate mutations. */
 export type WavSnapshot = Readonly<{
-  schema: string;
+  schema: "stdio.wav";
   fmt: WavFmt;
   data: WavData;
+  fmtPadByte?: number;
+  dataPadByte?: number;
   otherChunks: readonly RiffChunk[];
+  chunkOrder: readonly WavChunkRef[];
 }>;
 
 /** 🧬️ WAV mutation aggregate, matching the native internally tagged union exactly. */

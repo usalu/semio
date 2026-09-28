@@ -1,0 +1,149 @@
+{
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        2,
+        2,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        4,
+        0,
+        0
+      ],
+      [
+        4,
+        2,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3
+      ],
+      [
+        1,
+        4,
+        5,
+        2
+      ]
+    ]
+  },
+  "valid": [
+    {
+      "ids": [
+        "panel@meshOut#0.face.0"
+      ],
+      "vertices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "pivot": [
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "ids": [
+        "panel@meshOut#0.face.1",
+        "panel@meshOut#0.face.0",
+        "panel@meshOut#0.face.1"
+      ],
+      "vertices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "pivot": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "ids": [
+        "panel@meshOut#0.edge.1",
+        "panel@meshOut#0.edge.7"
+      ],
+      "vertices": [
+        1,
+        2
+      ],
+      "pivot": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "ids": [
+        "panel@meshOut#0.edge.4"
+      ],
+      "vertices": [
+        1,
+        4
+      ],
+      "pivot": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "ids": [
+        "panel@meshOut#0.vertex.5",
+        "panel@meshOut#0.vertex.0"
+      ],
+      "vertices": [
+        0,
+        5
+      ],
+      "pivot": [
+        2,
+        1,
+        0
+      ]
+    }
+  ],
+  "invalid": [
+    [
+      "panel@meshOut#0.face.2"
+    ],
+    [
+      "panel@meshOut#0.edge.8"
+    ],
+    [
+      "panel@meshOut#0.vertex.6"
+    ],
+    [
+      "panel@meshOut#1.face.0"
+    ],
+    [
+      "panel@meshOut#0.face.4294967295"
+    ]
+  ]
+}

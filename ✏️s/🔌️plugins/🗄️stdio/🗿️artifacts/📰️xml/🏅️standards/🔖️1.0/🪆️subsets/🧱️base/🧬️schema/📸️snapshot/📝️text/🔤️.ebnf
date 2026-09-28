@@ -1,9 +1,11 @@
 (* ebnf stdio.xml snapshot -- the subset of XML 1.0 this codec actually parses/emits *)
-document = [declaration], [doctype], element, {misc} ;
+document = [declaration], {preRoot}, element, {misc} ;
+preRoot = misc | doctype ;
 declaration = "<?xml", sp, "version", eq, attValue, [sp, "encoding", eq, attValue], [sp, "standalone", eq, yesNo], [sp], "?>" ;
 yesNo = '"yes"' | '"no"' | "'yes'" | "'no'" ;
-doctype = "<!DOCTYPE", { character - ">" | bracketed }, ">" ;
-bracketed = "[", { character - "]" }, "]" ;
+doctype = "<!DOCTYPE", { doctypeQuoted | bracketed | character - (">" | "[" | "'" | '"') }, ">" ;
+doctypeQuoted = '"', { character - '"' }, '"' | "'", { character - "'" }, "'" ;
+bracketed = "[", { doctypeQuoted | character - "]" }, "]" ;
 eq = [sp], "=", [sp] ;
 misc = comment | pi | sp ;
 element = emptyElemTag | ( sTag, content, eTag ) ;

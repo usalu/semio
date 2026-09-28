@@ -110,8 +110,7 @@ pub mod derived_construction {
         /// materialized `word/document.xml`/relationship to find at all, and the shared `DocxAnyBuilder`
         /// this wraps doesn't materialize either until actual encode.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let mut snapshot = self.inner.build()?;
-            crate::standards::v_ecma_376::subsets::base::io::export::serializers::sync_main_part(&mut snapshot);
+            let snapshot = self.inner.build()?;
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -131,10 +130,10 @@ pub use derived_construction::*;
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    use crate::DocxSnapshot;
+    use crate::{DocxSnapshot, schema::snapshot::DocxXmlPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
+    use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -155,15 +154,15 @@ pub mod derived_analysis {
     /// relationship-type SUFFIX (`/officeDocument`) so this resolves for either conformance class; see
     /// `📏️strict::analyzer::main_document_part`'s doc comment for the full rationale.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn main_document_part(opc: &OpcPackage) -> Option<(&OpcPart, String)> {
-        let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
+    fn main_document_part(snapshot: &DocxSnapshot) -> Option<(&DocxXmlPart, String)> {
+        let rel = snapshot.opc.relationships_for("").iter().find(|relationship| relationship.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
-        opc.part(&path).map(|p| (p, path))
+        snapshot.xml_part(&path).map(|part| (part, path))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn part_contains(bytes: &[u8], needle: &str) -> bool {
-        !needle.is_empty() && bytes.windows(needle.len()).any(|w| w == needle.as_bytes())
+    fn part_contains(part: &DocxXmlPart, needle: &str) -> bool {
+        !needle.is_empty() && semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text(&part.document).contains(needle)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -185,20 +184,20 @@ pub mod derived_analysis {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_document_part(opc) {
+        match main_document_part(snapshot) {
             Some((part, path)) => {
-                if !part_contains(&part.bytes, TRANSITIONAL_MAIN_NS) {
+                if !part_contains(part, TRANSITIONAL_MAIN_NS) {
                     out.push(hard(CODE_MAIN_NS_MISSING, format!("main document part {path} does not declare the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS}")));
                 }
-                if part_contains(&part.bytes, "conformance=\"strict\"") {
+                if part_contains(part, "conformance=\"strict\"") {
                     out.push(soft(CODE_CONFORMANCE_ATTR, format!("main document part {path} root element declares conformance=\"strict\" -- transitional documents must leave it absent or =\"transitional\"")));
                 }
             }
             None => out.push(hard(CODE_MAIN_NS_MISSING, "package has no root officeDocument relationship -- cannot locate the main document part to check the transitional namespace on".into())),
         }
 
-        for part in &opc.parts {
-            if part_contains(&part.bytes, STRICT_NS_FAMILY_PREFIX) {
+        for part in &snapshot.xml_parts {
+            if part_contains(part, STRICT_NS_FAMILY_PREFIX) {
                 out.push(hard(CODE_STRICT_NS_PRESENT, format!("part {} contains a strict-family namespace ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids mixed namespaces", part.path)));
             }
         }

@@ -24,7 +24,7 @@ layer: pixelLayer | groupLayer | adjustmentLayer ;
 pixelLayer: 'pixel' SP id SP text SP bool SP number SP transformBlock SP maskBlock? SP number? SP number? SP ('blend=' text)? SP ('image=' id)? ;
 groupLayer: 'group' SP id SP text SP bool SP number SP transformBlock SP maskBlock? SP layer* SP ('blend=' text)? ;
 adjustmentLayer: 'adjustment' SP id SP text SP bool SP number SP transformBlock SP ('blend=' text)? SP ('kind=' text)? SP param* ;
-transformBlock: 'transform' '{' 'x=' number SP 'y=' number SP 'scale-x=' number SP 'scale-y=' number SP 'rotation=' number 'deg' '}' ;
+transformBlock: 'transform' '{' 'x=' number SP 'y=' number SP 'a=' number SP 'b=' number SP 'c=' number SP 'd=' number '}' ;
 maskBlock: 'mask' '{' 'enabled=' bool SP 'linked=' bool SP 'invert=' bool SP 'width=' number? SP 'height=' number? '}' ;
 param: IDENT '=' TEXT ;
 asset: '{' 'mime=' text 'data=' TEXT '}' ;

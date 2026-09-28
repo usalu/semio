@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing/frames.json",
+  "title": "Affine Coordinate Frame Change",
+  "description": "Express a local transform in a new parent frame without changing its world placement: inverse(target) × source × transform. Matrices use [a,b,c,d,tx,ty]. All inputs and output must be finite with finite inverses and absolute determinant at least 1e-12.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "target", "transform"],
+  "properties": {
+    "source": {"$ref": "#/$defs/affine"},
+    "target": {"$ref": "#/$defs/affine"},
+    "transform": {"$ref": "#/$defs/affine"}
+  },
+  "$defs": {"affine": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "number"}}}
+}

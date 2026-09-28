@@ -7,6 +7,54 @@
       "additionalProperties": false,
       "required": [
         "kind",
+        "points",
+        "delta"
+      ],
+      "properties": {
+        "kind": {
+          "const": "translate"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "point"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "point": {
+                "enum": [
+                  "anchor",
+                  "control1",
+                  "control2"
+                ]
+              }
+            }
+          }
+        },
+        "delta": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
         "index",
         "point",
         "to"
@@ -201,6 +249,44 @@
         "index": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "points"
+      ],
+      "properties": {
+        "kind": {
+          "const": "deletePoints"
+        },
+        "points": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "point"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "point": {
+                "enum": [
+                  "anchor",
+                  "control1",
+                  "control2"
+                ]
+              }
+            }
+          }
         }
       }
     }

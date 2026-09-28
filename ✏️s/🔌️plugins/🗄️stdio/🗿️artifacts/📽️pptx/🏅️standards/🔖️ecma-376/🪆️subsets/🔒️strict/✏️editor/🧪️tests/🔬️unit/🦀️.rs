@@ -1,4 +1,5 @@
 use super::*;
+use crate::schema::snapshot::PptxSlide;
 use semio_framework_plugin::app::DocumentWindowKit;
 
 #[semio_framework_async_macros::async_test]

@@ -41,6 +41,7 @@ impl Candidate {
 }
 
 fn prepare(command: &MaskFromSelection, document: &RasterSnapshot) -> Result<Candidate, Fault> {
+    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&command.layer_id,false).map_err(Fault::from)?;
     let Some(RasterLayerNode::Pixel { image_key, mask, width, height, .. }) = find_layer(&document.layers, &command.layer_id) else { return Err(Fault::from("raster.mask-requires-pixel-layer")); };
     if image_key != &command.expected_image_key { return Err(Fault::from("raster.mask-image-conflict")); }
     let (width,height) = if let Some(key) = image_key {
@@ -48,25 +49,7 @@ fn prepare(command: &MaskFromSelection, document: &RasterSnapshot) -> Result<Can
         (image.width,image.height)
     } else { (width.unwrap_or(512),height.unwrap_or(512)) };
     validate_extent(width,height).map_err(|_| Fault::from("raster.mask-extent-invalid"))?;
-    if command.selection.len() > 40000 { return Err(Fault::from("raster.mask-selection-budget")); }
-    let parsed = dsl::os_pack::json::parse(&command.selection).map_err(|_| Fault::from("raster.mask-selection-invalid"))?;
-    let values = parsed.as_array().ok_or_else(|| Fault::from("raster.mask-selection-invalid"))?;
-    let count = width as usize * height as usize;
-    let mut spans = Vec::with_capacity(values.len());
-    let mut previous = 0;
-    for value in values {
-        let triple = value.as_array().filter(|v| v.len()==3).ok_or_else(|| Fault::from("raster.mask-selection-invalid"))?;
-        let mut numbers = [0_usize;3];
-        for (index,value) in triple.iter().enumerate() {
-            let value = value.as_f64().ok_or_else(|| Fault::from("raster.mask-selection-invalid"))?;
-            if !value.is_finite() || value.fract()!=0.0 || value<0.0 || value>count.max(255) as f64 { return Err(Fault::from("raster.mask-selection-invalid")); }
-            numbers[index]=value as usize;
-        }
-        let [start,length,coverage]=numbers;
-        let end=start.checked_add(length).ok_or_else(|| Fault::from("raster.mask-selection-invalid"))?;
-        if start<previous || length==0 || end>count || coverage>255 { return Err(Fault::from("raster.mask-selection-invalid")); }
-        spans.push((start,end,coverage as u8));previous=end;
-    }
+    let spans=crate::editor::raster::selection::selection_spans(&command.selection,width as usize*height as usize)?;
     Ok(Candidate { layer_id:command.layer_id.clone(),expected_image_key:image_key.clone(),expected_mask:mask.clone(),image:RasterImage::new(width,height),spans,cursor:0,span:0 })
 }
 

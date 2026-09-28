@@ -484,6 +484,19 @@ export function wireDownloadMediaExport(effect: WireVariant): Extract<Effect, { 
   };
 }
 
+/** 📤️ Decodes the packed IconRenderExport item envelope shared by both browser renderers. */
+export function wireIconRenderExport(effect: WireVariant, decodePackValue: (bytes: Uint8Array) => unknown): Extract<Effect, { readonly iconRenderExport: unknown }> {
+  const value = (effect.val ?? {}) as Record<string, unknown>;
+  const items = decodePackValue(coerceWireBytes(value.items));
+  if (!Array.isArray(items)) throw new Error("icon-export.items-invalid");
+  return { iconRenderExport: { items: items.map((item: unknown) => {
+    if (item === null || typeof item !== "object" || Array.isArray(item)) throw new Error("icon-export.items-invalid");
+    const record = item as Record<string, unknown>;
+    if (typeof record.filename !== "string" || !Object.hasOwn(record, "request") || Object.keys(record).some((key) => key !== "filename" && key !== "request")) throw new Error("icon-export.items-invalid");
+    return { filename: record.filename, request: record.request };
+  }) } };
+}
+
 /** 🧵️ Decodes `spawn-job-effect` (`🔌️plugin/🧬️schema/📜️.wit`) without narrowing its u64 identity.
  * `job` IS the guest's parked request id, so a `number` here would mis-resolve a long-lived actor's
  * futures and the `start-job`/`step-job` door rejects one outright. `placement` crosses as a BARE
@@ -870,6 +883,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return { openExternalUrl: { url: str("url") } };
     case "download-media-export":
       return wireDownloadMediaExport(effect);
+    case "icon-render-export":
+      return wireIconRenderExport(effect, decodePackValue);
     case "spawn-job":
       return wireSpawnJob(effect);
     case "cancel-job":

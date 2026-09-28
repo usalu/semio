@@ -19,7 +19,7 @@ async fn render_binds_each_topic_cell_to_its_address_and_snapshot_revision() {
     let mut document = BcfSnapshot::default();
     document.topics.push(Default::default());
     document.topics[0].title = "Issue".into();
-    let node = render_revisioned(&document, "store-revision").expect("render table");
+    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render table");
     let Component::Surface(props) = node.component else { panic!("expected table surface") };
     let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode scene");
     let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("rows JSON");

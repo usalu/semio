@@ -20,7 +20,8 @@ pub struct SvgArtifact {
 //#region 🔖️Conversions
 impl Default for SvgArtifact {
     fn default() -> Self {
-        Self::from_snapshot(SvgSnapshot::default())
+        let snapshot = SvgSnapshot::default();
+        Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 }
 
@@ -33,15 +34,18 @@ impl SvgArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_snapshot(snapshot: SvgSnapshot) -> Self {
-        Self { schema: snapshot.schema, doc: snapshot.doc }
+    pub fn from_snapshot(snapshot: SvgSnapshot) -> Result<Self, String> {
+        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
+        Ok(Self { schema: snapshot.schema, doc: snapshot.doc })
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: SvgSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: SvgSnapshot) -> Result<(), String> {
+        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
+        Ok(())
     }
 }
 //#endregion 🔖️Conversions
@@ -485,6 +489,7 @@ pub mod derived_construction {
         /// produce a complete, valid SVG 1.1 document purely from typed calls.
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let mut snapshot = self.snapshot;
+            let mut diagnostics = self.diagnostics;
             let pending = self.elements.build();
             if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
                 if snapshot.doc.root.is_none() {
@@ -508,10 +513,13 @@ pub mod derived_construction {
                     }
                 }
             }
-            if self.diagnostics.is_empty() {
+            if let Err(error) = semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc) {
+                diagnostics.push(dsl::Diagnostic::error("stdio.svg.boundary", dsl::TextSpan::at(1, 1), error));
+            }
+            if diagnostics.is_empty() {
                 Ok(snapshot)
             } else {
-                Err(self.diagnostics)
+                Err(diagnostics)
             }
         }
     }
@@ -678,9 +686,15 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
     };
     let snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
+        doc: XmlDocument {
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
+            doctype: Some("<!DOCTYPE svg>".into()),
+            prolog: Vec::new(),
+            epilog: Vec::new(),
+            root: Some(root),
+        },
     };
-    let _text = crate::schema::snapshot::write_svg_xml(&snapshot.doc);
+    let _text = crate::schema::snapshot::write_svg_xml(&snapshot.doc).expect("valid demo SVG");
     snapshot
 }
 //#endregion 🔖️DocumentHelpers

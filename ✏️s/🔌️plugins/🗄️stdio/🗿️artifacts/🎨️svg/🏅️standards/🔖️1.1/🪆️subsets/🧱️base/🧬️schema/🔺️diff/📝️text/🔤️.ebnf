@@ -1,7 +1,8 @@
 (* 🧬️ Structured stdio.svg diff text; canonical productions live in component.grammar.semio. *)
-document = [ declaration ], [ doctype ], [ root ], [ prolog ] ;
+document = [ declaration ], [ doctype ], [ root ], [ prolog ], [ epilog ] ;
 declaration = "declaration=", structuredValue ;
 doctype = "doctype=", structuredValue ;
 root = "root=", structuredValue ;
 prolog = "prolog=", structuredValue ;
+epilog = "epilog=", structuredValue ;
 structuredValue = ? bracketed tagged XML/diff value defined by component.grammar.semio ? ;

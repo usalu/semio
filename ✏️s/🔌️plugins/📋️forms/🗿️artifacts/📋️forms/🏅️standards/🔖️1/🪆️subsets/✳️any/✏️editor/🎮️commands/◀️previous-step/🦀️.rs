@@ -18,7 +18,7 @@ pub(crate) fn handle_window(payload: &PreviousStep, config: &FormsTryWindowConfi
     if payload.window_id.is_empty() || payload.window_kind_id != crate::editor::forms::modes::blueprint::windows::try_wizard::FORMS_PLAY_WINDOW_TRY {
         return Err(Fault::from("forms-previous-step-window-required"));
     }
-    Ok(FormsTryWindowConfig { current_step_index: config.current_step_index.saturating_sub(1) })
+    Ok(FormsTryWindowConfig { current_step_index: config.current_step_index.saturating_sub(1), ..config.clone() })
 }
 
 pub fn handle(_payload: &PreviousStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {

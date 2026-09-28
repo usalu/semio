@@ -45,8 +45,8 @@ async fn an_absent_stroke_becomes_the_committed_dashed_one() {
     assert_eq!(before_attributes.stroke, None, "adds-a-dashed-stroke's before-snapshot must start with no stroke at all");
     let stroke = after_attributes.stroke.expect("replace-layer-stroke must install the payload's stroke");
     assert_eq!(stroke.width, 2.0, "the stroke width comes from the payload");
-    assert_eq!(stroke.cap, "round", "the stroke cap comes from the payload");
-    assert_eq!(stroke.join, "bevel", "the stroke join comes from the payload");
+    assert_eq!(stroke.cap, crate::StrokeCap::Round, "the stroke cap comes from the payload");
+    assert_eq!(stroke.join, crate::StrokeJoin::Bevel, "the stroke join comes from the payload");
     assert_eq!(stroke.dash, Some(vec![4.0, 2.0]), "the optional dash pattern must survive verbatim");
     assert_eq!(after_attributes.fill, before_attributes.fill, "installing a stroke must not disturb the fill");
 }

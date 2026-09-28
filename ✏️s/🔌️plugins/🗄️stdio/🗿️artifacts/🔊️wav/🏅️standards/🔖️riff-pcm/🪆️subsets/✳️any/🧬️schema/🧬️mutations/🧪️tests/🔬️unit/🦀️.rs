@@ -15,7 +15,7 @@ fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
         WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
         WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
         WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
-        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2] }] }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2], pad_byte: 0 }] }),
     ]
 }
 
@@ -119,5 +119,34 @@ async fn text_descriptor_recognizes_every_printer_variant() {
     for mutation in variants(&base) {
         let printed = mutation.print_op();
         assert!(recognizer.recognize(&printed).unwrap_or(false), "WAV mutation grammar did not recognize {printed:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let invalid_even_pad = fixture["invalidEvenPadByte"].as_u64().expect("invalidEvenPadByte") as u8;
+    let overflow_ext = fixture["overflowFmtExtensionBytes"].as_u64().expect("overflowFmtExtensionBytes") as usize;
+    let valid_fourcc = fixture["validFourcc"].as_str().expect("validFourcc");
+    let invalid_fourcc = fixture["invalidFourcc"].as_str().expect("invalidFourcc");
+    let invalid_snapshots = [
+        WavSnapshot { fmt_pad_byte: invalid_even_pad, ..base_snapshot() },
+        WavSnapshot { data_pad_byte: invalid_even_pad, ..base_snapshot() },
+        WavSnapshot {
+            other_chunks: vec![RiffChunk { fourcc: valid_fourcc.into(), data: vec![1, 2], pad_byte: invalid_even_pad }],
+            ..base_snapshot()
+        },
+        WavSnapshot { fmt: WavFmt { ext: Some(vec![0; overflow_ext]), ..WavFmt::default() }, ..base_snapshot() },
+        WavSnapshot {
+            other_chunks: vec![RiffChunk { fourcc: invalid_fourcc.into(), data: vec![1], pad_byte: 0 }],
+            ..base_snapshot()
+        },
+    ];
+    for invalid in invalid_snapshots {
+        let mut current = base_snapshot();
+        let outcome = apply_wav_mutation(&mut current, &WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: invalid }));
+        assert!(!outcome.messages().is_empty(), "unrepresentable mutation must report a diagnostic");
+        assert!(outcome.diff().is_empty(), "unrepresentable mutation must carry an empty diff");
+        assert_eq!(current, base_snapshot(), "unrepresentable mutation must leave the document unchanged");
     }
 }

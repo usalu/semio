@@ -11,6 +11,7 @@
 //! `fn` wholesale rather than tagging each one individually.
 
 pub use semio_framework_geometry::{Mat4, Vec3};
+use serde::{Deserialize, Serialize};
 use semio_framework_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant,
     Viewport3dAxonometricVariant, Viewport3dObliqueVariant,
@@ -674,8 +675,10 @@ pub fn frame_projection_orbit_to_bounds(orbit: &OrbitController, orientation: Wo
     OrbitController { target: center, zoom: world_projection_ortho_zoom(half_width, half_height, width, height, padding.max(1.0)), ..orbit.clone() }
 }
 
-/// 📷️ Frames a parallel camera from the complete viewport projection spec.
-pub fn frame_projection_orbit_to_spec_bounds(orbit: &OrbitController, spec: Viewport3dProjectionSpec, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, padding: f32) -> OrbitController {
+/// 📷️ Frames a camera from the complete viewport projection spec, matching React's
+/// `frameWorldProjectionPose`: the spec owns look direction, up, family and FOV; content owns target,
+/// distance and, for a parallel family, the viewport-aware zoom.
+pub fn frame_projection_orbit_to_spec_bounds(_orbit: &OrbitController, spec: Viewport3dProjectionSpec, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, padding: f32) -> OrbitController {
     let center = vec3_new_m((minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5);
     let [hx, hy, hz] = [0, 1, 2].map(|axis| (maximum[axis] - minimum[axis]) * 0.5);
     let plane = match spec.orientation {
@@ -688,7 +691,22 @@ pub fn frame_projection_orbit_to_spec_bounds(orbit: &OrbitController, spec: View
             (span, span)
         }
     };
-    OrbitController { target: center, zoom: world_projection_ortho_zoom(plane.0, plane.1, width, height, padding.max(1.0)), ..orbit.clone() }
+    let padding = padding.max(1.0);
+    let span = plane.0.max(plane.1) * 2.0 * padding;
+    let distance = (span * 1.5).max(2.0);
+    let (direction, up) = projection_spec_orientation_look(spec);
+    let direction = direction.normalize_m();
+    let projection = projection_spec_family(spec);
+    OrbitController {
+        target: center,
+        distance,
+        yaw: direction.y.atan2(direction.x),
+        pitch: direction.z.clamp(-1.0, 1.0).asin(),
+        fov_y: projection_spec_fov_degrees(spec).to_radians(),
+        projection,
+        zoom: if projection.is_parallel() { world_projection_ortho_zoom(plane.0, plane.1, width, height, padding) } else { 1.0 },
+        up,
+    }
 }
 
 /// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
@@ -1141,7 +1159,15 @@ pub fn mesh3d_write_edge(token: Mesh3dWriteToken, value: [[f32; 3]; 2]) -> Resul
     for (index, value) in value.into_iter().flatten().enumerate() {
         bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
     }
-    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(Mesh3dField::Edges, &bytes)?;
+    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing(token)?;
+    owner.write(Mesh3dField::Edges, &bytes)?;
+    for point in value {
+        for (axis, coordinate) in point.into_iter().enumerate() {
+            owner.aabb_min[axis] = owner.aabb_min[axis].min(coordinate);
+            owner.aabb_max[axis] = owner.aabb_max[axis].max(coordinate);
+        }
+    }
     Ok(())
 }
 
@@ -1465,12 +1491,81 @@ pub enum SceneMaterialKind3d {
     Standard,
     Painted { texture_key: String },
     Celebration { stops: [[f32; 4]; 3], angle: f32 },
+    Authored(SceneAuthoredMaterial3d),
+}
+
+impl SceneMaterialKind3d {
+    pub fn texture_key(&self) -> Option<&str> {
+        match self {
+            Self::Painted { texture_key } => Some(texture_key),
+            Self::Authored(material) => material.base_color_texture.as_deref(),
+            Self::Standard | Self::Celebration { .. } => None,
+        }
+    }
+
+    pub fn texture_key_mut(&mut self) -> Option<&mut String> {
+        match self {
+            Self::Painted { texture_key } => Some(texture_key),
+            Self::Authored(material) => material.base_color_texture.as_mut(),
+            Self::Standard | Self::Celebration { .. } => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SceneMaterialAlpha3d {
+    Opaque,
+    Mask,
+    Blend,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SceneTextureWrap3d {
+    ClampToEdge,
+    Repeat,
+    MirrorRepeat,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SceneTextureFilter3d {
+    Nearest,
+    Linear,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SceneTextureSampler3d {
+    pub wrap_u: SceneTextureWrap3d,
+    pub wrap_v: SceneTextureWrap3d,
+    pub mag_filter: SceneTextureFilter3d,
+    pub min_filter: SceneTextureFilter3d,
+}
+
+impl Default for SceneTextureSampler3d {
+    fn default() -> Self {
+        Self { wrap_u: SceneTextureWrap3d::Repeat, wrap_v: SceneTextureWrap3d::Repeat, mag_filter: SceneTextureFilter3d::Linear, min_filter: SceneTextureFilter3d::Linear }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SceneAuthoredMaterial3d {
+    pub base_color: [f32; 4],
+    pub emissive: [f32; 3],
+    pub metalness: f32,
+    pub roughness: f32,
+    pub alpha: SceneMaterialAlpha3d,
+    pub alpha_cutoff: f32,
+    pub double_sided: bool,
+    pub preserve_vertex_color: bool,
+    pub base_color_texture: Option<String>,
+    pub texture_sampler: SceneTextureSampler3d,
 }
 
 #[derive(Clone, Debug)]
 pub struct SceneMaterialDraw3d {
     pub mesh_key: String,
     pub mesh_version: u64,
+    pub first_index: u32,
+    pub index_count: u32,
     pub instances: Vec<Instance3d>,
     pub material: SceneMaterialKind3d,
     pub translucent: bool,
@@ -1556,6 +1651,9 @@ impl Default for SceneShadow3d {
 #[derive(Clone, Debug, Default)]
 pub struct ScenePass3d {
     pub viewport: [f32; 4],
+    pub viewport_mask: SceneViewportMask3d,
+    pub render_profile: SceneRenderProfile3d,
+    pub clear_color: Option<[f32; 4]>,
     pub view_proj: [f32; 16],
     pub camera_position: [f32; 3],
     pub light_dir: [f32; 3],
@@ -1573,6 +1671,24 @@ pub struct ScenePass3d {
     pub ui_watermark: usize,
     pub vector_watermark: usize,
     pub curvilinear: Option<SceneCurvilinear3d>,
+}
+
+/// 🎨️ Lighting/output profile owned by one accepted 3D scene pass.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SceneRenderProfile3d {
+    #[default]
+    RasterPbr,
+    SvgFlatLit,
+}
+
+/// 🎭️ Shape that admits a completed 3D scene inside its physical viewport.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SceneViewportMask3d {
+    #[default]
+    Rectangle,
+    Ellipse,
 }
 
 /// 🐟️ Image-space remap owned by one accepted 3D scene pass.

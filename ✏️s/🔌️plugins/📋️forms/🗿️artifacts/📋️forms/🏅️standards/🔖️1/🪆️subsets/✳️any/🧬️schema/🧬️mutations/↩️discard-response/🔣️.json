@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↩️discard-response",
+  "semanticKind": "discard-response",
+  "displayName": "Retract Response",
+  "emoji": "↩️",
+  "aggregateVariant": "DiscardResponse",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "discard-response",
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "layer-1",
+      "target": {
+        "granularity": "layer",
+        "id": "layer-1"
+      }
+    },
+    {
+      "id": "Ebene 🖼️",
+      "target": {
+        "granularity": "layer",
+        "id": "Ebene 🖼️"
+      }
+    },
+    {
+      "id": "quoted\"layer\\id",
+      "target": {
+        "granularity": "layer",
+        "id": "quoted\"layer\\id"
+      }
+    }
+  ],
+  "invalid": [
+    ""
+  ]
+}

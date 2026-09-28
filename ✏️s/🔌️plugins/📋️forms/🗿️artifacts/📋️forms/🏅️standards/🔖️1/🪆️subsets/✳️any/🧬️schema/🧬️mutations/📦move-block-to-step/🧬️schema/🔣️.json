@@ -5,19 +5,19 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "blockId",
+    "block_id",
     "index",
-    "stepId",
-    "toStepId"
+    "step_id",
+    "to_step_id"
   ],
   "properties": {
-    "stepId": {
+    "step_id": {
       "type": "string"
     },
-    "blockId": {
+    "block_id": {
       "type": "string"
     },
-    "toStepId": {
+    "to_step_id": {
       "type": "string"
     },
     "index": {

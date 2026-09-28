@@ -87,7 +87,7 @@ function componentTextBytes(component: Component): number {
     case "extension":
       return utf8ByteLength(component.extension);
     case "table":
-      return utf8ByteLength(component.label) + component.columns.reduce((sum, column) => sum + utf8ByteLength(column), 0) + labelBytes(component.actionsLabel);
+      return utf8ByteLength(component.label) + component.columns.reduce((sum, column) => sum + utf8ByteLength(column), 0) + labelBytes(component.rowLabel) + labelBytes(component.columnLabel) + labelBytes(component.actionsLabel);
     case "tableRow":
       return component.cells.reduce((sum, cell) => sum + utf8ByteLength(cell), 0);
     case "separator":

@@ -20,6 +20,13 @@ test("path node editing matches shared cases and independent geometry", () => {
     const rounded = (value: unknown) => JSON.parse(JSON.stringify(value, (_, field) => typeof field === "number" ? Number(field.toFixed(10)) : field));
     expect(rounded(result)).toEqual(rounded(item.after));
     expect(editPath(editPath(result, { kind: "reverse" }), { kind: "reverse" })).toEqual(result);
+    if (item.name === "delete-cubic-handles") {
+      const curve = result[1];
+      if (curve?.kind !== "cubic") throw new Error("Missing cubic");
+      const oracle = new CubicBezierCurve(new Vector2(0,0),new Vector2(...curve.ctrl1),new Vector2(...curve.ctrl2),new Vector2(...curve.to));
+      expect(oracle.getLength()).toBeCloseTo(new LineCurve(new Vector2(0,0),new Vector2(12,0)).getLength(),10);
+      expect(produce(before,draft => {const segment=draft[1];if(segment?.kind==="cubic"){segment.ctrl1=[0,0];segment.ctrl2=[12,0];}})).toEqual(result);
+    }
     if (item.name === "edit-control") {
       const oracle = produce(before, draft => { if (draft[1]?.kind === "cubic") draft[1].ctrl1[1] = 18; });
       expect(result).toEqual(oracle);
@@ -169,5 +176,81 @@ test("node pointer deltas stay correct through affine ancestors without snapping
     const oracle=world.add(new Vector2(dx,dy)).applyMatrix3(matrix.clone().invert());
     expect(result![0]).toBeCloseTo(oracle.x,12);expect(result![1]).toBeCloseTo(oracle.y,12);
     expect(dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.start as Point,false)).toEqual(local);
+  }
+});
+
+import { patchPathPoint } from "../../🟦️.ts";
+test("gesture position previews copy at most the edited segment and its adjacent tangent",()=>{
+  for(const row of fixture.filter(row=>row.name.startsWith("position-") && !("error" in row))) {
+    const source=row.before as PathSegment[], saved=structuredClone(source), operation=row.operation as Extract<PathEdit,{kind:"position"}>;
+    const patch=patchPathPoint(source[operation.index]!,source[operation.index+1],operation.point,operation.to);
+    const preview=produce(source,draft=>{draft[operation.index]=patch[0];if(patch[1])draft[operation.index+1]=patch[1];});
+    expect(preview).toEqual(row.after);
+    expect(preview).toEqual(editPath(source,operation));
+    expect(source).toEqual(saved);
+    expect(()=>patchPathPoint(source[operation.index]!,source[operation.index+1],operation.point,[Infinity,0])).toThrow();
+  }
+  expect(()=>patchPathPoint({kind:"close"},undefined,"anchor",[0,0])).toThrow();
+  expect(()=>patchPathPoint({kind:"line",to:[0,0]},undefined,"control1",[0,0])).toThrow();
+});
+
+import pointHits from "../../🧫️fixtures/🎯️point-hit/🔣️.json";
+import { pathPointHit } from "../../🟦️.ts";
+test("node picking names the nearest visible point with deterministic anchor priority",()=>{
+  for(const row of pointHits) {
+    const segment=row.segment as PathSegment, matrix=row.matrix as Matrix;
+    const result=pathPointHit(segment,matrix,row.world as Point,row.tolerance);
+    expect(result?.point??null).toBe(row.point);
+    const candidates=segment.kind==="close"?[]:[{point:"anchor",to:segment.to},...(segment.kind==="quad"?[{point:"control1",to:segment.ctrl}]:segment.kind==="cubic"?[{point:"control1",to:segment.ctrl1},{point:"control2",to:segment.ctrl2}]:[])];
+    const [a,b,c,d,e,f]=matrix,affine=new Matrix3().set(a,c,e,b,d,f,0,0,1);
+    const oracle=candidates.map(candidate=>({...candidate,distance:new Vector2(...candidate.to).applyMatrix3(affine).distanceTo(new Vector2(...row.world))})).filter(candidate=>candidate.distance<=row.tolerance).sort((a,b)=>a.distance-b.distance)[0];
+    expect(result?.point??null).toBe(oracle?.point??null);
+    if(result)expect(result.distance).toBeCloseTo(oracle!.distance,12);
+    expect(pathPointHit(segment,matrix,row.world as Point,-1)).toBeNull();
+  }
+});
+
+import translationFixture from "../../🧫️fixtures/↔️points/🔣️.json";
+
+test("multi-point translation is atomic, order-independent and agrees with Three vectors", () => {
+  const validate=new Ajv({strict:true}).compile(schema);
+  for(const row of translationFixture) {
+    const source=row.before as PathSegment[],saved=structuredClone(source),operation=row.operation as PathEdit;
+    expect(validate(operation)).toBe(true);
+    if("error" in row) { expect(()=>editPath(source,operation)).toThrow(); expect(source).toEqual(saved); continue; }
+    const actual=editPath(source,operation);
+    expect(actual).toEqual(row.after);
+    expect(source).toEqual(saved);
+    const oracle=structuredClone(source) as unknown as Record<string,unknown>[];
+    for(const [index,field] of row.moved) {
+      const segment=oracle[index as number]!,coordinate=segment[field as string] as [number,number];
+      segment[field as string]=new Vector2(...coordinate).add(new Vector2(...row.operation.delta as [number,number])).toArray();
+    }
+    expect(actual).toEqual(oracle as unknown as PathSegment[]);
+    expect(editPath(source,{...row.operation,points:[...row.operation.points].reverse()} as PathEdit)).toEqual(actual);
+    expect(editPath(actual,{...row.operation,delta:row.operation.delta.map(value=>-value)} as PathEdit)).toEqual(source);
+  }
+});
+
+test("multi-point translation rejects empty selection, invalid indices and nonfinite deltas", () => {
+  const source:PathSegment[]=[{kind:"move",to:[0,0]}];
+  const valid={kind:"translate",points:[{index:0,point:"anchor"}],delta:[1,2]};
+  const invalid=[{...valid,points:[]},{...valid,points:[{index:-1,point:"anchor"}]},{...valid,points:[{index:0.5,point:"anchor"}]},{...valid,points:[{index:0,point:"unknown"}]},{...valid,delta:[Infinity,0]},{...valid,delta:[NaN,0]},{...valid,delta:[1]}];
+  const validate=new Ajv({strict:true}).compile(schema);
+  for(const operation of invalid) { expect(validate(operation)).toBe(false); expect(()=>editPath(source,operation as PathEdit)).toThrow(); }
+  expect(source).toEqual([{kind:"move",to:[0,0]}]);
+});
+
+import worldTranslationFixture from "../../🧫️fixtures/🌍️translation/🔣️.json";
+import { translateWorldPathPoints } from "../../🟦️.ts";
+
+test("world point nudges ignore translation and honor the complete affine basis",()=>{
+  for(const row of worldTranslationFixture) {
+    const source=structuredClone(row.segments) as PathSegment[],points=row.points as import("../../🟦️.ts").PathPointRef[];
+    if(!row.after){expect(()=>translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number])).toThrow();continue;}
+    const actual=translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number]);
+    expect(actual).toEqual(row.after);expect(source).toEqual(row.segments);
+    const [a,b,c,d]=row.matrix,local=new Vector2(...row.delta as [number,number]).applyMatrix3(new Matrix3().set(a!,c!,0,b!,d!,0,0,0,1).invert());
+    expect(actual).toEqual(editPath(source,{kind:"translate",points,delta:[local.x,local.y]}));
   }
 });

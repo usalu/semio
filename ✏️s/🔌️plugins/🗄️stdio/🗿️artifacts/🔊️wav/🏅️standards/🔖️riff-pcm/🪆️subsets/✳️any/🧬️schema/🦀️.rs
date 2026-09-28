@@ -1,7 +1,7 @@
 //! 🧬️ WavArtifact schema — full artifact state, mirrors `WavSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -15,8 +15,17 @@ pub struct WavArtifact {
     #[state(artifact)]
     pub data: WavData,
     #[state(artifact)]
+    #[value(default, skip_serializing_if = "crate::standards::riff_pcm::subsets::any::schema::snapshot::is_zero_byte")]
+    pub fmt_pad_byte: u8,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "crate::standards::riff_pcm::subsets::any::schema::snapshot::is_zero_byte")]
+    pub data_pad_byte: u8,
+    #[state(artifact)]
     #[value(default)]
     pub other_chunks: Vec<RiffChunk>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub chunk_order: Vec<WavChunkRef>,
 }
 
 impl Default for WavArtifact {
@@ -28,18 +37,21 @@ impl Default for WavArtifact {
 impl WavArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> WavSnapshot {
-        WavSnapshot { schema: self.schema.clone(), fmt: self.fmt.clone(), data: self.data.clone(), other_chunks: self.other_chunks.clone() }
+        WavSnapshot { schema: self.schema.clone(), fmt: self.fmt.clone(), data: self.data.clone(), fmt_pad_byte: self.fmt_pad_byte, data_pad_byte: self.data_pad_byte, other_chunks: self.other_chunks.clone(), chunk_order: self.chunk_order.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: WavSnapshot) -> Self {
-        Self { schema: snapshot.schema, fmt: snapshot.fmt, data: snapshot.data, other_chunks: snapshot.other_chunks }
+        Self { schema: snapshot.schema, fmt: snapshot.fmt, data: snapshot.data, fmt_pad_byte: snapshot.fmt_pad_byte, data_pad_byte: snapshot.data_pad_byte, other_chunks: snapshot.other_chunks, chunk_order: snapshot.chunk_order }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: WavSnapshot) {
         self.schema = snapshot.schema;
         self.fmt = snapshot.fmt;
         self.data = snapshot.data;
+        self.fmt_pad_byte = snapshot.fmt_pad_byte;
+        self.data_pad_byte = snapshot.data_pad_byte;
         self.other_chunks = snapshot.other_chunks;
+        self.chunk_order = snapshot.chunk_order;
     }
 }
 

@@ -10,6 +10,9 @@ semio_framework_plugin::app_labels! {
         window_builder: native_en "Builder", native_de "Builder", reuse_en "Builder", reuse_de "Builder";
         mode_builder: native_en "Builder", native_de "Builder", reuse_en "Builder", reuse_de "Builder";
         kind_arg: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        files_root: native_en "Playbook", native_de "Playbook", reuse_en "Playbook", reuse_de "Playbook";
+        files_step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+        files_block: native_en "Block", native_de "Baustein", reuse_en "Block", reuse_de "Baustein";
     }
 }
 //#endregion 🔖️Labels

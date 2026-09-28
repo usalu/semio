@@ -1,0 +1,380 @@
+[
+  {
+    "name": "rotated-sheared-parent",
+    "operation": "alignLeft",
+    "ids": [
+      "a",
+      "b",
+      "c"
+    ],
+    "nodes": [
+      {
+        "id": "group",
+        "transform": {
+          "x": 100,
+          "y": 10,
+          "rotation": 1.5707963267948966,
+          "scaleX": 2,
+          "scaleY": 3,
+          "shear": 1
+        },
+        "children": [
+          {
+            "id": "a",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "id": "b",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ],
+            "transform": {
+              "x": 20,
+              "y": 20
+            }
+          },
+          {
+            "id": "c",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ],
+            "transform": {
+              "x": 40,
+              "y": 5
+            }
+          }
+        ]
+      }
+    ],
+    "after": {
+      "a": [
+        10,
+        10,
+        30,
+        30
+      ],
+      "b": [
+        10,
+        70,
+        30,
+        30
+      ],
+      "c": [
+        10,
+        95,
+        30,
+        30
+      ]
+    }
+  },
+  {
+    "name": "different-reflected-parents",
+    "operation": "alignBottom",
+    "ids": [
+      "a",
+      "b",
+      "c"
+    ],
+    "nodes": [
+      {
+        "id": "first",
+        "transform": {
+          "x": 100,
+          "y": 10,
+          "rotation": 1.5707963267948966,
+          "scaleX": 2,
+          "scaleY": 3,
+          "shear": 1
+        },
+        "children": [
+          {
+            "id": "a",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "transform": {
+          "x": -20,
+          "y": 30,
+          "scaleX": -2,
+          "scaleY": 0.5,
+          "shear": 1
+        },
+        "children": [
+          {
+            "id": "b",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "rect": [
+          20,
+          80,
+          10,
+          10
+        ]
+      }
+    ],
+    "after": {
+      "a": [
+        70,
+        60,
+        30,
+        30
+      ],
+      "b": [
+        -40,
+        85,
+        30,
+        5
+      ],
+      "c": [
+        20,
+        80,
+        10,
+        10
+      ]
+    }
+  },
+  {
+    "name": "selected-ancestor-moves-child-once",
+    "operation": "alignLeft",
+    "ids": [
+      "group",
+      "a",
+      "b"
+    ],
+    "nodes": [
+      {
+        "id": "group",
+        "transform": {
+          "x": 50,
+          "y": 20,
+          "scaleX": 2,
+          "scaleY": 3
+        },
+        "children": [
+          {
+            "id": "a",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "rect": [
+          0,
+          0,
+          10,
+          10
+        ]
+      }
+    ],
+    "after": {
+      "a": [
+        0,
+        20,
+        20,
+        30
+      ],
+      "b": [
+        0,
+        0,
+        10,
+        10
+      ]
+    }
+  },
+  {
+    "name": "singular-parent-is-atomic",
+    "operation": "alignLeft",
+    "ids": [
+      "a",
+      "b"
+    ],
+    "nodes": [
+      {
+        "id": "group",
+        "transform": {
+          "scaleX": 0
+        },
+        "children": [
+          {
+            "id": "a",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "rect": [
+          20,
+          0,
+          10,
+          10
+        ]
+      }
+    ],
+    "after": null
+  },
+  {
+    "name": "locked-ancestor-is-atomic",
+    "operation": "alignLeft",
+    "ids": [
+      "a",
+      "b"
+    ],
+    "nodes": [
+      {
+        "id": "group",
+        "locked": true,
+        "children": [
+          {
+            "id": "a",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "rect": [
+          20,
+          0,
+          10,
+          10
+        ]
+      }
+    ],
+    "after": null
+  },
+  {
+    "name": "complete-grandparent-composition",
+    "operation": "alignLeft",
+    "ids": [
+      "a",
+      "b",
+      "c"
+    ],
+    "nodes": [
+      {
+        "id": "outer",
+        "transform": {
+          "x": 10,
+          "y": -5,
+          "scaleX": 0.5,
+          "scaleY": 2
+        },
+        "children": [
+          {
+            "id": "group",
+            "transform": {
+              "x": 100,
+              "y": 10,
+              "rotation": 1.5707963267948966,
+              "scaleX": 2,
+              "scaleY": 3,
+              "shear": 1
+            },
+            "children": [
+              {
+                "id": "a",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "id": "b",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ],
+                "transform": {
+                  "x": 20,
+                  "y": 20
+                }
+              },
+              {
+                "id": "c",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ],
+                "transform": {
+                  "x": 40,
+                  "y": 5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "after": {
+      "a": [
+        15,
+        15,
+        15,
+        60
+      ],
+      "b": [
+        15,
+        135,
+        15,
+        60
+      ],
+      "c": [
+        15,
+        185,
+        15,
+        60
+      ]
+    }
+  }
+]

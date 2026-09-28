@@ -67,7 +67,7 @@ fn layout_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧫️fixtures/🎨️layout/🔣️.json")).expect("shared GraphTimeline layout fixture")
 }
 
-fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     crate::collect_fixture_actions(input)
 }
 
@@ -366,7 +366,7 @@ fn accepted_checkpoint_accessibility_uses_selectable_geometry_and_exact_action()
     stage_graph_timeline_accessibility_controls(&scene.host_id, controls);
     seal_graph_timeline_accessibility_candidates(921);
     acknowledge_graph_timeline_accessibility_candidates(921);
-    let mut input = InputState::<ActionDescriptor>::default();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     graph_timeline_accessibility_activate(&scene, &control.key, &mut input).expect("accepted checkpoint").expect("bounded action");
     let actions = drain_actions(&mut input);
     assert_eq!(actions.len(), 1);

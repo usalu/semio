@@ -2,7 +2,7 @@
 use super::*;
 use serde_json::Value;
 fn fixture()->Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
-fn transform(value:&Value)->RasterStackTransform {RasterStackTransform {x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),scale_x:value["scaleX"].as_f64().unwrap(),scale_y:value["scaleY"].as_f64().unwrap(),rotation:value["rotation"].as_f64().unwrap()}}
+fn transform(value:&Value)->RasterStackTransform {RasterStackTransform {x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),a:value["a"].as_f64().unwrap(),b:value["b"].as_f64().unwrap(),c:value["c"].as_f64().unwrap(),d:value["d"].as_f64().unwrap()}}
 fn layer(value:&Value)->RasterStackLayer {
     let extent=|v:&Value|v.as_u64().map(|n|n as u32);
     let mask=(!value["mask"].is_null()).then(||{let m=&value["mask"];RasterStackMask {enabled:m["enabled"].as_bool().unwrap(),linked:m["linked"].as_bool().unwrap(),invert:m["invert"].as_bool().unwrap(),transform:transform(&m["transform"]),width:extent(&m["width"]),height:extent(&m["height"]),image_key:m["imageKey"].as_str().map(str::to_owned)}});
@@ -44,7 +44,7 @@ fn raster_stack_deduplicates_mask_work_and_preserves_transparent_bounds(){
     for completed in 1..=12{assert_eq!(job.advance(1).unwrap(),PixelProgress {completed,total:12,done:completed==12});}
     let mut source=input(&fixture()["cases"][0]);let mut blank=source.layers.pop().unwrap();blank.mask=None;
     if let RasterStackContent::Pixel {image_key,..}=&mut blank.content{*image_key=None;}
-    let transform=RasterStackTransform {x:0.0,y:0.0,scale_x:1.0,scale_y:1.0,rotation:0.0};
+    let transform=RasterStackTransform {x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0};
     for depth in 0..32 {blank=RasterStackLayer {id:format!("group-{depth}"),visible:true,opacity:if depth==0{0.0}else{1.0},blend_mode:CompositeBlend::Normal,transform,mask:None,content:RasterStackContent::Group(vec![blank])};}
     let mut job=RasterStackJob::new(RasterStackInput {layers:vec![blank],images:BTreeMap::new()}).unwrap();
     loop{let p=job.advance(1).unwrap();if p.done{assert_eq!(p.completed,p.total);break;}}

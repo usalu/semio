@@ -1215,13 +1215,21 @@ impl SurfaceSemanticCensusCursor {
                 }
                 1 => {
                     self.container = 2;
-                    progress(props.actions_label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
+                    progress(props.row_label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
                 }
                 2 => {
                     self.container = 3;
-                    progress(self.backing::<ui_contract::Label>(props.columns.capacity()))
+                    progress(props.column_label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
                 }
                 3 => {
+                    self.container = 4;
+                    progress(props.actions_label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
+                }
+                4 => {
+                    self.container = 5;
+                    progress(self.backing::<ui_contract::Label>(props.columns.capacity()))
+                }
+                5 => {
                     let Some(column) = props.columns.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
                     self.entry += 1;
                     progress(self.inline_text(&column.0))

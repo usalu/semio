@@ -1,0 +1,22 @@
+{
+  "mutation": "commitResponse",
+  "response": {
+    "id": "response-1",
+    "submittedAt": 1790545740000,
+    "definitionVersion": "v1",
+    "answers": [
+      {
+        "questionId": "name",
+        "label": "Name",
+        "kind": "text",
+        "value": "Ada"
+      },
+      {
+        "questionId": "age",
+        "label": "Age",
+        "kind": "number",
+        "value": 36
+      }
+    ]
+  }
+}

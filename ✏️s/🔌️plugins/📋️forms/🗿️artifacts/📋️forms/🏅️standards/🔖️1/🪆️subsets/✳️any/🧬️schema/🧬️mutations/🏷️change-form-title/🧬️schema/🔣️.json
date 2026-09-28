@@ -5,8 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "newTitle": {
-      "type": "string"
+    "new_title": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
-  }
+  },
+  "required": []
 }

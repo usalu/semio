@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retained Ordered Map Paging Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageCapacity", "entryCount", "keyPrefix", "valuePrefix", "longKeyByteLength", "comparisonGrant", "progressChannels", "repeatedGrowth", "immutableLookup", "operations"],
+  "properties": {
+    "pageCapacity": { "type": "integer", "const": 16 },
+    "entryCount": { "type": "integer", "minimum": 65 },
+    "keyPrefix": { "type": "string", "minLength": 1 },
+    "valuePrefix": { "type": "string", "minLength": 1 },
+    "longKeyByteLength": { "type": "integer", "minimum": 65536 },
+    "comparisonGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumItems", "maximumBytes"],
+      "properties": {
+        "maximumItems": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "maximumBytes": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    },
+    "progressChannels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparisonOnly", "capacityOnly", "minimumMovedItems"],
+      "properties": {
+        "comparisonOnly": { "const": true },
+        "capacityOnly": { "const": true },
+        "minimumMovedItems": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "repeatedGrowth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entryCount", "insertions", "keyPrefix", "valuePrefix", "expectedEntryCount"],
+      "properties": {
+        "entryCount": { "type": "integer", "const": 32 },
+        "insertions": { "type": "integer", "const": 17 },
+        "keyPrefix": { "type": "string", "minLength": 1 },
+        "valuePrefix": { "type": "string", "minLength": 1 },
+        "expectedEntryCount": { "type": "integer", "const": 49 }
+      }
+    },
+    "immutableLookup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capturedTarget", "externalAfterCapture", "expectedOrdinal"],
+      "properties": {
+        "capturedTarget": { "type": "string", "minLength": 1 },
+        "externalAfterCapture": { "type": "string", "minLength": 1 },
+        "expectedOrdinal": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "key", "expected"],
+        "properties": {
+          "kind": { "enum": ["lookup", "insert", "duplicate"] },
+          "key": { "type": "string", "minLength": 1 },
+          "value": { "type": "string" },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["found", "ordinal", "entryCount"],
+            "properties": {
+              "found": { "type": "boolean" },
+              "ordinal": { "type": "integer", "minimum": 0 },
+              "entryCount": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

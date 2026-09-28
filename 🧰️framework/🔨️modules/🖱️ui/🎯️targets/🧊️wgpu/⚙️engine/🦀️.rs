@@ -814,11 +814,19 @@ struct RetainedPaintFrame {
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
+    viewport_origin: [f32; 2],
     baseline: UiFramePaintCensus,
     hit_candidates: Vec<RetainedHitRegistration>,
     /// 🩺️ Which sub-step drove this frame terminal — a `UiFrameStep::Fault` is otherwise
     /// undiagnosable from outside the engine.
     fault_site: Option<&'static str>,
+    progress: u64,
+}
+
+impl RetainedPaintFrame {
+    fn note_progress(&mut self) {
+        self.progress = self.progress.saturating_add(1);
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1328,10 +1336,14 @@ impl Ui {
             return false;
         }
         for window in self.windows.values_mut().filter(|window| window.sealed_input_candidate.is_some_and(|(candidate, _)| candidate == witness)) {
+            let presented_revision = window.presented_revision;
             std::mem::swap(&mut window.tree, &mut window.presented_tree);
             std::mem::swap(&mut window.intrinsic_content_height, &mut window.presented_intrinsic_content_height);
             std::mem::swap(&mut window.router, &mut window.presented_router);
             window.presented_revision = window.revision;
+            if presented_revision != window.presented_revision {
+                window.presented_tooltip = None;
+            }
             window.presented_accessibility_generation = window.accessibility_generation;
             window.presented_ready = true;
             if !window.accepted_scene_retirements.is_empty() {
@@ -1614,6 +1626,55 @@ impl Ui {
     /// 🧭️ `window_id`'s current flow, or React's `DEFAULT_FLOW` for a window that has none yet.
     pub fn window_flow(&self, window_id: &str) -> ui_contract::UiFlow {
         self.windows.get(window_id).map_or(ui_contract::UiFlow::DEFAULT, |window| window.router.flow())
+    }
+
+    /// 🎯️ Applies one host-owned single selection to a reconciled Tree candidate without folding
+    /// ephemeral presence into the immutable document record. The generation fence prevents a late
+    /// host update from decorating a replacement document that reused the same surface id.
+    pub fn stamp_tree_selected_item(&mut self, window_id: &str, generation: u64, selected_key: &str) -> bool {
+        fn stamp_items(items: &mut [crate::wgpu::component::ui::UiTreeItemNode], selected_key: &str, changed: &mut bool) -> bool {
+            let mut matched = false;
+            for item in items {
+                let selected = item.id == selected_key;
+                *changed |= item.presence.selected != selected;
+                item.presence.selected = selected;
+                matched |= selected;
+                if let Some(children) = item.items.as_mut() {
+                    matched |= stamp_items(children, selected_key, changed);
+                }
+            }
+            matched
+        }
+
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return false };
+        if window.tree.document().is_none_or(|document| document.generation() != generation) {
+            return false;
+        }
+        let Some(root) = window.tree.root else { return false };
+        let mut pending = vec![root];
+        let mut changed = false;
+        let mut matched = false;
+        while let Some(id) = pending.pop() {
+            pending.extend(window.tree.children(id));
+            let is_item = window.tree.authored_tree_item(id).is_some();
+            let row_selected = is_item && window.tree.node(id).is_some_and(|node| matches!(&node.key, crate::wgpu::tree::NodeKey::Explicit(key) if key == selected_key));
+            let Some(node) = window.tree.node_mut(id) else { continue };
+            if is_item {
+                let presence = node.spec.0.presence_mut();
+                changed |= presence.selected != row_selected;
+                presence.selected = row_selected;
+                matched |= row_selected;
+            }
+            if let UiNode::Tree(tree) = &mut node.spec.0 {
+                for section in &mut tree.sections {
+                    matched |= stamp_items(&mut section.items, selected_key, &mut changed);
+                }
+            }
+        }
+        if changed {
+            window.tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        }
+        matched
     }
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
@@ -2382,9 +2443,11 @@ impl Ui {
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
+                viewport_origin: [0.0, 0.0],
                 baseline: UiFramePaintCensus::default(),
                 hit_candidates: Vec::new(),
                 fault_site: None,
+                progress: 0,
             });
             return UiFrameStep::Pending;
         }
@@ -2396,7 +2459,11 @@ impl Ui {
             if let Some(frame) = window.paint_frame.as_mut() {
                 frame.node_paint.cancel_draw_route(&mut frame.candidate);
             }
-            if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
+            if !window.paint_frame.as_mut().is_some_and(|frame| {
+                let closed = frame.node_sync.close_step();
+                frame.note_progress();
+                closed
+            }) {
                 return UiFrameStep::Pending;
             }
             let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
@@ -2407,6 +2474,7 @@ impl Ui {
         if matches!(frame.phase, RetainedPaintPhase::Fault) {
             frame.node_paint.cancel_draw_route(&mut frame.candidate);
             if !frame.node_sync.close_step() {
+                frame.note_progress();
                 return UiFrameStep::Pending;
             }
             frame.sync_node = None;
@@ -2415,13 +2483,18 @@ impl Ui {
         if matches!(frame.phase, RetainedPaintPhase::Synchronize) {
             if let Some(node) = frame.sync_node {
                 match sync_interactive_state_node_step(&mut window.tree, node, &theme, &mut frame.node_sync) {
-                    RetainedInteractiveSyncStep::Pending => return UiFrameStep::Pending,
+                    RetainedInteractiveSyncStep::Pending => {
+                        frame.note_progress();
+                        return UiFrameStep::Pending;
+                    }
                     RetainedInteractiveSyncStep::Complete => {
                         frame.sync_node = None;
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     RetainedInteractiveSyncStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                 }
@@ -2461,7 +2534,10 @@ impl Ui {
                     frame.candidate.end_overlay_route();
                 }
                 match step {
-                    RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
+                    RetainedNodePaintStep::Pending => {
+                        frame.note_progress();
+                        return UiFrameStep::Pending;
+                    }
                     RetainedNodePaintStep::Complete => {
                         if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
                             frame.candidate.pop_scissor();
@@ -2470,6 +2546,7 @@ impl Ui {
                         if let Some(node) = window.tree.node_mut(node) {
                             node.flags.set(NodeFlags::DIRTY_PAINT, false);
                         }
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     RetainedNodePaintStep::Fault => {
@@ -2477,6 +2554,7 @@ impl Ui {
                             frame.candidate.pop_scissor();
                         }
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.note_progress();
                         return UiFrameStep::Fault;
                     }
                 }
@@ -2486,25 +2564,36 @@ impl Ui {
             if let Some((node, origin_x, origin_y)) = frame.scene_node {
                 let Some(host) = scene_host.as_deref_mut() else {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.note_progress();
                     return UiFrameStep::Fault;
                 };
                 let Some(slot) = scene_slot_for_node(&window.tree, node, origin_x, origin_y) else {
                     frame.phase = RetainedPaintPhase::Fault;
+                    frame.note_progress();
                     return UiFrameStep::Fault;
                 };
+                let progress_before = frame.scene_paint.progress_witness();
                 match host.paint_slot_step(&slot, &mut frame.scene_paint, &mut frame.candidate, atlas, icons) {
-                    ScenePaintStep::Pending => return UiFrameStep::Pending,
+                    ScenePaintStep::Pending => {
+                        if frame.scene_paint.progress_witness() != progress_before {
+                            frame.note_progress();
+                        }
+                        return UiFrameStep::Pending;
+                    }
                     ScenePaintStep::Complete => {
                         frame.scene_node = None;
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     ScenePaintStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
+                        frame.note_progress();
                         return UiFrameStep::Fault;
                     }
                 }
             }
         }
+        frame.note_progress();
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _, _) => {
@@ -2626,7 +2715,8 @@ impl Ui {
         }
     }
 
-    /// 🧱️ Advances one retained UI node directly into a caller-owned unpublished frame candidate.
+    /// 🧱️ Advances one retained UI node into an engine-owned transaction and appends the balanced
+    /// candidate to the caller's unpublished frame only at the accepted Publish boundary.
     pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: crate::wgpu::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList) -> UiFrameStep {
         let crate::wgpu::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
@@ -2644,10 +2734,13 @@ impl Ui {
         }
         if window.paint_frame.is_none() {
             let tooltip = retained_tooltip_paint(window, surface, atlas, &theme);
+            let mut candidate = DrawList::default();
+            candidate.set_screen_height(target.screen_height());
+            candidate.set_clock_seconds(target.clock_seconds());
             window.paint_frame = Some(RetainedPaintFrame {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
-                candidate: DrawList::default(),
+                candidate,
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
@@ -2662,21 +2755,33 @@ impl Ui {
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
+                viewport_origin: [offset_x, offset_y],
                 baseline: UiFramePaintCensus::of(target),
                 hit_candidates: Vec::new(),
                 fault_site: None,
+                progress: 0,
             });
             return UiFrameStep::Pending;
         }
         let fresh = window
             .paint_frame
             .as_ref()
-            .is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && frame.interaction_epoch == window.presented_interaction_epoch);
+            .is_some_and(|frame| {
+                frame.revision == window.revision
+                    && frame.theme_revision == window.theme_revision
+                    && frame.viewport_revision == window.viewport_revision
+                    && frame.viewport_origin == [offset_x, offset_y]
+                    && frame.interaction_epoch == window.presented_interaction_epoch
+            });
         if !fresh {
             if let Some(frame) = window.paint_frame.as_mut() {
-                frame.node_paint.cancel_draw_route(target);
+                frame.node_paint.cancel_draw_route(&mut frame.candidate);
             }
-            if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
+            if !window.paint_frame.as_mut().is_some_and(|frame| {
+                let closed = frame.node_sync.close_step();
+                frame.note_progress();
+                closed
+            }) {
                 return UiFrameStep::Pending;
             }
             let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
@@ -2685,8 +2790,9 @@ impl Ui {
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
         if matches!(frame.phase, RetainedPaintPhase::Fault) {
-            frame.node_paint.cancel_draw_route(target);
+            frame.node_paint.cancel_draw_route(&mut frame.candidate);
             if !frame.node_sync.close_step() {
+                frame.note_progress();
                 return UiFrameStep::Pending;
             }
             frame.sync_node = None;
@@ -2695,14 +2801,19 @@ impl Ui {
         if matches!(frame.phase, RetainedPaintPhase::Synchronize) {
             if let Some(node) = frame.sync_node {
                 match sync_interactive_state_node_step(&mut window.tree, node, &theme, &mut frame.node_sync) {
-                    RetainedInteractiveSyncStep::Pending => return UiFrameStep::Pending,
+                    RetainedInteractiveSyncStep::Pending => {
+                        frame.note_progress();
+                        return UiFrameStep::Pending;
+                    }
                     RetainedInteractiveSyncStep::Complete => {
                         frame.sync_node = None;
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     RetainedInteractiveSyncStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
                         frame.fault_site = Some("synchronize-node");
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                 }
@@ -2714,12 +2825,12 @@ impl Ui {
                 let clip = starting.then(|| retained_node_clip(&window.tree, node).map(|clip| offset_rect(clip, offset_x, offset_y))).flatten();
                 if starting {
                     if let Some(clip) = clip {
-                        target.push_scissor(clip);
+                        frame.candidate.push_scissor(clip);
                     }
                 }
                 // 🪟️ See `frame_step`'s twin: overlay content composites above the surface chrome.
                 if frame.paint_overlay {
-                    target.begin_overlay_route();
+                    frame.candidate.begin_overlay_route();
                 }
                 let step = paint_node_step_with_driver(
                     &window.tree,
@@ -2733,30 +2844,35 @@ impl Ui {
                     self.driver_drag,
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
-                    target,
+                    &mut frame.candidate,
                     &mut frame.node_paint,
                 );
                 if frame.paint_overlay {
-                    target.end_overlay_route();
+                    frame.candidate.end_overlay_route();
                 }
                 match step {
-                    RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
+                    RetainedNodePaintStep::Pending => {
+                        frame.note_progress();
+                        return UiFrameStep::Pending;
+                    }
                     RetainedNodePaintStep::Complete => {
                         if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
-                            target.pop_scissor();
+                            frame.candidate.pop_scissor();
                         }
                         frame.paint_node = None;
                         if let Some(node) = window.tree.node_mut(node) {
                             node.flags.set(NodeFlags::DIRTY_PAINT, false);
                         }
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     RetainedNodePaintStep::Fault => {
                         if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
-                            target.pop_scissor();
+                            frame.candidate.pop_scissor();
                         }
                         frame.phase = RetainedPaintPhase::Fault;
                         frame.fault_site = Some("paint-node");
+                        frame.note_progress();
                         return UiFrameStep::Fault;
                     }
                 }
@@ -2767,27 +2883,38 @@ impl Ui {
                 let Some(host) = scene_host.as_deref_mut() else {
                     frame.phase = RetainedPaintPhase::Fault;
                     frame.fault_site = Some("scenes-no-host");
+                    frame.note_progress();
                     return UiFrameStep::Fault;
                 };
                 let Some(slot) = scene_slot_for_node(&window.tree, node, origin_x, origin_y) else {
                     frame.phase = RetainedPaintPhase::Fault;
                     frame.fault_site = Some("scenes-slot-missing");
+                    frame.note_progress();
                     return UiFrameStep::Fault;
                 };
-                match host.paint_slot_step(&slot, &mut frame.scene_paint, target, atlas, icons) {
-                    ScenePaintStep::Pending => return UiFrameStep::Pending,
+                let progress_before = frame.scene_paint.progress_witness();
+                match host.paint_slot_step(&slot, &mut frame.scene_paint, &mut frame.candidate, atlas, icons) {
+                    ScenePaintStep::Pending => {
+                        if frame.scene_paint.progress_witness() != progress_before {
+                            frame.note_progress();
+                        }
+                        return UiFrameStep::Pending;
+                    }
                     ScenePaintStep::Complete => {
                         frame.scene_node = None;
+                        frame.note_progress();
                         return UiFrameStep::Pending;
                     }
                     ScenePaintStep::Fault => {
                         frame.phase = RetainedPaintPhase::Fault;
                         frame.fault_site = Some("scenes-host");
+                        frame.note_progress();
                         return UiFrameStep::Fault;
                     }
                 }
             }
         }
+        frame.note_progress();
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _, _) => {
@@ -2809,7 +2936,7 @@ impl Ui {
                 Some(placement) => {
                     frame.overlay_index = frame.overlay_index.saturating_add(1);
                     let bounds = crate::wgpu::geometry::Rect::new(offset_x + placement.x, offset_y + placement.y, placement.width, placement.height);
-                    if retained_overlay_chrome_step(target, viewport_rect, bounds, placement.backdrop, &theme) {
+                    if retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
                         UiFrameStep::Pending
                     } else {
                         frame.phase = RetainedPaintPhase::Fault;
@@ -2863,7 +2990,7 @@ impl Ui {
             },
             RetainedPaintPhase::Tooltip => {
                 if let Some(tooltip) = frame.tooltip.take() {
-                    paint_retained_tooltip(target, atlas, tooltip, (offset_x, offset_y), &theme);
+                    paint_retained_tooltip(&mut frame.candidate, atlas, tooltip, (offset_x, offset_y), &theme);
                 }
                 frame.phase = RetainedPaintPhase::Hits;
                 frame.walk = RetainedPaintWalk::new(&window.tree, root);
@@ -2901,10 +3028,15 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Publish => {
+                if target.append_retained_candidate(&mut frame.candidate).is_err() {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("publish-candidate");
+                    return UiFrameStep::Fault;
+                }
                 window.hit_registry = std::mem::take(&mut frame.hit_candidates);
-                frame.phase = RetainedPaintPhase::Complete;
                 window.paint_census = UiFramePaintCensus::of(target).since(frame.baseline);
-                UiFrameStep::Pending
+                window.paint_frame = None;
+                UiFrameStep::Ready
             }
             RetainedPaintPhase::Complete => {
                 window.paint_frame = None;
@@ -3019,6 +3151,11 @@ impl Ui {
     /// walk never took one. See `🖌️paint`'s `retained_sync_fault`.
     pub fn paint_frame_sync_fault_line(&self, window_id: &str) -> u32 {
         self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map_or(0, |frame| frame.node_sync.fault_line)
+    }
+
+    /// 🩺️ Monotonic scalar progress of the in-flight retained paint frame.
+    pub fn paint_frame_progress(&self, window_id: &str) -> Option<u64> {
+        self.windows.get(window_id)?.paint_frame.as_ref().map(|frame| frame.progress)
     }
 
     pub fn paint_frame_phase(&self, window_id: &str) -> Option<&'static str> {

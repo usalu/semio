@@ -2,6 +2,7 @@
   {
     "kind": "shape:rect",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [
@@ -28,6 +29,7 @@
   {
     "kind": "shape:ellipse",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [
@@ -54,6 +56,7 @@
   {
     "kind": "shape:line",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": null,
       "stroke": {
         "color": [
@@ -72,6 +75,7 @@
   {
     "kind": "shape:polygon",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [
@@ -98,6 +102,7 @@
   {
     "kind": "path",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": null,
       "stroke": {
         "color": [
@@ -116,6 +121,7 @@
   {
     "kind": "text",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [
@@ -131,6 +137,7 @@
   {
     "kind": "group",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": null,
       "stroke": null
     }
@@ -138,6 +145,7 @@
   {
     "kind": "image",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": null,
       "stroke": null
     }
@@ -145,6 +153,7 @@
   {
     "kind": "boolean",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [
@@ -160,6 +169,7 @@
   {
     "kind": "trace",
     "attributes": {
+      "fillRule": "evenodd",
       "fill": {
         "kind": "solid",
         "color": [

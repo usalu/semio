@@ -18,7 +18,7 @@
 //! container first, exactly as `MutationMessage::at` specifies.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{forms_steps, materialize_forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step/📸️snapshot/➡️after/🔣️.json");
@@ -39,7 +39,7 @@ fn before() -> FormsSnapshot {
     let FormMutation::DeleteBlock(payload) = mutation() else {
         panic!("rejects-deleting-a-block-missing-from-an-existing-step's committed mutation must be a delete-block");
     };
-    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
+    replace_forms_steps(&mut snapshot, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 

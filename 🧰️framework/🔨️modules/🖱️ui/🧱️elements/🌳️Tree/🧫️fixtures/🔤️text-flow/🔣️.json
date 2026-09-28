@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "flows": [
+    "ltr",
+    "rtl"
+  ],
+  "labels": [
+    {
+      "locale": "en",
+      "text": "1-Point",
+      "visual": "1-Point"
+    },
+    {
+      "locale": "en",
+      "text": "3-Point",
+      "visual": "3-Point"
+    },
+    {
+      "locale": "de",
+      "text": "1-Punkt",
+      "visual": "1-Punkt"
+    },
+    {
+      "locale": "de",
+      "text": "3-Punkt",
+      "visual": "3-Punkt"
+    },
+    {
+      "locale": "en",
+      "text": "12.5 m",
+      "visual": "12.5 m"
+    },
+    {
+      "locale": "de",
+      "text": "12,5 m",
+      "visual": "12,5 m"
+    }
+  ]
+}
+

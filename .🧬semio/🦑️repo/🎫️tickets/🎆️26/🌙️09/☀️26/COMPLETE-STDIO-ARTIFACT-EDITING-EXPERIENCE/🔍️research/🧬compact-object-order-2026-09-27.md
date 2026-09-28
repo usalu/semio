@@ -1,0 +1,11 @@
+# Compact Patch Object Order
+
+Native contract run 6 exposed a real inverse defect: removing and reinserting an ordered object member appended it, so an escaped-key rename could not restore the original `DslValue::Object` order. Comparing only JSON object values would hide the defect.
+
+The schema now declares `insertAt` with an object-key index and value. Rust and TypeScript inverse generation capture the removed member’s index. Rename uses the old slot for the new name. The first-party `ValueEdit::InsertAt` edits the ordered object’s entry vector without projecting the parent’s values; typed containers retain their native field ordering and the compact patch verifies the resulting key slot, refusing an unrepresentable request. Arrays use existing path indices and reject object-positioned insertion.
+
+Neutral cases cover removal, cross-parent movement, escaped-key rename, insertion at each object position, and invalid indices. Native tests include a derived record containing an ordered metadata value and a json_patch oracle. TypeScript compares exact serialized undo order and uses fast-json-patch for independently produced values. The shared TypeScript run 2 passed 80 tests / 259 assertions; expanded run 3 is recorded in the validation log. Native execution of this new operation remains pending. This fixes order fidelity, not the remaining generic snapshot clone/store-preparation cost.
+
+## Intrinsic Container Order Correction
+
+The follow-up Terra audit found that HashMap and BTreeMap cannot honor a requested insertion position, and JavaScript enumerates array-index-shaped object keys canonically. Requiring the inserted key at that index after every typed mutation incorrectly rejects valid map operations (randomly for HashMap). InsertAt now preserves sequence position for ordered objects and respects intrinsic key ordering elsewhere. This is recorded in the neutral schema, rather than silently claiming all objects are ordered sequences. Existing exact ordered-object inverse laws remain; new neutral numeric insertion and rename cases prove keys/values and exact per-container undo with independent JSON Patch oracles. File-authored JSON member order remains represented explicitly by the JSON artifact's member vector.

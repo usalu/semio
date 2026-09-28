@@ -4,7 +4,8 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/**/🧫️fixtures/**/*"
     ]
   },
   "targets": {

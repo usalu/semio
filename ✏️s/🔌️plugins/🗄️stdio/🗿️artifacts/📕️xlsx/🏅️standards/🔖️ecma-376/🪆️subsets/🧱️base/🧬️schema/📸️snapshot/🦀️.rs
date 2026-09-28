@@ -1,15 +1,10 @@
-//! 🧬️ XlsxSnapshot — an OPC package (every part verbatim, lossless) plus a typed semantic view
-//! of the workbook: name-keyed sheets, each a sparse `(row, col)`-addressed cell list, plus the
-//! package's `shared_strings` table kept as its OWN index-keyed collection (never eagerly
-//! resolved into cell text — the #1 xlsx decode gotcha is precisely THAT eager resolution, since
-//! it silently collapses the `t="s"` shared-string-reference/`t="inlineStr"` literal distinction
-//! a real workbook depends on for lossless round-trip and for `SharedString`/`InlineString` to
-//! mean anything different in a diff). Unmodeled parts (`styles.xml`, themes, calc chain, …) stay
-//! verbatim inside `opc`.
+//! 🧬️ XLSX snapshot with one authoritative logical document per XML-bearing OPC part.
 
 use crate::STDIO_XLSX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
+use std::collections::HashSet;
 
 //#region 🔖️XlsxModel
 /// 🔢️ A cell's decoded value — a real typed union over every SpreadsheetML cell-type ECMA-376
@@ -28,6 +23,7 @@ pub enum XlsxCellValue {
     SharedString(usize),
     InlineString(String),
     Boolean(bool),
+    Error(String),
     Formula {
         expr: String,
         #[value(default, skip_serializing_if = "Option::is_none")]
@@ -77,6 +73,24 @@ pub struct XlsxWorkbook {
 }
 //#endregion 🔖️XlsxModel
 
+//#region 🔖️XmlParts
+/// 📄️ One authoritative XML-bearing OPC part. `OpcPackage.parts` contains only non-XML payloads.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct XlsxXmlPart {
+    pub path: String,
+    pub content_type: String,
+    pub document: XmlDocument,
+}
+
+/// 📄️ Classifies XML-bearing package parts independently from their relationship role.
+pub fn xlsx_part_is_xml(path: &str, content_type: &str) -> bool {
+    let lower_path = path.to_ascii_lowercase();
+    let lower_type = content_type.to_ascii_lowercase();
+    lower_path.ends_with(".xml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml")
+}
+//#endregion 🔖️XmlParts
+
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -87,21 +101,100 @@ pub struct XlsxSnapshot {
     #[state(artifact)]
     #[value(default)]
     pub opc: OpcPackage,
+    /// 📄️ Complete logical XML parts, each represented exactly once.
     #[state(artifact)]
     #[value(default)]
-    pub workbook: XlsxWorkbook,
+    pub xml_parts: Vec<XlsxXmlPart>,
 }
 
 impl Default for XlsxSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), workbook: XlsxWorkbook::default() }
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default())
     }
 }
 
 impl XlsxSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_parts(opc: OpcPackage, workbook: XlsxWorkbook) -> Self {
-        Self { schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(), opc, workbook }
+    /// 🏗️ Builds a snapshot from non-XML OPC state plus authoritative logical XML parts.
+    pub fn from_parts(opc: OpcPackage, xml_parts: Vec<XlsxXmlPart>) -> Self {
+        Self { schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(), opc, xml_parts }
+    }
+
+    /// 📄️ Finds one authoritative logical XML part by normalized OPC path.
+    pub fn xml_part(&self, path: &str) -> Option<&XlsxXmlPart> {
+        let key = path.trim_start_matches('/');
+        self.xml_parts.iter().find(|part| part.path == key)
+    }
+
+    /// 📄️ Finds one mutable authoritative logical XML part by normalized OPC path.
+    pub fn xml_part_mut(&mut self, path: &str) -> Option<&mut XlsxXmlPart> {
+        let key = path.trim_start_matches('/');
+        self.xml_parts.iter_mut().find(|part| part.path == key)
+    }
+
+    /// 🛡️ Refuses duplicate, mismatched, or unresolved XML/package authority.
+    pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::io::XlsxError> {
+        use crate::standards::v_ecma_376::subsets::base::io::{XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT};
+        fn valid_path(path: &str) -> bool {
+            !path.is_empty() && !path.starts_with('/') && !path.contains('\\') && path.split('/').all(|segment| !segment.is_empty() && segment != "." && segment != "..")
+        }
+        fn metadata_path(path: &str) -> bool {
+            let lower = path.to_ascii_lowercase();
+            lower == "[content_types].xml" || lower == "_rels/.rels" || lower.ends_with(".rels")
+        }
+        let mut paths = HashSet::new();
+        for part in &self.xml_parts {
+            if !valid_path(&part.path) || metadata_path(&part.path) {
+                return Err(XlsxError::Malformed(format!("invalid XML content part path: {}", part.path)));
+            }
+            if !xlsx_part_is_xml(&part.path, &part.content_type) {
+                return Err(XlsxError::Malformed(format!("XML authority carries a non-XML content type: {}", part.path)));
+            }
+            if !paths.insert(part.path.as_str()) {
+                return Err(XlsxError::Malformed(format!("duplicate XML part authority: {}", part.path)));
+            }
+            if self.opc.content_types.resolve(&part.path) != Some(part.content_type.as_str()) {
+                return Err(XlsxError::Malformed(format!("content type metadata disagrees for XML part {}", part.path)));
+            }
+        }
+        for part in &self.opc.parts {
+            if !valid_path(&part.path) || metadata_path(&part.path) {
+                return Err(XlsxError::Malformed(format!("invalid binary content part path: {}", part.path)));
+            }
+            if xlsx_part_is_xml(&part.path, &part.content_type) {
+                return Err(XlsxError::Malformed(format!("binary authority carries an XML content part: {}", part.path)));
+            }
+            if !paths.insert(part.path.as_str()) {
+                return Err(XlsxError::Malformed(format!("duplicate OPC part authority: {}", part.path)));
+            }
+            if self.opc.content_types.resolve(&part.path) != Some(part.content_type.as_str()) {
+                return Err(XlsxError::Malformed(format!("content type metadata disagrees for binary part {}", part.path)));
+            }
+        }
+        for owner in self.opc.relationships.keys().filter(|owner| !owner.is_empty()) {
+            if !paths.contains(owner.as_str()) {
+                return Err(XlsxError::Malformed(format!("relationship owner is not a content part: {owner}")));
+            }
+        }
+        let main: Vec<_> = self.opc.relationships_for("").iter().filter(|relationship| relationship.rel_type == REL_TYPE_OFFICE_DOCUMENT || relationship.rel_type == REL_TYPE_OFFICE_DOCUMENT_STRICT).collect();
+        if main.len() != 1 || main[0].target_mode != OpcTargetMode::Internal {
+            return Err(XlsxError::MissingWorkbookRelationship);
+        }
+        let main_path = resolve_relationship_target("", &main[0].target);
+        if self.xml_part(&main_path).is_none() {
+            return Err(XlsxError::MissingPart(main_path));
+        }
+        self.project_workbook()?;
+        Ok(())
+    }
+
+    /// 📘️ Projects the spreadsheet view without creating persisted semantic authority.
+    pub fn project_workbook(&self) -> Result<XlsxWorkbook, crate::standards::v_ecma_376::subsets::base::io::XlsxError> {
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_snapshot_workbook(self)
+    }
+
+    pub fn part_text(&self, path: &str) -> Option<String> {
+        let key = path.trim_start_matches('/');
+        self.xml_part(key).map(|part| xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))
     }
 }
 //#endregion 🔖️Snapshot

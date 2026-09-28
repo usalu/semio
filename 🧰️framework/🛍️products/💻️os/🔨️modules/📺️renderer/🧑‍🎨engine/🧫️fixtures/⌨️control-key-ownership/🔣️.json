@@ -1,0 +1,19 @@
+[
+  {"id":"button-enter","tag":"button","key":"Enter","owned":true},
+  {"id":"button-space","tag":"button","key":" ","owned":true},
+  {"id":"button-undo","tag":"button","key":"z","metaKey":true,"owned":false},
+  {"id":"button-redo","tag":"button","key":"z","ctrlKey":true,"shiftKey":true,"owned":false},
+  {"id":"button-shift-tab","tag":"button","key":"Tab","shiftKey":true,"owned":true},
+  {"id":"link-enter","tag":"a","attributes":{"href":"#example"},"key":"Enter","owned":true},
+  {"id":"combobox-arrow","tag":"div","attributes":{"role":"combobox"},"key":"ArrowDown","owned":true},
+  {"id":"tree-delete","tag":"div","attributes":{"role":"treeitem"},"key":"Delete","owned":true},
+  {"id":"empty-tree-delete","tag":"div","attributes":{"role":"tree"},"key":"Delete","owned":true},
+  {"id":"list-typeahead","tag":"div","attributes":{"role":"listbox"},"key":"a","owned":true},
+  {"id":"slider-arrow","tag":"div","attributes":{"role":"slider"},"key":"ArrowRight","owned":true},
+  {"id":"summary-enter","tag":"summary","key":"Enter","owned":true},
+  {"id":"input-select-all","tag":"input","key":"a","ctrlKey":true,"owned":true},
+  {"id":"textbox-undo","tag":"div","attributes":{"role":"textbox"},"key":"z","metaKey":true,"owned":true},
+  {"id":"editable-plain-text","tag":"div","attributes":{"contenteditable":"plaintext-only"},"key":"a","owned":true},
+  {"id":"canvas-enter","tag":"canvas","key":"Enter","owned":false},
+  {"id":"background-tool","tag":"div","key":"v","owned":false}
+]

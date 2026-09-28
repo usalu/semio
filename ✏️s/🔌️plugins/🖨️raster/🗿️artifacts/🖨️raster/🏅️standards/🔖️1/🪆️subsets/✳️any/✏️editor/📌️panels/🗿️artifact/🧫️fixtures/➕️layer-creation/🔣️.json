@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "kind": "pixel",
+      "en": "Add Pixel",
+      "de": "Pixel hinzufügen"
+    },
+    {
+      "kind": "group",
+      "en": "Add Group",
+      "de": "Gruppe hinzufügen"
+    },
+    {
+      "kind": "adjustment",
+      "en": "Add Adjustment",
+      "de": "Anpassung hinzufügen"
+    }
+  ],
+  "command": "addLayer"
+}

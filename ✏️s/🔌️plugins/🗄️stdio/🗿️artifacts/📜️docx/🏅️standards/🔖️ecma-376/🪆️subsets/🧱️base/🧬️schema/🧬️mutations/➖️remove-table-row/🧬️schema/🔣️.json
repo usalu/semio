@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/remove-table-row/schema.json",
+  "title": "RemoveTableRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "address",
+    "index"
+  ],
+  "properties": {
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "mutation": {
+      "const": "removeTableRow"
+    }
+  }
+}

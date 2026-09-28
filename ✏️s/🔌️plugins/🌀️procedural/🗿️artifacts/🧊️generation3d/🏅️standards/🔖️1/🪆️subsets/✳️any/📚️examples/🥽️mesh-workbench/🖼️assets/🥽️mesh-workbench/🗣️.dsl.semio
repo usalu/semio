@@ -1,0 +1,25 @@
+semio procedural.generation3d.dsl v1
+schema="flow.host_snapshot"
+camera { x=100 y=-40 zoom=1.5 }
+layout={
+  box=x=20 y=0 inset=x=220 y=0 extrude=x=420 y=0 analysis=x=620 y=140 preview=x=620 y=-80 amount=x=20 y=160 distance=x=220 y=160
+}
+synapses [id:TEXT wire:WIRE] {
+  e1 box@meshOut->inset@mesh
+  e2 amount@number->inset@amount
+  e3 inset@meshOut->extrude@mesh
+  e4 distance@number->extrude@distance
+  e5 extrude@meshOut->analysis@mesh
+  e6 extrude@meshOut->preview@mesh
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="amount" label="Inset" value=0.1 min=0.01 max=0.3 step=0.01
+  input-slider id="distance" label="Extrusion" value=0.5 min=0.01 max=2 step=0.01
+  neuron id="box" neuron-kind=brep.mesh.box preview=false input-ports=[ "width" "height" "depth" ] output-ports=[ ] params=[ ]
+  neuron id="inset" neuron-kind=brep.mesh.inset preview=false input-ports=[ "mesh" "faces" "amount" ] output-ports=[ ] params=[ ]
+  neuron id="extrude" neuron-kind=brep.mesh.extrude preview=true input-ports=[ "mesh" "faces" "distance" ] output-ports=[ ] params=[ ]
+  neuron id="analysis" neuron-kind=brep.mesh.analyze preview=false input-ports=[ "mesh" ] output-ports=[ ] params=[ ]
+  neuron id="preview" neuron-kind=brep.mesh.toBrep preview=false input-ports=[ "mesh" "tolerance" ] output-ports=[ ] params=[ ]
+}

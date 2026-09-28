@@ -2,19 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/artifact.json",
   "title": "WavArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Complete editable RIFF/WAVE artifact state with typed primary chunks and exact top-level chunk order.",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "fmt", "data", "otherChunks", "chunkOrder"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
-    }
+    "schema": { "type": "string", "const": "stdio.wav", "x-semio-state": "artifact" },
+    "fmt": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavFmt", "x-semio-state": "artifact" },
+    "data": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavData", "x-semio-state": "artifact" },
+    "fmtPadByte": { "type": "integer", "minimum": 0, "maximum": 255, "default": 0, "x-semio-state": "artifact" },
+    "dataPadByte": { "type": "integer", "minimum": 0, "maximum": 255, "default": 0, "x-semio-state": "artifact" },
+    "otherChunks": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/RiffChunk" }, "x-semio-state": "artifact" },
+    "chunkOrder": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/WavChunkRef" }, "x-semio-state": "artifact" }
   }
 }

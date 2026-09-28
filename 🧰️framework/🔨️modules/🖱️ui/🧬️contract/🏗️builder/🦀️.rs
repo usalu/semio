@@ -1643,18 +1643,28 @@ pub struct TableBuilder {
     base: NodeBase,
     label: crate::Label,
     columns: crate::UiFixedList<crate::Label>,
+    row_label: Option<crate::Label>,
+    column_label: Option<crate::Label>,
     actions_label: Option<crate::Label>,
     window: Option<crate::TreeWindow>,
+    column_window: Option<crate::TreeWindow>,
 }
 
 /// 📊️ A table named `label` whose header reads `columns`. Its accessible name defaults to `label`.
 pub fn table(label: crate::Label, columns: crate::UiFixedList<crate::Label>) -> TableBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
-    TableBuilder { base, label, columns, actions_label: None, window: None }
+    TableBuilder { base, label, columns, row_label: None, column_label: None, actions_label: None, window: None, column_window: None }
 }
 
 impl TableBuilder {
+    /// ↕️ Names the row and column domains for range status and navigation.
+    pub fn axis_labels(mut self, row_label: crate::Label, column_label: crate::Label) -> Self {
+        self.row_label = Some(row_label);
+        self.column_label = Some(column_label);
+        self
+    }
+
     /// 🎬️ Names the trailing actions column.
     pub fn actions_label(mut self, label: crate::Label) -> Self {
         self.actions_label = Some(label);
@@ -1665,6 +1675,12 @@ impl TableBuilder {
     /// [`crate::TreeWindow`].
     pub fn window(mut self, window: crate::TreeWindow) -> Self {
         self.window = Some(window);
+        self
+    }
+
+    /// ↔️ Declares which slice of the logical column list the headers and row cells contain.
+    pub fn column_window(mut self, window: crate::TreeWindow) -> Self {
+        self.column_window = Some(window);
         self
     }
 }
@@ -1679,7 +1695,18 @@ impl HasStackLayout for TableBuilder {}
 
 impl From<TableBuilder> for BuiltNode {
     fn from(builder: TableBuilder) -> Self {
-        assemble(builder.base, crate::Component::Table(crate::TableProps { label: builder.label, columns: builder.columns, actions_label: builder.actions_label, window: builder.window }))
+        assemble(
+            builder.base,
+            crate::Component::Table(crate::TableProps {
+                label: builder.label,
+                columns: builder.columns,
+                row_label: builder.row_label,
+                column_label: builder.column_label,
+                actions_label: builder.actions_label,
+                window: builder.window,
+                column_window: builder.column_window,
+            }),
+        )
     }
 }
 
@@ -1712,6 +1739,7 @@ impl HasBase for TableRowBuilder {
         &mut self.base
     }
 }
+impl HasChildren for TableRowBuilder {}
 
 impl From<TableRowBuilder> for BuiltNode {
     fn from(builder: TableRowBuilder) -> Self {

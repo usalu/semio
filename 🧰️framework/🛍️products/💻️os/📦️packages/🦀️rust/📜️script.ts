@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ValidateFunction } from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
@@ -1743,6 +1744,108 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🧬️ Validates the retained-clone resource contract and neutral corpus with Ajv and the platform structured-clone oracle. */
+class RetainedCloneCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length) throw new Error("retained-clone-check accepts no arguments");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🧫️fixtures/📦️nested");
+    const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.deepEqual(structuredClone(fixture), fixture);
+    assert.equal(fixture.source.choices.length, 3);
+    assert.equal(fixture.source.fixedArray.length, 4);
+    assert(fixture.grant.maximumDepth >= fixture.recursiveDepth);
+    const capturedLease = structuredClone(fixture.immutableLease.captured);
+    let externalLease = fixture.immutableLease.captured;
+    externalLease = fixture.immutableLease.externalAfterCapture;
+    assert.equal(capturedLease, fixture.immutableLease.expected);
+    assert.notEqual(externalLease, capturedLease);
+    assert(fixture.cancellationStops.some((stop: number) => stop > fixture.payloadByteLength / fixture.grant.maximumCopyBytes));
+    const mapRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging");
+    const mapSchema = JSON.parse(readFileSync(join(mapRoot, "🧬️schema/🔣️.json"), "utf8"));
+    const mapFixture = JSON.parse(readFileSync(join(mapRoot, "🔣️.json"), "utf8"));
+    const validateMap = new Ajv2020({ strict: true, allErrors: true }).compile(mapSchema);
+    assert(validateMap(mapFixture), JSON.stringify(validateMap.errors));
+    const entries = Array.from({ length: mapFixture.entryCount }, (_, ordinal) => [`${mapFixture.keyPrefix}${ordinal.toString().padStart(4, "0")}`, `${mapFixture.valuePrefix}${ordinal}`] as [string, string]);
+    const oracle = new Map(entries);
+    const ordered = [...oracle.entries()].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+    const lowerBound = (key: string): number => {
+      let low = 0;
+      let high = ordered.length;
+      while (low < high) {
+        const middle = low + Math.floor((high - low) / 2);
+        if (ordered[middle][0] < key) low = middle + 1;
+        else high = middle;
+      }
+      return low;
+    };
+    for (const operation of mapFixture.operations) {
+      const ordinal = lowerBound(operation.key);
+      const found = ordinal < ordered.length && ordered[ordinal][0] === operation.key;
+      if (operation.kind === "insert") ordered.splice(ordinal, 0, [operation.key, operation.value]);
+      assert.equal(operation.kind === "insert" ? true : found, operation.expected.found, operation.kind);
+      assert.equal(ordinal, operation.expected.ordinal, operation.kind);
+      assert.equal(ordered.length, operation.expected.entryCount, operation.kind);
+    }
+    const longKey = "k".repeat(mapFixture.longKeyByteLength);
+    assert.equal(new TextEncoder().encode(longKey).byteLength, mapFixture.longKeyByteLength);
+    assert(longKey < `${longKey}z`);
+    assert.equal(mapFixture.progressChannels.comparisonOnly, true);
+    assert.equal(mapFixture.progressChannels.capacityOnly, true);
+    assert(mapFixture.progressChannels.minimumMovedItems >= 1);
+    const growth = new Map(Array.from({ length: mapFixture.repeatedGrowth.entryCount }, (_, ordinal) => [`${mapFixture.repeatedGrowth.keyPrefix}${(ordinal * 2).toString().padStart(4, "0")}`, `${mapFixture.repeatedGrowth.valuePrefix}${ordinal}`]));
+    for (let ordinal = 0; ordinal < mapFixture.repeatedGrowth.insertions; ordinal += 1) growth.set(`${mapFixture.repeatedGrowth.keyPrefix}${(ordinal * 2 + 1).toString().padStart(4, "0")}`, `${mapFixture.repeatedGrowth.valuePrefix}insert-${ordinal}`);
+    assert.equal(growth.size, mapFixture.repeatedGrowth.expectedEntryCount);
+    const capturedTarget = structuredClone(mapFixture.immutableLookup.capturedTarget);
+    let externalTarget = mapFixture.immutableLookup.capturedTarget;
+    externalTarget = mapFixture.immutableLookup.externalAfterCapture;
+    assert.equal(lowerBound(capturedTarget), mapFixture.immutableLookup.expectedOrdinal);
+    assert.notEqual(externalTarget, capturedTarget);
+    const preparationRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle");
+    const preparationSchema = JSON.parse(readFileSync(join(preparationRoot, "🧬️schema/🔣️.json"), "utf8"));
+    const preparationFixture = JSON.parse(readFileSync(join(preparationRoot, "🔣️.json"), "utf8"));
+    const validatePreparation = new Ajv2020({ strict: true, allErrors: true }).compile(preparationSchema);
+    assert(validatePreparation(preparationFixture), JSON.stringify(validatePreparation.errors));
+    assert(preparationFixture.largeCapacity.stringByteLength > preparationFixture.grant.maximumBytes);
+    assert.equal(preparationFixture.largeCapacity.expectedCode, "retained-clone.step-grant-too-small");
+    for (const row of preparationFixture.cases) {
+      let value = row.initial;
+      let history = 0;
+      if (row.kind === "success") {
+        value = row.value;
+        history = 1;
+      } else if (row.kind === "stale") {
+        value += 1;
+        history = 1;
+      }
+      assert.equal(value, row.expected.value, row.id);
+      assert.equal(history, row.expected.history, row.id);
+      assert.equal(row.expected.published, row.kind === "success", row.id);
+      assert.equal(row.expected.terminalEmpty, true, row.id);
+    }
+    const pagedRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy");
+    const pagedSchema = JSON.parse(readFileSync(join(pagedRoot, "🧬️schema/🔣️.json"), "utf8"));
+    const pagedFixture = JSON.parse(readFileSync(join(pagedRoot, "🔣️.json"), "utf8"));
+    const validatePaged = new Ajv2020({ strict: true, allErrors: true }).compile(pagedSchema);
+    assert(validatePaged(pagedFixture), JSON.stringify(validatePaged.errors));
+    const pagedValues = Array.from({ length: pagedFixture.entryCount }, (_, ordinal) => `${pagedFixture.valuePrefix}${ordinal}`);
+    const pagedOracle = structuredClone(pagedValues);
+    assert.deepEqual(pagedOracle, pagedValues);
+    assert.equal(pagedOracle.length, pagedFixture.entryCount);
+    assert(pagedFixture.entryCount <= pagedFixture.maximumEntries);
+    assert(pagedFixture.cancellationAfterEntries > 0 && pagedFixture.cancellationAfterEntries < pagedFixture.entryCount);
+    assert(new TextEncoder().encode(pagedOracle.join("")).byteLength > pagedFixture.grant.maximumCapacityBytes);
+    assert.equal(pagedFixture.expected.ordered, true);
+    assert.equal(pagedFixture.expected.sourcePreserved, true);
+    assert.equal(pagedFixture.expected.copyRequiresMultipleTurns, true);
+    assert.equal(pagedFixture.expected.closeRequiresMultipleTurns, true);
+    assert.equal(pagedFixture.expected.terminalEmpty, true);
+    console.log(`[DEBUG] retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length}`);
+  }
+}
+
 /** 🪪️ Executes the native outer opening-attempt wire law without broadening the browser patch contract. */
 class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -2254,6 +2357,7 @@ class ReopenStormCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
+  .register("retained-clone-check", RetainedCloneCheckScript)
   .register("test", TestScript)
   .register("document-opening-attempt-native-check", DocumentOpeningAttemptNativeCheckScript)
   .register("test-scalar-wire-source", ScalarWireSourceScript)

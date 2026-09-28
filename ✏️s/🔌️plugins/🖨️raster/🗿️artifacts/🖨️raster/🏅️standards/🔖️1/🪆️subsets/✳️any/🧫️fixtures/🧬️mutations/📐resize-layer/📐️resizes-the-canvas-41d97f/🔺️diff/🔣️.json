@@ -18,7 +18,8 @@
           "transformY": null,
           "width": 256,
           "height": 128,
-          "adjustmentKind": null
+          "adjustmentKind": null,
+          "locked": null
         }
       }
     ],

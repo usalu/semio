@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the forms editor and viewer surfaces.
     pub enum FormsApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::forms::FormsPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::forms::FormsViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

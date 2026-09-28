@@ -666,6 +666,13 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
   for (const [key, hex] of Object.entries(theme.colors)) {
     setCssVar(root, appliedNames, `--color-${key.replaceAll("_", "-")}`, hex);
   }
+  for (const appearance of ["light", "dark"] as const) {
+    for (const [key, paint] of Object.entries(theme.appearances[appearance].chrome)) {
+      const [red, green, blue, alpha] = resolveThemePaint(theme.colors, paint);
+      const name = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+      setCssVar(root, appliedNames, `--theme-${appearance}-chrome-${name}`, `rgba(${red}, ${green}, ${blue}, ${alpha / 255})`);
+    }
+  }
   for (const [key, value] of Object.entries(theme.spacing)) {
     setCssVar(root, appliedNames, `--spacing-${key.replaceAll("_", "-")}`, value);
   }

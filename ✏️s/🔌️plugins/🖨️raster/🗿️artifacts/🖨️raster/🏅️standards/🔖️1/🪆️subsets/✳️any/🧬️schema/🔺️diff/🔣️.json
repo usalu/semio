@@ -294,7 +294,7 @@
             }
           }
         },
-        "pixelTransform": {
+        "transform": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterTransform"
         },
         "adjustmentParameters": {
@@ -341,7 +341,45 @@
               ]
             }
           ]
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "transform",
+              "transformX"
+            ],
+            "properties": {
+              "transform": {
+                "type": "object"
+              },
+              "transformX": {
+                "type": "number"
+              }
+            }
+          },
+          {
+            "required": [
+              "transform",
+              "transformY"
+            ],
+            "properties": {
+              "transform": {
+                "type": "object"
+              },
+              "transformY": {
+                "type": "number"
+              }
+            }
+          }
+        ]
       }
     },
     "RasterAdjustmentParameter": {

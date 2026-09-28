@@ -25,7 +25,7 @@ workbook-tok = "workbook" "=" workbook-diff
 # ── `XlsxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` (IDENTICAL shape to
 # docx's own `opc-diff`, restated -- both artifacts' `enc_opc_diff` produce byte-identical wire
 # forms for byte-identical `OpcPackage` diffs) ─────────────────────────────────────────────────
-opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "]"
+opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "," opt-hex "]"
 
 opt-content-types-diff = "[" "0" "]" | "[" "1" "," content-types-diff "]"
 content-types-diff = "[" opt-ct-entries-diff "," opt-ct-entries-diff "]"

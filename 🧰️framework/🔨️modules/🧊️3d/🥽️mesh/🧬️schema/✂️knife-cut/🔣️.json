@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mesh Face Knife Cut",
+  "description": "Split one polygon by the plane through start whose normal is the cross product of end-start and the polygon normal. Planar convex faces remain polygons; other faces are cut through their triangulation. Adjacent faces share inserted boundary vertices.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["face", "start", "end"],
+  "properties": {
+    "face": { "type": "integer", "minimum": 0, "maximum": 99999 },
+    "start": { "$ref": "#/$defs/point" },
+    "end": { "$ref": "#/$defs/point" }
+  },
+  "$defs": {
+    "point": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+  }
+}

@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "comment"
+    "comment",
+    "commentUtf8"
   ],
   "properties": {
     "comment": {
       "type": "string"
+    },
+    "commentUtf8": {
+      "type": "boolean",
+      "description": "True for UTF-8 EOCD bytes; false for an unambiguous CP437 representation."
     },
     "mutation": {
       "const": "setArchiveComment",

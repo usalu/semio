@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn transitional_document_bytes() -> Vec<u8> {
@@ -12,9 +12,13 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", doc_bytes);
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", rel_type, "word/document.xml");
-        DocxSnapshot::from_parts(opc, Default::default())
+        DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap() }],
+        )
     }
 
     #[semio_framework_async_macros::async_test]
@@ -35,7 +39,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn strict_namespace_anywhere_is_hard() {
         let mut snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
-        snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
+        snapshot.opc.content_types.set_override("word/styles.xml", "application/xml");
+        snapshot.xml_parts.push(DocxXmlPart {
+            path: "word/styles.xml".into(),
+            content_type: "application/xml".into(),
+            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap(),
+        });
         let diagnostics = check_transitional_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -45,10 +54,18 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", transitional_document_bytes());
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
         opc.add_relationship("word/document.xml", "rId2", "http://purl.oclc.org/ooxml/officeDocument/relationships/image", "media/image1.png");
-        let snapshot = DocxSnapshot::from_parts(opc, Default::default());
+        let snapshot = DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart {
+                path: "word/document.xml".into(),
+                content_type: content_type.into(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&transitional_document_bytes()).unwrap()).unwrap(),
+            }],
+        );
         let diagnostics = check_transitional_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }

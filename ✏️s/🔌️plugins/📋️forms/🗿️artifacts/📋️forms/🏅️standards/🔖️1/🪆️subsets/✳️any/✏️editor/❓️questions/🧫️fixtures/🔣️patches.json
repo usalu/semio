@@ -1,0 +1,318 @@
+{
+  "cases": [
+    {
+      "name": "edit field label",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Old"
+      },
+      "field": "label",
+      "value": "New",
+      "after": {
+        "id": "q",
+        "kind": "text",
+        "label": "New"
+      }
+    },
+    {
+      "name": "clear optional description",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Name",
+        "description": "Help"
+      },
+      "field": "description",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "text",
+        "label": "Name"
+      }
+    },
+    {
+      "name": "required flag is typed",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Name"
+      },
+      "field": "required",
+      "value": "yes",
+      "error": "invalid-value"
+    },
+    {
+      "name": "reject inverted numeric bounds",
+      "before": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size",
+        "max": 10
+      },
+      "field": "min",
+      "value": 20,
+      "error": "invalid-range"
+    },
+    {
+      "name": "clear optional numeric bound",
+      "before": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size",
+        "min": 0
+      },
+      "field": "min",
+      "value": "",
+      "after": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size"
+      }
+    },
+    {
+      "name": "reject nonpositive increment",
+      "before": {
+        "id": "q",
+        "kind": "slider",
+        "label": "Size"
+      },
+      "field": "step",
+      "value": 0,
+      "error": "invalid-range"
+    },
+    {
+      "name": "numeric default remains numeric",
+      "before": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size"
+      },
+      "field": "default",
+      "value": "oops",
+      "error": "invalid-value"
+    },
+    {
+      "name": "clear default",
+      "before": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size",
+        "default": 7
+      },
+      "field": "default",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "number",
+        "label": "Size"
+      }
+    },
+    {
+      "name": "set equality visibility",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Details"
+      },
+      "field": "condition",
+      "value": {
+        "kind": "eq",
+        "left": {
+          "kind": "var",
+          "name": "enabled"
+        },
+        "right": {
+          "kind": "const",
+          "value": true
+        }
+      },
+      "after": {
+        "id": "q",
+        "kind": "text",
+        "label": "Details",
+        "condition": {
+          "kind": "eq",
+          "left": {
+            "kind": "var",
+            "name": "enabled"
+          },
+          "right": {
+            "kind": "const",
+            "value": true
+          }
+        }
+      }
+    },
+    {
+      "name": "reject malformed visibility",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Details"
+      },
+      "field": "condition",
+      "value": {
+        "kind": "bad"
+      },
+      "error": "invalid-condition"
+    },
+    {
+      "name": "clear visibility",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Details",
+        "condition": {
+          "kind": "var",
+          "name": "enabled"
+        }
+      },
+      "field": "condition",
+      "value": null,
+      "after": {
+        "id": "q",
+        "kind": "text",
+        "label": "Details"
+      }
+    },
+    {
+      "name": "edit extension parameters",
+      "before": {
+        "id": "q",
+        "kind": "buildingComponent",
+        "label": "Geometry"
+      },
+      "field": "params",
+      "value": {
+        "radius": 2
+      },
+      "after": {
+        "id": "q",
+        "kind": "buildingComponent",
+        "label": "Geometry",
+        "params": {
+          "radius": 2
+        }
+      }
+    },
+    {
+      "name": "reject unknown property",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Name"
+      },
+      "field": "typo",
+      "value": "wrong",
+      "error": "unknown-field"
+    },
+    {
+      "name": "change kind resets incompatible configuration",
+      "before": {
+        "id": "q",
+        "kind": "single",
+        "label": "Dimension",
+        "description": "Length",
+        "required": true,
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "field": "kind",
+      "value": "number",
+      "after": {
+        "id": "q",
+        "kind": "number",
+        "label": "Dimension",
+        "description": "Length",
+        "required": true,
+        "default": 0,
+        "min": 0,
+        "max": 100,
+        "step": 1
+      }
+    },
+    {
+      "name": "unchanged kind preserves configured values",
+      "before": {
+        "id": "q",
+        "kind": "number",
+        "label": "Dimension",
+        "default": 4,
+        "min": 1
+      },
+      "field": "kind",
+      "value": "number",
+      "after": {
+        "id": "q",
+        "kind": "number",
+        "label": "Dimension",
+        "default": 4,
+        "min": 1
+      }
+    },
+    {
+      "name": "empty kind is rejected",
+      "before": {
+        "id": "q",
+        "kind": "text",
+        "label": "Name"
+      },
+      "field": "kind",
+      "value": "",
+      "error": "invalid-value"
+    },
+    {
+      "name": "A Date Field Starts Without an Invented Date",
+      "before": {
+        "id": "field",
+        "kind": "text",
+        "label": "Deadline",
+        "placeholder": "Old hint"
+      },
+      "field": "kind",
+      "value": "date",
+      "after": {
+        "id": "field",
+        "kind": "date",
+        "label": "Deadline"
+      }
+    },
+    {
+      "name": "A File Field Starts Without an Invented File Restriction",
+      "before": {
+        "id": "field",
+        "kind": "text",
+        "label": "Upload",
+        "placeholder": "Old hint"
+      },
+      "field": "kind",
+      "value": "file",
+      "after": {
+        "id": "field",
+        "kind": "file",
+        "label": "Upload"
+      }
+    },
+    {
+      "name": "An Extension Field Does Not Assume a Demo Fixture",
+      "before": {
+        "id": "field",
+        "kind": "text",
+        "label": "Component",
+        "placeholder": "Old hint"
+      },
+      "field": "kind",
+      "value": "buildingComponent",
+      "after": {
+        "id": "field",
+        "kind": "buildingComponent",
+        "label": "Component"
+      }
+    }
+  ]
+}

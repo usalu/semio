@@ -33,7 +33,10 @@ mod ui_node_wire_format_tests {
                     step: None,
                     accept: None,
                     on_change: act("setValue"),
-                    on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                    on_submit: None,
+                    on_abort: None,
+                    on_repeat_last: None,
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Select(UiSelectNode {
                     menu: None,
@@ -69,9 +72,12 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
-                UiNode::Tree(UiTreeNode { presentation: Default::default(),
+                UiNode::Tree(UiTreeNode {
+                    presentation: Default::default(),
                     menu: None,
-                    sections: vec![UiTreeSectionNode { header_toolbar: None, window: None,
+                    sections: vec![UiTreeSectionNode {
+                        header_toolbar: None,
+                        window: None,
                         id: "treesec1".into(),
                         label: Some(Label::data("Items")),
                         default_open: Some(true),
@@ -111,8 +117,9 @@ mod ui_node_wire_format_tests {
                         brush_preview_json: None,
                         interaction_json: None,
                         engagement_preview_json: None,
-            pick_targets_json: None,
+                        pick_targets_json: None,
                         lod_json: None,
+                        presentation_json: None,
                         chunking_json: None,
                         environment_json: None,
                         frame_json: None,
@@ -139,7 +146,7 @@ mod ui_node_wire_format_tests {
                     diff_view: None,
                     event_feed: None,
                 }),
-                UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "plugin1".into(), app_id: "app1".into(), body_key: "body1".into(), params_json: "{}".into(), presence: UiPresence::default() }),
+                UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "plugin1".into(), app_id: "app1".into(), body_key: "body1".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default() }),
             ],
         })
     }
@@ -238,15 +245,24 @@ mod ui_node_wire_format_tests {
                 step: None,
                 accept: None,
                 on_change: act("a"),
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                on_submit: None,
+                on_abort: None,
+                on_repeat_last: None,
+                presence: UiPresence::default(),
             }),
             "Input",
         );
         assert_presence_serializes(UiNode::Select(UiSelectNode { menu: None, id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
-        assert_presence_serializes(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
+        assert_presence_serializes(
+            UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }),
+            "Toggle",
+        );
         assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
         assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
-        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
+        assert_presence_serializes(
+            UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }),
+            "NumberStepper",
+        );
         assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
         assert_presence_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: None, value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
         assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
@@ -267,7 +283,10 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
         assert_presence_serializes(UiNode::Tree(UiTreeNode { presentation: Default::default(), menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
         assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
-        assert_presence_serializes(UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }), "ExternalSlot");
+        assert_presence_serializes(
+            UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default() }),
+            "ExternalSlot",
+        );
         assert_presence_serializes(
             UiNode::ComponentScene(UiComponentSceneNode {
                 menu: None,
@@ -371,7 +390,7 @@ mod ui_node_wire_format_tests {
         }
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"brushColor\":\"#2878dc\",\"brushHardness\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridVisible\":true,\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"selectableNodes\":true,\"selectableEdges\":true,\"selectableHandles\":true,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"brushColor\":\"#2878dc\",\"brushHardness\":1.0,\"paintTarget\":\"pixels\",\"maskValue\":255,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridVisible\":true,\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"selectableNodes\":true,\"selectableEdges\":true,\"selectableHandles\":true,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
     #[semio_framework_async_macros::async_test]
     async fn scene_records_serialize_to_golden_json() {
@@ -389,6 +408,9 @@ mod ui_node_wire_format_tests {
                 brush_opacity: 1.0,
                 brush_color: "#2878dc".into(),
                 brush_hardness: 1.0,
+                paint_target: "pixels".into(),
+                mask_value: 255,
+                pixel_selection_json:None,
                 view_mode: "composite".into(),
                 composite_viewport_json: None,
                 lanes: Vec::new(),

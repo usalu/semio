@@ -13,7 +13,11 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
                 for kind in row[field].as_array().unwrap() {
                     let mut instance = crate::wgpu::draw_types::UiInstance::solid([0.0, 0.0, 24.0, 24.0], crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
                     instance.params[2] = kind.as_f64().unwrap() as f32;
-                    if overlay_route { list.layers[0].overlay_ui_instances.push(instance); } else { list.layers[0].ui_instances.push(instance); }
+                    if overlay_route {
+                        list.layers[0].overlay_ui_instances.push(instance);
+                    } else {
+                        list.layers[0].ui_instances.push(instance);
+                    }
                 }
             }
             let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, Some(overlay), 0.0), 1);
@@ -417,8 +421,16 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
         draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
         translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
         material_draws: vec![
-            SceneMaterialDraw3d { mesh_key: "painted".into(), mesh_version: 3, instances: vec![instance.clone()], material: SceneMaterialKind3d::Painted { texture_key: "paint-map".into() }, translucent: false },
-            SceneMaterialDraw3d { mesh_key: "celebrated".into(), mesh_version: 4, instances: vec![instance.clone()], material: SceneMaterialKind3d::Celebration { stops: [[1.0; 4]; 3], angle: 0.5 }, translucent: true },
+            SceneMaterialDraw3d { mesh_key: "painted".into(), mesh_version: 3, first_index: 0, index_count: u32::MAX, instances: vec![instance.clone()], material: SceneMaterialKind3d::Painted { texture_key: "paint-map".into() }, translucent: false },
+            SceneMaterialDraw3d {
+                mesh_key: "celebrated".into(),
+                mesh_version: 4,
+                first_index: 0,
+                index_count: u32::MAX,
+                instances: vec![instance.clone()],
+                material: SceneMaterialKind3d::Celebration { stops: [[1.0; 4]; 3], angle: 0.5 },
+                translucent: true,
+            },
         ],
         line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0, 0.0, 0.0], color: [1.0, 1.0, 1.0, 1.0] }] }],
         textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, background: [0.0; 4], appearance: [0.85, 0.0, 0.0, 0.0] }] }],
@@ -451,7 +463,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
                 }
             }
             DrawMeasureCursor::PassLine { .. } | DrawMeasureCursor::PassLineVertex { .. } => "lines",
-            DrawMeasureCursor::PassCurvilinear { .. } => "curvilinear",
+            DrawMeasureCursor::PassPostprocess { .. } => "world-postprocess",
             _ => "other",
         };
         if order.last() != Some(&label) && label != "other" {
@@ -499,6 +511,35 @@ fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry
     let line_vertices = measured.iter().filter(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassLineVertex { .. })).count();
     assert!(textured < grid_index && grid_index < opaque, "textured references precede the grid and opaque geometry follows it");
     assert_eq!(line_vertices, 2, "ordinary overlays retain the line-vertex lane");
+}
+
+#[test]
+fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
+    use crate::wgpu::kernel_3d_scene::{ScenePass3d, SceneViewportMask3d};
+    let mut draw = DrawList::default();
+    draw.push_scene_pass(ScenePass3d { viewport_mask: SceneViewportMask3d::Ellipse, clear_color: Some([0.1, 0.2, 0.3, 0.7]), ..Default::default() });
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    let mut scalars = Vec::new();
+    for _ in 0..8 {
+        let Some(_) = PreparedRenderJob::next_draw_usage(&draw, &mut cursor) else { break };
+        scalars.push(cursor);
+        if matches!(cursor, DrawMeasureCursor::Complete) {
+            break;
+        }
+    }
+    assert_eq!(scalars[0], DrawMeasureCursor::PassBackdropSnapshot { pass: 0 });
+    assert_eq!(scalars[1], DrawMeasureCursor::PassSceneClear { pass: 0 });
+    assert!(scalars.contains(&DrawMeasureCursor::PassPostprocess { pass: 0 }));
+    assert_eq!(scalars.iter().filter(|cursor| matches!(cursor, DrawMeasureCursor::PassPostprocess { .. })).count(), 1);
+
+    let mut rectangular = DrawList::default();
+    rectangular.push_scene_pass(ScenePass3d::default());
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    let mut postprocess = 0;
+    while PreparedRenderJob::next_draw_usage(&rectangular, &mut cursor).is_some() && !matches!(cursor, DrawMeasureCursor::Complete) {
+        postprocess += usize::from(matches!(cursor, DrawMeasureCursor::PassPostprocess { .. } | DrawMeasureCursor::PassBackdropSnapshot { .. } | DrawMeasureCursor::PassSceneClear { .. }));
+    }
+    assert_eq!(postprocess, 0, "ordinary rectangular worlds add no capture, clear, or postprocess scalar");
 }
 
 /// 🖥️ LAW: grid uniforms stay in logical scene units at every device scale; only the

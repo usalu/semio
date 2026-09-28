@@ -1,0 +1,20 @@
+{
+  "paths": ["[Content_Types].xml", "_rels/.rels", "word/document.xml"],
+  "validOrder": ["word/document.xml", "_rels/.rels", "[Content_Types].xml"],
+  "invalidOrders": [
+    ["[Content_Types].xml", "_rels/.rels"],
+    ["[Content_Types].xml", "_rels/.rels", "_rels/.rels"],
+    ["[Content_Types].xml", "_rels/.rels", "missing.xml"],
+    ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/document.xml"]
+  ],
+  "conflictingPartPaths": ["word/document.xml", "[Content_Types].xml", "_rels/.rels"],
+  "duplicateArchivePaths": ["word/document.xml", "[Content_Types].xml", "_rels/.rels"],
+  "invalidMetadata": [
+    { "kind": "default", "identity": "XML", "value": "application/duplicate" },
+    { "kind": "override", "identity": "/word/document.xml", "value": "application/duplicate" },
+    { "kind": "relationship", "identity": "rId1", "value": "word/duplicate.xml" },
+    { "kind": "contentType", "identity": "word/document.xml", "value": "application/changed" }
+  ],
+  "emptyRelationshipOwner": "word/document.xml",
+  "emptyRelationshipPath": "word/_rels/document.xml.rels"
+}

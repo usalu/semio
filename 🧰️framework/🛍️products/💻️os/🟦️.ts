@@ -2632,7 +2632,16 @@ export type DocumentArchivePack = { readonly parent_pack: readonly number[]; rea
 export type DocumentArchiveLoadState = "pending" | "running" | "ready" | "cancelled" | "fault";
 export type DocumentArchiveLoadStatus = { readonly operation: number; readonly state: DocumentArchiveLoadState; readonly completed: number; readonly total: number; readonly fault: readonly number[] };
 
+/** 🎞️ Exact authority of one revision-scoped resumable media export. */
+export type MediaExportHandle = { readonly app_instance_id: number; readonly parent_document_id: string; readonly operation_id: bigint; readonly base_revision: bigint; readonly generation: bigint };
+export type MediaExportState = "running" | "complete" | "cancelled" | "failed";
+export type MediaExportStatus = { readonly handle: MediaExportHandle; readonly state: MediaExportState; readonly applied_progress: bigint; readonly checkpoint_available: boolean; readonly mime_type: string; readonly total_bytes: bigint; readonly detail: string };
+
 export type AppCommandValue =
+  | { readonly SubmitMediaExport: { readonly seq: bigint; readonly port: string; readonly expected_parent_document_id: string; readonly expected_base_revision: bigint } }
+  | { readonly PollMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
+  | { readonly CancelMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
+  | { readonly TakeMediaExportChunk: { readonly seq: bigint; readonly handle: MediaExportHandle } }
   | { readonly LocalInteractionQuery: { readonly seq: number; readonly command: LocalInteractionQueryCommand } }
   | { readonly ConfigCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly Command: { readonly seq: number; readonly command: readonly number[]; readonly view_state: readonly number[] } }
@@ -2697,6 +2706,9 @@ export type AppCommandValue =
   | { readonly presence: { readonly seq: number; readonly own_color: number | null; readonly peers: readonly (readonly number[])[] } };
 
 export type AppFrameValue =
+  | { readonly MediaExportSubmitted: { readonly in_reply_to: bigint; readonly handle: MediaExportHandle } }
+  | { readonly MediaExportStatus: MediaExportStatus & { readonly in_reply_to: bigint } }
+  | { readonly MediaExportChunk: { readonly in_reply_to: bigint; readonly handle: MediaExportHandle; readonly data: readonly number[]; readonly terminal: boolean } }
   | { readonly LocalInteractionQuery: { readonly reply: LocalInteractionQueryReply } }
   | { readonly Done: { readonly in_reply_to: number } }
   | {
@@ -2884,6 +2896,31 @@ function readVecWindowConfigPackEntry(bytes: Uint8Array, pos: [number]): WindowC
 //#endregion 🔖️Combinators
 
 //#region 🔖️Codec
+/** 🪪️ Serializes media ownership without rounding its u64 revision lanes. */
+function writeMediaExportHandle(out: number[], handle: MediaExportHandle): void {
+  if (!Number.isInteger(handle.app_instance_id) || handle.app_instance_id < 0 || handle.app_instance_id > 0xffffffff) throw new Error("media export: invalid app instance");
+  writeVarintU64(out, handle.app_instance_id);
+  writeStr(out, handle.parent_document_id);
+  writeVarintU64Exact(out, handle.operation_id);
+  writeVarintU64Exact(out, handle.base_revision);
+  writeVarintU64Exact(out, handle.generation);
+}
+
+/** 🎫️ Reads the exact media authority shared with the Rust channel. */
+function readMediaExportHandle(bytes: Uint8Array, pos: [number]): MediaExportHandle {
+  const app_instance_id = readVarintU64(bytes, pos);
+  if (app_instance_id > 0xffffffff) throw new Error("media export: invalid app instance");
+  return { app_instance_id, parent_document_id: readStr(bytes, pos), operation_id: readVarintU64Exact(bytes, pos), base_revision: readVarintU64Exact(bytes, pos), generation: readVarintU64Exact(bytes, pos) };
+}
+
+/** 📏️ Media messages consume their complete declared frame. */
+function exactMediaExportFrame<T>(bytes: Uint8Array, pos: [number], value: T): T {
+  if (pos[0] !== bytes.length) throw new Error("media export: trailing frame bytes");
+  return value;
+}
+
+const MEDIA_EXPORT_STATES = ["running", "complete", "cancelled", "failed"] as const;
+
 const APP_COMMAND_TAGS = {
   ConfigCommand: 0, Command: 1, CommandText: 2, ContextMenu: 3, ArtifactCommand: 4, ApplyEnvelopes: 5,
   LoadDocument: 6, ReadDocument: 7, LoadConfig: 8, ReadConfig: 9, MediaIn: 10, MediaOut: 11,
@@ -2893,18 +2930,32 @@ const APP_COMMAND_TAGS = {
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
   presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31, LoadDocumentArchive: 32, ReadDocumentArchive: 33,
   PollDocumentArchiveLoad: 34, CancelDocumentArchiveLoad: 35, AcknowledgeDocumentArchiveLoad: 36,
+  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
   MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25, DocumentArchive: 26, DocumentArchiveLoad: 27,
+  MediaExportSubmitted: 28, MediaExportStatus: 29, MediaExportChunk: 30,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
 export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   const out: number[] = [];
-  if ("ConfigCommand" in cmd) {
+  if ("SubmitMediaExport" in cmd) {
+    out.push(APP_COMMAND_TAGS.SubmitMediaExport);
+    writeVarintU64Exact(out, cmd.SubmitMediaExport.seq);
+    writeStr(out, cmd.SubmitMediaExport.port);
+    writeStr(out, cmd.SubmitMediaExport.expected_parent_document_id);
+    writeVarintU64Exact(out, cmd.SubmitMediaExport.expected_base_revision);
+  } else if ("PollMediaExport" in cmd || "CancelMediaExport" in cmd || "TakeMediaExportChunk" in cmd) {
+    const key = "PollMediaExport" in cmd ? "PollMediaExport" : "CancelMediaExport" in cmd ? "CancelMediaExport" : "TakeMediaExportChunk";
+    const value = (cmd as Record<typeof key, { readonly seq: bigint; readonly handle: MediaExportHandle }>)[key];
+    out.push(APP_COMMAND_TAGS[key]);
+    writeVarintU64Exact(out, value.seq);
+    writeMediaExportHandle(out, value.handle);
+  } else if ("ConfigCommand" in cmd) {
     out.push(APP_COMMAND_TAGS.ConfigCommand);
     writeVarintU64(out, cmd.ConfigCommand.seq);
     writeBytes(out, cmd.ConfigCommand.command);
@@ -3090,6 +3141,14 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
   if (bytes.length === 0) throw new Error("decodeAppCommand: empty frame");
   const pos: [number] = [1];
   switch (bytes[0]) {
+    case APP_COMMAND_TAGS.SubmitMediaExport:
+      return exactMediaExportFrame(bytes, pos, { SubmitMediaExport: { seq: readVarintU64Exact(bytes, pos), port: readStr(bytes, pos), expected_parent_document_id: readStr(bytes, pos), expected_base_revision: readVarintU64Exact(bytes, pos) } });
+    case APP_COMMAND_TAGS.PollMediaExport:
+      return exactMediaExportFrame(bytes, pos, { PollMediaExport: { seq: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
+    case APP_COMMAND_TAGS.CancelMediaExport:
+      return exactMediaExportFrame(bytes, pos, { CancelMediaExport: { seq: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
+    case APP_COMMAND_TAGS.TakeMediaExportChunk:
+      return exactMediaExportFrame(bytes, pos, { TakeMediaExportChunk: { seq: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
     case APP_COMMAND_TAGS.ConfigCommand:
       return { ConfigCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.Command: {
@@ -3246,7 +3305,29 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_frame` (agreed contract). */
 export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   const out: number[] = [];
-  if ("Done" in frame) {
+  if ("MediaExportSubmitted" in frame) {
+    out.push(APP_FRAME_TAGS.MediaExportSubmitted);
+    writeVarintU64Exact(out, frame.MediaExportSubmitted.in_reply_to);
+    writeMediaExportHandle(out, frame.MediaExportSubmitted.handle);
+  } else if ("MediaExportStatus" in frame) {
+    const value = frame.MediaExportStatus, state = MEDIA_EXPORT_STATES.indexOf(value.state);
+    if (state < 0) throw new Error("media export: invalid state");
+    out.push(APP_FRAME_TAGS.MediaExportStatus);
+    writeVarintU64Exact(out, value.in_reply_to);
+    writeMediaExportHandle(out, value.handle);
+    out.push(state);
+    writeVarintU64Exact(out, value.applied_progress);
+    writeBool(out, value.checkpoint_available);
+    writeStr(out, value.mime_type);
+    writeVarintU64Exact(out, value.total_bytes);
+    writeStr(out, value.detail);
+  } else if ("MediaExportChunk" in frame) {
+    out.push(APP_FRAME_TAGS.MediaExportChunk);
+    writeVarintU64Exact(out, frame.MediaExportChunk.in_reply_to);
+    writeMediaExportHandle(out, frame.MediaExportChunk.handle);
+    writeBytes(out, frame.MediaExportChunk.data);
+    writeBool(out, frame.MediaExportChunk.terminal);
+  } else if ("Done" in frame) {
     out.push(APP_FRAME_TAGS.Done);
     writeVarintU64(out, frame.Done.in_reply_to);
   } else if ("Invocation" in frame) {
@@ -3405,6 +3486,15 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
   if (bytes.length === 0) throw new Error("decodeAppFrame: empty frame");
   const pos: [number] = [1];
   switch (bytes[0]) {
+    case APP_FRAME_TAGS.MediaExportSubmitted:
+      return exactMediaExportFrame(bytes, pos, { MediaExportSubmitted: { in_reply_to: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
+    case APP_FRAME_TAGS.MediaExportStatus: {
+      const in_reply_to = readVarintU64Exact(bytes, pos), handle = readMediaExportHandle(bytes, pos), state = MEDIA_EXPORT_STATES[readU8(bytes, pos)];
+      if (state === undefined) throw new Error("media export: invalid state");
+      return exactMediaExportFrame(bytes, pos, { MediaExportStatus: { in_reply_to, handle, state, applied_progress: readVarintU64Exact(bytes, pos), checkpoint_available: readBool(bytes, pos), mime_type: readStr(bytes, pos), total_bytes: readVarintU64Exact(bytes, pos), detail: readStr(bytes, pos) } });
+    }
+    case APP_FRAME_TAGS.MediaExportChunk:
+      return exactMediaExportFrame(bytes, pos, { MediaExportChunk: { in_reply_to: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos), data: readBytes(bytes, pos), terminal: readBool(bytes, pos) } });
     case APP_FRAME_TAGS.Done:
       return { Done: { in_reply_to: readVarintU64(bytes, pos) } };
     case APP_FRAME_TAGS.Invocation: {
@@ -3626,7 +3716,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 18;
+export const APP_CHANNEL_VERSION = 19;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -3664,12 +3754,16 @@ function appChannelTransactionReply(command: AppCommandValue): AppChannelTransac
 
 function appChannelReplySequence(frame: AppFrameValue): number | null {
   const value = Object.values(frame)[0];
-  return value && "in_reply_to" in value && typeof value.in_reply_to === "number" ? value.in_reply_to : null;
+  if (!value || !("in_reply_to" in value)) return null;
+  const sequence = value.in_reply_to;
+  if (typeof sequence === "bigint") return sequence >= 0n && sequence <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(sequence) : null;
+  return typeof sequence === "number" ? sequence : null;
 }
 
 function appChannelFrameBelongsTo(frame: AppFrameValue, sequence: number, transaction: AppChannelTransactionReply | null): boolean {
   const replySequence = appChannelReplySequence(frame);
   if (replySequence !== null) return replySequence === sequence;
+  if ("MediaExportSubmitted" in frame || "MediaExportStatus" in frame || "MediaExportChunk" in frame) return false;
   if ("transactionPrepared" in frame) return transaction?.kind === "prepared" && transaction.id === frame.transactionPrepared.txn_id;
   if ("transactionCommitted" in frame) return transaction?.kind === "committed" && transaction.id === frame.transactionCommitted.txn_id;
   if ("transactionRolledBack" in frame) return transaction?.kind === "rolledBack" && transaction.id === frame.transactionRolledBack.txn_id;
@@ -3941,7 +4035,9 @@ export class AppChannelClient {
   private sendCommand(command: AppCommandValue, dispatch?: PluginDispatchHintV1): Promise<AppFrameValue[]> {
     if (this.disposed || this.retired) return Promise.reject(new Error("app-channel.disposed"));
     return new Promise<AppFrameValue[]>((resolve, reject) => {
-      const seq = Object.values(command)[0]!.seq;
+      const wireSequence = Object.values(command)[0]!.seq;
+      const seq = Number(wireSequence);
+      if (!Number.isSafeInteger(seq) || seq < 0) { reject(new Error("app-channel.invalid-sequence-owner")); return; }
       const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
       const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), document, resolve, reject };
       this.pending.push(waiter);
@@ -4075,6 +4171,26 @@ export class AppChannelClient {
    * over the live-shell route and one over the headless route ask the guest the identical question. */
   async mediaOut(port: string): Promise<AppFrameValue[]> {
     return this.sendCommand({ MediaOut: { seq: this.nextSeq(), port, request: [] } });
+  }
+
+  /** 🎬️ Admits media work only against the caller's exact document and revision. */
+  async submitMediaExport(port: string, parentDocumentId: string, revision: bigint): Promise<AppFrameValue[]> {
+    return this.sendCommand({ SubmitMediaExport: { seq: BigInt(this.nextSeq()), port, expected_parent_document_id: parentDocumentId, expected_base_revision: revision } });
+  }
+
+  /** ⏱️ Advances one bounded media-export slice. */
+  async pollMediaExport(handle: MediaExportHandle): Promise<AppFrameValue[]> {
+    return this.sendCommand({ PollMediaExport: { seq: BigInt(this.nextSeq()), handle } });
+  }
+
+  /** 🛑️ Cancels exactly the submitted media generation. */
+  async cancelMediaExport(handle: MediaExportHandle): Promise<AppFrameValue[]> {
+    return this.sendCommand({ CancelMediaExport: { seq: BigInt(this.nextSeq()), handle } });
+  }
+
+  /** 📦️ Takes one bounded output chunk and observes terminal owner retirement. */
+  async takeMediaExportChunk(handle: MediaExportHandle): Promise<AppFrameValue[]> {
+    return this.sendCommand({ TakeMediaExportChunk: { seq: BigInt(this.nextSeq()), handle } });
   }
 
   /** 🗃️ Restores one root envelope and its complete recursive owned-member closure atomically. */

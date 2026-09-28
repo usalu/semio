@@ -5,17 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "path",
-    "run_index",
+    "address",
     "text"
   ],
   "properties": {
-    "path": {
-      "$ref": "#/$defs/DocxBlockPath"
-    },
-    "run_index": {
-      "type": "integer",
-      "minimum": 0
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
     },
     "text": {
       "type": "string"
@@ -23,50 +18,6 @@
     "mutation": {
       "const": "setRunText",
       "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "DocxBlockPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index"
-      ],
-      "properties": {
-        "segments": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/DocxPathSegment"
-          }
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "DocxPathSegment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "blockIndex",
-        "row",
-        "cell"
-      ],
-      "properties": {
-        "blockIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "cell": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
     }
   }
 }

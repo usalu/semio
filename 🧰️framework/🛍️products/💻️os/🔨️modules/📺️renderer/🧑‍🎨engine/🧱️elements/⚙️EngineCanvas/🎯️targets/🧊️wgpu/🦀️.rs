@@ -14,7 +14,7 @@ use flow::{
 };
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_node_graph::paint::RasterHost;
+use framework_surface_node_graph::paint::{RasterHost,PaintTarget};
 use framework_surface_tiled_map::tiled_map::tiles as map_tiles;
 use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
@@ -1637,6 +1637,8 @@ struct RasterSyncCache {
     active_utility: Option<String>,
     view_mode: Option<String>,
     brush: Option<(f64, f64, u32, f64)>,
+    paint_target:Option<PaintTarget>,
+    mask_value:Option<u8>,
     theme_json: Option<String>,
     size_key: Option<String>,
 }
@@ -3107,6 +3109,10 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
             changed = true;
         }
     }
+    if let Some(target)=match paint.paint_target.as_str(){"pixels"=>Some(PaintTarget::Pixels),"mask"=>Some(PaintTarget::Mask),_=>None}{
+        if cache.paint_target!=Some(target){host.set_paint_target(target);cache.paint_target=Some(target);changed=true;}
+    }
+    if let Ok(value)=u8::try_from(paint.mask_value){if cache.mask_value!=Some(value){host.set_mask_value(value);cache.mask_value=Some(value);changed=true;}}
     if cache.selection_json.as_deref() != Some(paint.selection_json.as_str()) || cache.hovered_id.as_deref() != paint.hovered_id.as_deref() {
         let selected: Vec<String> = serde_json::from_str(&paint.selection_json).unwrap_or_default();
         host.sync_interaction(&selected, paint.hovered_id.as_deref());
@@ -3331,25 +3337,31 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
     true
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct RasterCompositeProgress {
+    pub(crate) completed: u64,
+    pub(crate) done: bool,
+}
+
 /// 🧩️ Advances raster preparation within one frame-build grant, retaining the previous presented image.
-pub(crate) fn advance_raster_composite(scene: &UiComponentSceneNode) -> bool {
+pub(crate) fn advance_raster_composite(scene: &UiComponentSceneNode) -> RasterCompositeProgress {
     if scene.component_kind != SurfaceKind::Paint2d {
-        return true;
+        return RasterCompositeProgress { completed: 0, done: true };
     }
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let Some(host) = registry.get_mut(&scene.host_id).and_then(|entry| entry.raster_host.as_mut()) else {
-            return true;
+            return RasterCompositeProgress { completed: 0, done: true };
         };
         if let Some(paint) = &scene.paint_2d {
             let selection: Vec<String> = serde_json::from_str(&paint.selection_json).unwrap_or_default();
             host.set_composite_view(&paint.view_mode, selection.first().map(String::as_str));
         }
         match host.advance_composite(65536) {
-            Ok(progress) => progress.done,
+            Ok(progress) => RasterCompositeProgress { completed: progress.completed as u64, done: progress.done },
             Err(error) => {
                 engine_canvas_debug_log(&format!("Raster composite failed: {error}"));
-                true
+                RasterCompositeProgress { completed: 0, done: true }
             }
         }
     })
@@ -4794,6 +4806,26 @@ pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&MapHost) -> R) -> Opti
     })
 }
 
+/// 🤏️ Reads one map camera for shared touch math.
+pub fn tiled_map_camera(surface_id: &str) -> Option<[f64; 3]> {
+    with_map_host(surface_id, MapHost::camera)
+}
+
+/// 🤏️ Applies an ephemeral map camera during a pinch without publishing guest state.
+pub fn tiled_map_set_camera_silent(surface_id: &str, camera: [f64; 3]) -> bool {
+    with_map_host_mut(surface_id, |host| host.set_camera_silent(camera[0], camera[1], camera[2])).is_some()
+}
+
+/// 🏁️ Publishes the settled map camera once when the last pinch contact lifts.
+pub fn tiled_map_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(camera) = tiled_map_camera(surface_id) else { return Ok(false) };
+    let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
+    let mut reservation = input.reserve_actions(1, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_map_camera_action(&mut reservation, wire_surface_id.as_str(), controller_id, camera)?;
+    reservation.publish()?;
+    Ok(true)
+}
+
 pub fn stamp_map_interaction_owner(surface_id: &str, owner: &ScenePointerTarget) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4990,6 +5022,34 @@ pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&infinite_canvas::Boa
         let host = entry.board_host.as_ref()?;
         Some(f(host))
     })
+}
+
+/// 🤏️ Reads one board camera for shared touch math.
+pub fn puzzle_board_camera(surface_id: &str) -> Option<[f64; 3]> {
+    with_board_host(surface_id, infinite_canvas::BoardHost::camera)
+}
+
+/// 🤏️ Applies an ephemeral board camera during a pinch without enqueueing a camera event.
+pub fn puzzle_board_set_camera_silent(surface_id: &str, camera: [f64; 3]) -> bool {
+    with_board_host_mut(surface_id, |host| host.set_camera_silent(camera[0], camera[1], camera[2])).is_some()
+}
+
+/// 🏁️ Publishes the settled board camera once when the last pinch contact lifts.
+pub fn puzzle_board_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(camera) = puzzle_board_camera(surface_id) else { return Ok(false) };
+    let mut reservation = input.reserve_actions(1, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_board_camera_flat(&mut reservation, controller_id, camera)?;
+    reservation.publish()?;
+    Ok(true)
+}
+
+/// 🔀️ Ends the board's single-pointer lane exactly once when a second touch acquires the surface.
+pub fn puzzle_board_yield_to_pinch(surface_id: &str, sx: f64, sy: f64) -> bool {
+    with_board_host_mut(surface_id, |host| {
+        host.cancel_area_select();
+        host.pointer_up_screen(sx, sy, false, false, false);
+    })
+    .is_some()
 }
 
 /// @emoji 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
@@ -6024,36 +6084,36 @@ pub fn paint2d_pointer_button_into(
     if down {
         return Ok(true);
     }
-    if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.pixel_edit().cloned()).flatten() {
+    if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.paint_edit().cloned()).flatten() {
         let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[
             &scene.controller_id,
-            "editPixels",
+            edit.action(),
             "surfaceId",
             &scene.surface_id,
             "layerId",
             &edit.layer_id,
-            "expectedImageKey",
-            edit.expected_image_key.as_deref().unwrap_or(""),
+            edit.revision_field(),
+            edit.revision_value().unwrap_or(""),
             "operation",
             &edit.operation,
             "selection",
         ])?;
         let mut batch = input.reserve_actions(1, bytes)?;
-        batch.action(&scene.controller_id, "editPixels", bytes, |builder| {
+        batch.action(&scene.controller_id, edit.action(), bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("surfaceId"), &scene.surface_id)?;
             builder.string(Some("layerId"), &edit.layer_id)?;
-            if let Some(key) = &edit.expected_image_key {
-                builder.string(Some("expectedImageKey"), key)?;
+            if let Some(key) = edit.revision_value() {
+                builder.string(Some(edit.revision_field()), key)?;
             } else {
-                builder.null(Some("expectedImageKey"))?;
+                builder.null(Some(edit.revision_field()))?;
             }
             builder.string(Some("operation"), &edit.operation)?;
             builder.null(Some("selection"))?;
             builder.end_container()
         })?;
         batch.publish()?;
-        with_raster_host_mut(&scene.host_id, |host| host.take_pixel_edit());
+        with_raster_host_mut(&scene.host_id, |host| host.take_paint_edit());
         return Ok(true);
     }
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
@@ -6154,16 +6214,23 @@ pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: 
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
-    if paint.view_mode == "navigator" {
-        return Ok(false);
-    }
     let sx = f64::from(x - inner.x);
     let sy = f64::from(y - inner.y);
-    let Some(camera) = with_raster_host_mut(&scene.host_id, |host| {
-        host.wheel_screen(sx, sy, f64::from(delta));
-        engine_camera_from_json(&host.camera_json())
-    })
-    .flatten() else {
+    let camera = if paint.view_mode == "navigator" {
+        let Some((x, y, zoom)) = engine_camera_from_json(&paint.camera_json) else { return Ok(false) };
+        let size = paint.composite_viewport_json.as_deref().and_then(|value| serde_json::from_str::<Value>(value).ok());
+        let dimension = |key: &str, fallback: u32| size.as_ref().and_then(|value| value.get(key)).and_then(Value::as_f64).filter(|value| value.is_finite() && *value > 0.0).map(|value| value as u32).unwrap_or(fallback);
+        let viewport = canvas::camera::Viewport { width: dimension("width", 800), height: dimension("height", 600), dpr: 1.0 };
+        let mut camera = canvas::camera::Camera { x, y, zoom };
+        canvas::camera::wheel_screen(&mut camera, &viewport, sx, sy, f64::from(delta));
+        Some((camera.x, camera.y, camera.zoom))
+    } else {
+        with_raster_host_mut(&scene.host_id, |host| {
+            host.wheel_screen(sx, sy, f64::from(delta));
+            engine_camera_from_json(&host.camera_json())
+        }).flatten()
+    };
+    let Some(camera) = camera else {
         return Ok(false);
     };
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;

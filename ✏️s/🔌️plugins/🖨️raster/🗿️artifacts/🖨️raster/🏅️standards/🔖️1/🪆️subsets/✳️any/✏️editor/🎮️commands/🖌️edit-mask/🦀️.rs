@@ -60,6 +60,7 @@ impl Candidate {
 }
 
 fn prepare(command:&EditMask,document:&RasterSnapshot)->Result<Candidate,Fault> {
+    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&command.layer_id,false).map_err(Fault::from)?;
     let layer=find_layer(&document.layers,&command.layer_id).ok_or_else(||Fault::from("raster.mask-layer-missing"))?;
     let mask=layer_mask(layer).ok_or_else(||Fault::from("raster.mask-missing"))?;
     if command.expected_mask.len()>8000 {return Err(Fault::from("raster.mask-revision-budget"));}
@@ -76,26 +77,37 @@ fn prepare(command:&EditMask,document:&RasterSnapshot)->Result<Candidate,Fault> 
         (mask.width.unwrap_or(width),mask.height.unwrap_or(height))
     };
     let count=validate_extent(width,height).map_err(|_|Fault::from("raster.mask-extent-invalid"))?;
-    let spans=command.selection.as_deref().map(|json|super::edit_pixels::selection_spans(json,count)).transpose()?.unwrap_or_default();
+    let spans=command.selection.as_deref().map(|json|crate::editor::raster::selection::selection_spans(json,count)).transpose()?.unwrap_or_default();
     Ok(Candidate {layer_id:command.layer_id.clone(),mask:mask.clone(),image:RasterImage {width,height,pixels:Vec::with_capacity(count*4)},operation:Some(operation),selection:command.selection.as_ref().map(|_|Vec::with_capacity(count)),spans,span:0})
 }
 
-fn publish(image:EncodedPngImage,candidate:&Candidate,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
+fn publish(mut image:EncodedPngImage,candidate:&Candidate,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
     use crate::mutations::{add_layer_asset,change_layer_mask,remove_layer_asset};
     let current=find_layer(&document.layers,&candidate.layer_id).and_then(layer_mask);
     if current!=Some(&candidate.mask) {return Err(Fault::from("raster.mask-revision-conflict"));}
     let key=format!("mask-{}-{:016x}",candidate.layer_id,image.content_hash);
     if candidate.mask.image_key.as_ref()==Some(&key) {return Ok(Emit::default());}
-    let mut replacement=candidate.mask.clone();replacement.image_key=Some(key.clone());
-    let mut operations=Vec::new();
-    if !document.assets.contains_key(&key) {operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key,asset:RasterImageAsset {mime:"image/png".into(),data:image.data}}));}
-    operations.push(RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:candidate.layer_id.clone(),expected:Some(candidate.mask.clone()),mask:Some(replacement)}));
-    if let Some(previous)=&candidate.mask.image_key {
-        let shared=flatten_raster_layers(&document.layers).iter().any(|layer| {
-            matches!(layer,RasterLayerNode::Pixel {image_key:Some(key),..} if key==previous)
-                || (layer_node_id(layer)!=candidate.layer_id&&layer_mask(layer).and_then(|mask|mask.image_key.as_ref())==Some(previous))
-        });
-        if !shared {operations.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id:previous.clone()}));}
+    use crate::editor::raster::asset_replacement::{replacement_steps,Step};
+    let previous=candidate.mask.image_key.as_ref();
+    let removable=previous.is_some_and(|previous|document.assets.contains_key(previous)&&!flatten_raster_layers(&document.layers).iter().any(|layer| {
+        matches!(layer,RasterLayerNode::Pixel {image_key:Some(key),..} if key==previous)
+            || (layer_node_id(layer)!=candidate.layer_id&&layer_mask(layer).and_then(|mask|mask.image_key.as_ref())==Some(previous))
+    }));
+    let plan=replacement_steps(document.assets.len(),crate::RASTER_OWNED_MAP_CAPACITY,removable,document.assets.contains_key(&key)).map_err(Fault::from)?;
+    let mut expected=candidate.mask.clone();let mut operations=Vec::new();
+    for step in plan {
+        match step {
+            Step::Detach=>{
+                let mut detached=expected.clone();detached.image_key=None;
+                operations.push(RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:candidate.layer_id.clone(),expected:Some(expected),mask:Some(detached.clone())}));expected=detached;
+            }
+            Step::Remove=>operations.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id:previous.unwrap().clone()})),
+            Step::Add=>operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:RasterImageAsset {mime:"image/png".into(),data:std::mem::take(&mut image.data)}})),
+            Step::Replace=>{
+                let mut replacement=candidate.mask.clone();replacement.image_key=Some(key.clone());
+                operations.push(RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:candidate.layer_id.clone(),expected:Some(expected.clone()),mask:Some(replacement)}));
+            }
+        }
     }
     Ok(Emit::mutations(operations))
 }

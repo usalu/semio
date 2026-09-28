@@ -16,6 +16,10 @@ fn display_shell() -> ShellState {
     super::panel_anchor_model_tests::host_test_shell()
 }
 
+fn display_order_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json"))).expect("window lifecycle fixture")
+}
+
 /// 🧾️ Every record key one shell-owned leaf's published body carries, in publication order — each
 /// tail is React's own control id (`panel_ui_records` qualifies the key with its surface).
 fn published_keys(shell: &ShellState, tab_id: &str, node: &UiNode) -> Vec<String> {
@@ -59,9 +63,10 @@ fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
     ] {
         assert!(keys.iter().any(|key| key.ends_with(react_id)), "🔀️ '{react_id}' is React's own nested template id, got {keys:?}");
     }
-    let kind_row = keys.iter().position(|key| key.ends_with("framework.display.windows.main.kind")).expect("the kind leaf");
+    let perspective = keys.iter().position(|key| key.ends_with("framework.display.windows.main.projection.perspective")).expect("the perspective branch");
     let parallel = keys.iter().position(|key| key.ends_with("framework.display.windows.main.projection.parallel")).expect("the parallel branch");
-    assert!(kind_row < parallel, "🔃️ React RENDERS the plain kind leaf first, then Parallel, then Perspective");
+    let kind_row = keys.iter().position(|key| key.ends_with("framework.display.windows.main.kind")).expect("the kind leaf");
+    assert!(perspective < parallel && parallel < kind_row, "🔃️ an Up-flow Tree authors the inverse sibling order so paint resolves kind, Parallel, Perspective top-to-bottom");
 }
 
 struct DisplayTreeSceneHost;
@@ -88,7 +93,11 @@ fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu
 }
 
 fn settle_tree_surface(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas, surface: &str, witness: u64) {
-    engine.set_viewport(surface, 300.0, 240.0);
+    settle_tree_surface_at_height(engine, atlas, surface, witness, 240.0);
+}
+
+fn settle_tree_surface_at_height(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas, surface: &str, witness: u64, height: f32) {
+    engine.set_viewport(surface, 300.0, height);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -116,7 +125,7 @@ fn settle_tree_surface(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu
     }
     assert!(!engine.layout_is_dirty(surface), "retained Tree layout settles");
     for _ in 0..131_072 {
-        match engine.frame_step::<DisplayTreeSceneHost>(surface, 300.0, 240.0, atlas, None, None) {
+        match engine.frame_step::<DisplayTreeSceneHost>(surface, 300.0, height, atlas, None, None) {
             ui_wgpu::wgpu::UiFrameStep::Pending => {}
             ui_wgpu::wgpu::UiFrameStep::Ready => {
                 assert!(engine.seal_presented_input_candidate(witness, &[surface.to_string()]));
@@ -168,6 +177,30 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_display_tree(&mut engine, &mut atlas, 1);
 
+    let expected: Vec<String> = display_order_fixture()["displayResolvedOrder"]["topToBottomIds"]
+        .as_array()
+        .expect("neutral Display order")
+        .iter()
+        .filter_map(|id| id.as_str())
+        .filter(|id| id.ends_with(".kind") || id.ends_with(".projection.parallel") || id.ends_with(".projection.perspective"))
+        .map(|id| id.replace("puzzle3d-main", "main"))
+        .collect();
+    let mut painted: Vec<(f32, String)> = expected
+        .iter()
+        .map(|id| {
+            let control_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{id}");
+            let rect = engine
+                .window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID)
+                .iter()
+                .find(|hit| hit.control_id == control_id)
+                .unwrap_or_else(|| panic!("Display row '{id}' publishes its painted label hit"))
+                .rect;
+            (rect.y, id.clone())
+        })
+        .collect();
+    painted.sort_by(|left, right| left.0.total_cmp(&right.0));
+    assert_eq!(painted.into_iter().map(|(_, id)| id).collect::<Vec<_>>(), expected, "the retained Up-flow Tree's accepted physical row rectangles match React's mounted top-to-bottom order");
+
     let chevron = engine
         .window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID)
         .iter()
@@ -184,6 +217,48 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     press_display_tree(&mut engine, chevron);
     settle_display_tree(&mut engine, &mut atlas, 3);
     assert!(!engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "closing Parallel retires Orthographic from the published hit generation");
+}
+
+#[test]
+fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
+    let fixture = display_order_fixture();
+    let expected: Vec<&str> = fixture["displayResolvedOrder"]["topToBottomIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+    let mut shell = display_shell();
+    let kind = shell.session.as_mut().unwrap().app.window_kinds.first_mut();
+    kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
+    kind.surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    let body = shell.build_display_windows_ui();
+    let mut records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display records");
+    for record in &mut records {
+        match &mut record.component {
+            ui_contract::Component::TreeItem(props) => props.default_open = Some(true),
+            ui_contract::Component::TreeSection(props) => props.default_open = Some(true),
+            _ => {}
+        }
+    }
+    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+        generation: 1,
+        surface: SurfaceId::try_from(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).unwrap(),
+        revision: ui_contract::UiRevision(1),
+        root: records[0].id,
+        layout_epoch: 0,
+        node_count: records.len(),
+    }).expect("Display header");
+    for record in records {
+        document.try_upsert_record(record).expect("Display record admits");
+    }
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
+    engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    settle_tree_surface_at_height(&mut engine, &mut atlas, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 1, 720.0);
+    let mut painted: Vec<(f32, &str)> = expected.iter().map(|id| {
+        let control_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{id}");
+        let hit = engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().find(|hit| hit.control_id == control_id).unwrap_or_else(|| panic!("missing painted Display row {id}"));
+        (hit.rect.y, *id)
+    }).collect();
+    painted.sort_by(|left, right| left.0.total_cmp(&right.0));
+    assert_eq!(painted.into_iter().map(|(_, id)| id).collect::<Vec<_>>(), expected);
 }
 
 /// 🖥️ **The Layout census.** React's save section (name box + Save, disabled on a blank name), the

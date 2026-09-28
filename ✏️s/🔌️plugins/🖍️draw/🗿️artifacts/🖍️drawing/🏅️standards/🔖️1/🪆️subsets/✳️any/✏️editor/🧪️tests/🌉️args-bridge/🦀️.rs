@@ -75,3 +75,13 @@ fn path_position_action_round_trips_one_two_axis_edit() {
     store::os_store::test_support::assert_op_line_round_trip(&command);
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
 }
+
+#[test]
+fn path_translation_action_round_trips_the_typed_point_set() {
+    use crate::schema::geometry::editing::{PathEdit,PathPoint,PathPointRef};
+    let args=dsl::json::to_dsl_value(&dsl::json::parse(r#"{"layerId":"path","edit":{"kind":"translate","points":[{"index":0,"point":"anchor"},{"index":1,"point":"control2"}],"delta":[3,-2]}}"#).unwrap());
+    let command=command_from_action("editPath",Some(&args)).unwrap();
+    assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Translate {points:vec![PathPointRef {index:0,point:PathPoint::Anchor},PathPointRef {index:1,point:PathPoint::Control2}],delta:[3.0,-2.0]})}));
+    store::os_store::test_support::assert_op_line_round_trip(&command);
+    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+}

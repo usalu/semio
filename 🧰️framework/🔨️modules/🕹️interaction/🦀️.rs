@@ -22,6 +22,9 @@ use ui_wgpu::wgpu::LocalizedLabel;
 
 use crate::IconName;
 
+#[path = "👆️gesture/🦀️.rs"]
+pub mod gesture;
+
 //#region 🔖️Definition
 pub use protocol::{next_hover, next_selection, validate_state, HoverInput, PresenceDomain, PresenceInteraction, SelectionInput};
 pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};

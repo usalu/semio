@@ -32,6 +32,7 @@ const KINDS: &[&str] = &[
     "reorder-layers",
     "rename-layer",
     "change-layer-visible",
+    "change-layer-locked",
     "change-layer-opacity",
     "change-layer-blend-mode",
     "move-layer",

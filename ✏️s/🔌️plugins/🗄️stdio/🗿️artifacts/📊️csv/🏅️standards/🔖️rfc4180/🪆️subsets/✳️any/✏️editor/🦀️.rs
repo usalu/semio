@@ -5,7 +5,7 @@
 
 use crate::editor::csv::modes::edit;
 use crate::editor::csv::modes::edit::windows::main;
-use crate::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use crate::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
@@ -34,6 +34,25 @@ pub enum CsvEditorCommand {
         revision: String,
         value: String,
     },
+    AddRow {
+        revision: String,
+    },
+    RemoveRow {
+        row: u32,
+        revision: String,
+    },
+    AddColumn {
+        revision: String,
+    },
+    RemoveColumn {
+        column: u32,
+        revision: String,
+    },
+    SetHeader {
+        column: u32,
+        revision: String,
+        value: String,
+    },
     EditSnapshot {
         event: SnapshotEditEvent,
     },
@@ -47,6 +66,11 @@ impl protocol::OpText for CsvEditorCommand {
     fn print_op(&self) -> String {
         match self {
             CsvEditorCommand::SetCell { row, column, revision, value } => format!("set-cell row={row} column={column} revision={} value={}", crate::schema::diff::hex_encode(revision.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes())),
+            CsvEditorCommand::AddRow { revision } => format!("add-row revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::RemoveRow { row, revision } => format!("remove-row row={row} revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::AddColumn { revision } => format!("add-column revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::RemoveColumn { column, revision } => format!("remove-column column={column} revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::SetHeader { column, revision, value } => format!("set-header column={column} revision={} value={}", crate::schema::diff::hex_encode(revision.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes())),
             CsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::schema::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
             CsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::schema::diff::hex_encode(example_id.as_bytes())),
         }
@@ -62,7 +86,7 @@ impl protocol::OpText for CsvEditorCommand {
             let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("csv editor command: invalid snapshot edit: {error}"), dsl::TextSpan::at(1, 1)))?;
             return Ok(CsvEditorCommand::EditSnapshot { event });
         }
-        let rest = line.strip_prefix("set-cell ").ok_or_else(|| store::TextError::new(format!("csv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
+        let (action, rest) = line.split_once(' ').ok_or_else(|| store::TextError::new(format!("csv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut row = None;
         let mut column = None;
         let mut revision = None;
@@ -80,12 +104,21 @@ impl protocol::OpText for CsvEditorCommand {
                     let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| store::TextError::new(format!("csv editor command: invalid value hex: {error}"), dsl::TextSpan::at(1, 1)))?;
                     value = Some(String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("csv editor command: invalid value utf8: {error}"), dsl::TextSpan::at(1, 1)))?);
                 }
-                _ => {}
+                _ => return Err(store::TextError::new(format!("csv editor command: unknown argument {key:?}"), dsl::TextSpan::at(1, 1))),
             }
         }
-        let (row, column, revision, value) =
-            row.zip(column).zip(revision).zip(value).map(|(((row, column), revision), value)| (row, column, revision, value)).ok_or_else(|| store::TextError::new("csv editor command: missing row/column/revision/value", dsl::TextSpan::at(1, 1)))?;
-        Ok(CsvEditorCommand::SetCell { row, column, revision, value })
+        let missing = |fields: &str| store::TextError::new(format!("csv editor command: missing {fields}"), dsl::TextSpan::at(1, 1));
+        match action {
+            "set-cell" => {
+                Ok(CsvEditorCommand::SetCell { row: row.ok_or_else(|| missing("row"))?, column: column.ok_or_else(|| missing("column"))?, revision: revision.ok_or_else(|| missing("revision"))?, value: value.ok_or_else(|| missing("value"))? })
+            }
+            "add-row" => Ok(CsvEditorCommand::AddRow { revision: revision.ok_or_else(|| missing("revision"))? }),
+            "remove-row" => Ok(CsvEditorCommand::RemoveRow { row: row.ok_or_else(|| missing("row"))?, revision: revision.ok_or_else(|| missing("revision"))? }),
+            "add-column" => Ok(CsvEditorCommand::AddColumn { revision: revision.ok_or_else(|| missing("revision"))? }),
+            "remove-column" => Ok(CsvEditorCommand::RemoveColumn { column: column.ok_or_else(|| missing("column"))?, revision: revision.ok_or_else(|| missing("revision"))? }),
+            "set-header" => Ok(CsvEditorCommand::SetHeader { column: column.ok_or_else(|| missing("column"))?, revision: revision.ok_or_else(|| missing("revision"))?, value: value.ok_or_else(|| missing("value"))? }),
+            _ => Err(store::TextError::new(format!("csv editor command: unknown action {action:?}"), dsl::TextSpan::at(1, 1))),
+        }
     }
 }
 
@@ -128,10 +161,23 @@ const CSV_KIT_ACTION_ID: &str = "set-cell";
 /// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
 /// ids. Without the kit verb's row the reactor refused every `set-cell` with
 /// `interactive-job.missing-factory`.
-const CSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, CSV_KIT_ACTION_ID];
+const CSV_RETAINED_TOOL_IDS: &[&str] = &[
+    semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    CSV_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID,
+    semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+    semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID,
+    semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
+    semio_s_artifact_stdio_contract::SET_TABLE_HEADER_ACTION_ID,
+];
 const CSV_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     CSV_KIT_ACTION_ID,
+    semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID,
+    semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+    semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID,
+    semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
+    semio_s_artifact_stdio_contract::SET_TABLE_HEADER_ACTION_ID,
     semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
     semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
     semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
@@ -147,6 +193,11 @@ const CSV_RETAINED_RAW_BYTES: usize = 8_192;
 const CSV_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: CSV_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_TABLE_HEADER_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -180,6 +231,19 @@ fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
             let edit = semio_s_artifact_stdio_contract::window_kit_revisioned_cell_edit(args)?;
             Ok(CsvEditorCommand::SetCell { row: edit.row, column: edit.column, revision: edit.revision, value: edit.value })
         }
+        semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID => Ok(CsvEditorCommand::AddRow { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")? }),
+        semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID => {
+            Ok(CsvEditorCommand::RemoveRow { row: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "row")?, revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")? })
+        }
+        semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID => Ok(CsvEditorCommand::AddColumn { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")? }),
+        semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID => {
+            Ok(CsvEditorCommand::RemoveColumn { column: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")? })
+        }
+        semio_s_artifact_stdio_contract::SET_TABLE_HEADER_ACTION_ID => Ok(CsvEditorCommand::SetHeader {
+            column: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?,
+            revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?,
+            value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
+        }),
         other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"))),
     }
 }
@@ -189,6 +253,11 @@ fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
 fn csv_command_id(command: &CsvEditorCommand) -> &'static str {
     match command {
         CsvEditorCommand::SetCell { .. } => CSV_KIT_ACTION_ID,
+        CsvEditorCommand::AddRow { .. } => semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID,
+        CsvEditorCommand::RemoveRow { .. } => semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+        CsvEditorCommand::AddColumn { .. } => semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID,
+        CsvEditorCommand::RemoveColumn { .. } => semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
+        CsvEditorCommand::SetHeader { .. } => semio_s_artifact_stdio_contract::SET_TABLE_HEADER_ACTION_ID,
         CsvEditorCommand::EditSnapshot { event } => event.action_id(),
         CsvEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
@@ -211,25 +280,102 @@ fn csv_emit_at_revision(command: &CsvEditorCommand, snapshot: &CsvSnapshot, cano
     if let CsvEditorCommand::EditSnapshot { event } = command {
         return <CsvEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot);
     }
-    let (row, column, revision, value) = match command {
-        CsvEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&csv_example_snapshot(example_id), STDIO_CSV_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
-        }
-        CsvEditorCommand::SetCell { row, column, revision, value } => (row, column, revision, value),
-        CsvEditorCommand::EditSnapshot { .. } => unreachable!(),
+    if let CsvEditorCommand::SetActiveExample { example_id } = command {
+        return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&csv_example_snapshot(example_id), STDIO_CSV_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() });
+    }
+    let revision = match command {
+        CsvEditorCommand::SetCell { revision, .. }
+        | CsvEditorCommand::AddRow { revision }
+        | CsvEditorCommand::RemoveRow { revision, .. }
+        | CsvEditorCommand::AddColumn { revision }
+        | CsvEditorCommand::RemoveColumn { revision, .. }
+        | CsvEditorCommand::SetHeader { revision, .. } => revision,
+        CsvEditorCommand::EditSnapshot { .. } | CsvEditorCommand::SetActiveExample { .. } => unreachable!(),
     };
     let current_revision = canonical_revision.map(str::to_owned).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot));
     if current_revision != *revision {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.table-conflict"), "The CSV document changed before this cell draft was applied."));
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.table-conflict"), "The CSV document changed before this table draft was applied."));
     }
-    let record_index = grid_row_to_record_index(snapshot.has_header, *row);
-    let record = snapshot.records.get(record_index).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.row-stale"), format!("CSV row {row} no longer exists")))?;
-    let field = record.fields.get(*column as usize).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.column-stale"), format!("CSV cell {row},{column} no longer exists")))?;
-    Ok(Emit {
-        artifact_mutations: vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted: field.quoted })],
-        description: Some(format!("Set cell {row},{column}")),
-        ..Default::default()
-    })
+    let mutation = match command {
+        CsvEditorCommand::SetCell { row, column, value, .. } => {
+            let record_index = grid_row_to_record_index(snapshot.has_header, *row);
+            let field = snapshot
+                .records
+                .get(record_index)
+                .and_then(|record| record.fields.get(*column as usize))
+                .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.cell-stale"), format!("CSV cell {row},{column} no longer exists")))?;
+            if field.value == *value {
+                return Ok(Emit::default());
+            }
+            CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted: field.quoted })
+        }
+        CsvEditorCommand::AddRow { .. } => {
+            let width = snapshot.records.first().filter(|_| snapshot.has_header).map(|record| record.fields.len()).unwrap_or_else(|| snapshot.records.iter().map(|record| record.fields.len()).max().unwrap_or(0)).max(1);
+            let row = CsvRecord { fields: vec![CsvField::default(); width] };
+            if snapshot.has_header && snapshot.records.is_empty() {
+                let mut next = snapshot.clone();
+                next.records.push(CsvRecord { fields: vec![CsvField::default(); width] });
+                next.records.push(row);
+                CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+            } else {
+                CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: row })
+            }
+        }
+        CsvEditorCommand::RemoveRow { row, .. } => {
+            let index = grid_row_to_record_index(snapshot.has_header, *row);
+            if snapshot.records.get(index).is_none() {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.row-stale"), format!("CSV row {row} no longer exists")));
+            }
+            CsvMutation::RemoveRecord(crate::schema::mutations::remove_record::RemoveRecord { index })
+        }
+        CsvEditorCommand::AddColumn { .. } => {
+            let mut next = snapshot.clone();
+            if next.records.is_empty() {
+                next.records.push(CsvRecord::default());
+            }
+            for record in &mut next.records {
+                record.fields.push(CsvField::default());
+            }
+            CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+        }
+        CsvEditorCommand::RemoveColumn { column, .. } => {
+            let column = *column as usize;
+            if !snapshot.records.iter().any(|record| column < record.fields.len()) {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.column-stale"), format!("CSV column {column} no longer exists")));
+            }
+            let mut next = snapshot.clone();
+            for record in &mut next.records {
+                if column < record.fields.len() {
+                    record.fields.remove(column);
+                }
+            }
+            CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+        }
+        CsvEditorCommand::SetHeader { column, value, .. } => {
+            let column = *column as usize;
+            if snapshot.has_header {
+                let field = snapshot
+                    .records
+                    .first()
+                    .and_then(|record| record.fields.get(column))
+                    .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.header-stale"), format!("CSV header {column} no longer exists")))?;
+                if field.value == *value {
+                    return Ok(Emit::default());
+                }
+                CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index: 0, field_index: column, value: value.clone(), quoted: field.quoted })
+            } else {
+                let mut next = snapshot.clone();
+                let width = next.records.iter().map(|record| record.fields.len()).max().unwrap_or(0).max(column + 1);
+                let mut header = CsvRecord { fields: vec![CsvField::default(); width] };
+                header.fields[column].value = value.clone();
+                next.records.insert(0, header);
+                next.has_header = true;
+                CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+            }
+        }
+        CsvEditorCommand::EditSnapshot { .. } | CsvEditorCommand::SetActiveExample { .. } => unreachable!(),
+    };
+    Ok(Emit { artifact_mutations: vec![mutation], description: Some(csv_command_id(command).to_string()), ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -332,7 +478,7 @@ impl ArtifactEditor for CsvEditor {
         factory: "CsvRetainedCommandJobFactory",
         factory_type: CsvRetainedCommandJobFactory,
         contract: csv_retained_contract(),
-        tools: ["setActiveExample", "set-cell"]
+        tools: ["setActiveExample", "set-cell", "add-row", "remove-row", "add-column", "remove-column", "set-header"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -484,7 +630,7 @@ impl ArtifactEditor for CsvEditor {
                     .render_operation()
                     .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
                     .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
-                main::render_revisioned(doc.snapshot, &revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render_revisioned(doc.snapshot, &revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,

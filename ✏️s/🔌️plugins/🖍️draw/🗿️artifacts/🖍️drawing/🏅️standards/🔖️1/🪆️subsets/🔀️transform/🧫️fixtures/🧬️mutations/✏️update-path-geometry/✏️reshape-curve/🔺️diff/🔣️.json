@@ -56,7 +56,10 @@
                 10
               ]
             }
-          ]
+          ],
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null
         }
       }
     ],

@@ -1,9 +1,12 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type WavDiffEntry {
-  key: String!
-  value: String!
-}
+type WavDiffFmt { audioFormat: Int!, channels: Int!, sampleRate: Int!, byteRate: Int!, blockAlign: Int!, bitsPerSample: Int!, ext: [Int!] }
+type WavDiffData { kind: String!, value: [Float!]! }
+type WavDiffRiffChunk { fourcc: String!, data: [Int!]!, padByte: Int }
+type WavDiffChunkRef { kind: String!, value: Int }
 type WavDiff {
-  schema: String! @state(class: ARTIFACT)
-  entries: [WavDiffEntry!]! @state(class: ARTIFACT)
+  fmt: WavDiffFmt
+  data: WavDiffData
+  fmtPadByte: Int
+  dataPadByte: Int
+  otherChunks: [WavDiffRiffChunk!]
+  chunkOrder: [WavDiffChunkRef!]
 }

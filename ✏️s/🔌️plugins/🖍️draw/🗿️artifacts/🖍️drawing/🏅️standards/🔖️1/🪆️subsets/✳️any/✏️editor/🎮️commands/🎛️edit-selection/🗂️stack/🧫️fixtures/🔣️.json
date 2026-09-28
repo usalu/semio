@@ -1,0 +1,224 @@
+[
+  {
+    "name": "separate-forward",
+    "operation": "bringForward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "a",
+      "c"
+    ],
+    "after": [
+      "b",
+      "a",
+      "d",
+      "c"
+    ]
+  },
+  {
+    "name": "adjacent-forward",
+    "operation": "bringForward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "b",
+      "c"
+    ],
+    "after": [
+      "a",
+      "d",
+      "b",
+      "c"
+    ]
+  },
+  {
+    "name": "forward-boundary",
+    "operation": "bringForward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "c",
+      "d"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  },
+  {
+    "name": "separate-backward",
+    "operation": "sendBackward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "b",
+      "d"
+    ],
+    "after": [
+      "b",
+      "a",
+      "d",
+      "c"
+    ]
+  },
+  {
+    "name": "adjacent-backward",
+    "operation": "sendBackward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "b",
+      "c"
+    ],
+    "after": [
+      "b",
+      "c",
+      "a",
+      "d"
+    ]
+  },
+  {
+    "name": "backward-boundary",
+    "operation": "sendBackward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "a",
+      "b"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  },
+  {
+    "name": "all-forward",
+    "operation": "bringForward",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  },
+  {
+    "name": "reversed-selection-front",
+    "operation": "bringToFront",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "c",
+      "a"
+    ],
+    "after": [
+      "b",
+      "d",
+      "a",
+      "c"
+    ]
+  },
+  {
+    "name": "reversed-selection-back",
+    "operation": "sendToBack",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "d",
+      "b"
+    ],
+    "after": [
+      "b",
+      "d",
+      "a",
+      "c"
+    ]
+  },
+  {
+    "name": "front-noop",
+    "operation": "bringToFront",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "c",
+      "d"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  },
+  {
+    "name": "back-noop",
+    "operation": "sendToBack",
+    "order": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ],
+    "ids": [
+      "a",
+      "b"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  }
+]

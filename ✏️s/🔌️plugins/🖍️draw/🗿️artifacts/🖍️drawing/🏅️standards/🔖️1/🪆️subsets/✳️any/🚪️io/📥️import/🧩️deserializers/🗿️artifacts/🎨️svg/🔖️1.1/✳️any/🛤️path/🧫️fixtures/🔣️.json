@@ -1,0 +1,305 @@
+[
+  {
+    "name": "empty",
+    "source": "",
+    "after": []
+  },
+  {
+    "name": "relative-and-implicit-lines",
+    "source": "m10 20 5-5 h10 v5 l-5 5z",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          15,
+          15
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          25,
+          15
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          25,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          25
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ]
+  },
+  {
+    "name": "cubic-reflection",
+    "source": "M0 0c0 10 10 10 10 0s10-10 10 0",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          10
+        ],
+        "ctrl2": [
+          10,
+          10
+        ],
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          -10
+        ],
+        "ctrl2": [
+          20,
+          -10
+        ],
+        "to": [
+          20,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "quad-reflection",
+    "source": "M0 0q10 20 20 0t20 0",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          10,
+          20
+        ],
+        "to": [
+          20,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          30,
+          -20
+        ],
+        "to": [
+          40,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reflection-resets-after-line",
+    "source": "M0 0Q10 20 20 0L30 0T40 0S50 10 60 0",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          10,
+          20
+        ],
+        "to": [
+          20,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          30,
+          0
+        ],
+        "to": [
+          40,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          40,
+          0
+        ],
+        "ctrl2": [
+          50,
+          10
+        ],
+        "to": [
+          60,
+          0
+        ]
+      }
+    ],
+    "oracleSource": "M0 0Q10 20 20 0L30 0Q30 0 40 0C40 0 50 10 60 0",
+    "oracleReason": "Three.js SVGLoader shares one previous control for Q/T and C/S. SVG 1.1 sections 8.3.6 and 8.3.7 require a reset between curve families; the reference uses explicit controls."
+  },
+  {
+    "name": "closed-origin-and-new-contour",
+    "source": "M10 10L20 20z m5 0 l0 5",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          15,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          15,
+          15
+        ]
+      }
+    ]
+  },
+  {
+    "name": "arc-flags-and-relative-endpoint",
+    "source": "M10 20a5 6 30 0110 5",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 5,
+        "ry": 6,
+        "rotation": 30,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          20,
+          25
+        ]
+      }
+    ]
+  },
+  {
+    "name": "numbers",
+    "source": "M.5-.25L1e2 +2E-1",
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0.5,
+          -0.25
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0.2
+        ]
+      }
+    ]
+  },
+  {
+    "name": "no-move",
+    "source": "L1 2",
+    "after": null
+  },
+  {
+    "name": "missing-coordinate",
+    "source": "M0 0L1",
+    "after": null
+  },
+  {
+    "name": "bad-flag",
+    "source": "M0 0A5 5 0 2 0 5 5",
+    "after": null
+  },
+  {
+    "name": "negative-radius",
+    "source": "M0 0A-5 5 0 0 1 5 5",
+    "after": null
+  },
+  {
+    "name": "nonfinite",
+    "source": "M0 0L1e999 0",
+    "after": null
+  },
+  {
+    "name": "unknown-command",
+    "source": "M0 0R1 2",
+    "after": null
+  },
+  {
+    "name": "data-after-close",
+    "source": "M0 0z 1 2",
+    "after": null
+  }
+]

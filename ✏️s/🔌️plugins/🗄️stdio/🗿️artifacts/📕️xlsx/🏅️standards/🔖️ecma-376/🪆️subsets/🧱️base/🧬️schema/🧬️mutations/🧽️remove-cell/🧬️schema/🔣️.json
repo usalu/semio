@@ -4,24 +4,10 @@
   "title": "RemoveCell",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "sheet_name",
-    "row",
-    "col"
-  ],
+  "required": ["address"],
   "properties": {
-    "sheet_name": {
-      "type": "string"
-    },
-    "row": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 4294967295
-    },
-    "col": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 4294967295
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json"
     },
     "mutation": {
       "const": "removeCell",

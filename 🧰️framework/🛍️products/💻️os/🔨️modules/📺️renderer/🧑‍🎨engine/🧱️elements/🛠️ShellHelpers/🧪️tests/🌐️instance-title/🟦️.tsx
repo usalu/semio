@@ -5,7 +5,7 @@ import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { isIconName } from "@semio-tech/assets";
-import { createWorldProjectionTemplates, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
+import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🟦️.tsx";
 import schema from "../../🧬️schema/🌐️instance-title/🔣️.json" with { type: "json" };
@@ -22,6 +22,23 @@ afterEach(() => {
 });
 
 describe("locale-stable instance titles", () => {
+  it("paints the concrete projection title for a newly transferred window template", () => {
+    vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
+    vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });
+    const windows = fixture.instances.map(row => {
+      const spec = decodeWorldProjectionTemplateId(encodeWorldProjectionTemplateId(row.initialProjection as WorldProjectionSpec))!;
+      const title = worldProjectionSpecLabel(spec);
+      const iconId = worldProjectionSpecIconId(spec);
+      expect(title).toBe(row.projectionTitle);
+      expect(iconId).toBe(row.projectionIcon);
+      if (!isIconName(iconId)) throw new Error(`Unknown projection icon: ${iconId}`);
+      return { id: row.id, title: uiDataLabel(title), iconId, children: <div>{row.id}</div> };
+    });
+    const layout: WindowLayoutNode = { kind: "row", children: windows.map(window => ({ kind: "stack", children: [{ kind: "window", id: window.id, title: window.title }] })) };
+    render(<Mode windows={windows} layout={layout} activeWindowId={windows[0]!.id} />);
+    for (const row of fixture.instances) expect(screen.getByRole("tab", { name: row.projectionTitle, exact: true })).toBeTruthy();
+  });
+
   it("uses the concrete projection selected by each template branch for window chrome", () => {
     const flatten = (rows: readonly WorldProjectionTemplateDescriptor[]): readonly WorldProjectionTemplateDescriptor[] => rows.flatMap(row => [row, ...flatten(row.children ?? [])]);
     const templates = flatten(createWorldProjectionTemplates({ controllerId: "projection-fixture" }));

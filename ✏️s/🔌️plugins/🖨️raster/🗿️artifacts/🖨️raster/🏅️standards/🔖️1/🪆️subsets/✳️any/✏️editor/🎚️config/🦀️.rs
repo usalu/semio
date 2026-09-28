@@ -5,10 +5,11 @@
 //!
 //! 🕹️ `selected_ids`/`hovered_id` deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
 //! layer selection/hover is the framework-owned `"layers"` interaction domain now (granularity
-//! `"layer"`, `HierarchyProvider::Flat`), read via `InteractionView::selection("layers")` instead of
+//! `"layer"`, `HierarchyProvider::Topology`), read via `InteractionView::selection("layers")` instead of
 //! this config.
 
 use crate::RasterCamera;
+pub use crate::editor::raster::selection::RasterPixelSelection;
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -26,6 +27,10 @@ pub struct RasterConfig {
     pub brush_color: String,
     /// 🖌️ Solid fraction of the brush radius.
     pub brush_hardness: f64,
+    pub paint_target: String,
+    pub mask_value: u32,
+    #[dsl(block)]
+    pub pixel_selection:Option<RasterPixelSelection>,
     /// 🔭️ Navigator's last-known composite-window viewport size — was
     /// `RasterPlayRuntime::composite_viewport`.
     #[dsl(block)]
@@ -84,7 +89,7 @@ pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, composite_viewport: None, camera: RasterCamera::default() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, paint_target:"pixels".into(),mask_value:255,pixel_selection:None,composite_viewport: None, camera: RasterCamera::default() }
     }
 }
 
@@ -122,6 +127,12 @@ pub enum RasterConfigMutation {
     SetBrushColor { value: String },
     #[dsl(key = "brush-hardness")]
     SetBrushHardness { value: f64 },
+    #[dsl(key = "paint-target")]
+    SetPaintTarget {value:String},
+    #[dsl(key = "mask-value")]
+    SetMaskValue {value:u32},
+    #[dsl(key="pixel-selection")]
+    SetPixelSelection {#[dsl(block)] selection:Option<RasterPixelSelection>},
     #[dsl(key = "composite-viewport")]
     SetCompositeViewport {
         #[dsl(block)]
@@ -307,6 +318,53 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎭️paint-target",
+            semantic_kind: "set-paint-target",
+            display_name: "Set Paint Target",
+            emoji: "🎭️",
+            aggregate_variant: "SetPaintTarget",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎭️mask-value",
+            semantic_kind: "set-mask-value",
+            display_name: "Set Mask Value",
+            emoji: "🎭️",
+            aggregate_variant: "SetMaskValue",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version:1,
+            owner:"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎯️pixel-selection",
+            semantic_kind:"set-pixel-selection",
+            display_name:"Set Pixel Selection",
+            emoji:"🎯️",
+            aggregate_variant:"SetPixelSelection",
+            payload_schema:"🧬️schema/🔣️.json",
+            text_opcode:None,binary_tag:None,
+            invertibility:protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation:protocol::MutationDiffParticipation::Detect,
+            outcome_classes:&[protocol::MutationOutcomeClass::Applied],
+            composition:protocol::MutationComposition::Atomic,
+            required_language_surfaces:&[protocol::MutationLanguageSurface::Rust,protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -318,6 +376,9 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
             Self::SetBrushColor { .. } => &Self::DESCRIPTORS[5],
             Self::SetBrushHardness { .. } => &Self::DESCRIPTORS[6],
+            Self::SetPaintTarget {..}=>&Self::DESCRIPTORS[7],
+            Self::SetMaskValue {..}=>&Self::DESCRIPTORS[8],
+            Self::SetPixelSelection {..}=>&Self::DESCRIPTORS[9],
         }
     }
 
@@ -337,6 +398,9 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetBrushHardness { value } => {
                 if value.is_finite() && (0.0..=1.0).contains(value) { next.brush_hardness = *value; }
             },
+            RasterConfigMutation::SetPaintTarget {value}=>{if matches!(value.as_str(),"pixels"|"mask"){if next.paint_target!=*value{next.pixel_selection=None;}next.paint_target=value.clone();}},
+            RasterConfigMutation::SetPixelSelection {selection}=>{if selection.as_ref().is_none_or(|value|value.target==base.paint_target&&value.validate().is_ok()){next.pixel_selection=selection.clone();}},
+            RasterConfigMutation::SetMaskValue {value}=>{if *value<=255{next.mask_value=*value;}},
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
             RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
         }

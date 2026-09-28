@@ -6,21 +6,7 @@ use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the forms artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-///
-/// Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): the old
-/// `steps: Option<FormsStepsDelta>` field (an id-keyed sparse collection delta) and the dead
-/// whole-snapshot-replace `artifact: Option<Box<FormsArtifact>>` slot (the banned `SetSnapshot`
-/// vocabulary — grepped: never constructed by any app command, only by this file's own now-removed
-/// `diff_set_snapshot`/`sparse_diff_between` dead code) are both removed. `structure`/`results`
-/// (`Option<ArtifactChild<S>>`, single-Option "always-present slot" shape) replace them: every
-/// mutation triad still builds its change as a `FormsStepsDelta` internally (that type is UNCHANGED,
-/// see `🔖️DeltaHelpers` below) and applies it against the WORKING-SCENE steps
-/// (`crate::forms_steps`, not a snapshot field) to get the resulting `Vec<FormStep>`,
-/// then regenerates both composed children from that result — the granular, cascade-aware mutation
-/// semantics are unchanged, only the diff's own wire representation of "what changed" becomes a
-/// pair of regenerated content-addressed handles, exactly like every other composed plugin in this
-/// ticket (see `crate::🔖️Composition`'s own doc comment).
+/// 🔺️ Sparse durable domain edits and their derived child projections.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.forms.forms")]
@@ -38,6 +24,12 @@ pub struct FormsDiff {
     #[value(skip_serializing_if = "Option::is_none")]
     pub title: Option<Option<String>>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub definition: Option<crate::schema::definition::FormsDefinition>,
+    #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub responses: Option<Vec<crate::schema::response::FormsResponse>>,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub structure: Option<FormsStructureChild>,
@@ -53,6 +45,8 @@ impl dsl::FromValue for FormsDiff {
         let mut id = None;
         let mut version = None;
         let mut title = None;
+        let mut definition = None;
+        let mut responses = None;
         let mut structure = None;
         let mut results = None;
         for (key, value) in dsl::DslValue::into_object(value)? {
@@ -61,12 +55,14 @@ impl dsl::FromValue for FormsDiff {
                 "id" if id.is_none() => id = Some(dsl::FromValue::from_value(value)?),
                 "version" if version.is_none() => version = Some(dsl::FromValue::from_value(value)?),
                 "title" if title.is_none() => title = Some(dsl::FromValue::from_value(value)?),
+                "definition" if definition.is_none() => definition = Some(dsl::FromValue::from_value(value)?),
+                "responses" if responses.is_none() => responses = Some(dsl::FromValue::from_value(value)?),
                 "structure" if structure.is_none() => structure = Some(dsl::FromValue::from_value(value)?),
                 "results" if results.is_none() => results = Some(dsl::FromValue::from_value(value)?),
                 _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Forms field {key}"))),
             }
         }
-        let result = Self { schema, id, version, title, structure, results };
+        let result = Self { schema, id, version, title, definition, responses, structure, results };
         result.validate().map_err(dsl::ValueError::new)?;
         Ok(result)
     }
@@ -77,6 +73,11 @@ impl FormsDiff {
     pub fn validate(&self) -> Result<(), String> {
         use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
         if self.schema.as_deref().is_some_and(|value| value != "forms.form") { return Err("invalid Forms document marker".into()); }
+        if let Some(definition) = &self.definition { definition.validate()?; }
+        if let Some(responses) = &self.responses {
+            let mut ids = std::collections::HashSet::new();
+            for response in responses { response.validate()?; if !ids.insert(&response.id) { return Err("duplicate response id".into()); } }
+        }
         if let Some(child) = &self.structure { validate_semio_child_identity(&child.child_id, &child.target, "value")?; }
         if let Some(child) = &self.results { validate_semio_child_identity(&child.child_id, &child.target, "table")?; }
         Ok(())
@@ -172,8 +173,8 @@ pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<For
 /// `FormsDiff{steps: Some(delta), ..}` literal).
 pub fn forms_diff_from_delta(delta: &FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
     let next_steps = apply_steps_delta(&forms_steps(base), delta);
-    let (structure, results) = forms_children_from_steps(&next_steps);
-    FormsDiff { structure: Some(structure), results: Some(results), ..Default::default() }
+    let (structure, _) = forms_children_from_steps(&next_steps);
+    FormsDiff { definition: Some(crate::schema::definition::FormsDefinition { steps: next_steps }), structure: Some(structure), ..Default::default() }
 }
 
 impl FormsDiff {
@@ -194,6 +195,8 @@ impl FormsDiff {
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
+            if let Some(definition) = &self.definition { next.definition = definition.clone(); }
+            if let Some(responses) = &self.responses { next.responses = responses.clone(); }
             if let Some(structure) = &self.structure {
                 next.structure = structure.clone();
             }
@@ -222,6 +225,8 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
+            if let Some(definition) = &self.definition { next.definition = definition.clone(); }
+            if let Some(responses) = &self.responses { next.responses = responses.clone(); }
             if let Some(structure) = &self.structure {
                 next.structure = structure.clone();
             }
@@ -243,6 +248,8 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
         take!(id);
         take!(version);
         take!(title);
+        take!(definition);
+        take!(responses);
         take!(structure);
         take!(results);
     }
@@ -270,12 +277,13 @@ pub fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> For
     if before.title != after.title {
         diff.title = Some(after.title.clone());
     }
+    if before.responses != after.responses { diff.responses = Some(after.responses.clone()); diff.results = Some(after.results.clone()); }
     let before_steps = forms_steps(before);
     let after_steps = forms_steps(after);
     if before_steps != after_steps {
-        let (structure, results) = forms_children_from_steps(&after_steps);
+        let (structure, _) = forms_children_from_steps(&after_steps);
+        diff.definition = Some(after.definition.clone());
         diff.structure = Some(structure);
-        diff.results = Some(results);
     }
     diff
 }

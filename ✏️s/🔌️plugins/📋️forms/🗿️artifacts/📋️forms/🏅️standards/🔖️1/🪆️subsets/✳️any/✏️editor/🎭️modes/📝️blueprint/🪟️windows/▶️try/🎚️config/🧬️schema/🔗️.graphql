@@ -1,3 +1,4 @@
 type FormsTryWindowConfig {
-  currentStepIndex: Int! @state(class: WINDOW_CONFIG)
+  currentStepIndex: Int!
+  submittedResponseId: String @state(class: WINDOW_CONFIG)
 }

@@ -124,6 +124,34 @@
         "path": "/list/1"
       },
       "oracle": []
+    },
+    {
+      "id": "remove-first-object-key",
+      "event": {
+        "operation": "removeValue",
+        "path": "/metadata/a~1b~0c"
+      },
+      "oracle": [
+        {
+          "op": "remove",
+          "path": "/metadata/a~1b~0c"
+        }
+      ]
+    },
+    {
+      "id": "move-object-key-to-array",
+      "event": {
+        "operation": "moveValue",
+        "from": "/metadata/a~1b~0c",
+        "path": "/list/1"
+      },
+      "oracle": [
+        {
+          "op": "move",
+          "from": "/metadata/a~1b~0c",
+          "path": "/list/1"
+        }
+      ]
     }
   ],
   "rejected": [
@@ -554,5 +582,48 @@
       },
       "maximumPatchBytes": 1048576
     }
-  }
+  },
+  "positionedInsertions": [
+    {
+      "key": "front",
+      "index": 0,
+      "keys": [
+        "front",
+        "a/b~c",
+        "old"
+      ]
+    },
+    {
+      "key": "middle",
+      "index": 1,
+      "keys": [
+        "a/b~c",
+        "middle",
+        "old"
+      ]
+    },
+    {
+      "key": "tail",
+      "index": 2,
+      "keys": [
+        "a/b~c",
+        "old",
+        "tail"
+      ]
+    }
+  ],
+  "intrinsicObjectOrder": [
+    { "before": { "2": "two", "10": "ten", "z": "last" }, "key": "1", "index": 1, "expectedKeys": ["1", "2", "10", "z"] },
+    { "before": { "a": "first", "b": "second" }, "key": "z", "index": 0, "expectedKeys": ["z", "a", "b"] }
+  ],
+  "intrinsicRenames": [
+    { "before": { "2": "two", "10": "ten", "z": "last" }, "from": "z", "key": "1" },
+    { "before": { "a": "first", "b": "second" }, "from": "a", "key": "z" }
+  ],
+  "invalidPositions": [
+    -1,
+    3,
+    0.5,
+    9007199254740992
+  ]
 }

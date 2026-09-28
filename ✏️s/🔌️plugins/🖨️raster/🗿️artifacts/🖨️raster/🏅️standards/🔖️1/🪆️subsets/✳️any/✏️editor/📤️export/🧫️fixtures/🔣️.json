@@ -1,0 +1,108 @@
+{
+  "schema": "2d.image",
+  "sourcePixelsPerGrant": 32768,
+  "compositePixelsPerGrant": 4096,
+  "pngBytesPerGrant": 4096,
+  "base64InputBytesPerGrant": 3072,
+  "outputChunkBytes": 4096,
+  "stages": [
+    "prepare",
+    "composite",
+    "encode",
+    "output"
+  ],
+  "image": {
+    "width": 2,
+    "height": 2,
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      128,
+      0,
+      0,
+      255,
+      64,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "base64Cases": [
+    {
+      "bytes": [],
+      "expected": ""
+    },
+    {
+      "bytes": [
+        0
+      ],
+      "expected": "AA=="
+    },
+    {
+      "bytes": [
+        0,
+        255
+      ],
+      "expected": "AP8="
+    },
+    {
+      "bytes": [
+        0,
+        255,
+        127
+      ],
+      "expected": "AP9/"
+    },
+    {
+      "bytes": [
+        82,
+        97,
+        115,
+        116,
+        101,
+        114
+      ],
+      "expected": "UmFzdGVy"
+    }
+  ],
+  "boundaryLengths": [
+    3071,
+    3072,
+    3073,
+    6147
+  ],
+  "labels": {
+    "prepare": {
+      "en": "Preparing layers",
+      "de": "Ebenen werden vorbereitet"
+    },
+    "composite": {
+      "en": "Rendering layers",
+      "de": "Ebenen werden gerendert"
+    },
+    "encode": {
+      "en": "Encoding PNG",
+      "de": "PNG wird kodiert"
+    },
+    "output": {
+      "en": "Preparing download",
+      "de": "Download wird vorbereitet"
+    }
+  },
+  "download": {
+    "action": "exportPng",
+    "wire": "export-png",
+    "args": {},
+    "filename": "image.png",
+    "mime": "image/png",
+    "encoding": "base64",
+    "en": "Export PNG",
+    "de": "PNG exportieren"
+  }
+}

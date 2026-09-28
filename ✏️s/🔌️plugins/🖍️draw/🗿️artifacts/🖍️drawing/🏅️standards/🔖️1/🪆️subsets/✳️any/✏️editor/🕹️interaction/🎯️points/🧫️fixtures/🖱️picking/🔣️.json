@@ -1,0 +1,105 @@
+[
+  {
+    "name": "plain-first",
+    "current": [],
+    "hit": "a",
+    "mode": "replace",
+    "after": [
+      "a"
+    ]
+  },
+  {
+    "name": "plain-other",
+    "current": [
+      "a"
+    ],
+    "hit": "b",
+    "mode": "replace",
+    "after": [
+      "b"
+    ]
+  },
+  {
+    "name": "selected-preserves-group",
+    "current": [
+      "a",
+      "b"
+    ],
+    "hit": "a",
+    "mode": "replace",
+    "after": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "name": "blank-clears",
+    "current": [
+      "a",
+      "b"
+    ],
+    "hit": null,
+    "mode": "replace",
+    "after": []
+  },
+  {
+    "name": "shift-add",
+    "current": [
+      "a"
+    ],
+    "hit": "b",
+    "mode": "toggle",
+    "after": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "name": "shift-remove",
+    "current": [
+      "a",
+      "b"
+    ],
+    "hit": "a",
+    "mode": "toggle",
+    "after": [
+      "b"
+    ]
+  },
+  {
+    "name": "shift-blank",
+    "current": [
+      "a"
+    ],
+    "hit": null,
+    "mode": "toggle",
+    "after": [
+      "a"
+    ]
+  },
+  {
+    "name": "add-is-idempotent",
+    "current": [
+      "a",
+      "b"
+    ],
+    "hit": "a",
+    "mode": "add",
+    "after": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "name": "add-new",
+    "current": [
+      "a"
+    ],
+    "hit": "b",
+    "mode": "add",
+    "after": [
+      "a",
+      "b"
+    ]
+  }
+]

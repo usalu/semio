@@ -910,7 +910,7 @@ fn field_edit_call(
                             *#access = __replacement;
                             Ok::<(), #value_crate::ValueError>(())
                         }
-                        #value_crate::ValueEdit::Insert(_) => Err(#value_crate::ValueError::new("cannot insert a required field")),
+                        #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert a required field")),
                         #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove a required field")),
                     }
                 } else {
@@ -946,7 +946,7 @@ fn struct_edit_path_body(fields: &[NamedField], value_crate: &syn::Path) -> proc
                     *self = replacement;
                     Ok(())
                 }
-                #value_crate::ValueEdit::Insert(_) => Err(#value_crate::ValueError::new("cannot insert at the record root")),
+                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert at the record root")),
                 #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove the record root")),
             };
         }
@@ -1541,7 +1541,7 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                     *self = replacement;
                     Ok(())
                 }
-                #value_crate::ValueEdit::Insert(_) => Err(#value_crate::ValueError::new("cannot insert at the enum root")),
+                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert at the enum root")),
                 #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove the enum root")),
             };
         }

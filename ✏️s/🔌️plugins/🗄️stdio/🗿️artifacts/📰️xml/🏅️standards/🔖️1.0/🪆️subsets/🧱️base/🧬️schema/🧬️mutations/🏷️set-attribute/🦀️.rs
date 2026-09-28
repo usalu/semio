@@ -41,16 +41,19 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMut
                     XmlNode::Element { attrs, .. } => attrs.iter().find(|attribute| attribute.name == payload.name),
                     _ => None,
                 });
+                let mut order: Vec<String> = match target {
+                    Some(XmlNode::Element { attrs, .. }) => attrs.iter().map(|attr| attr.name.clone()).collect(),
+                    _ => Vec::new(),
+                };
+                if payload.value.is_none() {
+                    order.retain(|name| *name != payload.name);
+                } else if existing.is_none() {
+                    order.push(payload.name.clone());
+                }
                 let attributes = match (existing, &payload.value) {
-                    (Some(_), Some(value)) => XmlAttributesDiff { removed: Vec::new(), modified: vec![XmlAttrModified { name: payload.name.clone(), value: value.clone() }], added: Vec::new() },
-                    (Some(_), None) => XmlAttributesDiff { removed: vec![payload.name.clone()], modified: Vec::new(), added: Vec::new() },
-                    (None, Some(value)) => {
-                        let index = match target {
-                            Some(XmlNode::Element { attrs, .. }) => attrs.len(),
-                            _ => 0,
-                        };
-                        XmlAttributesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlAttrAdded { index, name: payload.name.clone(), value: value.clone() }] }
-                    }
+                    (Some(_), Some(value)) => XmlAttributesDiff { order, removed: Vec::new(), modified: vec![XmlAttrModified { name: payload.name.clone(), value: value.clone() }], added: Vec::new() },
+                    (Some(_), None) => XmlAttributesDiff { order, removed: vec![payload.name.clone()], modified: Vec::new(), added: Vec::new() },
+                    (None, Some(value)) => XmlAttributesDiff { order, removed: Vec::new(), modified: Vec::new(), added: vec![XmlAttrAdded { name: payload.name.clone(), value: value.clone() }] },
                     (None, None) => XmlAttributesDiff::default(),
                 };
                 diff_at_path(&payload.path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attributes), children: None }))

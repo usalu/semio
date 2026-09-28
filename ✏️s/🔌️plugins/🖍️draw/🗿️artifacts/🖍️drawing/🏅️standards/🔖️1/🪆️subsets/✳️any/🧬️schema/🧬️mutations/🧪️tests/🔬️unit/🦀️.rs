@@ -130,9 +130,9 @@ async fn dispatch_registers_semantic_descriptors() {
     register_drawing_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", _ => "layer" });
+        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", _ => "layer" });
     }
-    assert_eq!(DrawingMutation::kinds().len(), 16);
+    assert_eq!(DrawingMutation::kinds().len(), 18);
 }
 
 #[test]
@@ -143,7 +143,9 @@ fn field_patch_validation_fixtures() {
     for case in cases.as_array().unwrap() {
         let patch = &case["patch"];
         let value = dsl::json::to_dsl_value(&dsl::json::parse(&patch["value"].to_string()).unwrap());
-        let operation = drawing_op_for_layer_field(&document, id, patch["field"].as_str().unwrap(), &value);
+        let group_document = DrawingSnapshot { layers: vec![crate::schema::create_drawing_group_layer("Group")], ..Default::default() };
+        let (target, target_id) = if patch["field"] == "isolation" { (&group_document, crate::schema::layer_id(&group_document.layers[0])) } else { (&document, id) };
+        let operation = drawing_op_for_layer_field(target, target_id, patch["field"].as_str().unwrap(), &value);
         assert_eq!(operation.is_some(), case["accepted"].as_bool().unwrap(), "{case}");
         if patch["field"] == "rotationDegrees" {
             let DrawingMutation::UpdateLayerTransform(update) = operation.unwrap() else { panic!("rotation must use a semantic transform mutation") };
@@ -197,4 +199,24 @@ fn text_field_edits_preserve_numeric_strings_and_other_facets() {
     assert!(drawing_op_for_layer_field(&document, &id, "textSize", &parse_layer_field_input("textSize", "0")).is_none());
     let shape = base_document();
     assert!(drawing_op_for_layer_field(&shape, crate::schema::layer_id(&shape.layers[0]), "textContent", &parse_layer_field_input("textContent", "123")).is_none());
+}
+
+#[test]
+fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let original = base_document();
+    let id = crate::schema::layer_id(&original.layers[0]);
+    for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true) {
+        let mode = case["patch"]["value"].as_str().unwrap();
+        let operation = drawing_op_for_layer_field(&original, id, "blendMode", &parse_layer_field_input("blendMode", mode)).unwrap();
+        let inverse = operation.inverse(&original);
+        let mut document = original.clone();
+        apply_drawing_mutation(&mut document, &operation).unwrap();
+        let mut expected = original.clone();
+        crate::schema::layer_base_mut(&mut expected.layers[0]).blend_mode = mode.into();
+        assert_eq!(document, expected, "{mode}");
+        for undo in inverse { apply_drawing_mutation(&mut document, &undo).unwrap(); }
+        assert_eq!(document, original, "{mode}");
+    }
+    eprintln!("[DEBUG] all sixteen inspector blend modes preserve unrelated fields and undo");
 }

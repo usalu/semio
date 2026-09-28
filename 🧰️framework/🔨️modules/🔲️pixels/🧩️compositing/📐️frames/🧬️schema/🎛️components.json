@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing/frames/components.json",
+  "title": "Affine Transform Controls",
+  "description": "Editable components compose as translation × rotation(degrees) × horizontal shear(factor) × scale. Decomposition chooses nonnegative scaleX and puts reflection into scaleY. Persist the resulting affine matrix, not a lossy five-field TRS approximation. Finite invertibility follows the compositor determinant floor of 1e-12.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["x", "y", "scaleX", "scaleY", "rotation", "shearX"],
+  "properties": {
+    "x": {"type": "number"},
+    "y": {"type": "number"},
+    "scaleX": {"type": "number"},
+    "scaleY": {"type": "number"},
+    "rotation": {"type": "number"},
+    "shearX": {"type": "number"}
+  }
+}

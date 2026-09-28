@@ -1,4 +1,5 @@
 /** 🧬️ Logical ECMA-376 PresentationML artifact schema. */
+import { parsePptxSnapshot } from './📸️snapshot/🟦️.ts';
 import type { OpcPackage, PptxPresentation, PptxXmlPart } from './📸️snapshot/🟦️.ts';
 export interface PptxArtifact {
   /** @state artifact */ schema: string;
@@ -55,11 +56,5 @@ export const stdioPptxEcma376BaseArtifactGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parsePptxArtifact(value: unknown, at = "$"): PptxArtifact {
-  const row = stdioPptxEcma376BaseArtifactGuardObject(value, at);
-  return {
-    schema: stdioPptxEcma376BaseArtifactGuardString(row["schema"], `${at}.schema`),
-    opc: stdioPptxEcma376BaseArtifactGuardObject(row["opc"], `${at}.opc`),
-    xmlParts: stdioPptxEcma376BaseArtifactGuardArray(row["xmlParts"], `${at}.xmlParts`).map((item, index) => stdioPptxEcma376BaseArtifactGuardObject(item, `${at}.xmlParts[${index}]`)),
-    presentation: stdioPptxEcma376BaseArtifactGuardObject(row["presentation"], `${at}.presentation`),
-  };
+  return parsePptxSnapshot(value, at);
 }

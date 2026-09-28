@@ -21,13 +21,10 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn flat_cells_orders_by_sheet_then_cell_storage_order() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    let document = XlsxSnapshot {
-        workbook: XlsxWorkbook {
+    let document = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] }],
             ..Default::default()
-        },
-        ..XlsxSnapshot::default()
-    };
+    });
     let rows = xlsx_flat_cells(&document);
     assert_eq!(rows, vec![("S1".to_string(), 1, 0, XlsxCellValue::Number(1.0)), ("S2".to_string(), 2, 1, XlsxCellValue::Boolean(true))]);
 }
@@ -78,16 +75,191 @@ async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_bin
 #[semio_framework_async_macros::async_test]
 async fn stable_cell_edit_targets_identity_and_rejects_a_stale_revision() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    let snapshot = XlsxSnapshot {
-        workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 41, col: 7, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() },
-        ..XlsxSnapshot::default()
-    };
-    let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: xlsx_cell_revision(&XlsxCellValue::Number(1.0)), value: "2".into() };
+    let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 41, col: 7, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() });
+    let address = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 41, 7).unwrap();
+    let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: address.revision.clone(), value: "2".into() };
     let emit = xlsx_set_cell_emit(&snapshot, &command).expect("matching revision emits a mutation");
-    assert_eq!(
-        emit.artifact_mutations,
-        vec![XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet 1".into(), row: 41, col: 7, value: XlsxCellValue::Number(2.0) })]
-    );
+    assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Number(2.0) })]);
     let stale = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: "stale".into(), value: "2".into() };
     assert!(xlsx_set_cell_emit(&snapshot, &stale).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
+    use crate::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
+    const FIXTURE: &str = include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
+    let shared_strings: Vec<String> = serde_json::from_value(fixture["sharedStrings"].clone()).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let original: XlsxCellValue = dsl::json::from_json_str(&case["value"].to_string()).unwrap();
+        let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value: original.clone() }] }], shared_strings: shared_strings.clone() });
+        let revision = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
+        let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: case["draft"].as_str().unwrap().into() };
+        let emitted = xlsx_set_cell_emit(&snapshot, &command).unwrap();
+        assert!(emitted.artifact_mutations.is_empty(), "unchanged draft must not rewrite {}", case["id"]);
+        assert_eq!(snapshot.project_workbook().unwrap().sheets[0].cells[0].value, original);
+    }
+    let conflict = &fixture["sharedStringConflict"];
+    let index = conflict["index"].as_u64().unwrap() as usize;
+    let value = XlsxCellValue::SharedString(index);
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value }] }], shared_strings });
+    let revision = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
+    let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: conflict["draft"].as_str().unwrap().into() };
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }));
+    assert!(xlsx_set_cell_emit(&snapshot, &command).is_ok(), "unrelated shared strings do not invalidate this cell");
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }));
+    assert!(xlsx_set_cell_emit(&snapshot, &command).is_err(), "referenced text changes invalidate the draft");
+    println!("[DEBUG] 🧱️base XLSX unchanged drafts preserve ten typed values; referenced shared-string conflicts are rejected");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn unchanged_cell_draft_fixture_matches_independent_spreadsheet_values_and_formulas() {
+    use crate::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+    use calamine::{Data, Reader};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json")).unwrap();
+    let cases = fixture["cases"].as_array().unwrap();
+    let cells = cases.iter().enumerate().map(|(index, case)| XlsxCell { row: index as u32 + 1, col: 0, value: dsl::json::from_json_str(&case["value"].to_string()).unwrap() }).collect();
+    let snapshot = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells }], shared_strings: serde_json::from_value(fixture["sharedStrings"].clone()).unwrap() });
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(encode_xlsx(&snapshot).unwrap())).unwrap();
+    let values = reference.worksheet_range("Sheet").unwrap();
+    let formulas = reference.worksheet_formula("Sheet").unwrap();
+    for (index, case) in cases.iter().enumerate() {
+        let value = values.get_value((index as u32, 0)).unwrap_or(&Data::Empty);
+        assert_eq!(value.to_string(), case["reference"].as_str().unwrap(), "{}", case["id"]);
+        let kind = match value {
+            Data::String(_) => "string",
+            Data::Float(_) | Data::Int(_) => "number",
+            Data::Bool(_) => "boolean",
+            Data::Empty => "empty",
+            _ => panic!("unexpected independent cell type for {}", case["id"]),
+        };
+        assert_eq!(kind, case["referenceKind"].as_str().unwrap(), "{}", case["id"]);
+        assert_eq!(formulas.get_value((index as u32, 0)).map(String::as_str).unwrap_or_default(), case["formula"].as_str().unwrap_or_default());
+    }
+    println!("[DEBUG] Calamine independently confirms all ten XLSX draft fixture values, types, and formula sources");
+}
+
+fn canonical_save_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️canonical-xml-save/🔣️.json")).expect("neutral canonical save fixture")
+}
+
+fn canonical_fixture_zip(case: &serde_json::Value) -> Vec<u8> {
+    use std::io::{Cursor, Write};
+    use zip::write::SimpleFileOptions;
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+    for part in case["parts"].as_array().unwrap() {
+        writer.start_file(part["path"].as_str().unwrap(), options).unwrap();
+        writer.write_all(part["text"].as_str().unwrap().as_bytes()).unwrap();
+    }
+    for part in case["binaryParts"].as_array().unwrap() {
+        writer.start_file(part["path"].as_str().unwrap(), options).unwrap();
+        let bytes: Vec<u8> = serde_json::from_value(part["bytes"].clone()).unwrap();
+        writer.write_all(&bytes).unwrap();
+    }
+    writer.finish().unwrap().into_inner()
+}
+
+fn independent_xml_events(text: &str) -> Vec<String> {
+    use quick_xml::{events::Event, Reader, XmlVersion};
+    let mut reader = Reader::from_str(text);
+    reader.config_mut().expand_empty_elements = true;
+    let mut events = Vec::new();
+    loop {
+        let event = match reader.read_event().expect("independent XML parser") {
+            Event::Start(element) => {
+                let attrs: Vec<_> = element
+                    .attributes()
+                    .map(|attribute| {
+                        let attribute = attribute.unwrap();
+                        (attribute.key.0.to_string(), attribute.normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned())
+                    })
+                    .collect();
+                format!("start:{}:{}", element.name().0, serde_json::to_string(&attrs).unwrap())
+            }
+            Event::End(element) => format!("end:{}", element.name().0),
+            Event::Text(text) => format!("text:{}", text.xml10_content()),
+            Event::CData(text) => format!("cdata:{}", text.xml10_content()),
+            Event::Comment(text) => format!("comment:{}", &*text),
+            Event::PI(text) => format!("pi:{}", &*text),
+            Event::Decl(text) => format!("declaration:{}", &*text),
+            Event::DocType(text) => format!("doctype:{}", &*text),
+            Event::GeneralRef(text) => format!("reference:{}", &*text),
+            Event::Eof => break,
+            Event::Empty(_) => unreachable!("empty elements are expanded"),
+        };
+        events.push(event);
+    }
+    events
+}
+
+fn assert_independent_canonical_package(bytes: &[u8], case: &serde_json::Value, edited: bool) {
+    use std::io::{Cursor, Read};
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).expect("independent ZIP reader");
+    let mut actual_names: Vec<String> = archive.file_names().map(str::to_string).collect();
+    let mut expected_names: Vec<String> = case["parts"].as_array().unwrap().iter().chain(case["binaryParts"].as_array().unwrap()).map(|part| part["path"].as_str().unwrap().to_string()).collect();
+    actual_names.sort();
+    expected_names.sort();
+    assert_eq!(actual_names, expected_names, "{} preserves every part identity", case["id"]);
+    for part in case["parts"].as_array().unwrap() {
+        let path = part["path"].as_str().unwrap();
+        let mut actual = String::new();
+        archive.by_name(path).unwrap().read_to_string(&mut actual).unwrap();
+        let expected = if edited && path == case["sheetPath"].as_str().unwrap() { case["expectedSheetXml"].as_str().unwrap() } else { part["text"].as_str().unwrap() };
+        assert_eq!(independent_xml_events(&actual), independent_xml_events(expected), "{} preserves XML field/order at {path}", case["id"]);
+    }
+    for part in case["binaryParts"].as_array().unwrap() {
+        let mut actual = Vec::new();
+        archive.by_name(part["path"].as_str().unwrap()).unwrap().read_to_end(&mut actual).unwrap();
+        assert_eq!(actual, serde_json::from_value::<Vec<u8>>(part["bytes"].clone()).unwrap());
+    }
+}
+
+fn assert_independent_spreadsheet_values(bytes: Vec<u8>, case: &serde_json::Value, edited: bool) {
+    use calamine::{Data, Reader};
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("Calamine opens neutral package");
+    assert_eq!(reference.sheet_names(), ["Data"]);
+    let values = reference.worksheet_range("Data").unwrap();
+    let formulas = reference.worksheet_formula("Data").unwrap();
+    for (column, expected) in case["expectedValues"].as_array().unwrap().iter().enumerate() {
+        let value = values.get_value((0, column as u32)).unwrap_or(&Data::Empty);
+        let kind = match value {
+            Data::Int(_) | Data::Float(_) => "number",
+            Data::String(_) => "string",
+            Data::Bool(_) => "boolean",
+            Data::Error(_) => "error",
+            other => panic!("unexpected independent fixture value {other:?}"),
+        };
+        assert_eq!(kind, expected["kind"].as_str().unwrap(), "{} {}", case["id"], expected["address"]);
+        assert_eq!(value.to_string(), expected[if edited { "after" } else { "before" }].as_str().unwrap(), "{} {}", case["id"], expected["address"]);
+        assert_eq!(formulas.get_value((0, column as u32)).map(String::as_str).unwrap_or_default(), expected["formula"].as_str().unwrap());
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn canonical_save_fixtures_are_valid_independent_workbooks() {
+    for case in canonical_save_fixture()["cases"].as_array().unwrap() {
+        let bytes = canonical_fixture_zip(case);
+        assert_independent_canonical_package(&bytes, case, false);
+        if case["calamine"].as_bool().unwrap() {
+            assert_independent_spreadsheet_values(bytes, case, false);
+        }
+    }
+    println!("[DEBUG] Independent ZIP/Quick-XML preserve all five authored package fixtures; Calamine checks four custom-directory namespace variants");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn canonical_xlsx_no_op_save_preserves_all_xml_fields_and_custom_part_paths() {
+    use crate::standards::v_ecma_376::subsets::base::io::{export::serializers::encode_xlsx, import::deserializers::decode_xlsx};
+    for case in canonical_save_fixture()["cases"].as_array().unwrap() {
+        let original = canonical_fixture_zip(case);
+        let snapshot = decode_xlsx(&original).unwrap_or_else(|error| panic!("{} import: {error}", case["id"]));
+        let encoded = encode_xlsx(&snapshot).unwrap_or_else(|error| panic!("{} export: {error}", case["id"]));
+        assert_independent_canonical_package(&encoded, case, false);
+        if case["calamine"].as_bool().unwrap() {
+            assert_independent_spreadsheet_values(encoded, case, false);
+        }
+    }
+    println!("[DEBUG] No-op XLSX save preserves five custom-path canonical XML packages and independent spreadsheet values");
 }

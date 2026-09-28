@@ -102,6 +102,7 @@ fn release_layer_forest(layers: Vec<RasterLayerNode>) {
 /// no-op rather than a fault — the navbar switcher is free-text on the wire, and an unknown id must
 /// not destroy the open document.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    for layer in &doc.snapshot.layers {crate::standards::v1::subsets::any::schema::require_layer_edit(&doc.snapshot.layers,crate::standards::v1::subsets::any::schema::layer_node_id(layer),true).map_err(Fault::from)?;}
     let Some(mut example) = raster_example_document(&payload.example_id) else {
         return Ok(Emit::default());
     };

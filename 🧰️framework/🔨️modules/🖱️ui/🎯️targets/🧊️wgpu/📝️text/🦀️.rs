@@ -1020,6 +1020,11 @@ impl FontAtlas {
     /// unbreakable run is still wider than the whole box, the run breaks at the glyph that overflows,
     /// because the alternative is a word painted outside its own card.
     pub fn wrap_lines(&mut self, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
+        self.wrap_lines_face(TextFace::Sans, text, max_width, size)
+    }
+
+    /// 🧵️ Applies the shared greedy wrap using the selected face's glyph advances.
+    pub fn wrap_lines_face(&mut self, face: TextFace, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
         let limit = max_width.max(1.0);
         let mut lines = Vec::new();
         let (mut line_start, mut pen, mut byte) = (0usize, 0.0f32, 0usize);
@@ -1031,13 +1036,13 @@ impl FontAtlas {
                 continue;
             }
             if pen > 0.0 && is_break_opportunity(text, byte) {
-                let run = self.measure_range(text, byte, unbreakable_run_end(text, byte), size);
+                let run = self.measure_range_face(face, text, byte, unbreakable_run_end(text, byte), size);
                 if pen + run > limit + LINE_BREAK_FIT_EPSILON {
                     lines.push(line_start..byte);
                     (line_start, pen) = (byte, 0.0);
                 }
             }
-            let advance = self.ensure_glyph(ch, size).advance;
+            let advance = self.ensure_glyph_for(face, ch, size).advance;
             if pen > 0.0 && !is_wrap_space(ch) && pen + advance > limit + LINE_BREAK_FIT_EPSILON {
                 lines.push(line_start..byte);
                 (line_start, pen) = (byte, 0.0);

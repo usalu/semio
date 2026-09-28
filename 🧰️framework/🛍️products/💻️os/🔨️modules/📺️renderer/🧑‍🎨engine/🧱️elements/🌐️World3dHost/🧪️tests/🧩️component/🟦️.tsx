@@ -7,12 +7,12 @@
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Matrix4, Quaternion, Vector3, type InstancedMesh } from "three";
+import { Matrix4, Quaternion, Vector3, type InstancedMesh, type PerspectiveCamera } from "three";
 import fixture from "../../🧫️fixtures/⏯️tool-run-trace-mount.json" with { type: "json" };
 import { base64UrlEncode } from "../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "../../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
 
-const recorded = vi.hoisted(() => ({ instanced: [] as { mesh: InstancedMesh; live: boolean }[], dashed: 0, frames: [] as ((state: unknown, delta: number) => void)[] }));
+const recorded = vi.hoisted(() => ({ instanced: [] as { mesh: InstancedMesh; live: boolean }[], dashed: 0, frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null }));
 
 vi.mock("three", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("three");
@@ -40,6 +40,7 @@ vi.mock("@react-three/fiber", async (importOriginal) => {
   camera.position.set(10, -10, 10);
   camera.lookAt(0, 0, 0);
   camera.updateMatrixWorld(true);
+  recorded.camera = camera;
   const state = { camera, gl: { domElement: { clientWidth: 800, clientHeight: 800 } }, scene: new three.Scene(), size: { width: 800, height: 800 }, raycaster: new three.Raycaster(), invalidate: () => {}, clock: { elapsedTime: 0 } };
   return {
     ...actual,
@@ -65,6 +66,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
+import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
 import { WindowInstanceIdContext, World3dHost } from "../../🟦️.tsx";
 
 type Batch = { readonly mesh: number; readonly verdict: string; readonly count: number };
@@ -84,8 +86,10 @@ function sceneNode(toolRunTrace: string | null) {
           meshesJson: JSON.stringify(fixture.meshes),
           instancesJson: JSON.stringify(fixture.instances),
           selectionJson: "{}",
+          referencesJson: JSON.stringify([{ id: "forest-plan", url: "/forest.png", origin: [7, 0, 0.01], widthWorld: 50 }]),
           vorticesJson: "[]",
           attractionsJson: "[]",
+          lodJson: JSON.stringify({ automaticLod: true, gridFactor: 10 }),
           interactionJson: '{"activeUtility":"select"}',
           toolRunTrace,
         },
@@ -135,6 +139,43 @@ describe("🎬️ world 3d host tool run trace mount", () => {
     recorded.instanced.length = 0;
     recorded.frames.length = 0;
     recorded.dashed = 0;
+    recorded.camera?.position.set(10, -10, 10);
+    setRuntimeDiagnostics(undefined);
+    vi.restoreAllMocks();
+  });
+
+  it("prints one gated accepted-frame receipt and only repeats when the live camera changes", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    setRuntimeDiagnostics(false);
+    render(sceneNode(null));
+    const runMountedFrames = () => {
+      for (const frame of [...recorded.frames]) frame({ clock: { elapsedTime: 0 } }, 0);
+    };
+    runMountedFrames();
+    expect(info).not.toHaveBeenCalled();
+
+    setRuntimeDiagnostics(true);
+    runMountedFrames();
+    expect(info).toHaveBeenCalledTimes(1);
+    const prefix = "[DEBUG] react-world-frame ";
+    const line = info.mock.calls[0]![0] as string;
+    expect(line.startsWith(prefix)).toBe(true);
+    const receipt = JSON.parse(line.slice(prefix.length)) as Record<string, any>;
+    expect(receipt).toMatchObject({
+      surfaceId: "trace-window",
+      windowInstanceId: "trace-window:1",
+      viewport: { width: 800, height: 800, aspect: 1 },
+      references: [{ id: "forest-plan", origin: [7, 0, 0.01], widthWorld: 50 }],
+      grid: { automaticLod: true, distanceReference: 100, gridFactor: 10 },
+    });
+    expect(receipt.camera).toMatchObject({ kind: "PerspectiveCamera", fov: 45, position: [10, -10, 10], target: [0, 0, 0] });
+    expect(receipt.contentBounds).not.toBeNull();
+
+    runMountedFrames();
+    expect(info).toHaveBeenCalledTimes(1);
+    recorded.camera!.position.x += 1;
+    runMountedFrames();
+    expect(info).toHaveBeenCalledTimes(2);
   });
 
   it("mounts one instanced mesh per (mesh, verdict) from the scene's toolRunTrace lane and publishes its counters", () => {

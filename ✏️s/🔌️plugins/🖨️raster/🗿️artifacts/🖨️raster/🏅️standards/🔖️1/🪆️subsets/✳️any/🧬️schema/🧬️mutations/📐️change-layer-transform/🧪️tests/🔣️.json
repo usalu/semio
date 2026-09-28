@@ -1,0 +1,113 @@
+{
+  "identity": {
+    "x": 0.0,
+    "y": 0.0,
+    "a": 1.0,
+    "b": 0.0,
+    "c": 0.0,
+    "d": 1.0
+  },
+  "cases": [
+    {
+      "name": "shear",
+      "transform": {
+        "x": 3.0,
+        "y": -2.0,
+        "a": 2.0,
+        "b": 1.0,
+        "c": -2.0,
+        "d": 1.0
+      }
+    },
+    {
+      "name": "reflection",
+      "transform": {
+        "x": 8.0,
+        "y": -11.0,
+        "a": -2.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 3.0
+      }
+    },
+    {
+      "name": "quarter turn",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "a": 0.0,
+        "b": 1.0,
+        "c": -1.0,
+        "d": 0.0
+      }
+    }
+  ],
+  "labels": {
+    "en": {
+      "transformScaleX": "Horizontal scale",
+      "transformScaleY": "Vertical scale",
+      "transformRotation": "Rotation",
+      "transformShearX": "Horizontal shear"
+    },
+    "de": {
+      "transformScaleX": "Horizontale Skalierung",
+      "transformScaleY": "Vertikale Skalierung",
+      "transformRotation": "Drehung",
+      "transformShearX": "Horizontale Scherung"
+    }
+  },
+  "controls": [
+    {
+      "field": "transformScaleX",
+      "component": "scaleX",
+      "value": 2,
+      "matrix": [
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "field": "transformScaleY",
+      "component": "scaleY",
+      "value": 0.5,
+      "matrix": [
+        2,
+        0,
+        0,
+        0.5,
+        0,
+        0
+      ]
+    },
+    {
+      "field": "transformRotation",
+      "component": "rotation",
+      "value": 90,
+      "matrix": [
+        0,
+        2,
+        -0.5,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "field": "transformShearX",
+      "component": "shearX",
+      "value": 1,
+      "matrix": [
+        0,
+        2,
+        -0.5,
+        0.5,
+        0,
+        0
+      ]
+    }
+  ]
+}

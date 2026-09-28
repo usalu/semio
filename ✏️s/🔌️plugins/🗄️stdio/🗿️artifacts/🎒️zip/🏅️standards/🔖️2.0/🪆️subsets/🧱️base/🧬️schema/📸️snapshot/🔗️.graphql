@@ -1,10 +1,47 @@
+type ZipExtraField {
+  id: Int!
+  data: [Int!]!
+}
+
+type ZipLocalHeaderMetadata {
+  versionNeeded: Int!
+  flags: Int!
+  modifiedTime: Int!
+  modifiedDate: Int!
+  extraFields: [ZipExtraField!]!
+  unicodePathLegacyName: [Int!]
+}
+
+type ZipCentralHeaderMetadata {
+  versionMadeBy: Int!
+  versionNeeded: Int!
+  flags: Int!
+  modifiedTime: Int!
+  modifiedDate: Int!
+  extraFields: [ZipExtraField!]!
+  unicodePathLegacyName: [Int!]
+  comment: String!
+  unicodeCommentLegacy: [Int!]
+  internalAttributes: Int!
+  externalAttributes: Int!
+}
+
+type ZipEntryMetadata {
+  compressionMethod: Int!
+  local: ZipLocalHeaderMetadata!
+  central: ZipCentralHeaderMetadata!
+  dataDescriptorSignature: Boolean!
+}
+
 type ZipEntry {
   name: String!
   data: [Int!]!
+  metadata: ZipEntryMetadata!
 }
 
 type ZipSnapshot {
   schema: String! @state(class: ARTIFACT)
   entries: [ZipEntry!]! @state(class: ARTIFACT)
   comment: String! @state(class: ARTIFACT)
+  commentUtf8: Boolean! @state(class: ARTIFACT)
 }

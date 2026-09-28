@@ -6,11 +6,22 @@ start document
 
 # Real grammar for `FormsSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
 # `FormsSnapshot`'s own `dsl::DslRecord` spec (📝️text/🦀️.rs), the same record the pack encodes.
-# Fields are space-separated `key=value` tokens in any order; `title` is optional. A composed child
+# Definition and responses are durable. Fields are space-separated `key=value` tokens in any order; `title` is optional. A composed child
 # handle is the `ArtifactChild` record printed inline:
 # `child_id=<id> target=<artifactId>!<kind>@<standard>/<subset>`. A parsed document must also pass
 # `FormsSnapshot::validate`.
 artifact-mark = "semio forms.form.dsl v1"
 document = artifact-mark field*
-field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"version" "=" TEXT} | {"title" "=" TEXT} | {"structure" "=" child-handle} | {"results" "=" child-handle}
+field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"version" "=" TEXT} | {"title" "=" TEXT} | {"definition" "=" definition} | {"responses" "=" "[" response* "]"} | {"structure" "=" child-handle} | {"results" "=" child-handle}
 child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}
+definition = {"steps" "=" "[" step* "]"}
+step = {"id" "=" TEXT} {"title" "=" TEXT} {"description" "=" TEXT}? {"blocks" "=" "[" question* "]"}
+question = {"id" "=" TEXT} {"label" "=" TEXT} {"kind" "=" TEXT} question-field*
+question-field = question-name "=" value | "condition" "{" expression? "}"
+question-name = "description" | "required" | "placeholder" | "default" | "min" | "max" | "step" | "unit" | "text" | "options" | "fields" | "schema" | "src" | "accept" | "fixture-slug" | "params"
+response = {"id" "=" TEXT} {"submitted-at" "=" TEXT} {"definition-version" "=" TEXT} {"answers" "=" "[" answer* "]"}
+answer = {"question-id" "=" TEXT} {"label" "=" TEXT} {"kind" "=" TEXT} {"value" "=" value}
+value = TEXT | "[" item* "]" | "{" entry* "}"
+item = entry | value
+entry = TEXT "=" value
+expression = {"const" "value" "=" value} | {"var" "name" "=" TEXT} | {"eq" "left" "{" expression "}" "right" "{" expression "}"} | {("and" | "or") "items" "{" expression* "}"} | {"truthy" "expr" "{" expression "}"}

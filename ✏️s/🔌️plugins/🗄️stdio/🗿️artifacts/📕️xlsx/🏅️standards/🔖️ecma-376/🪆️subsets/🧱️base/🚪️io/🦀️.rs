@@ -43,7 +43,9 @@ impl From<semio_s_artifact_stdio_zip::opc::OpcError> for XlsxError {
 
 //#region 🔖️Constants
 pub const SML_NS: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+pub const SML_NS_STRICT: &str = "http://purl.oclc.org/ooxml/spreadsheetml/main";
 pub const R_NS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+pub const R_NS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
 pub const WORKBOOK_PART: &str = "xl/workbook.xml";
 pub const SHARED_STRINGS_PART: &str = "xl/sharedStrings.xml";
 pub const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
@@ -72,6 +74,61 @@ pub fn attr(name: &str, value: &str) -> semio_s_artifact_stdio_xml::schema::snap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn attr_val<'a>(attrs: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
+}
+
+/// 🧭️ Extends an inherited namespace scope with declarations authored on one XML element.
+pub fn namespace_scope(parent: &[(String, String)], node: &semio_s_artifact_stdio_xml::schema::snapshot::XmlNode) -> Vec<(String, String)> {
+    let mut scope = parent.to_vec();
+    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = node else { return scope };
+    for attribute in attrs {
+        let prefix = if attribute.name == "xmlns" { Some("") } else { attribute.name.strip_prefix("xmlns:") };
+        if let Some(prefix) = prefix {
+            if let Some(binding) = scope.iter_mut().find(|(bound, _)| bound == prefix) {
+                binding.1.clone_from(&attribute.value);
+            } else {
+                scope.push((prefix.into(), attribute.value.clone()));
+            }
+        }
+    }
+    scope
+}
+
+/// 🧭️ Resolves an element qualified name; the default namespace applies to unprefixed elements.
+pub fn expanded_element_name(name: &str, scope: &[(String, String)]) -> Result<(String, String), String> {
+    let (prefix, local) = name.split_once(':').unwrap_or(("", name));
+    let namespace = if prefix.is_empty() {
+        scope.iter().rev().find(|(bound, _)| bound.is_empty()).map_or("", |(_, value)| value.as_str())
+    } else {
+        scope.iter().rev().find(|(bound, _)| bound == prefix).map(|(_, value)| value.as_str()).ok_or_else(|| format!("unbound XML namespace prefix in element {name}"))?
+    };
+    Ok((namespace.into(), local.into()))
+}
+
+/// 🧭️ Resolves an attribute qualified name; the default namespace never applies to attributes.
+pub fn expanded_attribute_name(name: &str, scope: &[(String, String)]) -> Result<(String, String), String> {
+    let Some((prefix, local)) = name.split_once(':') else { return Ok((String::new(), name.into())) };
+    let namespace =
+        if prefix == "xml" { "http://www.w3.org/XML/1998/namespace" } else { scope.iter().rev().find(|(bound, _)| bound == prefix).map(|(_, value)| value.as_str()).ok_or_else(|| format!("unbound XML namespace prefix in attribute {name}"))? };
+    Ok((namespace.into(), local.into()))
+}
+
+/// 🧭️ Matches an element by exact namespace URI and local name.
+pub fn element_matches(node: &semio_s_artifact_stdio_xml::schema::snapshot::XmlNode, scope: &[(String, String)], namespaces: &[&str], local: &str) -> Result<bool, String> {
+    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name, .. } = node else { return Ok(false) };
+    let (namespace, name) = expanded_element_name(name, scope)?;
+    Ok(name == local && namespaces.contains(&namespace.as_str()))
+}
+
+/// 🧭️ Reads an attribute by exact namespace URI and local name.
+pub fn attribute_value<'a>(node: &'a semio_s_artifact_stdio_xml::schema::snapshot::XmlNode, scope: &[(String, String)], namespaces: &[&str], local: &str) -> Result<Option<&'a str>, String> {
+    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = node else { return Ok(None) };
+    for attribute in attrs {
+        let (namespace, name) = expanded_attribute_name(&attribute.name, scope)?;
+        if name == local && namespaces.contains(&namespace.as_str()) {
+            return Ok(Some(attribute.value.as_str()));
+        }
+    }
+    Ok(None)
 }
 //#endregion 🔖️Constants
 

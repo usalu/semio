@@ -136,6 +136,79 @@ fn invalid_compact_snapshot_patches_preserve_original() {
     assert_eq!(base, value(&fixture["base"]));
 }
 
+#[test]
+fn intrinsic_maps_restore_exact_values_without_requiring_authored_key_positions() {
+    use std::collections::{BTreeMap, HashMap};
+    let fixture = fixture();
+    for row in fixture["intrinsicObjectOrder"].as_array().unwrap() {
+        let before = value(&row["before"]);
+        let patch =
+            SnapshotPatch { edits: vec![SnapshotValuePatch { path: vec![row["key"].as_str().unwrap().into()], edit: SnapshotPatchEdit::InsertAt { value: DslValue::String("Inserted".into()), index: row["index"].as_u64().unwrap() as usize } }] };
+        let mut oracle = row["before"].clone();
+        json_patch::patch(&mut oracle, &serde_json::from_value::<json_patch::Patch>(serde_json::json!([{ "op": "add", "path": format!("/{}", row["key"].as_str().unwrap()), "value": "Inserted" }])).unwrap()).unwrap();
+        let ordered = apply_snapshot_patch(&before, &patch).unwrap();
+        assert_eq!(serde_json::Value::from(ordered.clone()), oracle);
+        assert_eq!(apply_snapshot_patch(&ordered, &inverse_snapshot_patch(&before, &patch).unwrap()).unwrap(), before);
+        let tree = BTreeMap::<String, DslValue>::from_value(before.clone()).unwrap();
+        let changed = apply_snapshot_patch(&tree, &patch).unwrap();
+        assert_eq!(serde_json::Value::from(changed.to_value()), oracle);
+        assert_eq!(apply_snapshot_patch(&changed, &inverse_snapshot_patch(&tree, &patch).unwrap()).unwrap(), tree);
+        for _ in 0..32 {
+            let hash = HashMap::<String, DslValue>::from_value(before.clone()).unwrap();
+            let changed = apply_snapshot_patch(&hash, &patch).unwrap();
+            assert_eq!(serde_json::Value::from(changed.to_value()), oracle);
+            assert_eq!(apply_snapshot_patch(&changed, &inverse_snapshot_patch(&hash, &patch).unwrap()).unwrap(), hash);
+        }
+    }
+    for row in fixture["intrinsicRenames"].as_array().unwrap() {
+        let before = value(&row["before"]);
+        let event = SnapshotEditEvent::RenameKey { path: format!("/{}", row["from"].as_str().unwrap()), key: row["key"].as_str().unwrap().into() };
+        let mut oracle = row["before"].clone();
+        json_patch::patch(&mut oracle, &serde_json::from_value::<json_patch::Patch>(serde_json::json!([{ "op": "move", "from": format!("/{}", row["from"].as_str().unwrap()), "path": format!("/{}", row["key"].as_str().unwrap()) }])).unwrap())
+            .unwrap();
+        let tree = BTreeMap::<String, DslValue>::from_value(before.clone()).unwrap();
+        let patch = prepare_snapshot_patch(&tree, &event).unwrap();
+        let changed = apply_snapshot_patch(&tree, &patch).unwrap();
+        assert_eq!(serde_json::Value::from(changed.to_value()), oracle);
+        assert_eq!(apply_snapshot_patch(&changed, &inverse_snapshot_patch(&tree, &patch).unwrap()).unwrap(), tree);
+        for _ in 0..32 {
+            let hash = HashMap::<String, DslValue>::from_value(before.clone()).unwrap();
+            let patch = prepare_snapshot_patch(&hash, &event).unwrap();
+            let changed = apply_snapshot_patch(&hash, &patch).unwrap();
+            assert_eq!(serde_json::Value::from(changed.to_value()), oracle);
+            assert_eq!(apply_snapshot_patch(&changed, &inverse_snapshot_patch(&hash, &patch).unwrap()).unwrap(), hash);
+        }
+    }
+    eprintln!("[DEBUG] positioned patch insertion and rename restored ordered values and intrinsic map contents");
+}
+
+#[test]
+fn positioned_insertions_preserve_nested_typed_object_order() {
+    #[derive(Clone, value_derive::ToValue, value_derive::FromValue)]
+    struct Document {
+        metadata: DslValue,
+    }
+    let fixture = fixture();
+    let before = Document { metadata: value(&fixture["base"]["metadata"]) };
+    for row in fixture["positionedInsertions"].as_array().unwrap() {
+        let key = row["key"].as_str().unwrap();
+        let patch = SnapshotPatch { edits: vec![SnapshotValuePatch { path: vec!["metadata".into(), key.into()], edit: SnapshotPatchEdit::InsertAt { value: DslValue::String("Inserted".into()), index: row["index"].as_u64().unwrap() as usize } }] };
+        let after = apply_snapshot_patch(&before, &patch).unwrap();
+        let DslValue::Object(entries) = &after.metadata else { panic!("ordered metadata object") };
+        assert_eq!(entries.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), row["keys"].as_array().unwrap().iter().map(|key| key.as_str().unwrap()).collect::<Vec<_>>());
+        let mut oracle = fixture["base"]["metadata"].clone();
+        json_patch::patch(&mut oracle, &serde_json::from_value::<json_patch::Patch>(serde_json::json!([{ "op": "add", "path": format!("/{key}"), "value": "Inserted" }])).unwrap()).unwrap();
+        assert_eq!(serde_json::Value::from(after.metadata.clone()), oracle);
+        assert_eq!(apply_snapshot_patch(&after, &inverse_snapshot_patch(&before, &patch).unwrap()).unwrap().metadata, before.metadata);
+    }
+    for index in fixture["invalidPositions"].as_array().unwrap() {
+        let wire = serde_json::json!({ "edits": [{ "path": ["metadata", "bad"], "edit": { "operation": "insertAt", "value": "Rejected", "index": index } }] }).to_string();
+        let result = SnapshotPatch::parse_op(&wire).ok().and_then(|patch| apply_snapshot_patch(&before, &patch).ok());
+        assert!(result.is_none());
+    }
+    println!("[DEBUG] Compact native patches retain object key positions through typed nested fields and exact undo");
+}
+
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 struct LargeSnapshot {
     title: String,

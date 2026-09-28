@@ -1,0 +1,139 @@
+{
+  "cases": [
+    {
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 100,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "rows": [
+        {
+          "id": "fill.controls",
+          "inputs": [
+            "fill.type"
+          ]
+        },
+        {
+          "id": "fill.x1.row",
+          "inputs": [
+            "fill.x1"
+          ]
+        },
+        {
+          "id": "fill.y1.row",
+          "inputs": [
+            "fill.y1"
+          ]
+        },
+        {
+          "id": "fill.x2.row",
+          "inputs": [
+            "fill.x2"
+          ]
+        },
+        {
+          "id": "fill.y2.row",
+          "inputs": [
+            "fill.y2"
+          ]
+        }
+      ]
+    },
+    {
+      "fill": {
+        "kind": "radialGradient",
+        "cx": 50,
+        "cy": 50,
+        "r": 40,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "rows": [
+        {
+          "id": "fill.controls",
+          "inputs": [
+            "fill.type"
+          ]
+        },
+        {
+          "id": "fill.cx.row",
+          "inputs": [
+            "fill.cx"
+          ]
+        },
+        {
+          "id": "fill.cy.row",
+          "inputs": [
+            "fill.cy"
+          ]
+        },
+        {
+          "id": "fill.r.row",
+          "inputs": [
+            "fill.r"
+          ]
+        }
+      ]
+    }
+  ],
+  "stopRows": [
+    {
+      "id": "fill.stop.0",
+      "inputs": [
+        "fill.stop.0.color"
+      ]
+    },
+    {
+      "id": "fill.stop.0.alpha.row",
+      "inputs": [
+        "fill.stop.0.alpha"
+      ]
+    },
+    {
+      "id": "fill.stop.0.offset.row",
+      "inputs": [
+        "fill.stop.0.offset"
+      ]
+    }
+  ]
+}

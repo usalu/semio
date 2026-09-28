@@ -118,7 +118,7 @@ fn parse_f64(s: &str) -> f64 {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_bytes(root: XmlNode) -> Vec<u8> {
-    let doc = XmlDocument { root: Some(root), doctype: None, declaration: None, prolog: Vec::new() };
+    let doc = XmlDocument { root: Some(root), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() };
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     out.push_str(&xml_document_to_text(&doc));
     out.into_bytes()
@@ -432,20 +432,20 @@ fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
-    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version) });
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
     for topic in &snap.topics {
-        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic) });
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
         for vp in &topic.viewpoints {
-            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp) });
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
             if let Some(bytes) = &vp.snapshot {
-                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone() });
+                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
             }
         }
     }
     for part in &snap.parts {
-        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone() });
+        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
     }
-    let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot { schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot { schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new(), ..Default::default() };
     semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 

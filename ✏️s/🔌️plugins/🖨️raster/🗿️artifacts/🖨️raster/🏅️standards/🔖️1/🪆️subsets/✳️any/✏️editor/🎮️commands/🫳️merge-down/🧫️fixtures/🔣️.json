@@ -61,16 +61,18 @@
           "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": -2,
+            "x": -2.0,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 2,
           "height": 1,
-          "imageKey": "blue"
+          "imageKey": "blue",
+          "locked": false
         },
         {
           "kind": "pixel",
@@ -80,16 +82,18 @@
           "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": 1,
+            "x": 1.0,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 2,
           "height": 1,
-          "imageKey": "blue"
+          "imageKey": "blue",
+          "locked": false
         },
         {
           "kind": "pixel",
@@ -101,14 +105,16 @@
           "transform": {
             "x": 0.5,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 1,
           "height": 1,
-          "imageKey": "red"
+          "imageKey": "red",
+          "locked": false
         }
       ],
       "layerId": "upper",
@@ -127,16 +133,18 @@
           "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": -2,
+            "x": -2.0,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 2,
           "height": 1,
-          "imageKey": "blue"
+          "imageKey": "blue",
+          "locked": false
         },
         {
           "kind": "group",
@@ -146,11 +154,12 @@
           "opacity": 0.75,
           "blendMode": "normal",
           "transform": {
-            "x": 4,
-            "y": 2,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "x": 4.0,
+            "y": 2.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "children": [
@@ -162,16 +171,18 @@
               "opacity": 1,
               "blendMode": "normal",
               "transform": {
-                "x": 1,
+                "x": 1.0,
                 "y": 0.5,
-                "rotation": 0,
-                "scaleX": 1,
-                "scaleY": 1
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
               },
               "mask": null,
               "width": 2,
               "height": 1,
-              "imageKey": "blue"
+              "imageKey": "blue",
+              "locked": false
             },
             {
               "kind": "pixel",
@@ -183,16 +194,19 @@
               "transform": {
                 "x": 0.5,
                 "y": 0.5,
-                "rotation": 0,
-                "scaleX": 1,
-                "scaleY": 1
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
               },
               "mask": null,
               "width": 1,
               "height": 1,
-              "imageKey": "red"
+              "imageKey": "red",
+              "locked": false
             }
-          ]
+          ],
+          "locked": false
         }
       ],
       "layerId": "upper",
@@ -210,16 +224,18 @@
           "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": -2,
+            "x": -2.0,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 2,
           "height": 1,
-          "imageKey": "blue"
+          "imageKey": "blue",
+          "locked": false
         },
         {
           "kind": "pixel",
@@ -229,16 +245,18 @@
           "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": 1,
+            "x": 1.0,
             "y": 0.5,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": null,
           "width": 2,
           "height": 1,
-          "imageKey": "blue"
+          "imageKey": "blue",
+          "locked": false
         },
         {
           "kind": "group",
@@ -248,11 +266,12 @@
           "opacity": 0.5,
           "blendMode": "normal",
           "transform": {
-            "x": 0,
-            "y": 0,
-            "rotation": 0,
-            "scaleX": 1,
-            "scaleY": 1
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
           },
           "mask": {
             "enabled": true,
@@ -264,9 +283,10 @@
             "transform": {
               "x": 0.5,
               "y": 0.5,
-              "rotation": 0,
-              "scaleX": 1,
-              "scaleY": 1
+              "a": 1.0,
+              "b": 0.0,
+              "c": 0.0,
+              "d": 1.0
             }
           },
           "children": [
@@ -280,16 +300,19 @@
               "transform": {
                 "x": 0.5,
                 "y": 0.5,
-                "rotation": 0,
-                "scaleX": 1,
-                "scaleY": 1
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
               },
               "mask": null,
               "width": 1,
               "height": 1,
-              "imageKey": "red"
+              "imageKey": "red",
+              "locked": false
             }
-          ]
+          ],
+          "locked": false
         }
       ],
       "layerId": "upper",
@@ -399,10 +422,220 @@
         "adjustmentKind": "brightnessContrast",
         "params": {}
       }
+    },
+    {
+      "name": "locked upper",
+      "id": "upper",
+      "patch": {
+        "locked": true
+      }
+    },
+    {
+      "name": "locked lower",
+      "id": "upper",
+      "target": "lower",
+      "patch": {
+        "locked": true
+      }
     }
   ],
   "hints": {
-    "en": "Combine this layer with the layer below. Both must be visible pixels or groups using Normal blend.",
-    "de": "Diese Ebene mit der darunterliegenden vereinen. Beide müssen sichtbare Pixel- oder Gruppenebenen im normalen Mischmodus sein."
-  }
+    "en": "Combine this layer with the layer below. Both must be visible pixels or groups using Normal blend, with no locks in either subtree or their parents.",
+    "de": "Diese Ebene mit der darunterliegenden vereinen. Beide müssen sichtbare Pixel- oder Gruppenebenen im normalen Mischmodus sein, ohne Sperren in ihren Unterbäumen oder Elternebenen."
+  },
+  "protected": [
+    {
+      "name": "Inherited parent lock prevents merging siblings",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "outside",
+          "name": "Outside",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -2.0,
+            "y": 0.5,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue",
+          "locked": false
+        },
+        {
+          "kind": "group",
+          "id": "group",
+          "name": "Group",
+          "visible": true,
+          "opacity": 0.75,
+          "blendMode": "normal",
+          "transform": {
+            "x": 4.0,
+            "y": 2.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "mask": null,
+          "children": [
+            {
+              "kind": "pixel",
+              "id": "lower",
+              "name": "Lower",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 1.0,
+                "y": 0.5,
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
+              },
+              "mask": null,
+              "width": 2,
+              "height": 1,
+              "imageKey": "blue",
+              "locked": false
+            },
+            {
+              "kind": "pixel",
+              "id": "upper",
+              "name": "Upper",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 0.5,
+                "y": 0.5,
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
+              },
+              "mask": null,
+              "width": 1,
+              "height": 1,
+              "imageKey": "red",
+              "locked": false
+            }
+          ],
+          "locked": true
+        }
+      ],
+      "layerId": "upper"
+    },
+    {
+      "name": "A protected descendant prevents baking its group",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "outside",
+          "name": "Outside",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -2.0,
+            "y": 0.5,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue",
+          "locked": false
+        },
+        {
+          "kind": "pixel",
+          "id": "lower",
+          "name": "Lower",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 1.0,
+            "y": 0.5,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue",
+          "locked": false
+        },
+        {
+          "kind": "group",
+          "id": "upper",
+          "name": "Upper",
+          "visible": true,
+          "opacity": 0.5,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0
+          },
+          "mask": {
+            "enabled": true,
+            "linked": true,
+            "invert": false,
+            "width": 1,
+            "height": 1,
+            "imageKey": "mask",
+            "transform": {
+              "x": 0.5,
+              "y": 0.5,
+              "a": 1.0,
+              "b": 0.0,
+              "c": 0.0,
+              "d": 1.0
+            }
+          },
+          "children": [
+            {
+              "kind": "pixel",
+              "id": "inside",
+              "name": "Upper",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 0.5,
+                "y": 0.5,
+                "a": 1.0,
+                "b": 0.0,
+                "c": 0.0,
+                "d": 1.0
+              },
+              "mask": null,
+              "width": 1,
+              "height": 1,
+              "imageKey": "red",
+              "locked": true
+            }
+          ],
+          "locked": false
+        }
+      ],
+      "layerId": "upper"
+    }
+  ]
 }

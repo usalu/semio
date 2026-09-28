@@ -28,7 +28,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 
 //#region 🪟️WindowLaws
 use crate::editor::forms::terminology::forms_play_labels;
-use crate::materialize_forms_steps;
+use crate::replace_forms_steps;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
 use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
@@ -70,7 +70,7 @@ fn oversized() -> FormsSnapshot {
         })
         .collect();
     let mut snapshot = FormsSnapshot::default();
-    materialize_forms_steps(&mut snapshot.structure, steps);
+    replace_forms_steps(&mut snapshot, steps);
     snapshot
 }
 

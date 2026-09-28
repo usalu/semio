@@ -20,6 +20,7 @@
           "item": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
           "text": { "type": "string" },
           "revision": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+          "staticArguments": { "type": "object" },
           "labels": {
             "type": "object",
             "required": ["apply", "discard", "cancel"],

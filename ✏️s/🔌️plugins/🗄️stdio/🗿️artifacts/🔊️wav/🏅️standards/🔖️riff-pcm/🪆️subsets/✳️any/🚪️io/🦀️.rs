@@ -71,7 +71,7 @@ pub use derived_composition::*;
 // `fmt `+`data` roles) is small enough that duplicating the ~15-line walk loop keeps each
 // artifact's engine self-contained without a cross-artifact dependency).
 
-use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
 
 //#region 🔖️Sniff
 /// 🔍 Real magic sniff: `RIFF` fourcc at byte 0 + `WAVE` fourcc at byte 8 (RIFF's own type tag).
@@ -115,7 +115,7 @@ fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
 /// 📐️ Encodes a `fmt ` chunk body: the plain 16-byte PCM form when `ext` is `None`, else the
 /// extensible form (16 bytes + `cbSize`(u16) + `ext` bytes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
+fn encode_fmt_chunk(fmt: &WavFmt) -> Result<Vec<u8>, String> {
     let mut body = Vec::with_capacity(16);
     body.extend_from_slice(&fmt.audio_format.to_le_bytes());
     body.extend_from_slice(&fmt.channels.to_le_bytes());
@@ -124,10 +124,11 @@ fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
     body.extend_from_slice(&fmt.block_align.to_le_bytes());
     body.extend_from_slice(&fmt.bits_per_sample.to_le_bytes());
     if let Some(ext) = &fmt.ext {
-        body.extend_from_slice(&(ext.len() as u16).to_le_bytes());
+        let cb_size = u16::try_from(ext.len()).map_err(|_| format!("wav: fmt.ext contains {} bytes; cbSize is u16", ext.len()))?;
+        body.extend_from_slice(&cb_size.to_le_bytes());
         body.extend_from_slice(ext);
     }
-    body
+    Ok(body)
 }
 //#endregion 🔖️FmtChunk
 
@@ -160,9 +161,9 @@ fn encode_data_chunk(data: &WavData) -> Vec<u8> {
 //#endregion 🔖️DataChunk
 
 //#region 🔖️RiffWalk
-/// 🚶 Walks every top-level chunk under `RIFF …/WAVE`, routing `fmt `/`data` into their typed
-/// slots and retaining everything else (`LIST`/`INFO`/`fact`/`cue `/…) verbatim in
-/// `other_chunks`, in on-disk order.
+/// 🚶 Walks every top-level chunk under `RIFF …/WAVE`. The first `fmt ` and `data` chunks
+/// become the typed primary values. Every other chunk, including duplicate `fmt `/`data` chunks,
+/// remains verbatim in `other_chunks`; `chunk_order` records the complete on-disk sequence.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     if !sniff_real_bytes(bytes) {
@@ -171,7 +172,10 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     let mut pos = 12usize;
     let mut fmt: Option<WavFmt> = None;
     let mut data: Option<WavData> = None;
+    let mut fmt_pad_byte = 0;
+    let mut data_pad_byte = 0;
     let mut other_chunks = Vec::new();
+    let mut chunk_order = Vec::new();
     // 🪆️ `data` is decoded lazily against `fmt` — real RIFF/WAVE files always place `fmt ` before
     // `data`, but a malformed/reordered file would otherwise silently mis-type; we buffer the raw
     // `data` body until `fmt` is known instead of assuming ordering.
@@ -185,10 +189,23 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
             return Err(format!("wav: chunk {:?} overruns file ({} > {})", String::from_utf8_lossy(fourcc), body_end, bytes.len()));
         }
         let body = &bytes[body_start..body_end];
+        let pad_byte = if size % 2 == 1 { *bytes.get(body_end).ok_or_else(|| format!("wav: odd chunk {:?} is missing its pad byte", String::from_utf8_lossy(fourcc)))? } else { 0 };
         match fourcc {
-            b"fmt " => fmt = Some(decode_fmt_chunk(body)?),
-            b"data" => pending_data_body = Some(body.to_vec()),
-            other => other_chunks.push(RiffChunk { fourcc: String::from_utf8_lossy(other).into_owned(), data: body.to_vec() }),
+            b"fmt " if fmt.is_none() => {
+                fmt = Some(decode_fmt_chunk(body)?);
+                fmt_pad_byte = pad_byte;
+                chunk_order.push(WavChunkRef::Format);
+            }
+            b"data" if pending_data_body.is_none() => {
+                pending_data_body = Some(body.to_vec());
+                data_pad_byte = pad_byte;
+                chunk_order.push(WavChunkRef::Samples);
+            }
+            other => {
+                let index = other_chunks.len() as u64;
+                other_chunks.push(RiffChunk { fourcc: String::from_utf8_lossy(other).into_owned(), data: body.to_vec(), pad_byte });
+                chunk_order.push(WavChunkRef::Other(index));
+            }
         }
         pos = body_end + (size % 2); // 🧮️ RIFF chunks are word-aligned: a 1-byte pad after odd-sized bodies.
     }
@@ -197,45 +214,81 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
         data = Some(decode_data_chunk(&fmt, &body));
     }
     let data = data.ok_or_else(|| "wav: no data chunk found".to_string())?;
-    Ok(WavSnapshot { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt, data, other_chunks })
+    Ok(WavSnapshot { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt, data, fmt_pad_byte, data_pad_byte, other_chunks, chunk_order })
 }
 
-/// 🚶 Re-encodes a `WavSnapshot` into real RIFF/WAVE bytes: `fmt ` then `data` then
-/// `other_chunks` in their stored order — for a snapshot decoded from a real file with no other
-/// chunks, this reproduces the original bytes exactly (see `codec_retention_law` below).
+fn append_chunk(body: &mut Vec<u8>, fourcc: &[u8; 4], payload: &[u8], pad_byte: u8) {
+    body.extend_from_slice(fourcc);
+    body.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    body.extend_from_slice(payload);
+    if payload.len() % 2 == 1 {
+        body.push(pad_byte);
+    }
+}
+
+/// 🚶 Re-encodes a `WavSnapshot` in `chunk_order`. Missing primary or unreferenced auxiliary
+/// chunks are appended once so direct schema edits cannot accidentally discard payloads. A typed
+/// primary is emitted before a verbatim duplicate with the same fourcc, keeping primary edits
+/// authoritative even when a hand-edited sequence omits or misorders its primary reference.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
+pub fn try_encode_wav(snapshot: &WavSnapshot) -> Result<Vec<u8>, String> {
+    validate_wav_serialization(snapshot).map_err(|issue| format!("{}: {}", issue.code, issue.message))?;
     let mut body = Vec::new();
     body.extend_from_slice(b"WAVE");
-    let fmt_body = encode_fmt_chunk(&snapshot.fmt);
-    body.extend_from_slice(b"fmt ");
-    body.extend_from_slice(&(fmt_body.len() as u32).to_le_bytes());
-    body.extend_from_slice(&fmt_body);
-    if fmt_body.len() % 2 == 1 {
-        body.push(0);
-    }
+    let fmt_body = encode_fmt_chunk(&snapshot.fmt)?;
     let data_body = encode_data_chunk(&snapshot.data);
-    body.extend_from_slice(b"data");
-    body.extend_from_slice(&(data_body.len() as u32).to_le_bytes());
-    body.extend_from_slice(&data_body);
-    if data_body.len() % 2 == 1 {
-        body.push(0);
+    let mut format_emitted = false;
+    let mut samples_emitted = false;
+    let mut other_emitted = vec![false; snapshot.other_chunks.len()];
+    for reference in &snapshot.chunk_order {
+        match reference {
+            WavChunkRef::Format => {
+                if format_emitted { continue; }
+                append_chunk(&mut body, b"fmt ", &fmt_body, snapshot.fmt_pad_byte);
+                format_emitted = true;
+            }
+            WavChunkRef::Samples => {
+                if samples_emitted { continue; }
+                append_chunk(&mut body, b"data", &data_body, snapshot.data_pad_byte);
+                samples_emitted = true;
+            }
+            WavChunkRef::Other(index) => {
+                let Ok(index) = usize::try_from(*index) else { continue };
+                let Some(chunk) = snapshot.other_chunks.get(index) else { continue };
+                if other_emitted[index] { continue; }
+                if chunk.fourcc.as_bytes() == b"fmt " && !format_emitted {
+                    append_chunk(&mut body, b"fmt ", &fmt_body, snapshot.fmt_pad_byte);
+                    format_emitted = true;
+                }
+                if chunk.fourcc.as_bytes() == b"data" && !samples_emitted {
+                    append_chunk(&mut body, b"data", &data_body, snapshot.data_pad_byte);
+                    samples_emitted = true;
+                }
+                let mut fourcc = chunk.fourcc.clone().into_bytes();
+                fourcc.resize(4, b' ');
+                append_chunk(&mut body, fourcc[0..4].try_into().expect("fourcc resized to four bytes"), &chunk.data, chunk.pad_byte);
+                other_emitted[index] = true;
+            }
+        }
     }
-    for chunk in &snapshot.other_chunks {
+    if !format_emitted { append_chunk(&mut body, b"fmt ", &fmt_body, snapshot.fmt_pad_byte); }
+    if !samples_emitted { append_chunk(&mut body, b"data", &data_body, snapshot.data_pad_byte); }
+    for (index, chunk) in snapshot.other_chunks.iter().enumerate() {
+        if other_emitted[index] { continue; }
         let mut fourcc = chunk.fourcc.clone().into_bytes();
         fourcc.resize(4, b' ');
-        body.extend_from_slice(&fourcc[0..4]);
-        body.extend_from_slice(&(chunk.data.len() as u32).to_le_bytes());
-        body.extend_from_slice(&chunk.data);
-        if chunk.data.len() % 2 == 1 {
-            body.push(0);
-        }
+        append_chunk(&mut body, fourcc[0..4].try_into().expect("fourcc resized to four bytes"), &chunk.data, chunk.pad_byte);
     }
     let mut out = Vec::with_capacity(8 + body.len());
     out.extend_from_slice(b"RIFF");
     out.extend_from_slice(&(body.len() as u32).to_le_bytes());
     out.extend_from_slice(&body);
-    out
+    Ok(out)
+}
+
+/// 🚶 Re-encodes an already validated WAV snapshot for infallible framework call sites.
+pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
+    try_encode_wav(snapshot).expect("WAV snapshot must be exactly representable before encoding")
 }
 //#endregion 🔖️RiffWalk
 

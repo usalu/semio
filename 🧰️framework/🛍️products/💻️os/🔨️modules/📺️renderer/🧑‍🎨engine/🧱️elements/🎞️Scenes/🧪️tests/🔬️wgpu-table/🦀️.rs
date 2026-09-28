@@ -331,9 +331,9 @@ fn segmented_table_controls_share_fractional_paint_pointer_and_clipped_accessibi
         let cell_rect = rect(&case["cellRect"]);
         let body_rect = rect(&case["bodyRect"]);
         let cell = json!({ "kind": "buttons", "buttons": case["buttons"] });
-        let expected = case["expectedVisibleRects"].as_array().expect("visible rects");
-        for (index, expected) in expected.iter().enumerate() {
-            let segment = table_segment_rect(cell_rect, index, expected.len()).expect("logical segment");
+        let expected_rects = case["expectedVisibleRects"].as_array().expect("visible rects");
+        for (index, expected) in expected_rects.iter().enumerate() {
+            let segment = table_segment_rect(cell_rect, index, expected_rects.len()).expect("logical segment");
             assert_eq!(table_visible_rect(segment, body_rect), Some(rect(expected)), "{} segment {index}", case["id"].as_str().unwrap());
         }
         for probe in case["probes"].as_array().expect("pointer probes") {

@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn strict_document_bytes() -> Vec<u8> {
@@ -12,9 +12,13 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", doc_bytes);
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", rel_type, "word/document.xml");
-        DocxSnapshot::from_parts(opc, Default::default())
+        DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap() }],
+        )
     }
 
     #[semio_framework_async_macros::async_test]
@@ -37,7 +41,12 @@ mod tests {
     async fn transitional_namespace_anywhere_is_hard() {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
-        snapshot.opc.set_part("word/styles.xml", "application/xml", format!(r#"<w:styles xmlns:w="{TRANSITIONAL_MAIN_NS}"/>"#).into_bytes());
+        snapshot.opc.content_types.set_override("word/styles.xml", "application/xml");
+        snapshot.xml_parts.push(DocxXmlPart {
+            path: "word/styles.xml".into(),
+            content_type: "application/xml".into(),
+            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:styles xmlns:w="{TRANSITIONAL_MAIN_NS}"/>"#)).unwrap(),
+        });
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TRANSITIONAL_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -46,7 +55,12 @@ mod tests {
     async fn vml_namespace_anywhere_is_hard() {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
-        snapshot.opc.set_part("word/header1.xml", "application/xml", format!(r#"<w:hdr xmlns:v="{VML_NS}"/>"#).into_bytes());
+        snapshot.opc.content_types.set_override("word/header1.xml", "application/xml");
+        snapshot.xml_parts.push(DocxXmlPart {
+            path: "word/header1.xml".into(),
+            content_type: "application/xml".into(),
+            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:hdr xmlns:v="{VML_NS}"/>"#)).unwrap(),
+        });
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -71,7 +85,8 @@ mod tests {
     async fn alternate_content_anywhere_is_soft() {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
-        snapshot.opc.set_part("word/document2.xml", "application/xml", b"<mc:AlternateContent/>".to_vec());
+        snapshot.opc.content_types.set_override("word/document2.xml", "application/xml");
+        snapshot.xml_parts.push(DocxXmlPart { path: "word/document2.xml".into(), content_type: "application/xml".into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<mc:AlternateContent/>").unwrap() });
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ALTERNATE_CONTENT && d.severity == Severity::Warning), "got {diagnostics:?}");
     }

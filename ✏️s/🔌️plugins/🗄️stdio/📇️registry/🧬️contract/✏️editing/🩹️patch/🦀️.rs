@@ -11,6 +11,7 @@ pub const SNAPSHOT_PATCH_MAX_BYTES: usize = 1_048_576;
 pub enum SnapshotPatchEdit {
     Set { value: DslValue },
     Insert { value: DslValue },
+    InsertAt { value: DslValue, index: usize },
     Remove,
 }
 
@@ -103,7 +104,10 @@ fn validate_patch(patch: &SnapshotPatch) -> Result<(), SnapshotEditError> {
         return Err(SnapshotEditError::new("snapshot-edit.patch-limit", "", "a snapshot patch permits two edits and 128 path segments"));
     }
     for edit in &patch.edits {
-        if let SnapshotPatchEdit::Set { value } | SnapshotPatchEdit::Insert { value } = &edit.edit {
+        if matches!(&edit.edit, SnapshotPatchEdit::InsertAt { index, .. } if *index as u64 > 9_007_199_254_740_991) {
+            return Err(path_error(&edit.path, "object insertion index exceeds the portable integer range"));
+        }
+        if let SnapshotPatchEdit::Set { value } | SnapshotPatchEdit::Insert { value } | SnapshotPatchEdit::InsertAt { value, .. } = &edit.edit {
             validate_value(value, &pointer(&edit.path))?;
         }
     }
@@ -121,10 +125,20 @@ fn apply_one<S: ToValue + FromValue>(snapshot: &mut S, patch: &SnapshotValuePatc
             ValueEdit::Set(value.clone())
         }
         SnapshotPatchEdit::Insert { value } => ValueEdit::Insert(value.clone()),
+        SnapshotPatchEdit::InsertAt { value, index } => {
+            let parent = path.split_last().ok_or_else(|| path_error(&path, "cannot insert at the document root"))?.1;
+            let ValueShape::Object { len } = snapshot.value_shape_at_path(&segments(parent)).map_err(|error| path_error(parent, error))? else {
+                return Err(path_error(&path, "positioned insertion requires an object parent"));
+            };
+            if *index > len {
+                return Err(path_error(&path, "object insertion index is out of range"));
+            }
+            ValueEdit::InsertAt { value: value.clone(), index: *index }
+        }
         SnapshotPatchEdit::Remove => ValueEdit::Remove,
     };
     snapshot.edit_value_at_path(&segments(&path), edit).map_err(|error| path_error(&path, error))?;
-    if let SnapshotPatchEdit::Set { value } | SnapshotPatchEdit::Insert { value } = &patch.edit {
+    if let SnapshotPatchEdit::Set { value } | SnapshotPatchEdit::Insert { value } | SnapshotPatchEdit::InsertAt { value, .. } = &patch.edit {
         if !values_equivalent(&at(snapshot, &path)?, value) {
             return Err(SnapshotEditError::new("snapshot-edit.lossy-conversion", pointer(&path), "the typed field would normalize or discard part of the edit"));
         }
@@ -174,7 +188,8 @@ pub fn prepare_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, even
             } else {
                 let mut destination = parent.to_vec();
                 destination.push(key.clone());
-                SnapshotPatch { edits: vec![SnapshotValuePatch { path, edit: SnapshotPatchEdit::Remove }, SnapshotValuePatch { path: destination, edit: SnapshotPatchEdit::Insert { value } }] }
+                let index = object_key_index(snapshot, &path)?.expect("rename parent is an object");
+                SnapshotPatch { edits: vec![SnapshotValuePatch { path, edit: SnapshotPatchEdit::Remove }, SnapshotValuePatch { path: destination, edit: SnapshotPatchEdit::InsertAt { value, index } }] }
             }
         }
     };
@@ -290,7 +305,7 @@ fn apply_validated_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, 
     for (edit, path) in patch.edits.iter().zip(paths) {
         let (operation, candidate) = match &edit.edit {
             SnapshotPatchEdit::Set { value } => (SchemaFragmentOperation::Set, Some(value)),
-            SnapshotPatchEdit::Insert { value } => (SchemaFragmentOperation::Insert, Some(value)),
+            SnapshotPatchEdit::Insert { value } | SnapshotPatchEdit::InsertAt { value, .. } => (SchemaFragmentOperation::Insert, Some(value)),
             SnapshotPatchEdit::Remove => (SchemaFragmentOperation::Remove, None),
         };
         validator.validate_dsl_fragment_with_context(&path, operation, candidate, |context| project_context(&next, context), |context| project_shape(&next, context)).map_err(|error| SnapshotEditError::new(error.code, error.path, error.message))?;
@@ -326,8 +341,11 @@ pub fn inverse_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, patc
         let path = normalize_path(&next, edit)?;
         let inverse = match &edit.edit {
             SnapshotPatchEdit::Set { .. } => SnapshotPatchEdit::Set { value: at(&next, &path)? },
-            SnapshotPatchEdit::Insert { .. } => SnapshotPatchEdit::Remove,
-            SnapshotPatchEdit::Remove => SnapshotPatchEdit::Insert { value: at(&next, &path)? },
+            SnapshotPatchEdit::Insert { .. } | SnapshotPatchEdit::InsertAt { .. } => SnapshotPatchEdit::Remove,
+            SnapshotPatchEdit::Remove => match object_key_index(&next, &path)? {
+                Some(index) => SnapshotPatchEdit::InsertAt { value: at(&next, &path)?, index },
+                None => SnapshotPatchEdit::Insert { value: at(&next, &path)? },
+            },
         };
         apply_one(&mut next, edit)?;
         edits.push(SnapshotValuePatch { path, edit: inverse });
@@ -336,6 +354,21 @@ pub fn inverse_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, patc
     let inverse = SnapshotPatch { edits };
     validate_patch(&inverse)?;
     Ok(inverse)
+}
+
+fn object_key_index<S: ToValue>(snapshot: &S, path: &[String]) -> Result<Option<usize>, SnapshotEditError> {
+    let Some((key, parent)) = path.split_last() else {
+        return Ok(None);
+    };
+    let ValueShape::Object { len } = snapshot.value_shape_at_path(&segments(parent)).map_err(|error| path_error(parent, error))? else {
+        return Ok(None);
+    };
+    for index in 0..len {
+        if snapshot.value_key_at_path(&segments(parent), index).map_err(|error| path_error(parent, error))? == *key {
+            return Ok(Some(index));
+        }
+    }
+    Err(path_error(path, "the addressed object key does not exist"))
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 use super::*;
+use crate::forms_steps;
 use crate::editor::forms::commands::drop_question_kind::DropQuestionKind;
 use crate::editor::forms::commands::move_question::MoveQuestion;
 use crate::editor::forms::commands::patch_questions::PatchQuestions;
@@ -6,6 +7,22 @@ use crate::editor::forms::commands::remove_question::RemoveQuestion;
 use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
 use AddQuestion;
+
+#[semio_framework_async_macros::async_test]
+async fn adding_a_question_recovers_after_removing_the_last_page() {
+    let mut app = forms_app().await;
+    for step in app.snapshot().unwrap().definition.steps {
+        dispatch(&mut app, FormsCommand::RemoveStep(crate::editor::forms::commands::remove_step::RemoveStep { step_id: step.id })).await;
+    }
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
+        &mut app,
+        FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
+        |app| { let snapshot = app.snapshot().unwrap(); (snapshot.definition.steps.len(), snapshot.definition.steps.iter().map(|step| step.blocks.len()).sum::<usize>()) },
+        (0, 0),
+        (1, 1),
+    ).await;
+    println!("[DEBUG] Adding a question recovered an empty form through undoable page creation");
+}
 
 #[semio_framework_async_macros::async_test]
 async fn add_question_action_appends_question() {
@@ -52,6 +69,7 @@ async fn inspector_patch_updates_required() {
 #[semio_framework_async_macros::async_test]
 async fn remove_question_removes_it_from_the_document() {
     let mut app = forms_app().await;
+    dispatch(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None })).await;
     let question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
     dispatch(&mut app, FormsCommand::RemoveQuestion(RemoveQuestion { question_id: question_id.clone() })).await;
     assert!(crate::schema::flatten_questions(&app.snapshot().expect("projection")).iter().all(|(_, question)| question.id != question_id));
@@ -60,6 +78,7 @@ async fn remove_question_removes_it_from_the_document() {
 #[semio_framework_async_macros::async_test]
 async fn move_question_relocates_it_to_the_target_step() {
     let mut app = forms_app().await;
+    dispatch(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None })).await;
     dispatch(&mut app, FormsCommand::AddStep(crate::editor::forms::commands::add_step::AddStep {})).await;
     let spec = app.snapshot().expect("projection");
     let steps = forms_steps(&spec);

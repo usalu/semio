@@ -1,8 +1,9 @@
 mod tests {
     use super::*;
+    use crate::schema::snapshot::DocxXmlPart;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT;
     use semio_framework_plugin::AnalyzeSource;
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
@@ -11,9 +12,17 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#).into_bytes());
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        DocxSnapshot::from_parts(opc, Default::default())
+        DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart {
+                path: "word/document.xml".into(),
+                content_type: content_type.into(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+            }],
+        )
     }
 
     #[semio_framework_async_macros::async_test]
@@ -29,10 +38,25 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#).into_bytes());
-        opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
+        opc.content_types.set_override("word/styles.xml", "application/xml");
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        let snapshot = DocxSnapshot::from_parts(opc, Default::default());
+        let snapshot = DocxSnapshot::from_parts(
+            opc,
+            vec![
+                DocxXmlPart {
+                    path: "word/document.xml".into(),
+                    content_type: content_type.into(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+                },
+                DocxXmlPart {
+                    path: "word/styles.xml".into(),
+                    content_type: "application/xml".into(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap(),
+                },
+            ],
+        );
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxTransitionalComposerComposition::compose(&sources).expect_err("mixed-in strict namespace must not stamp transitional");

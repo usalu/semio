@@ -2,9 +2,33 @@
   "schema": "playbook.scene-showcase.v1",
   "modeId": "builder",
   "windows": [
+    { "windowId": "playbook-builder", "bodyKey": "playbook.play.builder", "surfaceKind": "block-list" },
     { "windowId": "playbook-steps", "bodyKey": "playbook.play.steps", "surfaceKind": "table" },
-    { "windowId": "playbook-changes", "bodyKey": "playbook.play.changes", "surfaceKind": "diffView" },
-    { "windowId": "playbook-activity", "bodyKey": "playbook.play.activity", "surfaceKind": "eventFeed" },
-    { "windowId": "playbook-source", "bodyKey": "playbook.play.source", "surfaceKind": "textEditor" }
-  ]
+    { "windowId": "playbook-changes", "bodyKey": "playbook.play.changes", "surfaceKind": "diff-view" },
+    { "windowId": "playbook-activity", "bodyKey": "playbook.play.activity", "surfaceKind": "event-feed" },
+    { "windowId": "playbook-source", "bodyKey": "playbook.play.source", "surfaceKind": "text-editor" },
+    { "windowId": "playbook-files", "bodyKey": "playbook.play.files", "surfaceKind": "virtual-file-system" }
+  ],
+  "files": {
+    "surfaceId": "playbook.play.files",
+    "schema": {
+      "fileNodeKinds": {
+        "root": { "id": "root", "name": "Playbook", "icon": "layout-grid", "descriptors": [] },
+        "step": { "id": "step", "name": "Step", "icon": "folder", "descriptors": [] },
+        "block": { "id": "block", "name": "Block", "icon": "file", "descriptors": [] }
+      },
+      "descriptorKinds": {},
+      "descriptorColumnIds": []
+    },
+    "rows": [
+      { "id": "playbook", "fileNodeKindId": "root", "name": "Playbook", "parentId": null, "hasChildren": true, "descriptorValues": {} },
+      { "id": "step/basics", "fileNodeKindId": "step", "name": "Project Basics", "parentId": "playbook", "hasChildren": true, "descriptorValues": {} },
+      { "id": "block/basics/project-name", "fileNodeKindId": "block", "name": "Project Name", "parentId": "step/basics", "hasChildren": false, "descriptorValues": {} },
+      { "id": "step/publish", "fileNodeKindId": "step", "name": "Publish", "parentId": "playbook", "hasChildren": false, "descriptorValues": {} }
+    ],
+    "initialVisibleRowIds": ["step/basics", "block/basics/project-name", "step/publish"],
+    "initialLevels": [0, 1, 0],
+    "collapsedVisibleRowIds": ["step/basics", "step/publish"],
+    "collapsedLevels": [0, 0]
+  }
 }

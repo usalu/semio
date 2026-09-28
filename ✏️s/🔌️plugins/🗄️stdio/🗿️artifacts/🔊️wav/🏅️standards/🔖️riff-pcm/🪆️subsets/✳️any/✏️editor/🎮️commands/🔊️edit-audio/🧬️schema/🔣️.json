@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.wav.command.edit-audio.v1",
+  "title": "WAV natural audio edit command",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["kind", "frame", "channel", "revision", "value"],
+      "properties": {
+        "kind": { "const": "setSample" },
+        "frame": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "channel": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "revision": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "revision"],
+      "properties": {
+        "kind": { "enum": ["appendFrame", "appendChannel"] },
+        "revision": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "frame", "revision"],
+      "properties": {
+        "kind": { "enum": ["insertFrame", "removeFrame"] },
+        "frame": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "revision": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "channel", "revision"],
+      "properties": {
+        "kind": { "enum": ["insertChannel", "removeChannel"] },
+        "channel": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "revision": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "revision", "value"],
+      "properties": {
+        "kind": { "const": "setSampleRate" },
+        "revision": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

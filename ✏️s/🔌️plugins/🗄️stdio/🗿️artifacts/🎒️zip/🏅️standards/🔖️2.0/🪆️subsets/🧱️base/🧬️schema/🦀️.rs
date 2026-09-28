@@ -18,6 +18,13 @@ pub struct ZipArtifact {
     #[state(artifact)]
     #[value(default)]
     pub comment: String,
+    #[state(artifact)]
+    #[value(default = "default_true")]
+    pub comment_utf8: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 //#endregion Artifact
 
@@ -32,13 +39,13 @@ impl ZipArtifact {
     /// 📸️ Persisted subset.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> ZipSnapshot {
-        ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone() }
+        ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone(), comment_utf8: self.comment_utf8 }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: ZipSnapshot) -> Self {
-        Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment }
+        Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment, comment_utf8: snapshot.comment_utf8 }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -47,6 +54,7 @@ impl ZipArtifact {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
         self.comment = snapshot.comment;
+        self.comment_utf8 = snapshot.comment_utf8;
     }
 }
 //#endregion Conversions
@@ -75,10 +83,11 @@ pub fn demo_zip_snapshot() -> ZipSnapshot {
         // and its reader hands back (`🚪️io`'s `encode_zip`/`decode_zip`), so the demo is a fixpoint
         // of its own codec rather than a snapshot no round trip could reproduce.
         entries: vec![
-            ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec() },
-            ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec() },
+            ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec(), ..Default::default() },
+            ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec(), ..Default::default() },
         ],
         comment: "demo archive comment".into(),
+        comment_utf8: true,
     }
 }
 //#endregion 🔖️DocumentHelpers
@@ -167,14 +176,18 @@ pub mod derived_construction {
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            self.snapshot.entries.push(ZipEntry { name: name.into(), data });
+            let mut entry = ZipEntry { name: name.into(), data, ..Default::default() };
+            entry.metadata.compression_method = 0;
+            entry.metadata.local.version_needed = 10;
+            entry.metadata.central.version_needed = 10;
+            self.snapshot.entries.push(entry);
             self
         }
 
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            self.snapshot.entries.push(ZipEntry { name: name.into(), data });
+            self.snapshot.entries.push(ZipEntry { name: name.into(), data, ..Default::default() });
             self
         }
 

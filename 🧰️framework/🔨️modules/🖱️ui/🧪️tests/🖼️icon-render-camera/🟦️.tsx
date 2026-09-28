@@ -1,4 +1,7 @@
 import type { IconRenderRequest } from "@semio-tech/ui-styling";
+import Ajv from "ajv";
+import fixture from "../../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
+import schema from "../../🧬️schema/🖼️icon-render-camera/🔣️.json";
 /** 📐️ Type-only three.js namespace; the runtime `THREE` value arrives through the dependency bag and would shadow this name. */
 import type * as Three from "three";
 
@@ -7,6 +10,45 @@ import type * as Three from "three";
 export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "THREE" | "buildIconCamera" | "finalizeIconSvgMarkup" | "iconRenderCameraPose">): Promise<void> {
   const { THREE, buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose } = dependencies;
   const { describe, expect, it } = vitest;
+  describe("icon camera projection contract", () => {
+    it("validates the shared language-neutral camera cases", () => {
+      const validate = new Ajv({ strict: false }).compile(schema);
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    });
+    for (const sample of fixture.cases) {
+      it(sample.id, () => {
+        const { minimum, maximum } = sample.model;
+        const geometry = new THREE.BoxGeometry(...minimum.map((value, axis) => maximum[axis] - value) as [number, number, number]);
+        const model = new THREE.Mesh(geometry);
+        model.position.set(...minimum.map((value, axis) => (maximum[axis] + value) / 2) as [number, number, number]);
+        model.updateMatrixWorld(true);
+        const request: IconRenderRequest = {
+          ...sample.request,
+          format: sample.request.format as IconRenderRequest["format"],
+          camera: { ...sample.request.camera, position: [sample.request.camera.position[0], sample.request.camera.position[1], sample.request.camera.position[2]], target: [sample.request.camera.target[0], sample.request.camera.target[1], sample.request.camera.target[2]], projection: sample.request.camera.projection === "orthographic" ? "orthographic" : "perspective" },
+          lights: { ambientIntensity: 1, ambientColor: "#fff", sunAzimuth: 0, sunElevation: 45, sunIntensity: 1, sunColor: "#fff" },
+        };
+        const pose = iconRenderCameraPose(request, model);
+        const camera = buildIconCamera(request, pose) as Three.PerspectiveCamera | Three.OrthographicCamera;
+        camera.updateMatrixWorld(true);
+        for (const field of ["position", "target"] as const) {
+          pose[field].forEach((value, axis) => expect(Math.abs(value - sample.expected[field][axis])).toBeLessThan(fixture.tolerance));
+        }
+        expect(Math.abs(pose.zoom - sample.expected.zoom)).toBeLessThan(fixture.tolerance);
+        expect(camera instanceof THREE.OrthographicCamera).toBe(sample.request.camera.projection === "orthographic");
+        if (camera instanceof THREE.PerspectiveCamera) expect(Math.abs(camera.getEffectiveFOV() - sample.expected.effectiveFov)).toBeLessThan(fixture.tolerance);
+        const projected = new THREE.Vector3(...pose.target).project(camera);
+        expect(Math.abs(projected.x - sample.expected.targetNdc[0])).toBeLessThan(fixture.tolerance);
+        expect(Math.abs(projected.y - sample.expected.targetNdc[1])).toBeLessThan(fixture.tolerance);
+        if (camera instanceof THREE.OrthographicCamera) {
+          const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+          const next = new THREE.Vector3(...pose.target).add(right).project(camera);
+          expect(Math.abs((next.x - projected.x) * sample.preview.width / 2 - sample.expected.previewZoom)).toBeLessThan(fixture.tolerance);
+        }
+        geometry.dispose();
+      });
+    }
+  });
   describe("finalizeIconSvgMarkup", () => {
     it("removes three.js SVGRenderer white clear color when the shot background is transparent", () => {
       const input = '<svg xmlns="http://www.w3.org/2000/svg" style="background-color: rgb(255, 255, 255);"><path d="M0 0"/></svg>';

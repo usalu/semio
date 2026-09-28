@@ -3,6 +3,8 @@ use crate::{editing::{validate_extent,validate_image,PixelEditError,PixelProgres
 use std::{collections::BTreeMap,sync::Arc};
 
 pub type CompositeAffine = [f64;6];
+#[path="📐️frames/🦀️.rs"]
+pub mod frames;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CompositeBlend {Normal,Multiply,Screen,Overlay,Darken,Lighten,ColorDodge,ColorBurn,HardLight,SoftLight,Difference,Exclusion,Hue,Saturation,Color,Luminosity}
 
@@ -39,10 +41,10 @@ struct Step {depth:usize,command:Command}
 const IDENTITY:CompositeAffine=[1.0,0.0,0.0,1.0,0.0,0.0];
 const TILE:usize=256;
 
-fn multiply(a:CompositeAffine,b:CompositeAffine)->CompositeAffine {
+pub fn multiply(a:CompositeAffine,b:CompositeAffine)->CompositeAffine {
     [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]]
 }
-fn inverse(m:CompositeAffine)->Result<CompositeAffine,PixelEditError> {
+pub fn inverse(m:CompositeAffine)->Result<CompositeAffine,PixelEditError> {
     let det=m[0]*m[3]-m[1]*m[2];
     if !m.iter().all(|v|v.is_finite())||!det.is_finite()||det.abs()<1e-12 {return Err(PixelEditError::Invalid("Transform must be finite and invertible"));}
     let out=[m[3]/det,-m[1]/det,-m[2]/det,m[0]/det,(m[2]*m[5]-m[3]*m[4])/det,(m[1]*m[4]-m[0]*m[5])/det];

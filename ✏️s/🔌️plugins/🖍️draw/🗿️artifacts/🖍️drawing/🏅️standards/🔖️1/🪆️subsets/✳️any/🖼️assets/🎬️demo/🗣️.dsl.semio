@@ -5,9 +5,10 @@ layers {
   base {
     id=emblem-group name="Semio Emblem" visible=true locked=false opacity=1 blend-mode=normal
     transform {
-      x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
+      x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad
     }
     attributes {
+      fill-rule=evenodd
       fill {
       }
     }
@@ -17,14 +18,15 @@ layers {
     base {
       id=emblem-orange name="Orange Wedge" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
+        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad
       }
       attributes {
+        fill-rule=evenodd
         fill {
           solid color=0.98,0.584,0,1
         }
         stroke {
-          color=0,0.067,0.09,1 width=2.5 cap=miter join=miter
+          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter
         }
       }
     }
@@ -39,14 +41,15 @@ layers {
     base {
       id=emblem-red name="Red Frame" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
+        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad
       }
       attributes {
+        fill-rule=evenodd
         fill {
           solid color=1,0.204,0.31,1
         }
         stroke {
-          color=0,0.067,0.09,1 width=2.5 cap=miter join=miter
+          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter
         }
       }
     }
@@ -66,14 +69,15 @@ layers {
     base {
       id=emblem-teal name="Teal Bars" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
+        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad
       }
       attributes {
+        fill-rule=evenodd
         fill {
           solid color=0.204,0.82,0.749,1
         }
         stroke {
-          color=0,0.067,0.09,1 width=2.5 cap=miter join=miter
+          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter
         }
       }
     }

@@ -19,7 +19,7 @@ fn sample_svg() -> SvgSnapshot {
             SvgElement::Text { common: CommonAttrs::default(), x: Some(1.0), y: Some(2.0), children: vec![SvgElement::TextNode("hi".into())] },
         ],
     };
-    SvgSnapshot { doc: XmlDocument { root: Some(semio_s_artifact_stdio_svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new() }, ..SvgSnapshot::default() }
+    SvgSnapshot { doc: XmlDocument { root: Some(semio_s_artifact_stdio_svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() }, ..SvgSnapshot::default() }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -25,9 +25,10 @@ async fn xml_to_value_to_xml_round_trips_structurally() {
                 XmlNode::Text { text: "hello & goodbye".into() },
             ],
         }),
-        doctype: Some("<!DOCTYPE svg>".into()),
+        doctype: Some(XmlDoctype { prolog_position: 1, name: "svg".into(), external_id: None, declarations: Vec::new() }),
         declaration: Some(XmlDeclaration::new("1.0", Some("UTF-8".into()), Some(false))),
         prolog: vec![XmlNode::Comment { text: "generated".into() }],
+        epilog: vec![XmlNode::ProcessingInstruction { target: "done".into(), data: "yes".into() }],
     };
     assert_eq!(round_trip(doc.clone()), doc);
 }

@@ -1,8 +1,9 @@
 mod tests {
     use super::*;
+    use crate::schema::snapshot::DocxXmlPart;
     use crate::standards::v_ecma_376::subsets::strict::schema::CODE_REL_BASE;
     use semio_framework_plugin::AnalyzeSource;
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
     const STRICT_REL_BASE: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
@@ -12,25 +13,22 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes());
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), "word/document.xml");
-        DocxSnapshot::from_parts(opc, Default::default())
+        DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart {
+                path: "word/document.xml".into(),
+                content_type: content_type.into(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#)).unwrap(),
+            }],
+        )
     }
 
-    /// 🩹 `encode_docx` (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️.rs`)
-    /// deliberately OVERWRITES `word/document.xml` from `snapshot.document` (the typed
-    /// paragraphs/runs model) on every encode -- see `DocxSnapshot.opc`'s own doc comment ("kept
-    /// in sync with `document` on encode"). Since `strict_snapshot()` sets `document` to
-    /// `Default::default()`, going through `encode_pack` would silently discard the hand-set
-    /// `xmlns:w`/`conformance="strict"` XML and replace it with the default empty document's
-    /// regenerated (non-strict) XML. Encoding the OPC package directly (bypassing the docx typed
-    /// model entirely, matching what `encode_pack_with` does minus that one overwrite step) is how
-    /// this test genuinely exercises a document whose main-part XML matches what was set on `opc`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    /// 📦️ The artifact pack serializes the authoritative strict XML part without regeneration.
     fn conforming_pack_bytes(snapshot: &DocxSnapshot) -> Vec<u8> {
-        let raw = semio_s_artifact_stdio_zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<DocxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
-        store::semio_format::wrap_binary(&envelope, &raw)
+        <DocxSnapshot as store::ArtifactPack>::encode_pack(snapshot)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -46,9 +44,17 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#).into_bytes());
+        let content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+        opc.content_types.set_override("word/document.xml", content_type);
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        let snapshot = DocxSnapshot::from_parts(opc, Default::default());
+        let snapshot = DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart {
+                path: "word/document.xml".into(),
+                content_type: content_type.into(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+            }],
+        );
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxStrictComposerComposition::compose(&sources).expect_err("transitional relationship base must not stamp strict");

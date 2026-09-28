@@ -4,8 +4,8 @@
 import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
-import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
-import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
+import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
+import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, documentBootMetaReader, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, stripBootBrokerProof, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
@@ -29,11 +29,12 @@ await new Promise<void>((resolve) => {
  * because a sandboxed page throws on `localStorage`; an absent value leaves the build-time switch to
  * decide. */
 function armUiTurnDiagnostics(): void {
+  const serverDefault = document.querySelector<HTMLMetaElement>('meta[name="semio-runtime-diagnostics"]')?.content;
   try {
     const stored = globalThis.localStorage?.getItem(TURN_DIAGNOSTICS_KEY);
-    if (stored !== null && stored !== undefined) setTurnDiagnostics(["1", "true", "on", "yes"].includes(stored.trim().toLowerCase()));
+    setTurnDiagnostics(resolveRuntimeDiagnosticsPreference(stored, serverDefault));
   } catch {
-    setTurnDiagnostics(undefined);
+    setTurnDiagnostics(resolveRuntimeDiagnosticsPreference(undefined, serverDefault));
   }
 }
 
@@ -282,7 +283,7 @@ async function mount(root: HTMLElement): Promise<void> {
   }
   let worker: Worker;
   try {
-    worker = new Worker(stampShardWorkerDiagnostics(FRAME_WORKER_URL.href), { type: "module", name: "semio-frame-worker" });
+    worker = new Worker(stampShardWorkerDiagnostics(FRAME_WORKER_URL.href, turnDiagnosticsEnabled()), { type: "module", name: "semio-frame-worker" });
   } catch (error) {
     throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -330,6 +331,7 @@ async function mount(root: HTMLElement): Promise<void> {
       if (typeof fullscreen === "boolean") void fullscreenOwner.set(fullscreen).catch(() => {});
       accessibility?.refresh();
     },
+    onDiagnostic: ({ channel, generation, frameSequence, json }) => console.debug(`[DEBUG] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}`),
     onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
       beacon.error();
       cleanupInput();

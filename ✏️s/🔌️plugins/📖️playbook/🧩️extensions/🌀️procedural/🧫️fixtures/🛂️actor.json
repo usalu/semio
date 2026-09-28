@@ -4,9 +4,20 @@
   "host": "playbook",
   "appId": "s.playbook.procedural@1/*#editor",
   "topic": "playbook.blockKind",
+  "formsTopic": "forms.questionKind",
   "blockKind": "buildingComponent",
   "windowBodies": [
     "params",
     "preview"
-  ]
+  ],
+  "formsLabels": {
+    "native": {
+      "en": "Building Component",
+      "de": "Bauteil"
+    },
+    "reuse": {
+      "en": "Building Component",
+      "de": "Bauteil"
+    }
+  }
 }

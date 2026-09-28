@@ -1,4 +1,5 @@
 /** 🧬️ Raster diff schema — sparse field delta over the artifact. */
+import {inverse} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
 import {
   parseRasterArtifact,
   parseRasterImageAsset,
@@ -65,9 +66,10 @@ export interface RasterLayerPatch {
   adjustmentParameters?: RasterAdjustmentParameter[];
   maskContent?: RasterMaskContent;
   pixelContent?: RasterPixelContent;
-  pixelTransform?: RasterTransform;
+  transform?: RasterTransform;
   name?: string;
   visible?: boolean;
+  locked?: boolean;
   opacity?: number;
   blendMode?: string;
   transformX?: number;
@@ -217,9 +219,13 @@ export function parseRasterAdjustmentParameters(value: unknown, at = "$"): Raste
 
 export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatch {
   const row = rasterRasterDiffGuardObject(value, at);
+  if(row.transform!=null&&(row.transformX!=null||row.transformY!=null))return rasterRasterDiffGuardReject(at,"full and partial transforms cannot occur in one patch");
+  const transform=row.transform==null?undefined:parseRasterTransform(row.transform,`${at}.transform`);
+  if(transform)inverse([transform.a,transform.b,transform.c,transform.d,transform.x,transform.y]);
   return {
     name: row["name"] == null ? undefined : rasterRasterDiffGuardString(row["name"], `${at}.name`),
     visible: row["visible"] == null ? undefined : rasterRasterDiffGuardBoolean(row["visible"], `${at}.visible`),
+    locked: row["locked"] == null ? undefined : rasterRasterDiffGuardBoolean(row["locked"], `${at}.locked`),
     opacity: row["opacity"] == null ? undefined : rasterRasterDiffGuardNumber(row["opacity"], `${at}.opacity`),
     blendMode: row["blendMode"] == null ? undefined : rasterRasterDiffGuardString(row["blendMode"], `${at}.blendMode`),
     transformX: row["transformX"] == null ? undefined : rasterRasterDiffGuardNumber(row["transformX"], `${at}.transformX`),
@@ -227,7 +233,7 @@ export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatc
     width: row["width"] == null ? undefined : rasterRasterDiffGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
     height: row["height"] == null ? undefined : rasterRasterDiffGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
     ...(row.pixelContent == null ? {} : {pixelContent: parseRasterPixelContent(row.pixelContent, `${at}.pixelContent`)}),
-    ...(row.pixelTransform == null ? {} : {pixelTransform: parseRasterTransform(row.pixelTransform, `${at}.pixelTransform`)}),
+    ...(transform === undefined ? {} : {transform}),
     ...(row.adjustmentParameters == null ? {} : {adjustmentParameters: parseRasterAdjustmentParameters(row.adjustmentParameters, `${at}.adjustmentParameters`)}),
     ...(row.maskContent == null ? {} : {maskContent: parseRasterMaskContent(row.maskContent, `${at}.maskContent`)}),
     adjustmentKind: row["adjustmentKind"] == null ? undefined : rasterRasterDiffGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),

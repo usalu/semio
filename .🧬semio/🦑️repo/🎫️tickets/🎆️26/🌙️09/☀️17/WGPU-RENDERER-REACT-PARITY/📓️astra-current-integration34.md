@@ -1,4 +1,48 @@
+## Current focused renderer queue
+
+SolCanvas projection retry stopped before assertions after36m18s in an external `semio-framework-plugin` snapshot: E0599 `TableRowBuilder::try_children`. Current source no longer contains that call; no rollback of concurrent API edits was attempted. Root empty-dock law remains active. New broad native batches remain on hold; transactional projection repair and neutral laws proceed from the confirmed partial-paint source/runtime evidence.
+
+## Playbook native showcase receipt
+
+The actual Playbook app manifest matches the five language-neutral scene families: native exact law **1/1 passed**, 162 unrelated cases filtered, Nextest 0.045 s, Nx 40m19s including the shared compiler queue. Session 99099 exited 0. Log: `🗑️generated/astra-runtime/gate34/playbook-five-native1.log`. This is manifest validation, not five-surface physical acceptance.
+
 # Current Renderer Integration Gate
+
+## Current Checkpoint — September 27, 21:10 UTC
+
+At21:16 UTC full renderer native10 ended before assertions after23m26s with17 errors from the in-flight touch packet: unresolved gesture module imports, new Map/Board camera helpers absent from already compiled dependencies, and12 old PointerId test calls against the new PointerInfo signature. The current compiler receipt is preserved under `gate34/native10-compiler-errors.jsonl` with verified fingerprint timestamp21:16:10. Sol Flow owns the coherent completion; no fresh broad native batch is started while queued focused proofs drain. Earlier claims that native10 would validate the prior renderer snapshot are withdrawn: its renderer compilation occurred after touch editing began.
+
+Full retained UI11 is GREEN:716/716 tests passed, zero skipped, Nextest10.145s after compilation (Nx20m27s), exit0. This includes the checked-checkbox outline regression, both tooltip lifecycle laws, Tree selection stamping and pipeline-count checks. Renderer native10 and the focused empty-notice/Playbook laws remain pending.
+
+The stdio owner confirmed its optimized components are compiling coherently but several native focused proofs queue behind renderer native10. Root preserves that active run and will avoid starting another broad native batch until already queued focused proofs drain. Work continues through browser acceptance, small source repairs and React oracles.
+
+WASM23 published successfully with exit0 after15m12s. Runtime preparation is active; the renderer snapshot predates the next touch/Display/empty-notice packet. Root restarted React with diagnostics enabled and confirmed actual accepted camera/grid payloads in the browser. Reference image positioning remains inconsistent with its authored-origin diagnostic and is under an actual render-transform audit. See [runtime23](📓️astra-paired-runtime23.md).
+
+The fresh native Projection-pane law compiled and failed after its 1,024-opportunity guard, producing no accepted pane hits. This supersedes the earlier compiler-only failures: the remaining failure is now an actual retained-frame convergence issue. Sol is collecting the parked phase before repairing it. WASM23, full UI11, full native10, and the Playbook manifest law remain active; no new full native or browser pass is claimed.
+
+React's accepted World-frame diagnostics and the Board/TiledMap pinch fixture/oracles pass 15/15 across three focused files (21.25 seconds). Diagnostics are gated and deduplicated, and carry actual camera, viewport, reference, content-bound and grid inputs. Rust touch production is held until the current WASM publication boundary. Root has registered a bilingual empty-dock fixture and actual styled Mode oracle; its measurement work is in progress.
+
+WASM22 ended before publication after 1m50s with three errors in the concurrent plugin ownership refactor: two remaining `HostMediaHandlerDescriptor.clone()` calls and `EditableTreeNode` deriving Clone while its `UiValue` no longer does. The stdio owner received exact file/line diagnostics, restored Clone only on the immutable descriptor and removed it from the move-only tree node. Root verified both corrections in current source. UI11 and native10 remain active; WASM23 retries that repaired source.
+
+The Playbook showcase corpus now lists all five existing windows and uses canonical surface tags. Its Ajv/React-side check passes 1/1 (Nx4.2s), and the native manifest law now compares its real app definition against that same corpus. That native law has not yet run. No Playbook producer has changed.
+
+At 20:48 UTC, full UI11 and WASM22 started against the coherent framing/pane/title/checkbox source. Checkbox GREEN1 stopped before assertions on E0308 in the new Tree selection stamp (`UiTreeSectionNode` passed as an item slice); the exact diagnostic was preserved, and current source correctly iterates each section's items. UI11 now includes the checkbox law and prior tooltip/pipeline-count regressions. Production mutations for the next Display/touch packets are held until this build receipt; their neutral fixtures and React oracles continue.
+
+The diagnostics propagation tests passed 2/2 through scoped Nx exec, including actual served HTML. The next browser activation will explicitly restart with diagnostics enabled and seal both targets before physical comparisons. Renderer native pane/sibling checks remain active; no native full-suite success is claimed.
+
+Full React13 completed at 20:44 UTC: **2,476 passed, two failed across 143 files**, zero skipped, 125.03 seconds (Nx 2m06s). Both failures are the concurrent raster editor's new own/inherited layer-protection cases in Paint2dHost editing selection-focus, missing the locked-layer notice. The renderer's new title, checkbox, pane and framing checks passed in this full run. The raster owner received the exact receipt and continues its repair; our fleet preserves that source. This is a failed full gate, not a full-suite success.
+
+The latest owned Projection-pane native compile stopped on E0599 for `stamp_tree_selected_item`: its UI dependency snapshot had compiled before the new method was added. The method is now present and public, and Sol is rerunning the coherent snapshot. The old E0502 summary is superseded by that preserved current diagnostic.
+
+At 20:41 UTC, the actual React Projection-pane oracle has passed 2/2, and both tooltip regressions have each passed their exact native filter. The externally delivered full camera-spec frame law passed 1/1; accepted-frame bounds stability remains pending. Root's checkbox GREEN run is still compiling, and the native Projection-pane run is awaiting a current diagnostic after an earlier E0502 compile failure. No integrated success is inferred from these focused receipts.
+
+The custom WGPU server did not previously propagate `VITE_SEMIO_RUNTIME_DIAGNOSTICS` into its statically bundled page/worker. Sol repaired the launch-env → HTML metadata → page resolution → worker URL chain, preserving explicit stored false precedence; its independent served-HTML tests are pending. Paired22 will use the supported launch flag and captured console output, without reading browser internals.
+
+Terra's current [15-surface schedule](📓️terra-current-window-caret-liveness-audit34.md) identifies real app targets for every registered family. The Display taxonomy is complete; only its authored order requires reversal. Space's current VFS is root-only and cannot serve as an expansion/navigation acceptance case, so a nontrivial existing producer is being located.
+
+The next source packet repairs one-shot World projection framing, hidden-sibling retention during focus, the retained Projection pane, spawned window title/icon seeding, and checked-checkbox paint. The latest frame-debt implementation passed Terra's source audit; focused executable frame checks remain pending. The spawned-window React file passed 6/6. The styled actual React checkbox oracle passed 3/3 after correcting its measurement to treat CSS `outline-style: none` as no painted outline. The native checkbox law then ran RED on the exact checked-state allocation outline; the narrow repair is applied and its focused GREEN rerun is active. [Checkbox evidence](📓️astra-checkbox-paint34.md) records the exact sequence.
+
+No new full-suite or paired-runtime success is claimed. Full React12 remains 142 files/2468 tests passed, while UI10 and native9 remain failed historical gates. WASM21 published successfully, but the [sealed paired journey](📓️astra-paired-runtime21.md) still exposes visual and lifecycle differences. [Spawned window chrome](📓️astra-spawned-window-chrome34.md) records the title repair and pending native/runtime checks. Display ordering and taxonomy parity are the next delegated shell packet.
 
 ## Revalidation on September 27 at 16:34 UTC
 
@@ -263,3 +307,32 @@ Current React World3d interaction passes 21/21, Canvas gesture lane passes 6/6, 
 The retained-control-commit TypeScript oracle was absent from both renderer include lists. It is now registered in the React runner and executes 16/16 passing tests. Earlier attempts returned no test files and are not passes. Terra is auditing the remaining ticket-owned test registration paths.
 
 Full React10 has not produced a terminal census. Comparison against a fresh 2,447-test collection isolates 107 unreported PluginRuntime laws after the background-job ledger cancellation case; three additional World laws were added after this run started and pass in the current focused suite. The exact job cancellation law is now running separately to distinguish a production yield defect from corpus interference.
+
+
+## 2026-09-27 19:55 UTC — Native Continuation Fairness
+
+A bounded reproduction showed 50,000 real scheduler yields taking 133.39 ms while an external 5 ms timer never fired on Bun 1.3.14. The new shared fairness fixture reproduced RED in the actual scheduler while the independent platform immediate-queue oracle passed. Native Node/Bun hosts now select their system immediate queue; browser hosts retain MessageChannel and the injected ContinuationPorts contract is unchanged. The complete async suite passes 26/26 across two files, including external-timer fairness and the platform oracle. The exact previously stalled cancellation test now passes, and the entire PluginRuntime corpus passes 133/133. Full React10’s verified stuck worker was terminated after reproducing this defect; its incomplete census is not a pass. Full React11 is now running with the repaired scheduler and current registrations.
+
+The newly registered projection/native-accessibility oracles pass five tests across two files, including the neutral viewport validator imported into projection-render-parity. The complete current React package typecheck passes with zero diagnostics after explicit UiLabel and icon fixture branding repairs. Native9 and WASM21 remain pending.
+
+
+## 2026-09-27 19:58 UTC — UI10 and Fresh Reference
+
+UI10 executed all 715 tests: 712 passed, three failed, zero skipped. Previous deadline, slider action and slot budget failures pass. Two later tooltip assertions now fail (frame completion and accepted-text retirement); SolCanvas owns diagnosis. The new curvilinear encoded composite adds an eleventh pipeline to an exact-count source guard still expecting ten; SolFlow owns the explicit coverage update.
+
+Fresh React source reload visibly paints the Concrete Forest scene, Top/Perspective panes, projection controls and chrome without console errors. Curvilinear selection changes the Top title, paints the scene, survives maximize/unmaximize, and preserves the sibling Perspective pane. The console retains the known 59 unactivated unrelated module warnings; the selected Puzzle module is not in that warning list. These are reference-only observations, not WGPU parity. WASM21 has finished Rust compilation but Trunk packaging remains pending.
+
+
+## 2026-09-27 20:00 UTC — Complete React11 Census
+
+Full React11 terminates in 147.98 seconds (Nx 2m30): 2,446 passed, four failed, eighteen skipped, across 142 files (137 passed/five failed). All failures share the missing Chromium headless executable under the inherited `PLAYWRIGHT_BROWSERS_PATH=node_modules/.cache/ms-playwright`; the fifth failed file is its eighteen-case textarea suite whose beforeAll could not launch. The canonical repository browser cache already has the correct executable. The registered `workspace:deps-browsers` setup completes successfully, confirming that cache. Full React12 now explicitly uses the canonical repository cache rather than this session’s broken override. No renderer expectation or browser test was weakened for these failures.
+
+
+## 2026-09-27 20:03 UTC — Current Green Reference and First WGPU21 Paint
+
+Full React12 passes all 2,468 tests across 142 files, zero skipped, in 113.59 seconds (Nx 1m55). WGPU21 publishes both renderer files after 12m39; preparation and activation complete successfully. The browser at port6014 boots both scene panes, onboarding Skip dismisses its overlay, and the console has no errors. Twelve artifact files are sealed before the journey. Shared Puzzle module/bridge/core bytes match the earlier reference seal; the receipts have the same source-content hash but different aggregate artifact hashes, so the latter are not claimed equal.
+
+The first equal-viewport visual inspection still shows differences requiring investigation: the Top reference image is displaced horizontally relative to React while the object remains similarly positioned; orthographic grid intervals differ; native chrome font weight/icons/spacing and scene outlines differ. Fresh paired measurement is underway; successful boot alone does not establish parity.
+# 2026-09-27 20:09 UTC — Fresh Comparison Continues
+
+Native9 is terminal: exit1 after11m01 before assertions, with one E0599 `NonEmptyVec::to_vec` fixture API error. Sol Flow owns the exact repair. Full React12 is terminal and green:2468 tests,142 files,zero skips. The physical comparison and artifact-seal limits are recorded in `📓️astra-paired-runtime21.md`; current source repairs are not yet reflected in WGPU21.

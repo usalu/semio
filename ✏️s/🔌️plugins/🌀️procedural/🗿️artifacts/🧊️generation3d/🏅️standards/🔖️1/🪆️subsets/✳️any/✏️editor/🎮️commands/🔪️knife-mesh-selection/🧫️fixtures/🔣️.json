@@ -1,0 +1,22 @@
+{
+  "payload": {"start":[0,-1,0],"end":[0,1,0]},
+  "valid": [
+    {"ids":["extrude@meshOut#0.face.0"],"face":0},
+    {"ids":["extrude@meshOut#0.face.3","extrude@meshOut#0.face.3"],"face":3}
+  ],
+  "invalidSelections": [
+    [],
+    ["extrude@meshOut#0.face.0","extrude@meshOut#0.face.1"],
+    ["extrude@meshOut#0.edge.0"],
+    ["extrude@meshOut#0.vertex.0"],
+    ["extrude@meshOut#1.face.0"],
+    ["extrude@meshOut#0.face.0","other@meshOut#0.face.0"]
+  ],
+  "invalidPayloads": [
+    {"start":[0,0,0],"end":[0,0,0]},
+    {"start":[0,0],"end":[0,1,0]},
+    {"start":[0,0,0],"end":[0,1,0,1]},
+    {"start":[1e39,0,0],"end":[0,1,0]},
+    {"start":[3.40282347e38,0,0],"end":[0,1,0]}
+  ]
+}

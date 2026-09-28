@@ -76,8 +76,14 @@ function bootAxisMetaTags(variant: string | undefined): { tag: string; attrs: Re
     ["semio-locked-terminology", process.env.SEMIO_LOCKED_TERMINOLOGY],
     ["semio-locked-theme", process.env.SEMIO_LOCKED_THEME],
     ["semio-locked-appearance", process.env.SEMIO_LOCKED_APPEARANCE],
+    ["semio-runtime-diagnostics", process.env.VITE_SEMIO_RUNTIME_DIAGNOSTICS ?? process.env.SEMIO_RUNTIME_DIAGNOSTICS],
   ];
   return axes.filter((entry): entry is [string, string] => Boolean(entry[1])).map(([name, content]) => ({ tag: "meta", attrs: { name, content }, injectTo: "head" }));
+}
+
+/** 🩺️ Projects server-owned boot axes into the actual WGPU page. */
+export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBuildPlugin {
+  return { name: "wgpu-browser-selection", transformIndexHtml: () => bootAxisMetaTags(variant) };
 }
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
@@ -90,7 +96,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
     cacheDir: repoCacheDirectory(options.workspace, "vite", "wgpu", options.variant ?? "fixture", options.profile),
     optimizeDeps: { noDiscovery: true, include: [] },
     resolve: { alias: mounts.map(([find, replacement]) => ({ find, replacement })) },
-    server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root)] } },
+    server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root)] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
     plugins: [
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
@@ -111,7 +117,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
         },
       },
       completedArtifactReload(options.reloadFile),
-      { name: "wgpu-browser-selection", transformIndexHtml: () => bootAxisMetaTags(options.variant) },
+      wgpuBrowserSelectionPlugin(options.variant),
       { name: "wgpu-serve-only", config(_config, environment) { if (environment.command !== "serve") throw new Error("Build the finite WGPU wasm target through Nx"); } },
     ],
   };

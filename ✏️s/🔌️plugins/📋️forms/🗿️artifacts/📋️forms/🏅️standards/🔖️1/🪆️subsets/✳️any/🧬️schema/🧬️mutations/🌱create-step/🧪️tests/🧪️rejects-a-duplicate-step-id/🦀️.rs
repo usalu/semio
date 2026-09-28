@@ -17,7 +17,7 @@
 //! JSON's own `step` — which is precisely the collision `mutation.duplicate-id` guards against.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::{materialize_forms_steps, FormsDiff, FormsSnapshot};
+use crate::{replace_forms_steps, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id/📸️snapshot/➡️after/🔣️.json");
@@ -38,7 +38,7 @@ fn before() -> FormsSnapshot {
     let FormMutation::CreateStep(payload) = mutation() else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
-    materialize_forms_steps(&mut snapshot.structure, vec![payload.step.clone()]);
+    replace_forms_steps(&mut snapshot, vec![payload.step.clone()]);
     snapshot
 }
 

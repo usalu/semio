@@ -13,7 +13,7 @@ pub struct ExportFixture {}
 pub fn handle(_payload: &ExportFixture, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let data = forms_dsl::print_dsl(spec);
-    Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.forms.dsl", spec.id), mime_type: "text/plain".into(), data, encoding: None }))
+    Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.forms", spec.id), mime_type: "text/plain;charset=utf-8".into(), data, encoding: None }))
 }
 
 //#region 🧪️Tests

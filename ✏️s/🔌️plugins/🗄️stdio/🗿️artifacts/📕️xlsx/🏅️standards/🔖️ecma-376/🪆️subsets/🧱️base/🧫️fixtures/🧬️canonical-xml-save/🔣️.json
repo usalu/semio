@@ -1,0 +1,489 @@
+{
+  "cases": [
+    {
+      "id": "transitional-default",
+      "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "mainPath": "custom/workbook.xml",
+      "sheetPath": "custom/sheets/data.xml",
+      "calamine": true,
+      "parts": [
+        {
+          "path": "[Content_Types].xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"bin\" ContentType=\"application/octet-stream\"/><Override PartName=\"/custom/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/custom/sheets/data.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/custom/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/><Override PartName=\"/custom/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>"
+        },
+        {
+          "path": "_rels/.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"main-document\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"custom/workbook.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/workbook.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--workbook-before--><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><workbookPr date1904=\"0\" codeName=\"RetainedBook\"/><bookViews><workbookView activeTab=\"0\" showSheetTabs=\"1\"/></bookViews><sheets><sheet name=\"Data\" sheetId=\"7\" r:id=\"sheet-data\" state=\"visible\"/></sheets><definedNames><definedName name=\"Total\">Data!$A$1</definedName></definedNames><calcPr calcId=\"191029\" fullCalcOnLoad=\"1\"/><extLst><ext uri=\"urn:semio:workbook\"><x:marker value=\"retained\"/></ext></extLst></workbook><?after workbook?>"
+        },
+        {
+          "path": "custom/_rels/workbook.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"sheet-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"sheets/data.xml\"/><Relationship Id=\"strings-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/><Relationship Id=\"styles-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/sheets/data.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>12.5</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->"
+        },
+        {
+          "path": "custom/sharedStrings.xml",
+          "text": "<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"1\" uniqueCount=\"1\"><si><r><rPr><b/><color rgb=\"FF112233\"/></rPr><t xml:space=\"preserve\">Rich </t></r><r><rPr><i/></rPr><t>文字</t></r></si></sst>"
+        },
+        {
+          "path": "custom/styles.xml",
+          "text": "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><fonts count=\"2\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font><font><b/><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts><fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills><borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs><cellXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>"
+        },
+        {
+          "path": "custom/sheets/_rels/data.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"link-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink\" Target=\"https://example.com/retained\" TargetMode=\"External\"/></Relationships>"
+        }
+      ],
+      "binaryParts": [
+        {
+          "path": "custom/media/retained.bin",
+          "bytes": [
+            0,
+            255,
+            17,
+            200
+          ]
+        }
+      ],
+      "edit": {
+        "sheetName": "Data",
+        "row": 1,
+        "column": 0,
+        "before": 12.5,
+        "after": 99.25
+      },
+      "expectedSheetXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>99.25</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->",
+      "expectedValues": [
+        {
+          "address": "A1",
+          "kind": "number",
+          "before": "12.5",
+          "after": "99.25",
+          "formula": ""
+        },
+        {
+          "address": "B1",
+          "kind": "string",
+          "before": "Rich 文字",
+          "after": "Rich 文字",
+          "formula": ""
+        },
+        {
+          "address": "C1",
+          "kind": "number",
+          "before": "25",
+          "after": "25",
+          "formula": "A1*2"
+        },
+        {
+          "address": "D1",
+          "kind": "boolean",
+          "before": "true",
+          "after": "true",
+          "formula": ""
+        },
+        {
+          "address": "E1",
+          "kind": "error",
+          "before": "#DIV/0!",
+          "after": "#DIV/0!",
+          "formula": ""
+        }
+      ]
+    },
+    {
+      "id": "transitional-alias",
+      "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "mainPath": "custom/workbook.xml",
+      "sheetPath": "custom/sheets/data.xml",
+      "calamine": true,
+      "parts": [
+        {
+          "path": "[Content_Types].xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"bin\" ContentType=\"application/octet-stream\"/><Override PartName=\"/custom/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/custom/sheets/data.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/custom/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/><Override PartName=\"/custom/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>"
+        },
+        {
+          "path": "_rels/.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"main-document\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"custom/workbook.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/workbook.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--workbook-before--><s:workbook xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:link=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><s:workbookPr date1904=\"0\" codeName=\"RetainedBook\"/><s:bookViews><s:workbookView activeTab=\"0\" showSheetTabs=\"1\"/></s:bookViews><s:sheets><s:sheet name=\"Data\" sheetId=\"7\" link:id=\"sheet-data\" state=\"visible\"/></s:sheets><s:definedNames><s:definedName name=\"Total\">Data!$A$1</s:definedName></s:definedNames><s:calcPr calcId=\"191029\" fullCalcOnLoad=\"1\"/><s:extLst><s:ext uri=\"urn:semio:workbook\"><x:marker value=\"retained\"/></s:ext></s:extLst></s:workbook><?after workbook?>"
+        },
+        {
+          "path": "custom/_rels/workbook.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"sheet-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"sheets/data.xml\"/><Relationship Id=\"strings-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/><Relationship Id=\"styles-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/sheets/data.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><s:worksheet xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:link=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><s:dimension ref=\"A1:F1\"/><s:sheetViews><s:sheetView workbookViewId=\"0\"><s:pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></s:sheetView></s:sheetViews><s:sheetFormatPr defaultRowHeight=\"15\"/><s:cols><s:col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></s:cols><s:sheetData><s:row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><s:c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><s:v>12.5</s:v><s:extLst><s:ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></s:ext></s:extLst></s:c><s:c r=\"B1\" t=\"s\" s=\"1\"><s:v>0</s:v></s:c><s:c r=\"C1\" s=\"1\"><s:f ca=\"1\">A1*2</s:f><s:v>25</s:v></s:c><s:c r=\"D1\" t=\"b\"><s:v>1</s:v></s:c><s:c r=\"E1\" t=\"e\"><s:v>#DIV/0!</s:v></s:c></s:row></s:sheetData><s:mergeCells count=\"1\"><s:mergeCell ref=\"E1:F1\"/></s:mergeCells><s:dataValidations count=\"1\"><s:dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><s:formula1>0</s:formula1><s:formula2>100</s:formula2></s:dataValidation></s:dataValidations><s:hyperlinks><s:hyperlink ref=\"B1\" link:id=\"link-data\"/></s:hyperlinks><s:pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><s:extLst><s:ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></s:ext></s:extLst></s:worksheet><!--worksheet-after-->"
+        },
+        {
+          "path": "custom/sharedStrings.xml",
+          "text": "<s:sst xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"1\" uniqueCount=\"1\"><s:si><s:r><s:rPr><s:b/><s:color rgb=\"FF112233\"/></s:rPr><s:t xml:space=\"preserve\">Rich </s:t></s:r><s:r><s:rPr><s:i/></s:rPr><s:t>文字</s:t></s:r></s:si></s:sst>"
+        },
+        {
+          "path": "custom/styles.xml",
+          "text": "<s:styleSheet xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><s:fonts count=\"2\"><s:font><s:sz val=\"11\"/><s:name val=\"Calibri\"/></s:font><s:font><s:b/><s:sz val=\"11\"/><s:name val=\"Calibri\"/></s:font></s:fonts><s:fills count=\"2\"><s:fill><s:patternFill patternType=\"none\"/></s:fill><s:fill><s:patternFill patternType=\"gray125\"/></s:fill></s:fills><s:borders count=\"1\"><s:border><s:left/><s:right/><s:top/><s:bottom/><s:diagonal/></s:border></s:borders><s:cellStyleXfs count=\"1\"><s:xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></s:cellStyleXfs><s:cellXfs count=\"2\"><s:xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><s:xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></s:cellXfs><s:cellStyles count=\"1\"><s:cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></s:cellStyles></s:styleSheet>"
+        },
+        {
+          "path": "custom/sheets/_rels/data.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"link-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink\" Target=\"https://example.com/retained\" TargetMode=\"External\"/></Relationships>"
+        }
+      ],
+      "binaryParts": [
+        {
+          "path": "custom/media/retained.bin",
+          "bytes": [
+            0,
+            255,
+            17,
+            200
+          ]
+        }
+      ],
+      "edit": {
+        "sheetName": "Data",
+        "row": 1,
+        "column": 0,
+        "before": 12.5,
+        "after": 99.25
+      },
+      "expectedSheetXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><s:worksheet xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:link=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><s:dimension ref=\"A1:F1\"/><s:sheetViews><s:sheetView workbookViewId=\"0\"><s:pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></s:sheetView></s:sheetViews><s:sheetFormatPr defaultRowHeight=\"15\"/><s:cols><s:col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></s:cols><s:sheetData><s:row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><s:c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><s:v>99.25</s:v><s:extLst><s:ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></s:ext></s:extLst></s:c><s:c r=\"B1\" t=\"s\" s=\"1\"><s:v>0</s:v></s:c><s:c r=\"C1\" s=\"1\"><s:f ca=\"1\">A1*2</s:f><s:v>25</s:v></s:c><s:c r=\"D1\" t=\"b\"><s:v>1</s:v></s:c><s:c r=\"E1\" t=\"e\"><s:v>#DIV/0!</s:v></s:c></s:row></s:sheetData><s:mergeCells count=\"1\"><s:mergeCell ref=\"E1:F1\"/></s:mergeCells><s:dataValidations count=\"1\"><s:dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><s:formula1>0</s:formula1><s:formula2>100</s:formula2></s:dataValidation></s:dataValidations><s:hyperlinks><s:hyperlink ref=\"B1\" link:id=\"link-data\"/></s:hyperlinks><s:pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><s:extLst><s:ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></s:ext></s:extLst></s:worksheet><!--worksheet-after-->",
+      "expectedValues": [
+        {
+          "address": "A1",
+          "kind": "number",
+          "before": "12.5",
+          "after": "99.25",
+          "formula": ""
+        },
+        {
+          "address": "B1",
+          "kind": "string",
+          "before": "Rich 文字",
+          "after": "Rich 文字",
+          "formula": ""
+        },
+        {
+          "address": "C1",
+          "kind": "number",
+          "before": "25",
+          "after": "25",
+          "formula": "A1*2"
+        },
+        {
+          "address": "D1",
+          "kind": "boolean",
+          "before": "true",
+          "after": "true",
+          "formula": ""
+        },
+        {
+          "address": "E1",
+          "kind": "error",
+          "before": "#DIV/0!",
+          "after": "#DIV/0!",
+          "formula": ""
+        }
+      ]
+    },
+    {
+      "id": "strict-default",
+      "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "mainPath": "custom/workbook.xml",
+      "sheetPath": "custom/sheets/data.xml",
+      "calamine": true,
+      "parts": [
+        {
+          "path": "[Content_Types].xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"bin\" ContentType=\"application/octet-stream\"/><Override PartName=\"/custom/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/custom/sheets/data.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/custom/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/><Override PartName=\"/custom/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>"
+        },
+        {
+          "path": "_rels/.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"main-document\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument\" Target=\"custom/workbook.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/workbook.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--workbook-before--><workbook xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:r=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><workbookPr date1904=\"0\" codeName=\"RetainedBook\"/><bookViews><workbookView activeTab=\"0\" showSheetTabs=\"1\"/></bookViews><sheets><sheet name=\"Data\" sheetId=\"7\" r:id=\"sheet-data\" state=\"visible\"/></sheets><definedNames><definedName name=\"Total\">Data!$A$1</definedName></definedNames><calcPr calcId=\"191029\" fullCalcOnLoad=\"1\"/><extLst><ext uri=\"urn:semio:workbook\"><x:marker value=\"retained\"/></ext></extLst></workbook><?after workbook?>"
+        },
+        {
+          "path": "custom/_rels/workbook.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"sheet-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet\" Target=\"sheets/data.xml\"/><Relationship Id=\"strings-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/><Relationship Id=\"styles-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/sheets/data.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:r=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>12.5</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->"
+        },
+        {
+          "path": "custom/sharedStrings.xml",
+          "text": "<sst xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" count=\"1\" uniqueCount=\"1\"><si><r><rPr><b/><color rgb=\"FF112233\"/></rPr><t xml:space=\"preserve\">Rich </t></r><r><rPr><i/></rPr><t>文字</t></r></si></sst>"
+        },
+        {
+          "path": "custom/styles.xml",
+          "text": "<styleSheet xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\"><fonts count=\"2\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font><font><b/><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts><fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills><borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs><cellXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>"
+        },
+        {
+          "path": "custom/sheets/_rels/data.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"link-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/hyperlink\" Target=\"https://example.com/retained\" TargetMode=\"External\"/></Relationships>"
+        }
+      ],
+      "binaryParts": [
+        {
+          "path": "custom/media/retained.bin",
+          "bytes": [
+            0,
+            255,
+            17,
+            200
+          ]
+        }
+      ],
+      "edit": {
+        "sheetName": "Data",
+        "row": 1,
+        "column": 0,
+        "before": 12.5,
+        "after": 99.25
+      },
+      "expectedSheetXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:r=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>99.25</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->",
+      "expectedValues": [
+        {
+          "address": "A1",
+          "kind": "number",
+          "before": "12.5",
+          "after": "99.25",
+          "formula": ""
+        },
+        {
+          "address": "B1",
+          "kind": "string",
+          "before": "Rich 文字",
+          "after": "Rich 文字",
+          "formula": ""
+        },
+        {
+          "address": "C1",
+          "kind": "number",
+          "before": "25",
+          "after": "25",
+          "formula": "A1*2"
+        },
+        {
+          "address": "D1",
+          "kind": "boolean",
+          "before": "true",
+          "after": "true",
+          "formula": ""
+        },
+        {
+          "address": "E1",
+          "kind": "error",
+          "before": "#DIV/0!",
+          "after": "#DIV/0!",
+          "formula": ""
+        }
+      ]
+    },
+    {
+      "id": "strict-alias",
+      "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "mainPath": "custom/workbook.xml",
+      "sheetPath": "custom/sheets/data.xml",
+      "calamine": true,
+      "parts": [
+        {
+          "path": "[Content_Types].xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"bin\" ContentType=\"application/octet-stream\"/><Override PartName=\"/custom/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/custom/sheets/data.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/custom/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/><Override PartName=\"/custom/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>"
+        },
+        {
+          "path": "_rels/.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"main-document\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument\" Target=\"custom/workbook.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/workbook.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--workbook-before--><s:workbook xmlns:s=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:link=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><s:workbookPr date1904=\"0\" codeName=\"RetainedBook\"/><s:bookViews><s:workbookView activeTab=\"0\" showSheetTabs=\"1\"/></s:bookViews><s:sheets><s:sheet name=\"Data\" sheetId=\"7\" link:id=\"sheet-data\" state=\"visible\"/></s:sheets><s:definedNames><s:definedName name=\"Total\">Data!$A$1</s:definedName></s:definedNames><s:calcPr calcId=\"191029\" fullCalcOnLoad=\"1\"/><s:extLst><s:ext uri=\"urn:semio:workbook\"><x:marker value=\"retained\"/></s:ext></s:extLst></s:workbook><?after workbook?>"
+        },
+        {
+          "path": "custom/_rels/workbook.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"sheet-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet\" Target=\"sheets/data.xml\"/><Relationship Id=\"strings-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/><Relationship Id=\"styles-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/sheets/data.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><s:worksheet xmlns:s=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:link=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><s:dimension ref=\"A1:F1\"/><s:sheetViews><s:sheetView workbookViewId=\"0\"><s:pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></s:sheetView></s:sheetViews><s:sheetFormatPr defaultRowHeight=\"15\"/><s:cols><s:col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></s:cols><s:sheetData><s:row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><s:c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><s:v>12.5</s:v><s:extLst><s:ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></s:ext></s:extLst></s:c><s:c r=\"B1\" t=\"s\" s=\"1\"><s:v>0</s:v></s:c><s:c r=\"C1\" s=\"1\"><s:f ca=\"1\">A1*2</s:f><s:v>25</s:v></s:c><s:c r=\"D1\" t=\"b\"><s:v>1</s:v></s:c><s:c r=\"E1\" t=\"e\"><s:v>#DIV/0!</s:v></s:c></s:row></s:sheetData><s:mergeCells count=\"1\"><s:mergeCell ref=\"E1:F1\"/></s:mergeCells><s:dataValidations count=\"1\"><s:dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><s:formula1>0</s:formula1><s:formula2>100</s:formula2></s:dataValidation></s:dataValidations><s:hyperlinks><s:hyperlink ref=\"B1\" link:id=\"link-data\"/></s:hyperlinks><s:pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><s:extLst><s:ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></s:ext></s:extLst></s:worksheet><!--worksheet-after-->"
+        },
+        {
+          "path": "custom/sharedStrings.xml",
+          "text": "<s:sst xmlns:s=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" count=\"1\" uniqueCount=\"1\"><s:si><s:r><s:rPr><s:b/><s:color rgb=\"FF112233\"/></s:rPr><s:t xml:space=\"preserve\">Rich </s:t></s:r><s:r><s:rPr><s:i/></s:rPr><s:t>文字</s:t></s:r></s:si></s:sst>"
+        },
+        {
+          "path": "custom/styles.xml",
+          "text": "<s:styleSheet xmlns:s=\"http://purl.oclc.org/ooxml/spreadsheetml/main\"><s:fonts count=\"2\"><s:font><s:sz val=\"11\"/><s:name val=\"Calibri\"/></s:font><s:font><s:b/><s:sz val=\"11\"/><s:name val=\"Calibri\"/></s:font></s:fonts><s:fills count=\"2\"><s:fill><s:patternFill patternType=\"none\"/></s:fill><s:fill><s:patternFill patternType=\"gray125\"/></s:fill></s:fills><s:borders count=\"1\"><s:border><s:left/><s:right/><s:top/><s:bottom/><s:diagonal/></s:border></s:borders><s:cellStyleXfs count=\"1\"><s:xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></s:cellStyleXfs><s:cellXfs count=\"2\"><s:xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><s:xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></s:cellXfs><s:cellStyles count=\"1\"><s:cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></s:cellStyles></s:styleSheet>"
+        },
+        {
+          "path": "custom/sheets/_rels/data.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"link-data\" Type=\"http://purl.oclc.org/ooxml/officeDocument/relationships/hyperlink\" Target=\"https://example.com/retained\" TargetMode=\"External\"/></Relationships>"
+        }
+      ],
+      "binaryParts": [
+        {
+          "path": "custom/media/retained.bin",
+          "bytes": [
+            0,
+            255,
+            17,
+            200
+          ]
+        }
+      ],
+      "edit": {
+        "sheetName": "Data",
+        "row": 1,
+        "column": 0,
+        "before": 12.5,
+        "after": 99.25
+      },
+      "expectedSheetXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><s:worksheet xmlns:s=\"http://purl.oclc.org/ooxml/spreadsheetml/main\" xmlns:link=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:x=\"urn:semio:fixture\"><s:dimension ref=\"A1:F1\"/><s:sheetViews><s:sheetView workbookViewId=\"0\"><s:pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></s:sheetView></s:sheetViews><s:sheetFormatPr defaultRowHeight=\"15\"/><s:cols><s:col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></s:cols><s:sheetData><s:row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><s:c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><s:v>99.25</s:v><s:extLst><s:ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></s:ext></s:extLst></s:c><s:c r=\"B1\" t=\"s\" s=\"1\"><s:v>0</s:v></s:c><s:c r=\"C1\" s=\"1\"><s:f ca=\"1\">A1*2</s:f><s:v>25</s:v></s:c><s:c r=\"D1\" t=\"b\"><s:v>1</s:v></s:c><s:c r=\"E1\" t=\"e\"><s:v>#DIV/0!</s:v></s:c></s:row></s:sheetData><s:mergeCells count=\"1\"><s:mergeCell ref=\"E1:F1\"/></s:mergeCells><s:dataValidations count=\"1\"><s:dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><s:formula1>0</s:formula1><s:formula2>100</s:formula2></s:dataValidation></s:dataValidations><s:hyperlinks><s:hyperlink ref=\"B1\" link:id=\"link-data\"/></s:hyperlinks><s:pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><s:extLst><s:ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></s:ext></s:extLst></s:worksheet><!--worksheet-after-->",
+      "expectedValues": [
+        {
+          "address": "A1",
+          "kind": "number",
+          "before": "12.5",
+          "after": "99.25",
+          "formula": ""
+        },
+        {
+          "address": "B1",
+          "kind": "string",
+          "before": "Rich 文字",
+          "after": "Rich 文字",
+          "formula": ""
+        },
+        {
+          "address": "C1",
+          "kind": "number",
+          "before": "25",
+          "after": "25",
+          "formula": "A1*2"
+        },
+        {
+          "address": "D1",
+          "kind": "boolean",
+          "before": "true",
+          "after": "true",
+          "formula": ""
+        },
+        {
+          "address": "E1",
+          "kind": "error",
+          "before": "#DIV/0!",
+          "after": "#DIV/0!",
+          "formula": ""
+        }
+      ]
+    },
+    {
+      "id": "custom-main-name",
+      "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "mainPath": "custom/book.xml",
+      "sheetPath": "custom/sheets/data.xml",
+      "calamine": false,
+      "parts": [
+        {
+          "path": "[Content_Types].xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"bin\" ContentType=\"application/octet-stream\"/><Override PartName=\"/custom/book.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/custom/sheets/data.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/custom/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/><Override PartName=\"/custom/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>"
+        },
+        {
+          "path": "_rels/.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"main-document\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"custom/book.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/book.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--workbook-before--><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><workbookPr date1904=\"0\" codeName=\"RetainedBook\"/><bookViews><workbookView activeTab=\"0\" showSheetTabs=\"1\"/></bookViews><sheets><sheet name=\"Data\" sheetId=\"7\" r:id=\"sheet-data\" state=\"visible\"/></sheets><definedNames><definedName name=\"Total\">Data!$A$1</definedName></definedNames><calcPr calcId=\"191029\" fullCalcOnLoad=\"1\"/><extLst><ext uri=\"urn:semio:workbook\"><x:marker value=\"retained\"/></ext></extLst></workbook><?after workbook?>"
+        },
+        {
+          "path": "custom/_rels/book.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"sheet-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"sheets/data.xml\"/><Relationship Id=\"strings-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/><Relationship Id=\"styles-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
+        },
+        {
+          "path": "custom/sheets/data.xml",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>12.5</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->"
+        },
+        {
+          "path": "custom/sharedStrings.xml",
+          "text": "<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"1\" uniqueCount=\"1\"><si><r><rPr><b/><color rgb=\"FF112233\"/></rPr><t xml:space=\"preserve\">Rich </t></r><r><rPr><i/></rPr><t>文字</t></r></si></sst>"
+        },
+        {
+          "path": "custom/styles.xml",
+          "text": "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><fonts count=\"2\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font><font><b/><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts><fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills><borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs><cellXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>"
+        },
+        {
+          "path": "custom/sheets/_rels/data.xml.rels",
+          "text": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"link-data\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink\" Target=\"https://example.com/retained\" TargetMode=\"External\"/></Relationships>"
+        }
+      ],
+      "binaryParts": [
+        {
+          "path": "custom/media/retained.bin",
+          "bytes": [
+            0,
+            255,
+            17,
+            200
+          ]
+        }
+      ],
+      "edit": {
+        "sheetName": "Data",
+        "row": 1,
+        "column": 0,
+        "before": 12.5,
+        "after": 99.25
+      },
+      "expectedSheetXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!--worksheet-before--><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:x=\"urn:semio:fixture\"><dimension ref=\"A1:F1\"/><sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"1\" topLeftCell=\"B1\" activePane=\"topRight\" state=\"frozen\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"18\" customWidth=\"1\"/></cols><sheetData><row r=\"1\" ht=\"27\" customHeight=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" x:marker=\"edited-cell\"><v>99.25</v><extLst><ext uri=\"urn:semio:cell\"><x:keep>cell-extension</x:keep></ext></extLst></c><c r=\"B1\" t=\"s\" s=\"1\"><v>0</v></c><c r=\"C1\" s=\"1\"><f ca=\"1\">A1*2</f><v>25</v></c><c r=\"D1\" t=\"b\"><v>1</v></c><c r=\"E1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData><mergeCells count=\"1\"><mergeCell ref=\"E1:F1\"/></mergeCells><dataValidations count=\"1\"><dataValidation type=\"decimal\" operator=\"between\" sqref=\"A1\" allowBlank=\"1\"><formula1>0</formula1><formula2>100</formula2></dataValidation></dataValidations><hyperlinks><hyperlink ref=\"B1\" r:id=\"link-data\"/></hyperlinks><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/><extLst><ext uri=\"urn:semio:sheet\"><x:marker value=\"preserved\"/></ext></extLst></worksheet><!--worksheet-after-->",
+      "expectedValues": [
+        {
+          "address": "A1",
+          "kind": "number",
+          "before": "12.5",
+          "after": "99.25",
+          "formula": ""
+        },
+        {
+          "address": "B1",
+          "kind": "string",
+          "before": "Rich 文字",
+          "after": "Rich 文字",
+          "formula": ""
+        },
+        {
+          "address": "C1",
+          "kind": "number",
+          "before": "25",
+          "after": "25",
+          "formula": "A1*2"
+        },
+        {
+          "address": "D1",
+          "kind": "boolean",
+          "before": "true",
+          "after": "true",
+          "formula": ""
+        },
+        {
+          "address": "E1",
+          "kind": "error",
+          "before": "#DIV/0!",
+          "after": "#DIV/0!",
+          "formula": ""
+        }
+      ]
+    }
+  ]
+}

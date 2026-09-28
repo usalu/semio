@@ -348,6 +348,43 @@ impl Canvas2dSceneLane {
 //#endregion 🔖️Canvas2dScene
 
 //#region 🔖️World3dScene
+/// 🎭️ Presentation owned by one world surface independently of its content LOD and camera.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct World3dPresentation {
+    #[serde(default = "world3d_presentation_true")]
+    pub show_grid: bool,
+    #[serde(default = "world3d_presentation_true")]
+    pub show_gizmo: bool,
+    #[serde(default = "world3d_presentation_true")]
+    pub interactive: bool,
+    #[serde(default)]
+    pub viewport_mask: crate::math::SceneViewportMask3d,
+    #[serde(default)]
+    pub clear: World3dPresentationClear,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_aspect: Option<f64>,
+}
+
+impl Default for World3dPresentation {
+    fn default() -> Self {
+        Self { show_grid: true, show_gizmo: true, interactive: true, viewport_mask: Default::default(), clear: Default::default(), source_aspect: None }
+    }
+}
+
+/// 🫧️ Fallback background owned by a world presentation when the environment has no explicit color.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum World3dPresentationClear {
+    #[default]
+    Theme,
+    Transparent,
+}
+
+fn world3d_presentation_true() -> bool {
+    true
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct World3dScene {
@@ -397,6 +434,8 @@ pub struct World3dScene {
     pub pick_targets_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lod_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub presentation_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chunking_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -480,6 +519,7 @@ scene_pack_wire!(World3dScenePack, World3dScene {
     engagement_preview_json: Option<String>,
     pick_targets_json: Option<String>,
     lod_json: Option<String>,
+    presentation_json: Option<String>,
     chunking_json: Option<String>,
     environment_json: Option<String>,
     frame_json: Option<String>,
@@ -557,6 +597,7 @@ impl World3dScene {
             engagement_preview_json: None,
             pick_targets_json: None,
             lod_json: None,
+            presentation_json: None,
             chunking_json: None,
             environment_json: None,
             frame_json: None,
@@ -590,6 +631,7 @@ impl ToValue for World3dScene {
         value_push_option(&mut entries, "engagementPreviewJson", &self.engagement_preview_json);
         value_push_option(&mut entries, "pickTargetsJson", &self.pick_targets_json);
         value_push_option(&mut entries, "lodJson", &self.lod_json);
+        value_push_option(&mut entries, "presentationJson", &self.presentation_json);
         value_push_option(&mut entries, "chunkingJson", &self.chunking_json);
         value_push_option(&mut entries, "environmentJson", &self.environment_json);
         value_push_option(&mut entries, "frameJson", &self.frame_json);
@@ -624,6 +666,7 @@ impl FromValue for World3dScene {
             engagement_preview_json: value_decode_option(&entries, "engagementPreviewJson")?,
             pick_targets_json: value_decode_option(&entries, "pickTargetsJson")?,
             lod_json: value_decode_option(&entries, "lodJson")?,
+            presentation_json: value_decode_option(&entries, "presentationJson")?,
             chunking_json: value_decode_option(&entries, "chunkingJson")?,
             environment_json: value_decode_option(&entries, "environmentJson")?,
             frame_json: value_decode_option(&entries, "frameJson")?,
@@ -641,7 +684,7 @@ impl FromValue for World3dScene {
 //#endregion 🔖️World3dScene
 
 //#region 🔖️World3dSceneLanes
-/// 🚚️ The twenty-one world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// 🚚️ The twenty-two world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
 /// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
 ///
 /// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
@@ -670,6 +713,7 @@ pub enum World3dSceneLane {
     EngagementPreview,
     PickTargets,
     Lod,
+    Presentation,
     Chunking,
     Environment,
     Frame,
@@ -685,7 +729,7 @@ pub enum World3dSceneLane {
 pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
 
 /// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
-pub const WORLD3D_SCENE_LANE_NAMES: [&str; 21] = [
+pub const WORLD3D_SCENE_LANE_NAMES: [&str; 22] = [
     "meshes",
     "instances",
     "instancesDelta",
@@ -699,6 +743,7 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 21] = [
     "engagementPreview",
     "pickTargets",
     "lod",
+    "presentation",
     "chunking",
     "environment",
     "frame",
@@ -710,7 +755,7 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 21] = [
 ];
 
 /// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 21] = [
+pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 22] = [
     "meshesJson",
     "instancesJson",
     "instancesDeltaJson",
@@ -724,6 +769,7 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 21] = [
     "engagementPreviewJson",
     "pickTargetsJson",
     "lodJson",
+    "presentationJson",
     "chunkingJson",
     "environmentJson",
     "frameJson",
@@ -736,7 +782,7 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 21] = [
 
 /// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
 /// so the constant is greppable and pinnable rather than assembled at runtime.
-pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 21] = [
+pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 22] = [
     "framework.scene.world3d.meshes",
     "framework.scene.world3d.instances",
     "framework.scene.world3d.instancesDelta",
@@ -750,6 +796,7 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 21] = [
     "framework.scene.world3d.engagementPreview",
     "framework.scene.world3d.pickTargets",
     "framework.scene.world3d.lod",
+    "framework.scene.world3d.presentation",
     "framework.scene.world3d.chunking",
     "framework.scene.world3d.environment",
     "framework.scene.world3d.frame",
@@ -763,10 +810,10 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 21] = [
 /// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
 /// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
 /// — while an absent optional lane publishes no carrier at all.
-pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 21] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 22] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 
 impl World3dSceneLane {
-    pub const ALL: [Self; 21] = [
+    pub const ALL: [Self; 22] = [
         Self::Meshes,
         Self::Instances,
         Self::InstancesDelta,
@@ -780,6 +827,7 @@ impl World3dSceneLane {
         Self::EngagementPreview,
         Self::PickTargets,
         Self::Lod,
+        Self::Presentation,
         Self::Chunking,
         Self::Environment,
         Self::Frame,
@@ -844,6 +892,7 @@ impl World3dSceneLane {
             Self::EngagementPreview => scene.engagement_preview_json.take(),
             Self::PickTargets => scene.pick_targets_json.take(),
             Self::Lod => scene.lod_json.take(),
+            Self::Presentation => scene.presentation_json.take(),
             Self::Chunking => scene.chunking_json.take(),
             Self::Environment => scene.environment_json.take(),
             Self::Frame => scene.frame_json.take(),
@@ -872,6 +921,7 @@ impl World3dSceneLane {
             Self::EngagementPreview => scene.engagement_preview_json = Some(payload),
             Self::PickTargets => scene.pick_targets_json = Some(payload),
             Self::Lod => scene.lod_json = Some(payload),
+            Self::Presentation => scene.presentation_json = Some(payload),
             Self::Chunking => scene.chunking_json = Some(payload),
             Self::Environment => scene.environment_json = Some(payload),
             Self::Frame => scene.frame_json = Some(payload),
@@ -1760,12 +1810,16 @@ pub struct Paint2dScene {
     pub camera_json: String,
     pub selection_json: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub pixel_selection_json:Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hovered_id: Option<String>,
     pub active_utility: String,
     pub brush_size: f64,
     pub brush_opacity: f64,
     pub brush_color: String,
     pub brush_hardness: f64,
+    pub paint_target:String,
+    pub mask_value:u32,
     pub view_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composite_viewport_json: Option<String>,
@@ -1801,36 +1855,32 @@ impl SceneDoc for Paint2dScene {
 /// of [`Canvas2dSceneLane`]/[`Board2dSceneLane`], pinned against
 /// `🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json` on both sides.
 ///
-/// Both lanes scale with the DOCUMENT, not with the frame: `document_sync_json` is the whole
-/// `RasterSession` sync channel (layers, strokes, masks) and `assets_json` carries one entry per
-/// imported bitmap. Either outgrows `UI_FIXED_BYTES` (32 KiB) on a real painting, and a surface doc
-/// cannot page — `scene_surface.encode` refuses the whole surface outright, which is why a
-/// paint-2d window silently stopped updating past that size while Canvas2d and Board2d did not.
-/// Everything else (camera, selection, hover, active utility, brush size/opacity, view mode,
-/// composite viewport) is a bounded per-frame descriptor and stays in the spine.
+/// Document, assets and completed pixel coverage can exceed the fixed scene header capacity.
+/// Camera, layer selection and brush settings remain in the bounded header.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Paint2dSceneLane {
     DocumentSync,
     Assets,
+    PixelSelection,
 }
 
 /// 🚚️ Reserved carrier-key namespace of the paint-2d lanes.
 pub const PAINT2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.paint2d.";
 
 /// 🚚️ Wire name of each [`Paint2dSceneLane`], in `Paint2dSceneLane::ALL` order.
-pub const PAINT2D_SCENE_LANE_NAMES: [&str; 2] = ["documentSync", "assets"];
+pub const PAINT2D_SCENE_LANE_NAMES: [&str; 3] = ["documentSync", "assets", "pixelSelection"];
 
 /// 🚚️ [`Paint2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const PAINT2D_SCENE_LANE_FIELDS: [&str; 2] = ["documentSyncJson", "assetsJson"];
+pub const PAINT2D_SCENE_LANE_FIELDS: [&str; 3] = ["documentSyncJson", "assetsJson", "pixelSelectionJson"];
 
 /// 🚚️ Reserved carrier key of each lane.
-pub const PAINT2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.paint2d.documentSync", "framework.scene.paint2d.assets"];
+pub const PAINT2D_SCENE_LANE_BODY_KEYS: [&str; 3] = ["framework.scene.paint2d.documentSync", "framework.scene.paint2d.assets", "framework.scene.paint2d.pixelSelection"];
 
 /// 🚚️ Whether each lane's [`Paint2dScene`] field is an `Option<String>`.
-pub const PAINT2D_SCENE_LANE_OPTIONAL: [bool; 2] = [false, false];
+pub const PAINT2D_SCENE_LANE_OPTIONAL: [bool; 3] = [false, false, true];
 
 impl Paint2dSceneLane {
-    pub const ALL: [Self; 2] = [Self::DocumentSync, Self::Assets];
+    pub const ALL: [Self; 3] = [Self::DocumentSync, Self::Assets, Self::PixelSelection];
 
     /// 🏷️ See [`PAINT2D_SCENE_LANE_NAMES`].
     // 🚫️async: E1 pure table lookup — see R9.
@@ -1874,6 +1924,7 @@ impl Paint2dSceneLane {
         match self {
             Self::DocumentSync => Some(std::mem::take(&mut scene.document_sync_json)),
             Self::Assets => Some(std::mem::take(&mut scene.assets_json)),
+            Self::PixelSelection=>scene.pixel_selection_json.take(),
         }
     }
 
@@ -1883,6 +1934,7 @@ impl Paint2dSceneLane {
         match self {
             Self::DocumentSync => scene.document_sync_json = payload,
             Self::Assets => scene.assets_json = payload,
+            Self::PixelSelection=>scene.pixel_selection_json=Some(payload),
         }
     }
 }
@@ -1894,12 +1946,15 @@ impl ToValue for Paint2dScene {
         value_push(&mut entries, "assetsJson", &self.assets_json);
         value_push(&mut entries, "cameraJson", &self.camera_json);
         value_push(&mut entries, "selectionJson", &self.selection_json);
+        value_push_option(&mut entries,"pixelSelectionJson",&self.pixel_selection_json);
         value_push_option(&mut entries, "hoveredId", &self.hovered_id);
         value_push(&mut entries, "activeUtility", &self.active_utility);
         value_push(&mut entries, "brushSize", &self.brush_size);
         value_push(&mut entries, "brushOpacity", &self.brush_opacity);
         value_push(&mut entries, "brushColor", &self.brush_color);
         value_push(&mut entries, "brushHardness", &self.brush_hardness);
+        value_push(&mut entries,"paintTarget",&self.paint_target);
+        value_push(&mut entries,"maskValue",&self.mask_value);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push_option(&mut entries, "compositeViewportJson", &self.composite_viewport_json);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -1915,12 +1970,15 @@ impl FromValue for Paint2dScene {
             assets_json: value_decode(&entries, "assetsJson")?,
             camera_json: value_decode(&entries, "cameraJson")?,
             selection_json: value_decode(&entries, "selectionJson")?,
+            pixel_selection_json:value_decode_option(&entries,"pixelSelectionJson")?,
             hovered_id: value_decode_option(&entries, "hoveredId")?,
             active_utility: value_decode(&entries, "activeUtility")?,
             brush_size: value_decode(&entries, "brushSize")?,
             brush_opacity: value_decode(&entries, "brushOpacity")?,
             brush_color: value_decode(&entries, "brushColor")?,
             brush_hardness: value_decode(&entries, "brushHardness")?,
+            paint_target:value_decode(&entries,"paintTarget")?,
+            mask_value:value_decode(&entries,"maskValue")?,
             view_mode: value_decode(&entries, "viewMode")?,
             composite_viewport_json: value_decode_option(&entries, "compositeViewportJson")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
@@ -2844,10 +2902,10 @@ impl FromValue for EventFeedScene {
 //#endregion 🔖️EventFeedScene
 
 //#region 🔖️BlockListScene
-/** @emoji 🧩️ A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
- * is a `PlaybookStep[]` array, `palette_json` is a `BlockPaletteEntry[]` array of the block kinds
- * available to insert (kept as opaque JSON here too — `BlockPaletteEntry.icon_id` was an `IconName`,
- * the same `ui_wgpu`-only-type problem as `TableScene::drop_action_json`, see this module's header). */
+/** 🧩️ Ordered pages with block cards and an insertion palette. Each page has `id`, `title`,
+ * optional `description`, and `blocks` with `id`, `label`, and `kind`. Pages and blocks may carry
+ * `target: { granularity, id }` for selection in `domain_id`; `selected_id` is the row's own ID.
+ * `palette_json` contains `{ blockKind, label, iconId }` entries. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockListScene {

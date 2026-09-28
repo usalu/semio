@@ -1,0 +1,102 @@
+{
+  "initial": {
+    "steps": [
+      {
+        "id": "first",
+        "title": "First",
+        "blocks": [
+          {
+            "id": "existing",
+            "label": "Existing",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "title": "Second",
+        "blocks": []
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "addBlock",
+      "args": {
+        "stepId": "first",
+        "kind": "number"
+      },
+      "kinds": [
+        [
+          "text",
+          "number"
+        ],
+        []
+      ]
+    },
+    {
+      "action": "moveBlock",
+      "args": {
+        "blockId": "existing",
+        "fromStepId": "first",
+        "toStepId": "second",
+        "index": 0
+      },
+      "kinds": [
+        [
+          "number"
+        ],
+        [
+          "text"
+        ]
+      ]
+    },
+    {
+      "action": "removeBlock",
+      "args": {
+        "stepId": "second",
+        "blockId": "existing"
+      },
+      "kinds": [
+        [
+          "number"
+        ],
+        []
+      ]
+    },
+    {
+      "action": "moveStep",
+      "args": {
+        "stepId": "second",
+        "index": 0
+      },
+      "kinds": [
+        [],
+        [
+          "number"
+        ]
+      ]
+    },
+    {
+      "action": "addStep",
+      "args": {},
+      "kinds": [
+        [],
+        [
+          "number"
+        ],
+        []
+      ]
+    },
+    {
+      "action": "removeStep",
+      "args": {
+        "stepId": "first"
+      },
+      "kinds": [
+        [],
+        []
+      ]
+    }
+  ]
+}

@@ -6,7 +6,8 @@ start body
 
 # P2-FG3: `stdio.svg` is TEXT-NATIVE (per the W0 census row) -- there is no "binary SVG"; the pack
 # container IS the SEMIO envelope wrapping the artifact's own real wire text verbatim
-# (`ArtifactPack::encode_pack_with` in ../../🦀️.rs: `write_svg_xml(&self.doc).into_bytes()`
+# (`ArtifactPack::encode_pack_with` in ../../🦀️.rs: the checked `write_svg_xml(&self.doc)`
+# result converted with `into_bytes()`
 # passed straight to `store::semio_format::wrap_binary` -- no `pack_rt::encode_document` structured
 # record, because the persisted `doc: XmlDocument` field is a genuinely recursive, data-carrying
 # enum tree with no `RecordSpec` to walk against, same reason `#[derive(dsl::DslArtifact)]` is

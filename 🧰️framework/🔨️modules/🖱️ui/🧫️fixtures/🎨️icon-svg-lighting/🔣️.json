@@ -1,0 +1,42 @@
+{
+  "schema": "framework.icon-render.svg-lighting/v1",
+  "profile": "svgFlatLit",
+  "cases": [
+    {
+      "id": "front-low-parameters",
+      "normal": [0, 0, 1],
+      "lightDirection": [0, 0, 1],
+      "ambient": { "color": "#203040", "intensity": 0.01 },
+      "sun": { "color": "#806020", "intensity": 0.75 },
+      "material": { "color": "#587ca8", "metalness": 0, "roughness": 1, "emissive": "#080410", "emissiveIntensity": 0.1 },
+      "expectedFill": "rgb(38,44,48)"
+    },
+    {
+      "id": "front-high-parameters",
+      "normal": [0, 0, 1],
+      "lightDirection": [0, 0, 1],
+      "ambient": { "color": "#203040", "intensity": 0.95 },
+      "sun": { "color": "#806020", "intensity": 0.75 },
+      "material": { "color": "#587ca8", "metalness": 0.93, "roughness": 0.04, "emissive": "#080410", "emissiveIntensity": 7.5 },
+      "expectedFill": "rgb(38,44,48)"
+    },
+    {
+      "id": "back-facing-sun",
+      "normal": [0, 0, 1],
+      "lightDirection": [0, 0, -1],
+      "ambient": { "color": "#203040", "intensity": 0.42 },
+      "sun": { "color": "#806020", "intensity": 0.75 },
+      "material": { "color": "#587ca8", "metalness": 0.4, "roughness": 0.3, "emissive": "#080410", "emissiveIntensity": 3 },
+      "expectedFill": "rgb(12,20,44)"
+    },
+    {
+      "id": "oblique-sun",
+      "normal": [0, 0, 1],
+      "lightDirection": [0.6, 0, 0.8],
+      "ambient": { "color": "#101820", "intensity": 0.3 },
+      "sun": { "color": "#4080c0", "intensity": 0.4 },
+      "material": { "color": "#c08040", "metalness": 0.7, "roughness": 0.2, "emissive": "#020804", "emissiveIntensity": 4 },
+      "expectedFill": "rgb(29,38,26)"
+    }
+  ]
+}

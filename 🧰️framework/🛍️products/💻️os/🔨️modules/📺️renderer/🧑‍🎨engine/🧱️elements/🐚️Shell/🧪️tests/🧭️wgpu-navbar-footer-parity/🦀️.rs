@@ -119,9 +119,17 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
     let mut shell = world_pane_shell();
-    let press = |shell: &mut ShellState, control_id: String| {
+    let press_chip = |shell: &mut ShellState, control_id: String| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
         assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a projection press never errors"), "🔀️ the shell claims its own projection chip");
+    };
+    let select = |shell: &mut ShellState, template_id: &str| {
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
+            controller_id: "framework".into(),
+            action: "setWorldProjectionTemplate".into(),
+            args: crate::action_args_json!({ "windowId": "pane-top", "templateId": template_id }),
+        }))
+        .expect("a retained Projection Tree action never errors");
     };
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ React's pane starts folded");
     assert_eq!(WindowPaneChip::Projection.control_id("pane-top", true), WindowPaneChip::Projection.control_id("pane-top", false), "🔀️ React derives ONE toggle id, never a fold-direction pair");
@@ -132,29 +140,54 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         let mut atlas = FontAtlas::builtin();
         let icons = IconAtlas::default();
         let mut cursor = ShellChromeChildCursor::default();
+        let mut overlay = DrawList::default();
+        let mut overlay = Some(&mut overlay);
+        let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         for _ in 0..8192 {
-            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources) {
                 break;
             }
         }
-        input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>()
+        input
+            .staged_hits()
+            .iter()
+            .filter_map(|hit| hit.control_id.clone())
+            .filter(|id| id.contains(WORLD_PROJECTION_PANE_PARENT) && id != &window_projection_surface_id("pane-top"))
+            .collect::<Vec<_>>()
     };
     assert!(rows(&mut shell).is_empty(), "🔀️ a folded projection pane paints no body");
 
-    press(&mut shell, WindowPaneChip::Projection.control_id("pane-top", true));
+    press_chip(&mut shell, WindowPaneChip::Projection.control_id("pane-top", true));
     assert!(!shell.projection_pane_folded("pane-top"), "🔀️ the press unfolds this pane");
     assert!(shell.projection_pane_folded("pane-perspective"), "🔀️ and leaves its sibling alone");
     let painted = rows(&mut shell);
     assert_eq!(painted.len(), WORLD_PROJECTION_TEMPLATES.len(), "🔀️ the unfolded pane paints React's whole taxonomy: {painted:?}");
-    for (row, template) in painted.iter().zip(WORLD_PROJECTION_TEMPLATES) {
-        assert_eq!(row, &format!("shell.projection.template.pane-top::{}", template.id), "🔀️ the rows keep React's depth-first template order");
-    }
+    assert!(painted.first().is_some_and(|row| row.ends_with("/framework.worldOrbit.projection.paneTop.parallel")), "🔀️ the first row is React's Parallel Tree item: {painted:?}");
+    assert!(painted.last().is_some_and(|row| row.ends_with("/framework.worldOrbit.projection.paneTop.curvilinear")), "🔀️ the last row is React's Curvilinear Tree item: {painted:?}");
+    let surface = window_projection_surface_id("pane-top");
+    assert_eq!(
+        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
+        Some(true),
+        "🔀️ the accepted retained Tree row carries the default selection into paint and AX"
+    );
 
     assert_eq!(shell.world_projection_template_id("pane-top"), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ a pane with no selection reads React's own `worldProjectionDefaults(\"threePoint\")` fallback");
     assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), "projection-three-point");
     assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Perspective), "🔀️ the pane opens on its delivered family");
-    press(&mut shell, "shell.projection.template.pane-top::orthographic".into());
+    select(&mut shell, "orthographic");
     assert_eq!(shell.world_projection_template_id("pane-top"), "orthographic");
+    let painted = rows(&mut shell);
+    assert_eq!(painted.len(), WORLD_PROJECTION_TEMPLATES.len());
+    assert_eq!(
+        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.orthographic")),
+        Some(true),
+        "🔀️ replacement reconcile moves accepted selection onto the newly chosen row"
+    );
+    assert_eq!(
+        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
+        Some(false),
+        "🔀️ replacement reconcile clears the predecessor instead of retaining two selected rows"
+    );
     let title_fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
     for transition in title_fixture["transitions"].as_array().unwrap() {
         shell.locale_id = transition["locale"].as_str().unwrap().into();
@@ -163,10 +196,8 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         assert_eq!(titles["pane-top"], title_fixture["explicitBaseTitle"].as_str().unwrap());
         assert_eq!(titles["pane-perspective"], "Perspective");
     }
-    // 🔀️ The switch is not a label: it moves the pane's CAMERA onto the other family and queues the
-    // settle that publishes the new pose, exactly as React's remount does.
     assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic), "🔀️ pressing a Parallel row makes the pane's camera parallel");
-    assert!(shell.world3d_states.get("pane-top").is_some_and(infinite_world::world::world3d_pending_camera_settle), "🔀️ and queues the camera settle that dispatches it");
+    assert!(!shell.world3d_states.get("pane-top").is_some_and(infinite_world::world::world3d_pending_camera_settle), "🔀️ a local projection choice does not invent a navigation gesture or dispatch a camera echo");
     assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), "projection-orthographic", "🔀️ the chip wears the selected template's icon, as React's `worldProjectionSpecIconId(spec)` pane icon does");
     assert_eq!(shell.world_projection_template_id("pane-perspective"), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ the selection is per pane");
 
@@ -189,7 +220,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         };
         infinite_world::world::apply_world3d_projection_spec(world, semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::ThreePoint { fov: 50.0 }, orientation: typed_orientation });
         for branch in title_fixture["projectionBranches"].as_array().unwrap() {
-            press(&mut shell, format!("shell.projection.template.pane-top::{}", branch["pressed"].as_str().unwrap()));
+            select(&mut shell, branch["pressed"].as_str().unwrap());
             shell.sync_dock();
             assert_eq!(shell.world_projection_template_id("pane-top"), branch["effective"].as_str().unwrap());
             assert_eq!(shell.dock_chrome_maps().0["pane-top"], branch["title"].as_str().unwrap());
@@ -201,7 +232,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         }
     }
 
-    press(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
+    press_chip(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ the same id folds it again");
 }
 
@@ -231,7 +262,7 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
         let control_id = chip.control_id("pane-top", folded);
         assert!(chrome(&control_id, HitKind::Toggle), "🛑️ {chip:?}'s press is the shell's: {control_id}");
     }
-    assert!(chrome("shell.projection.template.pane-top::orthographic", HitKind::DropdownItem), "🛑️ and so is a row of the body it opens");
+    assert!(chrome(&format!("{}/framework.worldOrbit.projection.paneTop.orthographic", window_projection_surface_id("pane-top")), HitKind::Generic), "🛑️ and so is a retained Tree row of the body it opens");
     assert!(chrome("ui.introduction.skip", HitKind::Button), "🛑️ the tour veil still owns every pointer while it blocks");
 
     assert!(!chrome("pane-top", HitKind::World3d), "🛑️ the surface's OWN region is never chrome");
@@ -244,54 +275,104 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 /// bounded run of the chrome walk — every row a hit, every row on the one measured column, and the
 /// run under [`WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES`].
 ///
-/// 🩸️ The body measured `world_projection_column_width` — a walk of all 15 labels — once per ROW,
-/// so one worker turn paid 225 `FontAtlas::measure_text` calls to answer the same number 15 times,
-/// and a pane too short for the taxonomy abandoned the body on its FIRST row instead of clamping to
-/// its own inset, which paints nothing at all (`📓️w8b` §7.2's live "no row within 14 s").
+/// 🩸️ The former body measured a bespoke label column once per row and abandoned a short pane on
+/// its first clipped row. The retained Tree now owns one shared 300px viewport and scrolls it.
 #[test]
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     let theme = Theme::light();
-    let mut atlas = FontAtlas::builtin();
-    let column = world_projection_column_width(&mut atlas, &theme);
     let body = |shell: &mut ShellState, window: Rect| {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
         let icons = IconAtlas::default();
         let mut cursor = ShellChromeChildCursor::default();
+        let mut overlay = DrawList::default();
+        let mut overlay = Some(&mut overlay);
+        let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         let mut opportunities = 0_usize;
         while opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
             opportunities += 1;
-            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources) {
                 break;
             }
         }
-        (opportunities, input.staged_hits().to_vec())
+        let surface = window_projection_surface_id("pane-top");
+        let rows = input.staged_hits().iter().filter(|hit| hit.control_id.as_deref().is_some_and(|id| id.contains(WORLD_PROJECTION_PANE_PARENT) && id != surface.as_str())).cloned().collect::<Vec<_>>();
+        (opportunities, rows, draw)
     };
 
     let mut shell = world_pane_shell();
     shell.projection_pane_folded.insert("pane-top".into(), false);
-    let (opportunities, rows) = body(&mut shell, Rect::new(0.0, 0.0, 800.0, 600.0));
+    let (opportunities, rows, draw) = body(&mut shell, Rect::new(0.0, 0.0, 800.0, 600.0));
     assert!(opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, "⏱️ the body terminates well inside its own budget, it does not exhaust it: {opportunities}");
     assert_eq!(rows.len(), WORLD_PROJECTION_TEMPLATES.len(), "⏱️ and publishes every row of React's taxonomy");
-    for (row, template) in rows.iter().zip(WORLD_PROJECTION_TEMPLATES) {
-        let indent = f32::from(template.depth) * theme.tree_indent_per_level;
-        let expected = 800.0 - theme.panel_inset - column + indent;
-        assert!((row.rect.x - expected).abs() < 0.5, "⏱️ every row hangs off ONE measured column trailing edge, indented per level: {} at {} wanted {expected}", template.id, row.rect.x);
+    let pane = ShellState::window_projection_rect("pane-top", Rect::new(0.0, 0.0, 800.0, 600.0), &theme);
+    assert!((pane.w - WINDOW_PANE_BODY_WIDTH_PX).abs() < 0.5, "⏱️ Projection uses React's 300px Pane body");
+    for row in &rows {
+        assert!(row.rect.x >= pane.x - 0.5 && row.rect.x + row.rect.w <= pane.x + pane.w + 0.5, "⏱️ each retained Tree row stays inside the common Pane body: {:?}", row.rect);
+        assert!((row.rect.x + row.rect.w - (pane.x + pane.w)).abs() < 0.5, "⏱️ each retained Tree row reaches the Pane's trailing edge: {:?}", row.rect);
     }
     let heights: Vec<f32> = rows.iter().map(|row| row.rect.y).collect();
     assert!(heights.windows(2).all(|pair| pair[1] > pair[0]), "⏱️ and reads top-down in React's declared order: {heights:?}");
+    let projection_fixture: Value = serde_json::from_str(include_str!("../../../🌐️World3dHost/🧫️fixtures/🔀️projection-pane/🔣️.json")).unwrap();
+    let declared_heights: Vec<f32> = projection_fixture["rows"].as_array().unwrap().iter().map(|item| {
+        let suffix = format!(".{}", semio_framework::element_id_segment(item["templateId"].as_str().unwrap()));
+        rows.iter().find(|row| row.control_id.as_deref().is_some_and(|id| id.ends_with(&suffix))).unwrap().rect.y
+    }).collect();
+    assert!(declared_heights.windows(2).all(|pair| pair[1] > pair[0]), "the bottom-right anchor retains the taxonomy's declared down direction: {declared_heights:?}");
+    let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+    for row in &rows {
+        let glyphs: Vec<_> = instances.iter().enumerate().filter(|(_, item)| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH && item.rect[1] >= row.rect.y && item.rect[1] < row.rect.y + row.rect.h).collect();
+        assert!(!glyphs.is_empty(), "each projection hit row also paints its label: {:?}", row.control_id);
+        for (index, glyph) in glyphs {
+            let center = [glyph.rect[0] + glyph.rect[2] * 0.5, glyph.rect[1] + glyph.rect[3] * 0.5];
+            assert!(!instances[index + 1..].iter().any(|item| {
+                (item.params[2] == ui_wgpu::wgpu::draw::KIND_SOLID || item.params[2] == ui_wgpu::wgpu::draw::KIND_ROUNDED)
+                    && item.color[3] >= 0.99 && item.rect[2] > glyph.rect[2] && item.rect[3] > glyph.rect[3]
+                    && center[0] > item.rect[0] && center[0] < item.rect[0] + item.rect[2] && center[1] > item.rect[1] && center[1] < item.rect[1] + item.rect[3]
+            }), "later identity-row chrome must not cover a projection label: {:?}", row.control_id);
+        }
+    }
 
     // 🧭️ A pane too short for 15 rows clamps to its own inset and still paints every row it can —
     // it never abandons the body, which is what left the live pane blank.
     let mut short = world_pane_shell();
     short.projection_pane_folded.insert("pane-top".into(), false);
-    let (_, clamped) = body(&mut short, Rect::new(0.0, 0.0, 800.0, theme.control_height * 6.0));
+    let (_, clamped, _) = body(&mut short, Rect::new(0.0, 0.0, 800.0, theme.control_height * 6.0));
     assert!(!clamped.is_empty(), "🧭️ a short pane still paints the rows that fit");
     assert!(clamped.len() < WORLD_PROJECTION_TEMPLATES.len(), "🧭️ and only the rows that fit");
     for row in &clamped {
         assert!(row.rect.y >= theme.panel_inset - 0.5, "🧭️ every painted row stays inside the pane: {:?}", row.rect.y);
     }
+}
+
+/// 🪟️ A focus/maximize paint plan contains only the visible window, while the committed dock still
+/// owns its hidden siblings. Engine retention follows the latter and real close follows its removal.
+#[test]
+fn a_focused_world_window_does_not_retire_its_hidden_sibling() {
+    let mut shell = world_pane_shell();
+    let _ = shell.world3d_states.try_insert("perspective-host".into(), World3dState::new("perspective-host".into(), "pane.controller".into()));
+    shell.world3d_window_ids.insert("perspective-host".into(), "pane-perspective".into());
+    shell.world_projection_template.insert("pane-perspective".into(), "three-point".into());
+    assert!(shell.apply_window_icon_host_command("pane-perspective", "projection-three-point"));
+    shell.dock_window_plan.retain(|(window_id, _)| window_id == "pane-top");
+
+    assert_eq!(shell.dock_window_plan.iter().map(|(window_id, _)| window_id.as_str()).collect::<Vec<_>>(), vec!["pane-top"], "🪟️ the focused paint plan omits its sibling");
+    let live = shell.live_window_ids();
+    assert!(live.iter().any(|window_id| window_id == "pane-perspective"), "🪟️ the committed dock still owns the hidden sibling");
+    let live_refs = live.iter().map(String::as_str).collect::<Vec<_>>();
+    shell.retire_closed_world3d_windows(&live_refs);
+    assert!(shell.world3d_states.contains_key("perspective-host"));
+    assert_eq!(shell.world_projection_template.get("pane-perspective").map(String::as_str), Some("three-point"));
+    assert_eq!(shell.window_icon_overrides.get("pane-perspective").map(|value| value.icon_id.as_str()), Some("projection-three-point"));
+
+    assert!(shell.dock.close_window("pane-perspective"));
+    let live = shell.live_window_ids();
+    let live_refs = live.iter().map(String::as_str).collect::<Vec<_>>();
+    shell.retire_closed_world3d_windows(&live_refs);
+    assert!(!shell.world3d_states.contains_key("perspective-host"), "🪟️ a real dock close retires the scene owner");
+    assert!(!shell.world_projection_template.contains_key("pane-perspective"));
+    assert!(!shell.window_icon_overrides.contains_key("pane-perspective"));
 }
 //#endregion 🎯️HitTargetLaw
 

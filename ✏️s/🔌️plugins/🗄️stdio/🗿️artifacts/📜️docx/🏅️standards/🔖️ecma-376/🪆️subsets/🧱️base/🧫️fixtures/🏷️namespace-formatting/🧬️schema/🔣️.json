@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.docx.namespace-formatting.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "namespace",
+          "documentXml",
+          "stylesXml",
+          "styleIds",
+          "paragraphStyle",
+          "format",
+          "retainedMarkers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "namespace": {
+            "enum": [
+              "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+              "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            ]
+          },
+          "documentXml": {
+            "type": "string"
+          },
+          "stylesXml": {
+            "type": "string"
+          },
+          "styleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "paragraphStyle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "format": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "retainedMarkers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

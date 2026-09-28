@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/any/import/svg/transform/schema.json",
+  "title": "Editable Svg Transform Source",
+  "type": "string"
+}

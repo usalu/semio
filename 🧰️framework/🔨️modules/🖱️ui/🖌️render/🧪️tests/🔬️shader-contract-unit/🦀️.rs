@@ -289,6 +289,24 @@ fn world3d_output_families_apply_their_authored_tone_mapping_policy() {
     }
 }
 
+/// 🎨️ Icon SVG passes mirror SVGRenderer's face-lighting profile without changing raster PBR.
+#[test]
+fn world3d_svg_profile_uses_flat_faces_and_svg_color_output() {
+    for value in [
+        "globals.shadow.y > 0.5",
+        "@builtin(front_facing)",
+        "cross(dpdx(in.world_position), dpdy(in.world_position))",
+        "var svg_light = globals.ambient.rgb",
+        "globals.sun.rgb * globals.sun.a",
+        "svg_light * in.color.rgb + globals.material_emissive.rgb",
+        "world3d_svg_attachment_output",
+    ] {
+        assert!(WORLD3D_SHADER.contains(value), "the SVG face-lighting profile is missing `{value}`");
+    }
+    assert!(WORLD3D_LINES_SHADER.contains("globals.shadow.y > 0.5"));
+    assert!(WORLD3D_LINES_SHADER.contains("world3d_svg_attachment_output"));
+}
+
 /// 🌑️ Law: the canonical WGPU mesh shader owns current Three's five-sample rotated Vogel PCF.
 #[test]
 fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
@@ -323,5 +341,10 @@ fn every_world3d_wgsl_variant_parses_and_validates_with_naga() {
             naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all()).validate(&module).unwrap_or_else(|error| panic!("{owner} {label} WGSL validation failed: {error}"));
         }
     }
+    let postprocess = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_POSTPROCESS_SHADER").expect("wgpu target is missing WORLD3D_POSTPROCESS_SHADER");
+    let module = naga::front::wgsl::parse_str(&postprocess).unwrap_or_else(|error| panic!("target World postprocess WGSL parse failed: {error}"));
+    naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
+        .validate(&module)
+        .unwrap_or_else(|error| panic!("target World postprocess WGSL validation failed: {error}"));
 }
 //#endregion ⚖️WgpuTargetShaderAgreement

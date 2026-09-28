@@ -29,3 +29,32 @@ async fn diff_codec_text_binary_roundtrip_law() {
         assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
     }
 }
+
+#[test]
+fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
+    use crate::schema::mutations::{set_snapshot, XlsxMutation};
+    use protocol::{MutationDiff, OpBinary, OpText, ToValue};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
+    let mut before = XlsxSnapshot::default();
+    before.opc.comment = fixture["before"].as_str().unwrap().into();
+    let mut after = before.clone();
+    after.opc.comment = fixture["after"].as_str().unwrap().into();
+    let diff = XlsxDiff::between(&before, &after);
+    assert!(!diff.is_empty(), "a comment-only edit is a persisted change");
+    for replay in [XlsxDiff::parse_diff(&diff.print_diff()).unwrap(), XlsxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
+        assert_eq!(replay.apply(&before).unwrap(), after);
+        assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+    }
+    let mut cleared = after.clone();
+    cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
+    let mut combined = diff;
+    combined.absorb(XlsxDiff::between(&after, &cleared));
+    assert_eq!(combined.apply(&before).unwrap(), cleared, "an empty comment remains an explicit edit");
+    let mutation = XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: after.clone() });
+    for replay in [XlsxMutation::parse_op(&mutation.print_op()).unwrap(), XlsxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap()] {
+        assert_eq!(replay, mutation, "complete snapshot replay preserves the archive comment");
+    }
+    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
+    assert_eq!(oracle["opc"]["comment"], fixture["after"]);
+    println!("[DEBUG] Xlsx archive comment text/binary diff, inverse, absorption and snapshot replay preserve Unicode and empty text");
+}

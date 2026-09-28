@@ -3,14 +3,484 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/diff.json",
   "title": "XlsxDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
+    "opc": {
+      "$ref": "#/$defs/XlsxOpcDiff",
       "x-semio-state": "artifact"
     },
-    "bytes": {
-      "type": "string",
+    "xmlParts": {
+      "$ref": "#/$defs/XlsxXmlPartsDiff",
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/OpcRelationship"
+            }
+          }
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "OpcRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "relType",
+        "target",
+        "targetMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "$ref": "#/$defs/OpcTargetMode"
+        }
+      }
+    },
+    "OpcTargetMode": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external"
+      ]
+    },
+    "XlsxOpcCtEntriesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "diff"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "diff": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "XlsxOpcPartDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "XlsxOpcPartsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "diff"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "diff": {
+                "$ref": "#/$defs/XlsxOpcPartDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "XlsxOpcRelDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "$ref": "#/$defs/OpcTargetMode"
+        }
+      }
+    },
+    "XlsxOpcRelListDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "diff"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "diff": {
+                "$ref": "#/$defs/XlsxOpcRelDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcRelationship"
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "XlsxOpcRelationshipsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "diff"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "diff": {
+                "$ref": "#/$defs/XlsxOpcRelListDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/OpcRelationship"
+                }
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "XlsxOpcContentTypesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "$ref": "#/$defs/XlsxOpcCtEntriesDiff"
+        },
+        "overrides": {
+          "$ref": "#/$defs/XlsxOpcCtEntriesDiff"
+        }
+      }
+    },
+    "XlsxOpcDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/XlsxOpcContentTypesDiff"
+        },
+        "parts": {
+          "$ref": "#/$defs/XlsxOpcPartsDiff"
+        },
+        "relationships": {
+          "$ref": "#/$defs/XlsxOpcRelationshipsDiff"
+        }
+      }
+    },
+    "XlsxXmlPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType",
+        "document"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
+        }
+      }
+    },
+    "XlsxXmlPartDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/diff.json"
+        }
+      }
+    },
+    "XlsxXmlPartModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "diff"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "diff": {
+          "$ref": "#/$defs/XlsxXmlPartDiff"
+        }
+      }
+    },
+    "XlsxXmlPartsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XlsxXmlPartModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XlsxXmlPart"
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
     }
   }
 }

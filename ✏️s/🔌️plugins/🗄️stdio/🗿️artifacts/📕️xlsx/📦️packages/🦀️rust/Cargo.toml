@@ -31,5 +31,9 @@ semio-s-artifact-stdio-zip = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+calamine = { version = "0.36.1", default-features = false }
+quick-xml = "0.42"
+zip = { version = "6", default-features = false, features = ["deflate"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }

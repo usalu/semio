@@ -1,0 +1,80 @@
+{
+  "maximumPixelsPerStep": 1024,
+  "cases": [
+    {
+      "id": "opaque",
+      "premultiplied": [
+        17,
+        63,
+        129,
+        255
+      ],
+      "straight": [
+        17,
+        63,
+        129,
+        255
+      ]
+    },
+    {
+      "id": "half-alpha",
+      "premultiplied": [
+        64,
+        32,
+        16,
+        128
+      ],
+      "straight": [
+        128,
+        64,
+        32,
+        128
+      ]
+    },
+    {
+      "id": "quarter-alpha",
+      "premultiplied": [
+        63,
+        17,
+        1,
+        64
+      ],
+      "straight": [
+        251,
+        68,
+        4,
+        64
+      ]
+    },
+    {
+      "id": "one-alpha",
+      "premultiplied": [
+        1,
+        0,
+        1,
+        1
+      ],
+      "straight": [
+        255,
+        0,
+        255,
+        1
+      ]
+    },
+    {
+      "id": "transparent",
+      "premultiplied": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "straight": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

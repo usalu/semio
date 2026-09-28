@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raster Image Export Progress",
+  "description": "Each granted step prepares at most 32768 source pixels, composites at most 4096 pixels, encodes at most 4096 scanline bytes or emits at most 4096 base64 bytes. No output is published before completion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stage",
+    "en",
+    "de",
+    "completedUnits"
+  ],
+  "properties": {
+    "stage": {
+      "enum": [
+        "prepare",
+        "composite",
+        "encode",
+        "output"
+      ]
+    },
+    "en": {
+      "type": "string"
+    },
+    "de": {
+      "type": "string"
+    },
+    "completedUnits": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

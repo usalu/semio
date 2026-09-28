@@ -8,7 +8,22 @@
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️transforms/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧬️schema/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/**/📚️examples/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧫️fixtures/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/**/*",
+        "{workspaceRoot}/bun.lock"
+      ]
     }
   }
 }

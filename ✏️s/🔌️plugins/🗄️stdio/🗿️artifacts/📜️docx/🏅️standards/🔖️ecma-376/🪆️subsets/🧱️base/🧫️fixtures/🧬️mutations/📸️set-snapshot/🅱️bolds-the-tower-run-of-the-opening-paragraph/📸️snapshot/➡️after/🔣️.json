@@ -5,12 +5,12 @@
     "contentTypes": {
       "defaults": [
         [
-          "xml",
-          "application/xml"
-        ],
-        [
           "rels",
           "application/vnd.openxmlformats-package.relationships+xml"
+        ],
+        [
+          "xml",
+          "application/xml"
         ]
       ],
       "overrides": [
@@ -20,39 +20,117 @@
         ]
       ]
     },
-    "relationships": {},
+    "relationships": {
+      "": [
+        {
+          "id": "rId1",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+          "target": "word/document.xml",
+          "targetMode": "internal"
+        }
+      ]
+    },
     "comment": ""
   },
-  "document": {
-    "body": [
-      {
-        "kind": "paragraph",
-        "runs": [
-          {
-            "text": "Nakagin ",
-            "bold": false,
-            "italic": false,
-            "underline": false,
-            "extraRunProperties": []
-          },
-          {
-            "text": "Capsule Tower",
-            "bold": true,
-            "italic": false,
-            "underline": false,
-            "extraRunProperties": []
-          }
-        ],
-        "style": "Heading1",
-        "extraParagraphProperties": []
+  "xmlParts": [
+    {
+      "path": "word/document.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "w:body",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "w:p",
+                  "attrs": [],
+                  "children": [
+                    {
+                      "kind": "element",
+                      "name": "w:r",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "w:rPr",
+                          "attrs": [],
+                          "children": []
+                        },
+                        {
+                          "kind": "element",
+                          "name": "w:t",
+                          "attrs": [
+                            {
+                              "name": "xml:space",
+                              "value": "preserve"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "Nakagin "
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "element",
+                      "name": "w:r",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "w:rPr",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "w:b",
+                              "attrs": [],
+                              "children": []
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "w:t",
+                          "attrs": [
+                            {
+                              "name": "xml:space",
+                              "value": "preserve"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "Capsule Tower"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "prolog": [],
+        "epilog": []
       }
-    ],
-    "styles": [
-      {
-        "id": "Heading1",
-        "name": "heading 1",
-        "basedOn": null
-      }
-    ]
-  }
+    }
+  ]
 }

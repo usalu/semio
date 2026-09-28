@@ -7,16 +7,61 @@
         "data": [
           97,
           98
-        ]
+        ],
+        "metadata": {
+          "compressionMethod": 8,
+          "local": {
+            "versionNeeded": 20,
+            "flags": 2048,
+            "modifiedTime": 0,
+            "modifiedDate": 33,
+            "extraFields": []
+          },
+          "central": {
+            "versionMadeBy": 45,
+            "versionNeeded": 20,
+            "flags": 2048,
+            "modifiedTime": 0,
+            "modifiedDate": 33,
+            "extraFields": [],
+            "comment": "",
+            "internalAttributes": 0,
+            "externalAttributes": 0
+          },
+          "dataDescriptorSignature": false
+        }
       },
       {
         "name": "folder/β.txt",
         "data": [
           99
-        ]
+        ],
+        "metadata": {
+          "compressionMethod": 8,
+          "local": {
+            "versionNeeded": 20,
+            "flags": 2048,
+            "modifiedTime": 0,
+            "modifiedDate": 33,
+            "extraFields": []
+          },
+          "central": {
+            "versionMadeBy": 45,
+            "versionNeeded": 20,
+            "flags": 2048,
+            "modifiedTime": 0,
+            "modifiedDate": 33,
+            "extraFields": [],
+            "comment": "",
+            "internalAttributes": 0,
+            "externalAttributes": 0
+          },
+          "dataDescriptorSignature": false
+        }
       }
     ],
-    "comment": "Original comment"
+    "comment": "Original comment",
+    "commentUtf8": true
   },
   "rename": {
     "name": "alpha.txt",
@@ -64,7 +109,8 @@
   "defaultSnapshot": {
     "schema": "stdio.zip",
     "entries": [],
-    "comment": ""
+    "comment": "",
+    "commentUtf8": true
   },
   "textByteBoundaries": [
     {
@@ -122,7 +168,29 @@
       "name": "middle.txt",
       "data": [
         42
-      ]
+      ],
+      "metadata": {
+        "compressionMethod": 8,
+        "local": {
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": []
+        },
+        "central": {
+          "versionMadeBy": 45,
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": [],
+          "comment": "",
+          "internalAttributes": 0,
+          "externalAttributes": 0
+        },
+        "dataDescriptorSignature": false
+      }
     },
     "before": "folder/β.txt",
     "index": 1
@@ -134,5 +202,12 @@
     "resumeAfterEntries": 1,
     "checkpointMagic": "ZAT1",
     "checkpointVersion": 1
-  }
+  },
+  "invalidPayloadBytes": [
+    -1,
+    256,
+    1.5,
+    "42",
+    null
+  ]
 }

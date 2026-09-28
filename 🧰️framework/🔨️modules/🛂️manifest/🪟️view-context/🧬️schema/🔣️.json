@@ -31,6 +31,11 @@
       "type": "string",
       "maxLength": 65536
     },
+    "extensionInputJson": {
+      "description": "Ephemeral parameters of this embedded surface, owned by its parent. Never stored in the contributor document.",
+      "type": "string",
+      "maxLength": 65536
+    },
     "sessionIdentity": {
       "$ref": "#/$defs/SessionIdentity"
     },

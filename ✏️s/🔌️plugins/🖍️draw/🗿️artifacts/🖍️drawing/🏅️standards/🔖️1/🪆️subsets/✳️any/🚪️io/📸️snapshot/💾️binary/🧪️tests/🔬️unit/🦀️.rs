@@ -12,7 +12,7 @@ fn representative_drawing_document() -> DrawingSnapshot {
     let mut rect_shape = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect_shape {
         shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] });
-        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: "round".into(), join: "round".into(), dash: Some(vec![2.0, 4.0]) });
+        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 4.0]) });
     }
     let rect_id = layer_id(&rect_shape).to_string();
 
@@ -52,7 +52,7 @@ fn representative_drawing_document() -> DrawingSnapshot {
 
     let ellipse_shape =
         DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
-    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle] });
+    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle] });
 
     DrawingSnapshot {
         schema: DRAWING_DOCUMENT_SCHEMA.into(),

@@ -130,6 +130,22 @@
           "additionalProperties": false,
           "required": [
             "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "error"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
             "expr"
           ],
           "properties": {

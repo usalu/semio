@@ -1,9 +1,10 @@
 use super::*;
 
 #[semio_framework_async_macros::async_test]
-async fn logical_snapshot_and_facets_have_no_shadow_state() {
+async fn complete_header_state_is_explicit_without_a_raw_archive_shadow_cache() {
     let json = format!("{:?}", ZipSnapshot::default());
-    for forbidden in ["localExtra", "centralExtra", "physical", "sourceBytes", "nativeArchive", "method", "dosDate", "flags", "versionMadeBy", "internalAttrs", "externalAttrs"] {
+    assert!(json.contains("metadata") && json.contains("compression_method") && json.contains("comment_utf8"));
+    for forbidden in ["physical", "sourceBytes", "nativeArchive", "rawMetadata"] {
         assert!(!json.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
     }
     for facet in [
@@ -11,41 +12,22 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
         include_str!("../../🔗️.graphql"),
         include_str!("../../🔣️.json"),
         include_str!("../../🛰️.proto"),
+    ] {
+        for (camel, snake) in [("ZipEntryMetadata", "ZipEntryMetadata"), ("compressionMethod", "compression_method"), ("extraFields", "extra_fields"), ("commentUtf8", "comment_utf8")] {
+            assert!(facet.contains(camel) || facet.contains(snake), "snapshot facet omits explicit header state {camel}");
+        }
+    }
+    for facet in [
         include_str!("../../../🔺️diff/🟦️.ts"),
         include_str!("../../../🔺️diff/🔗️.graphql"),
         include_str!("../../../🔺️diff/🔣️.json"),
         include_str!("../../../🔺️diff/🛰️.proto"),
-        include_str!("../../../🧬️mutations/🟦️.ts"),
-        include_str!("../../../🧬️mutations/🔗️.graphql"),
-        include_str!("../../../🧬️mutations/🔣️.json"),
-        include_str!("../../../🧬️mutations/🛰️.proto"),
     ] {
-        for forbidden in [
-            "ZipExtraField",
-            "localExtra",
-            "centralExtra",
-            "local_extra",
-            "central_extra",
-            "ZipCompressionMethod",
-            "SetEntryMethod",
-            "SetEntryFlags",
-            "setEntryMethod",
-            "setEntryFlags",
-            "set_entry_method",
-            "set_entry_flags",
-            "dosDate",
-            "dos_date",
-            "unixMtime",
-            "unix_mtime",
-            "versionMadeBy",
-            "version_made_by",
-            "internalAttrs",
-            "internal_attrs",
-            "externalAttrs",
-            "external_attrs",
-            "nativeArchive",
-            "sourceBytes",
-        ] {
+        assert!(facet.contains("metadata"));
+        assert!(facet.contains("commentUtf8") || facet.contains("comment_utf8"));
+    }
+    for facet in [include_str!("../../🟦️.ts"), include_str!("../../🔗️.graphql"), include_str!("../../🔣️.json"), include_str!("../../🛰️.proto")] {
+        for forbidden in ["nativeArchive", "sourceBytes", "rawMetadata", "raw_metadata"] {
             assert!(!facet.contains(forbidden), "facet contains forbidden shadow concept {forbidden}");
         }
     }

@@ -1,4 +1,6 @@
 import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json";
+import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧭️gesture-targets.json";
+import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
 import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
 import textInputFixture from "../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json";
@@ -4918,46 +4920,173 @@ describe("owned declarative controls", () => {
 });
 
 describe("framework external slots", () => {
-  // 🚧️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: `resolveExternalSlots` (framework-core)
-  // no longer has a `render`/`renderWithDocument` verb to call — rendering a contributor's UI body
-  // through the new binary channel (`AppChannelClient.refreshUi`) is a dedicated follow-up work
-  // package this ticket flags, so a found plugin/instance still degrades to "Extension unavailable"
-  // (see that function's doc comment). This test now asserts that documented Wave 1 behavior instead
-  // of the old per-verb `renderWithDocument` round trip.
-  it("degrades a resolvable external slot to 'unavailable' until the binary-channel render path lands", async () => {
+  it("preserves explicitly owned host extensions before contributor resolution at any depth", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
-    const { encodePackValue } = await import("@semio-tech/framework-os");
-    const handle = {
-      manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
-      createApp: async () => 7,
-      destroyApp: async () => {},
-      takeSegmentedDownloadChunk: async () => undefined,
-      // 🎫️ `exchange-removal`: this handle is only ever placed in `ExternalSlotResolverContext.plugins`
-      // (typed `ReadonlyMap<string, PluginWasmHandle>`, `🎠️kernel/🟦️.ts`) — `resolveExternalSlots`
-      // degrades to "unavailable" before ever touching `enqueue`/`outcomes` (see this test's own header
-      // doc), so these two only need to satisfy the shape, never actually fire.
-      enqueue: () => {},
-      outcomes: createTurnOutcomeBroadcast<TurnOutcome>().stream,
-      dispose: async () => {},
-    };
-    const externalNode: Parameters<typeof resolveExternalSlots>[0] = {
-      key: "forms-module-procedural",
-      component: { type: "extension", extension: "forms-module-procedural/forms-module-procedural", props: {} },
-      layout: CONTRACT_LEAF_LAYOUT,
+    const { default: fixture } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️host-slots/🔣️.json");
+    const { default: schema } = await import("../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🧩️host-slots/🔣️.json");
+    const { default: Ajv } = await import("ajv");
+    const ajv = new Ajv();
+    expect(ajv.validate(schema, fixture)).toBe(true);
+    const owns = ajv.compile({ enum: fixture.hostExtensionIds });
+    for (const sample of fixture.cases) {
+      expect(owns(sample.id)).toBe(sample.retained);
+      const node: any = {
+        key: sample.id, component: { type: "extension", extension: sample.id, props: sample.props }, layout: CONTRACT_LEAF_LAYOUT,
+        style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+        accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [],
+      };
+      const errors: string[] = [];
+      const context = { plugins: new Map(), contributorInstances: new Map(), contributorPasses: new Map(), viewState: { locale: "de", terminology: "native" } as any, ownerId: "app:document:window", hostExtensions: new Set(fixture.hostExtensionIds), onError: (id: string) => errors.push(id) };
+      const direct = await resolveExternalSlots(node, context);
+      const nested = await resolveExternalSlots({ ...node, key: "outer", component: { type: "text", value: "parent", emphasize: null, dataAttributes: null }, children: [node] }, context);
+      for (const result of [direct, nested.children[0]]) {
+        if (sample.retained) expect(result).toBe(node);
+        else expect(result.component.type).toBe("text");
+      }
+      expect(errors).toEqual(sample.retained ? [] : [sample.id, sample.id]);
+      expect(context.contributorInstances.size).toBe(0);
+    }
+  });
+
+  it("admits isolated extension render inputs against the neutral schema", async () => {
+    const { default: fixture } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🧩️extension-input/🔣️.json");
+    const { default: schema } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json");
+    const { default: Ajv } = await import("ajv");
+    const validate = new Ajv({ strict: true }).compile(schema);
+    for (const row of fixture.cases) {
+      expect(validate(row.context), JSON.stringify(validate.errors)).toBe(true);
+      expect(parseResolvedPluginViewState(row.context)).toEqual(row.context);
+    }
+    for (const length of [fixture.capacityChars, fixture.capacityChars + 1]) {
+      const context = { locale: "en", terminology: "native", extensionInputJson: "x".repeat(length) };
+      expect(validate(context)).toBe(length === fixture.capacityChars);
+      if (length === fixture.capacityChars) expect(parseResolvedPluginViewState(context)).toEqual(context);
+      else expect(() => parseResolvedPluginViewState(context)).toThrow();
+    }
+  });
+
+  it("renders canonical contributor bodies with isolated instances and current inputs", async () => {
+    const { resolveExternalSlots } = await import("@semio-tech/framework");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const created: string[] = [];
+    const destroyed: number[] = [];
+    const requests: { instanceId: number; request: any }[] = [];
+    const node = (key: string, component: any): any => ({
+      key, component, layout: CONTRACT_LEAF_LAYOUT,
       style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
-      activity: "idle",
-      disabled: false,
+      activity: "idle", disabled: false,
       accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
-      bindings: [],
-      menu: null,
-      children: [],
-    };
-    const resolved = await resolveExternalSlots(externalNode, {
-      plugins: new Map([["forms-module-procedural", handle]]),
-      contributorInstances: new Map(),
-      viewState: {},
+      bindings: [], menu: null, children: [],
     });
-    expect(resolved).toEqual({ ...externalNode, component: { type: "text", value: "Extension unavailable: forms-module-procedural", emphasize: null, dataAttributes: null }, children: [] });
+    const handle = {
+      manifest: { apps: [{ id: law.appId, controllerId: law.controllerId, defaultModeId: law.modeId, modes: [{ id: law.modeId }], windowKinds: [{ id: law.windowKindId, bodyKey: law.bodyKey }] }] },
+      createApp: async (appId: string) => { created.push(appId); await Promise.resolve(); return created.length; },
+      destroyApp: async (id: number) => { destroyed.push(id); },
+      refreshUi: async (instanceId: number, request: any) => {
+        requests.push({ instanceId, request });
+        const props = JSON.parse(request.viewState.extensionInputJson);
+        return { windows: [{ key: law.windowId, hash: "rendered", value: node("parameters", { type: "text", value: props.paramsJson, emphasize: null, dataAttributes: null }) }] };
+      },
+    };
+    const context = { plugins: new Map([[law.pluginId, handle]]), contributorInstances: new Map(), contributorPasses: new Map(), viewState: law.viewState, ownerId: law.ownerId };
+    const slots = law.slots.map((slot) => node(slot.key, { type: "extension", extension: `${law.pluginId}/${law.appId}`, props: slot.props }));
+    const first = await resolveExternalSlots(slots[0], { ...context, ownerId: `${law.ownerId}:a` });
+    const second = await resolveExternalSlots(slots[1], { ...context, ownerId: `${law.ownerId}:b` });
+    expect(created).toEqual([law.appId, law.appId]);
+    expect(first.children[0].component.value).toBe(law.slots[0].props.paramsJson);
+    expect(second.children[0].component.value).toBe(law.slots[1].props.paramsJson);
+    expect(first.key).toBe(slots[0].key);
+    expect(requests.map(({ instanceId }) => instanceId)).toEqual([1, 2]);
+    for (const { request } of requests) {
+      expect(request.windows).toEqual([{ key: law.windowId, bodyKey: law.bodyKey }]);
+      expect(request.viewState.windowInstances).toEqual([{ id: law.windowId, windowKindId: law.windowKindId }]);
+      expect(request.viewState.locale).toBe(law.viewState.locale);
+      expect(request.viewState.activeModeId).toBe(law.modeId);
+      expect(parseResolvedPluginViewState(request.viewState)).toEqual(request.viewState);
+    }
+    const changed = { ...slots[0], component: { ...slots[0].component, props: law.slots[1].props } };
+    const current = await resolveExternalSlots(changed, { ...context, ownerId: `${law.ownerId}:a` });
+    expect(created).toHaveLength(2);
+    expect(requests.at(-1)?.instanceId).toBe(1);
+    expect(current.children[0].component.value).toBe(law.slots[1].props.paramsJson);
+    await resolveExternalSlots(node("empty", { type: "text", value: "Empty", emphasize: null, dataAttributes: null }), { ...context, ownerId: `${law.ownerId}:a` });
+    expect(destroyed).toEqual([1]);
+    expect(context.contributorInstances.size).toBe(1);
+    console.info("[DEBUG] external slot bodies rendered with independent instances, refreshed input and exact retirement");
+  });
+
+  it("shares pending creations and retires the exact detached contributor", async () => {
+    const { ensureContributorInstance, retireContributorInstances } = await import("@semio-tech/framework");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    let release!: (id: number) => void;
+    const destroyed: number[] = [];
+    let created = 0;
+    const handle = {
+      manifest: { apps: [] },
+      createApp: async () => { created++; return new Promise<number>((resolve) => { release = resolve; }); },
+      destroyApp: async (id: number) => { destroyed.push(id); },
+      refreshUi: async () => ({}),
+    };
+    const context = { plugins: new Map([[law.pluginId, handle]]), contributorInstances: new Map(), contributorPasses: new Map(), viewState: law.viewState, ownerId: law.ownerId };
+    const first = ensureContributorInstance(law.pluginId, law.appId, [law.slots[0].key], context)!;
+    const second = ensureContributorInstance(law.pluginId, law.appId, [law.slots[0].key], context)!;
+    expect(first).toBe(second);
+    await Promise.resolve();
+    expect(created).toBe(1);
+    const retirement = retireContributorInstances(context.contributorInstances);
+    expect(context.contributorInstances.size).toBe(0);
+    release(17);
+    await retirement;
+    expect(destroyed).toEqual([17]);
+  });
+
+  it("does not render or recreate an extension after its parent retires during creation", async () => {
+    const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    let release!: (id: number) => void;
+    let refreshes = 0;
+    const destroyed: number[] = [];
+    const handle = {
+      manifest: { apps: [{ id: law.appId, controllerId: law.controllerId, defaultModeId: law.modeId, modes: [{ id: law.modeId }], windowKinds: [{ id: law.windowKindId, bodyKey: law.bodyKey }] }] },
+      createApp: async () => new Promise<number>((resolve) => { release = resolve; }),
+      destroyApp: async (id: number) => { destroyed.push(id); },
+      refreshUi: async () => { refreshes++; return {}; },
+    };
+    const context = { plugins: new Map([[law.pluginId, handle]]), contributorInstances: new Map(), contributorPasses: new Map(), viewState: law.viewState, ownerId: law.ownerId };
+    const slot: any = { key: law.slots[0].key, component: { type: "extension", extension: `${law.pluginId}/${law.appId}`, props: law.slots[0].props }, children: [] };
+    const rendering = resolveExternalSlots(slot, context);
+    await Promise.resolve();
+    const retiring = retireContributorInstances(context.contributorInstances);
+    release(23);
+    await Promise.all([rendering, retiring]);
+    expect(refreshes).toBe(0);
+    expect(destroyed).toEqual([23]);
+    expect(context.contributorInstances.size).toBe(0);
+  });
+
+  it("discards effects from a refresh that finishes after retirement", async () => {
+    const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    let release!: (response: any) => void;
+    let started!: () => void;
+    const refreshing = new Promise<void>((resolve) => { started = resolve; });
+    const effects: unknown[] = [];
+    const destroyed: number[] = [];
+    const handle = {
+      manifest: { apps: [{ id: law.appId, controllerId: law.controllerId, defaultModeId: law.modeId, modes: [{ id: law.modeId }], windowKinds: [{ id: law.windowKindId, bodyKey: law.bodyKey }] }] },
+      createApp: async () => 24,
+      destroyApp: async (id: number) => { destroyed.push(id); },
+      refreshUi: async () => { started(); return new Promise<any>((resolve) => { release = resolve; }); },
+    };
+    const context = { plugins: new Map([[law.pluginId, handle]]), contributorInstances: new Map(), contributorPasses: new Map(), viewState: law.viewState, ownerId: law.ownerId, onEffects: (...args: unknown[]) => { effects.push(args); } };
+    const slot: any = { key: law.slots[0].key, component: { type: "extension", extension: `${law.pluginId}/${law.appId}`, props: law.slots[0].props }, children: [] };
+    const rendering = resolveExternalSlots(slot, context);
+    await refreshing;
+    const retiring = retireContributorInstances(context.contributorInstances);
+    release({ requestedEffects: [{ type: "diagnostic", message: "late extension work" }], windows: [] });
+    await Promise.all([rendering, retiring]);
+    expect(effects).toEqual([]);
+    expect(destroyed).toEqual([24]);
   });
 
   it("renders external slot fallback text when unresolved", () => {
@@ -6938,6 +7067,7 @@ describe("framework renderer hosts", () => {
     expect(world3dFitProjectionContent(false, true, true)).toBe(false);
     expect(world3dFitProjectionContent(false, false, true, true)).toBe(false);
     expect(world3dFitProjectionContent(false, false, false)).toBe(false);
+    expect(world3dFitProjectionContent(false, false, true, false, "preserveCamera")).toBe(false);
     expect(world3dProjectionContentFrameMounted(true, false, false)).toBe(true);
     expect(world3dProjectionContentFrameMounted(true, false, true)).toBe(false);
     expect(world3dProjectionContentFrameMounted(false, true, true)).toBe(false);
@@ -8121,7 +8251,7 @@ describe("framework renderer hosts", () => {
         disconnect() {}
       },
     );
-    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,viewMode:"composite"}};
+    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,viewMode:"composite"}};
     const view=render(createElement(Paint2dHost,{node,onAction:noopAction}));
     try {
       await waitFor(() => expect(setCanvasThemeJson).toHaveBeenCalled());
@@ -8214,7 +8344,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
             viewMode: "composite",
           },
         },
@@ -8300,7 +8430,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
             viewMode: "composite",
           },
         },
@@ -8337,7 +8467,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
             viewMode: "composite",
           },
         },
@@ -8366,7 +8496,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
             viewMode: "navigator",
             compositeViewportJson: '{"width":640,"height":480}',
           },
@@ -10351,6 +10481,25 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(
       gumballTransformDeltaBetweenPoses("transform", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { mode: "mesh", ids: ["obj-1"] }, "moveY"),
     ).toBeNull();
+  });
+
+  it("gumball gesture targets pin opaque component IDs independently of rendered instances", () => {
+    const validate = new Ajv2020({ strict: true }).compile(gumballTargetsSchema);
+    for (const fixture of gumballTargetsFixture.cases) {
+      expect(validate(fixture.selection)).toBe(true);
+      const selection = JSON.parse(JSON.stringify(fixture.selection));
+      const pinned = world3dGumballSelectionArgsV1(selection);
+      expect(pinned).toEqual(fixture.expected);
+      if (selection.ids) selection.ids.splice(0, selection.ids.length, "changed-instance");
+      if (selection.gumballSelectionIds) selection.gumballSelectionIds.splice(0, selection.gumballSelectionIds.length, "changed-component");
+      expect(pinned).toEqual(fixture.expected);
+      const before = { position: gumballTargetsFixture.translation.before as [number, number, number], quaternion: [0, 0, 0, 1] as [number, number, number, number], scale: [1, 1, 1] as [number, number, number] };
+      const after = { ...before, position: gumballTargetsFixture.translation.after as [number, number, number] };
+      const dispatch = gumballTransformDeltaBetweenPoses("translate", before, after, pinned, "moveX");
+      expect(dispatch?.args.ids).toEqual(fixture.expected.ids);
+      const delta = new THREE.Vector3(...after.position).sub(new THREE.Vector3(...before.position));
+      expect([dispatch?.args.dx, dispatch?.args.dy, dispatch?.args.dz]).toEqual(delta.toArray());
+    }
   });
 
   it("gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview", () => {

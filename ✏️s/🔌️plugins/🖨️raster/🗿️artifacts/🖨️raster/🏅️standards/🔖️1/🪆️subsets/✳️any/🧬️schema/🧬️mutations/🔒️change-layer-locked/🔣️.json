@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-layer-locked",
+  "semanticKind": "change-layer-locked",
+  "displayName": "Change Layer Locked",
+  "emoji": "🔒️",
+  "aggregateVariant": "ChangeLayerLocked",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-layer-locked",
+  "binaryTag": 15,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

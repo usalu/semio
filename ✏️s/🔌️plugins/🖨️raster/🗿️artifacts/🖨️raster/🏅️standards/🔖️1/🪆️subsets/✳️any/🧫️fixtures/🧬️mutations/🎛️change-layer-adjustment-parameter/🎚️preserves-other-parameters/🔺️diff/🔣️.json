@@ -12,7 +12,8 @@
               "parameter": "brightness",
               "value": 0.4
             }
-          ]
+          ],
+          "locked": null
         }
       }
     ]

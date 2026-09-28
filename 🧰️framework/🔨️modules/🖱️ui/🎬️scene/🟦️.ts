@@ -271,6 +271,53 @@ export function organizeContextMenu(
 }
 //#endregion 🗂️ContextMenuOrganizer
 
+export type SceneViewportMask3d = "rectangle" | "ellipse";
+
+export type World3dPresentation = {
+  readonly showGrid: boolean;
+  readonly showGizmo: boolean;
+  readonly interactive: boolean;
+  readonly viewportMask: SceneViewportMask3d;
+  readonly clear: "theme" | "transparent";
+  readonly sourceAspect?: number;
+};
+
+export const DEFAULT_WORLD3D_PRESENTATION: World3dPresentation = {
+  showGrid: true,
+  showGizmo: true,
+  interactive: true,
+  viewportMask: "rectangle",
+  clear: "theme",
+};
+
+/** 🎭️ Parses one complete world presentation lane, rejecting non-finite projection extents. */
+export function parseWorld3dPresentation(json: string | null | undefined): World3dPresentation {
+  if (json === undefined || json === null) return DEFAULT_WORLD3D_PRESENTATION;
+  try {
+    const value = JSON.parse(json) as Record<string, unknown>;
+    if (value === null || Array.isArray(value) || typeof value !== "object") return DEFAULT_WORLD3D_PRESENTATION;
+    const keys = Object.keys(value);
+    if (keys.some((key) => !["showGrid", "showGizmo", "interactive", "viewportMask", "clear", "sourceAspect"].includes(key))) return DEFAULT_WORLD3D_PRESENTATION;
+    const sourceAspect = value.sourceAspect;
+    if (sourceAspect !== undefined && (typeof sourceAspect !== "number" || !Number.isFinite(sourceAspect) || sourceAspect <= 0)) return DEFAULT_WORLD3D_PRESENTATION;
+    if (value.showGrid !== undefined && typeof value.showGrid !== "boolean") return DEFAULT_WORLD3D_PRESENTATION;
+    if (value.showGizmo !== undefined && typeof value.showGizmo !== "boolean") return DEFAULT_WORLD3D_PRESENTATION;
+    if (value.interactive !== undefined && typeof value.interactive !== "boolean") return DEFAULT_WORLD3D_PRESENTATION;
+    if (value.viewportMask !== undefined && value.viewportMask !== "rectangle" && value.viewportMask !== "ellipse") return DEFAULT_WORLD3D_PRESENTATION;
+    if (value.clear !== undefined && value.clear !== "theme" && value.clear !== "transparent") return DEFAULT_WORLD3D_PRESENTATION;
+    return {
+      showGrid: value.showGrid ?? true,
+      showGizmo: value.showGizmo ?? true,
+      interactive: value.interactive ?? true,
+      viewportMask: value.viewportMask ?? "rectangle",
+      clear: value.clear ?? "theme",
+      ...(sourceAspect === undefined ? {} : { sourceAspect }),
+    } as World3dPresentation;
+  } catch {
+    return DEFAULT_WORLD3D_PRESENTATION;
+  }
+}
+
 export type World3dScene = {
   readonly cameraJson: string;
   readonly meshesJson: string;
@@ -295,6 +342,7 @@ export type World3dScene = {
    * publishes and the consumer caps what it retains. See the Rust `World3dScene::pick_targets_json`. */
   readonly pickTargetsJson?: string;
   readonly lodJson?: string;
+  readonly presentationJson?: string;
   readonly chunkingJson?: string;
   readonly environmentJson?: string;
   readonly frameJson?: string;
@@ -476,7 +524,7 @@ export type World3dSceneLane = SceneLane<World3dScene>;
  * collide with an app-authored node id. */
 export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
 
-/** 🚚️ The twenty-one world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/** 🚚️ The twenty-two world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
  * its own retained, individually paged text carrier. `SurfaceDoc.bytes` is a hard 32 KiB
  * `UiFixedBytes` ceiling that cannot page, so a world whose payload scales with its document (a
  * measured 57 281-byte Nakagin Capsule Tower) can only publish with the payload split out; keeping the
@@ -499,6 +547,7 @@ export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "engagementPreview", field: "engagementPreviewJson", bodyKey: "framework.scene.world3d.engagementPreview", optional: true },
   { lane: "pickTargets", field: "pickTargetsJson", bodyKey: "framework.scene.world3d.pickTargets", optional: true },
   { lane: "lod", field: "lodJson", bodyKey: "framework.scene.world3d.lod", optional: true },
+  { lane: "presentation", field: "presentationJson", bodyKey: "framework.scene.world3d.presentation", optional: true },
   { lane: "chunking", field: "chunkingJson", bodyKey: "framework.scene.world3d.chunking", optional: true },
   { lane: "environment", field: "environmentJson", bodyKey: "framework.scene.world3d.environment", optional: true },
   { lane: "frame", field: "frameJson", bodyKey: "framework.scene.world3d.frame", optional: true },
@@ -616,12 +665,12 @@ export const PAINT2D_SCENE_LANE_KEY_PREFIX = "framework.scene.paint2d.";
 
 /** 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
  * `Paint2dSceneLane` / `PAINT2D_SCENE_LANE_*`; both pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json`. Both lanes scale with
- * the document (the whole `RasterSession` sync channel and one entry per imported bitmap), so either
- * outgrows the 32 KiB surface doc on a real painting. */
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json`. Document, assets and completed
+ * pixel coverage travel separately so the 32 KiB scene header stays bounded. */
 export const PAINT2D_SCENE_LANES: readonly SceneLane<Paint2dScene>[] = [
   { lane: "documentSync", field: "documentSyncJson", bodyKey: "framework.scene.paint2d.documentSync", optional: false },
   { lane: "assets", field: "assetsJson", bodyKey: "framework.scene.paint2d.assets", optional: false },
+  { lane: "pixelSelection", field: "pixelSelectionJson", bodyKey: "framework.scene.paint2d.pixelSelection", optional: true },
 ];
 
 /** 🚚️ Resolves a retained node key back to the paint-2d lane it carries. */
@@ -981,12 +1030,15 @@ export type Paint2dScene = {
   readonly assetsJson: string;
   readonly cameraJson: string;
   readonly selectionJson: string;
+  readonly pixelSelectionJson?:string;
   readonly hoveredId?: string;
   readonly activeUtility: string;
   readonly brushSize: number;
   readonly brushOpacity: number;
   readonly brushColor: string;
   readonly brushHardness: number;
+  readonly paintTarget:"pixels"|"mask";
+  readonly maskValue:number;
   readonly viewMode: string;
   readonly compositeViewportJson?: string;
   /** 🚚️ The spine's lane manifest — see {@link PAINT2D_SCENE_LANES}. */
@@ -1122,10 +1174,11 @@ export type BlockPaletteEntry = {
   readonly iconId: IconName;
 };
 
-/** 🧩️ A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `PlaybookStep[]` array, `paletteJson` is a `BlockPaletteEntry[]` array of the block kinds available to insert. */
+/** 🧩️ Ordered sections and fields with optional interaction targets in the declared selection domain. */
 export type BlockListScene = {
   readonly stepsJson: string;
   readonly paletteJson: string;
+  readonly domainId?: string;
   readonly selectedId?: string;
   readonly draggingId?: string;
 };
@@ -1162,6 +1215,7 @@ export type UiExternalSlotNode = {
   readonly appId: string;
   readonly bodyKey: string;
   readonly paramsJson: string;
+  readonly hostStatus?: string;
   readonly menu?: UiMenuRef;
 };
 

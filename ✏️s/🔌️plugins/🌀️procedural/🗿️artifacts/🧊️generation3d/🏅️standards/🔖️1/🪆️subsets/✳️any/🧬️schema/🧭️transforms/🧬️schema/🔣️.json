@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Axis-Angle Rotation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "axis",
+    "angle"
+  ],
+  "properties": {
+    "axis": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "not": {
+        "const": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "angle": {
+      "type": "number"
+    }
+  }
+}

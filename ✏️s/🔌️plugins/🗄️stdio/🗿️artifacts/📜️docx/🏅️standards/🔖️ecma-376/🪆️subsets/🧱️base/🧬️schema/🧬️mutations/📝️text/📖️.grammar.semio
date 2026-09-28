@@ -13,14 +13,20 @@ comment none
 # `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
 # built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2. `[0]`/`[1,x]` is
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
-document = set-snapshot | insert-block | remove-block | set-block-content | set-run-text | set-run-formatting | insert-style | remove-style | set-style-name | set-style-based-on | set-part | remove-part
+document = set-snapshot | insert-block | remove-block | set-block-content | set-run-text | replace-xml-node | set-run-formatting | set-paragraph-style | insert-table-row | remove-table-row | insert-xml-node | remove-xml-node | insert-style | remove-style | set-style-name | set-style-based-on | set-part | remove-part
 
 set-snapshot = "set-snapshot" "snapshot" "=" docx-snapshot
 insert-block = "insert-block" "path" "=" block-path "block" "=" block
 remove-block = "remove-block" "path" "=" block-path
 set-block-content = "set-block-content" "path" "=" block-path "block" "=" block
-set-run-text = "set-run-text" "path" "=" block-path "run-index" "=" INT "text" "=" hex
-set-run-formatting = "set-run-formatting" "path" "=" block-path "run-index" "=" INT "bold" "=" bool-lit "italic" "=" bool-lit "underline" "=" bool-lit
+set-run-text = "set-run-text" "address" "=" hex "text" "=" hex
+replace-xml-node = "replace-xml-node" "address" "=" hex "node" "=" x-node
+set-run-formatting = "set-run-formatting" "address" "=" hex "bold" "=" bool-lit "italic" "=" bool-lit "underline" "=" bool-lit
+set-paragraph-style = "set-paragraph-style" "address" "=" hex "style-id" "=" opt-hex
+insert-table-row = "insert-table-row" "address" "=" hex "index" "=" INT "cells" "=" text-list
+remove-table-row = "remove-table-row" "address" "=" hex "index" "=" INT
+insert-xml-node = "insert-xml-node" "parent" "=" hex "index" "=" INT "node" "=" x-node
+remove-xml-node = "remove-xml-node" "parent" "=" hex "index" "=" INT "expected-name" "=" hex "revision" "=" hex
 insert-style = "insert-style" "style" "=" style
 remove-style = "remove-style" "id" "=" hex
 set-style-name = "set-style-name" "id" "=" hex "name" "=" hex
@@ -30,6 +36,8 @@ remove-part = "remove-part" "path" "=" hex
 
 bool-lit = "0" | "1"
 opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+text-list = "[" text-item* "]"
+text-item = hex ","?
 
 # ── `DocxBlockPath` -- `[[segment,...],index]` (`enc_block_path`) ────────────────────────────────
 block-path = "[" segments-list "," INT "]"
@@ -42,7 +50,7 @@ segment = "[" INT "," INT "," INT "]"
 docx-snapshot = "[" hex "," opc-package "," docx-document "]"
 
 # ── `OpcPackage` -- `[parts,content-types,relationships-by-owner]` (`enc_opc_package`) ───────────
-opc-package = "[" parts-list "," content-types "," rel-owner-list "]"
+opc-package = "[" parts-list "," content-types "," rel-owner-list "," hex "]"
 parts-list = "[" opc-part-item* "]"
 opc-part-item = opc-part ","?
 opc-part = "[" hex "," hex "," hex "]"

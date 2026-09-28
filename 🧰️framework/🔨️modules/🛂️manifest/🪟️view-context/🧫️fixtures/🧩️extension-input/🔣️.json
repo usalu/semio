@@ -1,0 +1,21 @@
+{
+  "capacityChars": 65536,
+  "cases": [
+    {
+      "name": "First Form Question",
+      "context": {
+        "locale": "en",
+        "terminology": "native",
+        "extensionInputJson": "{\"paramsJson\":\"{\\\"questionId\\\":\\\"column-a\\\",\\\"params\\\":{\\\"height\\\":6},\\\"windowId\\\":\\\"fill-a\\\"}\"}"
+      }
+    },
+    {
+      "name": "Independent German Form Question",
+      "context": {
+        "locale": "de",
+        "terminology": "native",
+        "extensionInputJson": "{\"paramsJson\":\"{\\\"questionId\\\":\\\"column-b\\\",\\\"params\\\":{\\\"height\\\":9},\\\"windowId\\\":\\\"fill-b\\\"}\"}"
+      }
+    }
+  ]
+}

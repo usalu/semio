@@ -354,6 +354,7 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
 pub enum PreviewInlineGeometry {
     Point { x: f64, y: f64, z: f64 },
     Vector { x: f64, y: f64, z: f64 },
+    Mesh { preview: String, data: String },
 }
 
 /// 🔌️ One previewable value found on one output channel of one widget — the channel-aware
@@ -383,6 +384,13 @@ fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Valu
 fn collect_preview_channel_items(channel: &str, value: &dsl::json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
     match value {
         dsl::json::Value::Object(map) => {
+            if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("mesh") {
+                if let (Some(preview), Some(data)) = (map.get("preview").and_then(dsl::json::Value::as_str), map.get("data").and_then(dsl::json::Value::as_str)) {
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(PreviewInlineGeometry::Mesh { preview: preview.into(), data: data.into() }) });
+                    *index += 1;
+                }
+                return;
+            }
             if let Some(handle) = map.get("handle").and_then(dsl::json::Value::as_str) {
                 if is_brep_geometry_handle(handle) {
                     items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
@@ -477,9 +485,9 @@ pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData
     match inline {
         Some(PreviewInlineGeometry::Point { .. }) => "point",
         Some(PreviewInlineGeometry::Vector { .. }) => "vector",
-        None if !data.indices.is_empty() => "solid",
-        None if !data.edge_positions.is_empty() => "wire",
-        None => "point",
+        _ if !data.indices.is_empty() => "solid",
+        _ if !data.edge_positions.is_empty() => "wire",
+        _ => "point",
     }
 }
 

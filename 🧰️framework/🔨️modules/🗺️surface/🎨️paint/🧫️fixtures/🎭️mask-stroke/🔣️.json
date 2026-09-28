@@ -1,0 +1,673 @@
+{
+  "cases": [
+    {
+      "name": "pixel linked mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "width": 20,
+                "height": 10,
+                "imageKey": null,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": true,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(3 4) rotate(90) translate(1 2) translate(-3 -1) scale(2)"
+    },
+    {
+      "name": "pixel unlinked mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "width": 20,
+                "height": 10,
+                "imageKey": null,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": false,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        24
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(1 2) translate(-3 -1) scale(2)"
+    },
+    {
+      "name": "blank pixel mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "width": 20,
+                "height": 10,
+                "imageKey": null,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": true,
+                  "imageKey": null,
+                  "width": null,
+                  "height": null,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {},
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        10,
+        5
+      ]
+    },
+    {
+      "name": "group linked mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "group",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": true,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(3 4) rotate(90) translate(1 2) translate(-3 -1) scale(2)"
+    },
+    {
+      "name": "group unlinked mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "group",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": false,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        24
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(1 2) translate(-3 -1) scale(2)"
+    },
+    {
+      "name": "blank group mask",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "group",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": true,
+                  "imageKey": null,
+                  "width": null,
+                  "height": null,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {},
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        256,
+        256
+      ]
+    },
+    {
+      "name": "blank mask uses authored fallback instead of owner image extent",
+      "document": {
+        "schema": "raster.document",
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "locked": false,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "a": 2,
+              "b": 0,
+              "c": 0,
+              "d": 2
+            },
+            "mask": null,
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "visible": true,
+                "locked": false,
+                "width": null,
+                "height": null,
+                "imageKey": "color",
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "a": 0,
+                  "b": 1,
+                  "c": -1,
+                  "d": 0
+                },
+                "mask": {
+                  "enabled": false,
+                  "invert": true,
+                  "linked": true,
+                  "imageKey": null,
+                  "width": null,
+                  "height": null,
+                  "transform": {
+                    "x": 1,
+                    "y": 2,
+                    "a": 1,
+                    "b": 0,
+                    "c": 0,
+                    "d": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "color": {
+          "width": 40,
+          "height": 20
+        }
+      },
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        256,
+        256
+      ]
+    }
+  ],
+  "revisions": [
+    {
+      "name": "unchanged",
+      "patch": [],
+      "cancel": false,
+      "admit": true
+    },
+    {
+      "name": "rename",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/name",
+          "value": "Renamed"
+        }
+      ],
+      "cancel": false,
+      "admit": true
+    },
+    {
+      "name": "lock",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/locked",
+          "value": true
+        }
+      ],
+      "cancel": true,
+      "admit": false
+    },
+    {
+      "name": "hide",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/visible",
+          "value": false
+        }
+      ],
+      "cancel": true,
+      "admit": false
+    },
+    {
+      "name": "owner transform",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/transform/x",
+          "value": 4
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask enable",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/enabled",
+          "value": true
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask invert",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/invert",
+          "value": false
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask link",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/linked",
+          "value": false
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask image",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/imageKey",
+          "value": "replacement"
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask extent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/width",
+          "value": 8
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask transform",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask/transform/c",
+          "value": 1
+        }
+      ],
+      "cancel": true,
+      "admit": true
+    },
+    {
+      "name": "mask removed",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/mask",
+          "value": null
+        }
+      ],
+      "cancel": true,
+      "admit": false
+    },
+    {
+      "name": "ancestor locked",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/locked",
+          "value": true
+        }
+      ],
+      "cancel": true,
+      "admit": false
+    },
+    {
+      "name": "ancestor hidden",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/visible",
+          "value": false
+        }
+      ],
+      "cancel": true,
+      "admit": false
+    }
+  ],
+  "brush": {
+    "size": 3,
+    "opacity": 0.25,
+    "hardness": 0.5,
+    "alpha": 96
+  }
+}

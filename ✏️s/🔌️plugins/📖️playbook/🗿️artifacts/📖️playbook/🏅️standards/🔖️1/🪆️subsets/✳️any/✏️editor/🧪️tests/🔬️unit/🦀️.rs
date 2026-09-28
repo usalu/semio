@@ -160,7 +160,7 @@ pub(super) fn every_command() -> Vec<PlaybookCommand> {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
     let json = serde_json::to_string(&create_playbook_play_app()).expect("app definition json");
-    for window in [PLAYBOOK_PLAY_WINDOW_BUILDER, PLAYBOOK_PLAY_WINDOW_STEPS, PLAYBOOK_PLAY_WINDOW_CHANGES, PLAYBOOK_PLAY_WINDOW_ACTIVITY, PLAYBOOK_PLAY_WINDOW_SOURCE] {
+    for window in [PLAYBOOK_PLAY_WINDOW_BUILDER, PLAYBOOK_PLAY_WINDOW_STEPS, PLAYBOOK_PLAY_WINDOW_CHANGES, PLAYBOOK_PLAY_WINDOW_ACTIVITY, PLAYBOOK_PLAY_WINDOW_SOURCE, PLAYBOOK_PLAY_WINDOW_FILES] {
         assert!(json.contains(window), "window kind missing from the manifest: {window}");
     }
     assert!(json.contains(builder::PLAYBOOK_PLAY_MODE_BUILDER), "mode missing from the manifest");
@@ -170,17 +170,9 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn playbook_play_app_declares_the_authored_scene_showcase() {
     let definition = create_playbook_play_app();
-    let actual = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str(), window.surface_kind)).collect::<Vec<_>>();
-    assert_eq!(
-        actual,
-        vec![
-            (PLAYBOOK_PLAY_WINDOW_BUILDER, PLAYBOOK_PLAY_BODY_BUILDER, semio_framework_plugin::SurfaceKind::BlockList),
-            (PLAYBOOK_PLAY_WINDOW_STEPS, PLAYBOOK_PLAY_BODY_STEPS, semio_framework_plugin::SurfaceKind::Table),
-            (PLAYBOOK_PLAY_WINDOW_CHANGES, PLAYBOOK_PLAY_BODY_CHANGES, semio_framework_plugin::SurfaceKind::DiffView),
-            (PLAYBOOK_PLAY_WINDOW_ACTIVITY, PLAYBOOK_PLAY_BODY_ACTIVITY, semio_framework_plugin::SurfaceKind::EventFeed),
-            (PLAYBOOK_PLAY_WINDOW_SOURCE, PLAYBOOK_PLAY_BODY_SOURCE, semio_framework_plugin::SurfaceKind::TextEditor),
-        ]
-    );
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/🏗️builder/🧫️fixtures/🎬️scene-showcase/🔣️.json")).unwrap();
+    let actual: Vec<_> = definition.window_kinds.iter().map(|window| serde_json::json!({ "windowId": window.id, "bodyKey": window.body_key, "surfaceKind": window.surface_kind })).collect();
+    assert_eq!(serde_json::json!(actual), fixture["windows"]);
 }
 //#endregion 🔖️ManifestSanity
 

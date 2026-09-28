@@ -64,6 +64,7 @@ struct XEntity {
 
 #[derive(Clone, Debug, PartialEq)]
 struct XDoctype {
+    prolog_position: usize,
     name: String,
     external_id: Option<XExternalId>,
     entities: Vec<XEntity>,
@@ -84,6 +85,7 @@ struct XDoc {
     doctype: Option<XDoctype>,
     prolog: Vec<XNode>,
     root: Option<XNode>,
+    epilog: Vec<XNode>,
 }
 //#endregion 🔖️Types
 
@@ -155,14 +157,20 @@ fn encode_xml(doc: &XDoc) -> Vec<u8> {
         let standalone = decl.standalone.map(|value| if value { "yes" } else { "no" });
         writer.write_event(Event::Decl(BytesDecl::new(&decl.version, decl.encoding.as_deref(), standalone))).expect("write decl event");
     }
-    for node in &doc.prolog {
+    for (index, node) in doc.prolog.iter().enumerate() {
+        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index) {
+            writer.write_event(Event::DocType(BytesText::from_escaped(doctype_content(doc.doctype.as_ref().unwrap())))).expect("write doctype event");
+        }
         write_node(&mut writer, node);
     }
-    if let Some(doctype) = &doc.doctype {
+    if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len()) {
         writer.write_event(Event::DocType(BytesText::from_escaped(doctype_content(doctype)))).expect("write doctype event");
     }
     if let Some(root) = &doc.root {
         write_node(&mut writer, root);
+    }
+    for node in &doc.epilog {
+        write_node(&mut writer, node);
     }
     writer.into_inner().into_inner()
 }
@@ -350,7 +358,7 @@ fn parse_doctype(raw: &str) -> Result<XDoctype, String> {
             entities.push(XEntity { parameter, name: entity_name, value });
         }
     }
-    Ok(XDoctype { name, external_id, entities })
+    Ok(XDoctype { prolog_position: 0, name, external_id, entities })
 }
 
 /// 📥️ Decodes real bytes back into a typed document, walking events with `quick_xml::reader::Reader`
@@ -366,14 +374,20 @@ fn decode_xml(bytes: &[u8]) -> Result<XDoc, String> {
         match event {
             Event::Eof => break,
             Event::Decl(decl) => doc.declaration = Some(decl_from_event(&decl)?),
-            Event::DocType(doctype) => doc.doctype = Some(parse_doctype(doctype.as_ref().trim())?),
+            Event::DocType(_) if root_seen => return Err("doctype cannot appear after the root element".to_string()),
+            Event::DocType(_) if doc.doctype.is_some() => return Err("duplicate XML doctype".to_string()),
+            Event::DocType(doctype) => {
+                let mut doctype = parse_doctype(doctype.as_ref().trim())?;
+                doctype.prolog_position = doc.prolog.len();
+                doc.doctype = Some(doctype);
+            }
             // 📌 `content()` returns everything after the target NAME, including the one separating
             // whitespace byte — `trim_start` recovers the semantic `data` half (what `write_node`'s
             // own `format!("{target} {data}")` put there), so encode -> decode round-trips exactly.
             Event::PI(pi) if !root_seen => doc.prolog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().trim_start().to_string() }),
-            Event::PI(_) => {}
+            Event::PI(pi) => doc.epilog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().trim_start().to_string() }),
             Event::Comment(comment) if !root_seen => doc.prolog.push(XNode::Comment(comment.as_ref().to_string())),
-            Event::Comment(_) => {}
+            Event::Comment(comment) => doc.epilog.push(XNode::Comment(comment.as_ref().to_string())),
             Event::Text(text) => {
                 if !text.as_ref().trim().is_empty() {
                     return Err(if root_seen { "trailing content after root element".to_string() } else { "unexpected text before the root element".to_string() });
@@ -462,7 +476,7 @@ fn doctype_json(doctype: &Option<XDoctype>) -> String {
         None => "null".to_string(),
         Some(dt) => {
             let entities: Vec<String> = dt.entities.iter().map(entity_json).collect();
-            format!("{{\"name\":{},\"externalId\":{},\"entities\":[{}]}}", json_str(&dt.name), external_id_json(&dt.external_id), entities.join(","))
+            format!("{{\"prologPosition\":{},\"name\":{},\"externalId\":{},\"entities\":[{}]}}", dt.prolog_position, json_str(&dt.name), external_id_json(&dt.external_id), entities.join(","))
         }
     }
 }
@@ -485,11 +499,12 @@ fn node_json(node: &XNode) -> String {
 
 fn doc_json(doc: &XDoc) -> String {
     let prolog: Vec<String> = doc.prolog.iter().map(node_json).collect();
+    let epilog: Vec<String> = doc.epilog.iter().map(node_json).collect();
     let root = match &doc.root {
         Some(root) => node_json(root),
         None => "null".to_string(),
     };
-    format!("{{\"declaration\":{},\"doctype\":{},\"prolog\":[{}],\"root\":{}}}", declaration_json(&doc.declaration), doctype_json(&doc.doctype), prolog.join(","), root)
+    format!("{{\"declaration\":{},\"doctype\":{},\"prolog\":[{}],\"root\":{},\"epilog\":[{}]}}", declaration_json(&doc.declaration), doctype_json(&doc.doctype), prolog.join(","), root, epilog.join(","))
 }
 //#endregion 🔖️Json
 
@@ -503,7 +518,12 @@ fn doc_json(doc: &XDoc) -> String {
 fn base_doc() -> XDoc {
     XDoc {
         declaration: Some(XDecl { version: "1.0".to_string(), encoding: Some("UTF-8".to_string()), standalone: Some(false) }),
-        doctype: Some(XDoctype { name: "catalog".to_string(), external_id: Some(XExternalId::System { system_id: "catalog.dtd".to_string() }), entities: vec![XEntity { parameter: false, name: "vendor".to_string(), value: "Acme Corp".to_string() }] }),
+        doctype: Some(XDoctype {
+            prolog_position: 1,
+            name: "catalog".to_string(),
+            external_id: Some(XExternalId::System { system_id: "catalog.dtd".to_string() }),
+            entities: vec![XEntity { parameter: false, name: "vendor".to_string(), value: "Acme Corp".to_string() }],
+        }),
         prolog: vec![XNode::Pi { target: "catalog-pi".to_string(), data: "build=\"1\"".to_string() }, XNode::Comment(" catalog root comment ".to_string())],
         root: Some(XNode::Element {
             name: "catalog".to_string(),
@@ -522,6 +542,7 @@ fn base_doc() -> XDoc {
                 XNode::Pi { target: "note".to_string(), data: "priority=\"low\"".to_string() },
             ],
         }),
+        epilog: vec![XNode::Comment(" catalog complete ".to_string())],
     }
 }
 //#endregion 🔖️BaseDocument
@@ -539,7 +560,7 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
         // 🧬 SetDeclaration — whole-value replace of the declaration only.
         "set-declaration-applied" => {
             let mut after = base.clone();
-            after.declaration = Some(XDecl { version: "1.0".to_string(), encoding: Some("UTF-16".to_string()), standalone: Some(true) });
+            after.declaration = Some(XDecl { version: "1.0".to_string(), encoding: Some("utf-8".to_string()), standalone: Some(true) });
             Some((base, after))
         }
 
@@ -547,6 +568,7 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
         "set-doctype-applied" => {
             let mut after = base.clone();
             after.doctype = Some(XDoctype {
+                prolog_position: 1,
                 name: "catalog".to_string(),
                 external_id: Some(XExternalId::Public { public_id: "-//ACME//DTD Catalog//EN".to_string(), system_id: "catalog.dtd".to_string() }),
                 entities: vec![XEntity { parameter: false, name: "vendor".to_string(), value: "Acme Corp".to_string() }, XEntity { parameter: false, name: "revision".to_string(), value: "2".to_string() }],

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/insert-xml-node/schema.json",
+  "title": "InsertXmlNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parent",
+    "index",
+    "node"
+  ],
+  "properties": {
+    "parent": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "node": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode"
+    },
+    "mutation": {
+      "const": "insertXmlNode"
+    }
+  }
+}

@@ -102,6 +102,10 @@ pub struct DrawingLayerPatch {
     pub name: Option<String>,
     pub opacity: Option<f64>,
     pub blend_mode: Option<String>,
+    pub fill_rule: Option<crate::FillRule>,
+    #[value(skip_serializing_if="Option::is_none")]
+    #[cfg_attr(test,serde(skip_serializing_if="Option::is_none"))]
+    pub isolation:Option<bool>,
     pub transform_json: Option<String>,
     pub fill_json: Option<String>,
     pub stroke_json: Option<String>,
@@ -267,6 +271,10 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         }
         if let Some(content) = &patch.text_content { text.content = content.clone(); }
     }
+    if let Some(isolation)=patch.isolation {
+        let DrawingLayerNode::Group(group)=layer else {return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Isolation needs a group"));};
+        group.isolation=isolation;
+    }
     let base = layer_base_mut(layer);
     if let Some(visible) = patch.visible {
         base.visible = visible;
@@ -280,7 +288,9 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
     if let Some(opacity) = patch.opacity {
         base.opacity = opacity;
     }
+    if let Some(fill_rule) = patch.fill_rule {base.attributes.fill_rule=fill_rule;}
     if let Some(blend_mode) = &patch.blend_mode {
+        if !crate::DRAWING_BLEND_MODES.contains(&blend_mode.as_str()) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Unsupported blend mode.").at(["blendMode"])); }
         base.blend_mode = blend_mode.clone();
     }
     if let Some(transform_json) = &patch.transform_json {
@@ -322,6 +332,8 @@ fn merge_layer_patch(dst: &mut DrawingLayerPatch, mut src: DrawingLayerPatch) {
     take!(name);
     take!(opacity);
     take!(blend_mode);
+    take!(fill_rule);
+    take!(isolation);
     take!(transform_json);
     take!(fill_json);
     take!(stroke_json);
@@ -533,3 +545,8 @@ pub fn diff_set_path_geometry(layer_id: &str, segments: &[crate::PathSegment]) -
 pub fn diff_set_text(layer_id: &str, content: &str, size: f64) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { text_content: Some(content.into()), text_size: Some(size), ..Default::default() })
 }
+
+/// 🌀️ Sparse authored fill-rule delta.
+pub fn diff_set_layer_fill_rule(layer_id:&str,fill_rule:crate::FillRule)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {fill_rule:Some(fill_rule),..Default::default()})}
+
+pub fn diff_set_group_isolation(layer_id:&str,isolation:bool)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {isolation:Some(isolation),..Default::default()})}

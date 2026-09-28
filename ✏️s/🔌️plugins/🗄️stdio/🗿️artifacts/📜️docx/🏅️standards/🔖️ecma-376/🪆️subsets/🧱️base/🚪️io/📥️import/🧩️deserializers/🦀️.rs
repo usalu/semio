@@ -4,47 +4,39 @@
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
 use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_PART};
-use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::DocxSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, docx_part_is_xml};
+use crate::standards::v_ecma_376::subsets::base::io::namespaces::{is_word_name, scoped_bindings, word_attr, word_local_name};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode, xml_document_from_text};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
-//#region 🔖️XmlHelpers
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
-    attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn child_elements(node: &XmlNode) -> &[XmlNode] {
     match node {
         XmlNode::Element { children, .. } => children.as_slice(),
         _ => &[],
     }
 }
-//#endregion 🔖️XmlHelpers
 
-//#region 🔖️RunMapping
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn run_from_xml(node: &XmlNode) -> DocxRun {
+fn run_from_xml(node: &XmlNode, bindings: &[(String, String)]) -> DocxRun {
     let mut run = DocxRun::default();
     for child in child_elements(node) {
-        let XmlNode::Element { name, children: inner, .. } = child else { continue };
-        match name.as_str() {
-            "w:rPr" => {
-                for prop in inner {
-                    let XmlNode::Element { name, .. } = prop else { continue };
-                    match name.as_str() {
-                        "w:b" => run.bold = true,
-                        "w:i" => run.italic = true,
-                        "w:u" => run.underline = true,
+        let child_bindings = scoped_bindings(child, bindings);
+        match word_local_name(child, &child_bindings) {
+            Some("rPr") => {
+                for prop in child_elements(child) {
+                    let prop_bindings = scoped_bindings(prop, &child_bindings);
+                    let enabled = !matches!(word_attr(prop, "val", &prop_bindings), Some("0" | "false" | "off" | "none"));
+                    match word_local_name(prop, &prop_bindings) {
+                        Some("b") => run.bold = enabled,
+                        Some("i") => run.italic = enabled,
+                        Some("u") => run.underline = enabled,
                         _ => run.extra_run_properties.push(prop.clone()),
                     }
                 }
             }
-            "w:t" => {
-                for t in inner {
-                    if let XmlNode::Text { text } = t {
+            Some("t") => {
+                for text_node in child_elements(child) {
+                    if let XmlNode::Text { text } | XmlNode::CData { text } = text_node {
                         run.text.push_str(text);
                     }
                 }
@@ -54,178 +46,188 @@ fn run_from_xml(node: &XmlNode) -> DocxRun {
     }
     run
 }
-//#endregion 🔖️RunMapping
 
-//#region 🔖️ParagraphMapping
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn paragraph_from_xml(node: &XmlNode) -> DocxParagraph {
+fn collect_runs(node: &XmlNode, parent_bindings: &[(String, String)], runs: &mut Vec<DocxRun>) {
+    let bindings = scoped_bindings(node, parent_bindings);
+    if is_word_name(node, "r", &bindings) {
+        runs.push(run_from_xml(node, &bindings));
+        return;
+    }
+    for child in child_elements(node) {
+        collect_runs(child, &bindings, runs);
+    }
+}
+
+fn paragraph_from_xml(node: &XmlNode, bindings: &[(String, String)]) -> DocxParagraph {
     let mut paragraph = DocxParagraph::default();
     for child in child_elements(node) {
-        let XmlNode::Element { name, children: inner, attrs, .. } = child else { continue };
-        match name.as_str() {
-            "w:pPr" => {
-                for prop in inner {
-                    let XmlNode::Element { name, attrs: pattrs, .. } = prop else { continue };
-                    if name == "w:pStyle" {
-                        paragraph.style = find_attr(pattrs, "w:val").map(str::to_string);
-                    } else {
-                        paragraph.extra_paragraph_properties.push(prop.clone());
-                    }
+        let child_bindings = scoped_bindings(child, bindings);
+        if is_word_name(child, "pPr", &child_bindings) {
+            for prop in child_elements(child) {
+                let prop_bindings = scoped_bindings(prop, &child_bindings);
+                if is_word_name(prop, "pStyle", &prop_bindings) {
+                    paragraph.style = word_attr(prop, "val", &prop_bindings).map(str::to_string);
+                } else {
+                    paragraph.extra_paragraph_properties.push(prop.clone());
                 }
             }
-            "w:r" => paragraph.runs.push(run_from_xml(child)),
-            _ => {
-                let _ = attrs;
-            }
+        } else {
+            collect_runs(child, bindings, &mut paragraph.runs);
         }
     }
     paragraph
 }
-//#endregion 🔖️ParagraphMapping
 
-//#region 🔖️TableMapping
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cell_from_xml(node: &XmlNode) -> DocxTableCell {
+fn cell_from_xml(node: &XmlNode, bindings: &[(String, String)]) -> DocxTableCell {
     let mut cell = DocxTableCell::default();
     for child in child_elements(node) {
-        let XmlNode::Element { name, children: inner, .. } = child else { continue };
-        match name.as_str() {
-            "w:tcPr" => cell.extra_cell_properties = inner.clone(),
-            "w:p" => cell.blocks.push(DocxBlock::Paragraph(paragraph_from_xml(child))),
-            "w:tbl" => cell.blocks.push(DocxBlock::Table(table_from_xml(child))),
+        let child_bindings = scoped_bindings(child, bindings);
+        match word_local_name(child, &child_bindings) {
+            Some("tcPr") => cell.extra_cell_properties = child_elements(child).to_vec(),
+            Some("p") => cell.blocks.push(DocxBlock::Paragraph(paragraph_from_xml(child, &child_bindings))),
+            Some("tbl") => cell.blocks.push(DocxBlock::Table(table_from_xml(child, &child_bindings))),
             _ => {}
         }
     }
     cell
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn row_from_xml(node: &XmlNode) -> DocxTableRow {
+fn row_from_xml(node: &XmlNode, bindings: &[(String, String)]) -> DocxTableRow {
     let mut row = DocxTableRow::default();
     for child in child_elements(node) {
-        let XmlNode::Element { name, children: inner, .. } = child else { continue };
-        match name.as_str() {
-            "w:trPr" => row.extra_row_properties = inner.clone(),
-            "w:tc" => row.cells.push(cell_from_xml(child)),
+        let child_bindings = scoped_bindings(child, bindings);
+        match word_local_name(child, &child_bindings) {
+            Some("trPr") => row.extra_row_properties = child_elements(child).to_vec(),
+            Some("tc") => row.cells.push(cell_from_xml(child, &child_bindings)),
             _ => {}
         }
     }
     row
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_from_xml(node: &XmlNode) -> DocxTable {
+fn table_from_xml(node: &XmlNode, bindings: &[(String, String)]) -> DocxTable {
     let mut table = DocxTable::default();
     for child in child_elements(node) {
-        let XmlNode::Element { name, children: inner, .. } = child else { continue };
-        match name.as_str() {
-            "w:tblPr" => table.extra_table_properties = inner.clone(),
-            "w:tr" => table.rows.push(row_from_xml(child)),
+        let child_bindings = scoped_bindings(child, bindings);
+        match word_local_name(child, &child_bindings) {
+            Some("tblPr") => table.extra_table_properties = child_elements(child).to_vec(),
+            Some("tr") => table.rows.push(row_from_xml(child, &child_bindings)),
             _ => {}
         }
     }
     table
 }
-//#endregion 🔖️TableMapping
 
-//#region 🔖️DocumentMapping
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 📖️ Reads WordprocessingML blocks using in-scope namespaces and direct run properties.
 pub fn document_from_xml(doc: &XmlDocument) -> Result<Vec<DocxBlock>, DocxError> {
     let bad = |detail: &str| DocxError::Xml { part: MAIN_DOCUMENT_PART.into(), detail: detail.into() };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document"))?;
-    let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element")) };
-    if name != "w:document" {
-        return Err(DocxError::Xml { part: MAIN_DOCUMENT_PART.into(), detail: format!("expected <w:document>, got <{name}>") });
+    let bindings = scoped_bindings(root, &[]);
+    if !is_word_name(root, "document", &bindings) {
+        return Err(bad("expected WordprocessingML document root"));
     }
-    let body = children
+    let (body, body_bindings) = child_elements(root)
         .iter()
-        .find_map(|c| match c {
-            XmlNode::Element { name, children, .. } if name == "w:body" => Some(children),
-            _ => None,
+        .find_map(|child| {
+            let child_bindings = scoped_bindings(child, &bindings);
+            is_word_name(child, "body", &child_bindings).then_some((child, child_bindings))
         })
-        .ok_or_else(|| bad("missing <w:body>"))?;
-
+        .ok_or_else(|| bad("missing WordprocessingML body"))?;
     let mut blocks = Vec::new();
-    for node in body {
-        let XmlNode::Element { name, .. } = node else { continue };
-        match name.as_str() {
-            "w:p" => blocks.push(DocxBlock::Paragraph(paragraph_from_xml(node))),
-            "w:tbl" => blocks.push(DocxBlock::Table(table_from_xml(node))),
+    for node in child_elements(body) {
+        let bindings = scoped_bindings(node, &body_bindings);
+        match word_local_name(node, &bindings) {
+            Some("p") => blocks.push(DocxBlock::Paragraph(paragraph_from_xml(node, &bindings))),
+            Some("tbl") => blocks.push(DocxBlock::Table(table_from_xml(node, &bindings))),
             _ => {}
         }
     }
     Ok(blocks)
 }
-//#endregion 🔖️DocumentMapping
 
-//#region 🔖️StylesMapping
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🎨️ Reads style identities without treating default or foreign attributes as WordprocessingML.
 pub fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
     let bad = |detail: &str| DocxError::Xml { part: STYLES_PART.into(), detail: detail.into() };
     let Some(root) = doc.root.as_ref() else { return Ok(Vec::new()) };
-    let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element")) };
-    if name != "w:styles" {
-        return Err(DocxError::Xml { part: STYLES_PART.into(), detail: format!("expected <w:styles>, got <{name}>") });
+    let bindings = scoped_bindings(root, &[]);
+    if !is_word_name(root, "styles", &bindings) {
+        return Err(bad("expected WordprocessingML styles root"));
     }
     let mut styles = Vec::new();
-    for child in children {
-        let XmlNode::Element { name, attrs, children: inner } = child else { continue };
-        if name != "w:style" {
+    for child in child_elements(root) {
+        let child_bindings = scoped_bindings(child, &bindings);
+        if !is_word_name(child, "style", &child_bindings) {
             continue;
         }
-        let id = find_attr(attrs, "w:styleId").unwrap_or_default().to_string();
-        let mut style_name = id.clone();
+        let Some(id) = word_attr(child, "styleId", &child_bindings).filter(|id| !id.is_empty()) else { continue };
+        let mut style_name = id.to_string();
         let mut based_on = None;
-        for prop in inner {
-            let XmlNode::Element { name, attrs: pattrs, .. } = prop else { continue };
-            match name.as_str() {
-                "w:name" => style_name = find_attr(pattrs, "w:val").unwrap_or(&style_name).to_string(),
-                "w:basedOn" => based_on = find_attr(pattrs, "w:val").map(str::to_string),
+        for prop in child_elements(child) {
+            let prop_bindings = scoped_bindings(prop, &child_bindings);
+            match word_local_name(prop, &prop_bindings) {
+                Some("name") => style_name = word_attr(prop, "val", &prop_bindings).unwrap_or(&style_name).to_string(),
+                Some("basedOn") => based_on = word_attr(prop, "val", &prop_bindings).map(str::to_string),
                 _ => {}
             }
         }
-        styles.push(DocxStyle { id, name: style_name, based_on });
+        styles.push(DocxStyle { id: id.to_string(), name: style_name, based_on });
     }
     Ok(styles)
 }
-//#endregion 🔖️StylesMapping
 
 //#region 🔖️Codec
+/// 🧭️ Resolves the authoritative WordprocessingML main document part.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
-    let opc = opc::decode_opc(data)?;
-    let main_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT)).ok_or(DocxError::MissingMainDocumentRelationship)?;
-    let bytes = opc.part_bytes(&main_path).ok_or_else(|| DocxError::MissingPart(main_path.clone()))?;
-    let text = String::from_utf8(bytes.to_vec()).map_err(|_| DocxError::Xml { part: main_path.clone(), detail: "not valid utf-8".into() })?;
-    let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: main_path.clone(), detail: e })?;
-    let body = document_from_xml(&xml)?;
+pub fn main_document_path(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage) -> Result<String, DocxError> {
+    opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT)).ok_or(DocxError::MissingMainDocumentRelationship)
+}
 
-    // 🏅️ Both conformance classes, exactly as the `officeDocument` lookup above: a Strict package
-    // types its styles relationship `http://purl.oclc.org/ooxml/…/styles`, and resolving only the
-    // transitional type silently decoded such a package with NO styles at all.
-    let styles = match opc.resolve_relationship(&main_path, REL_TYPE_STYLES).or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES)).and_then(|p| opc.part_bytes(&p).map(|b| (p, b.to_vec()))) {
-        Some((styles_path, styles_bytes)) => {
-            let text = String::from_utf8(styles_bytes).map_err(|_| DocxError::Xml { part: styles_path.clone(), detail: "not valid utf-8".into() })?;
-            let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: styles_path.clone(), detail: e })?;
-            styles_from_xml(&xml)?
-        }
+/// 📰️ Projects the semantic document view from authoritative XML parts without mutating them.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn project_document(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage, xml_parts: &[DocxXmlPart]) -> Result<DocxDocument, DocxError> {
+    let main_path = main_document_path(opc)?;
+    let main = xml_parts.iter().find(|part| part.path == main_path).ok_or_else(|| DocxError::MissingPart(main_path.clone()))?;
+    let body = document_from_xml(&main.document)?;
+    let styles = match opc.resolve_relationship(&main_path, REL_TYPE_STYLES).or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES)) {
+        Some(styles_path) => xml_parts.iter().find(|part| part.path == styles_path).map(|part| styles_from_xml(&part.document)).transpose()?.unwrap_or_default(),
         None => Vec::new(),
     };
+    Ok(DocxDocument { body, styles })
+}
 
-    Ok(DocxSnapshot::from_parts(opc, DocxDocument { body, styles }))
+/// 📰️ Projects the semantic document view from one canonical snapshot.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn project_snapshot_document(snapshot: &DocxSnapshot) -> Result<DocxDocument, DocxError> {
+    project_document(&snapshot.opc, &snapshot.xml_parts)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
+    let mut opc = opc::decode_opc(data)?;
+    let mut xml_parts = Vec::new();
+    let mut binary_parts = Vec::with_capacity(opc.parts.len());
+    for part in std::mem::take(&mut opc.parts) {
+        if docx_part_is_xml(&part.path, &part.content_type) {
+            let text = String::from_utf8(part.bytes).map_err(|_| DocxError::Xml { part: part.path.clone(), detail: "not valid utf-8".into() })?;
+            let document = xml_document_from_text(&text).map_err(|detail| DocxError::Xml { part: part.path.clone(), detail })?;
+            xml_parts.push(DocxXmlPart { path: part.path, content_type: part.content_type, document });
+        } else {
+            binary_parts.push(part);
+        }
+    }
+    opc.parts = binary_parts;
+    let snapshot = DocxSnapshot::from_parts(opc, xml_parts);
+    snapshot.validate_authority()?;
+    project_snapshot_document(&snapshot)?;
+    Ok(snapshot)
 }
 //#endregion 🔖️Codec
 
 //#region 🔖️Sniff
-/// 🕵️ Real docx sniff: OPC-shaped (real `[Content_Types].xml`) *and* the root officeDocument
-/// relationship resolves to a part under `word/` — disambiguates from xlsx/pptx, which share the
-/// same zip magic and OPC shape but point at `xl/`/`ppt/` instead.
+/// 🕵️ Recognizes the relationship-selected WordprocessingML main part regardless of its path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_docx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
-    match opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT) {
-        Some(path) => path.starts_with("word/"),
-        None => false,
-    }
+    main_document_path(&opc).ok().and_then(|path| opc.part(&path)).is_some_and(|part| part.content_type == super::super::super::MAIN_DOCUMENT_CONTENT_TYPE)
 }
 //#endregion 🔖️Sniff

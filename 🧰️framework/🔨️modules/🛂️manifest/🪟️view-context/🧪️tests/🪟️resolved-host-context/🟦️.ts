@@ -36,7 +36,7 @@ export function testResolvedHostContext(): void {
   const capacity = fixture.panelCapacityChars;
   assert.equal(schema.properties.panelJson.maxLength, capacity);
   assert.equal(VIEW_CONTEXT_LONG_STRING_CHARS, capacity);
-  assert.deepEqual([...VIEW_CONTEXT_LONG_STRING_FIELDS], ["panelJson"]);
+  assert.deepEqual([...VIEW_CONTEXT_LONG_STRING_FIELDS], ["panelJson", "extensionInputJson"]);
   assert.doesNotThrow(() => parseResolvedPluginViewState({ ...fixture.valid, panelJson: "p".repeat(capacity) }), "panelJson at capacity");
   assert.throws(() => parseResolvedPluginViewState({ ...fixture.valid, panelJson: "p".repeat(capacity + 1) }), /invalid panel data at panelJson/, "panelJson over capacity");
   // 🗣️ The guest half of the SAME fixture: every row the plugin's own `ViewModel` decoder rejects

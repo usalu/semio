@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-transform/schema.json",
+  "title": "Change Layer Transform",
+  "description": "Replaces the complete invertible affine transform of a pixel or group layer against its exact expected transform.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "expected",
+    "transform"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterTransform"
+    },
+    "transform": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterTransform"
+    }
+  }
+}

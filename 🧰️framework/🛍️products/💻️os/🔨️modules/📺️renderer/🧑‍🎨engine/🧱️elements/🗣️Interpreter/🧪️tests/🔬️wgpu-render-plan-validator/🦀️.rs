@@ -37,6 +37,7 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
             engagement_preview_json: None,
             pick_targets_json: None,
             lod_json: None,
+            presentation_json: None,
             chunking_json: None,
             environment_json: None,
             frame_json: None,
